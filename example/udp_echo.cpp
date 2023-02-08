@@ -2,44 +2,37 @@
 // Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
 
 #include "../poseidon/precompiled.ipp"
-#include "../poseidon/socket/udp_socket.hpp"
-#include "../poseidon/static/network_driver.hpp"
+#include "../poseidon/easy_udp_server.hpp"
 #include "../poseidon/static/async_logger.hpp"
 #include "../poseidon/utils.hpp"
 
 namespace {
-using namespace poseidon;
+using namespace ::poseidon;
 
-const Socket_Address listen_address(::rocket::sref("[::]:3807"));
+extern Easy_UDP_Server my_server;
 
-struct Example_Server : UDP_Socket
+void
+data_callback(Socket_Address&& addr, linear_buffer&& data)
   {
-    explicit
-    Example_Server()
-      : UDP_Socket(listen_address)
-      {
-        POSEIDON_LOG_WARN(("example UDP server listening on `$1`"), this->local_address());
-      }
+    cow_string str(data.data(), data.size());
+    data.clear();
 
-    void
-    do_on_udp_packet(Socket_Address&& addr, linear_buffer&& data) override
-      {
-        cow_string str(data.begin(), data.end());
-        data.clear();
-
-        POSEIDON_LOG_WARN(("example UDP server received from `$1`: $2"), addr, str);
-        this->udp_send(addr, str.data(), str.size());
-      }
-  };
-
-shared_ptr<Example_Server>
-do_create_server()
-  {
-    auto server = ::std::make_shared<Example_Server>();
-    network_driver.insert(server);
-    return server;
+    POSEIDON_LOG_WARN(("example UDP server received data from `$1`: $2"), addr, str);
+    my_server.send(addr, str.data(), str.size());
   }
 
-const auto server = do_create_server();
+int
+start_server()
+  {
+    constexpr uint16_t port = 3801;
+
+    my_server.start(port);
+    POSEIDON_LOG_ERROR(("example UDP server started: bind = $1"), my_server.local_address());
+    return 0;
+  }
+
+// Start the server when this shared library is being loaded.
+Easy_UDP_Server my_server(data_callback);
+int dummy = start_server();
 
 }  // namespace

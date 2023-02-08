@@ -7,6 +7,7 @@ nobase_include_HEADERS +=  \
   %reldir%/version.h  \
   %reldir%/fwd.hpp  \
   %reldir%/easy_timer.hpp  \
+  %reldir%/easy_udp_server.hpp  \
   %reldir%/utils.hpp  \
   %reldir%/base/config_file.hpp  \
   %reldir%/base/charbuf_256.hpp  \
@@ -32,6 +33,7 @@ nobase_include_HEADERS +=  \
   %reldir%/static/async_task_executor.hpp  \
   %reldir%/static/network_driver.hpp  \
   %reldir%/easy/easy_timer.hpp  \
+  %reldir%/easy/easy_udp_server.hpp  \
   ${END}
 
 lib_libposeidon_la_SOURCES =  \
@@ -57,6 +59,7 @@ lib_libposeidon_la_SOURCES =  \
   %reldir%/static/async_task_executor.cpp  \
   %reldir%/static/network_driver.cpp  \
   %reldir%/easy/easy_timer.cpp  \
+  %reldir%/easy/easy_udp_server.cpp  \
   ${END}
 
 lib_libposeidon_la_CXXFLAGS = ${AM_CXXFLAGS}

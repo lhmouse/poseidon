@@ -127,6 +127,7 @@ class SSL_Socket;
 // Easy classes
 // These are suitable for agile development.
 class Easy_Timer;
+class Easy_UDP_Server;
 
 // Singletons
 extern atomic_signal exit_signal;
