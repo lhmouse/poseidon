@@ -29,13 +29,13 @@ class Easy_Timer
     Easy_Timer(CallbackT&& cb)
       {
         using cb_obj_type = ::std::decay_t<CallbackT>;
+        this->m_cb_obj = ::std::make_shared<cb_obj_type>(::std::forward<CallbackT>(cb));
 
         this->m_cb_thunk = [](void* ptr, int64_t now)
           {
-            ::std::invoke(*(::std::decay_t<CallbackT>*) ptr, now);
+            // We need this as the type of the callback has been erased.
+            ::std::invoke(*(cb_obj_type*) ptr, now);
           };
-
-        this->m_cb_obj = ::std::make_shared<cb_obj_type>(::std::forward<CallbackT>(cb));
       }
 
   public:
