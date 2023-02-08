@@ -27,9 +27,16 @@ class Easy_Timer
     ROCKET_DISABLE_IF(::std::is_same<::std::decay_t<CallbackT>, Easy_Timer>::value)>
     explicit
     Easy_Timer(CallbackT&& cb)
-      : m_cb_thunk([](void* ptr, int64_t now) { ((*(::std::decay_t<CallbackT>*) ptr) (now));  }),
-        m_cb_obj(::std::make_shared<::std::decay_t<CallbackT>>(::std::forward<CallbackT>(cb)))
-      { }
+      {
+        using cb_obj_type = ::std::decay_t<CallbackT>;
+
+        this->m_cb_thunk = [](void* ptr, int64_t now)
+          {
+            ::std::invoke(*(::std::decay_t<CallbackT>*) ptr, now);
+          };
+
+        this->m_cb_obj = ::std::make_shared<cb_obj_type>(::std::forward<CallbackT>(cb));
+      }
 
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_Timer);
