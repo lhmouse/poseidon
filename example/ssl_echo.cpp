@@ -36,8 +36,9 @@ struct Example_Session : SSL_Socket
       {
         cow_string str(data.begin(), data.end());
         data.clear();
+
         POSEIDON_LOG_WARN(("example SSL server received from `$1`: $2"), this->remote_address(), str);
-        this->ssl_send(str);
+        this->ssl_send(str.data(), str.size());
       }
   };
 

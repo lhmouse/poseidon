@@ -282,27 +282,6 @@ tcp_send(const char* data, size_t size)
 
 bool
 TCP_Socket::
-tcp_send(const linear_buffer& data)
-  {
-    return this->tcp_send(data.data(), data.size());
-  }
-
-bool
-TCP_Socket::
-tcp_send(const cow_string& data)
-  {
-    return this->tcp_send(data.data(), data.size());
-  }
-
-bool
-TCP_Socket::
-tcp_send(const string& data)
-  {
-    return this->tcp_send(data.data(), data.size());
-  }
-
-bool
-TCP_Socket::
 tcp_send_oob(char data) noexcept
   {
     return ::send(this->fd(), &data, 1, MSG_OOB) > 0;

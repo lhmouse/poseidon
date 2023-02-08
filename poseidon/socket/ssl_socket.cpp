@@ -429,27 +429,6 @@ ssl_send(const char* data, size_t size)
 
 bool
 SSL_Socket::
-ssl_send(const linear_buffer& data)
-  {
-    return this->ssl_send(data.data(), data.size());
-  }
-
-bool
-SSL_Socket::
-ssl_send(const cow_string& data)
-  {
-    return this->ssl_send(data.data(), data.size());
-  }
-
-bool
-SSL_Socket::
-ssl_send(const string& data)
-  {
-    return this->ssl_send(data.data(), data.size());
-  }
-
-bool
-SSL_Socket::
 ssl_send_oob(char data) noexcept
   {
     return ::send(this->fd(), &data, 1, MSG_OOB) > 0;

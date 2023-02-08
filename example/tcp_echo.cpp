@@ -26,8 +26,9 @@ struct Example_Session : TCP_Socket
       {
         cow_string str(data.begin(), data.end());
         data.clear();
+
         POSEIDON_LOG_WARN(("example TCP server received from `$1`: $2"), this->remote_address(), str);
-        this->tcp_send(str);
+        this->tcp_send(str.data(), str.size());
       }
   };
 

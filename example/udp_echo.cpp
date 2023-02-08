@@ -26,8 +26,9 @@ struct Example_Server : UDP_Socket
       {
         cow_string str(data.begin(), data.end());
         data.clear();
+
         POSEIDON_LOG_WARN(("example UDP server received from `$1`: $2"), addr, str);
-        this->udp_send(addr, str);
+        this->udp_send(addr, str.data(), str.size());
       }
   };
 

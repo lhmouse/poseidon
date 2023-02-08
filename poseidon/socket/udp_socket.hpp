@@ -89,15 +89,6 @@ class UDP_Socket
     // This function is thread-safe.
     bool
     udp_send(const Socket_Address& addr, const char* data, size_t size);
-
-    bool
-    udp_send(const Socket_Address& addr, const linear_buffer& data);
-
-    bool
-    udp_send(const Socket_Address& addr, const cow_string& data);
-
-    bool
-    udp_send(const Socket_Address& addr, const string& data);
   };
 
 }  // namespace poseidon

@@ -365,25 +365,4 @@ udp_send(const Socket_Address& addr, const char* data, size_t size)
     return true;
   }
 
-bool
-UDP_Socket::
-udp_send(const Socket_Address& addr, const linear_buffer& data)
-  {
-    return this->udp_send(addr, data.data(), data.size());
-  }
-
-bool
-UDP_Socket::
-udp_send(const Socket_Address& addr, const cow_string& data)
-  {
-    return this->udp_send(addr, data.data(), data.size());
-  }
-
-bool
-UDP_Socket::
-udp_send(const Socket_Address& addr, const string& data)
-  {
-    return this->udp_send(addr, data.data(), data.size());
-  }
-
 }  // namespace poseidon
