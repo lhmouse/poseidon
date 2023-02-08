@@ -9,6 +9,10 @@ nobase_include_HEADERS +=  \
   %reldir%/easy_timer.hpp  \
   %reldir%/easy_udp_server.hpp  \
   %reldir%/easy_udp_client.hpp  \
+  %reldir%/easy_tcp_server.hpp  \
+  %reldir%/easy_tcp_client.hpp  \
+  %reldir%/easy_ssl_server.hpp  \
+  %reldir%/easy_ssl_client.hpp  \
   %reldir%/utils.hpp  \
   %reldir%/base/config_file.hpp  \
   %reldir%/base/charbuf_256.hpp  \
@@ -36,6 +40,10 @@ nobase_include_HEADERS +=  \
   %reldir%/easy/easy_timer.hpp  \
   %reldir%/easy/easy_udp_server.hpp  \
   %reldir%/easy/easy_udp_client.hpp  \
+  %reldir%/easy/easy_tcp_server.hpp  \
+  %reldir%/easy/easy_tcp_client.hpp  \
+  %reldir%/easy/easy_ssl_server.hpp  \
+  %reldir%/easy/easy_ssl_client.hpp  \
   ${END}
 
 lib_libposeidon_la_SOURCES =  \
@@ -63,6 +71,10 @@ lib_libposeidon_la_SOURCES =  \
   %reldir%/easy/easy_timer.cpp  \
   %reldir%/easy/easy_udp_server.cpp  \
   %reldir%/easy/easy_udp_client.cpp  \
+  %reldir%/easy/easy_tcp_server.cpp  \
+  %reldir%/easy/easy_tcp_client.cpp  \
+  %reldir%/easy/easy_ssl_server.cpp  \
+  %reldir%/easy/easy_ssl_client.cpp  \
   ${END}
 
 lib_libposeidon_la_CXXFLAGS = ${AM_CXXFLAGS}
