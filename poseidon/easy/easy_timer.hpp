@@ -49,8 +49,7 @@ class Easy_Timer
     void
     start(int64_t delay, int64_t period);
 
-    // Stops the active timer, if any. This causes `active()` to return `false`
-    // thereafter.
+    // Stops the timer, if one is running.
     void
     stop() noexcept;
   };
