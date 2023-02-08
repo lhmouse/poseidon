@@ -66,7 +66,6 @@ do_abstract_socket_on_readable()
   {
     recursive_mutex::unique_lock io_lock;
     auto& queue = this->do_abstract_socket_lock_read_queue(io_lock);
-    auto& addr = this->m_recv_saddr;
     ::ssize_t io_result = 0;
 
     for(;;) {
@@ -96,11 +95,11 @@ do_abstract_socket_on_readable()
         continue;
 
       // Accept this incoming packet.
-      addr.set_addr(sa.sin6_addr);
-      addr.set_port(be16toh(sa.sin6_port));
+      this->m_temp_addr.set_addr(sa.sin6_addr);
+      this->m_temp_addr.set_port(be16toh(sa.sin6_port));
       queue.accept((size_t) io_result);
 
-      this->do_on_udp_packet(::std::move(addr), ::std::move(queue));
+      this->do_on_udp_packet(::std::move(this->m_temp_addr), ::std::move(queue));
     }
   }
 
@@ -335,7 +334,6 @@ udp_send(const Socket_Address& addr, const char* data, size_t size)
     sa.sin6_flowinfo = 0;
     sa.sin6_addr = addr.addr();
     sa.sin6_scope_id = 0;
-
     io_result = ::sendto(this->fd(), data, size, 0, (const ::sockaddr*) &sa, sizeof(sa));
 
     if(io_result < 0) {

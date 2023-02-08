@@ -15,7 +15,7 @@ class UDP_Socket
   private:
     friend class Network_Driver;
 
-    Socket_Address m_recv_saddr;
+    Socket_Address m_temp_addr;
 
   protected:
     // Server-side constructor:
