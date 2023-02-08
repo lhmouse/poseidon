@@ -33,12 +33,12 @@ struct Final_UDP_Socket final : UDP_Socket
   {
     thunk_function* m_cb_thunk;
     weak_ptr<void> m_cb_wobj;
-    weak_ptr<int> m_wuniq;
+    weak_ptr<void> m_wuniq;
 
     shared_ptr<Packet_Queue> m_queue;
 
     explicit
-    Final_UDP_Socket(const Socket_Address& addr, thunk_function* cb_thunk, shared_ptrR<void> cb_obj, shared_ptrR<int> uniq)
+    Final_UDP_Socket(const Socket_Address& addr, thunk_function* cb_thunk, shared_ptrR<void> cb_obj, shared_ptrR<void> uniq)
       : UDP_Socket(addr),
         m_cb_thunk(cb_thunk), m_cb_wobj(cb_obj), m_wuniq(uniq)
       { }
@@ -52,7 +52,7 @@ struct Final_Fiber final : Abstract_Fiber
   {
     thunk_function* m_cb_thunk;
     weak_ptr<void> m_cb_wobj;
-    weak_ptr<int> m_wuniq;
+    weak_ptr<void> m_wuniq;
     shared_ptr<Packet_Queue> m_queue;
 
     explicit
@@ -69,6 +69,9 @@ void
 Final_UDP_Socket::
 do_on_udp_packet(Socket_Address&& addr, linear_buffer&& data)
   {
+    if(this->m_wuniq.expired())
+      return;
+
     if(!this->m_queue)
       this->m_queue = ::std::make_shared<Packet_Queue>();
 
@@ -138,9 +141,7 @@ void
 Easy_UDP_Server::
 start(const Socket_Address& addr)
   {
-    if(!this->m_uniq)
-      this->m_uniq = ::std::make_shared<int>();
-
+    this->m_uniq = ::std::make_shared<int>();
     this->m_socket = ::std::make_shared<Final_UDP_Socket>(addr, this->m_cb_thunk, this->m_cb_obj, this->m_uniq);
     network_driver.insert(this->m_socket);
   }

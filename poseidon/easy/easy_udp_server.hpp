@@ -16,7 +16,7 @@ class Easy_UDP_Server
     thunk_function* m_cb_thunk;
     shared_ptr<void> m_cb_obj;
 
-    shared_ptr<int> m_uniq;
+    shared_ptr<void> m_uniq;
     shared_ptr<UDP_Socket> m_socket;
 
   public:
