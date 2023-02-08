@@ -151,9 +151,9 @@ do_parse_command_line(int argc, char** argv)
           continue;
 
         default:
-          // `getopt()` will have written a message to standard error.
           do_exit_printf(exit_invalid_argument,
-              "Try `%s -h` for help.\n", argv[0]);
+              "%s: invalid argument -- '%c'\nTry `%s -h` for help.\n",
+              argv[0], optopt, argv[0]);
       }
     }
 
@@ -167,10 +167,8 @@ do_parse_command_line(int argc, char** argv)
     // If more arguments follow, they denote the working directory.
     if(argc - optind > 1)
       do_exit_printf(exit_invalid_argument,
-          "%s: too many arguments -- '%s'\n"
-          "Try `%s -h` for help.\n",
-          argv[0], argv[optind+1],
-          argv[0]);
+          "%s: too many arguments -- '%s'\nTry `%s -h` for help.\n",
+          argv[0], argv[optind+1], argv[0]);
 
     if(argc - optind > 0)
       cd_here = cow_string(argv[optind]);
