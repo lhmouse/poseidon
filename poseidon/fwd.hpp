@@ -99,14 +99,6 @@ using phsh_stringR = const phsh_string&;
 template<typename T> using shared_ptrR = const shared_ptr<T>&;
 template<typename T> using weak_ptrR = const weak_ptr<T>&;
 
-#define POSEIDON_HIDDEN_STRUCT(CLASS, MEMBER)  \
-  using CLASS##_##MEMBER = MEMBER;  \
-  struct __attribute__((__visibility__("hidden"))) CLASS::MEMBER : CLASS##_##MEMBER  \
-    {  \
-      using CLASS##_##MEMBER::MEMBER;  \
-      using CLASS##_##MEMBER::operator=;  \
-    }  // no semicolon
-
 // Base types
 class Config_File;
 class charbuf_256;

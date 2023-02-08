@@ -13,11 +13,12 @@ namespace poseidon {
 class Timer_Driver
   {
   private:
+    struct X_Queued_Timer;
+
     mutable plain_mutex m_pq_mutex;
     condition_variable m_pq_avail;
     uint64_t m_serial;
-    struct Queued_Timer;
-    vector<Queued_Timer> m_pq;
+    vector<X_Queued_Timer> m_pq;
 
   public:
     // Constructs an empty driver.

@@ -14,18 +14,19 @@ namespace poseidon {
 class Fiber_Scheduler
   {
   private:
+    struct X_Queued_Fiber;
+
     mutable plain_mutex m_conf_mutex;
     uint32_t m_conf_stack_vm_size = 0;
     uint32_t m_conf_warn_timeout = 0;
     uint32_t m_conf_fail_timeout = 0;
 
     mutable plain_mutex m_pq_mutex;
-    struct Queued_Fiber;
-    vector<shared_ptr<Queued_Fiber>> m_pq;
+    vector<shared_ptr<X_Queued_Fiber>> m_pq;
     long m_pq_wait_ns = 0;
 
     mutable recursive_mutex m_sched_mutex;
-    weak_ptr<Queued_Fiber> m_sched_self_opt;
+    weak_ptr<X_Queued_Fiber> m_sched_self_opt;
     void* m_sched_asan_save;  // private data for address sanitizer
     ::ucontext_t m_sched_outer[1];  // yield target
 

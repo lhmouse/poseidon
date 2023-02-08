@@ -143,7 +143,9 @@ struct Fiber_Comparator
 
 }  // namespace
 
-POSEIDON_HIDDEN_STRUCT(Fiber_Scheduler, Queued_Fiber);
+struct Fiber_Scheduler::X_Queued_Fiber : Queued_Fiber
+  {
+  };
 
 Fiber_Scheduler::
 Fiber_Scheduler()
@@ -454,7 +456,7 @@ insert(unique_ptr<Abstract_Fiber>&& fiber)
     const int64_t now = this->clock();
 
     // Create the management node.
-    auto elem = ::std::make_shared<Queued_Fiber>();
+    auto elem = ::std::make_shared<X_Queued_Fiber>();
     elem->fiber = ::std::move(fiber);
     elem->async_time.store(now);
     elem->yield_time = now;

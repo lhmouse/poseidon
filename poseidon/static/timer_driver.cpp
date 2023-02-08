@@ -38,7 +38,9 @@ struct Timer_Comparator
 
 }  // namespace
 
-POSEIDON_HIDDEN_STRUCT(Timer_Driver, Queued_Timer);
+struct Timer_Driver::X_Queued_Timer : Queued_Timer
+  {
+  };
 
 Timer_Driver::
 Timer_Driver()
@@ -137,7 +139,7 @@ insert(shared_ptrR<Abstract_Timer> timer, int64_t delay, int64_t period)
       POSEIDON_THROW(("Timer period out of range: $1"), period);
 
     // Calculate the end time point.
-    Queued_Timer elem;
+    X_Queued_Timer elem;
     elem.timer = timer;
     elem.next = this->clock() + delay;
     elem.period = period;
