@@ -20,10 +20,10 @@ struct Final_Timer final : Abstract_Timer
   {
     thunk_function* m_cb_thunk;
     weak_ptr<void> m_cb_wobj;
-    weak_ptr<int> m_wuniq;
+    weak_ptr<void> m_wuniq;
 
     explicit
-    Final_Timer(thunk_function* cb_thunk, shared_ptrR<void> cb_obj, shared_ptrR<int> uniq)
+    Final_Timer(thunk_function* cb_thunk, shared_ptrR<void> cb_obj, shared_ptrR<void> uniq)
       : m_cb_thunk(cb_thunk), m_cb_wobj(cb_obj), m_wuniq(uniq)
       { }
 
@@ -36,7 +36,7 @@ struct Final_Fiber final : Abstract_Fiber
   {
     thunk_function* m_cb_thunk;
     weak_ptr<void> m_cb_wobj;
-    weak_ptr<int> m_wuniq;
+    weak_ptr<void> m_wuniq;
     int64_t m_now;
 
     explicit
@@ -54,6 +54,9 @@ void
 Final_Timer::
 do_abstract_timer_on_tick(int64_t now)
   {
+    if(this->m_wuniq.expired())
+      return;
+
     // We are in the timer thread here, so create a new fiber.
     fiber_scheduler.insert(::std::make_unique<Final_Fiber>(*this, now));
   }
@@ -84,12 +87,8 @@ void
 Easy_Timer::
 start(int64_t delay, int64_t period)
   {
-    if(!this->m_uniq)
-      this->m_uniq = ::std::make_shared<int>();
-
-    if(!this->m_timer)
-      this->m_timer = ::std::make_shared<Final_Timer>(this->m_cb_thunk, this->m_cb_obj, this->m_uniq);
-
+    this->m_uniq = ::std::make_shared<int>();
+    this->m_timer = ::std::make_shared<Final_Timer>(this->m_cb_thunk, this->m_cb_obj, this->m_uniq);
     timer_driver.insert(this->m_timer, delay, period);
   }
 
