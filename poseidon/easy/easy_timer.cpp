@@ -9,7 +9,6 @@
 #include "../static/fiber_scheduler.hpp"
 #include "../static/async_logger.hpp"
 #include "../utils.hpp"
-#include <time.h>
 
 namespace poseidon {
 namespace {
