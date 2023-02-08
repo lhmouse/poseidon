@@ -28,7 +28,7 @@ start_timer()
     return 0;
   }
 
-// Start the timer when this shared object is being loaded.
+// Start the timer when this shared library is being loaded.
 Easy_Timer my_timer(timer_callback);
 int dummy = start_timer();
 
