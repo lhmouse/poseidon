@@ -12,10 +12,34 @@
 #include <sys/resource.h>  // getrlimit()
 #include <sys/mman.h>  // mmap(), munmap()
 
+extern "C" {
+
 #ifdef POSEIDON_ENABLE_ADDRESS_SANITIZER
-extern "C" void __sanitizer_start_switch_fiber(void**, const void*, size_t) noexcept;
-extern "C" void __sanitizer_finish_switch_fiber(void*, const void**, size_t*) noexcept;
-#endif  // POSEIDON_ENABLE_ADDRESS_SANITIZER
+void __sanitizer_start_switch_fiber(void**, const void*, size_t) noexcept;
+void __sanitizer_finish_switch_fiber(void*, const void**, size_t*) noexcept;
+#endif
+
+static inline
+void
+do_start_switch_fiber(void** psave, const ::ucontext_t* uctx) noexcept
+  {
+#ifdef POSEIDON_ENABLE_ADDRESS_SANITIZER
+    ::__sanitizer_start_switch_fiber(psave, uctx->uc_stack.ss_sp, uctx->uc_stack.ss_size);
+#endif
+    (void) psave, (void) uctx;
+  }
+
+inline
+void
+do_finish_switch_fiber(void* save) noexcept
+  {
+#ifdef POSEIDON_ENABLE_ADDRESS_SANITIZER
+    ::__sanitizer_finish_switch_fiber(save, nullptr, nullptr);
+#endif
+    (void) save;
+  }
+
+}  // extern "C"
 
 namespace poseidon {
 namespace {
@@ -116,26 +140,6 @@ struct Fiber_Comparator
       { return lhs > rhs->check_time;  }
   }
   constexpr fiber_comparator;
-
-inline
-void
-do_start_switch_fiber(void*& save, const ::ucontext_t* uctx) noexcept
-  {
-#ifdef POSEIDON_ENABLE_ADDRESS_SANITIZER
-    ::__sanitizer_start_switch_fiber(&save, uctx->uc_stack.ss_sp, uctx->uc_stack.ss_size);
-#endif
-    (void) save, (void) uctx;
-  }
-
-inline
-void
-do_finish_switch_fiber(void* save) noexcept
-  {
-#ifdef POSEIDON_ENABLE_ADDRESS_SANITIZER
-    ::__sanitizer_finish_switch_fiber(save, nullptr, nullptr);
-#endif
-    (void) save;
-  }
 
 }  // namespace
 
@@ -408,7 +412,7 @@ thread_loop()
 
           // Return to `m_sched_outer`.
           elec->async_time.store(self->clock());
-          do_start_switch_fiber(self->m_sched_asan_save, elec->sched_inner->uc_link);
+          do_start_switch_fiber(&(self->m_sched_asan_save), elec->sched_inner->uc_link);
         };
 
       int args[2];
@@ -421,7 +425,7 @@ thread_loop()
     this->m_sched_self_opt = elem;
     POSEIDON_LOG_TRACE(("Resuming fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
 
-    do_start_switch_fiber(this->m_sched_asan_save, elem->sched_inner);
+    do_start_switch_fiber(&(this->m_sched_asan_save), elem->sched_inner);
     ::swapcontext(this->m_sched_outer, elem->sched_inner);
     do_finish_switch_fiber(this->m_sched_asan_save);
 
@@ -533,7 +537,7 @@ checked_yield(const Abstract_Fiber* current, shared_ptrR<Abstract_Future> futr_o
     elem->fiber->m_state.store(async_state_suspended);
     POSEIDON_LOG_TRACE(("Suspending fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
 
-    do_start_switch_fiber(this->m_sched_asan_save, this->m_sched_outer);
+    do_start_switch_fiber(&(this->m_sched_asan_save), this->m_sched_outer);
     ::swapcontext(elem->sched_inner, this->m_sched_outer);
     do_finish_switch_fiber(this->m_sched_asan_save);
 
