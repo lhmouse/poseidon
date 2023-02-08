@@ -16,7 +16,6 @@ data_callback(Socket_Address&& addr, linear_buffer&& data)
   {
     cow_string str(data.data(), data.size());
     data.clear();
-
     POSEIDON_LOG_WARN(("example UDP server received data from `$1`: $2"), addr, str);
     my_server.send(addr, str.data(), str.size());
   }
@@ -24,9 +23,8 @@ data_callback(Socket_Address&& addr, linear_buffer&& data)
 int
 start_server()
   {
-    constexpr uint16_t port = 3801;
-
-    my_server.start(port);
+    Socket_Address addr(sref("[::]:3801"));
+    my_server.start(addr);
     POSEIDON_LOG_ERROR(("example UDP server started: bind = $1"), my_server.local_address());
     return 0;
   }

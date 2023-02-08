@@ -83,15 +83,6 @@ class Easy_UDP_Client
     // This function is thread-safe.
     bool
     send(const Socket_Address& addr, const char* data, size_t size);
-
-    bool
-    send(const Socket_Address& addr, const linear_buffer& data);
-
-    bool
-    send(const Socket_Address& addr, const cow_string& data);
-
-    bool
-    send(const Socket_Address& addr, const string& data);
   };
 
 }  // namespace poseidon

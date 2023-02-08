@@ -18,21 +18,19 @@ data_callback(Socket_Address&& addr, linear_buffer&& data)
   {
     cow_string str(data.data(), data.size());
     data.clear();
-
     POSEIDON_LOG_DEBUG(("example UDP client received data from `$1`: $2"), addr, str);
   }
 
 void
 timer_callback(int64_t now)
   {
-    static Socket_Address addr((::in6_addr) IN6ADDR_LOOPBACK_INIT, 3801);
     static uint32_t index;
-    cow_string str;
-    format(str, "packet $1", ++index);
     (void) now;
 
+    Socket_Address addr(sref("[::1]:3801"));
+    cow_string str = format_string("packet $1", ++index);
     POSEIDON_LOG_INFO(("example UDP client sending data to `$1`: $2"), addr, str);
-    my_client.send(addr, str);
+    my_client.send(addr, str.data(), str.size());
   }
 
 int

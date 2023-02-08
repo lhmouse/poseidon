@@ -148,22 +148,6 @@ start(const Socket_Address& addr)
 
 void
 Easy_UDP_Server::
-start(stringR host_port)
-  {
-    Socket_Address addr(host_port);
-    this->start(addr);
-  }
-
-void
-Easy_UDP_Server::
-start(uint16_t port)
-  {
-    Socket_Address addr((::in6_addr) IN6ADDR_ANY_INIT, port);
-    this->start(addr);
-  }
-
-void
-Easy_UDP_Server::
 stop() noexcept
   {
     this->m_uniq = nullptr;
@@ -214,36 +198,6 @@ send(const Socket_Address& addr, const char* data, size_t size)
       return false;
 
     return this->m_socket->udp_send(addr, data, size);
-  }
-
-bool
-Easy_UDP_Server::
-send(const Socket_Address& addr, const linear_buffer& data)
-  {
-    if(!this->m_socket)
-      return false;
-
-    return this->m_socket->udp_send(addr, data.data(), data.size());
-  }
-
-bool
-Easy_UDP_Server::
-send(const Socket_Address& addr, const cow_string& data)
-  {
-    if(!this->m_socket)
-      return false;
-
-    return this->m_socket->udp_send(addr, data.data(), data.size());
-  }
-
-bool
-Easy_UDP_Server::
-send(const Socket_Address& addr, const string& data)
-  {
-    if(!this->m_socket)
-      return false;
-
-    return this->m_socket->udp_send(addr, data.data(), data.size());
   }
 
 }  // namespace poseidon
