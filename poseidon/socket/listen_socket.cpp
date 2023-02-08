@@ -11,7 +11,7 @@
 namespace poseidon {
 
 Listen_Socket::
-Listen_Socket(const Socket_Address& saddr)
+Listen_Socket(const Socket_Address& addr)
   : Abstract_Socket(SOCK_STREAM, IPPROTO_TCP)
   {
     // Use `SO_REUSEADDR`. Errors are ignored.
@@ -19,26 +19,26 @@ Listen_Socket(const Socket_Address& saddr)
     ::setsockopt(this->fd(), SOL_SOCKET, SO_REUSEADDR, &ival, sizeof(ival));
 
     // Bind this socket onto `addr`.
-    ::sockaddr_in6 addr;
-    addr.sin6_family = AF_INET6;
-    addr.sin6_port = htobe16(saddr.port());
-    addr.sin6_flowinfo = 0;
-    addr.sin6_addr = saddr.addr();
-    addr.sin6_scope_id = 0;
+    ::sockaddr_in6 sa;
+    sa.sin6_family = AF_INET6;
+    sa.sin6_port = htobe16(addr.port());
+    sa.sin6_flowinfo = 0;
+    sa.sin6_addr = addr.addr();
+    sa.sin6_scope_id = 0;
 
-    if(::bind(this->fd(), (const ::sockaddr*) &addr, sizeof(addr)) != 0)
+    if(::bind(this->fd(), (const ::sockaddr*) &sa, sizeof(sa)) != 0)
       POSEIDON_THROW((
           "Failed to bind TCP socket onto `$4`",
           "[`bind()` failed: $3]",
           "[TCP socket `$1` (class `$2`)]"),
-          this, typeid(*this), format_errno(), saddr);
+          this, typeid(*this), format_errno(), addr);
 
     if(::listen(this->fd(), SOMAXCONN) != 0)
       POSEIDON_THROW((
           "Failed to start listening on `$4`",
           "[`listen()` failed: $3]",
           "[TCP listen socket `$1` (class `$2`)]"),
-          this, typeid(*this), format_errno(), saddr);
+          this, typeid(*this), format_errno(), addr);
 
     POSEIDON_LOG_INFO((
         "TCP server started listening on `$3`",

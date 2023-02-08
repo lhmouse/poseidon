@@ -18,21 +18,21 @@ Abstract_Socket(unique_posix_fd&& fd)
       POSEIDON_THROW(("Null socket handle not valid"));
 
     // Get the local address and address family.
-    ::sockaddr_in6 addr;
-    ::socklen_t addrlen = sizeof(addr);
-    if(::getsockname(this->fd(), (::sockaddr*) &addr, &addrlen) != 0)
+    ::sockaddr_in6 sa;
+    ::socklen_t salen = sizeof(sa);
+    if(::getsockname(this->fd(), (::sockaddr*) &sa, &salen) != 0)
       POSEIDON_THROW((
           "Could not get socket local address",
           "[`getsockname()` failed: $1]"),
           format_errno());
 
-    if((addr.sin6_family != AF_INET6) || (addrlen != sizeof(addr)))
+    if((sa.sin6_family != AF_INET6) || (salen != sizeof(sa)))
       POSEIDON_THROW((
-          "Addresss family unimplemented: family `$1`, addrlen `$2`"),
-          addr.sin6_family, addrlen);
+          "Addresss family unimplemented: family = $1, salen = $2"),
+          sa.sin6_family, salen);
 
-    this->m_sockname.set_addr(addr.sin6_addr);
-    this->m_sockname.set_port(be16toh(addr.sin6_port));
+    this->m_sockname.set_addr(sa.sin6_addr);
+    this->m_sockname.set_port(be16toh(sa.sin6_port));
     this->m_sockname_ready.store(true);
 
     // Turn on non-blocking mode if it hasn't been enabled.
@@ -83,17 +83,17 @@ local_address() const noexcept
     if(this->m_sockname_ready.load())
       return this->m_sockname;
 
-    ::sockaddr_in6 addr;
-    ::socklen_t addrlen = sizeof(addr);
-    if(::getsockname(this->fd(), (::sockaddr*) &addr, &addrlen) != 0)
+    ::sockaddr_in6 sa;
+    ::socklen_t salen = sizeof(sa);
+    if(::getsockname(this->fd(), (::sockaddr*) &sa, &salen) != 0)
       return ipv6_unspecified;
 
-    ROCKET_ASSERT(addr.sin6_family == AF_INET6);
-    ROCKET_ASSERT(addrlen == sizeof(addr));
+    ROCKET_ASSERT(sa.sin6_family == AF_INET6);
+    ROCKET_ASSERT(salen == sizeof(sa));
 
     // Cache the address.
-    this->m_sockname.set_addr(addr.sin6_addr);
-    this->m_sockname.set_port(be16toh(addr.sin6_port));
+    this->m_sockname.set_addr(sa.sin6_addr);
+    this->m_sockname.set_port(be16toh(sa.sin6_port));
     this->m_sockname_ready.store(true);
     return this->m_sockname;
   }

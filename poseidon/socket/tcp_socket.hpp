@@ -27,7 +27,7 @@ class TCP_Socket
     // Client-side constructor:
     // Creates a new non-blocking socket to the target host.
     explicit
-    TCP_Socket(const Socket_Address& saddr);
+    TCP_Socket(const Socket_Address& addr);
 
   protected:
     // These callbacks implement `Abstract_Socket`.

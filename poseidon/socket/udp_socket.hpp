@@ -21,7 +21,7 @@ class UDP_Socket
     // Server-side constructor:
     // Creates a socket that is bound onto the given address.
     explicit
-    UDP_Socket(const Socket_Address& saddr);
+    UDP_Socket(const Socket_Address& addr);
 
     // Client-side constructor:
     // Creates a socket that is bound onto a random address.
@@ -59,7 +59,7 @@ class UDP_Socket
     // for subsequent packets.
     virtual
     void
-    do_on_udp_packet(Socket_Address&& saddr, linear_buffer&& data) = 0;
+    do_on_udp_packet(Socket_Address&& addr, linear_buffer&& data) = 0;
 
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(UDP_Socket);
@@ -88,16 +88,16 @@ class UDP_Socket
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    udp_send(const Socket_Address& saddr, const char* data, size_t size);
+    udp_send(const Socket_Address& addr, const char* data, size_t size);
 
     bool
-    udp_send(const Socket_Address& saddr, const linear_buffer& data);
+    udp_send(const Socket_Address& addr, const linear_buffer& data);
 
     bool
-    udp_send(const Socket_Address& saddr, const cow_string& data);
+    udp_send(const Socket_Address& addr, const cow_string& data);
 
     bool
-    udp_send(const Socket_Address& saddr, const string& data);
+    udp_send(const Socket_Address& addr, const string& data);
   };
 
 }  // namespace poseidon

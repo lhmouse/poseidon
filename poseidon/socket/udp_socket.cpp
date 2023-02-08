@@ -11,7 +11,7 @@
 namespace poseidon {
 
 UDP_Socket::
-UDP_Socket(const Socket_Address& saddr)
+UDP_Socket(const Socket_Address& addr)
   : Abstract_Socket(SOCK_DGRAM, IPPROTO_UDP)
   {
     // Use `SO_REUSEADDR`. Errors are ignored.
@@ -19,19 +19,19 @@ UDP_Socket(const Socket_Address& saddr)
     ::setsockopt(this->fd(), SOL_SOCKET, SO_REUSEADDR, &ival, sizeof(ival));
 
     // Bind this socket onto `addr`.
-    ::sockaddr_in6 addr;
-    addr.sin6_family = AF_INET6;
-    addr.sin6_port = htobe16(saddr.port());
-    addr.sin6_flowinfo = 0;
-    addr.sin6_addr = saddr.addr();
-    addr.sin6_scope_id = 0;
+    ::sockaddr_in6 sa;
+    sa.sin6_family = AF_INET6;
+    sa.sin6_port = htobe16(addr.port());
+    sa.sin6_flowinfo = 0;
+    sa.sin6_addr = addr.addr();
+    sa.sin6_scope_id = 0;
 
-    if(::bind(this->fd(), (const ::sockaddr*) &addr, sizeof(addr)) != 0)
+    if(::bind(this->fd(), (const ::sockaddr*) &sa, sizeof(sa)) != 0)
       POSEIDON_THROW((
           "Failed to bind UDP socket onto `$4`",
           "[`bind()` failed: $3]",
           "[UDP socket `$1` (class `$2`)]"),
-          this, typeid(*this), format_errno(), saddr);
+          this, typeid(*this), format_errno(), addr);
 
     POSEIDON_LOG_INFO((
         "UDP server started listening on `$3`",
@@ -66,7 +66,7 @@ do_abstract_socket_on_readable()
   {
     recursive_mutex::unique_lock io_lock;
     auto& queue = this->do_abstract_socket_lock_read_queue(io_lock);
-    auto& saddr = this->m_recv_saddr;
+    auto& addr = this->m_recv_saddr;
     ::ssize_t io_result = 0;
 
     for(;;) {
@@ -74,9 +74,9 @@ do_abstract_socket_on_readable()
       queue.clear();
       queue.reserve(0xFFFFU);
 
-      ::sockaddr_in6 addr;
-      ::socklen_t addrlen = sizeof(addr);
-      io_result = ::recvfrom(this->fd(), queue.mut_end(), queue.capacity(), 0, (::sockaddr*) &addr, &addrlen);
+      ::sockaddr_in6 sa;
+      ::socklen_t salen = sizeof(sa);
+      io_result = ::recvfrom(this->fd(), queue.mut_end(), queue.capacity(), 0, (::sockaddr*) &sa, &salen);
 
       if(io_result < 0) {
         if((errno == EAGAIN) || (errno == EWOULDBLOCK))
@@ -92,15 +92,15 @@ do_abstract_socket_on_readable()
         continue;
       }
 
-      if((addr.sin6_family != AF_INET6) || (addrlen != sizeof(addr)))
+      if((sa.sin6_family != AF_INET6) || (salen != sizeof(sa)))
         continue;
 
       // Accept this incoming packet.
-      saddr.set_addr(addr.sin6_addr);
-      saddr.set_port(be16toh(addr.sin6_port));
+      addr.set_addr(sa.sin6_addr);
+      addr.set_port(be16toh(sa.sin6_port));
       queue.accept((size_t) io_result);
 
-      this->do_on_udp_packet(::std::move(saddr), ::std::move(queue));
+      this->do_on_udp_packet(::std::move(addr), ::std::move(queue));
     }
   }
 
@@ -125,15 +125,15 @@ do_abstract_socket_on_writable()
       if(queue.size() == 0)
         break;
 
-      ::sockaddr_in6 addr;
+      ::sockaddr_in6 sa;
       uint16_t datalen;
 
       // This must match `udp_send()`.
-      size_t ngot = queue.getn((char*) &addr, sizeof(addr));
-      ROCKET_ASSERT(ngot == sizeof(addr));
+      size_t ngot = queue.getn((char*) &sa, sizeof(sa));
+      ROCKET_ASSERT(ngot == sizeof(sa));
       ngot = queue.getn((char*) &datalen, sizeof(datalen));
       ROCKET_ASSERT(ngot == sizeof(datalen));
-      io_result = ::sendto(this->fd(), queue.begin(), datalen, 0, (const ::sockaddr*) &addr, sizeof(addr));
+      io_result = ::sendto(this->fd(), queue.begin(), datalen, 0, (const ::sockaddr*) &sa, sizeof(sa));
       queue.discard(datalen);
 
       if(io_result < 0) {
@@ -304,7 +304,7 @@ leave_multicast_group(const Socket_Address& maddr, const char* ifname_opt)
 
 bool
 UDP_Socket::
-udp_send(const Socket_Address& saddr, const char* data, size_t size)
+udp_send(const Socket_Address& addr, const char* data, size_t size)
   {
     if((data == nullptr) && (size != 0))
       POSEIDON_THROW((
@@ -329,23 +329,23 @@ udp_send(const Socket_Address& saddr, const char* data, size_t size)
 
     // Try sending the packet immediately.
     // This is valid because UDP packets can be transmitted out of order.
-    ::sockaddr_in6 addr;
-    addr.sin6_family = AF_INET6;
-    addr.sin6_port = htobe16(saddr.port());
-    addr.sin6_flowinfo = 0;
-    addr.sin6_addr = saddr.addr();
-    addr.sin6_scope_id = 0;
+    ::sockaddr_in6 sa;
+    sa.sin6_family = AF_INET6;
+    sa.sin6_port = htobe16(addr.port());
+    sa.sin6_flowinfo = 0;
+    sa.sin6_addr = addr.addr();
+    sa.sin6_scope_id = 0;
 
-    io_result = ::sendto(this->fd(), data, size, 0, (const ::sockaddr*) &addr, sizeof(addr));
+    io_result = ::sendto(this->fd(), data, size, 0, (const ::sockaddr*) &sa, sizeof(sa));
 
     if(io_result < 0) {
       if((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
         // Buffer them until the next `do_abstract_socket_on_writable()`.
-        queue.reserve(sizeof(addr) + sizeof(datalen) + datalen);
+        queue.reserve(sizeof(sa) + sizeof(datalen) + datalen);
 
         // This must match `do_abstract_socket_on_writable()`.
-        ::memcpy(queue.mut_end(), &addr, sizeof(addr));
-        queue.accept(sizeof(addr));
+        ::memcpy(queue.mut_end(), &sa, sizeof(sa));
+        queue.accept(sizeof(sa));
         ::memcpy(queue.mut_end(), &datalen, sizeof(datalen));
         queue.accept(sizeof(datalen));
         ::memcpy(queue.mut_end(), data, datalen);
@@ -369,23 +369,23 @@ udp_send(const Socket_Address& saddr, const char* data, size_t size)
 
 bool
 UDP_Socket::
-udp_send(const Socket_Address& saddr, const linear_buffer& data)
+udp_send(const Socket_Address& addr, const linear_buffer& data)
   {
-    return this->udp_send(saddr, data.data(), data.size());
+    return this->udp_send(addr, data.data(), data.size());
   }
 
 bool
 UDP_Socket::
-udp_send(const Socket_Address& saddr, const cow_string& data)
+udp_send(const Socket_Address& addr, const cow_string& data)
   {
-    return this->udp_send(saddr, data.data(), data.size());
+    return this->udp_send(addr, data.data(), data.size());
   }
 
 bool
 UDP_Socket::
-udp_send(const Socket_Address& saddr, const string& data)
+udp_send(const Socket_Address& addr, const string& data)
   {
-    return this->udp_send(saddr, data.data(), data.size());
+    return this->udp_send(addr, data.data(), data.size());
   }
 
 }  // namespace poseidon

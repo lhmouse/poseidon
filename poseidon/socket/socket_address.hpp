@@ -139,9 +139,9 @@ swap(Socket_Address& lhs, Socket_Address& rhs) noexcept
 
 inline
 tinyfmt&
-operator<<(tinyfmt& fmt, const Socket_Address& saddr)
+operator<<(tinyfmt& fmt, const Socket_Address& addr)
   {
-    return saddr.print(fmt);
+    return addr.print(fmt);
   }
 
 }  // namespace poseidon
