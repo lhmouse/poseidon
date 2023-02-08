@@ -41,16 +41,6 @@ class Easy_Timer
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_Timer);
 
-    // Checks whether the timer has been started. This value might not be
-    // accurate for one-shot timers.
-    bool
-    active() const noexcept
-      { return this->m_timer != nullptr;  }
-
-    explicit operator
-    bool() const noexcept
-      { return this->active();  }
-
     // Starts a timer if none is running, or resets the running one. The timer
     // callback will be called after `delay` nanoseconds, and then, if `period`
     // is non-zero, periodically every `period` nanoseconds. If `period` is
