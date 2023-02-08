@@ -29,7 +29,7 @@ struct Final_Timer final : Abstract_Timer
 
     virtual
     void
-    do_abstract_timer_on_tick(int64_t now);
+    do_abstract_timer_on_tick(int64_t now) override;
   };
 
 struct Final_Fiber final : Abstract_Fiber
