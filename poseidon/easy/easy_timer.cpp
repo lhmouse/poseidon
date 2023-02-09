@@ -12,12 +12,10 @@
 namespace poseidon {
 namespace {
 
-using thunk_function = void (void*, int64_t);
-
 struct Shared_cb_args
   {
-    thunk_function* thunk;
     weak_ptr<void> wobj;
+    callback_thunk_ptr<int64_t> thunk;
     weak_ptr<void> wuniq;
   };
 
@@ -35,11 +33,11 @@ struct Final_Fiber final : Abstract_Fiber
     void
     do_abstract_fiber_on_work() override
       {
-        if(this->m_cb.wuniq.expired())
-          return;
-
         auto cb_obj = this->m_cb.wobj.lock();
         if(!cb_obj)
+          return;
+
+        if(this->m_cb.wuniq.expired())
           return;
 
         try {
@@ -87,7 +85,7 @@ Easy_Timer::
 start(int64_t delay, int64_t period)
   {
     this->m_uniq = ::std::make_shared<int>();
-    Shared_cb_args cb = { this->m_cb_thunk, this->m_cb_obj, this->m_uniq };
+    Shared_cb_args cb = { this->m_cb_obj, this->m_cb_thunk, this->m_uniq };
     this->m_timer = ::std::make_shared<Final_Timer>(::std::move(cb));
     timer_driver.insert(this->m_timer, delay, period);
   }

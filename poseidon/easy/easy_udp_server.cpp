@@ -12,8 +12,6 @@
 namespace poseidon {
 namespace {
 
-using thunk_function = void (void*, Socket_Address&&, linear_buffer&&);
-
 struct Packet
   {
     Socket_Address addr;
@@ -29,10 +27,9 @@ struct Packet_Queue
 
 struct Shared_cb_args
   {
-    thunk_function* thunk;
     weak_ptr<void> wobj;
-    weak_ptr<void> wuniq;
-    shared_ptr<Packet_Queue> q;
+    callback_thunk_ptr<Socket_Address&&, linear_buffer&&> thunk;
+    weak_ptr<Packet_Queue> wqueue;
   };
 
 struct Final_Fiber final : Abstract_Fiber
@@ -49,27 +46,30 @@ struct Final_Fiber final : Abstract_Fiber
     do_abstract_fiber_on_work()
       {
         for(;;) {
-          // The packet callback may stop this server, so we have to check for expiry
-          // in every iteration.
-          if(this->m_cb.wuniq.expired())
-            return;
-
           auto cb_obj = this->m_cb.wobj.lock();
           if(!cb_obj)
             return;
 
-          // We are in the main thread here.
-          plain_mutex::unique_lock lock(this->m_cb.q->mutex);
+          // The packet callback may stop this server, so we have to check for
+          // expiry in every iteration.
+          auto queue = this->m_cb.wqueue.lock();
+          if(!queue)
+            return;
 
-          if(this->m_cb.q->packets.empty()) {
+          // We are in the main thread here.
+          plain_mutex::unique_lock lock(queue->mutex);
+
+          if(queue->packets.empty()) {
             // Leave now.
-            this->m_cb.q->fiber_active = false;
+            queue->fiber_active = false;
             return;
           }
 
-          auto packet = ::std::move(this->m_cb.q->packets.front());
-          this->m_cb.q->packets.pop_front();
+          auto packet = ::std::move(queue->packets.front());
+          queue->packets.pop_front();
+
           lock.unlock();
+          queue = nullptr;
 
           try {
             // Invoke the user-defined data callback.
@@ -97,23 +97,21 @@ struct Final_UDP_Socket final : UDP_Socket
     void
     do_on_udp_packet(Socket_Address&& addr, linear_buffer&& data) override
       {
-        if(this->m_cb.wuniq.expired())
+        auto queue = this->m_cb.wqueue.lock();
+        if(!queue)
           return;
 
-        if(!this->m_cb.q)
-          this->m_cb.q = ::std::make_shared<Packet_Queue>();
-
         // We are in the network thread here.
-        plain_mutex::unique_lock lock(this->m_cb.q->mutex);
+        plain_mutex::unique_lock lock(queue->mutex);
 
-        if(!this->m_cb.q->fiber_active) {
+        if(!queue->fiber_active) {
           // Create a new fiber, if none is active. The fiber shall only reset
           // `m_fiber_active` if no packet is pending.
           fiber_scheduler.insert(::std::make_unique<Final_Fiber>(this->m_cb));
-          this->m_cb.q->fiber_active = true;
+          queue->fiber_active = true;
         }
 
-        auto& packet = this->m_cb.q->packets.emplace_back();
+        auto& packet = queue->packets.emplace_back();
         packet.addr.swap(addr);
         packet.data.swap(data);
       }
@@ -130,8 +128,9 @@ void
 Easy_UDP_Server::
 start(const Socket_Address& addr)
   {
-    this->m_uniq = ::std::make_shared<int>();
-    Shared_cb_args cb = { this->m_cb_thunk, this->m_cb_obj, this->m_uniq, nullptr };
+    auto queue = ::std::make_shared<Packet_Queue>();
+    this->m_queue = queue;
+    Shared_cb_args cb = { this->m_cb_obj, this->m_cb_thunk, ::std::move(queue) };
     this->m_socket = ::std::make_shared<Final_UDP_Socket>(addr, ::std::move(cb));
     network_driver.insert(this->m_socket);
   }
@@ -140,7 +139,7 @@ void
 Easy_UDP_Server::
 stop() noexcept
   {
-    this->m_uniq = nullptr;
+    this->m_queue = nullptr;
     this->m_socket = nullptr;
   }
 
