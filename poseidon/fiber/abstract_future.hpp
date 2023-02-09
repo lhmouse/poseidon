@@ -5,7 +5,6 @@
 #define POSEIDON_FIBER_ABSTRACT_FUTURE_
 
 #include "../fwd.hpp"
-#include "enums.hpp"
 namespace poseidon {
 
 class Abstract_Future

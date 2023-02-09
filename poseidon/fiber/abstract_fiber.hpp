@@ -5,7 +5,6 @@
 #define POSEIDON_FIBER_ABSTRACT_FIBER_
 
 #include "../fwd.hpp"
-#include "../base/enums.hpp"
 namespace poseidon {
 
 class Abstract_Fiber
