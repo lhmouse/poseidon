@@ -132,16 +132,19 @@ void
 UDP_Socket::
 join_multicast_group(const Socket_Address& maddr, uint8_t ttl, bool loopback, const char* ifname_opt)
   {
-    // Get the index of the interface to use. If no interface name is given,
-    // the second one is used, as the first one is typically the loopback
-    // interface `lo`.
-    int ifindex = ifname_opt ? (int) ::if_nametoindex(ifname_opt) : 2;
-    if(ifindex <= 0)
-      POSEIDON_THROW((
-          "Failed to get index of interface `$4`",
-          "[`ioctl()` failed: $3]",
-          "[UDP socket `$1` (class `$2`)]"),
-          this, typeid(*this), format_errno(), ifname_opt);
+    // If no interface name is given, the second one is used, as the first one
+    // is typically the loopback interface `lo`.
+    unsigned ifindex = 2;
+    if(ifname_opt) {
+      // Get its index.
+      ifindex = ::if_nametoindex(ifname_opt);
+      if(ifindex <= 0)
+        POSEIDON_THROW((
+            "Failed to get index of interface `$4`",
+            "[`ioctl()` failed: $3]",
+            "[UDP socket `$1` (class `$2`)]"),
+            this, typeid(*this), format_errno(), ifname_opt);
+    }
 
     // IPv6 doesn't take IPv4-mapped multicast addresses, so there has to be
     // special treatement. `sendto()` is not affected.
@@ -150,7 +153,7 @@ join_multicast_group(const Socket_Address& maddr, uint8_t ttl, bool loopback, co
       struct ::ip_mreqn mreq;
       ::memcpy(&(mreq.imr_multiaddr.s_addr), maddr.data() + 12, 4);
       mreq.imr_address.s_addr = INADDR_ANY;
-      mreq.imr_ifindex = ifindex;
+      mreq.imr_ifindex = (int) ifindex;
       if(::setsockopt(this->fd(), IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) != 0)
         POSEIDON_THROW((
             "Failed to join IPv4 multicast group `$4`",
@@ -179,7 +182,7 @@ join_multicast_group(const Socket_Address& maddr, uint8_t ttl, bool loopback, co
       // Join the multicast group.
       struct ::ipv6_mreq mreq;
       mreq.ipv6mr_multiaddr = maddr.addr();
-      mreq.ipv6mr_interface = (uint32_t) ifindex;
+      mreq.ipv6mr_interface = ifindex;
       if(::setsockopt(this->fd(), IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) != 0)
         POSEIDON_THROW((
             "Failed to join IPv6 multicast group `$4`",
@@ -215,16 +218,19 @@ void
 UDP_Socket::
 leave_multicast_group(const Socket_Address& maddr, const char* ifname_opt)
   {
-    // Get the index of the interface to use. If no interface name is given,
-    // the second one is used, as the first one is typically the loopback
-    // interface `lo`.
-    int ifindex = ifname_opt ? (int) ::if_nametoindex(ifname_opt) : 2;
-    if(ifindex <= 0)
-      POSEIDON_THROW((
-          "Failed to get index of interface `$4`",
-          "[`ioctl()` failed: $3]",
-          "[UDP socket `$1` (class `$2`)]"),
-          this, typeid(*this), format_errno(), ifname_opt);
+    // If no interface name is given, the second one is used, as the first one
+    // is typically the loopback interface `lo`.
+    unsigned ifindex = 2;
+    if(ifname_opt) {
+      // Get its index.
+      ifindex = ::if_nametoindex(ifname_opt);
+      if(ifindex <= 0)
+        POSEIDON_THROW((
+            "Failed to get index of interface `$4`",
+            "[`ioctl()` failed: $3]",
+            "[UDP socket `$1` (class `$2`)]"),
+            this, typeid(*this), format_errno(), ifname_opt);
+    }
 
     // IPv6 doesn't take IPv4-mapped multicast addresses, so there has to be
     // special treatement. `sendto()` is not affected.
@@ -233,7 +239,7 @@ leave_multicast_group(const Socket_Address& maddr, const char* ifname_opt)
       struct ::ip_mreqn mreq;
       ::memcpy(&(mreq.imr_multiaddr.s_addr), maddr.data() + 12, 4);
       mreq.imr_address.s_addr = INADDR_ANY;
-      mreq.imr_ifindex = ifindex;
+      mreq.imr_ifindex = (int) ifindex;
       if(::setsockopt(this->fd(), IPPROTO_IP, IP_DROP_MEMBERSHIP, &mreq, sizeof(mreq)) != 0)
         POSEIDON_THROW((
             "Failed to leave IPv4 multicast group `$4`",
@@ -245,7 +251,7 @@ leave_multicast_group(const Socket_Address& maddr, const char* ifname_opt)
       // Leave the multicast group.
       struct ::ipv6_mreq mreq;
       mreq.ipv6mr_multiaddr = maddr.addr();
-      mreq.ipv6mr_interface = (uint32_t) ifindex;
+      mreq.ipv6mr_interface = ifindex;
       if(::setsockopt(this->fd(), IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, &mreq, sizeof(mreq)) != 0)
         POSEIDON_THROW((
             "Failed to leave IPv6 multicast group `$4`",
