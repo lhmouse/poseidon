@@ -6,7 +6,6 @@
 #include "../utils.hpp"
 #include <stdlib.h>
 #include <asteria/library/system.hpp>
-
 namespace poseidon {
 
 Config_File::

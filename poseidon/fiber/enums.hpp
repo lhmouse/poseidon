@@ -5,7 +5,6 @@
 #define POSEIDON_FIBER_ENUMS_
 
 #include "../fwd.hpp"
-
 namespace poseidon {
 
 enum Future_State : uint8_t

@@ -6,7 +6,6 @@
 
 #include "../fwd.hpp"
 #include "../socket/socket_address.hpp"
-
 namespace poseidon {
 
 class Easy_UDP_Client

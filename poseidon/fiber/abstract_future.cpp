@@ -5,7 +5,6 @@
 #include "abstract_future.hpp"
 #include "../static/fiber_scheduler.hpp"
 #include "../utils.hpp"
-
 namespace poseidon {
 
 Abstract_Future::

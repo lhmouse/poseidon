@@ -5,7 +5,6 @@
 #define POSEIDON_STATIC_ASYNC_LOGGER_
 
 #include "../fwd.hpp"
-
 namespace poseidon {
 
 // This class buffers log messages and write them asynchronously.

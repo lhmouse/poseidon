@@ -4,7 +4,6 @@
 #include "precompiled.ipp"
 #include "utils.hpp"
 #include <execinfo.h>  // backtrace()
-
 namespace poseidon {
 
 void

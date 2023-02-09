@@ -7,7 +7,6 @@
 #include "../base/abstract_timer.hpp"
 #include "../utils.hpp"
 #include <time.h>
-
 namespace poseidon {
 namespace {
 

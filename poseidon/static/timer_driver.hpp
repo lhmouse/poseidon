@@ -5,7 +5,6 @@
 #define POSEIDON_STATIC_TIMER_DRIVER_
 
 #include "../fwd.hpp"
-
 namespace poseidon {
 
 // This class schedules timers.

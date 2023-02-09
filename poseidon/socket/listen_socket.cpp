@@ -7,7 +7,6 @@
 #include "../static/network_driver.hpp"
 #include "../utils.hpp"
 #include <sys/socket.h>
-
 namespace poseidon {
 
 Listen_Socket::

@@ -3,7 +3,6 @@
 
 #include "utils.hpp"
 #include "../poseidon/socket/socket_address.hpp"
-
 using namespace ::poseidon;
 
 int main()

@@ -7,7 +7,6 @@
 #include "../poseidon/static/network_driver.hpp"
 #include "../poseidon/static/async_logger.hpp"
 #include "../poseidon/utils.hpp"
-
 namespace {
 using namespace poseidon;
 

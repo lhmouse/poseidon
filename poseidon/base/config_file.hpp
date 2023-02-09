@@ -6,7 +6,6 @@
 
 #include "../fwd.hpp"
 #include <asteria/value.hpp>
-
 namespace poseidon {
 
 // This class can be used to parse a configuration file.

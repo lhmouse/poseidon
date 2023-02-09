@@ -6,7 +6,6 @@
 
 #include "../fwd.hpp"
 #include "enums.hpp"
-
 namespace poseidon {
 
 class Abstract_Future

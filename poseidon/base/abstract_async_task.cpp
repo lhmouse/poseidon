@@ -3,7 +3,6 @@
 
 #include "../precompiled.ipp"
 #include "abstract_async_task.hpp"
-
 namespace poseidon {
 
 Abstract_Async_Task::

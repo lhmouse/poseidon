@@ -40,7 +40,6 @@ do_finish_switch_fiber(void* save) noexcept
   }
 
 }  // extern "C"
-
 namespace poseidon {
 namespace {
 

@@ -3,7 +3,6 @@
 
 #include "utils.hpp"
 #include "../poseidon/utils.hpp"
-
 using namespace ::poseidon;
 
 int main()

@@ -6,7 +6,6 @@
 
 #include "../fwd.hpp"
 #include <ucontext.h>  // ucontext_t
-
 namespace poseidon {
 
 // This class schedules fibers.

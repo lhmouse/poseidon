@@ -6,7 +6,6 @@
 
 #include "../fwd.hpp"
 #include "../base/enums.hpp"
-
 namespace poseidon {
 
 class Abstract_Fiber

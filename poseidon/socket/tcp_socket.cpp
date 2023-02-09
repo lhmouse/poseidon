@@ -7,7 +7,6 @@
 #include "../utils.hpp"
 #include <sys/socket.h>
 #include <netinet/tcp.h>
-
 namespace poseidon {
 
 TCP_Socket::

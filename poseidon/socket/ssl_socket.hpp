@@ -8,7 +8,6 @@
 #include "abstract_socket.hpp"
 #include "ssl_ptr.hpp"
 #include "../base/charbuf_256.hpp"
-
 namespace poseidon {
 
 class SSL_Socket

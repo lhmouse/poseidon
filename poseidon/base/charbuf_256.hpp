@@ -5,7 +5,6 @@
 #define POSEIDON_BASE_CHARBUF_256_
 
 #include "../fwd.hpp"
-
 namespace poseidon {
 
 // This class provides 256-byte storage for temporary use.

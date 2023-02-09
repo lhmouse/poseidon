@@ -5,7 +5,6 @@
 #define POSEIDON_BASE_ENUMS_
 
 #include "../fwd.hpp"
-
 namespace poseidon {
 
 enum Async_State : uint8_t

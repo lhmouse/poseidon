@@ -5,7 +5,6 @@
 #include "../poseidon/easy_timer.hpp"
 #include "../poseidon/static/async_logger.hpp"
 #include "../poseidon/utils.hpp"
-
 namespace {
 using namespace ::poseidon;
 

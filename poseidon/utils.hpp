@@ -7,7 +7,6 @@
 #include "fwd.hpp"
 #include <asteria/utils.hpp>
 #include <cstdio>
-
 namespace poseidon {
 
 using ::rocket::clamp_cast;

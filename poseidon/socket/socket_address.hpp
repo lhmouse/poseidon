@@ -7,7 +7,6 @@
 #include "../fwd.hpp"
 #include "enums.hpp"
 #include <netinet/in.h>
-
 namespace poseidon {
 
 class Socket_Address

@@ -11,7 +11,6 @@
 #include <sys/epoll.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
-
 namespace poseidon {
 namespace {
 

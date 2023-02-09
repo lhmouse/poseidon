@@ -6,7 +6,6 @@
 #include "../utils.hpp"
 #include <arpa/inet.h>
 #include <http_parser.h>
-
 namespace poseidon {
 namespace {
 

@@ -3,7 +3,6 @@
 
 #include "../precompiled.ipp"
 #include "main_config.hpp"
-
 namespace poseidon {
 
 Main_Config::

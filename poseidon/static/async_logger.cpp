@@ -7,7 +7,6 @@
 #include "../utils.hpp"
 #include <time.h>
 #include <sys/syscall.h>
-
 namespace poseidon {
 namespace {
 

@@ -19,7 +19,6 @@
 #include <pthread.h>
 #include <sys/file.h>
 #include <sys/resource.h>
-
 namespace {
 using namespace poseidon;
 

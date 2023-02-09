@@ -21,7 +21,6 @@
 #include <deque>
 #include <unordered_map>
 #include <string>
-
 namespace poseidon {
 namespace noadl = poseidon;
 

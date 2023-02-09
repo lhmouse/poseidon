@@ -6,7 +6,6 @@
 
 #include "../fwd.hpp"
 #include "abstract_future.hpp"
-
 namespace poseidon {
 
 template<typename ValueT>

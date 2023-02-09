@@ -9,7 +9,6 @@
 #include "static/timer_driver.hpp"
 #include "static/async_task_executor.hpp"
 #include "static/network_driver.hpp"
-
 namespace poseidon {
 
 atomic_signal exit_signal;

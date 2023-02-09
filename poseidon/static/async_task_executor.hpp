@@ -5,7 +5,6 @@
 #define POSEIDON_STATIC_TASK_EXECUTOR_
 
 #include "../fwd.hpp"
-
 namespace poseidon {
 
 // This class buffers tasks and execute them asynchronously.

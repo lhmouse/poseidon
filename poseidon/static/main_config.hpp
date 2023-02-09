@@ -6,7 +6,6 @@
 
 #include "../fwd.hpp"
 #include "../base/config_file.hpp"
-
 namespace poseidon {
 
 // This class reads 'main.conf' and provides thread-safe accessors.

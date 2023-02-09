@@ -6,7 +6,6 @@
 #include "../static/async_logger.hpp"
 #include "../static/fiber_scheduler.hpp"
 #include "../utils.hpp"
-
 namespace poseidon {
 
 Abstract_Fiber::

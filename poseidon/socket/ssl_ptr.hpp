@@ -6,7 +6,6 @@
 
 #include "../fwd.hpp"
 #include <openssl/ssl.h>
-
 namespace poseidon {
 
 class SSL_ptr

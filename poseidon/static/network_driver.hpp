@@ -6,7 +6,6 @@
 
 #include "../fwd.hpp"
 #include "../socket/ssl_ctx_ptr.hpp"
-
 namespace poseidon {
 
 // This class performs network I/O operations.

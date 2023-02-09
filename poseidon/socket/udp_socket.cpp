@@ -7,7 +7,6 @@
 #include "../utils.hpp"
 #include <sys/socket.h>
 #include <net/if.h>
-
 namespace poseidon {
 
 UDP_Socket::

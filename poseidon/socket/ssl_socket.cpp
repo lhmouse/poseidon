@@ -10,7 +10,6 @@
 #include <netinet/tcp.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
-
 namespace poseidon {
 
 SSL_Socket::

@@ -6,7 +6,6 @@
 
 #include "../fwd.hpp"
 #include "abstract_socket.hpp"
-
 namespace poseidon {
 
 class UDP_Socket

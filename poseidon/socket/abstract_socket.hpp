@@ -7,7 +7,6 @@
 #include "../fwd.hpp"
 #include "enums.hpp"
 #include "socket_address.hpp"
-
 namespace poseidon {
 
 class Abstract_Socket
