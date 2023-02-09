@@ -400,20 +400,6 @@ thread_loop()
       ::SSL_CTX_set_alpn_select_cb(server_ssl_ctx, alpn_callback, socket.get());
     }
 
-    if(event.events & EPOLLIN) {
-      try {
-        socket->do_abstract_socket_on_readable();
-      }
-      catch(exception& stdex) {
-        POSEIDON_LOG_ERROR((
-            "Unhandled exception thrown from socket read callback: $1",
-            "[socket class `$2`]"),
-            stdex, typeid(*socket));
-      }
-
-      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`) read done"), socket, typeid(*socket));
-    }
-
     if(event.events & EPOLLPRI) {
       try {
         socket->do_abstract_socket_on_oob_readable();
@@ -426,6 +412,20 @@ thread_loop()
       }
 
       POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`) out-of-band read done"), socket, typeid(*socket));
+    }
+
+    if(event.events & EPOLLIN) {
+      try {
+        socket->do_abstract_socket_on_readable();
+      }
+      catch(exception& stdex) {
+        POSEIDON_LOG_ERROR((
+            "Unhandled exception thrown from socket read callback: $1",
+            "[socket class `$2`]"),
+            stdex, typeid(*socket));
+      }
+
+      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`) read done"), socket, typeid(*socket));
     }
 
     if(event.events & EPOLLOUT) {
