@@ -69,7 +69,9 @@ do_abstract_socket_on_readable()
 
     for(;;) {
       // Try getting a connection.
-      unique_posix_fd fd(::accept4(this->fd(), nullptr, nullptr, SOCK_NONBLOCK));
+      ::sockaddr_in6 sa;
+      ::socklen_t salen = sizeof(sa);
+      unique_posix_fd fd(::accept4(this->fd(), (::sockaddr*) &sa, &salen, SOCK_NONBLOCK));
 
       if(!fd) {
         if((errno == EAGAIN) || (errno == EWOULDBLOCK))
@@ -87,9 +89,16 @@ do_abstract_socket_on_readable()
 
       // Accept the client socket. If a null pointer is returned, the accepted
       // socket will be closed immediately.
-      auto client = this->do_on_listen_new_client_opt(::std::move(fd));
+      this->m_taddr.set_addr(sa.sin6_addr);
+      this->m_taddr.set_port(be16toh(sa.sin6_port));
+      auto client = this->do_on_listen_new_client_opt(::std::move(this->m_taddr), ::std::move(fd));
       if(!client)
         continue;
+
+      POSEIDON_LOG_INFO((
+          "Accepted new TCP connection `$3` (class `$4`)]",
+          "[TCP listen socket `$1` (class `$2`)]"),
+          this, typeid(*this), this->m_taddr, client, typeid(*client));
 
       driver.insert(client);
     }

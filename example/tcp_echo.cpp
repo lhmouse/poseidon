@@ -43,7 +43,7 @@ struct Example_Server : Listen_Socket
       }
 
     shared_ptr<Abstract_Socket>
-    do_on_listen_new_client_opt(unique_posix_fd&& fd) override
+    do_on_listen_new_client_opt(Socket_Address&&, unique_posix_fd&& fd) override
       {
         this->m_client = ::std::make_shared<Example_Session>(::std::move(fd));
         POSEIDON_LOG_WARN(("example TCP server accepted connection from `$1`"), this->m_client->remote_address());

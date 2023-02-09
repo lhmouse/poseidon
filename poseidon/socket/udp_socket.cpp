@@ -94,11 +94,10 @@ do_abstract_socket_on_readable()
         continue;
 
       // Accept this incoming packet.
-      this->m_temp_addr.set_addr(sa.sin6_addr);
-      this->m_temp_addr.set_port(be16toh(sa.sin6_port));
+      this->m_taddr.set_addr(sa.sin6_addr);
+      this->m_taddr.set_port(be16toh(sa.sin6_port));
       queue.accept((size_t) io_result);
-
-      this->do_on_udp_packet(::std::move(this->m_temp_addr), ::std::move(queue));
+      this->do_on_udp_packet(::std::move(this->m_taddr), ::std::move(queue));
     }
   }
 
@@ -291,8 +290,6 @@ udp_send(const Socket_Address& addr, const char* data, size_t size)
     sa.sin6_addr = addr.addr();
     sa.sin6_scope_id = 0;
     ::ssize_t io_result = ::sendto(this->fd(), data, size, 0, (const ::sockaddr*) &sa, sizeof(sa));
-
-    // Partial writes are accepted without errors.
     return io_result >= 0;
   }
 

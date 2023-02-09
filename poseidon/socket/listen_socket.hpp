@@ -14,6 +14,8 @@ class Listen_Socket
   private:
     friend class Network_Driver;
 
+    Socket_Address m_taddr;
+
   protected:
     // Server-side constructor:
     // Creates a socket that is bound onto the given address.
@@ -43,7 +45,7 @@ class Listen_Socket
     // should return a pointer to a socket object, constructed from the given FD.
     virtual
     shared_ptr<Abstract_Socket>
-    do_on_listen_new_client_opt(unique_posix_fd&& fd) = 0;
+    do_on_listen_new_client_opt(Socket_Address&& addr, unique_posix_fd&& fd) = 0;
 
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Listen_Socket);
