@@ -127,6 +127,10 @@ class SSL_Socket;
 class Easy_Timer;
 class Easy_UDP_Server;
 class Easy_UDP_Client;
+class Easy_TCP_Server;
+class Easy_TCP_Client;
+class Easy_SSL_Server;
+class Easy_SSL_Client;
 
 // Singletons
 extern atomic_signal exit_signal;
