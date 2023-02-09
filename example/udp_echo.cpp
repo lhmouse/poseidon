@@ -16,7 +16,7 @@ data_callback(Socket_Address&& addr, linear_buffer&& data)
     cow_string str(data.data(), data.size());
     data.clear();
     POSEIDON_LOG_WARN(("example UDP server received data from `$1`: $2"), addr, str);
-    my_server.send(addr, str.data(), str.size());
+    my_server.udp_send(addr, str.data(), str.size());
   }
 
 int

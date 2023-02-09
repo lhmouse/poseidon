@@ -29,7 +29,7 @@ timer_callback(int64_t now)
     Socket_Address addr(sref("[::1]:3801"));
     cow_string str = format_string("packet $1", ++index);
     POSEIDON_LOG_INFO(("example UDP client sending data to `$1`: $2"), addr, str);
-    my_client.send(addr, str.data(), str.size());
+    my_client.udp_send(addr, str.data(), str.size());
   }
 
 int
