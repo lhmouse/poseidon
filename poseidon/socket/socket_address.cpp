@@ -157,7 +157,6 @@ parse(stringR str)
     // Break down the host:port string as a URL.
     ::http_parser_url url;
     url.field_set = 0;
-    url.port = 0;
 
     if(::http_parser_parse_url(str.data(), str.size(), true, &url) != 0)
       return false;
