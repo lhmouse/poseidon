@@ -43,9 +43,7 @@ class Easy_UDP_Server
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_UDP_Server);
 
-    // Starts listening the given address and port for incoming packets. If no
-    // host is specified, it is treated as `"[::]"`, allowing packets from all
-    // addresses.
+    // Starts listening the given address and port for incoming packets.
     void
     start(const Socket_Address& addr);
 
