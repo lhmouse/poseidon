@@ -218,6 +218,9 @@ do_abstract_socket_on_readable()
             "Unhandled exception thrown from `do_on_ssl_stream()`: $1",
             "[socket class `$2`]"),
             stdex, typeid(*socket));
+
+        this->quick_shut_down();
+        return;
       }
     }
 
@@ -249,6 +252,9 @@ do_abstract_socket_on_oob_readable()
             "Unhandled exception thrown from `do_on_ssl_oob_byte()`: $1",
             "[socket class `$2`]"),
             stdex, typeid(*socket));
+
+        this->quick_shut_down();
+        return;
       }
     }
   }
@@ -324,6 +330,9 @@ do_abstract_socket_on_writable()
             "Unhandled exception thrown from `do_on_ssl_connected()`: $1",
             "[socket class `$2`]"),
             stdex, typeid(*socket));
+
+        this->quick_shut_down();
+        return;
       }
     }
 

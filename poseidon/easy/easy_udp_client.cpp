@@ -67,6 +67,7 @@ struct Final_Fiber final : Abstract_Fiber
             return;
           }
 
+          ROCKET_ASSERT(queue->fiber_active);
           auto packet = ::std::move(queue->packets.front());
           queue->packets.pop_front();
 

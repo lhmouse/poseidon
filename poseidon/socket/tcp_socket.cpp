@@ -81,7 +81,6 @@ do_abstract_socket_on_readable()
             "[TCP socket `$1` (class `$2`)]"),
             this, typeid(*this), format_errno());
 
-        // The connection is now broken.
         this->quick_shut_down();
         return;
       }
@@ -103,6 +102,9 @@ do_abstract_socket_on_readable()
             "Unhandled exception thrown from `do_on_tcp_stream()`: $1",
             "[socket class `$2`]"),
             stdex, typeid(*socket));
+
+        this->quick_shut_down();
+        return;
       }
     }
 
@@ -133,6 +135,9 @@ do_abstract_socket_on_oob_readable()
             "Unhandled exception thrown from `do_on_tcp_oob_byte()`: $1",
             "[socket class `$2`]"),
             stdex, typeid(*socket));
+
+        this->quick_shut_down();
+        return;
       }
     }
   }
@@ -162,7 +167,6 @@ do_abstract_socket_on_writable()
             "[TCP socket `$1` (class `$2`)]"),
             this, typeid(*this), format_errno());
 
-        // The connection is now broken.
         this->quick_shut_down();
         return;
       }
@@ -182,6 +186,9 @@ do_abstract_socket_on_writable()
             "Unhandled exception thrown from `do_on_tcp_connected()`: $1",
             "[socket class `$2`]"),
             stdex, typeid(*socket));
+
+        this->quick_shut_down();
+        return;
       }
     }
 
@@ -288,7 +295,6 @@ tcp_send(const char* data, size_t size)
             "[TCP socket `$1` (class `$2`)]"),
             this, typeid(*this), format_errno());
 
-        // The connection is now broken.
         this->quick_shut_down();
         return false;
       }
