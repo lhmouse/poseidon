@@ -2,7 +2,7 @@
 // Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
 
 #include "../poseidon/precompiled.ipp"
-#include "../poseidon/easy_udp_server.hpp"
+#include "../poseidon/easy/easy_udp_server.hpp"
 #include "../poseidon/static/async_logger.hpp"
 #include "../poseidon/utils.hpp"
 namespace {

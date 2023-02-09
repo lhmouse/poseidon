@@ -6,13 +6,6 @@ EXTRA_DIST += %reldir%/main.conf
 nobase_include_HEADERS +=  \
   %reldir%/version.h  \
   %reldir%/fwd.hpp  \
-  %reldir%/easy_timer.hpp  \
-  %reldir%/easy_udp_server.hpp  \
-  %reldir%/easy_udp_client.hpp  \
-  %reldir%/easy_tcp_server.hpp  \
-  %reldir%/easy_tcp_client.hpp  \
-  %reldir%/easy_ssl_server.hpp  \
-  %reldir%/easy_ssl_client.hpp  \
   %reldir%/utils.hpp  \
   %reldir%/base/config_file.hpp  \
   %reldir%/base/charbuf_256.hpp  \

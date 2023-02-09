@@ -2,7 +2,7 @@
 // Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
 
 #include "../poseidon/precompiled.ipp"
-#include "../poseidon/easy_tcp_server.hpp"
+#include "../poseidon/easy/easy_tcp_server.hpp"
 #include "../poseidon/socket/tcp_socket.hpp"
 #include "../poseidon/static/async_logger.hpp"
 #include "../poseidon/utils.hpp"

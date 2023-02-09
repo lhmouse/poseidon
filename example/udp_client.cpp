@@ -2,8 +2,8 @@
 // Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
 
 #include "../poseidon/precompiled.ipp"
-#include "../poseidon/easy_udp_client.hpp"
-#include "../poseidon/easy_timer.hpp"
+#include "../poseidon/easy/easy_udp_client.hpp"
+#include "../poseidon/easy/easy_timer.hpp"
 #include "../poseidon/static/async_logger.hpp"
 #include "../poseidon/utils.hpp"
 namespace {
