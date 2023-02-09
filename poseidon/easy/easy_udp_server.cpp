@@ -119,6 +119,10 @@ struct Final_UDP_Socket final : UDP_Socket
 
 }  // namespace
 
+struct Easy_UDP_Server::X_Packet_Queue : Packet_Queue
+  {
+  };
+
 Easy_UDP_Server::
 ~Easy_UDP_Server()
   {
@@ -128,9 +132,8 @@ void
 Easy_UDP_Server::
 start(const Socket_Address& addr)
   {
-    auto queue = ::std::make_shared<Packet_Queue>();
-    this->m_queue = queue;
-    Shared_cb_args cb = { this->m_cb_obj, this->m_cb_thunk, ::std::move(queue) };
+    this->m_queue = ::std::make_shared<X_Packet_Queue>();
+    Shared_cb_args cb = { this->m_cb_obj, this->m_cb_thunk, this->m_queue };
     this->m_socket = ::std::make_shared<Final_UDP_Socket>(addr, ::std::move(cb));
     network_driver.insert(this->m_socket);
   }

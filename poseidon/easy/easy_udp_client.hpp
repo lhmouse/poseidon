@@ -11,10 +11,12 @@ namespace poseidon {
 class Easy_UDP_Client
   {
   private:
+    struct X_Packet_Queue;
+
     shared_ptr<void> m_cb_obj;
     callback_thunk_ptr<Socket_Address&&, linear_buffer&&> m_cb_thunk;
 
-    shared_ptr<void> m_queue;
+    shared_ptr<X_Packet_Queue> m_queue;
     shared_ptr<UDP_Socket> m_socket;
 
   public:
