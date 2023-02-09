@@ -12,7 +12,7 @@
 namespace poseidon {
 namespace {
 
-using my_thunk = void (void*, Socket_Address&&, linear_buffer&&);
+using my_thunk = void (void*, shared_ptrR<UDP_Socket>, Socket_Address&&, linear_buffer&&);
 
 struct Packet_Queue
   {
@@ -22,6 +22,7 @@ struct Packet_Queue
         linear_buffer data;
       };
 
+    weak_ptr<UDP_Socket> wsocket;  // read-only; no locking needed
     mutable plain_mutex mutex;
     deque<Packet> packets;
     bool fiber_active = false;
@@ -61,6 +62,10 @@ struct Final_Fiber final : Abstract_Fiber
           // We are in the main thread here.
           plain_mutex::unique_lock lock(queue->mutex);
 
+          auto socket = queue->wsocket.lock();
+          if(!socket)
+            return;
+
           if(queue->packets.empty()) {
             // Leave now.
             queue->fiber_active = false;
@@ -76,7 +81,7 @@ struct Final_Fiber final : Abstract_Fiber
 
           try {
             // Invoke the user-defined data callback.
-            this->m_cb.thunk(cb_obj.get(), ::std::move(packet.addr), ::std::move(packet.data));
+            this->m_cb.thunk(cb_obj.get(), socket, ::std::move(packet.addr), ::std::move(packet.data));
           }
           catch(exception& stdex) {
             POSEIDON_LOG_ERROR((
@@ -135,10 +140,14 @@ void
 Easy_UDP_Server::
 start(const Socket_Address& addr)
   {
-    this->m_queue = ::std::make_shared<X_Packet_Queue>();
-    Shared_cb_args cb = { this->m_cb_obj, this->m_cb_thunk, this->m_queue };
-    this->m_socket = ::std::make_shared<Final_UDP_Socket>(addr, ::std::move(cb));
-    network_driver.insert(this->m_socket);
+    auto queue = ::std::make_shared<X_Packet_Queue>();
+    Shared_cb_args cb = { this->m_cb_obj, this->m_cb_thunk, queue };
+    auto socket = ::std::make_shared<Final_UDP_Socket>(addr, ::std::move(cb));
+    queue->wsocket = socket;
+
+    network_driver.insert(socket);
+    this->m_queue = ::std::move(queue);
+    this->m_socket = ::std::move(socket);
   }
 
 void

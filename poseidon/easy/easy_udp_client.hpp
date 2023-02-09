@@ -6,6 +6,7 @@
 
 #include "../fwd.hpp"
 #include "../socket/socket_address.hpp"
+#include "../socket/udp_socket.hpp"
 namespace poseidon {
 
 class Easy_UDP_Client
@@ -14,18 +15,19 @@ class Easy_UDP_Client
     struct X_Packet_Queue;
 
     shared_ptr<void> m_cb_obj;
-    callback_thunk_ptr<Socket_Address&&, linear_buffer&&> m_cb_thunk;
+    callback_thunk_ptr<shared_ptrR<UDP_Socket>, Socket_Address&&, linear_buffer&&> m_cb_thunk;
 
     shared_ptr<X_Packet_Queue> m_queue;
     shared_ptr<UDP_Socket> m_socket;
 
   public:
     // Constructs a client. The argument shall be an invocable object taking
-    // `(Socket_Address&& addr, linear_buffer&& data)`, where `addr` and `data`
-    // are the source address and payload of incoming UDP packets respectively.
-    // This client object stores a copy of the callback, which is invoked
-    // accordingly in the main thread. The callback object is never copied, and
-    // is allowed to modify itself.
+    // `(shared_ptrR<UDP_Socket> socket, Socket_Address&& addr,
+    // linear_buffer&& data)`, where `socket` is a pointer to the client socket,
+    // and `addr` and `data` are the source address and payload of the current
+    // UDP packet, respectively. This client object stores a copy of the
+    // callback, which is invoked accordingly in the main thread. The callback
+    // object is never copied, and is allowed to modify itself.
     template<typename CallbackT,
     ROCKET_DISABLE_IF(::std::is_same<::std::decay_t<CallbackT>, Easy_UDP_Client>::value)>
     explicit

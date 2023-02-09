@@ -13,23 +13,23 @@ extern Easy_UDP_Client my_client;
 extern Easy_Timer text_timer;
 
 void
-data_callback(Socket_Address&& addr, linear_buffer&& data)
+data_callback(shared_ptrR<UDP_Socket> socket, Socket_Address&& addr, linear_buffer&& data)
   {
     cow_string str(data.data(), data.size());
     data.clear();
     POSEIDON_LOG_DEBUG(("example UDP client received data from `$1`: $2"), addr, str);
+    (void) socket;
   }
 
 void
 timer_callback(int64_t now)
   {
-    static uint32_t index;
-    (void) now;
-
     Socket_Address addr(sref("[::1]:3801"));
+    static uint32_t index;
     cow_string str = format_string("packet $1", ++index);
     POSEIDON_LOG_INFO(("example UDP client sending data to `$1`: $2"), addr, str);
     my_client.udp_send(addr, str.data(), str.size());
+    (void) now;
   }
 
 int
