@@ -20,6 +20,7 @@
 #include <vector>
 #include <deque>
 #include <unordered_map>
+#include <unordered_set>
 #include <string>
 namespace poseidon {
 namespace noadl = poseidon;
@@ -54,6 +55,7 @@ using ::std::array;
 using ::std::vector;
 using ::std::deque;
 using ::std::unordered_map;
+using ::std::unordered_set;
 using ::std::string;
 
 using ::std::static_pointer_cast;
