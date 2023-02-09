@@ -14,14 +14,14 @@ namespace {
 
 using my_thunk = void (void*, Socket_Address&&, linear_buffer&&);
 
-struct Packet
-  {
-    Socket_Address addr;
-    linear_buffer data;
-  };
-
 struct Packet_Queue
   {
+    struct Packet
+      {
+        Socket_Address addr;
+        linear_buffer data;
+      };
+
     mutable plain_mutex mutex;
     deque<Packet> packets;
     bool fiber_active = false;
