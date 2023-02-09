@@ -14,6 +14,7 @@ nobase_include_HEADERS +=  \
   %reldir%/easy_ssl_server.hpp  \
   %reldir%/easy_ssl_client.hpp  \
   %reldir%/utils.hpp  \
+  %reldir%/base/enums.hpp  \
   %reldir%/base/config_file.hpp  \
   %reldir%/base/charbuf_256.hpp  \
   %reldir%/base/abstract_timer.hpp  \

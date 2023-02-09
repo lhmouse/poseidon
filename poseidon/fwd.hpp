@@ -100,6 +100,7 @@ template<typename T> using shared_ptrR = const shared_ptr<T>&;
 template<typename T> using weak_ptrR = const weak_ptr<T>&;
 
 // Base types
+enum Async_State : uint8_t;
 class Config_File;
 class charbuf_256;
 class Abstract_Timer;
@@ -139,15 +140,6 @@ extern class Async_Logger& async_logger;
 extern class Timer_Driver& timer_driver;
 extern class Async_Task_Executor& async_task_executor;
 extern class Network_Driver& network_driver;
-
-// Asynchronous object states
-enum Async_State : uint8_t
-  {
-    async_state_pending    = 0,
-    async_state_suspended  = 1,
-    async_state_running    = 2,
-    async_state_finished   = 3,
-  };
 
 // Log levels
 // Note each level has a hardcoded name and number.
