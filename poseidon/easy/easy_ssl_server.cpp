@@ -234,10 +234,13 @@ void
 Easy_SSL_Server::
 start(const Socket_Address& addr)
   {
-    this->m_client_table = ::std::make_shared<X_Client_Table>();
-    Shared_cb_args cb = { this->m_cb_obj, this->m_cb_thunk, this->m_client_table };
-    this->m_socket = ::std::make_shared<Final_Listen_Socket>(addr, ::std::move(cb));
-    network_driver.insert(this->m_socket);
+    auto table = ::std::make_shared<X_Client_Table>();
+    Shared_cb_args cb = { this->m_cb_obj, this->m_cb_thunk, table };
+    auto socket = ::std::make_shared<Final_Listen_Socket>(addr, ::std::move(cb));
+
+    network_driver.insert(socket);
+    this->m_client_table = ::std::move(table);
+    this->m_socket = ::std::move(socket);
   }
 
 void
