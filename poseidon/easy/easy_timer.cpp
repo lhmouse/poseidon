@@ -13,67 +13,67 @@ namespace poseidon {
 namespace {
 
 using thunk_function = void (void*, int64_t);
-class Final_Fiber;
 
-struct Final_Timer final : Abstract_Timer
+struct Shared_cb_args
   {
-    thunk_function* m_cb_thunk;
-    weak_ptr<void> m_cb_wobj;
-    weak_ptr<void> m_wuniq;
-
-    explicit
-    Final_Timer(thunk_function* cb_thunk, shared_ptrR<void> cb_obj, shared_ptrR<void> uniq)
-      : m_cb_thunk(cb_thunk), m_cb_wobj(cb_obj), m_wuniq(uniq)
-      { }
-
-    virtual
-    void
-    do_abstract_timer_on_tick(int64_t now) override;
+    thunk_function* thunk;
+    weak_ptr<void> wobj;
+    weak_ptr<void> wuniq;
   };
 
 struct Final_Fiber final : Abstract_Fiber
   {
-    thunk_function* m_cb_thunk;
-    weak_ptr<void> m_cb_wobj;
-    weak_ptr<void> m_wuniq;
+    Shared_cb_args m_cb;
     int64_t m_now;
 
     explicit
-    Final_Fiber(const Final_Timer& timer, int64_t now)
-      : m_cb_thunk(timer.m_cb_thunk), m_cb_wobj(timer.m_cb_wobj), m_wuniq(timer.m_wuniq),
-        m_now(now)
+    Final_Fiber(const Shared_cb_args& cb, int64_t now)
+      : m_cb(cb), m_now(now)
       { }
 
     virtual
     void
-    do_abstract_fiber_on_work() override;
+    do_abstract_fiber_on_work() override
+      {
+        if(this->m_cb.wuniq.expired())
+          return;
+
+        auto cb_obj = this->m_cb.wobj.lock();
+        if(!cb_obj)
+          return;
+
+        try {
+          // We are in the main thread, so invoke the user-defined callback.
+          this->m_cb.thunk(cb_obj.get(), this->m_now);
+        }
+        catch(exception& stdex) {
+          POSEIDON_LOG_ERROR((
+              "Unhandled exception thrown from easy timer: $1"),
+              stdex);
+        }
+      }
   };
 
-void
-Final_Timer::
-do_abstract_timer_on_tick(int64_t now)
+struct Final_Timer final : Abstract_Timer
   {
-    if(this->m_wuniq.expired())
-      return;
+    Shared_cb_args m_cb;
 
-    // We are in the timer thread here, so create a new fiber.
-    fiber_scheduler.insert(::std::make_unique<Final_Fiber>(*this, now));
-  }
+    explicit
+    Final_Timer(Shared_cb_args&& cb)
+      : m_cb(::std::move(cb))
+      { }
 
-void
-Final_Fiber::
-do_abstract_fiber_on_work()
-  {
-    if(this->m_wuniq.expired())
-      return;
+    virtual
+    void
+    do_abstract_timer_on_tick(int64_t now) override
+      {
+        if(this->m_cb.wuniq.expired())
+          return;
 
-    auto cb_obj = this->m_cb_wobj.lock();
-    if(!cb_obj)
-      return;
-
-    // We are in the main thread, so invoke the user-defined callback.
-    this->m_cb_thunk(cb_obj.get(), this->m_now);
-  }
+        // We are in the timer thread here, so create a new fiber.
+        fiber_scheduler.insert(::std::make_unique<Final_Fiber>(this->m_cb, now));
+      }
+  };
 
 }  // namespace
 
@@ -87,7 +87,8 @@ Easy_Timer::
 start(int64_t delay, int64_t period)
   {
     this->m_uniq = ::std::make_shared<int>();
-    this->m_timer = ::std::make_shared<Final_Timer>(this->m_cb_thunk, this->m_cb_obj, this->m_uniq);
+    Shared_cb_args cb = { this->m_cb_thunk, this->m_cb_obj, this->m_uniq };
+    this->m_timer = ::std::make_shared<Final_Timer>(::std::move(cb));
     timer_driver.insert(this->m_timer, delay, period);
   }
 
