@@ -14,7 +14,7 @@ class Abstract_Socket
     friend class Network_Driver;
 
     unique_posix_fd m_fd;
-    atomic_relaxed<Socket_State> m_state;
+    atomic_relaxed<Socket_State> m_state = { socket_state_pending };
     mutable atomic_acq_rel<bool> m_sockname_ready;
     mutable Socket_Address m_sockname;
 

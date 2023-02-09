@@ -154,7 +154,7 @@ do_abstract_socket_on_writable()
       queue.discard((size_t) io_result);
     }
 
-    if(this->do_abstract_socket_set_state(socket_state_connecting, socket_state_established)) {
+    if(this->do_abstract_socket_set_state(socket_state_pending, socket_state_established)) {
       // Deliver the establishment notification.
       POSEIDON_LOG_DEBUG(("TCP connection established: remote = $1"), this->remote_address());
       this->do_on_tcp_connected();

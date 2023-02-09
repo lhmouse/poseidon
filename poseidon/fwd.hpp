@@ -178,11 +178,10 @@ enum IP_Address_Class : uint8_t
 
 enum Socket_State : uint8_t
   {
-    socket_state_empty        = 0,
-    socket_state_connecting   = 1,
-    socket_state_established  = 2,
-    socket_state_closing      = 3,
-    socket_state_closed       = 4,
+    socket_state_pending      = 0,
+    socket_state_established  = 1,
+    socket_state_closing      = 2,
+    socket_state_closed       = 3,
   };
 
 // General utilities

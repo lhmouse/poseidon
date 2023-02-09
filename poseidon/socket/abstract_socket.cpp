@@ -45,8 +45,6 @@ Abstract_Socket(unique_posix_fd&& fd)
     int fl_new = fl_old | O_NONBLOCK;
     if(fl_new != fl_old)
       ::fcntl(this->fd(), F_SETFL, fl_new);
-
-    this->m_state.store(socket_state_established);
   }
 
 Abstract_Socket::
@@ -59,8 +57,6 @@ Abstract_Socket(int type, int protocol)
           "Could not create IPv6 socket: type `$2`, protocol `$3`",
           "[`socket()` failed: $1]"),
           format_errno(), type, protocol);
-
-    this->m_state.store(socket_state_connecting);
   }
 
 Abstract_Socket::

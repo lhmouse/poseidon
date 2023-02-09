@@ -289,7 +289,7 @@ do_abstract_socket_on_writable()
       queue.discard(datalen);
     }
 
-    if(this->do_abstract_socket_set_state(socket_state_connecting, socket_state_established)) {
+    if(this->do_abstract_socket_set_state(socket_state_pending, socket_state_established)) {
       // Set the ALPN response for outgoing sockets. For incoming sockets, it is
       // set in the ALPN callback.
       const char* alpn_str;
