@@ -24,7 +24,7 @@ data_callback(shared_ptrR<UDP_Socket> socket, Socket_Address&& addr, linear_buff
 void
 timer_callback(int64_t now)
   {
-    Socket_Address addr(sref("[::1]:3801"));
+    Socket_Address addr(sref("127.0.0.1:3801"));
     static uint32_t index;
     cow_string str = format_string("packet $1", ++index);
     POSEIDON_LOG_INFO(("example UDP client sending data to `$1`: $2"), addr, str);
