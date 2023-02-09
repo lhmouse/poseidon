@@ -106,51 +106,12 @@ void
 UDP_Socket::
 do_abstract_socket_on_oob_readable()
   {
-    // UDP doesn't support OOB data.
   }
 
 void
 UDP_Socket::
 do_abstract_socket_on_writable()
   {
-    recursive_mutex::unique_lock io_lock;
-    auto& queue = this->do_abstract_socket_lock_write_queue(io_lock);
-    ::ssize_t io_result = 0;
-
-    for(;;) {
-      // Get a packet from the write queue. In case of errors, no attempt is made
-      // to re-send failed packets.
-      if(queue.size() == 0)
-        break;
-
-      ::sockaddr_in6 sa;
-      uint16_t datalen;
-
-      // This must match `udp_send()`.
-      size_t ngot = queue.getn((char*) &sa, sizeof(sa));
-      ROCKET_ASSERT(ngot == sizeof(sa));
-      ngot = queue.getn((char*) &datalen, sizeof(datalen));
-      ROCKET_ASSERT(ngot == sizeof(datalen));
-      io_result = ::sendto(this->fd(), queue.begin(), datalen, 0, (const ::sockaddr*) &sa, sizeof(sa));
-      queue.discard(datalen);
-
-      if(io_result < 0) {
-        if((errno == EAGAIN) || (errno == EWOULDBLOCK))
-          break;
-
-        POSEIDON_LOG_ERROR((
-            "Error writing UDP socket",
-            "[`sendto()` failed: $3]",
-            "[UDP socket `$1` (class `$2`)]"),
-            this, typeid(*this), format_errno());
-
-        // Errors are ignored.
-        continue;
-      }
-
-      ROCKET_ASSERT((size_t) io_result <= datalen);
-    }
-
     if(this->do_abstract_socket_set_state(socket_state_connecting, socket_state_established)) {
       // Deliver the establishment notification.
       POSEIDON_LOG_DEBUG(("UDP port opened: local = $1"), this->local_address());
@@ -321,10 +282,6 @@ udp_send(const Socket_Address& addr, const char* data, size_t size)
     if(this->socket_state() == socket_state_closed)
       return false;
 
-    recursive_mutex::unique_lock io_lock;
-    auto& queue = this->do_abstract_socket_lock_write_queue(io_lock);
-    ::ssize_t io_result = 0;
-
     // Try sending the packet immediately.
     // This is valid because UDP packets can be transmitted out of order.
     ::sockaddr_in6 sa;
@@ -333,35 +290,10 @@ udp_send(const Socket_Address& addr, const char* data, size_t size)
     sa.sin6_flowinfo = 0;
     sa.sin6_addr = addr.addr();
     sa.sin6_scope_id = 0;
-    io_result = ::sendto(this->fd(), data, size, 0, (const ::sockaddr*) &sa, sizeof(sa));
-
-    if(io_result < 0) {
-      if((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-        // Buffer them until the next `do_abstract_socket_on_writable()`.
-        queue.reserve(sizeof(sa) + sizeof(datalen) + datalen);
-
-        // This must match `do_abstract_socket_on_writable()`.
-        ::memcpy(queue.mut_end(), &sa, sizeof(sa));
-        queue.accept(sizeof(sa));
-        ::memcpy(queue.mut_end(), &datalen, sizeof(datalen));
-        queue.accept(sizeof(datalen));
-        ::memcpy(queue.mut_end(), data, datalen);
-        queue.accept(datalen);
-        return true;
-      }
-
-      POSEIDON_LOG_ERROR((
-          "Error writing UDP socket",
-          "[`sendto()` failed: $3]",
-          "[UDP socket `$1` (class `$2`)]"),
-          this, typeid(*this), format_errno());
-
-      // Errors are ignored.
-      return false;
-    }
+    ::ssize_t io_result = ::sendto(this->fd(), data, size, 0, (const ::sockaddr*) &sa, sizeof(sa));
 
     // Partial writes are accepted without errors.
-    return true;
+    return io_result >= 0;
   }
 
 }  // namespace poseidon
