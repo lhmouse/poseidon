@@ -208,8 +208,18 @@ do_abstract_socket_on_readable()
       queue.accept(datalen);
     }
 
-    if(old_size != queue.size())
-      this->do_on_ssl_stream(queue);
+    if(old_size != queue.size()) {
+      try {
+        // Process received data.
+        this->do_on_ssl_stream(queue);
+      }
+      catch(exception& stdex) {
+        POSEIDON_LOG_ERROR((
+            "Unhandled exception thrown from `do_on_ssl_stream()`: $1",
+            "[socket class `$2`]"),
+            stdex, typeid(*socket));
+      }
+    }
 
     if(ssl_err == SSL_ERROR_ZERO_RETURN) {
       // If the end of stream has been reached, shut the connection down anyway.
@@ -229,11 +239,18 @@ do_abstract_socket_on_oob_readable()
 
     // If there are no OOB data, `recv()` fails with `EINVAL`.
     io_result = ::recv(this->fd(), &data, 1, MSG_OOB);
-    if(io_result <= 0)
-      return;
-
-    // Accept it.
-    this->do_on_ssl_oob_byte(data);
+    if(io_result > 0) {
+      try {
+        // Process received byte.
+        this->do_on_ssl_oob_byte(data);
+      }
+      catch(exception& stdex) {
+        POSEIDON_LOG_ERROR((
+            "Unhandled exception thrown from `do_on_ssl_oob_byte()`: $1",
+            "[socket class `$2`]"),
+            stdex, typeid(*socket));
+      }
+    }
   }
 
 void
@@ -290,16 +307,24 @@ do_abstract_socket_on_writable()
     }
 
     if(this->do_abstract_socket_set_state(socket_state_pending, socket_state_established)) {
-      // Set the ALPN response for outgoing sockets. For incoming sockets, it is
-      // set in the ALPN callback.
-      const char* alpn_str;
-      unsigned int alpn_len;
-      ::SSL_get0_alpn_selected(this->ssl(), (const uint8_t**) &alpn_str, &alpn_len);
-      this->m_alpn_proto.assign(alpn_str, alpn_len);
+      try {
+        // Set the ALPN response for outgoing sockets. For incoming sockets, it is
+        // set in the ALPN callback.
+        const char* alpn_str;
+        unsigned int alpn_len;
+        ::SSL_get0_alpn_selected(this->ssl(), (const uint8_t**) &alpn_str, &alpn_len);
+        this->m_alpn_proto.assign(alpn_str, alpn_len);
 
-      // Deliver the establishment notification.
-      POSEIDON_LOG_DEBUG(("SSL connection established: remote = $1, alpn = $2"), this->remote_address(), this->m_alpn_proto);
-      this->do_on_ssl_connected();
+        // Deliver the establishment notification.
+        POSEIDON_LOG_DEBUG(("SSL connection established: remote = $1, alpn = $2"), this->remote_address(), this->m_alpn_proto);
+        this->do_on_ssl_connected();
+      }
+      catch(exception& stdex) {
+        POSEIDON_LOG_ERROR((
+            "Unhandled exception thrown from `do_on_ssl_connected()`: $1",
+            "[socket class `$2`]"),
+            stdex, typeid(*socket));
+      }
     }
 
     if(queue.empty() && this->do_abstract_socket_set_state(socket_state_closing, socket_state_closed)) {

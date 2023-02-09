@@ -93,11 +93,19 @@ do_abstract_socket_on_readable()
       if((sa.sin6_family != AF_INET6) || (salen != sizeof(sa)))
         continue;
 
-      // Accept this incoming packet.
-      this->m_taddr.set_addr(sa.sin6_addr);
-      this->m_taddr.set_port(be16toh(sa.sin6_port));
-      queue.accept((size_t) io_result);
-      this->do_on_udp_packet(::std::move(this->m_taddr), ::std::move(queue));
+      try {
+        // Accept this incoming packet.
+        this->m_taddr.set_addr(sa.sin6_addr);
+        this->m_taddr.set_port(be16toh(sa.sin6_port));
+        queue.accept((size_t) io_result);
+        this->do_on_udp_packet(::std::move(this->m_taddr), ::std::move(queue));
+      }
+      catch(exception& stdex) {
+        POSEIDON_LOG_ERROR((
+            "Unhandled exception thrown from `do_on_udp_packet()`: $1",
+            "[socket class `$2`]"),
+            stdex, typeid(*socket));
+      }
     }
   }
 
@@ -112,9 +120,17 @@ UDP_Socket::
 do_abstract_socket_on_writable()
   {
     if(this->do_abstract_socket_set_state(socket_state_pending, socket_state_established)) {
-      // Deliver the establishment notification.
-      POSEIDON_LOG_DEBUG(("UDP port opened: local = $1"), this->local_address());
-      this->do_on_udp_opened();
+      try {
+        // Deliver the establishment notification.
+        POSEIDON_LOG_DEBUG(("UDP port opened: local = $1"), this->local_address());
+        this->do_on_udp_opened();
+      }
+      catch(exception& stdex) {
+        POSEIDON_LOG_ERROR((
+            "Unhandled exception thrown from `do_on_udp_opened()`: $1",
+            "[socket class `$2`]"),
+            stdex, typeid(*socket));
+      }
     }
   }
 

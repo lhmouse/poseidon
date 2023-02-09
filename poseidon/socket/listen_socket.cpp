@@ -87,20 +87,28 @@ do_abstract_socket_on_readable()
         continue;
       }
 
-      // Accept the client socket. If a null pointer is returned, the accepted
-      // socket will be closed immediately.
-      this->m_taddr.set_addr(sa.sin6_addr);
-      this->m_taddr.set_port(be16toh(sa.sin6_port));
-      auto client = this->do_on_listen_new_client_opt(::std::move(this->m_taddr), ::std::move(fd));
-      if(!client)
-        continue;
+      try {
+        // Accept the client socket. If a null pointer is returned, the accepted
+        // socket will be closed immediately.
+        this->m_taddr.set_addr(sa.sin6_addr);
+        this->m_taddr.set_port(be16toh(sa.sin6_port));
+        auto client = this->do_on_listen_new_client_opt(::std::move(this->m_taddr), ::std::move(fd));
+        if(!client)
+          continue;
 
-      POSEIDON_LOG_INFO((
-          "Accepted new TCP connection `$3` (class `$4`)]",
-          "[TCP listen socket `$1` (class `$2`)]"),
-          this, typeid(*this), this->m_taddr, client, typeid(*client));
+        POSEIDON_LOG_INFO((
+            "Accepted new TCP connection `$3` (class `$4`)]",
+            "[TCP listen socket `$1` (class `$2`)]"),
+            this, typeid(*this), this->m_taddr, client, typeid(*client));
 
-      driver.insert(client);
+        driver.insert(client);
+      }
+      catch(exception& stdex) {
+        POSEIDON_LOG_ERROR((
+            "Unhandled exception thrown from `do_on_listen_new_client_opt()`: $1",
+            "[socket class `$2`]"),
+            stdex, typeid(*socket));
+      }
     }
   }
 

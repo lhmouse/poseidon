@@ -93,8 +93,18 @@ do_abstract_socket_on_readable()
       queue.accept((size_t) io_result);
     }
 
-    if(old_size != queue.size())
-      this->do_on_tcp_stream(queue);
+    if(old_size != queue.size()) {
+      try {
+        // Process received data.
+        this->do_on_tcp_stream(queue);
+      }
+      catch(exception& stdex) {
+        POSEIDON_LOG_ERROR((
+            "Unhandled exception thrown from `do_on_tcp_stream()`: $1",
+            "[socket class `$2`]"),
+            stdex, typeid(*socket));
+      }
+    }
 
     if(io_result == 0) {
       // If the end of stream has been reached, shut the connection down anyway.
@@ -113,11 +123,18 @@ do_abstract_socket_on_oob_readable()
 
     // If there are no OOB data, `recv()` fails with `EINVAL`.
     io_result = ::recv(this->fd(), &data, 1, MSG_OOB);
-    if(io_result <= 0)
-      return;
-
-    // Accept it.
-    this->do_on_tcp_oob_byte(data);
+    if(io_result > 0) {
+      try {
+        // Process received byte.
+        this->do_on_tcp_oob_byte(data);
+      }
+      catch(exception& stdex) {
+        POSEIDON_LOG_ERROR((
+            "Unhandled exception thrown from `do_on_tcp_oob_byte()`: $1",
+            "[socket class `$2`]"),
+            stdex, typeid(*socket));
+      }
+    }
   }
 
 void
@@ -155,9 +172,17 @@ do_abstract_socket_on_writable()
     }
 
     if(this->do_abstract_socket_set_state(socket_state_pending, socket_state_established)) {
-      // Deliver the establishment notification.
-      POSEIDON_LOG_DEBUG(("TCP connection established: remote = $1"), this->remote_address());
-      this->do_on_tcp_connected();
+      try {
+        // Deliver the establishment notification.
+        POSEIDON_LOG_DEBUG(("TCP connection established: remote = $1"), this->remote_address());
+        this->do_on_tcp_connected();
+      }
+      catch(exception& stdex) {
+        POSEIDON_LOG_ERROR((
+            "Unhandled exception thrown from `do_on_tcp_connected()`: $1",
+            "[socket class `$2`]"),
+            stdex, typeid(*socket));
+      }
     }
 
     if(queue.empty() && this->do_abstract_socket_set_state(socket_state_closing, socket_state_closed)) {
