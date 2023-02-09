@@ -25,9 +25,10 @@ struct Client_Table
             linear_buffer data;
           };
 
-        shared_ptr<TCP_Socket> client;
+        shared_ptr<TCP_Socket> client;  // read-only; no locking needed
         deque<Event> events;
-        shared_ptr<linear_buffer> fiber_buffer;
+        bool fiber_active = false;
+        linear_buffer fiber_buffer;  // by fibers only; no locking needed
       };
 
     mutable plain_mutex mutex;
@@ -75,16 +76,19 @@ struct Final_Fiber final : Abstract_Fiber
 
           if(citer->second.events.empty()) {
             // Leave now.
-            citer->second.fiber_buffer = nullptr;
+            citer->second.fiber_active = false;
             return;
           }
 
           ROCKET_ASSERT(citer->second.client.get() == this->m_key);
-          ROCKET_ASSERT(citer->second.fiber_buffer);
-          auto client = citer->second.client;
+          ROCKET_ASSERT(citer->second.fiber_active);
           auto event = ::std::move(citer->second.events.front());
           citer->second.events.pop_front();
-          auto fiber_buffer = citer->second.fiber_buffer;
+          auto client = citer->second.client;
+          auto fiber_buffer = &(citer->second.fiber_buffer);
+
+          if(event.type != connection_event_stream)
+            fiber_buffer = nullptr;
 
           if(event.type == connection_event_closed)
             table->clients.erase(citer);
@@ -94,14 +98,13 @@ struct Final_Fiber final : Abstract_Fiber
 
           try {
             auto data = &(event.data);
-            if(event.type == connection_event_stream) {
+            if(fiber_buffer) {
               // Append new data to the private buffer, which will be preserved
-              // across callbacks.
-              fiber_buffer->putn(event.data.data(), event.data.size());
-              data = fiber_buffer.get();
+              // across callbacks. This is essential for code that may consume
+              // the buffer partially.
+              fiber_buffer->putn(data->data(), data->size());
+              data = fiber_buffer;
             }
-
-            // Invoke the user-defined data callback.
             this->m_cb.thunk(cb_obj.get(), client, event.type, *data);
           }
           catch(exception& stdex) {
@@ -141,12 +144,11 @@ struct Final_TCP_Socket final : TCP_Socket
 
         ROCKET_ASSERT(citer->second.client.get() == this);
 
-        if(!citer->second.fiber_buffer) {
+        if(!citer->second.fiber_active) {
           // Create a new fiber, if none is active. The fiber shall only reset
           // `m_fiber_buffer` if no event is pending.
-          auto fiber_buffer = ::std::make_shared<linear_buffer>();
           fiber_scheduler.insert(::std::make_unique<Final_Fiber>(this->m_cb, this));
-          citer->second.fiber_buffer = ::std::move(fiber_buffer);
+          citer->second.fiber_active = true;
         }
 
         auto& event = citer->second.events.emplace_back();
