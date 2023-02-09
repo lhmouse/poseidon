@@ -10,9 +10,8 @@ namespace poseidon {
 class Easy_Timer
   {
   private:
-    using thunk_function = void (void*, int64_t);
-    thunk_function* m_cb_thunk;
     shared_ptr<void> m_cb_obj;
+    callback_thunk_ptr<int64_t> m_cb_thunk;
 
     shared_ptr<void> m_uniq;
     shared_ptr<Abstract_Timer> m_timer;
@@ -27,16 +26,9 @@ class Easy_Timer
     ROCKET_DISABLE_IF(::std::is_same<::std::decay_t<CallbackT>, Easy_Timer>::value)>
     explicit
     Easy_Timer(CallbackT&& cb)
-      {
-        using cb_obj_type = ::std::decay_t<CallbackT>;
-        this->m_cb_obj = ::std::make_shared<cb_obj_type>(::std::forward<CallbackT>(cb));
-
-        this->m_cb_thunk = [](void* ptr, int64_t now)
-          {
-            // We need this as the type of the callback has been erased.
-            ::std::invoke(*(cb_obj_type*) ptr, now);
-          };
-      }
+      : m_cb_obj(::std::make_shared<::std::decay_t<CallbackT>>(::std::forward<CallbackT>(cb))),
+        m_cb_thunk(callback_thunk<::std::decay_t<CallbackT>>)
+      { }
 
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_Timer);

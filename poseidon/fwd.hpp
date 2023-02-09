@@ -185,6 +185,17 @@ enum Socket_State : uint8_t
     socket_state_closed       = 4,
   };
 
+// General utilities
+template<typename CopyT, typename... ArgsT>
+void
+callback_thunk(void* ptr, ArgsT... args)
+  {
+    ::std::invoke(*(CopyT*) ptr, ::std::forward<ArgsT>(args)...);
+  }
+
+template<typename... ArgsT>
+using callback_thunk_ptr = void (*)(void*, ArgsT...);
+
 // Composes a string and submits it to the logger.
 // Note that in order to use these macros, you still have to include
 // <poseidon/static/async_logger.hpp>; otherwise there may be errors
