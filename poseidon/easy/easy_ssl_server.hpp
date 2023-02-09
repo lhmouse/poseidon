@@ -6,6 +6,7 @@
 
 #include "../fwd.hpp"
 #include "../socket/socket_address.hpp"
+#include "../socket/ssl_socket.hpp"
 namespace poseidon {
 
 class Easy_SSL_Server

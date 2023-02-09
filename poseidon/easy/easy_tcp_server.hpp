@@ -6,6 +6,7 @@
 
 #include "../fwd.hpp"
 #include "../socket/socket_address.hpp"
+#include "../socket/tcp_socket.hpp"
 namespace poseidon {
 
 class Easy_TCP_Server
