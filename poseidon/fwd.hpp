@@ -176,7 +176,7 @@ enum IP_Address_Class : uint8_t
 
 enum Socket_State : uint8_t
   {
-    socket_state_unknown      = 0,
+    socket_state_empty        = 0,
     socket_state_connecting   = 1,
     socket_state_established  = 2,
     socket_state_closing      = 3,
@@ -191,8 +191,7 @@ enum Socket_State : uint8_t
   (::poseidon::async_logger.enabled(::poseidon::log_level_##LEVEL)  \
    &&  \
    ([&](const char* f5zuNP3w)  \
-     __attribute__((__noinline__, __nothrow__, __cold__))  \
-     -> bool  \
+       __attribute__((__noinline__, __nothrow__, __cold__))  \
      {  \
        try {  \
          ::poseidon::Async_Logger::Queued_Message iQw3Zbsf;  \
