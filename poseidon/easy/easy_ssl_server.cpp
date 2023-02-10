@@ -17,6 +17,9 @@ using my_thunk = void (void*, shared_ptrR<SSL_Socket>, Connection_Event, linear_
 
 struct Client_Table
   {
+    mutable plain_mutex mutex;
+    weak_ptr<Listen_Socket> wsocket;  // read-only; no locking needed
+
     struct Event_Queue
       {
         struct Event
@@ -31,7 +34,6 @@ struct Client_Table
         linear_buffer fiber_buffer;  // by fibers only; no locking needed
       };
 
-    mutable plain_mutex mutex;
     unordered_map<const volatile SSL_Socket*, Event_Queue> clients;
   };
 
@@ -237,6 +239,7 @@ start(const Socket_Address& addr)
     auto table = ::std::make_shared<X_Client_Table>();
     Shared_cb_args cb = { this->m_cb_obj, this->m_cb_thunk, table };
     auto socket = ::std::make_shared<Final_Listen_Socket>(addr, ::std::move(cb));
+    table->wsocket = socket;
 
     network_driver.insert(socket);
     this->m_client_table = ::std::move(table);

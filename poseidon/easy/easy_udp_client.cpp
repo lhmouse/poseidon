@@ -16,14 +16,15 @@ using my_thunk = void (void*, shared_ptrR<UDP_Socket>, Socket_Address&&, linear_
 
 struct Packet_Queue
   {
+    mutable plain_mutex mutex;
+    weak_ptr<UDP_Socket> wsocket;  // read-only; no locking needed
+
     struct Packet
       {
         Socket_Address addr;
         linear_buffer data;
       };
 
-    weak_ptr<UDP_Socket> wsocket;  // read-only; no locking needed
-    mutable plain_mutex mutex;
     deque<Packet> packets;
     bool fiber_active = false;
   };
