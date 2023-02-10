@@ -33,7 +33,6 @@ TCP_Socket(const Socket_Address& addr)
     sa.sin6_flowinfo = 0;
     sa.sin6_addr = addr.addr();
     sa.sin6_scope_id = 0;
-
     if((::connect(this->fd(), (const ::sockaddr*) &sa, sizeof(sa)) != 0) && (errno != EINPROGRESS))
       POSEIDON_THROW((
           "Failed to initiate TCP connection to `$4`",
@@ -241,6 +240,9 @@ remote_address() const noexcept
 
     ROCKET_ASSERT(sa.sin6_family == AF_INET6);
     ROCKET_ASSERT(salen == sizeof(sa));
+
+    if(sa.sin6_port == htobe16(0))
+      return ipv6_unspecified;
 
     // Cache the address.
     this->m_peername.set_addr(sa.sin6_addr);

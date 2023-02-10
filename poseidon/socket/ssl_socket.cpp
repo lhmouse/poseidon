@@ -30,14 +30,14 @@ SSL_Socket(unique_posix_fd&& fd, const SSL_CTX_ptr& ssl_ctx)
           "[SSL socket `$1` (class `$2`)]"),
           this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
 
-    ::SSL_set_accept_state(this->ssl());
-
     if(!::SSL_set_fd(this->ssl(), this->fd()))
       POSEIDON_THROW((
           "Could not allocate SSL BIO for incoming connection",
           "[`SSL_set_fd()` failed: $3]",
           "[SSL socket `$1` (class `$2`)]"),
           this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
+
+    ::SSL_set_accept_state(this->ssl());
 
     // Use `TCP_NODELAY`. Errors are ignored.
     int ival = 1;
@@ -62,14 +62,14 @@ SSL_Socket(const Socket_Address& addr, const SSL_CTX_ptr& ssl_ctx)
           "[SSL socket `$1` (class `$2`)]"),
           this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
 
-    ::SSL_set_connect_state(this->ssl());
-
     if(!::SSL_set_fd(this->ssl(), this->fd()))
       POSEIDON_THROW((
           "Could not allocate SSL BIO for outgoing connection",
           "[`SSL_set_fd()` failed: $3]",
           "[SSL socket `$1` (class `$2`)]"),
           this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
+
+    ::SSL_set_connect_state(this->ssl());
 
     // Use `TCP_NODELAY`. Errors are ignored.
     int ival = 1;
@@ -82,7 +82,6 @@ SSL_Socket(const Socket_Address& addr, const SSL_CTX_ptr& ssl_ctx)
     sa.sin6_flowinfo = 0;
     sa.sin6_addr = addr.addr();
     sa.sin6_scope_id = 0;
-
     if((::connect(this->fd(), (const ::sockaddr*) &sa, sizeof(sa)) != 0) && (errno != EINPROGRESS))
       POSEIDON_THROW((
           "Failed to initiate SSL connection to `$4`",
@@ -386,6 +385,9 @@ remote_address() const noexcept
 
     ROCKET_ASSERT(sa.sin6_family == AF_INET6);
     ROCKET_ASSERT(salen == sizeof(sa));
+
+    if(sa.sin6_port == htobe16(0))
+      return ipv6_unspecified;
 
     // Cache the address.
     this->m_peername.set_addr(sa.sin6_addr);

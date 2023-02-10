@@ -30,9 +30,12 @@ Abstract_Socket(unique_posix_fd&& fd)
           "Addresss family unimplemented: family = $1, salen = $2"),
           sa.sin6_family, salen);
 
-    this->m_sockname.set_addr(sa.sin6_addr);
-    this->m_sockname.set_port(be16toh(sa.sin6_port));
-    this->m_sockname_ready.store(true);
+    if(sa.sin6_port != htobe16(0)) {
+      // Cache the address.
+      this->m_sockname.set_addr(sa.sin6_addr);
+      this->m_sockname.set_port(be16toh(sa.sin6_port));
+      this->m_sockname_ready.store(true);
+    }
 
     // Turn on non-blocking mode if it hasn't been enabled.
     int fl_old = ::fcntl(this->fd(), F_GETFL);
@@ -85,6 +88,9 @@ local_address() const noexcept
 
     ROCKET_ASSERT(sa.sin6_family == AF_INET6);
     ROCKET_ASSERT(salen == sizeof(sa));
+
+    if(sa.sin6_port == htobe16(0))
+      return ipv6_unspecified;
 
     // Cache the address.
     this->m_sockname.set_addr(sa.sin6_addr);
