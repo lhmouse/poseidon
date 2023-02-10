@@ -104,7 +104,6 @@ quick_shut_down() noexcept
     lng.l_onoff = 1;
     lng.l_linger = 0;
     ::setsockopt(this->fd(), SOL_SOCKET, SO_LINGER, &lng, sizeof(lng));
-
     return ::shutdown(this->fd(), SHUT_RDWR) == 0;
   }
 
