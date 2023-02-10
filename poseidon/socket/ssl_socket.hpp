@@ -142,7 +142,8 @@ class SSL_Socket
     bool
     ssl_send_oob(char data) noexcept;
 
-    // Shuts the socket down gracefully.
+    // Shuts the socket down gracefully. Errors during the shutdown operation
+    // are ignored.
     // This function is thread-safe.
     bool
     ssl_shut_down() noexcept;
