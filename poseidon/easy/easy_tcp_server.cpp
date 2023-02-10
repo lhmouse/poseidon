@@ -29,7 +29,7 @@ struct Client_Table
           };
 
         shared_ptr<TCP_Socket> client;  // read-only; no locking needed
-        linear_buffer fiber_buffer;  // by fibers only; no locking needed
+        linear_buffer fiber_private_buffer;  // by fibers only; no locking needed
 
         deque<Event> events;
         bool fiber_active = false;
@@ -88,10 +88,10 @@ struct Final_Fiber final : Abstract_Fiber
           auto event = ::std::move(citer->second.events.front());
           citer->second.events.pop_front();
           auto client = citer->second.client;
-          auto fiber_buffer = &(citer->second.fiber_buffer);
+          auto fiber_private_buffer = &(citer->second.fiber_private_buffer);
 
           if(event.type != connection_event_stream)
-            fiber_buffer = nullptr;
+            fiber_private_buffer = nullptr;
 
           if(event.type == connection_event_closed)
             table->clients.erase(citer);
@@ -100,15 +100,17 @@ struct Final_Fiber final : Abstract_Fiber
           table = nullptr;
 
           try {
-            auto data = &(event.data);
-            if(fiber_buffer) {
-              // Append new data to the private buffer, which will be preserved
-              // across callbacks. This is essential for code that may consume
-              // the buffer partially.
-              fiber_buffer->putn(data->data(), data->size());
-              data = fiber_buffer;
+            // Invoke the user-defined event callback.
+            if(event.type == connection_event_stream) {
+              // `connection_event_stream` is special. We append new data to the
+              // private buffer which is then passed to the callback instead of
+              // `event.data`. The private buffer is preserved across callbacks
+              // and may be consumed partially by user code.
+              fiber_private_buffer->putn(event.data.data(), event.data.size());
+              this->m_cb.thunk(cb_obj.get(), client, event.type, *fiber_private_buffer);
             }
-            this->m_cb.thunk(cb_obj.get(), client, event.type, *data);
+            else
+              this->m_cb.thunk(cb_obj.get(), client, event.type, event.data);
           }
           catch(exception& stdex) {
             POSEIDON_LOG_ERROR((
@@ -149,7 +151,7 @@ struct Final_TCP_Socket final : TCP_Socket
 
         if(!citer->second.fiber_active) {
           // Create a new fiber, if none is active. The fiber shall only reset
-          // `m_fiber_buffer` if no event is pending.
+          // `m_fiber_private_buffer` if no event is pending.
           fiber_scheduler.insert(::std::make_unique<Final_Fiber>(this->m_cb, this));
           citer->second.fiber_active = true;
         }
