@@ -45,6 +45,7 @@ TCP_Socket(const Socket_Address& addr)
 TCP_Socket::
 ~TCP_Socket()
   {
+    POSEIDON_LOG_INFO(("Destroying `$1` (class `$2`)"), this, typeid(*this));
   }
 
 void

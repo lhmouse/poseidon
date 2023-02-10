@@ -47,6 +47,7 @@ UDP_Socket()
 UDP_Socket::
 ~UDP_Socket()
   {
+    POSEIDON_LOG_INFO(("Destroying `$1` (class `$2`)"), this, typeid(*this));
   }
 
 void

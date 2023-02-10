@@ -94,6 +94,7 @@ SSL_Socket(const Socket_Address& addr, const SSL_CTX_ptr& ssl_ctx)
 SSL_Socket::
 ~SSL_Socket()
   {
+    POSEIDON_LOG_INFO(("Destroying `$1` (class `$2`)"), this, typeid(*this));
   }
 
 charbuf_256

@@ -48,6 +48,7 @@ Listen_Socket(const Socket_Address& addr)
 Listen_Socket::
 ~Listen_Socket()
   {
+    POSEIDON_LOG_INFO(("Destroying `$1` (class `$2`)"), this, typeid(*this));
   }
 
 void
