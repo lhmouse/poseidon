@@ -83,7 +83,9 @@ do_load_level_config(Level_Config& lconf, const Config_File& file, const char* n
           "[in configuration file '$3']"),
           name, value, file.path());
 
-    if(str == "stdout")
+    if(str == "")
+      lconf.stdio = -1;
+    else if(str == "stdout")
       lconf.stdio = STDOUT_FILENO;
     else if(str == "stderr")
       lconf.stdio = STDERR_FILENO;
@@ -120,17 +122,6 @@ do_color(cow_string& data, const Level_Config& lconf, const char* code)
   {
     if(!lconf.color.empty())
       data << "\x1B[" << code << "m";
-  }
-
-inline
-bool
-do_write_loop(int fd, stringR data) noexcept
-  {
-    for(;;)
-      if(::write(fd, data.data(), data.size()) >= 0)
-        return true;
-      else if(errno != EINTR)
-        return false;
   }
 
 void
@@ -235,19 +226,18 @@ do_write_nothrow(const Level_Config& lconf, const Async_Logger::Queued_Message& 
     data += "\n\v";
     do_color(data, lconf, "0");  // reset
 
-    // Write text to streams. Errors are ignored.
-    if(!lconf.file.empty()) {
-      unique_posix_fd ofd(::open(lconf.file.c_str(), O_WRONLY | O_APPEND | O_CREAT, 0644));
-      if(ofd)
-        do_write_loop(ofd, data);
-      else
-        ::fprintf(stderr,
-            "WARNING: Could not open log file '%s' for appending: %m\n",
-            lconf.file.c_str());
-    }
+    // Prepare output streams.
+    array<unique_posix_fd, 8> fds;
 
     if(lconf.stdio != -1)
-      do_write_loop(lconf.stdio, data);
+      fds.at(0).reset(lconf.stdio, nullptr);  // no closer
+
+    if(lconf.file != "")
+      fds.at(1).reset(::open(lconf.file.c_str(), O_WRONLY | O_APPEND | O_CREAT, 0644), ::close);
+
+    // Write text to streams. Errors are ignored.
+    for(int fd : fds)
+      ::write(fd, data.data(), data.size());
   }
   catch(exception& stdex) {
     ::fprintf(stderr,
@@ -278,7 +268,7 @@ reload(const Config_File& file)
   {
     // Parse new configuration.
     cow_vector<X_Level_Config> levels(6);
-    uint32_t level_mask = 0;
+    uint32_t level_bits = 0;
 
     do_load_level_config(levels.mut(log_level_trace), file, "trace");
     do_load_level_config(levels.mut(log_level_debug), file, "debug");
@@ -288,16 +278,16 @@ reload(const Config_File& file)
     do_load_level_config(levels.mut(log_level_fatal), file, "fatal");
 
     for(size_t k = 0;  k != levels.size();  ++k)
-      if((levels[k].stdio != -1) || !levels[k].file.empty())
-        level_mask |= 1U << k;
+      if((levels[k].stdio != -1) || (levels[k].file != ""))
+        level_bits |= 1U << k;
 
-    if(level_mask == 0)
+    if(level_bits == 0)
       ::fprintf(stderr, "WARNING: Logger disabled\n");
 
     // Set up new data.
     plain_mutex::unique_lock lock(this->m_conf_mutex);
     this->m_conf_levels.swap(levels);
-    this->m_conf_level_mask.store(level_mask);
+    this->m_conf_level_bits.store(level_bits);
   }
 
 void
