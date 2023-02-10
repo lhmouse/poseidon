@@ -48,7 +48,7 @@ class Easy_UDP_Server
     stop() noexcept;
 
     // Gets the bound address of this server for incoming packets. In case of
-    // errors, `ipv6_unspecified` is returned.
+    // errors, `ipv6_invalid` is returned.
     ROCKET_PURE
     const Socket_Address&
     local_address() const noexcept;

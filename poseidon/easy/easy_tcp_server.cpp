@@ -261,7 +261,7 @@ Easy_TCP_Server::
 local_address() const noexcept
   {
     if(!this->m_socket)
-      return ipv6_unspecified;
+      return ipv6_invalid;
 
     return this->m_socket->local_address();
   }

@@ -108,6 +108,8 @@ class Socket_Address
 
 extern const Socket_Address ipv6_unspecified;  // ::
 extern const Socket_Address ipv6_loopback;     // ::1
+extern const Socket_Address ipv6_invalid;      // 100::
+
 extern const Socket_Address ipv4_unspecified;  // ::ffff::0.0.0.0
 extern const Socket_Address ipv4_loopback;     // ::ffff::127.0.0.1
 extern const Socket_Address ipv4_broadcast;    // ::ffff::255.255.255.255

@@ -382,7 +382,7 @@ remote_address() const noexcept
     ::sockaddr_in6 sa;
     ::socklen_t salen = sizeof(sa);
     if(::getpeername(this->fd(), (::sockaddr*) &sa, &salen) != 0)
-      return ipv6_unspecified;
+      return ipv6_invalid;
 
     ROCKET_ASSERT(sa.sin6_family == AF_INET6);
     ROCKET_ASSERT(salen == sizeof(sa));

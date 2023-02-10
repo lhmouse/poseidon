@@ -73,7 +73,7 @@ class TCP_Socket
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(TCP_Socket);
 
     // Gets the remote or connected address of this socket. In case of errors,
-    // `ipv6_unspecified` is returned. The result is cached and will not
+    // `ipv6_invalid` is returned. The result is cached and will not
     // reflect changes that other APIs may have made.
     ROCKET_PURE
     const Socket_Address&
