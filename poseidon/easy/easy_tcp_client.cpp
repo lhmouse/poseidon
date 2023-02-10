@@ -59,12 +59,12 @@ struct Final_Fiber final : Abstract_Fiber
           if(!queue)
             return;
 
-          // We are in the main thread here.
-          plain_mutex::unique_lock lock(queue->mutex);
-
           auto socket = queue->wsocket.lock();
           if(!socket)
             return;
+
+          // We are in the main thread here.
+          plain_mutex::unique_lock lock(queue->mutex);
 
           if(queue->events.empty()) {
             // Leave now.
