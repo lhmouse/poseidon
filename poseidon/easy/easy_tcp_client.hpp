@@ -76,7 +76,7 @@ class Easy_TCP_Client
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    tcp_send(const Socket_Address& addr, const char* data, size_t size);
+    tcp_send(const char* data, size_t size);
 
     // Shuts the socket down gracefully. Errors during the shutdown operation
     // are ignored.

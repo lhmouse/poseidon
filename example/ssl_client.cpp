@@ -2,57 +2,50 @@
 // Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
 
 #include "../poseidon/precompiled.ipp"
-#include "../poseidon/socket/ssl_socket.hpp"
-#include "../poseidon/static/network_driver.hpp"
+#include "../poseidon/easy/easy_ssl_client.hpp"
 #include "../poseidon/static/async_logger.hpp"
 #include "../poseidon/utils.hpp"
 namespace {
-using namespace poseidon;
+using namespace ::poseidon;
 
-const Socket_Address connect_address(::rocket::sref("93.184.216.34:443"));  // example.org
+extern Easy_SSL_Client my_client;
 
-struct Example_Session : SSL_Socket
+void
+event_callback(shared_ptrR<SSL_Socket> socket, Connection_Event event, linear_buffer& data)
   {
-    explicit
-    Example_Session()
-      : SSL_Socket(connect_address, network_driver.default_client_ssl_ctx())
-      {
-        this->do_ssl_alpn_request({ "http/1.1" });
-        POSEIDON_LOG_FATAL(("ALPN: requesting HTTP/1.1"));
-      }
+    Socket_Address addr = socket->remote_address();
+    cow_string str(data.data(), data.size());
+    data.clear();
+    static constexpr char req[] = "GET / HTTP/1.1\r\nConnection: close\r\nHost: www.example.org\r\n\r\n";
 
-    void
-    do_on_ssl_connected() override
-      {
-        static constexpr char data[] =
-            "GET / HTTP/1.1\r\n"
-            "Host: example.org\r\n"
-            "Connection: close\r\n"
-            "\r\n";
+    switch((uint32_t) event) {
+      case connection_event_open:
+        socket->ssl_send(req, ::strlen(req));
+        POSEIDON_LOG_FATAL(("example SSL client sent data to `$1`:\n\n$2"), addr, req);
+        break;
 
-        this->ssl_send(data, ::strlen(data));
-        POSEIDON_LOG_ERROR(("example SSL client sent to `$1`:\n\n$2"), this->remote_address(), data);
-      }
+      case connection_event_stream:
+        POSEIDON_LOG_WARN(("example SSL client received data from `$1`:\n\n$2"), addr, str);
+        break;
 
-    void
-    do_on_ssl_stream(linear_buffer& data) override
-      {
-        POSEIDON_LOG_FATAL(("ALPN: received `$1`"), this->alpn_protocol());
-
-        cow_string str(data.begin(), data.end());
-        data.clear();
-        POSEIDON_LOG_WARN(("example SSL client received from `$1`:\n\n$2"), this->remote_address(), str);
-      }
-  };
-
-shared_ptr<Example_Session>
-do_create_client()
-  {
-    auto client = ::std::make_shared<Example_Session>();
-    network_driver.insert(client);
-    return client;
+      case connection_event_closed:
+        POSEIDON_LOG_FATAL(("example SSL client shut down connection `$1`: $2"), addr, str);
+        break;
+    }
   }
 
-const auto client = do_create_client();
+int
+start_client()
+  {
+    Socket_Address addr(sref("93.184.216.34:443"));  // www.example.org
+
+    my_client.start(addr);
+    POSEIDON_LOG_FATAL(("example SSL client started: local = $1"), my_client.local_address());
+    return 0;
+  }
+
+// Start the client when this shared library is being loaded.
+Easy_SSL_Client my_client(event_callback);
+int dummy = start_client();
 
 }  // namespace
