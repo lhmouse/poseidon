@@ -100,14 +100,15 @@ struct Final_Fiber final : Abstract_Fiber
 
           try {
             // Invoke the user-defined event callback.
-            if(event.type == connection_event_stream) {
-              // `connection_event_stream` is special. We append new data to the
-              // private buffer which is then passed to the callback instead of
-              // `event.data`. The private buffer is preserved across callbacks
-              // and may be consumed partially by user code.
-              fiber_private_buffer->putn(event.data.data(), event.data.size());
-              this->m_cb.thunk(cb_obj.get(), client, event.type, *fiber_private_buffer);
-            }
+            // `connection_event_stream` is special. We append new data to the
+            // private buffer which is then passed to the callback instead of
+            // `event.data`. The private buffer is preserved across callbacks
+            // and may be consumed partially by user code.
+            if(event.type == connection_event_stream)
+              this->m_cb.thunk(cb_obj.get(), client, event.type,
+                      fiber_private_buffer->empty()
+                         ? fiber_private_buffer->swap(event.data)
+                         : fiber_private_buffer->putn(event.data.data(), event.data.size()));
             else
               this->m_cb.thunk(cb_obj.get(), client, event.type, event.data);
           }
