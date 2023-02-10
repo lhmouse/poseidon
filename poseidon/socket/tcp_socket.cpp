@@ -27,13 +27,13 @@ TCP_Socket(const Socket_Address& addr)
     ::setsockopt(this->fd(), IPPROTO_TCP, TCP_NODELAY, &ival, sizeof(ival));
 
     // Initiate a connection to `addr`.
-    ::sockaddr_in6 sa;
+    struct ::sockaddr_in6 sa;
     sa.sin6_family = AF_INET6;
     sa.sin6_port = htobe16(addr.port());
     sa.sin6_flowinfo = 0;
     sa.sin6_addr = addr.addr();
     sa.sin6_scope_id = 0;
-    if((::connect(this->fd(), (const ::sockaddr*) &sa, sizeof(sa)) != 0) && (errno != EINPROGRESS))
+    if((::connect(this->fd(), (const struct ::sockaddr*) &sa, sizeof(sa)) != 0) && (errno != EINPROGRESS))
       POSEIDON_THROW((
           "Failed to initiate TCP connection to `$4`",
           "[`connect()` failed: $3]",
@@ -233,7 +233,7 @@ remote_address() const noexcept
     if(this->m_peername_ready.load())
       return this->m_peername;
 
-    ::sockaddr_in6 sa;
+    struct ::sockaddr_in6 sa;
     ::socklen_t salen = sizeof(sa);
     if(::getpeername(this->fd(), (::sockaddr*) &sa, &salen) != 0)
       return ipv6_invalid;

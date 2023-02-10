@@ -17,7 +17,7 @@ Abstract_Socket(unique_posix_fd&& fd)
       POSEIDON_THROW(("Null socket handle not valid"));
 
     // Get the local address and address family.
-    ::sockaddr_in6 sa;
+    struct ::sockaddr_in6 sa;
     ::socklen_t salen = sizeof(sa);
     if(::getsockname(this->fd(), (::sockaddr*) &sa, &salen) != 0)
       POSEIDON_THROW((
@@ -81,7 +81,7 @@ local_address() const noexcept
     if(this->m_sockname_ready.load())
       return this->m_sockname;
 
-    ::sockaddr_in6 sa;
+    struct ::sockaddr_in6 sa;
     ::socklen_t salen = sizeof(sa);
     if(::getsockname(this->fd(), (::sockaddr*) &sa, &salen) != 0)
       return ipv6_invalid;

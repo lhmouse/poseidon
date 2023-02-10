@@ -18,14 +18,14 @@ Listen_Socket(const Socket_Address& addr)
     ::setsockopt(this->fd(), SOL_SOCKET, SO_REUSEADDR, &ival, sizeof(ival));
 
     // Bind this socket onto `addr`.
-    ::sockaddr_in6 sa;
+    struct ::sockaddr_in6 sa;
     sa.sin6_family = AF_INET6;
     sa.sin6_port = htobe16(addr.port());
     sa.sin6_flowinfo = 0;
     sa.sin6_addr = addr.addr();
     sa.sin6_scope_id = 0;
 
-    if(::bind(this->fd(), (const ::sockaddr*) &sa, sizeof(sa)) != 0)
+    if(::bind(this->fd(), (const struct ::sockaddr*) &sa, sizeof(sa)) != 0)
       POSEIDON_THROW((
           "Failed to bind TCP socket onto `$4`",
           "[`bind()` failed: $3]",
@@ -70,7 +70,7 @@ do_abstract_socket_on_readable()
 
     for(;;) {
       // Try getting a connection.
-      ::sockaddr_in6 sa;
+      struct ::sockaddr_in6 sa;
       ::socklen_t salen = sizeof(sa);
       unique_posix_fd fd(::accept4(this->fd(), (::sockaddr*) &sa, &salen, SOCK_NONBLOCK));
 
