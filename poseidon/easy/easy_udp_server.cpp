@@ -12,8 +12,6 @@
 namespace poseidon {
 namespace {
 
-using my_thunk = void (void*, shared_ptrR<UDP_Socket>, Socket_Address&&, linear_buffer&&);
-
 struct Packet_Queue
   {
     mutable plain_mutex mutex;
@@ -32,7 +30,7 @@ struct Packet_Queue
 struct Shared_cb_args
   {
     weak_ptr<void> wobj;
-    my_thunk* thunk;
+    callback_thunk_ptr<shared_ptrR<UDP_Socket>, Socket_Address&&, linear_buffer&&> thunk;
     weak_ptr<Packet_Queue> wqueue;
   };
 

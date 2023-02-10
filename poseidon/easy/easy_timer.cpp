@@ -12,12 +12,10 @@
 namespace poseidon {
 namespace {
 
-using my_thunk = void (void*, int64_t);
-
 struct Shared_cb_args
   {
     weak_ptr<void> wobj;
-    my_thunk* thunk;
+    callback_thunk_ptr<int64_t> thunk;
     weak_ptr<void> wuniq;
   };
 

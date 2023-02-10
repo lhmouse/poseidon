@@ -13,8 +13,6 @@
 namespace poseidon {
 namespace {
 
-using my_thunk = void (void*, shared_ptrR<SSL_Socket>, Connection_Event, linear_buffer&);
-
 struct Client_Table
   {
     mutable plain_mutex mutex;
@@ -40,7 +38,7 @@ struct Client_Table
 struct Shared_cb_args
   {
     weak_ptr<void> wobj;
-    my_thunk* thunk;
+    callback_thunk_ptr<shared_ptrR<SSL_Socket>, Connection_Event, linear_buffer&> thunk;
     weak_ptr<Client_Table> wtable;
   };
 
