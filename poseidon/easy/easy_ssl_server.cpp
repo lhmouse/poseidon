@@ -20,16 +20,17 @@ struct Client_Table
 
     struct Event_Queue
       {
+        shared_ptr<SSL_Socket> client;  // read-only; no locking needed
+        linear_buffer fiber_private_buffer;  // by fibers only; no locking needed
+
         struct Event
           {
             Connection_Event type;
             linear_buffer data;
           };
 
-        shared_ptr<SSL_Socket> client;  // read-only; no locking needed
         deque<Event> events;
         bool fiber_active = false;
-        linear_buffer fiber_private_buffer;  // by fibers only; no locking needed
       };
 
     unordered_map<const volatile SSL_Socket*, Event_Queue> clients;
