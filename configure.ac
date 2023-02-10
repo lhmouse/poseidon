@@ -48,7 +48,7 @@ AM_CONDITIONAL([enable_address_sanitizer], [test "${enable_sanitizer}" == "addre
 AM_COND_IF([enable_address_sanitizer], [
   AC_CHECK_LIB([asan], [__asan_report_error], [], [AC_MSG_ERROR([address sanitizer not found])])
   AC_DEFINE([POSEIDON_ENABLE_ADDRESS_SANITIZER], [1], [Define to 1 to enable address sanitizer.])
-  AS_VAR_APPEND([sanitizer_flags], [" -fsanitize=address"])
+  AS_VAR_APPEND([sanitizer_flags], [" -fsanitize=address,undefined"])
 ])
 AM_CONDITIONAL([enable_thread_sanitizer], [test "${enable_sanitizer}" == "thread"])
 AM_COND_IF([enable_thread_sanitizer], [
