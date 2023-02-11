@@ -23,12 +23,11 @@ nobase_include_HEADERS +=  \
   %reldir%/fiber/future.hpp  \
   %reldir%/fiber/abstract_fiber.hpp  \
   %reldir%/socket/enums.hpp  \
+  %reldir%/socket/openssl_fwd.hpp  \
   %reldir%/socket/socket_address.hpp  \
   %reldir%/socket/abstract_socket.hpp  \
   %reldir%/socket/udp_socket.hpp  \
   %reldir%/socket/listen_socket.hpp  \
-  %reldir%/socket/ssl_ptr.hpp  \
-  %reldir%/socket/ssl_ctx_ptr.hpp  \
   %reldir%/socket/tcp_socket.hpp  \
   %reldir%/socket/ssl_socket.hpp  \
   %reldir%/easy/enums.hpp  \

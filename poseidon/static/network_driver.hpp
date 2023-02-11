@@ -5,7 +5,7 @@
 #define POSEIDON_STATIC_NETWORK_DRIVER_
 
 #include "../fwd.hpp"
-#include "../socket/ssl_ctx_ptr.hpp"
+#include "../socket/openssl_fwd.hpp"
 namespace poseidon {
 
 class Network_Driver
