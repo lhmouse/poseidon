@@ -245,7 +245,7 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
 
     // Write text to streams. Errors are ignored.
     for(int fd : fds)
-      ::write(fd, data.data(), data.size());
+      (void)!::write(fd, data.data(), data.size());
   }
   catch(exception& stdex) {
     ::fprintf(stderr,
