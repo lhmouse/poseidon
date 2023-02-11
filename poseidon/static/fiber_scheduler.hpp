@@ -8,8 +8,6 @@
 #include <ucontext.h>  // ucontext_t
 namespace poseidon {
 
-// This class schedules fibers.
-// Objects of this class are recommended to be static.
 class Fiber_Scheduler
   {
   private:

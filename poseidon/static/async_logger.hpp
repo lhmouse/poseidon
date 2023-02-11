@@ -7,8 +7,6 @@
 #include "../fwd.hpp"
 namespace poseidon {
 
-// This class buffers log messages and write them asynchronously.
-// Objects of this class are recommended to be static.
 class Async_Logger
   {
   private:

@@ -7,7 +7,6 @@
 #include "../fwd.hpp"
 namespace poseidon {
 
-// This class provides 256-byte storage for temporary use.
 class charbuf_256
   {
   private:

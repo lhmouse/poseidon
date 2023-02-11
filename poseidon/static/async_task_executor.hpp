@@ -7,8 +7,6 @@
 #include "../fwd.hpp"
 namespace poseidon {
 
-// This class buffers tasks and execute them asynchronously.
-// Objects of this class are recommended to be static.
 class Async_Task_Executor
   {
   private:

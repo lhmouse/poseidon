@@ -8,8 +8,6 @@
 #include "../socket/ssl_ctx_ptr.hpp"
 namespace poseidon {
 
-// This class performs network I/O operations.
-// Objects of this class are recommended to be static.
 class Network_Driver
   {
   private:

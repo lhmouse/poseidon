@@ -7,8 +7,6 @@
 #include "../fwd.hpp"
 namespace poseidon {
 
-// This class schedules timers.
-// Objects of this class are recommended to be static.
 class Timer_Driver
   {
   private:

@@ -8,9 +8,6 @@
 #include <asteria/value.hpp>
 namespace poseidon {
 
-// This class can be used to parse a configuration file.
-// Please see 'etc/poseidon/main.default.conf' for details about the file
-// format and syntax.
 class Config_File
   {
   private:
