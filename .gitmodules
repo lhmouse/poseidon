@@ -1,3 +1,6 @@
 [submodule "asteria"]
 	path = asteria
 	url = https://github.com/lhmouse/asteria.git
+[submodule "http-parser"]
+	path = http-parser
+	url = https://github.com/lhmouse/http-parser.git
