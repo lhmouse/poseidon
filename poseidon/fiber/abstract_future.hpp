@@ -14,7 +14,7 @@ class Abstract_Future
     friend class Fiber_Scheduler;
 
     mutable plain_mutex m_init_mutex;
-    atomic_acq_rel<Future_State> m_state = { future_state_empty };
+    atomic_acq_rel<Future_State> m_state;
     vector<weak_ptr<atomic_relaxed<int64_t>>> m_waiters;
 
   protected:
@@ -38,18 +38,6 @@ class Abstract_Future
     Future_State
     future_state() const noexcept
       { return this->m_state.load();  }
-
-    bool
-    empty() const noexcept
-      { return this->m_state.load() == future_state_empty;  }
-
-    bool
-    has_value() const noexcept
-      { return this->m_state.load() == future_state_value;  }
-
-    bool
-    has_exception() const noexcept
-      { return this->m_state.load() == future_state_exception;  }
   };
 
 }  // namespace poseidon

@@ -4,6 +4,7 @@
 #include "../precompiled.ipp"
 #include "ssl_socket.hpp"
 #include "ssl_ctx_ptr.hpp"
+#include "enums.hpp"
 #include "../utils.hpp"
 #include <sys/socket.h>
 #include <netinet/tcp.h>

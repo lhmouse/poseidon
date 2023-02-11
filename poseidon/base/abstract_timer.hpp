@@ -12,7 +12,7 @@ class Abstract_Timer
   private:
     friend class Timer_Driver;
 
-    atomic_relaxed<Async_State> m_state = { async_state_pending };
+    atomic_relaxed<Async_State> m_state = { };
     uint64_t m_serial;  // used by timer driver
 
   protected:

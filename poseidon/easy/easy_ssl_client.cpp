@@ -3,6 +3,7 @@
 
 #include "../precompiled.ipp"
 #include "easy_ssl_client.hpp"
+#include "enums.hpp"
 #include "../socket/ssl_socket.hpp"
 #include "../static/network_driver.hpp"
 #include "../fiber/abstract_fiber.hpp"

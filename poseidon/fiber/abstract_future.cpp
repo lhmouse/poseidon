@@ -3,6 +3,7 @@
 
 #include "../precompiled.ipp"
 #include "abstract_future.hpp"
+#include "enums.hpp"
 #include "../static/fiber_scheduler.hpp"
 #include "../utils.hpp"
 namespace poseidon {

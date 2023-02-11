@@ -3,6 +3,7 @@
 
 #include "../precompiled.ipp"
 #include "easy_udp_client.hpp"
+#include "enums.hpp"
 #include "../socket/udp_socket.hpp"
 #include "../static/network_driver.hpp"
 #include "../fiber/abstract_fiber.hpp"

@@ -3,6 +3,7 @@
 
 #include "../precompiled.ipp"
 #include "easy_timer.hpp"
+#include "enums.hpp"
 #include "../base/abstract_timer.hpp"
 #include "../static/timer_driver.hpp"
 #include "../fiber/abstract_fiber.hpp"

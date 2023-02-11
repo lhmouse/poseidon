@@ -6,6 +6,7 @@
 #include "../base/config_file.hpp"
 #include "../fiber/abstract_fiber.hpp"
 #include "../fiber/abstract_future.hpp"
+#include "../fiber/enums.hpp"
 #include "../utils.hpp"
 #include <time.h>  // clock_gettime()
 #include <sys/resource.h>  // getrlimit()
@@ -352,7 +353,7 @@ thread_loop()
     //    will exit after all fibers complete execution.
     // 3. If the fiber is not waiting for a future, or if the future has become
     //    ready, the fiber shall be resumed.
-    if((now - elem->yield_time < real_fail_timeout) && !signal && futr && futr->empty())
+    if((now - elem->yield_time < real_fail_timeout) && !signal && futr && (futr->future_state() == future_state_empty))
       return;
 
     if(!elem->sched_inner->uc_stack.ss_sp) {
@@ -501,7 +502,7 @@ checked_yield(const Abstract_Fiber* current, shared_ptrR<Abstract_Future> futr_o
       future_lock.lock(futr_opt->m_init_mutex);
 
     // If the future is not empty, don't block at all.
-    if(futr_opt && !futr_opt->empty())
+    if(futr_opt && (futr_opt->future_state() != future_state_empty))
       return;
 
     // Set the first timeout value.

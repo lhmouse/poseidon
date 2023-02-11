@@ -12,7 +12,7 @@ class Abstract_Async_Task
   private:
     friend class Async_Task_Executor;
 
-    atomic_relaxed<Async_State> m_state = { async_state_pending };
+    atomic_relaxed<Async_State> m_state;
 
   protected:
     // Constructs an asynchronous task.

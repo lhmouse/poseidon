@@ -101,18 +101,22 @@ template<typename T> using shared_ptrR = const shared_ptr<T>&;
 template<typename T> using weak_ptrR = const weak_ptr<T>&;
 
 // Base types
+enum Async_State : uint8_t;
 class Config_File;
 class charbuf_256;
 class Abstract_Timer;
 class Abstract_Async_Task;
 
 // Fiber types
+enum Future_State : uint8_t;
 class Abstract_Future;
 template<typename ValueT> class future;
 class Abstract_Fiber;
 class Timer_Fiber;
 
 // Socket types
+enum IP_Address_Class : uint8_t;
+enum Socket_State : uint8_t;
 class Socket_Address;
 class Abstract_Socket;
 class Listen_Socket;
@@ -122,8 +126,10 @@ class UDP_Socket;
 class TCP_Socket;
 class SSL_Socket;
 
-// Easy classes
-// These are suitable for agile development.
+// Easy types
+// Being 'easy' means all callbacks are invoked in fibers and can perform
+// async/await operations. These are suitable for agile development.
+enum Connection_Event : uint8_t;
 class Easy_Timer;
 class Easy_UDP_Server;
 class Easy_UDP_Client;
@@ -141,50 +147,6 @@ extern class Async_Logger& async_logger;
 extern class Timer_Driver& timer_driver;
 extern class Async_Task_Executor& async_task_executor;
 extern class Network_Driver& network_driver;
-
-// Enumerations
-enum Async_State : uint8_t
-  {
-    async_state_pending    = 0,
-    async_state_suspended  = 1,
-    async_state_running    = 2,
-    async_state_finished   = 3,
-  };
-
-enum Future_State : uint8_t
-  {
-    future_state_empty      = 0,
-    future_state_value      = 1,
-    future_state_exception  = 2,
-  };
-
-enum IP_Address_Class : uint8_t
-  {
-    ip_address_class_unspecified  = 0,  // all zeroes
-    ip_address_class_reserved     = 1,
-    ip_address_class_public       = 2,
-    ip_address_class_loopback     = 3,
-    ip_address_class_private      = 4,
-    ip_address_class_link_local   = 5,
-    ip_address_class_multicast    = 6,
-    ip_address_class_broadcast    = 7,  // IPv4 only
-  };
-
-enum Socket_State : uint8_t
-  {
-    socket_state_pending      = 0,
-    socket_state_established  = 1,
-    socket_state_closing      = 2,
-    socket_state_closed       = 3,
-  };
-
-enum Connection_Event : uint8_t
-  {
-    connection_event_null    = 0,
-    connection_event_open    = 1,
-    connection_event_stream  = 2,
-    connection_event_closed  = 3,
-  };
 
 // General utilities
 template<typename CopyT, typename... ArgsT>
