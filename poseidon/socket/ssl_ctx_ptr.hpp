@@ -5,7 +5,7 @@
 #define POSEIDON_SOCKET_SSL_CTX_PTR_
 
 #include "../fwd.hpp"
-#include <openssl/types.h>
+#include <openssl/ossl_typ.h>
 extern "C" int SSL_CTX_up_ref(SSL_CTX*) __attribute__((__nothrow__));
 extern "C" void SSL_CTX_free(SSL_CTX*) __attribute__((__nothrow__));
 namespace poseidon {

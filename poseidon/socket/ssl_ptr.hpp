@@ -5,7 +5,7 @@
 #define POSEIDON_SOCKET_SSL_PTR_
 
 #include "../fwd.hpp"
-#include <openssl/types.h>
+#include <openssl/ossl_typ.h>
 extern "C" int SSL_up_ref(SSL*) __attribute__((__nothrow__));
 extern "C" void SSL_free(SSL*) __attribute__((__nothrow__));
 namespace poseidon {
