@@ -3,7 +3,6 @@
 
 #include "../precompiled.ipp"
 #include "network_driver.hpp"
-#include "async_logger.hpp"
 #include "../socket/abstract_socket.hpp"
 #include "../socket/ssl_socket.hpp"
 #include "../base/config_file.hpp"

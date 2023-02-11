@@ -20,4 +20,22 @@ Timer_Driver& timer_driver = *new Timer_Driver;
 Async_Task_Executor& async_task_executor = *new Async_Task_Executor;
 Network_Driver& network_driver = *new Network_Driver;
 
+bool
+do_async_logger_level_enabled(Log_Level level) noexcept
+  {
+    return async_logger.level_enabled(level);
+  }
+
+void
+do_async_logger_enqueue(Log_Message&& msg)
+  {
+    async_logger.enqueue(::std::move(msg));
+  }
+
+void
+do_async_logger_synchronize() noexcept
+  {
+    async_logger.synchronize();
+  }
+
 }  // namespace poseidon

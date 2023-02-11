@@ -3,7 +3,6 @@
 
 #include "../precompiled.ipp"
 #include "udp_socket.hpp"
-#include "../static/async_logger.hpp"
 #include "../utils.hpp"
 #include <sys/socket.h>
 #include <net/if.h>

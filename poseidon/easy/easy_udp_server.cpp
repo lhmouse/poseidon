@@ -7,7 +7,6 @@
 #include "../static/network_driver.hpp"
 #include "../fiber/abstract_fiber.hpp"
 #include "../static/fiber_scheduler.hpp"
-#include "../static/async_logger.hpp"
 #include "../utils.hpp"
 namespace poseidon {
 namespace {

@@ -125,7 +125,7 @@ do_color(cow_string& data, const Level_Config& lconf, const char* code)
   }
 
 void
-do_write_nothrow(const Level_Config& lconf, const Async_Logger::Queued_Message& msg) noexcept
+do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
   try {
     // Compose the string to write.
     cow_string data;
@@ -322,10 +322,10 @@ thread_loop()
 
 void
 Async_Logger::
-enqueue(Queued_Message&& msg)
+enqueue(Log_Message&& msg)
   {
     // Fill in the name and LWP ID of the calling thread.
-    ::strncpy(msg.thrd_name, "[unknown]", sizeof(msg.thrd_name));
+    ::strcpy(msg.thrd_name, "[unknown]");
     ::pthread_getname_np(::pthread_self(), msg.thrd_name, sizeof(msg.thrd_name));
     msg.thrd_lwpid = (uint32_t) ::syscall(SYS_gettid);
 

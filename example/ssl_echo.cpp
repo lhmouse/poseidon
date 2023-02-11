@@ -3,7 +3,6 @@
 
 #include "../poseidon/precompiled.ipp"
 #include "../poseidon/easy/easy_ssl_server.hpp"
-#include "../poseidon/static/async_logger.hpp"
 #include "../poseidon/utils.hpp"
 namespace {
 using namespace ::poseidon;

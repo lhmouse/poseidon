@@ -3,7 +3,6 @@
 
 #include "../precompiled.ipp"
 #include "async_task_executor.hpp"
-#include "async_logger.hpp"
 #include "../base/abstract_async_task.hpp"
 #include "../utils.hpp"
 namespace poseidon {
