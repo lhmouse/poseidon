@@ -13,6 +13,7 @@ class Async_Logger
   {
   private:
     struct X_Level_Config;
+    struct X_Log_Message;
 
     mutable plain_mutex m_conf_mutex;
     cow_vector<X_Level_Config> m_conf_levels;
@@ -20,10 +21,10 @@ class Async_Logger
 
     mutable plain_mutex m_queue_mutex;
     condition_variable m_queue_avail;
-    vector<Log_Message> m_queue;
+    vector<X_Log_Message> m_queue;
 
     mutable recursive_mutex m_io_mutex;
-    vector<Log_Message> m_io_queue;
+    vector<X_Log_Message> m_io_queue;
 
   public:
     // Creates a logger that outputs to nowhere.
@@ -57,7 +58,7 @@ class Async_Logger
     // If this function fails, an exception is thrown, and there is no effect.
     // This function is thread-safe.
     void
-    enqueue(Log_Message&& msg);
+    enqueue(const Log_Context& ctx, cow_string text);
 
     // Waits until all pending log entries are delivered to output devices.
     // This function is thread-safe.

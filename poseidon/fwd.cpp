@@ -21,21 +21,25 @@ Async_Task_Executor& async_task_executor = *new Async_Task_Executor;
 Network_Driver& network_driver = *new Network_Driver;
 
 bool
-do_async_logger_level_enabled(Log_Level level) noexcept
+do_async_logger_check_level(Log_Level level) noexcept
   {
     return async_logger.level_enabled(level);
   }
 
 void
-do_async_logger_enqueue(Log_Message&& msg)
+do_async_logger_enqueue(const Log_Context& ctx, void* cb_obj, callback_thunk_ptr<cow_string&> cb_thunk) noexcept
   {
-    async_logger.enqueue(::std::move(msg));
-  }
+    try {
+      cow_string msg;
+      cb_thunk(cb_obj, msg);
+      async_logger.enqueue(ctx, ::std::move(msg));
+    }
+    catch(::std::exception& stdex) {
+      ::fprintf(stderr, "WARNING: Could not compose log message: %s\n", stdex.what());
+    }
 
-void
-do_async_logger_synchronize() noexcept
-  {
-    async_logger.synchronize();
+    if(ctx.level <= log_level_error)
+      async_logger.synchronize();
   }
 
 }  // namespace poseidon

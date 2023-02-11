@@ -5,7 +5,7 @@
 #define POSEIDON_FWD_
 
 #include "version.h"
-#include <asteria/fwd.hpp>
+#include <asteria/utils.hpp>
 #include <rocket/ascii_case.hpp>
 #include <rocket/atomic.hpp>
 #include <rocket/mutex.hpp>
@@ -208,28 +208,30 @@ enum Log_Level : uint8_t
     log_level_trace  = 5,
   };
 
-struct Log_Message
+struct Log_Context
   {
-    Log_Level level;
     const char* file;
-    size_t line;
+    uint32_t line;
+    Log_Level level;
     const char* func;
-    cow_string text;
-
-    // Users should not set these.
-    char thrd_name[16];
-    uint32_t thrd_lwpid;
   };
 
 ROCKET_CONST
 bool
-do_async_logger_level_enabled(Log_Level level) noexcept;
+do_async_logger_check_level(Log_Level level) noexcept;
 
 void
-do_async_logger_enqueue(Log_Message&& msg);
+do_async_logger_enqueue(const Log_Context& ctx, void* cb_obj, callback_thunk_ptr<cow_string&> cb_thunk) noexcept;
 
-void
-do_async_logger_synchronize() noexcept;
+template<typename... ParamsT>
+inline
+bool
+do_async_logger_enqueue_generic(const Log_Context& ctx, const ParamsT&... params) noexcept
+  {
+    auto my_thunk = [&](cow_string& msg) { ::asteria::format(msg, params...);  };
+    do_async_logger_enqueue(ctx, ::std::addressof(my_thunk), callback_thunk<decltype(my_thunk)>);
+    return true;
+  }
 
 // Define helper macros that compose log messages.
 // The `TEMPLATE` argument shall be a list of string literals in parentheses.
@@ -237,34 +239,10 @@ do_async_logger_synchronize() noexcept;
 // is appended. An example is:
 //  `POSEIDON_LOG_ERROR(("invalid argument: $1", "error: $2"), arg, err);`
 #define POSEIDON_LOG_GENERIC(LEVEL, TEMPLATE, ...)  \
-  (::poseidon::do_async_logger_level_enabled(::poseidon::log_level_##LEVEL)  \
-   &&  \
-   ([&](const char* f5zuNP3w) __attribute__((__noinline__, __nothrow__))  \
-     {  \
-       try {  \
-         ::poseidon::Log_Message iQw3Zbsf;  \
-         iQw3Zbsf.level = ::poseidon::log_level_##LEVEL;  \
-         iQw3Zbsf.file = __FILE__;  \
-         iQw3Zbsf.line = __LINE__;  \
-         iQw3Zbsf.func = f5zuNP3w;  \
-         try {  \
-           ::asteria::format(iQw3Zbsf.text, (::asteria::make_string_template TEMPLATE), ##__VA_ARGS__);  \
-         }  \
-         catch(::std::exception& xSG022wB) {  \
-           iQw3Zbsf.level = ::poseidon::log_level_error;  \
-           ::asteria::format(iQw3Zbsf.text, "Failed to compose log message: $1", xSG022wB);  \
-         }  \
-         ::poseidon::do_async_logger_enqueue(::std::move(iQw3Zbsf));  \
-         \
-         if(ROCKET_UNEXPECT(iQw3Zbsf.level <= ::poseidon::log_level_error))  \
-           ::poseidon::do_async_logger_synchronize();  \
-       }  \
-       catch(::std::exception& aJHPhv84) {  \
-         ::fprintf(stderr, "%s: Error writing log:\n  %s\n", f5zuNP3w, aJHPhv84.what());  \
-       }  \
-       return true;  \
-     }  \
-     (__FUNCTION__)))
+  (::poseidon::do_async_logger_check_level(::poseidon::log_level_##LEVEL)  \
+   && ::poseidon::do_async_logger_enqueue_generic(  \
+          { __FILE__, __LINE__, ::poseidon::log_level_##LEVEL, __FUNCTION__ }, \
+          (::asteria::make_string_template TEMPLATE), ##__VA_ARGS__))
 
 #define POSEIDON_LOG_FATAL(...)   POSEIDON_LOG_GENERIC(fatal, __VA_ARGS__)
 #define POSEIDON_LOG_ERROR(...)   POSEIDON_LOG_GENERIC(error, __VA_ARGS__)

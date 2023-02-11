@@ -19,6 +19,14 @@ struct Level_Config
     bool trivial = false;
   };
 
+struct Log_Message
+  {
+    Log_Context ctx;
+    char thrd_name[16] = "unknown";
+    uint32_t thrd_lwpid;
+    cow_string text;
+  };
+
 constexpr char escapes[][5] =
   {
     "\\0",   "\\x01", "\\x02", "\\x03", "\\x04", "\\x05", "\\x06", "\\a",
@@ -187,15 +195,15 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
     // Write the function name.
     do_color(data, lconf, "37;1");  // bright white
     data += "FUNCTION `";
-    data += msg.func;
+    data += msg.ctx.func;
     data += "` ";
 
     // Write the source file name and line number.
     do_color(data, lconf, "34;1");  // bright blue
     data += "SOURCE \'";
-    data += msg.file;
+    data += msg.ctx.file;
     data += ':';
-    nump.put_DU(msg.line);
+    nump.put_DU(msg.ctx.line);
     data.append(nump.data(), nump.size());
     data += "\'\n";
 
@@ -249,6 +257,10 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
 }  // namespace
 
 struct Async_Logger::X_Level_Config : Level_Config
+  {
+  };
+
+struct Async_Logger::X_Log_Message : Log_Message
   {
   };
 
@@ -311,9 +323,9 @@ thread_loop()
 
     // Write all elements.
     for(const auto& msg : this->m_io_queue)
-      if(msg.level < levels.size())
-        if((this->m_io_queue.size() <= 1024U) || !levels[msg.level].trivial)
-          do_write_nothrow(levels[msg.level], msg);
+      if(msg.ctx.level < levels.size())
+        if((this->m_io_queue.size() <= 1024U) || (levels[msg.ctx.level].trivial == false))
+          do_write_nothrow(levels[msg.ctx.level], msg);
 
     this->m_io_queue.clear();
     io_sync_lock.unlock();
@@ -322,12 +334,14 @@ thread_loop()
 
 void
 Async_Logger::
-enqueue(Log_Message&& msg)
+enqueue(const Log_Context& ctx, cow_string text)
   {
     // Fill in the name and LWP ID of the calling thread.
-    ::strcpy(msg.thrd_name, "[unknown]");
+    X_Log_Message msg;
+    msg.ctx = ctx;
     ::pthread_getname_np(::pthread_self(), msg.thrd_name, sizeof(msg.thrd_name));
     msg.thrd_lwpid = (uint32_t) ::syscall(SYS_gettid);
+    msg.text = ::std::move(text);
 
     // Enqueue the element.
     plain_mutex::unique_lock lock(this->m_queue_mutex);
@@ -356,8 +370,8 @@ synchronize() noexcept
 
     // Write all elements.
     for(const auto& msg : this->m_io_queue)
-      if(msg.level < levels.size())
-        do_write_nothrow(levels[msg.level], msg);
+      if(msg.ctx.level < levels.size())
+        do_write_nothrow(levels[msg.ctx.level], msg);
 
     this->m_io_queue.clear();
     io_sync_lock.unlock();
