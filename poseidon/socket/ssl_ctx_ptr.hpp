@@ -5,7 +5,9 @@
 #define POSEIDON_SOCKET_SSL_CTX_PTR_
 
 #include "../fwd.hpp"
-#include <openssl/ssl.h>
+#include <openssl/types.h>
+extern "C" int SSL_CTX_up_ref(SSL_CTX*) __attribute__((__nothrow__));
+extern "C" void SSL_CTX_free(SSL_CTX*) __attribute__((__nothrow__));
 namespace poseidon {
 
 class SSL_CTX_ptr
@@ -16,45 +18,44 @@ class SSL_CTX_ptr
   public:
     constexpr
     SSL_CTX_ptr(::SSL_CTX* ptr = nullptr) noexcept
-      : m_ptr(ptr)
-      { }
+      : m_ptr(ptr)  { }
 
     SSL_CTX_ptr(const SSL_CTX_ptr& other) noexcept
-      : m_ptr(other.do_up_ref())
-      { }
+      : m_ptr(other.do_up_ref())  { }
 
     SSL_CTX_ptr(SSL_CTX_ptr&& other) noexcept
-      : m_ptr(other.release())
-      { }
+      : m_ptr(other.release())  { }
 
     SSL_CTX_ptr&
     operator=(const SSL_CTX_ptr& other) & noexcept
-      {
-        this->reset(other.do_up_ref());
-        return *this;
-      }
+      { return this->reset(other.do_up_ref());  }
 
     SSL_CTX_ptr&
     operator=(SSL_CTX_ptr&& other) & noexcept
-      {
-        this->reset(other.release());
-        return *this;
-      }
+      { return this->reset(other.release());  }
 
     ~SSL_CTX_ptr()
-      {
-        if(this->m_ptr)
-          ::SSL_CTX_free(this->m_ptr);
-      }
+      { this->do_free();  }
 
   private:
     ::SSL_CTX*
     do_up_ref() const noexcept
       {
-        auto ptr_old = this->m_ptr;
-        if(ptr_old)
-          ::SSL_CTX_up_ref(ptr_old);
-        return ptr_old;
+        if(this->m_ptr)
+          ::SSL_CTX_up_ref(this->m_ptr);
+
+        return this->m_ptr;
+      }
+
+    void
+    do_free() noexcept
+      {
+        if(this->m_ptr)
+          ::SSL_CTX_free(this->m_ptr);
+
+#ifdef ROCKET_DEBUG
+        this->m_ptr = (::SSL_CTX*) 0xDEADBEEF;
+#endif  // DEBUG
       }
 
   public:
@@ -78,11 +79,10 @@ class SSL_CTX_ptr
       }
 
     SSL_CTX_ptr&
-    reset(::SSL_CTX* ptr_new = nullptr) noexcept
+    reset(::SSL_CTX* ptr = nullptr) noexcept
       {
-        auto ptr_old = ::std::exchange(this->m_ptr, ptr_new);
-        if(ptr_old)
-          ::SSL_CTX_free(ptr_old);
+        this->do_free();
+        this->m_ptr = ptr;
         return *this;
       }
 
