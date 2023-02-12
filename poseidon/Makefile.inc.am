@@ -7,6 +7,7 @@ nobase_include_HEADERS +=  \
   %reldir%/version.h  \
   %reldir%/fwd.hpp  \
   %reldir%/utils.hpp  \
+  %reldir%/third/openssl_fwd.hpp  \
   %reldir%/static/main_config.hpp  \
   %reldir%/static/async_logger.hpp  \
   %reldir%/static/timer_driver.hpp  \
@@ -23,7 +24,6 @@ nobase_include_HEADERS +=  \
   %reldir%/fiber/future.hpp  \
   %reldir%/fiber/abstract_fiber.hpp  \
   %reldir%/socket/enums.hpp  \
-  %reldir%/socket/openssl_fwd.hpp  \
   %reldir%/socket/socket_address.hpp  \
   %reldir%/socket/abstract_socket.hpp  \
   %reldir%/socket/udp_socket.hpp  \

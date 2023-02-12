@@ -1,8 +1,8 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
 
-#ifndef POSEIDON_SOCKET_OPENSSL_FWD_
-#define POSEIDON_SOCKET_OPENSSL_FWD_
+#ifndef POSEIDON_THIRD_OPENSSL_FWD_
+#define POSEIDON_THIRD_OPENSSL_FWD_
 
 #include <openssl/ossl_typ.h>
 namespace poseidon {
