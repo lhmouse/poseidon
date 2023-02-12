@@ -1,6 +1,8 @@
 check_PROGRAMS +=  \
   %reldir%/utils.test  \
   %reldir%/socket_address.test  \
+  %reldir%/deflator.test  \
+  %reldir%/inflator.test  \
   ${END}
 
 EXTRA_DIST +=  \

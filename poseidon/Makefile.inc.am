@@ -8,6 +8,7 @@ nobase_include_HEADERS +=  \
   %reldir%/fwd.hpp  \
   %reldir%/utils.hpp  \
   %reldir%/third/openssl_fwd.hpp  \
+  %reldir%/third/zlib_fwd.hpp  \
   %reldir%/static/main_config.hpp  \
   %reldir%/static/async_logger.hpp  \
   %reldir%/static/timer_driver.hpp  \
@@ -19,6 +20,8 @@ nobase_include_HEADERS +=  \
   %reldir%/base/charbuf_256.hpp  \
   %reldir%/base/abstract_timer.hpp  \
   %reldir%/base/abstract_async_task.hpp  \
+  %reldir%/base/deflator.hpp  \
+  %reldir%/base/inflator.hpp  \
   %reldir%/fiber/abstract_future.hpp  \
   %reldir%/fiber/future.hpp  \
   %reldir%/fiber/abstract_fiber.hpp  \
@@ -53,6 +56,8 @@ lib_libposeidon_la_SOURCES =  \
   %reldir%/base/config_file.cpp  \
   %reldir%/base/abstract_timer.cpp  \
   %reldir%/base/abstract_async_task.cpp  \
+  %reldir%/base/deflator.cpp  \
+  %reldir%/base/inflator.cpp  \
   %reldir%/fiber/abstract_future.cpp  \
   %reldir%/fiber/abstract_fiber.cpp  \
   %reldir%/socket/socket_address.cpp  \

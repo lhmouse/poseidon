@@ -106,6 +106,8 @@ class Config_File;
 class charbuf_256;
 class Abstract_Timer;
 class Abstract_Async_Task;
+class Deflator;
+class Inflator;
 
 // Fiber types
 enum Future_State : uint8_t;
