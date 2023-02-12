@@ -172,10 +172,7 @@ Easy_UDP_Client::
 join_multicast_group(const Socket_Address& maddr, uint8_t ttl, bool loopback, const char* ifname_opt)
   {
     if(!this->m_socket)
-      POSEIDON_THROW((
-          "Client not running",
-          "[easy UDP client `$1` (class `$2`)]"),
-          this, typeid(*this));
+      POSEIDON_THROW(("Client not running"));
 
     this->m_socket->join_multicast_group(maddr, ttl, loopback, ifname_opt);
   }
@@ -185,10 +182,7 @@ Easy_UDP_Client::
 leave_multicast_group(const Socket_Address& maddr, const char* ifname_opt)
   {
     if(!this->m_socket)
-      POSEIDON_THROW((
-          "Client not running",
-          "[easy UDP client `$1` (class `$2`)]"),
-          this, typeid(*this));
+      POSEIDON_THROW(("Client not running"));
 
     this->m_socket->leave_multicast_group(maddr, ifname_opt);
   }
