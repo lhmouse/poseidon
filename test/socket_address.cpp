@@ -5,7 +5,8 @@
 #include "../poseidon/socket/socket_address.hpp"
 using namespace ::poseidon;
 
-int main()
+int
+main()
   {
     Socket_Address addr;
     void* const data = &(addr.mut_addr());
