@@ -10,7 +10,7 @@ namespace {
 
 struct Final_Deflator final : Deflator
   {
-    ::std::string m_out;
+    linear_buffer m_out;
 
     explicit
     Final_Deflator(zlib_Format format, int level)
@@ -21,16 +21,17 @@ struct Final_Deflator final : Deflator
     pair<char*, size_t>
     do_on_deflate_get_output_buffer() override
       {
-        size_t old_size = this->m_out.size();
-        this->m_out.append(1024, '*');
-        return ::std::make_pair(&(this->m_out[0]) + old_size, this->m_out.size() - old_size);
+        size_t cap = this->m_out.reserve_after_end(1024);
+        char* ptr = this->m_out.mut_end();
+        this->m_out.accept(cap);
+        return { ptr, cap };
       }
 
     virtual
     void
     do_on_deflate_truncate_output_buffer(size_t nbackup) override
       {
-        this->m_out.erase(this->m_out.size() - nbackup);
+        this->m_out.unaccept(nbackup);
       }
   };
 
