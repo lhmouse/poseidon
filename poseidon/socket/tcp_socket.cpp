@@ -68,8 +68,8 @@ do_abstract_socket_on_readable()
 
     for(;;) {
       // Read bytes and append them to `queue`.
-      queue.reserve(0xFFFFU);
-      io_result = ::recv(this->fd(), queue.mut_end(), queue.capacity(), 0);
+      queue.reserve_after_end(0xFFFFU);
+      io_result = ::recv(this->fd(), queue.mut_end(), queue.capacity_after_end(), 0);
 
       if(io_result < 0) {
         if((errno == EAGAIN) || (errno == EWOULDBLOCK))
@@ -271,7 +271,7 @@ tcp_send(const char* data, size_t size)
 
     // Reserve backup space in case of partial writes.
     size_t nskip = 0;
-    queue.reserve(size);
+    queue.reserve_after_end(size);
 
     if(queue.size() != 0) {
       // If there have been data pending, append new data to the end.

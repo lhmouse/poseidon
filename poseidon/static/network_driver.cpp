@@ -274,8 +274,8 @@ thread_loop()
     lock.lock(this->m_event_mutex);
     if(this->m_events.getn((char*) &event, sizeof(event)) == 0) {
       // If the queue has been exhausted, get events from the epoll and fill it.
-      this->m_events.reserve(sizeof(::epoll_event) * event_buffer_size);
-      int nevents = ::epoll_wait(this->m_epoll, (::epoll_event*) this->m_events.end(), (int) event_buffer_size, 5000);
+      this->m_events.reserve_after_end(sizeof(::epoll_event) * event_buffer_size);
+      int nevents = ::epoll_wait(this->m_epoll, (::epoll_event*) this->m_events.end(), (int) this->m_events.capacity_after_end(), 5000);
       if(nevents <= 0)
         return;
 

@@ -71,11 +71,10 @@ do_abstract_socket_on_readable()
     for(;;) {
       // Try getting a packet.
       queue.clear();
-      queue.reserve(0xFFFFU);
-
+      queue.reserve_after_end(0xFFFFU);
       struct ::sockaddr_in6 sa;
       ::socklen_t salen = sizeof(sa);
-      io_result = ::recvfrom(this->fd(), queue.mut_end(), queue.capacity(), 0, (::sockaddr*) &sa, &salen);
+      io_result = ::recvfrom(this->fd(), queue.mut_end(), queue.capacity_after_end(), 0, (::sockaddr*) &sa, &salen);
 
       if(io_result < 0) {
         if((errno == EAGAIN) || (errno == EWOULDBLOCK))
