@@ -19,7 +19,6 @@ nobase_include_HEADERS +=  \
   %reldir%/base/charbuf_256.hpp  \
   %reldir%/base/abstract_timer.hpp  \
   %reldir%/base/abstract_async_task.hpp  \
-  %reldir%/fiber/enums.hpp  \
   %reldir%/fiber/abstract_future.hpp  \
   %reldir%/fiber/future.hpp  \
   %reldir%/fiber/abstract_fiber.hpp  \

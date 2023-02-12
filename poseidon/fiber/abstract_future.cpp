@@ -3,7 +3,6 @@
 
 #include "../precompiled.ipp"
 #include "abstract_future.hpp"
-#include "enums.hpp"
 #include "../static/fiber_scheduler.hpp"
 #include "../utils.hpp"
 namespace poseidon {
@@ -48,6 +47,8 @@ void
 Abstract_Future::
 do_abstract_future_signal_nolock() noexcept
   {
+    ROCKET_ASSERT(this->m_state.load() != future_state_empty);
+
     for(const auto& wp : this->m_waiters)
       if(auto timep = wp.lock())
         timep->store(Fiber_Scheduler::clock());

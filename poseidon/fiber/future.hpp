@@ -12,15 +12,13 @@ template<typename ValueT>
 class future
   : public Abstract_Future
   {
+  public:
     using value_type       = ValueT;
     using const_reference  = ::std::add_lvalue_reference_t<const ValueT>;
     using reference        = ::std::add_lvalue_reference_t<ValueT>;
 
   private:
-    static constexpr Future_State xstate_empty   = (Future_State) 0;  // future_state_empty
-    static constexpr Future_State xstate_value   = (Future_State) 1;  // future_state_value
-    static constexpr Future_State xstate_except  = (Future_State) 2;  // future_state_exception
-
+    // These fields are initialized according to the future state.
     union {
       ::std::conditional_t<::std::is_void<ValueT>::value, int, ValueT> m_value[1];
       exception_ptr m_exptr[1];
@@ -38,8 +36,7 @@ class future
     const_reference
     value() const
       {
-        // If no value has been set, throw an exception.
-        if(this->m_state.load() != xstate_value)
+        if(this->m_state.load() != future_state_value)
           this->do_abstract_future_check_value(typeid(ValueT).name(), this->m_exptr);
 
         // This cast is necessary when `const_reference` is void.
@@ -50,44 +47,37 @@ class future
     reference
     value()
       {
-        // If no value has been set, throw an exception.
-        if(this->m_state.load() != xstate_value)
+        if(this->m_state.load() != future_state_value)
           this->do_abstract_future_check_value(typeid(ValueT).name(), this->m_exptr);
 
         // This cast is necessary when `reference` is void.
         return (reference) this->m_value[0];
       }
 
-    // Sets a value.
+    // Sets a value, or does nothing if another value or exception has been set.
     template<typename... ParamsT>
     void
     set_value(ParamsT&&... params)
       {
-        // If a value or exception has already been set, this function shall
-        // do nothing.
         plain_mutex::unique_lock lock(this->m_init_mutex);
-        if(this->m_state.load() != xstate_empty)
+        if(ROCKET_UNEXPECT(this->m_state.load() != future_state_empty))
           return;
 
-        // Construct the value.
         ::rocket::construct(this->m_value, ::std::forward<ParamsT>(params)...);
-        this->m_state.store(xstate_value);
+        this->m_state.store(future_state_value);
         this->do_abstract_future_signal_nolock();
       }
 
-    // Sets an exception.
+    // Sets an exception, or does nothing if another value or exception has been set.
     void
     set_exception(const ::std::exception_ptr& exptr_opt) noexcept
       {
-        // If a value or exception has already been set, this function shall
-        // do nothing.
         plain_mutex::unique_lock lock(this->m_init_mutex);
-        if(this->m_state.load() != xstate_empty)
+        if(ROCKET_UNEXPECT(this->m_state.load() != future_state_empty))
           return;
 
-        // Construct the exception pointer.
         ::rocket::construct(this->m_exptr, exptr_opt);
-        this->m_state.store(xstate_except);
+        this->m_state.store(future_state_exception);
         this->do_abstract_future_signal_nolock();
       }
   };
@@ -97,14 +87,14 @@ future<ValueT>::
 ~future()
   {
     switch(this->m_state.load()) {
-      case xstate_empty:
+      case future_state_empty:
         break;
 
-      case xstate_value:
+      case future_state_value:
         ::rocket::destroy(this->m_value);
         break;
 
-      case xstate_except:
+      case future_state_exception:
         ::rocket::destroy(this->m_exptr);
         break;
     }

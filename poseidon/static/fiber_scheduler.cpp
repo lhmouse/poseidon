@@ -7,7 +7,6 @@
 #include "../base/enums.hpp"
 #include "../fiber/abstract_fiber.hpp"
 #include "../fiber/abstract_future.hpp"
-#include "../fiber/enums.hpp"
 #include "../utils.hpp"
 #include <time.h>  // clock_gettime()
 #include <sys/resource.h>  // getrlimit()
