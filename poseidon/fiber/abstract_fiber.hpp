@@ -5,7 +5,6 @@
 #define POSEIDON_FIBER_ABSTRACT_FIBER_
 
 #include "../fwd.hpp"
-#include "../base/enums.hpp"
 namespace poseidon {
 
 class Abstract_Fiber
@@ -14,7 +13,7 @@ class Abstract_Fiber
     friend class Fiber_Scheduler;
 
     Fiber_Scheduler* m_scheduler = nullptr;
-    atomic_relaxed<Async_State> m_state = { async_state_pending };
+    atomic_relaxed<Async_State> m_state;
 
   protected:
     // Constructs an empty fiber.
@@ -22,14 +21,14 @@ class Abstract_Fiber
     Abstract_Fiber() noexcept;
 
   protected:
-     // Gets the scheduler instance inside the callbacks hereafter.
-     // If this function is called elsewhere, the behavior is undefined.
-     Fiber_Scheduler&
-     do_abstract_fiber_scheduler() const noexcept
-       {
-         ROCKET_ASSERT(this->m_scheduler);
-         return *(this->m_scheduler);
-       }
+    // Gets the scheduler instance inside the callbacks hereafter.
+    // If this function is called elsewhere, the behavior is undefined.
+    Fiber_Scheduler&
+    do_abstract_fiber_scheduler() const noexcept
+      {
+        ROCKET_ASSERT(this->m_scheduler);
+        return *(this->m_scheduler);
+      }
 
     // This callback is invoked by the fiber scheduler and is intended to be
     // overriden by derived classes to perform useful operation.

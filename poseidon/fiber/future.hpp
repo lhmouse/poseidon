@@ -17,15 +17,19 @@ class future
     using reference        = ::std::add_lvalue_reference_t<ValueT>;
 
   private:
+    static constexpr Future_State xstate_empty   = (Future_State) 0;  // future_state_empty
+    static constexpr Future_State xstate_value   = (Future_State) 1;  // future_state_value
+    static constexpr Future_State xstate_except  = (Future_State) 2;  // future_state_exception
+
     union {
-      exception_ptr m_exptr[1];
       ::std::conditional_t<::std::is_void<ValueT>::value, int, ValueT> m_value[1];
+      exception_ptr m_exptr[1];
     };
 
   public:
     // Constructs an empty future.
     explicit
-    future() noexcept;
+    future() noexcept = default;
 
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(future);
@@ -35,7 +39,7 @@ class future
     value() const
       {
         // If no value has been set, throw an exception.
-        if(this->m_state.load() != future_state_value)
+        if(this->m_state.load() != xstate_value)
           this->do_abstract_future_check_value(typeid(ValueT).name(), this->m_exptr);
 
         // This cast is necessary when `const_reference` is void.
@@ -47,7 +51,7 @@ class future
     value()
       {
         // If no value has been set, throw an exception.
-        if(this->m_state.load() != future_state_value)
+        if(this->m_state.load() != xstate_value)
           this->do_abstract_future_check_value(typeid(ValueT).name(), this->m_exptr);
 
         // This cast is necessary when `reference` is void.
@@ -62,12 +66,12 @@ class future
         // If a value or exception has already been set, this function shall
         // do nothing.
         plain_mutex::unique_lock lock(this->m_init_mutex);
-        if(this->m_state.load() != future_state_empty)
+        if(this->m_state.load() != xstate_empty)
           return;
 
         // Construct the value.
         ::rocket::construct(this->m_value, ::std::forward<ParamsT>(params)...);
-        this->m_state.store(future_state_value);
+        this->m_state.store(xstate_value);
         this->do_abstract_future_signal_nolock();
       }
 
@@ -78,37 +82,29 @@ class future
         // If a value or exception has already been set, this function shall
         // do nothing.
         plain_mutex::unique_lock lock(this->m_init_mutex);
-        if(this->m_state.load() != future_state_empty)
+        if(this->m_state.load() != xstate_empty)
           return;
 
         // Construct the exception pointer.
         ::rocket::construct(this->m_exptr, exptr_opt);
-        this->m_state.store(future_state_exception);
+        this->m_state.store(xstate_except);
         this->do_abstract_future_signal_nolock();
       }
   };
 
 template<typename ValueT>
 future<ValueT>::
-future() noexcept
-  {
-  }
-
-template<typename ValueT>
-future<ValueT>::
 ~future()
   {
     switch(this->m_state.load()) {
-      case future_state_empty:
+      case xstate_empty:
         break;
 
-      case future_state_value:
-        // Destroy the value that has been constructed.
+      case xstate_value:
         ::rocket::destroy(this->m_value);
         break;
 
-      case future_state_exception:
-        // Destroy the exception that has been constructed.
+      case xstate_except:
         ::rocket::destroy(this->m_exptr);
         break;
     }

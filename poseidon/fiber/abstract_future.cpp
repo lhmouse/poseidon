@@ -38,7 +38,7 @@ do_abstract_future_check_value(const char* type, const exception_ptr* exptr) con
           rethrow_exception(*exptr);
 
         POSEIDON_THROW((
-            "Promise brkoen without an exception",
+            "Promise broken without an exception",
             "[value type was `$1`]"),
             type);
     }

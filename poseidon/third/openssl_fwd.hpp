@@ -4,6 +4,7 @@
 #ifndef POSEIDON_THIRD_OPENSSL_FWD_
 #define POSEIDON_THIRD_OPENSSL_FWD_
 
+#include "../fwd.hpp"
 #include <openssl/ossl_typ.h>
 namespace poseidon {
 
