@@ -136,6 +136,8 @@ class Easy_TCP_Server;
 class Easy_TCP_Client;
 class Easy_SSL_Server;
 class Easy_SSL_Client;
+class Easy_Deflator;
+class Easy_Inflator;
 
 // Singletons
 extern atomic_signal exit_signal;
