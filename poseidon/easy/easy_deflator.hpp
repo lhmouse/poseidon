@@ -12,6 +12,7 @@ class Easy_Deflator
   {
   private:
     shared_ptr<Deflator> m_defl;
+    shared_ptr<linear_buffer> m_out;
 
   public:
     // Constructs an empty data compressor.
@@ -28,7 +29,7 @@ class Easy_Deflator
 
     // Clears the current stream. Pending data are discarded.
     void
-    reset() noexcept;
+    clear() noexcept;
 
     // Gets a pointer to compressed data.
     ROCKET_PURE

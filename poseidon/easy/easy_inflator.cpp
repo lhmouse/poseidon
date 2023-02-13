@@ -46,44 +46,50 @@ void
 Easy_Inflator::
 start(zlib_Format format)
   {
-    this->m_defl = ::std::make_shared<Final_Inflator>(format);
+    auto defl = ::std::make_shared<Final_Inflator>(format);
+    this->m_defl = defl;
+    this->m_out = shared_ptr<linear_buffer>(defl, &(defl->m_out));
   }
 
 void
 Easy_Inflator::
-reset() noexcept
+clear() noexcept
   {
-    this->m_defl = nullptr;
+    if(!this->m_defl)
+      return;
+
+    this->m_defl->clear();
+    this->m_out->clear();
   }
 
 const char*
 Easy_Inflator::
 output_data() const noexcept
   {
-    if(!this->m_defl)
+    if(!this->m_out)
       return nullptr;
 
-    return static_cast<Final_Inflator*>(this->m_defl.get())->m_out.data();
+    return this->m_out->data();
   }
 
 size_t
 Easy_Inflator::
 output_size() const noexcept
   {
-    if(!this->m_defl)
+    if(!this->m_out)
       return 0;
 
-    return static_cast<Final_Inflator*>(this->m_defl.get())->m_out.size();
+    return this->m_out->size();
   }
 
 void
 Easy_Inflator::
 output_clear() noexcept
   {
-    if(!this->m_defl)
+    if(!this->m_out)
       return;
 
-    static_cast<Final_Inflator*>(this->m_defl.get())->m_out.clear();
+    this->m_out->clear();
   }
 
 void
@@ -93,7 +99,7 @@ inflate(const char* data, size_t size)
     if(!this->m_defl)
       POSEIDON_THROW(("No output stream"));
 
-    static_cast<Final_Inflator*>(this->m_defl.get())->inflate(data, size);
+    this->m_defl->inflate(data, size);
   }
 
 void
@@ -103,7 +109,7 @@ finish()
     if(!this->m_defl)
       POSEIDON_THROW(("No output stream"));
 
-    static_cast<Final_Inflator*>(this->m_defl.get())->finish();
+    this->m_defl->finish();
   }
 
 }  // namespace poseidon

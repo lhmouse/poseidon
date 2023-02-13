@@ -46,21 +46,27 @@ void
 Easy_Deflator::
 start(zlib_Format format, int level)
   {
-    this->m_defl = ::std::make_shared<Final_Deflator>(format, level);
+    auto defl = ::std::make_shared<Final_Deflator>(format, level);
+    this->m_defl = defl;
+    this->m_out = shared_ptr<linear_buffer>(defl, &(defl->m_out));
   }
 
 void
 Easy_Deflator::
-reset() noexcept
+clear() noexcept
   {
-    this->m_defl = nullptr;
+    if(!this->m_defl)
+      return;
+
+    this->m_defl->clear();
+    this->m_out->clear();
   }
 
 const char*
 Easy_Deflator::
 output_data() const noexcept
   {
-    if(!this->m_defl)
+    if(!this->m_out)
       return nullptr;
 
     return static_cast<Final_Deflator*>(this->m_defl.get())->m_out.data();
@@ -70,7 +76,7 @@ size_t
 Easy_Deflator::
 output_size() const noexcept
   {
-    if(!this->m_defl)
+    if(!this->m_out)
       return 0;
 
     return static_cast<Final_Deflator*>(this->m_defl.get())->m_out.size();
@@ -80,7 +86,7 @@ void
 Easy_Deflator::
 output_clear() noexcept
   {
-    if(!this->m_defl)
+    if(!this->m_out)
       return;
 
     static_cast<Final_Deflator*>(this->m_defl.get())->m_out.clear();

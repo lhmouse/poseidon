@@ -37,7 +37,7 @@ main()
         "\x03\x13\x00", 3) == 0);
 
     // reset
-    defl.reset();
+    defl.clear();
     POSEIDON_TEST_CHECK(defl.output_size() == 0);
     defl.start(zlib_format_raw);
     defl.deflate("He", 2);
@@ -48,7 +48,7 @@ main()
         "\xf2\x48\xcd\xc9\xc9\x07\x00\x00\x00\xFF\xFF", 11) == 0);
 
     // uncompressed data test
-    defl.reset();
+    defl.clear();
     POSEIDON_TEST_CHECK(defl.output_size() == 0);
     defl.start(zlib_format_raw, 0);
     defl.deflate("He", 2);

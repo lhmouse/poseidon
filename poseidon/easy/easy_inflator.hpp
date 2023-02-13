@@ -12,6 +12,7 @@ class Easy_Inflator
   {
   private:
     shared_ptr<Inflator> m_defl;
+    shared_ptr<linear_buffer> m_out;
 
   public:
     // Constructs an empty data decompressor.
@@ -27,7 +28,7 @@ class Easy_Inflator
 
     // Clears the current stream. Pending data are discarded.
     void
-    reset() noexcept;
+    clear() noexcept;
 
     // Gets a pointer to compressed data.
     ROCKET_PURE
