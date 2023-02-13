@@ -35,7 +35,7 @@ main()
     infl.clear();
     POSEIDON_TEST_CHECK(infl.output_size() == 0);
     infl.start(zlib_format_raw);
-    infl.inflate("\xf2\x48\xcd\xc9\xc9\x07\x00\x00\x00\xFF\xFF", 11);
+    infl.inflate("\xf3\x48\xcd\xc9\xc9\x07\x00\x00", 8);
     POSEIDON_TEST_CHECK(infl.output_size() == 5);
     POSEIDON_TEST_CHECK(::memcmp(infl.output_data(), "Hello", 5) == 0);
 
