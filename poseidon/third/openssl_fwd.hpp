@@ -30,11 +30,11 @@ class openssl_ptr
       : m_ptr(other.release())  { }
 
     openssl_ptr&
-    operator=(const openssl_ptr& other) noexcept
+    operator=(const openssl_ptr& other) & noexcept
       { return this->reset(other.do_up_ref());  }
 
     openssl_ptr&
-    operator=(openssl_ptr&& other) noexcept
+    operator=(openssl_ptr&& other) & noexcept
       { return this->reset(other.release());  }
 
     ~openssl_ptr()
