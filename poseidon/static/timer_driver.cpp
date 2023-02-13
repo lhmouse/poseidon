@@ -59,7 +59,7 @@ clock() noexcept
   {
     ::timespec ts;
     ::clock_gettime(CLOCK_MONOTONIC, &ts);
-    return ts.tv_sec * 1000000000LL + ts.tv_nsec;
+    return ts.tv_sec * 1000LL + (uint32_t) ts.tv_nsec / 1000000U;
   }
 
 void
@@ -70,17 +70,10 @@ thread_loop()
     while(this->m_pq.empty())
       this->m_pq_avail.wait(lock);
 
-    ROCKET_ASSERT(this->m_pq.front().next > 0);
     const int64_t now = this->clock();
-
-    int64_t delta = this->m_pq.front().next - now;
-    if(delta > 0) {
-      ::timespec ts;
-      ::clock_gettime(CLOCK_REALTIME, &ts);
-      double secs = (double) ts.tv_sec + (double) (ts.tv_nsec + delta) * 1.0e-9;
-      ts.tv_sec = (time_t) secs;
-      ts.tv_nsec = (long) ((secs - (double) ts.tv_sec) * 1.0e+9);
-      this->m_pq_avail.wait_until(lock, ts);
+    ROCKET_ASSERT(this->m_pq.front().next > 0);
+    if(now < this->m_pq.front().next) {
+      this->m_pq_avail.wait_for(lock, (int64_t) (this->m_pq.front().next - now));
       return;
     }
 

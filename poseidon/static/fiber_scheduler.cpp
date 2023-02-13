@@ -162,7 +162,7 @@ clock() noexcept
   {
     ::timespec ts;
     ::clock_gettime(CLOCK_MONOTONIC_COARSE, &ts);
-    return ts.tv_sec * 1000000000LL + ts.tv_nsec;
+    return ts.tv_sec * 1000LL + (uint32_t) ts.tv_nsec / 1000000U;
   }
 
 void
@@ -252,8 +252,8 @@ thread_loop()
   {
     plain_mutex::unique_lock lock(this->m_conf_mutex);
     const size_t stack_vm_size = this->m_conf_stack_vm_size;
-    const int64_t warn_timeout = this->m_conf_warn_timeout * 1000000000LL;
-    const int64_t fail_timeout = this->m_conf_fail_timeout * 1000000000LL;
+    const int64_t warn_timeout = this->m_conf_warn_timeout * 1000LL;
+    const int64_t fail_timeout = this->m_conf_fail_timeout * 1000LL;
     lock.unlock();
 
     const int64_t now = this->clock();
@@ -283,7 +283,7 @@ thread_loop()
 
       if(delta > 0) {
         // Calculate the time to wait, using binary exponential backoff.
-        delta = ::rocket::min(delta, this->m_pq_wait_ns * 2 + 1, 200000000LL);
+        delta = ::rocket::min(delta, this->m_pq_wait_ns * 2 + 1, 200LL);
         this->m_pq_wait_ns = delta;
         lock.unlock();
 
@@ -338,15 +338,13 @@ thread_loop()
     if((elem->fail_timeout_override == 0) && (now - elem->yield_time >= warn_timeout))
       POSEIDON_LOG_WARN((
           "Fiber `$1` (class `$2`) has been suspended for `$3` ms"),
-          elem->fiber, typeid(*(elem->fiber)),
-          (uint64_t) (now - elem->yield_time) / 1000000ULL);
+          elem->fiber, typeid(*(elem->fiber)), now - elem->yield_time);
 
     if((elem->fail_timeout_override == 0) && (now - elem->yield_time >= fail_timeout))
       POSEIDON_LOG_ERROR((
           "Fiber `$1` (class `$2`) has been suspended for `$3` ms",
           "This circumstance looks permanent. Please check for deadlocks."),
-          elem->fiber, typeid(*(elem->fiber)),
-          (uint64_t) (now - elem->yield_time) / 1000000ULL);
+          elem->fiber, typeid(*(elem->fiber)), now - elem->yield_time);
 
     // 1. If the fail timeout has been exceeded, the fiber shall be resumed anyway.
     // 2. If an exit signal is pending, all fibers shall be resumed. The process
@@ -507,8 +505,8 @@ checked_yield(const Abstract_Fiber* current, shared_ptrR<Abstract_Future> futr_o
 
     // Set the first timeout value.
     plain_mutex::unique_lock lock(this->m_conf_mutex);
-    const int64_t warn_timeout = this->m_conf_warn_timeout * 1000000000LL;
-    const int64_t fail_timeout = this->m_conf_fail_timeout * 1000000000LL;
+    const int64_t warn_timeout = this->m_conf_warn_timeout * 1000LL;
+    const int64_t fail_timeout = this->m_conf_fail_timeout * 1000LL;
     lock.unlock();
 
     const int64_t now = this->clock();

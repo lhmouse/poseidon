@@ -35,7 +35,7 @@ int
 start_client()
   {
     my_client.start();
-    text_timer.start(0, 1000'000'000);
+    text_timer.start(2000, 1000);
     POSEIDON_LOG_FATAL(("example UDP client started: local = $1"), my_client.local_address());
     return 0;
   }

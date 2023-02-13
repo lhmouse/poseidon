@@ -22,7 +22,7 @@ class Abstract_Timer
 
   protected:
     // This callback is invoked by the timer thread and is intended to be
-    // overriden by derived classes. `now` is the number of nanoseconds since
+    // overriden by derived classes. `now` is the number of milliseconds since
     // system startup.
     virtual
     void

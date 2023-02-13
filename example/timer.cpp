@@ -18,8 +18,8 @@ timer_callback(int64_t now)
 int
 start_timer()
   {
-    constexpr int64_t delay = 5'000'000'000;  // 5 seconds
-    constexpr int64_t period = 1'000'000'000;  // 1 seconds
+    constexpr int64_t delay = 5000;  // 5 seconds
+    constexpr int64_t period = 1000;  // 1 second
 
     my_timer.start(delay, period);
     POSEIDON_LOG_ERROR(("example timer started: delay = $1, period = $2"), delay, period);

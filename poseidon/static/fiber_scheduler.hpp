@@ -35,7 +35,7 @@ class Fiber_Scheduler
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Fiber_Scheduler);
 
-    // Gets the current time from a monotonic clock, in nanoseconds.
+    // Gets the current time from a monotonic clock, in milliseconds.
     // This function is thread-safe.
     static
     int64_t
