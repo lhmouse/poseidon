@@ -31,6 +31,11 @@ main()
     POSEIDON_TEST_CHECK(infl.output_size() == 5);
     POSEIDON_TEST_CHECK(::memcmp(infl.output_data(), "Hello", 5) == 0);
 
+    infl.output_clear();
+    infl.inflate("\x03\x13\x00", 3);
+    infl.finish();
+    POSEIDON_TEST_CHECK(infl.output_size() == 0);
+
     // reset
     infl.clear();
     POSEIDON_TEST_CHECK(infl.output_size() == 0);

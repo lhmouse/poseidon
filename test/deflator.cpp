@@ -36,6 +36,15 @@ main()
     POSEIDON_TEST_CHECK(::memcmp(defl.output_data(),
         "\x03\x13\x00", 3) == 0);
 
+    defl.output_clear();
+    try {
+      defl.deflate("Hello", 5);
+      ::abort();
+    }
+    catch(exception& e) {
+      POSEIDON_TEST_CHECK(::strstr(e.what(), "stream error"));
+    }
+
     // reset
     defl.clear();
     POSEIDON_TEST_CHECK(defl.output_size() == 0);
