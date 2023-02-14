@@ -62,14 +62,16 @@ class Inflator
     Inflator&
     clear() noexcept;
 
-    // Decompresses a chunk of data and flushes all output.
-    Inflator&
+    // Decompresses some data and returns the number of bytes that have been
+    // consumed. This function may return a value that is less than `size` if
+    // an end-of-stream marker has been encountered in the current stream.
+    size_t
     inflate(const char* data, size_t size);
 
-    // Completes the current stream. No data shall be written any further. This
-    // function expects an end-of-stream marker, and throws an exception if no
-    // one is encountered.
-    Inflator&
+    // Completes the current stream. No data shall be written any further. If
+    // no end-of-stream marker has been found in the current stream, `false`
+    // is returned.
+    bool
     finish();
   };
 

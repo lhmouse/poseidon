@@ -84,63 +84,61 @@ do_deflate_cleanup(uint8_t* end_out)
     this->m_strm->next_out = nullptr;
   }
 
-Deflator&
+size_t
 Deflator::
 deflate(const char* data, size_t size)
   {
     this->do_deflate_prepare(data);
-    const uint8_t* const end_in = (const uint8_t*) data + size;
+    const uint8_t* end_in = (const uint8_t*) data + size;
     uint8_t* end_out = nullptr;
+    int err = Z_OK;
 
-    for(;;) {
-      this->m_strm->avail_in = clamp_cast<uint32_t>(end_in - this->m_strm->next_in, 0, INT_MAX);
-      int err = this->do_deflate(end_out, Z_NO_FLUSH);
-      if(err == Z_BUF_ERROR)
-        break;
-      else if(err != Z_OK)
-        this->m_strm.throw_exception("deflate", err);
-    }
+    while(err == Z_OK)
+      this->m_strm->avail_in = clamp_cast<uint32_t>(end_in - this->m_strm->next_in, 0, INT_MAX),
+        err = this->do_deflate(end_out, Z_NO_FLUSH);
 
+    if(is_none_of(err, { Z_BUF_ERROR, Z_STREAM_ERROR }))
+      this->m_strm.throw_exception("deflate", err);
+
+    end_in = this->m_strm->next_in;
     this->do_deflate_cleanup(end_out);
-    return *this;
+    return (size_t) (end_in - (const uint8_t*) data);
   }
 
-Deflator&
+bool
 Deflator::
 sync_flush()
   {
     this->do_deflate_prepare(nullptr);
     uint8_t* end_out = nullptr;
+    int err = Z_OK;
 
-    for(;;) {
-      int err = this->do_deflate(end_out, Z_SYNC_FLUSH);
-      if(err == Z_BUF_ERROR)
-        break;
-      else if(err != Z_OK)
-        this->m_strm.throw_exception("deflate", err);
-    }
+    while(err == Z_OK)
+      err = this->do_deflate(end_out, Z_SYNC_FLUSH);
+
+    if(is_none_of(err, { Z_BUF_ERROR, Z_STREAM_ERROR }))
+      this->m_strm.throw_exception("deflate", err);
 
     this->do_deflate_cleanup(end_out);
-    return *this;
+    return err == Z_BUF_ERROR;
   }
 
-Deflator&
+bool
 Deflator::
 finish()
   {
     this->do_deflate_prepare(nullptr);
     uint8_t* end_out = nullptr;
+    int err = Z_OK;
 
-    for(;;) {
-      int err = this->do_deflate(end_out, Z_FINISH);
-      if(err == Z_STREAM_END)
-        break;
-      else if(err != Z_OK)
-        this->m_strm.throw_exception("deflate", err);
-    }
+    while(err == Z_OK)
+      err = this->do_deflate(end_out, Z_FINISH);
+
+    if(is_none_of(err, { Z_STREAM_END, Z_STREAM_ERROR }))
+      this->m_strm.throw_exception("deflate", err);
 
     this->do_deflate_cleanup(end_out);
-    return *this;
+    return err == Z_STREAM_END;
   }
 
 }  // namespace poseidon

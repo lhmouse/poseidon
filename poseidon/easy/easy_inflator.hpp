@@ -11,7 +11,7 @@ namespace poseidon {
 class Easy_Inflator
   {
   private:
-    shared_ptr<Inflator> m_defl;
+    shared_ptr<Inflator> m_infl;
     shared_ptr<linear_buffer> m_out;
 
   public:
@@ -44,13 +44,15 @@ class Easy_Inflator
     void
     output_clear() noexcept;
 
-    // Inputs some data to compress.
-    void
+    // Decompresses some data and returns the number of bytes that
+    // have been consumed.
+    size_t
     inflate(const char* data, size_t size);
 
-    // Completes the current stream.  This function expects an end-of-stream
-    // marker, and throws an exception if no one is encountered.
-    void
+    // Completes the current stream. No data shall be written any
+    // further. Ifno end-of-stream marker has been found in the
+    // current stream, `false` is returned.
+    bool
     finish();
   };
 

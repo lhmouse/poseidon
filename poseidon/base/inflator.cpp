@@ -54,7 +54,6 @@ do_inflate(uint8_t*& end_out, int flush)
     if(this->m_strm->avail_out != 0)
       return ::inflate(this->m_strm, flush);
 
-
     // .. When there is no more room, ask for a new buffer.
     auto obuf = this->do_on_inflate_get_output_buffer();
     if(obuf.second == 0)
@@ -82,46 +81,43 @@ do_inflate_cleanup(uint8_t* end_out)
     this->m_strm->next_out = nullptr;
   }
 
-Inflator&
+size_t
 Inflator::
 inflate(const char* data, size_t size)
   {
     this->do_inflate_prepare(data);
-    const uint8_t* const end_in = (const uint8_t*) data + size;
+    const uint8_t* end_in = (const uint8_t*) data + size;
     uint8_t* end_out = nullptr;
+    int err = Z_OK;
 
-    for(;;) {
-      this->m_strm->avail_in = clamp_cast<uint32_t>(end_in - this->m_strm->next_in, 0, INT_MAX);
-      int err = this->do_inflate(end_out, Z_SYNC_FLUSH);
-      if(err == Z_STREAM_END)
-        break;
-      else if(err == Z_BUF_ERROR)
-        break;
-      else if(err != Z_OK)
-        this->m_strm.throw_exception("inflate", err);
-    }
+    while(err == Z_OK)
+      this->m_strm->avail_in = clamp_cast<uint32_t>(end_in - this->m_strm->next_in, 0, INT_MAX),
+        err = this->do_inflate(end_out, Z_FINISH);
 
+    if(is_none_of(err, { Z_BUF_ERROR, Z_STREAM_END }))
+      this->m_strm.throw_exception("inflate", err);
+
+    end_in = this->m_strm->next_in;
     this->do_inflate_cleanup(end_out);
-    return *this;
+    return (size_t) (end_in - (const uint8_t*) data);
   }
 
-Inflator&
+bool
 Inflator::
 finish()
   {
     this->do_inflate_prepare(nullptr);
     uint8_t* end_out = nullptr;
+    int err = Z_OK;
 
-    for(;;) {
-      int err = this->do_inflate(end_out, Z_FINISH);
-      if(err == Z_STREAM_END)
-        break;
-      else if(err != Z_OK)
-        this->m_strm.throw_exception("inflate", err);
-    }
+    while(err == Z_OK)
+      err = this->do_inflate(end_out, Z_FINISH);
+
+    if(is_none_of(err, { Z_BUF_ERROR, Z_STREAM_END }))
+      this->m_strm.throw_exception("inflate", err);
 
     this->do_inflate_cleanup(end_out);
-    return *this;
+    return err == Z_STREAM_END;
   }
 
 }  // namespace poseidon

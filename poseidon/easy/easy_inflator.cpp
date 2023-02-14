@@ -47,7 +47,7 @@ Easy_Inflator::
 start(zlib_Format format)
   {
     auto defl = ::std::make_shared<Final_Inflator>(format);
-    this->m_defl = defl;
+    this->m_infl = defl;
     this->m_out = shared_ptr<linear_buffer>(defl, &(defl->m_out));
   }
 
@@ -55,10 +55,10 @@ void
 Easy_Inflator::
 clear() noexcept
   {
-    if(!this->m_defl)
+    if(!this->m_infl)
       return;
 
-    this->m_defl->clear();
+    this->m_infl->clear();
     this->m_out->clear();
   }
 
@@ -92,24 +92,24 @@ output_clear() noexcept
     this->m_out->clear();
   }
 
-void
+size_t
 Easy_Inflator::
 inflate(const char* data, size_t size)
   {
-    if(!this->m_defl)
-      POSEIDON_THROW(("No output stream"));
+    if(!this->m_infl)
+      return 0;
 
-    this->m_defl->inflate(data, size);
+    return this->m_infl->inflate(data, size);
   }
 
-void
+bool
 Easy_Inflator::
 finish()
   {
-    if(!this->m_defl)
-      POSEIDON_THROW(("No output stream"));
+    if(!this->m_infl)
+      return false;
 
-    this->m_defl->finish();
+    return this->m_infl->finish();
   }
 
 }  // namespace poseidon

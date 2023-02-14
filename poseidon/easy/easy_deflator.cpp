@@ -92,34 +92,34 @@ output_clear() noexcept
     static_cast<Final_Deflator*>(this->m_defl.get())->m_out.clear();
   }
 
-void
+size_t
 Easy_Deflator::
 deflate(const char* data, size_t size)
   {
     if(!this->m_defl)
-      POSEIDON_THROW(("No output stream"));
+      return 0;
 
-    static_cast<Final_Deflator*>(this->m_defl.get())->deflate(data, size);
+    return this->m_defl->deflate(data, size);
   }
 
-void
+bool
 Easy_Deflator::
 sync_flush()
   {
     if(!this->m_defl)
-      POSEIDON_THROW(("No output stream"));
+      return false;
 
-    static_cast<Final_Deflator*>(this->m_defl.get())->sync_flush();
+    return this->m_defl->sync_flush();
   }
 
-void
+bool
 Easy_Deflator::
 finish()
   {
     if(!this->m_defl)
-      POSEIDON_THROW(("No output stream"));
+      return false;
 
-    static_cast<Final_Deflator*>(this->m_defl.get())->finish();
+    return this->m_defl->finish();
   }
 
 }  // namespace poseidon

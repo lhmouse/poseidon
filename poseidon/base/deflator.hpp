@@ -63,19 +63,21 @@ class Deflator
     Deflator&
     clear() noexcept;
 
-    // Compresses a chunk of data.
-    Deflator&
+    // Compresses some data and returns the number of bytes that have been
+    // consumed. This function returns zero if `finish()` has been called to
+    // complete the current stream.
+    size_t
     deflate(const char* data, size_t size);
 
     // Completes the current deflate block. The effect of this function is
     // described by zlib about its `Z_SYNC_FLUSH` argument.
-    Deflator&
+    bool
     sync_flush();
 
     // Completes the current stream. No data shall be written any further. The
     // effect of this function is described by zlib about its `Z_FINISH`
     // argument.
-    Deflator&
+    bool
     finish();
   };
 

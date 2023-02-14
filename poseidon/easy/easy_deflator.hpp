@@ -22,8 +22,8 @@ class Easy_Deflator
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_Deflator);
 
-    // Starts a stream. `level` shall be an integer between 0 (no compression)
-    // and 9 (best compression).
+    // Starts a stream. `level` shall be an integer between 0 (no
+    // compression) and 9 (best compression).
     void
     start(zlib_Format format, int level = 8);
 
@@ -45,16 +45,17 @@ class Easy_Deflator
     void
     output_clear() noexcept;
 
-    // Inputs some data to compress.
-    void
+    // Compresses some data and returns the number of bytes that
+    // have been consumed.
+    size_t
     deflate(const char* data, size_t size);
 
     // Completes the current deflate block.
-    void
+    bool
     sync_flush();
 
     // Completes the current stream.
-    void
+    bool
     finish();
   };
 
