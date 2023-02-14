@@ -20,7 +20,7 @@ class Fiber_Scheduler
 
     mutable plain_mutex m_pq_mutex;
     vector<shared_ptr<X_Queued_Fiber>> m_pq;
-    long m_pq_wait_ns = 0;
+    long m_pq_wait_ms = 0;
 
     mutable recursive_mutex m_sched_mutex;
     weak_ptr<X_Queued_Fiber> m_sched_self_opt;

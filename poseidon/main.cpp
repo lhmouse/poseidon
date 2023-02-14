@@ -426,29 +426,31 @@ main(int argc, char** argv)
     // Note that this function shall not return in case of errors.
     do_parse_command_line(argc, argv);
 
-    // Load configuration and start the logger early.
+    // Load configuration.
     do_set_working_directory();
     main_config.reload();
-    do_create_threads();
 
     async_logger.reload(main_config.copy());
     fiber_scheduler.reload(main_config.copy());
     network_driver.reload(main_config.copy());
-    POSEIDON_LOG_INFO(("Finished loading configuration"));
+    do_init_signal_handlers();
+    do_create_threads();
+
+    POSEIDON_LOG_INFO(("Starting up: $1"), PACKAGE_STRING);
 
     do_check_euid();
     do_check_ulimits();
-    do_init_signal_handlers();
     do_write_pid_file();
     do_load_addons();
+
     POSEIDON_LOG_INFO(("Startup complete: $1"), PACKAGE_STRING);
 
     // Schedule fibers until a signal has been received and the scheduler is empty.
-    while(fiber_scheduler.size() || !exit_signal.load())
+    int sig = 0;
+    while(((sig = exit_signal.load()) == 0) || (fiber_scheduler.size() != 0))
       fiber_scheduler.thread_loop();
 
-    int sig = exit_signal.load();
-    POSEIDON_LOG_INFO(("Shutting down due to signal $1: $2"), sig, ::strsignal(sig));
+    POSEIDON_LOG_INFO(("Shutting down (signal $1: $2)"), sig, ::strsignal(sig));
     do_exit_printf(exit_success, "");
   }
   catch(exception& stdex) {

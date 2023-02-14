@@ -282,18 +282,18 @@ thread_loop()
 
       if(delta > 0) {
         // Calculate the time to wait, using binary exponential backoff.
-        delta = ::rocket::min(delta, this->m_pq_wait_ns * 2 + 1, 200LL);
-        this->m_pq_wait_ns = delta;
+        delta = ::rocket::min(delta, this->m_pq_wait_ms * 2 + 1, 200LL);
+        this->m_pq_wait_ms = delta;
         lock.unlock();
 
         ::timespec ts;
         ts.tv_sec = 0;
-        ts.tv_nsec = (long) delta;
+        ts.tv_nsec = (long) delta * 1000000L;
         ::nanosleep(&ts, nullptr);
         return;
       }
 
-      this->m_pq_wait_ns = 0;
+      this->m_pq_wait_ms = 0;
     }
 
     ::std::pop_heap(this->m_pq.begin(), this->m_pq.end(), fiber_comparator);
