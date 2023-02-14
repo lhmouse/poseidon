@@ -10,13 +10,6 @@
 #include <zlib.h>
 namespace poseidon {
 
-enum zlib_Format : uint8_t
-  {
-    zlib_format_deflate  = 0,
-    zlib_format_raw      = 1,
-    zlib_format_gzip     = 2,
-  };
-
 inline
 int
 zlib_make_level(int level)

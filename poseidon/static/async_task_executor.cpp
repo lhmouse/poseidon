@@ -4,7 +4,6 @@
 #include "../precompiled.ipp"
 #include "async_task_executor.hpp"
 #include "../base/abstract_async_task.hpp"
-#include "../base/enums.hpp"
 #include "../utils.hpp"
 namespace poseidon {
 

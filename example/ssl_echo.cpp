@@ -3,7 +3,6 @@
 
 #include "../poseidon/precompiled.ipp"
 #include "../poseidon/easy/easy_ssl_server.hpp"
-#include "../poseidon/easy/enums.hpp"
 #include "../poseidon/utils.hpp"
 namespace {
 using namespace ::poseidon;

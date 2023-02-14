@@ -5,7 +5,6 @@
 #define POSEIDON_EASY_EASY_INFLATOR_
 
 #include "../fwd.hpp"
-#include "../third/zlib_fwd.hpp"
 namespace poseidon {
 
 class Easy_Inflator

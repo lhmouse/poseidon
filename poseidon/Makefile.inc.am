@@ -15,7 +15,6 @@ nobase_include_HEADERS +=  \
   %reldir%/static/fiber_scheduler.hpp  \
   %reldir%/static/async_task_executor.hpp  \
   %reldir%/static/network_driver.hpp  \
-  %reldir%/base/enums.hpp  \
   %reldir%/base/config_file.hpp  \
   %reldir%/base/charbuf_256.hpp  \
   %reldir%/base/abstract_timer.hpp  \
@@ -25,14 +24,12 @@ nobase_include_HEADERS +=  \
   %reldir%/fiber/abstract_future.hpp  \
   %reldir%/fiber/future.hpp  \
   %reldir%/fiber/abstract_fiber.hpp  \
-  %reldir%/socket/enums.hpp  \
   %reldir%/socket/socket_address.hpp  \
   %reldir%/socket/abstract_socket.hpp  \
   %reldir%/socket/udp_socket.hpp  \
   %reldir%/socket/listen_socket.hpp  \
   %reldir%/socket/tcp_socket.hpp  \
   %reldir%/socket/ssl_socket.hpp  \
-  %reldir%/easy/enums.hpp  \
   %reldir%/easy/easy_timer.hpp  \
   %reldir%/easy/easy_udp_server.hpp  \
   %reldir%/easy/easy_udp_client.hpp  \
