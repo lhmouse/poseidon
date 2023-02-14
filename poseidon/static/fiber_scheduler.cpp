@@ -313,8 +313,8 @@ thread_loop()
     }
 
     // Put the fiber back.
-    elem->async_time.xadd(warn_timeout);
     elem->check_time += warn_timeout;
+    elem->async_time.xadd(warn_timeout);
     ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), fiber_comparator);
 
     recursive_mutex::unique_lock sched_lock(this->m_sched_mutex);
@@ -325,8 +325,6 @@ thread_loop()
     POSEIDON_LOG_TRACE((
         "Processing fiber `$1` (class `$2`): state = $3"),
         elem->fiber, typeid(*(elem->fiber)), elem->fiber->m_state.load());
-
-    auto futr = elem->futr_opt.lock();
 
     int64_t real_fail_timeout;
     if(elem->fail_timeout_override <= 0)
@@ -350,7 +348,8 @@ thread_loop()
     //    will exit after all fibers complete execution.
     // 3. If the fiber is not waiting for a future, or if the future has become
     //    ready, the fiber shall be resumed.
-    if((now - elem->yield_time < real_fail_timeout) && !signal && futr && (futr->future_state() == future_state_empty))
+    auto futr = elem->futr_opt.lock();
+    if((now - elem->yield_time < real_fail_timeout) && (signal == 0) && futr && (futr->m_state.load() == future_state_empty))
       return;
 
     if(!elem->sched_inner->uc_stack.ss_sp) {
@@ -449,14 +448,12 @@ insert(unique_ptr<Abstract_Fiber>&& fiber)
     if(!fiber)
       POSEIDON_THROW(("Null fiber pointer not valid"));
 
-    const int64_t now = this->clock();
-
     // Create the management node.
     auto elem = ::std::make_shared<X_Queued_Fiber>();
     elem->fiber = ::std::move(fiber);
-    elem->async_time.store(now);
-    elem->yield_time = now;
-    elem->check_time = now;
+    elem->yield_time = this->clock();
+    elem->check_time = elem->yield_time;
+    elem->async_time.store(elem->yield_time);
 
     // Insert it.
     plain_mutex::unique_lock lock(this->m_pq_mutex);
@@ -495,12 +492,13 @@ check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_op
 
     // If a future is given, lock it, in order to prevent race conditions.
     plain_mutex::unique_lock future_lock;
-    if(futr_opt)
+    if(futr_opt) {
       future_lock.lock(futr_opt->m_init_mutex);
 
-    // If the future is not empty, don't block at all.
-    if(futr_opt && (futr_opt->future_state() != future_state_empty))
-      return;
+      // Check whether initialization has completed with `m_init_mutex` locked.
+      if(futr_opt->m_state.load() != future_state_empty)
+        return;
+    }
 
     // Set the first timeout value.
     plain_mutex::unique_lock lock(this->m_conf_mutex);
@@ -508,18 +506,17 @@ check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_op
     const int64_t fail_timeout = this->m_conf_fail_timeout * 1000LL;
     lock.unlock();
 
-    const int64_t now = this->clock();
+    elem->futr_opt = futr_opt;
+    elem->yield_time = this->clock();
+    elem->fail_timeout_override = fail_timeout_override;
 
     int64_t real_check_timeout;
-    if(fail_timeout_override <= 0)
+    if(elem->fail_timeout_override <= 0)
       real_check_timeout = ::rocket::min(warn_timeout, fail_timeout);  // use default
     else
-      real_check_timeout = ::rocket::min(fail_timeout_override, 0x7F000000'00000000LL - now);
+      real_check_timeout = elem->fail_timeout_override;
 
-    elem->async_time.store(now + real_check_timeout);
-    elem->futr_opt = futr_opt;
-    elem->yield_time = now;
-    elem->fail_timeout_override = fail_timeout_override;
+    elem->async_time.store(elem->yield_time + ::rocket::min(real_check_timeout, INT64_MAX - elem->yield_time));
 
     // Attach this fiber to the wait queue of the future.
     // Other threads may update the `async_time` field to affect scheduling.
