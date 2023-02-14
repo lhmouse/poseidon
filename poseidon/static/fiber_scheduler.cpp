@@ -118,7 +118,7 @@ struct Queued_Fiber
     weak_ptr<Abstract_Future> futr_opt;
     int64_t yield_time;
     int64_t check_time;
-    int64_t fail_timeout_override;
+    uint32_t fail_timeout_override;
     ::ucontext_t sched_inner[1];
   };
 
@@ -251,8 +251,8 @@ thread_loop()
   {
     plain_mutex::unique_lock lock(this->m_conf_mutex);
     const size_t stack_vm_size = this->m_conf_stack_vm_size;
-    const int64_t warn_timeout = this->m_conf_warn_timeout * 1000LL;
-    const int64_t fail_timeout = this->m_conf_fail_timeout * 1000LL;
+    const uint32_t warn_timeout = this->m_conf_warn_timeout;
+    const uint32_t fail_timeout = this->m_conf_fail_timeout;
     lock.unlock();
 
     const int64_t now = this->clock();
@@ -313,8 +313,8 @@ thread_loop()
     }
 
     // Put the fiber back.
-    elem->check_time += warn_timeout;
-    elem->async_time.xadd(warn_timeout);
+    elem->check_time += warn_timeout * 1000LL;
+    elem->async_time.xadd(warn_timeout * 1000LL);
     ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), fiber_comparator);
 
     recursive_mutex::unique_lock sched_lock(this->m_sched_mutex);
@@ -326,18 +326,18 @@ thread_loop()
         "Processing fiber `$1` (class `$2`): state = $3"),
         elem->fiber, typeid(*(elem->fiber)), elem->fiber->m_state.load());
 
-    int64_t real_fail_timeout;
-    if(elem->fail_timeout_override <= 0)
+    uint32_t real_fail_timeout;
+    if(elem->fail_timeout_override == 0)
       real_fail_timeout = fail_timeout;  // use default
     else
       real_fail_timeout = elem->fail_timeout_override;
 
-    if((elem->fail_timeout_override == 0) && (now - elem->yield_time >= warn_timeout))
+    if(now - elem->yield_time >= warn_timeout * 1000LL)
       POSEIDON_LOG_WARN((
           "Fiber `$1` (class `$2`) has been suspended for `$3` ms"),
           elem->fiber, typeid(*(elem->fiber)), now - elem->yield_time);
 
-    if((elem->fail_timeout_override == 0) && (now - elem->yield_time >= fail_timeout))
+    if(now - elem->yield_time >= real_fail_timeout * 1000LL)
       POSEIDON_LOG_ERROR((
           "Fiber `$1` (class `$2`) has been suspended for `$3` ms",
           "This circumstance looks permanent. Please check for deadlocks."),
@@ -349,7 +349,7 @@ thread_loop()
     // 3. If the fiber is not waiting for a future, or if the future has become
     //    ready, the fiber shall be resumed.
     auto futr = elem->futr_opt.lock();
-    if((now - elem->yield_time < real_fail_timeout) && (signal == 0) && futr && (futr->m_state.load() == future_state_empty))
+    if(futr && (futr->m_state.load() == future_state_empty) && (now - elem->yield_time < real_fail_timeout * 1000LL) && (signal == 0))
       return;
 
     if(!elem->sched_inner->uc_stack.ss_sp) {
@@ -478,7 +478,7 @@ self_opt() const noexcept
 
 void
 Fiber_Scheduler::
-check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_opt, int64_t fail_timeout_override)
+check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_opt, uint32_t fail_timeout_override)
   {
     // Get the current fiber.
     recursive_mutex::unique_lock sched_lock(this->m_sched_mutex);
@@ -502,21 +502,20 @@ check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_op
 
     // Set the first timeout value.
     plain_mutex::unique_lock lock(this->m_conf_mutex);
-    const int64_t warn_timeout = this->m_conf_warn_timeout * 1000LL;
-    const int64_t fail_timeout = this->m_conf_fail_timeout * 1000LL;
+    const uint32_t warn_timeout = this->m_conf_warn_timeout;
+    const uint32_t fail_timeout = this->m_conf_fail_timeout;
     lock.unlock();
 
-    elem->futr_opt = futr_opt;
-    elem->yield_time = this->clock();
-    elem->fail_timeout_override = fail_timeout_override;
-
-    int64_t real_check_timeout;
+    uint32_t real_check_timeout;
     if(elem->fail_timeout_override <= 0)
       real_check_timeout = ::rocket::min(warn_timeout, fail_timeout);  // use default
     else
       real_check_timeout = elem->fail_timeout_override;
 
-    elem->async_time.store(elem->yield_time + ::rocket::min(real_check_timeout, INT64_MAX - elem->yield_time));
+    elem->futr_opt = futr_opt;
+    elem->yield_time = this->clock();
+    elem->fail_timeout_override = fail_timeout_override;
+    elem->async_time.store(elem->yield_time + real_check_timeout * 1000LL);
 
     // Attach this fiber to the wait queue of the future.
     // Other threads may update the `async_time` field to affect scheduling.

@@ -61,10 +61,10 @@ class Abstract_Fiber
     async_state() const noexcept
       { return this->m_state.load();  }
 
-    // Calls `m_scheduler->yield(futr_opt)`.
+    // Calls `m_scheduler->check_and_yield(futr_opt, fail_timeout_override)`.
     // This function can only be called from `do_abstract_fiber_on_execution()`.
     void
-    yield(shared_ptrR<Abstract_Future> futr_opt = nullptr, int64_t fail_timeout_override = 0) const;
+    yield(shared_ptrR<Abstract_Future> futr_opt = nullptr, uint32_t fail_timeout_override = 0) const;
   };
 
 }  // namespace poseidon
