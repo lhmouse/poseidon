@@ -107,7 +107,7 @@ class SSL_Socket
 
     // Gets the SSL structure.
     ::SSL*
-    ssl() const noexcept
+    ssl() noexcept
       { return this->m_ssl.get();  }
 
     // Gets the remote or connected address of this socket. In case of errors,

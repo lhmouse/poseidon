@@ -100,7 +100,7 @@ class Abstract_Socket
 
     // Gets the file descriptor.
     int
-    fd() const noexcept
+    fd() noexcept
       { return this->m_fd.get();  }
 
     // Gets the socket state.
