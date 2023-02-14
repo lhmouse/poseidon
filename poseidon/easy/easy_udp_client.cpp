@@ -167,6 +167,16 @@ local_address() const noexcept
 
 void
 Easy_UDP_Client::
+connect(const Socket_Address& addr)
+  {
+    if(!this->m_socket)
+      POSEIDON_THROW(("Client not running"));
+
+    this->m_socket->connect(addr);
+  }
+
+void
+Easy_UDP_Client::
 join_multicast_group(const Socket_Address& maddr, uint8_t ttl, bool loopback, const char* ifname_opt)
   {
     if(!this->m_socket)
