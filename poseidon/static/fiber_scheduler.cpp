@@ -481,7 +481,7 @@ self_opt() const noexcept
 
 void
 Fiber_Scheduler::
-checked_yield(const Abstract_Fiber* current, shared_ptrR<Abstract_Future> futr_opt, int64_t fail_timeout_override)
+check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_opt, int64_t fail_timeout_override)
   {
     // Get the current fiber.
     recursive_mutex::unique_lock sched_lock(this->m_sched_mutex);
@@ -490,7 +490,7 @@ checked_yield(const Abstract_Fiber* current, shared_ptrR<Abstract_Future> futr_o
     if(!elem)
       POSEIDON_THROW(("Cannot yield execution outside a fiber"));
 
-    if(elem->fiber.get() != current)
+    if(elem->fiber.get() != self)
       POSEIDON_THROW(("Cannot yield execution outside the current fiber"));
 
     // If a future is given, lock it, in order to prevent race conditions.

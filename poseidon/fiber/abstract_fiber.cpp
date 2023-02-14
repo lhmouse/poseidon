@@ -39,7 +39,7 @@ yield(shared_ptrR<Abstract_Future> futr_opt, int64_t fail_timeout_override) cons
       POSEIDON_THROW(("Fiber not yieldable unless assigned to a scheduler"));
 
     // Check that we are yielding within the current fiber.
-    this->m_scheduler->checked_yield(this, futr_opt, fail_timeout_override);
+    this->m_scheduler->check_and_yield(this, futr_opt, fail_timeout_override);
   }
 
 }  // namespace poseidon
