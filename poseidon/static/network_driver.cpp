@@ -308,7 +308,6 @@ thread_loop()
     socket->m_io_driver = this;
     lock.unlock();
 
-    // Process events on this socket.
     POSEIDON_LOG_TRACE((
         "Processing socket `$1` (class `$2`): HUP = $3, ERR = $4, IN = $5, PRI = $6, OUT = $7"),
         socket, typeid(*socket), (event.events / EPOLLHUP) & 1U, (event.events / EPOLLERR) & 1U,
