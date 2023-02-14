@@ -29,7 +29,7 @@ SSL_Socket(unique_posix_fd&& fd, const SSL_CTX_ptr& ssl_ctx)
           "[SSL socket `$1` (class `$2`)]"),
           this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
 
-    if(!::SSL_set_fd(this->ssl(), this->fd()))
+    if(!::SSL_set_fd(this->ssl(), this->do_get_fd()))
       POSEIDON_THROW((
           "Could not allocate SSL BIO for incoming connection",
           "[`SSL_set_fd()` failed: $3]",
@@ -40,7 +40,7 @@ SSL_Socket(unique_posix_fd&& fd, const SSL_CTX_ptr& ssl_ctx)
 
     // Use `TCP_NODELAY`. Errors are ignored.
     int ival = 1;
-    ::setsockopt(this->fd(), IPPROTO_TCP, TCP_NODELAY, &ival, sizeof(ival));
+    ::setsockopt(this->do_get_fd(), IPPROTO_TCP, TCP_NODELAY, &ival, sizeof(ival));
   }
 
 SSL_Socket::
@@ -61,7 +61,7 @@ SSL_Socket(const Socket_Address& addr, const SSL_CTX_ptr& ssl_ctx)
           "[SSL socket `$1` (class `$2`)]"),
           this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
 
-    if(!::SSL_set_fd(this->ssl(), this->fd()))
+    if(!::SSL_set_fd(this->ssl(), this->do_get_fd()))
       POSEIDON_THROW((
           "Could not allocate SSL BIO for outgoing connection",
           "[`SSL_set_fd()` failed: $3]",
@@ -72,7 +72,7 @@ SSL_Socket(const Socket_Address& addr, const SSL_CTX_ptr& ssl_ctx)
 
     // Use `TCP_NODELAY`. Errors are ignored.
     int ival = 1;
-    ::setsockopt(this->fd(), IPPROTO_TCP, TCP_NODELAY, &ival, sizeof(ival));
+    ::setsockopt(this->do_get_fd(), IPPROTO_TCP, TCP_NODELAY, &ival, sizeof(ival));
 
     // Initiate a connection to `addr`.
     struct ::sockaddr_in6 sa;
@@ -81,7 +81,7 @@ SSL_Socket(const Socket_Address& addr, const SSL_CTX_ptr& ssl_ctx)
     sa.sin6_flowinfo = 0;
     sa.sin6_addr = addr.addr();
     sa.sin6_scope_id = 0;
-    if((::connect(this->fd(), (const struct ::sockaddr*) &sa, sizeof(sa)) != 0) && (errno != EINPROGRESS))
+    if((::connect(this->do_get_fd(), (const struct ::sockaddr*) &sa, sizeof(sa)) != 0) && (errno != EINPROGRESS))
       POSEIDON_THROW((
           "Failed to initiate SSL connection to `$4`",
           "[`connect()` failed: $3]",
@@ -228,7 +228,7 @@ do_abstract_socket_on_readable()
       // Half-open connections are not supported.
       bool alerted = ::SSL_shutdown(this->ssl()) == 1;
       POSEIDON_LOG_INFO(("Closing SSL connection: remote = $1, alerted = $2"), this->remote_address(), alerted);
-      ::shutdown(this->fd(), SHUT_RDWR);
+      ::shutdown(this->do_get_fd(), SHUT_RDWR);
     }
   }
 
@@ -240,7 +240,7 @@ do_abstract_socket_on_oob_readable()
     ::ssize_t io_result;
 
     // If there are no OOB data, `recv()` fails with `EINVAL`.
-    io_result = ::recv(this->fd(), &data, 1, MSG_OOB);
+    io_result = ::recv(this->do_get_fd(), &data, 1, MSG_OOB);
     if(io_result > 0) {
       try {
         // Process received byte.
@@ -339,7 +339,7 @@ do_abstract_socket_on_writable()
       // If the socket has been marked closing and there are no more data, perform
       // complete shutdown.
       ::SSL_shutdown(this->ssl());
-      ::shutdown(this->fd(), SHUT_RDWR);
+      ::shutdown(this->do_get_fd(), SHUT_RDWR);
     }
   }
 
@@ -379,7 +379,7 @@ remote_address() const noexcept
 
     struct ::sockaddr_in6 sa;
     ::socklen_t salen = sizeof(sa);
-    if(::getpeername(this->fd(), (::sockaddr*) &sa, &salen) != 0)
+    if(::getpeername(this->do_get_fd(), (::sockaddr*) &sa, &salen) != 0)
       return ipv6_invalid;
 
     ROCKET_ASSERT(sa.sin6_family == AF_INET6);
@@ -466,7 +466,7 @@ bool
 SSL_Socket::
 ssl_send_oob(char data) noexcept
   {
-    return ::send(this->fd(), &data, 1, MSG_OOB) > 0;
+    return ::send(this->do_get_fd(), &data, 1, MSG_OOB) > 0;
   }
 
 bool
@@ -484,7 +484,7 @@ ssl_shut_down() noexcept
 
     // If there are no data pending, shut it down immediately.
     ::SSL_shutdown(this->ssl());
-    return ::shutdown(this->fd(), SHUT_RDWR) == 0;
+    return ::shutdown(this->do_get_fd(), SHUT_RDWR) == 0;
   }
 
 }  // namespace poseidon

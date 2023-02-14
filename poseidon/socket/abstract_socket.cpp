@@ -20,7 +20,7 @@ Abstract_Socket(unique_posix_fd&& fd)
     // Get the local address and address family.
     struct ::sockaddr_in6 sa;
     ::socklen_t salen = sizeof(sa);
-    if(::getsockname(this->fd(), (::sockaddr*) &sa, &salen) != 0)
+    if(::getsockname(this->m_fd, (::sockaddr*) &sa, &salen) != 0)
       POSEIDON_THROW((
           "Could not get socket local address",
           "[`getsockname()` failed: $1]"),
@@ -39,7 +39,7 @@ Abstract_Socket(unique_posix_fd&& fd)
     }
 
     // Turn on non-blocking mode if it hasn't been enabled.
-    int fl_old = ::fcntl(this->fd(), F_GETFL);
+    int fl_old = ::fcntl(this->m_fd, F_GETFL);
     if(fl_old == -1)
       POSEIDON_THROW((
           "Could not get socket flags",
@@ -48,7 +48,7 @@ Abstract_Socket(unique_posix_fd&& fd)
 
     int fl_new = fl_old | O_NONBLOCK;
     if(fl_new != fl_old)
-      ::fcntl(this->fd(), F_SETFL, fl_new);
+      ::fcntl(this->m_fd, F_SETFL, fl_new);
   }
 
 Abstract_Socket::
@@ -84,7 +84,7 @@ local_address() const noexcept
 
     struct ::sockaddr_in6 sa;
     ::socklen_t salen = sizeof(sa);
-    if(::getsockname(this->fd(), (::sockaddr*) &sa, &salen) != 0)
+    if(::getsockname(this->m_fd, (::sockaddr*) &sa, &salen) != 0)
       return ipv6_invalid;
 
     ROCKET_ASSERT(sa.sin6_family == AF_INET6);
@@ -110,8 +110,8 @@ quick_shut_down() noexcept
     ::linger lng;
     lng.l_onoff = 1;
     lng.l_linger = 0;
-    ::setsockopt(this->fd(), SOL_SOCKET, SO_LINGER, &lng, sizeof(lng));
-    return ::shutdown(this->fd(), SHUT_RDWR) == 0;
+    ::setsockopt(this->m_fd, SOL_SOCKET, SO_LINGER, &lng, sizeof(lng));
+    return ::shutdown(this->m_fd, SHUT_RDWR) == 0;
   }
 
 }  // namespace poseidon

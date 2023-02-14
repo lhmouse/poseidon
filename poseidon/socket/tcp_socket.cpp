@@ -15,7 +15,7 @@ TCP_Socket(unique_posix_fd&& fd)
   {
     // Use `TCP_NODELAY`. Errors are ignored.
     int ival = 1;
-    ::setsockopt(this->fd(), IPPROTO_TCP, TCP_NODELAY, &ival, sizeof(ival));
+    ::setsockopt(this->do_get_fd(), IPPROTO_TCP, TCP_NODELAY, &ival, sizeof(ival));
   }
 
 TCP_Socket::
@@ -24,7 +24,7 @@ TCP_Socket(const Socket_Address& addr)
   {
     // Use `TCP_NODELAY`. Errors are ignored.
     int ival = 1;
-    ::setsockopt(this->fd(), IPPROTO_TCP, TCP_NODELAY, &ival, sizeof(ival));
+    ::setsockopt(this->do_get_fd(), IPPROTO_TCP, TCP_NODELAY, &ival, sizeof(ival));
 
     // Initiate a connection to `addr`.
     struct ::sockaddr_in6 sa;
@@ -33,7 +33,7 @@ TCP_Socket(const Socket_Address& addr)
     sa.sin6_flowinfo = 0;
     sa.sin6_addr = addr.addr();
     sa.sin6_scope_id = 0;
-    if((::connect(this->fd(), (const struct ::sockaddr*) &sa, sizeof(sa)) != 0) && (errno != EINPROGRESS))
+    if((::connect(this->do_get_fd(), (const struct ::sockaddr*) &sa, sizeof(sa)) != 0) && (errno != EINPROGRESS))
       POSEIDON_THROW((
           "Failed to initiate TCP connection to `$4`",
           "[`connect()` failed: $3]",
@@ -69,7 +69,7 @@ do_abstract_socket_on_readable()
     for(;;) {
       // Read bytes and append them to `queue`.
       queue.reserve_after_end(0xFFFFU);
-      io_result = ::recv(this->fd(), queue.mut_end(), queue.capacity_after_end(), 0);
+      io_result = ::recv(this->do_get_fd(), queue.mut_end(), queue.capacity_after_end(), 0);
 
       if(io_result < 0) {
         if((errno == EAGAIN) || (errno == EWOULDBLOCK))
@@ -112,7 +112,7 @@ do_abstract_socket_on_readable()
       // If the end of stream has been reached, shut the connection down anyway.
       // Half-open connections are not supported.
       POSEIDON_LOG_INFO(("Closing TCP connection: remote = $1"), this->remote_address());
-      ::shutdown(this->fd(), SHUT_RDWR);
+      ::shutdown(this->do_get_fd(), SHUT_RDWR);
     }
   }
 
@@ -124,7 +124,7 @@ do_abstract_socket_on_oob_readable()
     ::ssize_t io_result;
 
     // If there are no OOB data, `recv()` fails with `EINVAL`.
-    io_result = ::recv(this->fd(), &data, 1, MSG_OOB);
+    io_result = ::recv(this->do_get_fd(), &data, 1, MSG_OOB);
     if(io_result > 0) {
       try {
         // Process received byte.
@@ -155,7 +155,7 @@ do_abstract_socket_on_writable()
       if(queue.size() == 0)
         break;
 
-      io_result = ::send(this->fd(), queue.begin(), queue.size(), 0);
+      io_result = ::send(this->do_get_fd(), queue.begin(), queue.size(), 0);
 
       if(io_result < 0) {
         if((errno == EAGAIN) || (errno == EWOULDBLOCK))
@@ -195,7 +195,7 @@ do_abstract_socket_on_writable()
     if(queue.empty() && this->do_abstract_socket_set_state(socket_state_closing, socket_state_closed)) {
       // If the socket has been marked closing and there are no more data, perform
       // complete shutdown.
-      ::shutdown(this->fd(), SHUT_RDWR);
+      ::shutdown(this->do_get_fd(), SHUT_RDWR);
     }
   }
 
@@ -235,7 +235,7 @@ remote_address() const noexcept
 
     struct ::sockaddr_in6 sa;
     ::socklen_t salen = sizeof(sa);
-    if(::getpeername(this->fd(), (::sockaddr*) &sa, &salen) != 0)
+    if(::getpeername(this->do_get_fd(), (::sockaddr*) &sa, &salen) != 0)
       return ipv6_invalid;
 
     ROCKET_ASSERT(sa.sin6_family == AF_INET6);
@@ -286,7 +286,7 @@ tcp_send(const char* data, size_t size)
       if(nskip == size)
         break;
 
-      io_result = ::send(this->fd(), data + nskip, size - nskip, 0);
+      io_result = ::send(this->do_get_fd(), data + nskip, size - nskip, 0);
 
       if(io_result < 0) {
         if((errno == EAGAIN) || (errno == EWOULDBLOCK))
@@ -317,7 +317,7 @@ bool
 TCP_Socket::
 tcp_send_oob(char data) noexcept
   {
-    return ::send(this->fd(), &data, 1, MSG_OOB) > 0;
+    return ::send(this->do_get_fd(), &data, 1, MSG_OOB) > 0;
   }
 
 bool
@@ -334,7 +334,7 @@ tcp_shut_down() noexcept
       return true;
 
     // If there are no data pending, shut it down immediately.
-    return ::shutdown(this->fd(), SHUT_RDWR) == 0;
+    return ::shutdown(this->do_get_fd(), SHUT_RDWR) == 0;
   }
 
 }  // namespace poseidon

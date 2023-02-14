@@ -15,7 +15,7 @@ Listen_Socket(const Socket_Address& addr)
   {
     // Use `SO_REUSEADDR`. Errors are ignored.
     int ival = 1;
-    ::setsockopt(this->fd(), SOL_SOCKET, SO_REUSEADDR, &ival, sizeof(ival));
+    ::setsockopt(this->do_get_fd(), SOL_SOCKET, SO_REUSEADDR, &ival, sizeof(ival));
 
     // Bind this socket onto `addr`.
     struct ::sockaddr_in6 sa;
@@ -25,14 +25,14 @@ Listen_Socket(const Socket_Address& addr)
     sa.sin6_addr = addr.addr();
     sa.sin6_scope_id = 0;
 
-    if(::bind(this->fd(), (const struct ::sockaddr*) &sa, sizeof(sa)) != 0)
+    if(::bind(this->do_get_fd(), (const struct ::sockaddr*) &sa, sizeof(sa)) != 0)
       POSEIDON_THROW((
           "Failed to bind TCP socket onto `$4`",
           "[`bind()` failed: $3]",
           "[TCP socket `$1` (class `$2`)]"),
           this, typeid(*this), format_errno(), addr);
 
-    if(::listen(this->fd(), SOMAXCONN) != 0)
+    if(::listen(this->do_get_fd(), SOMAXCONN) != 0)
       POSEIDON_THROW((
           "Failed to start listening on `$4`",
           "[`listen()` failed: $3]",
@@ -72,7 +72,7 @@ do_abstract_socket_on_readable()
       // Try getting a connection.
       struct ::sockaddr_in6 sa;
       ::socklen_t salen = sizeof(sa);
-      unique_posix_fd fd(::accept4(this->fd(), (::sockaddr*) &sa, &salen, SOCK_NONBLOCK));
+      unique_posix_fd fd(::accept4(this->do_get_fd(), (::sockaddr*) &sa, &salen, SOCK_NONBLOCK));
 
       if(!fd) {
         if((errno == EAGAIN) || (errno == EWOULDBLOCK))

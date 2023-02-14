@@ -34,8 +34,15 @@ class Abstract_Socket
     Abstract_Socket(int type, int protocol);
 
   protected:
-    // Gets the network driver instance inside the callbacks hereafter.
-    // If this function is called elsewhere, the behavior is undefined.
+    // Gets the file descriptor.
+    // Generally speaking, native handle getters should not be `const`. This
+    // function exists for convenience for derived classes.
+    int
+    do_get_fd() const noexcept
+      { return this->m_fd.get();  }
+
+    // Gets the network driver instance inside the callbacks hereafter. If this
+    // function is called elsewhere, the behavior is undefined.
     Network_Driver&
     do_abstract_socket_lock_driver(recursive_mutex::unique_lock& lock) const noexcept
       {
