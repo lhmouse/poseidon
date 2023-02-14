@@ -46,9 +46,9 @@ void
 Easy_Inflator::
 start(zlib_Format format)
   {
-    auto defl = ::std::make_shared<Final_Inflator>(format);
-    this->m_infl = defl;
-    this->m_out = shared_ptr<linear_buffer>(defl, &(defl->m_out));
+    auto infl = ::std::make_shared<Final_Inflator>(format);
+    this->m_infl = infl;
+    this->m_out = shared_ptr<linear_buffer>(infl, &(infl->m_out));
   }
 
 void
