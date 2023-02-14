@@ -41,8 +41,7 @@ struct Final_Fiber final : Abstract_Fiber
 
     explicit
     Final_Fiber(const Shared_cb_args& cb)
-      : m_cb(cb)
-      { }
+      : m_cb(cb)  { }
 
     virtual
     void
