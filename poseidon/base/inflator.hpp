@@ -58,6 +58,11 @@ class Inflator
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Inflator);
 
+    // Gets the inflate stream.
+    ::z_stream*
+    z_stream() noexcept
+      { return this->m_strm;  }
+
     // Clears internal states. Pending data are discarded.
     Inflator&
     clear() noexcept;

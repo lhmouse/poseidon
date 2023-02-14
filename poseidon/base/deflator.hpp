@@ -59,6 +59,11 @@ class Deflator
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Deflator);
 
+    // Gets the deflate stream.
+    ::z_stream*
+    z_stream() noexcept
+      { return this->m_strm;  }
+
     // Clears internal states. Pending data are discarded.
     Deflator&
     clear() noexcept;
