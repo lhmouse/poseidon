@@ -21,9 +21,15 @@ class Inflator
     Inflator(zlib_Format format, int wbits = 15);
 
   private:
+    inline
+    void
+    do_inflate_prepare(const char* data);
+
+    inline
     int
     do_inflate(uint8_t*& end_out, int flush);
 
+    inline
     void
     do_inflate_cleanup(uint8_t* end_out);
 
