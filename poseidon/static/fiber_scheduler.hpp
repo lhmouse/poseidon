@@ -74,7 +74,7 @@ class Fiber_Scheduler
     // `fail_timeout_override` is non-zero, it overrides `fiber.fail_timeout`
     // in 'main.conf'. Suspension may not exceed the fail timeout.
     void
-    check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr, uint32_t fail_timeout_override);
+    check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_opt, uint32_t fail_timeout_override);
   };
 
 }  // namespace poseidon
