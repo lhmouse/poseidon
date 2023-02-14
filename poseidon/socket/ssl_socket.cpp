@@ -44,7 +44,7 @@ SSL_Socket(unique_posix_fd&& fd, const SSL_CTX_ptr& ssl_ctx)
   }
 
 SSL_Socket::
-SSL_Socket(const Socket_Address& addr, const SSL_CTX_ptr& ssl_ctx)
+SSL_Socket(const SSL_CTX_ptr& ssl_ctx)
   : Abstract_Socket(SOCK_STREAM, IPPROTO_TCP)
   {
     // Create an SSL structure in client mode.
@@ -73,20 +73,6 @@ SSL_Socket(const Socket_Address& addr, const SSL_CTX_ptr& ssl_ctx)
     // Use `TCP_NODELAY`. Errors are ignored.
     int ival = 1;
     ::setsockopt(this->do_get_fd(), IPPROTO_TCP, TCP_NODELAY, &ival, sizeof(ival));
-
-    // Initiate a connection to `addr`.
-    struct ::sockaddr_in6 sa;
-    sa.sin6_family = AF_INET6;
-    sa.sin6_port = htobe16(addr.port());
-    sa.sin6_flowinfo = 0;
-    sa.sin6_addr = addr.addr();
-    sa.sin6_scope_id = 0;
-    if((::connect(this->do_get_fd(), (const struct ::sockaddr*) &sa, sizeof(sa)) != 0) && (errno != EINPROGRESS))
-      POSEIDON_THROW((
-          "Failed to initiate SSL connection to `$4`",
-          "[`connect()` failed: $3]",
-          "[SSL socket `$1` (class `$2`)]"),
-          this, typeid(*this), format_errno(), addr);
   }
 
 SSL_Socket::

@@ -113,9 +113,8 @@ struct Final_TCP_Socket final : TCP_Socket
     Shared_cb_args m_cb;
 
     explicit
-    Final_TCP_Socket(const Socket_Address& addr, Shared_cb_args&& cb)
-      : TCP_Socket(addr), m_cb(::std::move(cb))
-      { }
+    Final_TCP_Socket(Shared_cb_args&& cb)
+      : TCP_Socket(), m_cb(::std::move(cb))  { }
 
     void
     do_push_event_common(Connection_Event type, linear_buffer&& data) const
@@ -186,7 +185,8 @@ start(const Socket_Address& addr)
   {
     auto queue = ::std::make_shared<X_Event_Queue>();
     Shared_cb_args cb = { this->m_cb_obj, this->m_cb_thunk, queue };
-    auto socket = ::std::make_shared<Final_TCP_Socket>(addr, ::std::move(cb));
+    auto socket = ::std::make_shared<Final_TCP_Socket>(::std::move(cb));
+    socket->connect(addr);
     queue->wsocket = socket;
 
     network_driver.insert(socket);

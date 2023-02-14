@@ -29,9 +29,8 @@ class SSL_Socket
     SSL_Socket(unique_posix_fd&& fd, const SSL_CTX_ptr& ssl_ctx);
 
     // Client-side constructor:
-    // Creates a new non-blocking socket to the target host.
     explicit
-    SSL_Socket(const Socket_Address& addr, const SSL_CTX_ptr& ssl_ctx);
+    SSL_Socket(const SSL_CTX_ptr& ssl_ctx);
 
   protected:
     // These callbacks implement `Abstract_Socket`.

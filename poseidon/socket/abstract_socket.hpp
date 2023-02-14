@@ -122,6 +122,11 @@ class Abstract_Socket
     const Socket_Address&
     local_address() const noexcept;
 
+    // Initiates a connection for a stream socket, or sets the peer address
+    // for a datagram socket.
+    void
+    connect(const Socket_Address& addr);
+
     // Shuts the socket down without sending any protocol-specific closure
     // notifications.
     // This function is thread-safe.

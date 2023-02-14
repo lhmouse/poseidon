@@ -113,9 +113,8 @@ struct Final_SSL_Socket final : SSL_Socket
     Shared_cb_args m_cb;
 
     explicit
-    Final_SSL_Socket(const Socket_Address& addr, Shared_cb_args&& cb)
-      : SSL_Socket(addr, network_driver.default_client_ssl_ctx()), m_cb(::std::move(cb))
-      { }
+    Final_SSL_Socket(Shared_cb_args&& cb)
+      : SSL_Socket(network_driver.default_client_ssl_ctx()), m_cb(::std::move(cb))  { }
 
     void
     do_push_event_common(Connection_Event type, linear_buffer&& data) const
@@ -186,7 +185,8 @@ start(const Socket_Address& addr)
   {
     auto queue = ::std::make_shared<X_Event_Queue>();
     Shared_cb_args cb = { this->m_cb_obj, this->m_cb_thunk, queue };
-    auto socket = ::std::make_shared<Final_SSL_Socket>(addr, ::std::move(cb));
+    auto socket = ::std::make_shared<Final_SSL_Socket>(::std::move(cb));
+    socket->connect(addr);
     queue->wsocket = socket;
 
     network_driver.insert(socket);

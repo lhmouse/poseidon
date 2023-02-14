@@ -23,7 +23,6 @@ class UDP_Socket
     UDP_Socket(const Socket_Address& addr);
 
     // Client-side constructor:
-    // Creates a socket that is bound onto a random address.
     explicit
     UDP_Socket();
 

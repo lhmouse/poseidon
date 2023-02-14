@@ -100,17 +100,35 @@ local_address() const noexcept
     return this->m_sockname;
   }
 
+void
+Abstract_Socket::
+connect(const Socket_Address& addr)
+  {
+    struct ::sockaddr_in6 sa;
+    sa.sin6_family = AF_INET6;
+    sa.sin6_port = htobe16(addr.port());
+    sa.sin6_flowinfo = 0;
+    sa.sin6_addr = addr.addr();
+    sa.sin6_scope_id = 0;
+    if((::connect(this->m_fd, (const struct ::sockaddr*) &sa, sizeof(sa)) != 0) && (errno != EINPROGRESS))
+      POSEIDON_THROW((
+          "Failed to initiate TCP connection to `$4`",
+          "[`connect()` failed: $3]",
+          "[TCP socket `$1` (class `$2`)]"),
+          this, typeid(*this), format_errno(), addr);
+  }
+
 bool
 Abstract_Socket::
 quick_shut_down() noexcept
   {
     this->m_state.store(socket_state_closed);
 
-    // Enable linger to request that any pending data be discarded.
     ::linger lng;
     lng.l_onoff = 1;
     lng.l_linger = 0;
     ::setsockopt(this->m_fd, SOL_SOCKET, SO_LINGER, &lng, sizeof(lng));
+
     return ::shutdown(this->m_fd, SHUT_RDWR) == 0;
   }
 

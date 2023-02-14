@@ -19,26 +19,12 @@ TCP_Socket(unique_posix_fd&& fd)
   }
 
 TCP_Socket::
-TCP_Socket(const Socket_Address& addr)
+TCP_Socket()
   : Abstract_Socket(SOCK_STREAM, IPPROTO_TCP)
   {
     // Use `TCP_NODELAY`. Errors are ignored.
     int ival = 1;
     ::setsockopt(this->do_get_fd(), IPPROTO_TCP, TCP_NODELAY, &ival, sizeof(ival));
-
-    // Initiate a connection to `addr`.
-    struct ::sockaddr_in6 sa;
-    sa.sin6_family = AF_INET6;
-    sa.sin6_port = htobe16(addr.port());
-    sa.sin6_flowinfo = 0;
-    sa.sin6_addr = addr.addr();
-    sa.sin6_scope_id = 0;
-    if((::connect(this->do_get_fd(), (const struct ::sockaddr*) &sa, sizeof(sa)) != 0) && (errno != EINPROGRESS))
-      POSEIDON_THROW((
-          "Failed to initiate TCP connection to `$4`",
-          "[`connect()` failed: $3]",
-          "[TCP socket `$1` (class `$2`)]"),
-          this, typeid(*this), format_errno(), addr);
   }
 
 TCP_Socket::
