@@ -6,6 +6,7 @@
 #include "../static/network_driver.hpp"
 #include "../utils.hpp"
 #include <sys/socket.h>
+#include <netinet/tcp.h>
 namespace poseidon {
 
 Listen_Socket::
@@ -13,8 +14,8 @@ Listen_Socket(const Socket_Address& addr)
   : Abstract_Socket(SOCK_STREAM, IPPROTO_TCP)
   {
     // Use `SO_REUSEADDR`. Errors are ignored.
-    int ival = 1;
-    ::setsockopt(this->do_get_fd(), SOL_SOCKET, SO_REUSEADDR, &ival, sizeof(ival));
+    static constexpr int true_value = 1;
+    ::setsockopt(this->do_get_fd(), SOL_SOCKET, SO_REUSEADDR, &true_value, sizeof(int));
 
     // Bind this socket onto `addr`.
     struct ::sockaddr_in6 sa;
@@ -86,6 +87,10 @@ do_abstract_socket_on_readable()
         // Errors are ignored.
         continue;
       }
+
+      // Use `TCP_NODELAY`. Errors are ignored.
+      static constexpr int true_value = 1;
+      ::setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &true_value, sizeof(int));
 
       try {
         // Accept the client socket. If a null pointer is returned, the accepted

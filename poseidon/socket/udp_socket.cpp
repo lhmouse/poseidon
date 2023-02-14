@@ -13,8 +13,8 @@ UDP_Socket(const Socket_Address& addr)
   : Abstract_Socket(SOCK_DGRAM, IPPROTO_UDP)
   {
     // Use `SO_REUSEADDR`. Errors are ignored.
-    int ival = 1;
-    ::setsockopt(this->do_get_fd(), SOL_SOCKET, SO_REUSEADDR, &ival, sizeof(ival));
+    static constexpr int true_value = 1;
+    ::setsockopt(this->do_get_fd(), SOL_SOCKET, SO_REUSEADDR, &true_value, sizeof(int));
 
     // Bind this socket onto `addr`.
     struct ::sockaddr_in6 sa;
@@ -177,16 +177,16 @@ join_multicast_group(const Socket_Address& maddr, uint8_t ttl, bool loopback, co
             this, typeid(*this), format_errno(), maddr);
 
       // Set multicast parameters.
-      int ival = ttl;
-      if(::setsockopt(this->do_get_fd(), IPPROTO_IP, IP_MULTICAST_TTL, &ival, sizeof(ival)) != 0)
+      int value = ttl;
+      if(::setsockopt(this->do_get_fd(), IPPROTO_IP, IP_MULTICAST_TTL, &value, sizeof(int)) != 0)
         POSEIDON_THROW((
             "Failed to set TTL of IPv4 multicast packets",
             "[`setsockopt()` failed: $3]",
             "[UDP socket `$1` (class `$2`)]"),
             this, typeid(*this), format_errno());
 
-      ival = loopback;
-      if(::setsockopt(this->do_get_fd(), IPPROTO_IP, IP_MULTICAST_LOOP, &ival, sizeof(ival)) != 0)
+      value = loopback;
+      if(::setsockopt(this->do_get_fd(), IPPROTO_IP, IP_MULTICAST_LOOP, &value, sizeof(int)) != 0)
         POSEIDON_THROW((
             "Failed to set loopback of IPv4 multicast packets",
             "[`setsockopt()` failed: $3]",
@@ -206,16 +206,16 @@ join_multicast_group(const Socket_Address& maddr, uint8_t ttl, bool loopback, co
             this, typeid(*this), format_errno(), maddr);
 
       // Set multicast parameters.
-      int ival = ttl;
-      if(::setsockopt(this->do_get_fd(), IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &ival, sizeof(ival)) != 0)
+      int value = ttl;
+      if(::setsockopt(this->do_get_fd(), IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &value, sizeof(int)) != 0)
         POSEIDON_THROW((
             "Failed to set TTL of IPv6 multicast packets",
             "[`setsockopt()` failed: $3]",
             "[UDP socket `$1` (class `$2`)]"),
             this, typeid(*this), format_errno());
 
-      ival = loopback;
-      if(::setsockopt(this->do_get_fd(), IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &ival, sizeof(ival)) != 0)
+      value = loopback;
+      if(::setsockopt(this->do_get_fd(), IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &value, sizeof(int)) != 0)
         POSEIDON_THROW((
             "Failed to set loopback of IPv6 multicast packets",
             "[`setsockopt()` failed: $3]",

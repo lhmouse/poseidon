@@ -5,7 +5,6 @@
 #include "ssl_socket.hpp"
 #include "../utils.hpp"
 #include <sys/socket.h>
-#include <netinet/tcp.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 namespace poseidon {
@@ -14,7 +13,6 @@ SSL_Socket::
 SSL_Socket(unique_posix_fd&& fd, const SSL_CTX_ptr& ssl_ctx)
   : Abstract_Socket(::std::move(fd))
   {
-    // Create an SSL structure in server mode.
     if(!ssl_ctx)
       POSEIDON_THROW((
           "Null SSL context pointer not valid",
@@ -36,17 +34,12 @@ SSL_Socket(unique_posix_fd&& fd, const SSL_CTX_ptr& ssl_ctx)
           this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
 
     ::SSL_set_accept_state(this->ssl());
-
-    // Use `TCP_NODELAY`. Errors are ignored.
-    int ival = 1;
-    ::setsockopt(this->do_get_fd(), IPPROTO_TCP, TCP_NODELAY, &ival, sizeof(ival));
   }
 
 SSL_Socket::
 SSL_Socket(const SSL_CTX_ptr& ssl_ctx)
   : Abstract_Socket(SOCK_STREAM, IPPROTO_TCP)
   {
-    // Create an SSL structure in client mode.
     if(!ssl_ctx)
       POSEIDON_THROW((
           "Null SSL context pointer not valid",
@@ -68,10 +61,6 @@ SSL_Socket(const SSL_CTX_ptr& ssl_ctx)
           this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
 
     ::SSL_set_connect_state(this->ssl());
-
-    // Use `TCP_NODELAY`. Errors are ignored.
-    int ival = 1;
-    ::setsockopt(this->do_get_fd(), IPPROTO_TCP, TCP_NODELAY, &ival, sizeof(ival));
   }
 
 SSL_Socket::

@@ -5,6 +5,7 @@
 #include "abstract_socket.hpp"
 #include "../utils.hpp"
 #include <sys/socket.h>
+#include <netinet/tcp.h>
 #include <fcntl.h>
 namespace poseidon {
 
@@ -37,17 +38,12 @@ Abstract_Socket(unique_posix_fd&& fd)
       this->m_sockname_ready.store(true);
     }
 
-    // Turn on non-blocking mode if it hasn't been enabled.
-    int fl_old = ::fcntl(this->m_fd, F_GETFL);
-    if(fl_old == -1)
-      POSEIDON_THROW((
-          "Could not get socket flags",
-          "[`fcntl()` failed: $1]"),
-          format_errno());
-
-    int fl_new = fl_old | O_NONBLOCK;
-    if(fl_new != fl_old)
-      ::fcntl(this->m_fd, F_SETFL, fl_new);
+#ifdef ROCKET_DEBUG
+    // Require the socket be non-blocking here.
+    int fl = ::fcntl(this->m_fd, F_GETFL);
+    ROCKET_ASSERT(fl != -1);
+    ROCKET_ASSERT(fl & O_NONBLOCK);
+#endif
   }
 
 Abstract_Socket::
@@ -60,6 +56,11 @@ Abstract_Socket(int type, int protocol)
           "Could not create IPv6 socket: type `$2`, protocol `$3`",
           "[`socket()` failed: $1]"),
           format_errno(), type, protocol);
+
+    // Use `TCP_NODELAY`. Errors are ignored.
+    static constexpr int true_value = 1;
+    if(type == SOCK_STREAM)
+      ::setsockopt(this->m_fd, IPPROTO_TCP, TCP_NODELAY, &true_value, sizeof(int));
   }
 
 Abstract_Socket::
