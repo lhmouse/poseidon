@@ -468,11 +468,8 @@ self_opt() const noexcept
 
 void
 Fiber_Scheduler::
-check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr, uint32_t fail_timeout_override)
+check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_opt, uint32_t fail_timeout_override)
   {
-    if(!futr)
-      POSEIDON_THROW(("Cannot yield execution without a future to wait for"));
-
     recursive_mutex::unique_lock sched_lock(this->m_sched_mutex);
 
     auto elem = this->m_sched_self_opt.lock();
@@ -486,18 +483,28 @@ check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr, u
     const uint32_t fail_timeout = this->m_conf_fail_timeout;
     lock.unlock();
 
-    // Associate the future.
-    lock.lock(futr->m_init_mutex);
-    if(futr->m_state.load() != future_state_empty)
-      return;
+    if(futr_opt) {
+      // Associate the future.
+      lock.lock(futr_opt->m_init_mutex);
+      if(futr_opt->m_state.load() != future_state_empty)
+        return;
 
-    elem->wfutr = futr;
-    elem->yield_time = this->clock();
-    uint32_t real_fail_timeout = (fail_timeout_override != 0) ? fail_timeout_override : fail_timeout;
-    elem->fail_time = elem->yield_time + real_fail_timeout * 1000L;
-    elem->async_time.store(elem->yield_time + ::rocket::min(warn_timeout, real_fail_timeout) * 1000);
+      elem->wfutr = futr_opt;
+      elem->yield_time = this->clock();
+      uint32_t real_fail_timeout = (fail_timeout_override != 0) ? fail_timeout_override : fail_timeout;
+      elem->fail_time = elem->yield_time + real_fail_timeout * 1000L;
+      elem->async_time.store(elem->yield_time + ::rocket::min(warn_timeout, real_fail_timeout) * 1000);
 
-    futr->m_waiters.emplace_back(shared_ptr<atomic_relaxed<int64_t>>(elem, &(elem->async_time)));
+      shared_ptr<atomic_relaxed<int64_t>> async_time_ptr(elem, &(elem->async_time));
+      futr_opt->m_waiters.emplace_back(async_time_ptr);
+    }
+    else {
+      // Perform a neutral yield operation.
+      elem->wfutr.reset();
+      elem->yield_time = this->clock();
+      elem->fail_time = elem->yield_time;
+      elem->async_time.store(elem->yield_time);
+    }
     lock.unlock();
 
     // Suspend the current fiber...
