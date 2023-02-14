@@ -123,9 +123,14 @@ class Deflator;
 class Inflator;
 
 // Fiber types
-enum Future_State : uint8_t;
+enum Future_State : uint8_t
+  {
+    future_state_empty      = 0,
+    future_state_value      = 1,
+    future_state_exception  = 2,
+  };
+
 class Abstract_Future;
-template<typename ValueT> class future;
 class Abstract_Fiber;
 class Timer_Fiber;
 

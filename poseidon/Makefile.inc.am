@@ -22,7 +22,6 @@ nobase_include_HEADERS +=  \
   %reldir%/base/deflator.hpp  \
   %reldir%/base/inflator.hpp  \
   %reldir%/fiber/abstract_future.hpp  \
-  %reldir%/fiber/future.hpp  \
   %reldir%/fiber/abstract_fiber.hpp  \
   %reldir%/socket/socket_address.hpp  \
   %reldir%/socket/abstract_socket.hpp  \
