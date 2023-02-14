@@ -362,12 +362,12 @@ thread_loop()
       auto fiber_function = +[](int a0, int a1) noexcept
         {
           // Unpack arguments.
-          Fiber_Scheduler* self;
+          Fiber_Scheduler* xthis;
           int args[2] = { a0, a1 };
-          ::memcpy(&self, args, sizeof(self));
+          ::memcpy(&xthis, args, sizeof(xthis));
 
-          do_finish_switch_fiber(self->m_sched_asan_save);
-          const auto elec = self->m_sched_self_opt.lock();
+          do_finish_switch_fiber(xthis->m_sched_asan_save);
+          const auto elec = xthis->m_sched_self_opt.lock();
           ROCKET_ASSERT(elec);
 
           try {
@@ -409,13 +409,13 @@ thread_loop()
           }
 
           // Return to `m_sched_outer`.
-          elec->async_time.store(self->clock());
-          do_start_switch_fiber(&(self->m_sched_asan_save), elec->sched_inner->uc_link);
+          elec->async_time.store(xthis->clock());
+          do_start_switch_fiber(&(xthis->m_sched_asan_save), elec->sched_inner->uc_link);
         };
 
       int args[2];
-      Fiber_Scheduler* self = this;
-      ::memcpy(args, &self, sizeof(self));
+      Fiber_Scheduler* xthis = this;
+      ::memcpy(args, &xthis, sizeof(xthis));
       ::makecontext(elem->sched_inner, (void (*)()) fiber_function, 2, args[0], args[1]);
     }
 
