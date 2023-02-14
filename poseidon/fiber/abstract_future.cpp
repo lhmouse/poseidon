@@ -17,41 +17,30 @@ Abstract_Future::
   {
   }
 
-void
+bool
 Abstract_Future::
-do_abstract_future_check_value(const char* type, const exception_ptr* exptr) const
+do_try_set_future_state_slow(Future_State new_state, void* param)
   {
-    switch(this->m_state.load()) {
-      case future_state_empty:
-        POSEIDON_THROW((
-            "No value set",
-            "[value type was `$1`]"),
-            type);
+    ROCKET_ASSERT(new_state != future_state_empty);
+    plain_mutex::unique_lock lock(this->m_init_mutex);
 
-      case future_state_value:
-        break;
+    if(this->m_state.load() != future_state_empty)
+      return false;
 
-      case future_state_exception:
-        // `exptr` shall point to an initialized exception pointer here.
-        if(*exptr)
-          rethrow_exception(*exptr);
+    // Perform initialization.
+    this->do_on_future_state_change(new_state, param);
+    this->m_state.store(new_state);
 
-        POSEIDON_THROW((
-            "Promise broken without an exception",
-            "[value type was `$1`]"),
-            type);
+    if(!this->m_waiters.empty()) {
+      // Wake up all waiters. This will not throw exceptions.
+      int64_t now = Fiber_Scheduler::clock();
+      shared_ptr<atomic_relaxed<int64_t>> time_ptr;
+
+      for(const auto& wp : this->m_waiters)
+        if((time_ptr = wp.lock()) != nullptr)
+          time_ptr->store(now);
     }
-  }
-
-void
-Abstract_Future::
-do_abstract_future_signal_nolock() noexcept
-  {
-    ROCKET_ASSERT(this->m_state.load() != future_state_empty);
-
-    for(const auto& wp : this->m_waiters)
-      if(auto timep = wp.lock())
-        timep->store(Fiber_Scheduler::clock());
+    return true;
   }
 
 }  // namespace poseidon
