@@ -115,10 +115,10 @@ struct Queued_Fiber
     unique_ptr<Abstract_Fiber> fiber;
     atomic_relaxed<int64_t> async_time;  // this might get modified at any time
 
-    weak_ptr<Abstract_Future> futr_opt;
+    weak_ptr<Abstract_Future> wfutr;
     int64_t yield_time;
     int64_t check_time;
-    uint32_t fail_timeout_override;
+    int64_t fail_time;
     ::ucontext_t sched_inner[1];
   };
 
@@ -252,7 +252,6 @@ thread_loop()
     plain_mutex::unique_lock lock(this->m_conf_mutex);
     const size_t stack_vm_size = this->m_conf_stack_vm_size;
     const uint32_t warn_timeout = this->m_conf_warn_timeout;
-    const uint32_t fail_timeout = this->m_conf_fail_timeout;
     lock.unlock();
 
     const int64_t now = this->clock();
@@ -313,49 +312,41 @@ thread_loop()
     }
 
     // Put the fiber back.
-    elem->check_time += warn_timeout * 1000LL;
-    elem->async_time.xadd(warn_timeout * 1000LL);
+    int64_t next_check_time = ::rocket::min(elem->check_time + warn_timeout * 1000LL, elem->fail_time);
+    elem->async_time.xadd(next_check_time - elem->check_time);
+    elem->check_time = next_check_time;
     ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), fiber_comparator);
 
     recursive_mutex::unique_lock sched_lock(this->m_sched_mutex);
     elem->fiber->m_scheduler = this;
     lock.unlock();
 
-    // Process this fiber.
     POSEIDON_LOG_TRACE((
         "Processing fiber `$1` (class `$2`): state = $3"),
         elem->fiber, typeid(*(elem->fiber)), elem->fiber->m_state.load());
 
-    uint32_t real_fail_timeout;
-    if(elem->fail_timeout_override == 0)
-      real_fail_timeout = fail_timeout;  // use default
-    else
-      real_fail_timeout = elem->fail_timeout_override;
+    // Check timeouts.
+    auto futr = elem->wfutr.lock();
 
-    if(now - elem->yield_time >= warn_timeout * 1000LL)
+    if(now >= elem->yield_time + warn_timeout * 1000LL)
       POSEIDON_LOG_WARN((
           "Fiber `$1` (class `$2`) has been suspended for `$3` ms"),
           elem->fiber, typeid(*(elem->fiber)), now - elem->yield_time);
 
-    if(now - elem->yield_time >= real_fail_timeout * 1000LL)
+    if((now >= elem->fail_time) && futr && (futr->m_state.load() == future_state_empty))
       POSEIDON_LOG_ERROR((
           "Fiber `$1` (class `$2`) has been suspended for `$3` ms",
           "This circumstance looks permanent. Please check for deadlocks."),
           elem->fiber, typeid(*(elem->fiber)), now - elem->yield_time);
 
-    // 1. If the fail timeout has been exceeded, the fiber shall be resumed anyway.
-    // 2. If an exit signal is pending, all fibers shall be resumed. The process
-    //    will exit after all fibers complete execution.
-    // 3. If the fiber is not waiting for a future, or if the future has become
-    //    ready, the fiber shall be resumed.
-    auto futr = elem->futr_opt.lock();
-    if(futr && (futr->m_state.load() == future_state_empty) && (now - elem->yield_time < real_fail_timeout * 1000LL) && (signal == 0))
+    if((now < elem->fail_time) && (signal == 0) && futr && (futr->m_state.load() == future_state_empty))
       return;
 
+    // Execute the fiber now. If no stack has been allocated, allocate one.
     if(!elem->sched_inner->uc_stack.ss_sp) {
       POSEIDON_LOG_TRACE(("Initializing fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
       ::getcontext(elem->sched_inner);
-      elem->sched_inner->uc_stack = do_alloc_stack(stack_vm_size);  // may throw an exception
+      elem->sched_inner->uc_stack = do_alloc_stack(stack_vm_size);  // may throw
       elem->sched_inner->uc_link = this->m_sched_outer;
 
       auto fiber_function = +[](int a0, int a1) noexcept
@@ -428,9 +419,8 @@ thread_loop()
 
     // ... and return here.
     POSEIDON_LOG_TRACE(("Suspended fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
-    this->m_sched_self_opt.reset();
-
     elem->fiber->m_scheduler = nullptr;
+    this->m_sched_self_opt.reset();
   }
 
 size_t
@@ -453,6 +443,7 @@ insert(unique_ptr<Abstract_Fiber>&& fiber)
     elem->fiber = ::std::move(fiber);
     elem->yield_time = this->clock();
     elem->check_time = elem->yield_time;
+    elem->fail_time = INT64_MAX;
     elem->async_time.store(elem->yield_time);
 
     // Insert it.
@@ -465,7 +456,6 @@ Abstract_Fiber*
 Fiber_Scheduler::
 self_opt() const noexcept
   {
-    // Get the current fiber.
     recursive_mutex::unique_lock sched_lock(this->m_sched_mutex);
 
     auto elem = this->m_sched_self_opt.lock();
@@ -478,55 +468,40 @@ self_opt() const noexcept
 
 void
 Fiber_Scheduler::
-check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_opt, uint32_t fail_timeout_override)
+check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr, uint32_t fail_timeout_override)
   {
-    // Get the current fiber.
+    if(!futr)
+      POSEIDON_THROW(("Cannot yield execution without a future to wait for"));
+
     recursive_mutex::unique_lock sched_lock(this->m_sched_mutex);
 
     auto elem = this->m_sched_self_opt.lock();
     if(!elem)
       POSEIDON_THROW(("Cannot yield execution outside a fiber"));
+    else if(elem->fiber.get() != self)
+      POSEIDON_THROW(("Cannot yield execution outside current fiber"));
 
-    if(elem->fiber.get() != self)
-      POSEIDON_THROW(("Cannot yield execution outside the current fiber"));
-
-    // If a future is given, lock it, in order to prevent race conditions.
-    plain_mutex::unique_lock future_lock;
-    if(futr_opt) {
-      future_lock.lock(futr_opt->m_init_mutex);
-
-      // Check whether initialization has completed with `m_init_mutex` locked.
-      if(futr_opt->m_state.load() != future_state_empty)
-        return;
-    }
-
-    // Set the first timeout value.
     plain_mutex::unique_lock lock(this->m_conf_mutex);
     const uint32_t warn_timeout = this->m_conf_warn_timeout;
     const uint32_t fail_timeout = this->m_conf_fail_timeout;
     lock.unlock();
 
-    uint32_t real_check_timeout;
-    if(elem->fail_timeout_override <= 0)
-      real_check_timeout = ::rocket::min(warn_timeout, fail_timeout);  // use default
-    else
-      real_check_timeout = elem->fail_timeout_override;
+    // Associate the future.
+    lock.lock(futr->m_init_mutex);
+    if(futr->m_state.load() != future_state_empty)
+      return;
 
-    elem->futr_opt = futr_opt;
+    elem->wfutr = futr;
     elem->yield_time = this->clock();
-    elem->fail_timeout_override = fail_timeout_override;
-    elem->async_time.store(elem->yield_time + real_check_timeout * 1000LL);
+    uint32_t real_fail_timeout = (fail_timeout_override != 0) ? fail_timeout_override : fail_timeout;
+    elem->fail_time = elem->yield_time + real_fail_timeout * 1000L;
+    elem->async_time.store(elem->yield_time + ::rocket::min(warn_timeout, real_fail_timeout) * 1000);
 
-    // Attach this fiber to the wait queue of the future.
-    // Other threads may update the `async_time` field to affect scheduling.
-    // Typically, zero is written so the fiber can be resumed immediately.
-    if(futr_opt)
-      futr_opt->m_waiters.emplace_back(shared_ptr<atomic_relaxed<int64_t>>(elem, &(elem->async_time)));
-
-    future_lock.unlock();
-    elem->fiber->do_abstract_fiber_on_suspended();
+    futr->m_waiters.emplace_back(shared_ptr<atomic_relaxed<int64_t>>(elem, &(elem->async_time)));
+    lock.unlock();
 
     // Suspend the current fiber...
+    elem->fiber->do_abstract_fiber_on_suspended();
     ROCKET_ASSERT(elem->fiber->m_state.load() == async_state_running);
     elem->fiber->m_state.store(async_state_suspended);
     POSEIDON_LOG_TRACE(("Suspending fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
@@ -539,9 +514,7 @@ check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_op
     POSEIDON_LOG_TRACE(("Resumed fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
     ROCKET_ASSERT(elem->fiber->m_state.load() == async_state_suspended);
     elem->fiber->m_state.store(async_state_running);
-
-    // Disassociate the future, if any.
-    elem->futr_opt.reset();
+    elem->wfutr.reset();
     elem->fiber->do_abstract_fiber_on_resumed();
   }
 

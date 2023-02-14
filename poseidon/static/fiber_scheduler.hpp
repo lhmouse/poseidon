@@ -70,13 +70,11 @@ class Fiber_Scheduler
     self_opt() const noexcept;
 
     // Suspends the current fiber until a future becomes satisfied. `self_opt()`
-    // must not return a null pointer when this function is called. If no future
-    // is specified, this function relinquishes the current time slice, similar
-    // to `sched_yield()`. If `fail_timeout_override` is non-zero, it overrides
-    // `fiber.fail_timeout` in 'main.conf'. Suspension may not exceed the fail
-    // timeout.
+    // must not return a null pointer when this function is called. If
+    // `fail_timeout_override` is non-zero, it overrides `fiber.fail_timeout`
+    // in 'main.conf'. Suspension may not exceed the fail timeout.
     void
-    check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_opt, uint32_t fail_timeout_override);
+    check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr, uint32_t fail_timeout_override);
   };
 
 }  // namespace poseidon
