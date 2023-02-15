@@ -27,8 +27,7 @@ class Easy_Timer
     explicit
     Easy_Timer(CallbackT&& cb)
       : m_cb_obj(::std::make_shared<::std::decay_t<CallbackT>>(::std::forward<CallbackT>(cb))),
-        m_cb_thunk(callback_thunk<::std::decay_t<CallbackT>>)
-      { }
+        m_cb_thunk(callback_thunk<::std::decay_t<CallbackT>>)  { }
 
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_Timer);

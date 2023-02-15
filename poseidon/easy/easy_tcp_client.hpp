@@ -40,8 +40,7 @@ class Easy_TCP_Client
     explicit
     Easy_TCP_Client(CallbackT&& cb)
       : m_cb_obj(::std::make_shared<::std::decay_t<CallbackT>>(::std::forward<CallbackT>(cb))),
-        m_cb_thunk(callback_thunk<::std::decay_t<CallbackT>>)
-      { }
+        m_cb_thunk(callback_thunk<::std::decay_t<CallbackT>>)  { }
 
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_TCP_Client);
