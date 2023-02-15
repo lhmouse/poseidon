@@ -13,8 +13,8 @@ struct Queued_Timer
   {
     weak_ptr<Abstract_Timer> wtimer;
     uint64_t serial;
-    int64_t next;
-    int64_t period;
+    milliseconds next;
+    milliseconds period;
   };
 
 struct Timer_Comparator
@@ -25,11 +25,11 @@ struct Timer_Comparator
       { return lhs.next > rhs.next;  }
 
     bool
-    operator()(const Queued_Timer& lhs, int64_t rhs) noexcept
+    operator()(const Queued_Timer& lhs, milliseconds rhs) noexcept
       { return lhs.next > rhs;  }
 
     bool
-    operator()(int64_t lhs, const Queued_Timer& rhs) noexcept
+    operator()(milliseconds lhs, const Queued_Timer& rhs) noexcept
       { return lhs > rhs.next;  }
   }
   constexpr timer_comparator;
@@ -52,13 +52,14 @@ Timer_Driver::
   {
   }
 
-int64_t
+milliseconds
 Timer_Driver::
 clock() noexcept
   {
     ::timespec ts;
     ::clock_gettime(CLOCK_MONOTONIC, &ts);
-    return ts.tv_sec * 1000LL + (uint32_t) ts.tv_nsec / 1000000U;
+    int64_t count = ts.tv_sec * 1000LL + (uint32_t) ts.tv_nsec / 1000000U;
+    return (milliseconds) count;
   }
 
 void
@@ -69,10 +70,10 @@ thread_loop()
     while(this->m_pq.empty())
       this->m_pq_avail.wait(lock);
 
-    const int64_t now = this->clock();
-    ROCKET_ASSERT(this->m_pq.front().next > 0);
+    const auto now = this->clock();
+    ROCKET_ASSERT(this->m_pq.front().next > milliseconds(0));
     if(now < this->m_pq.front().next) {
-      this->m_pq_avail.wait_for(lock, (int64_t) (this->m_pq.front().next - now));
+      this->m_pq_avail.wait_for(lock, this->m_pq.front().next - now);
       return;
     }
 
@@ -84,7 +85,7 @@ thread_loop()
       this->m_pq.pop_back();
       return;
     }
-    else if(this->m_pq.back().period != 0) {
+    else if(this->m_pq.back().period != milliseconds(0)) {
       // Update the next time point and insert the timer back.
       this->m_pq.back().next += this->m_pq.back().period;
       ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), timer_comparator);
@@ -118,15 +119,15 @@ thread_loop()
 
 void
 Timer_Driver::
-insert(shared_ptrR<Abstract_Timer> timer, int64_t delay, int64_t period)
+insert(shared_ptrR<Abstract_Timer> timer, milliseconds delay, milliseconds period)
   {
     if(!timer)
       POSEIDON_THROW(("Null timer pointer not valid"));
 
-    if(delay >> 56)
+    if((delay < milliseconds(0)) || (delay > milliseconds(0xFF'FFFFFFFF)))
       POSEIDON_THROW(("Timer delay out of range: $1"), delay);
 
-    if(delay >> 56)
+    if((period < milliseconds(0)) || (period > milliseconds(0xFF'FFFFFFFF)))
       POSEIDON_THROW(("Timer period out of range: $1"), period);
 
     // Calculate the end time point.

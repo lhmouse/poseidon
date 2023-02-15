@@ -21,7 +21,7 @@ data_callback(shared_ptrR<UDP_Socket> socket, Socket_Address&& addr, linear_buff
   }
 
 void
-timer_callback(int64_t now)
+timer_callback(milliseconds now)
   {
     Socket_Address addr(sref("127.0.0.1:3801"));
     static uint32_t index;
@@ -35,7 +35,7 @@ int
 start_client()
   {
     my_client.start();
-    text_timer.start(2000, 1000);
+    text_timer.start(seconds(2), seconds(1));
     POSEIDON_LOG_FATAL(("example UDP client started: local = $1"), my_client.local_address());
     return 0;
   }

@@ -10,7 +10,7 @@ using namespace ::poseidon;
 extern Easy_Timer my_timer;
 
 void
-timer_callback(int64_t now)
+timer_callback(milliseconds now)
   {
     POSEIDON_LOG_WARN(("example timer: now = $1"), now);
   }
@@ -18,9 +18,8 @@ timer_callback(int64_t now)
 int
 start_timer()
   {
-    constexpr int64_t delay = 5000;  // 5 seconds
-    constexpr int64_t period = 1000;  // 1 second
-
+    constexpr auto delay = seconds(5);  // 5 seconds
+    constexpr auto period = seconds(1);  // 1 second
     my_timer.start(delay, period);
     POSEIDON_LOG_ERROR(("example timer started: delay = $1, period = $2"), delay, period);
     return 0;

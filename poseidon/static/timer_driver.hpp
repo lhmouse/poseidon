@@ -28,7 +28,7 @@ class Timer_Driver
     // Gets the current time from a monotonic clock, in milliseconds.
     // This function is thread-safe.
     static
-    int64_t
+    milliseconds
     clock() noexcept;
 
     // Schedules timers.
@@ -44,7 +44,7 @@ class Timer_Driver
     // timer.
     // This function is thread-safe.
     void
-    insert(shared_ptrR<Abstract_Timer> timer, int64_t delay, int64_t period);
+    insert(shared_ptrR<Abstract_Timer> timer, milliseconds delay, milliseconds period);
   };
 
 }  // namespace poseidon
