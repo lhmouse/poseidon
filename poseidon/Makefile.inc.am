@@ -9,6 +9,7 @@ nobase_include_HEADERS +=  \
   %reldir%/utils.hpp  \
   %reldir%/third/openssl_fwd.hpp  \
   %reldir%/third/zlib_fwd.hpp  \
+  %reldir%/third/asan_fwd.hpp  \
   %reldir%/static/main_config.hpp  \
   %reldir%/static/async_logger.hpp  \
   %reldir%/static/timer_driver.hpp  \

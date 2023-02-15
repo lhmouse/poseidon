@@ -6,39 +6,12 @@
 #include "../base/config_file.hpp"
 #include "../fiber/abstract_fiber.hpp"
 #include "../fiber/abstract_future.hpp"
+#include "../third/asan_fwd.hpp"
 #include "../utils.hpp"
 #include <time.h>  // clock_gettime()
 #include <sys/resource.h>  // getrlimit()
 #include <sys/mman.h>  // mmap(), munmap()
 
-extern "C" {
-
-#ifdef POSEIDON_ENABLE_ADDRESS_SANITIZER
-void __sanitizer_start_switch_fiber(void**, const void*, size_t) noexcept;
-void __sanitizer_finish_switch_fiber(void*, const void**, size_t*) noexcept;
-#endif
-
-static inline
-void
-do_start_switch_fiber(void** psave, const ::ucontext_t* uctx) noexcept
-  {
-#ifdef POSEIDON_ENABLE_ADDRESS_SANITIZER
-    ::__sanitizer_start_switch_fiber(psave, uctx->uc_stack.ss_sp, uctx->uc_stack.ss_size);
-#endif
-    (void) psave, (void) uctx;
-  }
-
-inline
-void
-do_finish_switch_fiber(void* save) noexcept
-  {
-#ifdef POSEIDON_ENABLE_ADDRESS_SANITIZER
-    ::__sanitizer_finish_switch_fiber(save, nullptr, nullptr);
-#endif
-    (void) save;
-  }
-
-}  // extern "C"
 namespace poseidon {
 namespace {
 
@@ -356,7 +329,7 @@ thread_loop()
           int args[2] = { a0, a1 };
           ::memcpy(&xthis, args, sizeof(xthis));
 
-          do_finish_switch_fiber(xthis->m_sched_asan_save);
+          asan_fiber_switch_finish(xthis->m_sched_asan_save);
           const auto elec = xthis->m_sched_self_opt.lock();
           ROCKET_ASSERT(elec);
 
@@ -400,7 +373,7 @@ thread_loop()
 
           // Return to `m_sched_outer`.
           elec->async_time.store(xthis->clock());
-          do_start_switch_fiber(&(xthis->m_sched_asan_save), elec->sched_inner->uc_link);
+          asan_fiber_switch_start(xthis->m_sched_asan_save, elec->sched_inner->uc_link);
         };
 
       int args[2];
@@ -413,9 +386,9 @@ thread_loop()
     this->m_sched_self_opt = elem;
     POSEIDON_LOG_TRACE(("Resuming fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
 
-    do_start_switch_fiber(&(this->m_sched_asan_save), elem->sched_inner);
+    asan_fiber_switch_start(this->m_sched_asan_save, elem->sched_inner);
     ::swapcontext(this->m_sched_outer, elem->sched_inner);
-    do_finish_switch_fiber(this->m_sched_asan_save);
+    asan_fiber_switch_finish(this->m_sched_asan_save);
 
     // ... and return here.
     POSEIDON_LOG_TRACE(("Suspended fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
@@ -513,9 +486,9 @@ check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_op
     elem->fiber->m_state.store(async_state_suspended);
     POSEIDON_LOG_TRACE(("Suspending fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
 
-    do_start_switch_fiber(&(this->m_sched_asan_save), this->m_sched_outer);
+    asan_fiber_switch_start(this->m_sched_asan_save, this->m_sched_outer);
     ::swapcontext(elem->sched_inner, this->m_sched_outer);
-    do_finish_switch_fiber(this->m_sched_asan_save);
+    asan_fiber_switch_finish(this->m_sched_asan_save);
 
     // ... and return here.
     POSEIDON_LOG_TRACE(("Resumed fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
