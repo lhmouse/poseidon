@@ -227,45 +227,35 @@ thread_loop()
     const uint32_t warn_timeout = this->m_conf_warn_timeout;
     lock.unlock();
 
+    lock.lock(this->m_pq_mutex);
     const int64_t now = this->clock();
     const int signal = exit_signal.load();
 
-    lock.lock(this->m_pq_mutex);
-    if(this->m_pq.empty() && signal)
-      return;
+    if(signal == 0) {
+      if(!this->m_pq.empty() && (now < this->m_pq.front()->check_time)) {
+        // Rebuild the heap when there is nothing to do. `async_time` can be
+        // modified by other threads arbitrarily, so has to be copied to
+        // somewhere safe first.
+        for(const auto& elem : this->m_pq)
+          elem->check_time = elem->async_time.load();
 
-    // When no signal is pending, wait until a fiber can be scheduled.
-    if(!signal) {
-      int64_t delta = INT_MAX;
-      if(!this->m_pq.empty()) {
-        delta = this->m_pq.front()->check_time - now;
-        if(delta > 0) {
-          // Rebuild the heap when there is nothing to do.
-          // Note `async_time` may be overwritten by other threads at any time, so
-          // we have to copy it somewhere safe.
-          for(const auto& elem : this->m_pq)
-            elem->check_time = elem->async_time.load();
-
-          ::std::make_heap(this->m_pq.begin(), this->m_pq.end(), fiber_comparator);
-          POSEIDON_LOG_TRACE(("Rebuilt heap for fiber scheduler: size = $1"), this->m_pq.size());
-          delta = this->m_pq.front()->check_time - now;
-        }
+        ::std::make_heap(this->m_pq.begin(), this->m_pq.end(), fiber_comparator);
+        POSEIDON_LOG_TRACE(("Rebuilt heap for fiber scheduler: size = $1"), this->m_pq.size());
       }
 
-      if(delta > 0) {
-        // Calculate the time to wait, using binary exponential backoff.
-        delta = ::rocket::min(delta, this->m_pq_wait_ms * 2 + 1, 200LL);
-        this->m_pq_wait_ms = delta;
-        lock.unlock();
+      // Calculate the time to wait.
+      this->m_pq_wait->tv_nsec = ::rocket::min(
+             this->m_pq_wait->tv_nsec * 2 + 1,  // binary exponential backoff
+             200000000L,  // maximum value
+             this->m_pq.empty()
+                ? LONG_MAX
+                : clamp_cast<long>(this->m_pq.front()->check_time - now, 0, LONG_MAX));
 
-        ::timespec ts;
-        ts.tv_sec = 0;
-        ts.tv_nsec = (long) delta * 1000000L;
-        ::nanosleep(&ts, nullptr);
+      if(this->m_pq_wait->tv_nsec != 0) {
+        lock.unlock();
+        ::nanosleep(this->m_pq_wait, nullptr);
         return;
       }
-
-      this->m_pq_wait_ms = 0;
     }
 
     ::std::pop_heap(this->m_pq.begin(), this->m_pq.end(), fiber_comparator);
