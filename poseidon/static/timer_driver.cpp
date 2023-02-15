@@ -71,7 +71,7 @@ thread_loop()
       this->m_pq_avail.wait(lock);
 
     const auto now = this->clock();
-    ROCKET_ASSERT(this->m_pq.front().next > milliseconds(0));
+    ROCKET_ASSERT(this->m_pq.front().next > (milliseconds) 0);
     if(now < this->m_pq.front().next) {
       this->m_pq_avail.wait_for(lock, this->m_pq.front().next - now);
       return;
@@ -85,7 +85,7 @@ thread_loop()
       this->m_pq.pop_back();
       return;
     }
-    else if(this->m_pq.back().period != milliseconds(0)) {
+    else if(this->m_pq.back().period != (milliseconds) 0) {
       // Update the next time point and insert the timer back.
       this->m_pq.back().next += this->m_pq.back().period;
       ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), timer_comparator);
@@ -124,10 +124,10 @@ insert(shared_ptrR<Abstract_Timer> timer, milliseconds delay, milliseconds perio
     if(!timer)
       POSEIDON_THROW(("Null timer pointer not valid"));
 
-    if((delay < milliseconds(0)) || (delay > milliseconds(0xFF'FFFFFFFF)))
+    if((delay < (milliseconds) 0) || (delay > (milliseconds) 0xFF'FFFFFFFF))
       POSEIDON_THROW(("Timer delay out of range: $1"), delay);
 
-    if((period < milliseconds(0)) || (period > milliseconds(0xFF'FFFFFFFF)))
+    if((period < (milliseconds) 0) || (period > (milliseconds) 0xFF'FFFFFFFF))
       POSEIDON_THROW(("Timer period out of range: $1"), period);
 
     // Calculate the end time point.

@@ -18,8 +18,8 @@ timer_callback(milliseconds now)
 int
 start_timer()
   {
-    constexpr auto delay = seconds(5);  // 5 seconds
-    constexpr auto period = seconds(1);  // 1 second
+    constexpr auto delay = (seconds) 5;  // 5 seconds
+    constexpr auto period = (seconds) 1;  // 1 second
     my_timer.start(delay, period);
     POSEIDON_LOG_ERROR(("example timer started: delay = $1, period = $2"), delay, period);
     return 0;
