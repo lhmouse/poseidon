@@ -193,10 +193,10 @@ reload(const Config_File& file)
             "[in configuration file '$2']"),
             ::ERR_reason_error_string(::ERR_peek_error()), file.path(), default_certificate, default_private_key);
 
-      ::std::array<uint8_t, 32> sid_ctx = { };
-      ::gethostname((char*) sid_ctx.data(), sid_ctx.size());
-
-      if(!::SSL_CTX_set_session_id_context(server_ssl_ctx, sid_ctx.data(), sid_ctx.size()))
+      uint8_t sid_ctx[32];
+      ::memset(sid_ctx, '*', sizeof(sid_ctx));
+      ::gethostname((char*) sid_ctx, sizeof(sid_ctx));
+      if(!::SSL_CTX_set_session_id_context(server_ssl_ctx, sid_ctx, sizeof(sid_ctx)))
         POSEIDON_THROW((
             "Could not set SSL session ID context",
             "[`SSL_set_session_id_context()` failed: $1]",
