@@ -11,7 +11,7 @@ namespace {
 
 struct Queued_Timer
   {
-    weak_ptr<Abstract_Timer> timer;
+    weak_ptr<Abstract_Timer> wtimer;
     uint64_t serial;
     int64_t next;
     int64_t period;
@@ -77,7 +77,7 @@ thread_loop()
     }
 
     ::std::pop_heap(this->m_pq.begin(), this->m_pq.end(), timer_comparator);
-    auto timer = this->m_pq.back().timer.lock();
+    auto timer = this->m_pq.back().wtimer.lock();
     Async_State next_state;
     if(!timer || (this->m_pq.back().serial != timer->m_serial)) {
       // If the element has been invalidated, delete it.
@@ -131,7 +131,7 @@ insert(shared_ptrR<Abstract_Timer> timer, int64_t delay, int64_t period)
 
     // Calculate the end time point.
     X_Queued_Timer elem;
-    elem.timer = timer;
+    elem.wtimer = timer;
     elem.next = this->clock() + delay;
     elem.period = period;
 
