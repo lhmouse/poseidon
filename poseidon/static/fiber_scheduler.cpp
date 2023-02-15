@@ -246,7 +246,7 @@ thread_loop()
       // Calculate the time to wait.
       this->m_pq_wait->tv_nsec = ::rocket::min(
              this->m_pq_wait->tv_nsec * 2 + 1,  // binary exponential backoff
-             999'999'999L,  // maximum value
+             200000000L,  // maximum value
              !this->m_pq.empty()
                 ? clamp_cast<long>(this->m_pq.front()->check_time - now, 0, LONG_MAX)
                 : LONG_MAX);
