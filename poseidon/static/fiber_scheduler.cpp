@@ -249,8 +249,7 @@ thread_loop()
       this->m_pq_wait->tv_nsec = min(
              this->m_pq_wait->tv_nsec * 2 + 1,  // binary exponential backoff
              200'000000L,  // maximum value
-             this->m_pq.empty()
-                ? LONG_MAX
+             this->m_pq.empty() ? LONG_MAX
                 : clamp((this->m_pq.front()->check_time - now).count(), 0, 10000) * 1000000L);
 
       if(this->m_pq_wait->tv_nsec != 0) {
@@ -461,7 +460,10 @@ check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_op
         return;
 
       shared_ptr<atomic_relaxed<milliseconds>> async_time_ptr(elem, &(elem->async_time));
-      seconds real_fail_timeout = (fail_timeout_override != (seconds) 0) ? fail_timeout_override : fail_timeout;
+      seconds real_fail_timeout = fail_timeout;
+
+      if(fail_timeout_override != (seconds) 0)
+        real_fail_timeout = clamp(fail_timeout_override, (seconds) 0, (seconds) 86400);
 
       elem->fail_time = elem->yield_time + real_fail_timeout;
       elem->async_time.store(min(elem->yield_time + warn_timeout, elem->fail_time));
