@@ -9,6 +9,9 @@
 #include <cstdio>
 namespace poseidon {
 
+using ::rocket::min;
+using ::rocket::max;
+using ::rocket::clamp;
 using ::rocket::clamp_cast;
 using ::rocket::is_any_of;
 using ::rocket::is_none_of;

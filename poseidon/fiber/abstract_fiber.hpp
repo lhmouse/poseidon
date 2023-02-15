@@ -64,7 +64,7 @@ class Abstract_Fiber
     // Calls `m_scheduler->check_and_yield(futr_opt, fail_timeout_override)`.
     // This function can only be called from `do_abstract_fiber_on_execution()`.
     void
-    yield(shared_ptrR<Abstract_Future> futr_opt = nullptr, uint32_t fail_timeout_override = 0) const;
+    yield(shared_ptrR<Abstract_Future> futr_opt, seconds fail_timeout_override = (seconds) 0) const;
   };
 
 }  // namespace poseidon

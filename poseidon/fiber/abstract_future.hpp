@@ -14,7 +14,7 @@ class Abstract_Future
 
     mutable plain_mutex m_init_mutex;
     atomic_acq_rel<Future_State> m_state;
-    vector<weak_ptr<atomic_relaxed<int64_t>>> m_waiters;
+    vector<weak_ptr<atomic_relaxed<milliseconds>>> m_waiters;
 
   protected:
     // Constructs an empty future.

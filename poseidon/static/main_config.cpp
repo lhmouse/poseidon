@@ -20,7 +20,7 @@ Main_Config::
 reload()
   {
     Config_File file;
-    file.reload(::rocket::sref("main.conf"));
+    file.reload(sref("main.conf"));
 
     // Set up new data.
     plain_mutex::unique_lock lock(this->m_mutex);

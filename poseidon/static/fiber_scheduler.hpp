@@ -15,8 +15,8 @@ class Fiber_Scheduler
 
     mutable plain_mutex m_conf_mutex;
     uint32_t m_conf_stack_vm_size = 0;
-    uint32_t m_conf_warn_timeout = 0;
-    uint32_t m_conf_fail_timeout = 0;
+    seconds m_conf_warn_timeout = (seconds) 0;
+    seconds m_conf_fail_timeout = (seconds) 0;
 
     mutable plain_mutex m_pq_mutex;
     vector<shared_ptr<X_Queued_Fiber>> m_pq;
@@ -38,7 +38,7 @@ class Fiber_Scheduler
     // Gets the current time from a monotonic clock, in milliseconds.
     // This function is thread-safe.
     static
-    int64_t
+    milliseconds
     clock() noexcept;
 
     // Reloads configuration from 'main.conf'.
@@ -74,7 +74,7 @@ class Fiber_Scheduler
     // `fail_timeout_override` is non-zero, it overrides `fiber.fail_timeout`
     // in 'main.conf'. Suspension may not exceed the fail timeout.
     void
-    check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_opt, uint32_t fail_timeout_override);
+    check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_opt, seconds fail_timeout_override);
   };
 
 }  // namespace poseidon

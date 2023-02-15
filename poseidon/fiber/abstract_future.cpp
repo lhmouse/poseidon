@@ -32,13 +32,13 @@ do_try_set_future_state_slow(Future_State new_state, void* param)
     this->m_state.store(new_state);
 
     if(!this->m_waiters.empty()) {
-      // Wake up all waiters. This will not throw exceptions.
-      int64_t now = Fiber_Scheduler::clock();
-      shared_ptr<atomic_relaxed<int64_t>> time_ptr;
+      const auto now = Fiber_Scheduler::clock();
+      shared_ptr<atomic_relaxed<milliseconds>> async_time_ptr;
 
+      // Wake up all waiters. This will not throw exceptions.
       for(const auto& wp : this->m_waiters)
-        if((time_ptr = wp.lock()) != nullptr)
-          time_ptr->store(now);
+        if((async_time_ptr = wp.lock()) != nullptr)
+          async_time_ptr->store(now);
     }
     return true;
   }

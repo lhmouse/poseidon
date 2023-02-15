@@ -86,12 +86,12 @@ do_pool_stack(::stack_t ss) noexcept
 struct Queued_Fiber
   {
     unique_ptr<Abstract_Fiber> fiber;
-    atomic_relaxed<int64_t> async_time;  // this might get modified at any time
+    atomic_relaxed<milliseconds> async_time;  // this might get modified at any time
 
     weak_ptr<Abstract_Future> wfutr;
-    int64_t yield_time;
-    int64_t check_time;
-    int64_t fail_time;
+    milliseconds yield_time;
+    milliseconds check_time;
+    milliseconds fail_time;
     ::ucontext_t sched_inner[1];
   };
 
@@ -103,11 +103,11 @@ struct Fiber_Comparator
       { return lhs->check_time > rhs->check_time;  }
 
     bool
-    operator()(shared_ptrR<Queued_Fiber> lhs, int64_t rhs) noexcept
+    operator()(shared_ptrR<Queued_Fiber> lhs, milliseconds rhs) noexcept
       { return lhs->check_time > rhs;  }
 
     bool
-    operator()(int64_t lhs, shared_ptrR<Queued_Fiber> rhs) noexcept
+    operator()(milliseconds lhs, shared_ptrR<Queued_Fiber> rhs) noexcept
       { return lhs > rhs->check_time;  }
   }
   constexpr fiber_comparator;
@@ -128,13 +128,14 @@ Fiber_Scheduler::
   {
   }
 
-int64_t
+milliseconds
 Fiber_Scheduler::
 clock() noexcept
   {
     ::timespec ts;
     ::clock_gettime(CLOCK_MONOTONIC_COARSE, &ts);
-    return ts.tv_sec * 1000LL + (uint32_t) ts.tv_nsec / 1000000U;
+    int64_t count = ts.tv_sec * 1000LL + (uint32_t) ts.tv_nsec / 1000000U;
+    return (milliseconds) count;
   }
 
 void
@@ -165,7 +166,8 @@ reload(const Config_File& file)
             "[`getrlimit()` failed: $1]"),
             format_errno());
 
-      stack_vm_size = (int64_t) rlim.rlim_cur;
+      // Hmmm this should be enough.
+      stack_vm_size = (uint32_t) rlim.rlim_cur;
     }
 
     if((stack_vm_size < 0x10000) || (stack_vm_size > 0x7FFF0000))
@@ -214,8 +216,8 @@ reload(const Config_File& file)
     // Set up new data.
     plain_mutex::unique_lock lock(this->m_conf_mutex);
     this->m_conf_stack_vm_size = (uint32_t) stack_vm_size;
-    this->m_conf_warn_timeout = (uint32_t) warn_timeout;
-    this->m_conf_fail_timeout = (uint32_t) fail_timeout;
+    this->m_conf_warn_timeout = (seconds) warn_timeout;
+    this->m_conf_fail_timeout = (seconds) fail_timeout;
   }
 
 void
@@ -224,12 +226,12 @@ thread_loop()
   {
     plain_mutex::unique_lock lock(this->m_conf_mutex);
     const size_t stack_vm_size = this->m_conf_stack_vm_size;
-    const uint32_t warn_timeout = this->m_conf_warn_timeout;
+    const seconds warn_timeout = this->m_conf_warn_timeout;
     lock.unlock();
 
     lock.lock(this->m_pq_mutex);
-    const int64_t now = this->clock();
     const int signal = exit_signal.load();
+    const auto now = this->clock();
 
     if(signal == 0) {
       if(!this->m_pq.empty() && (now < this->m_pq.front()->check_time)) {
@@ -243,16 +245,18 @@ thread_loop()
         POSEIDON_LOG_TRACE(("Rebuilt heap for fiber scheduler: size = $1"), this->m_pq.size());
       }
 
-      // Calculate the time to wait.
-      this->m_pq_wait->tv_nsec = ::rocket::min(
+      // Calculate the number of nanoseconds to sleep.
+      this->m_pq_wait->tv_nsec = min(
              this->m_pq_wait->tv_nsec * 2 + 1,  // binary exponential backoff
-             200000000L,  // maximum value
-             !this->m_pq.empty()
-                ? clamp_cast<long>(this->m_pq.front()->check_time - now, 0, LONG_MAX)
-                : LONG_MAX);
+             200'000000L,  // maximum value
+             this->m_pq.empty()
+                ? LONG_MAX
+                : clamp((this->m_pq.front()->check_time - now).count(), 0, 10000) * 1000000L);
 
       if(this->m_pq_wait->tv_nsec != 0) {
         lock.unlock();
+
+        ROCKET_ASSERT(this->m_pq_wait->tv_sec == 0);
         ::nanosleep(this->m_pq_wait, nullptr);
         return;
       }
@@ -260,11 +264,10 @@ thread_loop()
 
     ::std::pop_heap(this->m_pq.begin(), this->m_pq.end(), fiber_comparator);
     auto elem = this->m_pq.back();
-    ROCKET_ASSERT(elem->yield_time > 0);
-    ROCKET_ASSERT(elem->check_time > 0);
+    ROCKET_ASSERT(elem->yield_time > (milliseconds) 0);
+    ROCKET_ASSERT(elem->check_time > (milliseconds) 0);
 
     if(elem->fiber->m_state.load() == async_state_finished) {
-      // Delete the fiber.
       this->m_pq.pop_back();
       lock.unlock();
 
@@ -275,8 +278,8 @@ thread_loop()
     }
 
     // Put the fiber back.
-    int64_t next_check_time = ::rocket::min(elem->check_time + warn_timeout * 1000LL, elem->fail_time);
-    elem->async_time.xadd(next_check_time - elem->check_time);
+    milliseconds next_check_time = min(elem->check_time + warn_timeout, elem->fail_time);
+    elem->async_time.cmpxchg(elem->check_time, next_check_time);
     elem->check_time = next_check_time;
     ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), fiber_comparator);
 
@@ -291,14 +294,14 @@ thread_loop()
     // Check timeouts.
     auto futr = elem->wfutr.lock();
 
-    if(now >= elem->yield_time + warn_timeout * 1000LL)
+    if(now >= elem->yield_time + warn_timeout)
       POSEIDON_LOG_WARN((
-          "Fiber `$1` (class `$2`) has been suspended for `$3` ms"),
+          "Fiber `$1` (class `$2`) has been suspended for $3"),
           elem->fiber, typeid(*(elem->fiber)), now - elem->yield_time);
 
     if((now >= elem->fail_time) && futr && (futr->m_state.load() == future_state_empty))
       POSEIDON_LOG_ERROR((
-          "Fiber `$1` (class `$2`) has been suspended for `$3` ms",
+          "Fiber `$1` (class `$2`) has been suspended for $3",
           "This circumstance looks permanent. Please check for deadlocks."),
           elem->fiber, typeid(*(elem->fiber)), now - elem->yield_time);
 
@@ -406,7 +409,7 @@ insert(unique_ptr<Abstract_Fiber>&& fiber)
     elem->fiber = ::std::move(fiber);
     elem->yield_time = this->clock();
     elem->check_time = elem->yield_time;
-    elem->fail_time = INT64_MAX;
+    elem->fail_time = (milliseconds) INT64_MAX;
     elem->async_time.store(elem->yield_time);
 
     // Insert it.
@@ -431,7 +434,7 @@ self_opt() const noexcept
 
 void
 Fiber_Scheduler::
-check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_opt, uint32_t fail_timeout_override)
+check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_opt, seconds fail_timeout_override)
   {
     recursive_mutex::unique_lock sched_lock(this->m_sched_mutex);
 
@@ -442,9 +445,14 @@ check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_op
       POSEIDON_THROW(("Cannot yield execution outside current fiber"));
 
     plain_mutex::unique_lock lock(this->m_conf_mutex);
-    const uint32_t warn_timeout = this->m_conf_warn_timeout;
-    const uint32_t fail_timeout = this->m_conf_fail_timeout;
+    const seconds warn_timeout = this->m_conf_warn_timeout;
+    const seconds fail_timeout = this->m_conf_fail_timeout;
     lock.unlock();
+
+    elem->wfutr = futr_opt;
+    elem->yield_time = this->clock();
+    elem->fail_time = elem->yield_time;
+    elem->async_time.store(elem->yield_time);
 
     if(futr_opt) {
       // Associate the future.
@@ -452,21 +460,12 @@ check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_op
       if(futr_opt->m_state.load() != future_state_empty)
         return;
 
-      elem->wfutr = futr_opt;
-      elem->yield_time = this->clock();
-      uint32_t real_fail_timeout = (fail_timeout_override != 0) ? fail_timeout_override : fail_timeout;
-      elem->fail_time = elem->yield_time + real_fail_timeout * 1000L;
-      elem->async_time.store(elem->yield_time + ::rocket::min(warn_timeout, real_fail_timeout) * 1000);
+      shared_ptr<atomic_relaxed<milliseconds>> async_time_ptr(elem, &(elem->async_time));
+      seconds real_fail_timeout = (fail_timeout_override != (seconds) 0) ? fail_timeout_override : fail_timeout;
 
-      shared_ptr<atomic_relaxed<int64_t>> async_time_ptr(elem, &(elem->async_time));
+      elem->fail_time = elem->yield_time + real_fail_timeout;
+      elem->async_time.store(min(elem->yield_time + warn_timeout, elem->fail_time));
       futr_opt->m_waiters.emplace_back(async_time_ptr);
-    }
-    else {
-      // Perform a neutral yield operation.
-      elem->wfutr.reset();
-      elem->yield_time = this->clock();
-      elem->fail_time = elem->yield_time;
-      elem->async_time.store(elem->yield_time);
     }
     lock.unlock();
 
