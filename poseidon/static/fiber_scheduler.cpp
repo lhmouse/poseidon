@@ -247,9 +247,9 @@ thread_loop()
       this->m_pq_wait->tv_nsec = ::rocket::min(
              this->m_pq_wait->tv_nsec * 2 + 1,  // binary exponential backoff
              200000000L,  // maximum value
-             this->m_pq.empty()
-                ? LONG_MAX
-                : clamp_cast<long>(this->m_pq.front()->check_time - now, 0, LONG_MAX));
+             !this->m_pq.empty()
+                ? clamp_cast<long>(this->m_pq.front()->check_time - now, 0, LONG_MAX)
+                : LONG_MAX);
 
       if(this->m_pq_wait->tv_nsec != 0) {
         lock.unlock();
