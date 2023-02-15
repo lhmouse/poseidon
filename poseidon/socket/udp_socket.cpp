@@ -17,14 +17,14 @@ UDP_Socket(const Socket_Address& addr)
     ::setsockopt(this->do_get_fd(), SOL_SOCKET, SO_REUSEADDR, &true_value, sizeof(int));
 
     // Bind this socket onto `addr`.
-    struct ::sockaddr_in6 sa;
+    ::sockaddr_in6 sa;
     sa.sin6_family = AF_INET6;
     sa.sin6_port = htobe16(addr.port());
     sa.sin6_flowinfo = 0;
     sa.sin6_addr = addr.addr();
     sa.sin6_scope_id = 0;
 
-    if(::bind(this->do_get_fd(), (const struct ::sockaddr*) &sa, sizeof(sa)) != 0)
+    if(::bind(this->do_get_fd(), (const ::sockaddr*) &sa, sizeof(sa)) != 0)
       POSEIDON_THROW((
           "Failed to bind UDP socket onto `$4`",
           "[`bind()` failed: $3]",
@@ -71,7 +71,7 @@ do_abstract_socket_on_readable()
       // Try getting a packet.
       queue.clear();
       queue.reserve_after_end(0xFFFFU);
-      struct ::sockaddr_in6 sa;
+      ::sockaddr_in6 sa;
       ::socklen_t salen = sizeof(sa);
       io_result = ::recvfrom(this->do_get_fd(), queue.mut_end(), queue.capacity_after_end(), 0, (::sockaddr*) &sa, &salen);
 
@@ -165,7 +165,7 @@ join_multicast_group(const Socket_Address& maddr, uint8_t ttl, bool loopback, co
     // special treatement. `sendto()` is not affected.
     if(::memcmp(maddr.data(), "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF", 12) == 0) {
       // Join the multicast group.
-      struct ::ip_mreqn mreq;
+      ::ip_mreqn mreq;
       ::memcpy(&(mreq.imr_multiaddr.s_addr), maddr.data() + 12, 4);
       mreq.imr_address.s_addr = INADDR_ANY;
       mreq.imr_ifindex = (int) ifindex;
@@ -195,7 +195,7 @@ join_multicast_group(const Socket_Address& maddr, uint8_t ttl, bool loopback, co
     }
     else {
       // Join the multicast group.
-      struct ::ipv6_mreq mreq;
+      ::ipv6_mreq mreq;
       mreq.ipv6mr_multiaddr = maddr.addr();
       mreq.ipv6mr_interface = ifindex;
       if(::setsockopt(this->do_get_fd(), IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) != 0)
@@ -251,7 +251,7 @@ leave_multicast_group(const Socket_Address& maddr, const char* ifname_opt)
     // special treatement. `sendto()` is not affected.
     if(::memcmp(maddr.data(), "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF", 12) == 0) {
       // Leave the multicast group.
-      struct ::ip_mreqn mreq;
+      ::ip_mreqn mreq;
       ::memcpy(&(mreq.imr_multiaddr.s_addr), maddr.data() + 12, 4);
       mreq.imr_address.s_addr = INADDR_ANY;
       mreq.imr_ifindex = (int) ifindex;
@@ -264,7 +264,7 @@ leave_multicast_group(const Socket_Address& maddr, const char* ifname_opt)
     }
     else {
       // Leave the multicast group.
-      struct ::ipv6_mreq mreq;
+      ::ipv6_mreq mreq;
       mreq.ipv6mr_multiaddr = maddr.addr();
       mreq.ipv6mr_interface = ifindex;
       if(::setsockopt(this->do_get_fd(), IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, &mreq, sizeof(mreq)) != 0)
@@ -304,13 +304,13 @@ udp_send(const Socket_Address& addr, const char* data, size_t size)
 
     // Try sending the packet immediately.
     // This is valid because UDP packets can be transmitted out of order.
-    struct ::sockaddr_in6 sa;
+    ::sockaddr_in6 sa;
     sa.sin6_family = AF_INET6;
     sa.sin6_port = htobe16(addr.port());
     sa.sin6_flowinfo = 0;
     sa.sin6_addr = addr.addr();
     sa.sin6_scope_id = 0;
-    ::ssize_t io_result = ::sendto(this->do_get_fd(), data, size, 0, (const struct ::sockaddr*) &sa, sizeof(sa));
+    ::ssize_t io_result = ::sendto(this->do_get_fd(), data, size, 0, (const ::sockaddr*) &sa, sizeof(sa));
     return io_result >= 0;
   }
 

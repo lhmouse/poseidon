@@ -351,7 +351,7 @@ remote_address() const noexcept
     if(this->m_peername_ready.load())
       return this->m_peername;
 
-    struct ::sockaddr_in6 sa;
+    ::sockaddr_in6 sa;
     ::socklen_t salen = sizeof(sa);
     if(::getpeername(this->do_get_fd(), (::sockaddr*) &sa, &salen) != 0)
       return ipv6_invalid;

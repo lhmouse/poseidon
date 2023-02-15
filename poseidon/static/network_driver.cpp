@@ -16,7 +16,7 @@ namespace {
 void
 do_epoll_ctl(int epoll_fd, int op, shared_ptrR<Abstract_Socket> socket, uint32_t events = EPOLLIN | EPOLLPRI | EPOLLOUT | EPOLLET)
   {
-    struct ::epoll_event event;
+    ::epoll_event event;
     event.events = events;
     event.data.ptr = socket.get();
     if(::epoll_ctl(epoll_fd, op, socket->fd(), &event) != 0) {
@@ -262,7 +262,7 @@ thread_loop()
   {
     // Await events.
     shared_ptr<Abstract_Socket> socket;
-    struct ::epoll_event event;
+    ::epoll_event event;
 
     plain_mutex::unique_lock lock(this->m_conf_mutex);
     const size_t event_buffer_size = this->m_event_buffer_size;

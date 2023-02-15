@@ -18,7 +18,7 @@ Abstract_Socket(unique_posix_fd&& fd)
       POSEIDON_THROW(("Null socket handle not valid"));
 
     // Get the local address and address family.
-    struct ::sockaddr_in6 sa;
+    ::sockaddr_in6 sa;
     ::socklen_t salen = sizeof(sa);
     if(::getsockname(this->m_fd, (::sockaddr*) &sa, &salen) != 0)
       POSEIDON_THROW((
@@ -82,7 +82,7 @@ local_address() const noexcept
     if(this->m_sockname_ready.load())
       return this->m_sockname;
 
-    struct ::sockaddr_in6 sa;
+    ::sockaddr_in6 sa;
     ::socklen_t salen = sizeof(sa);
     if(::getsockname(this->m_fd, (::sockaddr*) &sa, &salen) != 0)
       return ipv6_invalid;
@@ -104,13 +104,13 @@ void
 Abstract_Socket::
 connect(const Socket_Address& addr)
   {
-    struct ::sockaddr_in6 sa;
+    ::sockaddr_in6 sa;
     sa.sin6_family = AF_INET6;
     sa.sin6_port = htobe16(addr.port());
     sa.sin6_flowinfo = 0;
     sa.sin6_addr = addr.addr();
     sa.sin6_scope_id = 0;
-    if((::connect(this->m_fd, (const struct ::sockaddr*) &sa, sizeof(sa)) != 0) && (errno != EINPROGRESS))
+    if((::connect(this->m_fd, (const ::sockaddr*) &sa, sizeof(sa)) != 0) && (errno != EINPROGRESS))
       POSEIDON_THROW((
           "Failed to initiate TCP connection to `$4`",
           "[`connect()` failed: $3]",
