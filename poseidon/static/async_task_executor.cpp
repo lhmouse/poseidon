@@ -22,16 +22,11 @@ Async_Task_Executor::
 thread_loop()
   {
     plain_mutex::unique_lock lock(this->m_queue_mutex);
-    while(this->m_queue_offset == this->m_queue_buffer.size())
+    while(this->m_queue.empty())
       this->m_queue_avail.wait(lock);
 
-    auto task = this->m_queue_buffer[this->m_queue_offset].lock();
-    this->m_queue_offset ++;
-    if(this->m_queue_offset == this->m_queue_buffer.size()) {
-      POSEIDON_LOG_TRACE(("Clearing task queue: size = $1"), this->m_queue_buffer.size());
-      this->m_queue_buffer.clear();
-      this->m_queue_offset = 0;
-    }
+    auto task = this->m_queue.front().lock();
+    this->m_queue.pop_front();
     lock.unlock();
 
     if(!task)
@@ -65,9 +60,7 @@ enqueue(shared_ptrR<Abstract_Async_Task> task)
 
     // Insert the task.
     plain_mutex::unique_lock lock(this->m_queue_mutex);
-    this->m_queue_buffer.emplace_back(task);
-    this->m_queue_avail.notify_one();
-
+    this->m_queue.emplace_back(task);
   }
 
 }  // namespace poseidon

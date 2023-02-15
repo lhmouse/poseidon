@@ -12,8 +12,7 @@ class Async_Task_Executor
   private:
     mutable plain_mutex m_queue_mutex;
     condition_variable m_queue_avail;
-    vector<weak_ptr<Abstract_Async_Task>> m_queue_buffer;
-    size_t m_queue_offset = 0;
+    deque<weak_ptr<Abstract_Async_Task>> m_queue;
 
   public:
     // Creates an empty task executor.
