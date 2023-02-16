@@ -22,11 +22,10 @@ class Abstract_Timer
 
   protected:
     // This callback is invoked by the timer thread and is intended to be
-    // overriden by derived classes. `now` is the number of milliseconds since
-    // system startup.
+    // overriden by derived classes.
     virtual
     void
-    do_abstract_timer_on_tick(milliseconds now) = 0;
+    do_abstract_timer_on_tick(steady_time now) = 0;
 
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Abstract_Timer);

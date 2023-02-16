@@ -5,7 +5,6 @@
 #include "timer_driver.hpp"
 #include "../base/abstract_timer.hpp"
 #include "../utils.hpp"
-#include <time.h>
 namespace poseidon {
 namespace {
 
@@ -13,7 +12,7 @@ struct Queued_Timer
   {
     weak_ptr<Abstract_Timer> wtimer;
     uint64_t serial;
-    milliseconds next;
+    steady_time next;
     milliseconds period;
   };
 
@@ -25,11 +24,11 @@ struct Timer_Comparator
       { return lhs.next > rhs.next;  }
 
     bool
-    operator()(const Queued_Timer& lhs, milliseconds rhs) noexcept
+    operator()(const Queued_Timer& lhs, steady_time rhs) noexcept
       { return lhs.next > rhs;  }
 
     bool
-    operator()(milliseconds lhs, const Queued_Timer& rhs) noexcept
+    operator()(steady_time lhs, const Queued_Timer& rhs) noexcept
       { return lhs > rhs.next;  }
   }
   constexpr timer_comparator;
@@ -52,16 +51,6 @@ Timer_Driver::
   {
   }
 
-milliseconds
-Timer_Driver::
-clock() noexcept
-  {
-    ::timespec ts;
-    ::clock_gettime(CLOCK_MONOTONIC, &ts);
-    int64_t count = ts.tv_sec * 1000LL + (uint32_t) ts.tv_nsec / 1000000U;
-    return (milliseconds) count;
-  }
-
 void
 Timer_Driver::
 thread_loop()
@@ -70,8 +59,7 @@ thread_loop()
     while(this->m_pq.empty())
       this->m_pq_avail.wait(lock);
 
-    const auto now = this->clock();
-    ROCKET_ASSERT(this->m_pq.front().next > (milliseconds) 0);
+    const auto now = time_point_cast<milliseconds>(steady_clock::now());
     if(now < this->m_pq.front().next) {
       this->m_pq_avail.wait_for(lock, this->m_pq.front().next - now);
       return;
@@ -133,7 +121,7 @@ insert(shared_ptrR<Abstract_Timer> timer, milliseconds delay, milliseconds perio
     // Calculate the end time point.
     X_Queued_Timer elem;
     elem.wtimer = timer;
-    elem.next = this->clock() + delay;
+    elem.next = time_point_cast<milliseconds>(steady_clock::now()) + delay;
     elem.period = period;
 
     // Insert the timer.

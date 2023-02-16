@@ -14,17 +14,17 @@ namespace {
 struct Shared_cb_args
   {
     weak_ptr<void> wobj;
-    callback_thunk_ptr<milliseconds> thunk;
+    callback_thunk_ptr<steady_time> thunk;
     weak_ptr<void> wuniq;
   };
 
 struct Final_Fiber final : Abstract_Fiber
   {
     Shared_cb_args m_cb;
-    milliseconds m_now;
+    steady_time m_now;
 
     explicit
-    Final_Fiber(const Shared_cb_args& cb, milliseconds now)
+    Final_Fiber(const Shared_cb_args& cb, steady_time now)
       : m_cb(cb), m_now(now)  { }
 
     virtual
@@ -60,7 +60,7 @@ struct Final_Timer final : Abstract_Timer
 
     virtual
     void
-    do_abstract_timer_on_tick(milliseconds now) override
+    do_abstract_timer_on_tick(steady_time now) override
       {
         if(this->m_cb.wuniq.expired())
           return;

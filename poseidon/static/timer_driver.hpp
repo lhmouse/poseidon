@@ -25,12 +25,6 @@ class Timer_Driver
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Timer_Driver);
 
-    // Gets the current time from a monotonic clock, in milliseconds.
-    // This function is thread-safe.
-    static
-    milliseconds
-    clock() noexcept;
-
     // Schedules timers.
     // This function should be called by the timer thread repeatedly.
     void

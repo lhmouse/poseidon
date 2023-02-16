@@ -56,15 +56,19 @@ using ::std::vector;
 using ::std::deque;
 using ::std::unordered_map;
 using ::std::unordered_set;
-using ::std::chrono::system_clock;
 using ::std::chrono::milliseconds;
 using ::std::chrono::seconds;
 using ::std::chrono::duration;
+using ::std::chrono::system_clock;
+using system_time = ::std::chrono::time_point<system_clock, milliseconds>;
+using ::std::chrono::steady_clock;
+using steady_time = ::std::chrono::time_point<steady_clock, milliseconds>;
 
 using ::std::static_pointer_cast;
 using ::std::dynamic_pointer_cast;
 using ::std::const_pointer_cast;
 using ::std::chrono::duration_cast;
+using ::std::chrono::time_point_cast;
 
 using ::rocket::atomic;
 using ::rocket::atomic_relaxed;

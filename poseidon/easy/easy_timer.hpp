@@ -11,17 +11,16 @@ class Easy_Timer
   {
   private:
     shared_ptr<void> m_cb_obj;
-    callback_thunk_ptr<milliseconds> m_cb_thunk;
+    callback_thunk_ptr<steady_time> m_cb_thunk;
 
     shared_ptr<void> m_uniq;
     shared_ptr<Abstract_Timer> m_timer;
 
   public:
     // Constructs a timer. The argument shall be an invocable object taking
-    // `(milliseconds now)`, where `now` is the number of milliseconds since
-    // system startup. This timer stores a copy of the callback, which is
-    // invoked accordingly in the main thread. The callback object is never
-    // copied, and is allowed to modify itself.
+    // `(steady_time now)`. This timer stores a copy of the callback,
+    // which is invoked accordingly in the main thread. The callback object is
+    // never copied, and is allowed to modify itself.
     template<typename CallbackT,
     ROCKET_DISABLE_IF(::std::is_same<::std::decay_t<CallbackT>, Easy_Timer>::value)>
     explicit

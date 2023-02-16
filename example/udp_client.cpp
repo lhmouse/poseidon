@@ -21,7 +21,7 @@ data_callback(shared_ptrR<UDP_Socket> socket, Socket_Address&& addr, linear_buff
   }
 
 void
-timer_callback(milliseconds now)
+timer_callback(steady_time now)
   {
     Socket_Address addr(sref("127.0.0.1:3801"));
     static uint32_t index;

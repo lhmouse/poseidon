@@ -10,9 +10,9 @@ using namespace ::poseidon;
 extern Easy_Timer my_timer;
 
 void
-timer_callback(milliseconds now)
+timer_callback(steady_time now)
   {
-    POSEIDON_LOG_WARN(("example timer: now = $1"), now);
+    POSEIDON_LOG_WARN(("example timer: now = $1"), now.time_since_epoch());
   }
 
 int
