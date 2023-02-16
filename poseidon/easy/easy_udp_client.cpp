@@ -111,7 +111,7 @@ struct Final_UDP_Socket final : UDP_Socket
         if(!queue->fiber_active) {
           // Create a new fiber, if none is active. The fiber shall only reset
           // `m_fiber_active` if no packet is pending.
-          fiber_scheduler.insert(::std::make_unique<Final_Fiber>(this->m_cb));
+          fiber_scheduler.insert(::std::make_shared<Final_Fiber>(this->m_cb));
           queue->fiber_active = true;
         }
 

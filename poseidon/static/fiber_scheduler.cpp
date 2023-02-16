@@ -85,7 +85,7 @@ do_pool_stack(::stack_t ss) noexcept
 
 struct Queued_Fiber
   {
-    unique_ptr<Abstract_Fiber> fiber;
+    shared_ptr<Abstract_Fiber> fiber;
     atomic_relaxed<steady_time> async_time;  // volatile
 
     weak_ptr<Abstract_Future> wfutr;
@@ -383,14 +383,14 @@ size() const noexcept
 
 void
 Fiber_Scheduler::
-insert(unique_ptr<Abstract_Fiber>&& fiber)
+insert(shared_ptrR<Abstract_Fiber> fiber)
   {
     if(!fiber)
       POSEIDON_THROW(("Null fiber pointer not valid"));
 
     // Create the management node.
     auto elem = ::std::make_shared<X_Queued_Fiber>();
-    elem->fiber = ::std::move(fiber);
+    elem->fiber = fiber;
     elem->yield_time = time_point_cast<milliseconds>(steady_clock::now());
     elem->check_time = elem->yield_time;
     elem->async_time.store(elem->yield_time);

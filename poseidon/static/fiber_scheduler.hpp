@@ -55,7 +55,7 @@ class Fiber_Scheduler
     // Inserts a fiber. The scheduler will take ownership of this fiber.
     // This function is thread-safe.
     void
-    insert(unique_ptr<Abstract_Fiber>&& fiber);
+    insert(shared_ptrR<Abstract_Fiber> fiber);
 
     // Gets the current fiber if one is being scheduled.
     // This function shall be called from the same thread as `thread_loop()`.
