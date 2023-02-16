@@ -62,6 +62,7 @@ using ::std::chrono::seconds;
 using ::std::chrono::time_point;
 using ::std::chrono::system_clock;
 using system_time = time_point<system_clock, milliseconds>;
+using unix_time = time_point<system_clock, seconds>;
 using ::std::chrono::steady_clock;
 using steady_time = time_point<steady_clock, milliseconds>;
 
