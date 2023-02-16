@@ -86,12 +86,10 @@ do_pool_stack(::stack_t ss) noexcept
 struct Queued_Fiber
   {
     unique_ptr<Abstract_Fiber> fiber;
-    atomic_relaxed<milliseconds> async_time;  // this might get modified at any time
+    atomic_relaxed<steady_time> async_time;  // volatile
 
     weak_ptr<Abstract_Future> wfutr;
-    milliseconds yield_time;
-    milliseconds check_time;
-    milliseconds fail_time;
+    steady_time yield_time, check_time, fail_time;
     ::ucontext_t sched_inner[1];
   };
 
@@ -103,11 +101,11 @@ struct Fiber_Comparator
       { return lhs->check_time > rhs->check_time;  }
 
     bool
-    operator()(shared_ptrR<Queued_Fiber> lhs, milliseconds rhs) noexcept
+    operator()(shared_ptrR<Queued_Fiber> lhs, steady_time rhs) noexcept
       { return lhs->check_time > rhs;  }
 
     bool
-    operator()(milliseconds lhs, shared_ptrR<Queued_Fiber> rhs) noexcept
+    operator()(steady_time lhs, shared_ptrR<Queued_Fiber> rhs) noexcept
       { return lhs > rhs->check_time;  }
   }
   constexpr fiber_comparator;
@@ -126,16 +124,6 @@ Fiber_Scheduler()
 Fiber_Scheduler::
 ~Fiber_Scheduler()
   {
-  }
-
-milliseconds
-Fiber_Scheduler::
-clock() noexcept
-  {
-    ::timespec ts;
-    ::clock_gettime(CLOCK_MONOTONIC_COARSE, &ts);
-    int64_t count = ts.tv_sec * 1000LL + (uint32_t) ts.tv_nsec / 1000000U;
-    return (milliseconds) count;
   }
 
 void
@@ -231,7 +219,7 @@ thread_loop()
 
     lock.lock(this->m_pq_mutex);
     const int signal = exit_signal.load();
-    const auto now = this->clock();
+    const auto now = time_point_cast<milliseconds>(steady_clock::now());
 
     if(signal == 0) {
       if(!this->m_pq.empty() && (now < this->m_pq.front()->check_time)) {
@@ -263,9 +251,6 @@ thread_loop()
 
     ::std::pop_heap(this->m_pq.begin(), this->m_pq.end(), fiber_comparator);
     auto elem = this->m_pq.back();
-    ROCKET_ASSERT(elem->yield_time > (milliseconds) 0);
-    ROCKET_ASSERT(elem->check_time > (milliseconds) 0);
-
     if(elem->fiber->m_state.load() == async_state_finished) {
       this->m_pq.pop_back();
       lock.unlock();
@@ -277,7 +262,7 @@ thread_loop()
     }
 
     // Put the fiber back.
-    milliseconds next_check_time = min(elem->check_time + warn_timeout, elem->fail_time);
+    steady_time next_check_time = min(elem->check_time + warn_timeout, elem->fail_time);
     elem->async_time.cmpxchg(elem->check_time, next_check_time);
     elem->check_time = next_check_time;
     ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), fiber_comparator);
@@ -364,7 +349,7 @@ thread_loop()
           }
 
           // Return to `m_sched_outer`.
-          elec->async_time.store(xthis->clock());
+          elec->async_time.store(time_point_cast<milliseconds>(steady_clock::now()));
           asan_fiber_switch_start(xthis->m_sched_asan_save, elec->sched_inner->uc_link);
         };
 
@@ -406,9 +391,8 @@ insert(unique_ptr<Abstract_Fiber>&& fiber)
     // Create the management node.
     auto elem = ::std::make_shared<X_Queued_Fiber>();
     elem->fiber = ::std::move(fiber);
-    elem->yield_time = this->clock();
+    elem->yield_time = time_point_cast<milliseconds>(steady_clock::now());
     elem->check_time = elem->yield_time;
-    elem->fail_time = (milliseconds) INT64_MAX;
     elem->async_time.store(elem->yield_time);
 
     // Insert it.
@@ -449,7 +433,7 @@ check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_op
     lock.unlock();
 
     elem->wfutr = futr_opt;
-    elem->yield_time = this->clock();
+    elem->yield_time = time_point_cast<milliseconds>(steady_clock::now());
     elem->fail_time = elem->yield_time;
     elem->async_time.store(elem->yield_time);
 
@@ -459,7 +443,7 @@ check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_op
       if(futr_opt->m_state.load() != future_state_empty)
         return;
 
-      shared_ptr<atomic_relaxed<milliseconds>> async_time_ptr(elem, &(elem->async_time));
+      shared_ptr<atomic_relaxed<steady_time>> async_time_ptr(elem, &(elem->async_time));
       seconds real_fail_timeout = fail_timeout;
 
       if(fail_timeout_override != (seconds) 0)

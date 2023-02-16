@@ -35,12 +35,6 @@ class Fiber_Scheduler
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Fiber_Scheduler);
 
-    // Gets the current time from a monotonic clock, in milliseconds.
-    // This function is thread-safe.
-    static
-    milliseconds
-    clock() noexcept;
-
     // Reloads configuration from 'main.conf'.
     // If this function fails, an exception is thrown, and there is no effect.
     // This function is thread-safe.

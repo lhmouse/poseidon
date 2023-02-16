@@ -3,7 +3,6 @@
 
 #include "../precompiled.ipp"
 #include "abstract_future.hpp"
-#include "../static/fiber_scheduler.hpp"
 #include "../utils.hpp"
 namespace poseidon {
 
@@ -32,8 +31,8 @@ do_try_set_future_state_slow(Future_State new_state, void* param)
     this->m_state.store(new_state);
 
     if(!this->m_waiters.empty()) {
-      const auto now = Fiber_Scheduler::clock();
-      shared_ptr<atomic_relaxed<milliseconds>> async_time_ptr;
+      shared_ptr<atomic_relaxed<steady_time>> async_time_ptr;
+      const auto now = time_point_cast<milliseconds>(steady_clock::now());
 
       // Wake up all waiters. This will not throw exceptions.
       for(const auto& wp : this->m_waiters)
