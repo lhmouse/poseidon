@@ -105,15 +105,20 @@ class Socket_Address
     // If `false` is returned or an exception is thrown, the contents of
     // this object are unspecified.
     bool
-    parse(const char* str, size_t len);
+    parse(const char* str, size_t len) noexcept;
 
     bool
-    parse(const char* str);
+    parse(const char* str) noexcept;
 
     bool
-    parse(stringR str);
+    parse(stringR str) noexcept;
 
-    // Converts this address to its string form.
+    // Converts this address to its string form. The caller should supply
+    // a buffer for 48 characters, which is capable of storing the longest
+    // string `[fedc:ba98:7654:3210:fedc:ba98:7654:3210]:65535`.
+    size_t
+    print_partial(char* str) const noexcept;
+
     tinyfmt&
     print(tinyfmt& fmt) const;
 
@@ -133,16 +138,14 @@ inline
 bool
 operator==(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
   {
-    return (::memcmp(lhs.data(), rhs.data(), sizeof(::in6_addr)) == 0) &&
-           (lhs.port() == rhs.port());
+    return (::memcmp(lhs.data(), rhs.data(), sizeof(::in6_addr)) == 0) && (lhs.port() == rhs.port());
   }
 
 inline
 bool
 operator!=(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
   {
-    return (::memcmp(lhs.data(), rhs.data(), sizeof(::in6_addr)) != 0) ||
-           (lhs.port() != rhs.port());
+    return (::memcmp(lhs.data(), rhs.data(), sizeof(::in6_addr)) != 0) || (lhs.port() != rhs.port());
   }
 
 inline

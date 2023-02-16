@@ -118,6 +118,13 @@ do_classify_ipv6_generic(const void* addr) noexcept
     return ip_address_class_public;
   }
 
+inline
+size_t
+do_strmov(char* dst, const char* src)
+  {
+    return (size_t) (::stpcpy(dst, src) - src);
+  }
+
 }  // namespace
 
 const Socket_Address ipv6_unspecified  = (::in6_addr) {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -164,7 +171,7 @@ classify() const noexcept
 
 bool
 Socket_Address::
-parse(const char* str, size_t len)
+parse(const char* str, size_t len) noexcept
   {
     this->clear();
 
@@ -213,56 +220,66 @@ parse(const char* str, size_t len)
 
 bool
 Socket_Address::
-parse(const char* str)
+parse(const char* str) noexcept
   {
     return this->parse(str, ::strlen(str));
   }
 
 bool
 Socket_Address::
-parse(stringR str)
+parse(stringR str) noexcept
   {
     return this->parse(str.data(), str.size());
+  }
+
+size_t
+Socket_Address::
+print_partial(char* str) const noexcept
+  {
+    const uint8_t* addr = (const uint8_t*) &(this->m_addr);
+    ::rocket::ascii_numput nump;
+    char* wptr;
+
+    if(do_match_subnet(addr, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF", 96)) {
+      // IPv4
+      addr += 12;
+      if(::inet_ntop(AF_INET, addr, str, INET_ADDRSTRLEN) == nullptr)
+        return do_strmov(str, "(invalid IPv4 address)");
+
+      wptr = str + ::strlen(str);
+    }
+    else {
+      // IPv6
+      str[0] = '[';
+      if(::inet_ntop(AF_INET6, addr, str + 1, INET6_ADDRSTRLEN) == nullptr)
+        return do_strmov(str, "(invalid IPv6 address)");
+
+      wptr = str + ::strlen(str);
+      *(wptr++) = ']';
+    }
+
+    *(wptr++) = ':';
+    nump.put_DU(this->m_port);
+    wptr += do_strmov(wptr, nump.data());
+    return (size_t) (wptr - str);
   }
 
 tinyfmt&
 Socket_Address::
 print(tinyfmt& fmt) const
   {
-    const uint8_t* addr = (const uint8_t*) &(this->m_addr);
-    int family = AF_INET6;
-    char sbuf[64];
-    char* host;
-
-    if(do_match_subnet(addr, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF", 96)) {
-      // IPv4
-      addr += 12;
-      family = AF_INET;
-    }
-
-    host = (char*) ::inet_ntop(family, addr, sbuf + 1, sizeof(sbuf) - 1);
-    if(!host)
-      return fmt << "(invalid IP address)";
-
-    if(family != AF_INET) {
-      host --;
-      host[0] = '[';
-      ::strcat(host, "]:");
-    }
-    else
-      ::strcat(host, ":");
-
-    fmt << host << this->m_port;
-    return fmt;
+    char str[64];
+    size_t len = this->print_partial(str);
+    return fmt.putn(str, len);
   }
 
 cow_string
 Socket_Address::
 print_to_string() const
   {
-    ::rocket::tinyfmt_str fmt;
-    this->print(fmt);
-    return fmt.extract_string();
+    char str[64];
+    size_t len = this->print_partial(str);
+    return cow_string(str, len);
   }
 
 }  // namespace poseidon
