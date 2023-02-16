@@ -417,7 +417,7 @@ self_opt() const noexcept
 
 void
 Fiber_Scheduler::
-check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_opt, seconds fail_timeout_override)
+check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override)
   {
     recursive_mutex::unique_lock sched_lock(this->m_sched_mutex);
 
@@ -443,10 +443,10 @@ check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_op
         return;
 
       shared_ptr<atomic_relaxed<steady_time>> async_time_ptr(elem, &(elem->async_time));
-      seconds real_fail_timeout = fail_timeout;
+      milliseconds real_fail_timeout = fail_timeout;
 
       if(fail_timeout_override != (seconds) 0)
-        real_fail_timeout = clamp(fail_timeout_override, (seconds) 0, (seconds) 86400);
+        real_fail_timeout = clamp(fail_timeout_override, (hours) 0, (hours) 1);
 
       elem->fail_time = elem->yield_time + real_fail_timeout;
       elem->async_time.store(min(elem->yield_time + warn_timeout, elem->fail_time));
