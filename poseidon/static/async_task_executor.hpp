@@ -1,8 +1,8 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
 
-#ifndef POSEIDON_STATIC_TASK_EXECUTOR_
-#define POSEIDON_STATIC_TASK_EXECUTOR_
+#ifndef POSEIDON_STATIC_ASYNC_TASK_EXECUTOR_
+#define POSEIDON_STATIC_ASYNC_TASK_EXECUTOR_
 
 #include "../fwd.hpp"
 namespace poseidon {
