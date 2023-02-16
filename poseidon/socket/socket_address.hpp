@@ -15,7 +15,7 @@ class Socket_Address
     uint16_t m_port;
 
   public:
-    // Initializes an unspecified address.
+    // Initializes an unspecified (all-zero) address.
     constexpr
     Socket_Address() noexcept
       : m_addr(), m_port(0)  { }
@@ -52,18 +52,6 @@ class Socket_Address
     port() const noexcept
       { return this->m_port;  }
 
-    ::in6_addr&
-    mut_addr() noexcept
-      { return this->m_addr;  }
-
-    void
-    set_addr(const ::in6_addr& addr) noexcept
-      { this->m_addr = addr;  }
-
-    void
-    set_port(uint16_t port) noexcept
-      { this->m_port = port;  }
-
     const uint8_t*
     data() const noexcept
       { return (const uint8_t*) &(this->m_addr);  }
@@ -71,6 +59,24 @@ class Socket_Address
     uint8_t*
     mut_data() noexcept
       { return (uint8_t*) &(this->m_addr);  }
+
+    ::in6_addr&
+    mut_addr() noexcept
+      { return this->m_addr;  }
+
+    Socket_Address&
+    set_addr(const ::in6_addr& addr) noexcept
+      {
+        this->m_addr = addr;
+        return *this;
+      }
+
+    Socket_Address&
+    set_port(uint16_t port) noexcept
+      {
+        this->m_port = port;
+        return *this;
+      }
 
     Socket_Address&
     clear() noexcept
