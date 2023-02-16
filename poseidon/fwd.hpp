@@ -71,12 +71,12 @@ using unix_time = time_point<system_clock, seconds>;
 using ::std::chrono::steady_clock;
 using steady_time = time_point<steady_clock, milliseconds>;
 
+constexpr weeks zero_duration = { };
 using ::std::static_pointer_cast;
 using ::std::dynamic_pointer_cast;
 using ::std::const_pointer_cast;
 using ::std::chrono::duration_cast;
 using ::std::chrono::time_point_cast;
-constexpr weeks zero_duration(0);
 
 using ::rocket::atomic;
 using ::rocket::atomic_relaxed;
