@@ -287,7 +287,7 @@ thread_loop()
 
     // Get the socket.
     lock.lock(this->m_epoll_mutex);
-    auto socket_it = this->m_epoll_sockets.find(event.data.ptr);
+    auto socket_it = this->m_epoll_sockets.find((Abstract_Socket*) event.data.ptr);
     if(socket_it == this->m_epoll_sockets.end())
       return;
 
