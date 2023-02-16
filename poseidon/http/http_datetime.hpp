@@ -42,7 +42,7 @@ class HTTP_DateTime
     // Accesses raw data.
     constexpr
     unix_time
-    as_time_point() const noexcept
+    as_unix_time() const noexcept
       { return this->m_tp;  }
 
     constexpr
@@ -142,42 +142,42 @@ constexpr
 bool
 operator==(const HTTP_DateTime& lhs, const HTTP_DateTime& rhs) noexcept
   {
-    return lhs.as_time_point() == rhs.as_time_point();
+    return lhs.as_unix_time() == rhs.as_unix_time();
   }
 
 constexpr
 bool
 operator!=(const HTTP_DateTime& lhs, const HTTP_DateTime& rhs) noexcept
   {
-    return lhs.as_time_point() != rhs.as_time_point();
+    return lhs.as_unix_time() != rhs.as_unix_time();
   }
 
 constexpr
 bool
 operator<(const HTTP_DateTime& lhs, const HTTP_DateTime& rhs) noexcept
   {
-    return lhs.as_time_point() < rhs.as_time_point();
+    return lhs.as_unix_time() < rhs.as_unix_time();
   }
 
 constexpr
 bool
 operator>(const HTTP_DateTime& lhs, const HTTP_DateTime& rhs) noexcept
   {
-    return lhs.as_time_point() > rhs.as_time_point();
+    return lhs.as_unix_time() > rhs.as_unix_time();
   }
 
 constexpr
 bool
 operator<=(const HTTP_DateTime& lhs, const HTTP_DateTime& rhs) noexcept
   {
-    return lhs.as_time_point() <= rhs.as_time_point();
+    return lhs.as_unix_time() <= rhs.as_unix_time();
   }
 
 constexpr
 bool
 operator>=(const HTTP_DateTime& lhs, const HTTP_DateTime& rhs) noexcept
   {
-    return lhs.as_time_point() >= rhs.as_time_point();
+    return lhs.as_unix_time() >= rhs.as_unix_time();
   }
 
 inline
