@@ -432,7 +432,6 @@ check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_op
     const seconds fail_timeout = this->m_conf_fail_timeout;
     lock.unlock();
 
-    elem->wfutr = futr_opt;
     elem->yield_time = time_point_cast<milliseconds>(steady_clock::now());
     elem->fail_time = elem->yield_time;
     elem->async_time.store(elem->yield_time);
@@ -457,6 +456,7 @@ check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_op
 
     // Suspend the current fiber...
     elem->fiber->do_abstract_fiber_on_suspended();
+    elem->wfutr = futr_opt;
     ROCKET_ASSERT(elem->fiber->m_state.load() == async_state_running);
     elem->fiber->m_state.store(async_state_suspended);
     POSEIDON_LOG_TRACE(("Suspending fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
