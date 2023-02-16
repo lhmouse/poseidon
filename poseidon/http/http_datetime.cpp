@@ -421,7 +421,7 @@ print_to_string() const
     return cow_string(str, len);
   }
 
-const HTTP_DateTime http_datetime_min = (seconds) 0;
-const HTTP_DateTime http_datetime_max = (seconds) 253370764800;
+const HTTP_DateTime http_datetime_min = (unix_time)(days) 0;
+const HTTP_DateTime http_datetime_max = (unix_time)(days) 2932532;
 
 }  // namespace poseidon

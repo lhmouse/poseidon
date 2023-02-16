@@ -73,7 +73,7 @@ thread_loop()
       this->m_pq.pop_back();
       return;
     }
-    else if(this->m_pq.back().period != (milliseconds) 0) {
+    else if(this->m_pq.back().period != zero_duration) {
       // Update the next time point and insert the timer back.
       this->m_pq.back().next += this->m_pq.back().period;
       ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), timer_comparator);
@@ -112,10 +112,10 @@ insert(shared_ptrR<Abstract_Timer> timer, milliseconds delay, milliseconds perio
     if(!timer)
       POSEIDON_THROW(("Null timer pointer not valid"));
 
-    if((delay < (milliseconds) 0) || (delay > (milliseconds) 0xFF'FFFFFFFF))
+    if((delay < (days) 0) || (delay > (days) 1000))
       POSEIDON_THROW(("Timer delay out of range: $1"), delay);
 
-    if((period < (milliseconds) 0) || (period > (milliseconds) 0xFF'FFFFFFFF))
+    if((period < (days) 0) || (period > (days) 1000))
       POSEIDON_THROW(("Timer period out of range: $1"), period);
 
     // Calculate the end time point.

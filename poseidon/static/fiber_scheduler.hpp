@@ -15,8 +15,8 @@ class Fiber_Scheduler
 
     mutable plain_mutex m_conf_mutex;
     uint32_t m_conf_stack_vm_size = 0;
-    seconds m_conf_warn_timeout = (seconds) 0;
-    seconds m_conf_fail_timeout = (seconds) 0;
+    seconds m_conf_warn_timeout = zero_duration;
+    seconds m_conf_fail_timeout = zero_duration;
 
     mutable plain_mutex m_pq_mutex;
     vector<shared_ptr<X_Queued_Fiber>> m_pq;

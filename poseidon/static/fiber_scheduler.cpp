@@ -445,7 +445,7 @@ check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_op
       shared_ptr<atomic_relaxed<steady_time>> async_time_ptr(elem, &(elem->async_time));
       milliseconds real_fail_timeout = fail_timeout;
 
-      if(fail_timeout_override != (seconds) 0)
+      if(fail_timeout_override != zero_duration)
         real_fail_timeout = clamp(fail_timeout_override, (hours) 0, (hours) 1);
 
       elem->fail_time = elem->yield_time + real_fail_timeout;
