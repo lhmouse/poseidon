@@ -370,31 +370,23 @@ bool
 HTTP_DateTime::
 parse(const char* str, size_t len, size_t* outlen_opt)
   {
-    size_t outlen = 0;
+    size_t temp_outlen;
+    size_t* outlen = outlen_opt ? outlen_opt : &temp_outlen;
+    *outlen = 0;
 
     // A string with an erroneous length will not be accepted, so
     // we just need to check for possibilities by `len`.
-    switch(len) {
-      case 29:
-        outlen = parse_rfc1123_partial(str);
-        break;
+    if((*outlen == 0) && (len >= 29))
+      *outlen = parse_rfc1123_partial(str);
 
-      case 30:
-      case 31:
-      case 32:
-      case 33:
-        outlen = parse_rfc850_partial(str);
-        break;
+    if((*outlen == 0) && (len >= 30))
+      *outlen = parse_rfc850_partial(str);
 
-      case 24:
-        outlen = parse_asctime_partial(str);
-        break;
-    }
+    if((*outlen == 0) && (len >= 24))
+      *outlen = parse_asctime_partial(str);
 
-    if(outlen_opt)
-      *outlen_opt = outlen;
-
-    return outlen != 0;
+    // Return whether any attempt has succeeded.
+    return *outlen != 0;
   }
 
 bool
