@@ -32,6 +32,12 @@ class Socket_Address
     // Parses an address from a string, like `parse()`.
     // An exception is thrown if the address string is not valid.
     explicit
+    Socket_Address(const char* str, size_t len);
+
+    explicit
+    Socket_Address(const char* str);
+
+    explicit
     Socket_Address(stringR str);
 
   public:
@@ -92,6 +98,12 @@ class Socket_Address
     // are `127.0.0.1:80` and `[::1]:1300`.
     // If `false` is returned or an exception is thrown, the contents of
     // this object are unspecified.
+    bool
+    parse(const char* str, size_t len);
+
+    bool
+    parse(const char* str);
+
     bool
     parse(stringR str);
 

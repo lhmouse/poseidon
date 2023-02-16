@@ -21,7 +21,7 @@ data_callback(shared_ptrR<UDP_Socket> socket, Socket_Address&& addr, linear_buff
 int
 start_server()
   {
-    Socket_Address addr(sref("[::]:3801"));
+    Socket_Address addr("[::]:3801");
     my_server.start(addr);
     POSEIDON_LOG_ERROR(("example UDP server started: bind = $1"), my_server.local_address());
     return 0;

@@ -36,7 +36,7 @@ event_callback(shared_ptrR<TCP_Socket> socket, Connection_Event event, linear_bu
 int
 start_client()
   {
-    Socket_Address addr(sref("93.184.216.34:80"));  // www.example.org
+    Socket_Address addr("93.184.216.34:80");  // www.example.org
 
     my_client.start(addr);
     POSEIDON_LOG_FATAL(("example TCP client started: local = $1"), my_client.local_address());

@@ -129,6 +129,24 @@ const Socket_Address ipv4_loopback     = (::in6_addr) {0,0,0,0,0,0,0,0,0,0,255,2
 const Socket_Address ipv4_broadcast    = (::in6_addr) {0,0,0,0,0,0,0,0,0,0,255,255,255,255,255,255};
 
 Socket_Address::
+Socket_Address(const char* str, size_t len)
+  {
+    if(!this->parse(str, len))
+      POSEIDON_THROW((
+          "Could not parse socket address string `$1`"),
+          cow_string(str, len));
+  }
+
+Socket_Address::
+Socket_Address(const char* str)
+  {
+    if(!this->parse(str))
+      POSEIDON_THROW((
+          "Could not parse socket address string `$1`"),
+          str);
+  }
+
+Socket_Address::
 Socket_Address(stringR str)
   {
     if(!this->parse(str))
@@ -146,27 +164,27 @@ classify() const noexcept
 
 bool
 Socket_Address::
-parse(stringR str)
+parse(const char* str, size_t len)
   {
     this->clear();
 
-    if(str.empty())
+    // Validate arguments.
+    if(len == 0)
       return true;
-
-    if(str.size() >= UINT16_MAX)
+    else if(len >= UINT16_MAX)
       return false;
 
     // Break down the host:port string as a URL.
     ::http_parser_url url;
     url.field_set = 0;
 
-    if(::http_parser_parse_url(str.data(), str.size(), true, &url) != 0)
+    if(::http_parser_parse_url(str, len, true, &url) != 0)
       return false;
 
     if(url.field_set != (1U << UF_HOST | 1U << UF_PORT))
       return false;
 
-    const char* host = str.data() + url.field_data[UF_HOST].off;
+    const char* host = str + url.field_data[UF_HOST].off;
     size_t hostlen = url.field_data[UF_HOST].len;
     uint8_t* addr = (uint8_t*) &(this->m_addr);
     int family = AF_INET6;
@@ -191,6 +209,20 @@ parse(stringR str)
 
     this->m_port = url.port;
     return true;
+  }
+
+bool
+Socket_Address::
+parse(const char* str)
+  {
+    return this->parse(str, ::strlen(str));
+  }
+
+bool
+Socket_Address::
+parse(stringR str)
+  {
+    return this->parse(str.data(), str.size());
   }
 
 tinyfmt&

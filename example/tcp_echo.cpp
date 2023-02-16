@@ -35,7 +35,7 @@ event_callback(shared_ptrR<TCP_Socket> socket, Connection_Event event, linear_bu
 int
 start_server()
   {
-    Socket_Address addr(sref("[::]:3802"));
+    Socket_Address addr("[::]:3802");
     my_server.start(addr);
     POSEIDON_LOG_ERROR(("example TCP server started: bind = $1"), my_server.local_address());
     return 0;

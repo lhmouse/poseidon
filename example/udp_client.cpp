@@ -23,12 +23,10 @@ data_callback(shared_ptrR<UDP_Socket> socket, Socket_Address&& addr, linear_buff
 void
 timer_callback(steady_time now)
   {
-    Socket_Address addr(sref("127.0.0.1:3801"));
-    static uint32_t index;
-    cow_string str = format_string("packet $1", ++index);
+    Socket_Address addr("127.0.0.1:3801");
+    cow_string str = format_string("ticks = $1", now.time_since_epoch());
     POSEIDON_LOG_INFO(("example UDP client sending data to `$1`: $2"), addr, str);
     my_client.udp_send(addr, str.data(), str.size());
-    (void) now;
   }
 
 int
