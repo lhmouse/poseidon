@@ -173,6 +173,9 @@ class UDP_Socket;
 class TCP_Socket;
 class SSL_Socket;
 
+// HTTP types
+class HTTP_DateTime;
+
 // Easy types
 // Being 'easy' means all callbacks are invoked in fibers and can perform
 // async/await operations. These are suitable for agile development.

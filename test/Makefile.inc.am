@@ -3,6 +3,7 @@ check_PROGRAMS +=  \
   %reldir%/socket_address.test  \
   %reldir%/deflator.test  \
   %reldir%/inflator.test  \
+  %reldir%/http_datetime.test  \
   ${END}
 
 EXTRA_DIST +=  \
