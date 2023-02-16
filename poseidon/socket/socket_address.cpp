@@ -118,13 +118,6 @@ do_classify_ipv6_generic(const void* addr) noexcept
     return ip_address_class_public;
   }
 
-inline
-size_t
-do_strmov(char* dst, const char* src)
-  {
-    return (size_t) (::stpcpy(dst, src) - src);
-  }
-
 }  // namespace
 
 const Socket_Address ipv6_unspecified  = (::in6_addr) {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -194,26 +187,26 @@ parse(const char* str, size_t len) noexcept
     const char* host = str + url.field_data[UF_HOST].off;
     size_t hostlen = url.field_data[UF_HOST].len;
     uint8_t* addr = (uint8_t*) &(this->m_addr);
-    int family = AF_INET6;
     char sbuf[64];
 
     if((hostlen < 1) || (hostlen > 63))
       return false;
 
+    ::memcpy(sbuf, host, hostlen);
+    sbuf[hostlen] = 0;
+
     if(host[hostlen] != ']') {
       // IPv4
       ::memcpy(addr, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF", 12);
       addr += 12;
-      family = AF_INET;
+      if(::inet_pton(AF_INET, sbuf, addr) == 0)
+        return false;
     }
-
-    ::memcpy(sbuf, host, hostlen);
-    sbuf[hostlen] = 0;
-    host = sbuf;
-
-    if(::inet_pton(family, host, addr) == 0)
-      return false;
-
+    else {
+      // IPv6
+      if(::inet_pton(AF_INET6, sbuf, addr) == 0)
+        return false;
+    }
     this->m_port = url.port;
     return true;
   }
@@ -238,29 +231,28 @@ print_partial(char* str) const noexcept
   {
     const uint8_t* addr = (const uint8_t*) &(this->m_addr);
     ::rocket::ascii_numput nump;
-    char* wptr;
+    char* wptr = str;
 
     if(do_match_subnet(addr, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF", 96)) {
       // IPv4
       addr += 12;
-      if(::inet_ntop(AF_INET, addr, str, INET_ADDRSTRLEN) == nullptr)
-        return do_strmov(str, "(invalid IPv4 address)");
+      if(::inet_ntop(AF_INET, addr, wptr, INET_ADDRSTRLEN) == nullptr)
+        return nstpcpy(wptr, "(invalid IPv4 address)");
 
-      wptr = str + ::strlen(str);
+      wptr += ::strlen(wptr);
     }
     else {
       // IPv6
-      str[0] = '[';
-      if(::inet_ntop(AF_INET6, addr, str + 1, INET6_ADDRSTRLEN) == nullptr)
-        return do_strmov(str, "(invalid IPv6 address)");
+      nstpset(wptr, '[');
+      if(::inet_ntop(AF_INET6, addr, wptr, INET6_ADDRSTRLEN) == nullptr)
+        return nstpcpy(wptr, "(invalid IPv6 address)");
 
-      wptr = str + ::strlen(str);
-      *(wptr++) = ']';
+      wptr += ::strlen(wptr);
+      nstpset(wptr, ']');
     }
-
-    *(wptr++) = ':';
+    nstpset(wptr, ':');
     nump.put_DU(this->m_port);
-    wptr += do_strmov(wptr, nump.data());
+    nstpcpy(wptr, nump.data(), nump.size());
     return (size_t) (wptr - str);
   }
 
