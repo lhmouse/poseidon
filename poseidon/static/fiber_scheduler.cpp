@@ -383,7 +383,7 @@ size() const noexcept
 
 void
 Fiber_Scheduler::
-insert(shared_ptrR<Abstract_Fiber> fiber)
+launch(shared_ptrR<Abstract_Fiber> fiber)
   {
     if(!fiber)
       POSEIDON_THROW(("Null fiber pointer not valid"));

@@ -66,7 +66,7 @@ struct Final_Timer final : Abstract_Timer
           return;
 
         // We are in the timer thread here, so create a new fiber.
-        fiber_scheduler.insert(::std::make_shared<Final_Fiber>(this->m_cb, now));
+        fiber_scheduler.launch(::std::make_shared<Final_Fiber>(this->m_cb, now));
       }
   };
 

@@ -128,7 +128,7 @@ struct Final_SSL_Socket final : SSL_Socket
         if(!queue->fiber_active) {
           // Create a new fiber, if none is active. The fiber shall only reset
           // `m_fiber_private_buffer` if no event is pending.
-          fiber_scheduler.insert(::std::make_shared<Final_Fiber>(this->m_cb));
+          fiber_scheduler.launch(::std::make_shared<Final_Fiber>(this->m_cb));
           queue->fiber_active = true;
         }
 

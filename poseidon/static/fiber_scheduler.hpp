@@ -52,10 +52,11 @@ class Fiber_Scheduler
     size_t
     size() const noexcept;
 
-    // Inserts a fiber. The scheduler will take ownership of this fiber.
+    // Takes ownership of a fiber, and schedules it for execution. The fiber
+    // can only be deleted after it finishes execution.
     // This function is thread-safe.
     void
-    insert(shared_ptrR<Abstract_Fiber> fiber);
+    launch(shared_ptrR<Abstract_Fiber> fiber);
 
     // Gets the current fiber if one is being scheduled.
     // This function shall be called from the same thread as `thread_loop()`.
