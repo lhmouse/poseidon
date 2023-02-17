@@ -5,7 +5,6 @@
 #define POSEIDON_EASY_EASY_TCP_CLIENT_
 
 #include "../fwd.hpp"
-#include "../socket/socket_address.hpp"
 #include "../socket/tcp_socket.hpp"
 namespace poseidon {
 

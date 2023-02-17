@@ -5,7 +5,6 @@
 #define POSEIDON_EASY_EASY_SSL_CLIENT_
 
 #include "../fwd.hpp"
-#include "../socket/socket_address.hpp"
 #include "../socket/ssl_socket.hpp"
 namespace poseidon {
 
