@@ -121,7 +121,7 @@ do_match(const char*& rptr_out, const char* cstr, size_t len)
 template<uint32_t N, uint32_t S>
 inline
 bool
-do_match(const char*& rptr_out, int& val, const char (&cstrs)[N][S], int limit)
+do_match(const char*& rptr_out, int& add_to_value, const char (&cstrs)[N][S], int limit)
   {
     // If a previous match has failed, don't do anything.
     if(rptr_out == nullptr)
@@ -131,9 +131,8 @@ do_match(const char*& rptr_out, int& val, const char (&cstrs)[N][S], int limit)
       size_t len = (limit >= 0) ? (uint32_t) limit : ::strlen(cstrs[k]);
       if(::memcmp(rptr_out, cstrs[k], len) == 0) {
         // A match has been found, so move the read pointer past it.
-        // The value will be accumulated.
         rptr_out += len;
-        val += (int) k;
+        add_to_value += (int) k;
         return true;
       }
     }
