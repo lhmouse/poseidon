@@ -116,7 +116,14 @@ using phsh_stringR = const phsh_string&;
 template<typename T> using shared_ptrR = const shared_ptr<T>&;
 template<typename T> using weak_ptrR = const weak_ptr<T>&;
 
-// Base types
+// Enumerations
+enum zlib_Format : uint8_t
+  {
+    zlib_format_deflate  = 0,
+    zlib_format_raw      = 1,
+    zlib_format_gzip     = 2,
+  };
+
 enum Async_State : uint8_t
   {
     async_state_pending    = 0,
@@ -125,21 +132,6 @@ enum Async_State : uint8_t
     async_state_finished   = 3,
   };
 
-enum zlib_Format : uint8_t
-  {
-    zlib_format_deflate  = 0,
-    zlib_format_raw      = 1,
-    zlib_format_gzip     = 2,
-  };
-
-class Config_File;
-class charbuf_256;
-class Abstract_Timer;
-class Abstract_Async_Task;
-class Deflator;
-class Inflator;
-
-// Fiber types
 enum Future_State : uint8_t
   {
     future_state_empty      = 0,
@@ -147,11 +139,6 @@ enum Future_State : uint8_t
     future_state_exception  = 2,
   };
 
-class Abstract_Future;
-class Abstract_Fiber;
-class Timer_Fiber;
-
-// Socket types
 enum IP_Address_Class : uint8_t
   {
     ip_address_class_unspecified  = 0,  // all zeroes
@@ -172,6 +159,28 @@ enum Socket_State : uint8_t
     socket_state_closed       = 3,
   };
 
+enum Connection_Event : uint8_t
+  {
+    connection_event_null    = 0,
+    connection_event_open    = 1,
+    connection_event_stream  = 2,
+    connection_event_closed  = 3,
+  };
+
+// Base types
+class Config_File;
+class charbuf_256;
+class Abstract_Timer;
+class Abstract_Async_Task;
+class Deflator;
+class Inflator;
+
+// Fiber types
+class Abstract_Future;
+class Abstract_Fiber;
+class Timer_Fiber;
+
+// Socket types
 class Socket_Address;
 class Abstract_Socket;
 class Listen_Socket;
@@ -181,18 +190,11 @@ class SSL_Socket;
 
 // HTTP types
 class HTTP_DateTime;
+class HTTP_Value;
 
 // Easy types
 // Being 'easy' means all callbacks are invoked in fibers and can perform
 // async/await operations. These are suitable for agile development.
-enum Connection_Event : uint8_t
-  {
-    connection_event_null    = 0,
-    connection_event_open    = 1,
-    connection_event_stream  = 2,
-    connection_event_closed  = 3,
-  };
-
 class Easy_Timer;
 class Easy_UDP_Server;
 class Easy_UDP_Client;
