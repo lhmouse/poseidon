@@ -31,6 +31,8 @@ nobase_include_HEADERS +=  \
   %reldir%/socket/tcp_socket.hpp  \
   %reldir%/socket/ssl_socket.hpp  \
   %reldir%/http/http_datetime.hpp  \
+  %reldir%/http/http_value.hpp  \
+  %reldir%/http/http_header.hpp  \
   %reldir%/easy/easy_timer.hpp  \
   %reldir%/easy/easy_udp_server.hpp  \
   %reldir%/easy/easy_udp_client.hpp  \
@@ -67,6 +69,8 @@ lib_libposeidon_la_SOURCES =  \
   %reldir%/socket/tcp_socket.cpp  \
   %reldir%/socket/ssl_socket.cpp  \
   %reldir%/http/http_datetime.cpp  \
+  %reldir%/http/http_value.cpp  \
+  %reldir%/http/http_header.cpp  \
   %reldir%/easy/easy_timer.cpp  \
   %reldir%/easy/easy_udp_server.cpp  \
   %reldir%/easy/easy_udp_client.cpp  \
