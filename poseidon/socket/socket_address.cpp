@@ -131,7 +131,7 @@ const Socket_Address ipv4_broadcast    = (::in6_addr) {0,0,0,0,0,0,0,0,0,0,255,2
 Socket_Address::
 Socket_Address(const char* str, size_t len)
   {
-    if(!this->parse(str, len))
+    if(this->parse(str, len) == 0)
       POSEIDON_THROW((
           "Could not parse socket address string `$1`"),
           cow_string(str, len));
@@ -140,7 +140,7 @@ Socket_Address(const char* str, size_t len)
 Socket_Address::
 Socket_Address(const char* str)
   {
-    if(!this->parse(str))
+    if(this->parse(str) == 0)
       POSEIDON_THROW((
           "Could not parse socket address string `$1`"),
           str);
@@ -149,7 +149,7 @@ Socket_Address(const char* str)
 Socket_Address::
 Socket_Address(stringR str)
   {
-    if(!this->parse(str))
+    if(this->parse(str) == 0)
       POSEIDON_THROW((
           "Could not parse socket address string `$1`"),
           str);
@@ -162,31 +162,21 @@ classify() const noexcept
     return do_classify_ipv6_generic(&(this->m_addr));
   }
 
-bool
+size_t
 Socket_Address::
-parse(const char* str, size_t len, size_t* outlen_opt)
+parse(const char* str, size_t len) noexcept
   {
-    size_t temp_outlen;
-    size_t& outlen = outlen_opt ? *outlen_opt : temp_outlen;
-    outlen = 0;
-
     this->clear();
 
-    // Validate arguments.
-    if(len == 0)
-      return true;
-    else if(len >= UINT16_MAX)
-      return false;
+    if((len == 0) || (len > UINT16_MAX))
+      return 0;
 
     // Break down the host:port string as a URL.
     ::http_parser_url url;
     url.field_set = 0;
 
     if(::http_parser_parse_url(str, len, true, &url) != 0)
-      return false;
-
-    if(url.field_set != (1U << UF_HOST | 1U << UF_PORT))
-      return false;
+      return 0;
 
     const char* host = str + url.field_data[UF_HOST].off;
     size_t hostlen = url.field_data[UF_HOST].len;
@@ -194,7 +184,7 @@ parse(const char* str, size_t len, size_t* outlen_opt)
     char sbuf[64];
 
     if((hostlen < 1) || (hostlen > 63))
-      return false;
+      return 0;
 
     ::memcpy(sbuf, host, hostlen);
     sbuf[hostlen] = 0;
@@ -204,30 +194,31 @@ parse(const char* str, size_t len, size_t* outlen_opt)
       ::memcpy(addr, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF", 12);
       addr += 12;
       if(::inet_pton(AF_INET, sbuf, addr) == 0)
-        return false;
+        return 0;
     }
     else {
       // IPv6
       if(::inet_pton(AF_INET6, sbuf, addr) == 0)
-        return false;
+        return 0;
     }
     this->m_port = url.port;
-    outlen = (size_t) url.field_data[UF_PORT].off + url.field_data[UF_PORT].len;
-    return true;
+
+    // Return the number of characters up to the end of the port field.
+    return (size_t) url.field_data[UF_PORT].off + url.field_data[UF_PORT].len;
   }
 
-bool
+size_t
 Socket_Address::
-parse(const char* str, size_t* outlen_opt)
+parse(const char* str) noexcept
   {
-    return this-> parse(str, ::strlen(str), outlen_opt);
+    return this->parse(str, ::strlen(str));
   }
 
-bool
+size_t
 Socket_Address::
-parse(stringR str, size_t* outlen_opt)
+parse(stringR str) noexcept
   {
-    return this->parse(str.data(), str.size(), outlen_opt);
+    return this->parse(str.data(), str.size());
   }
 
 size_t
@@ -258,6 +249,8 @@ print_partial(char* str) const noexcept
     nstpset(wptr, ':');
     nump.put_DU(this->m_port);
     nstpcpy(wptr, nump.data(), nump.size());
+
+    // Return the number of characters that have been written in total.
     return (size_t) (wptr - str);
   }
 

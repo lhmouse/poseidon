@@ -156,7 +156,7 @@ HTTP_DateTime(const char* str, size_t len)
 HTTP_DateTime::
 HTTP_DateTime(const char* str)
   {
-    if(!this->parse(str))
+    if(this->parse(str) == 0)
       POSEIDON_THROW((
           "Could not parse HTTP data/time string `$1`"),
           str);
@@ -165,7 +165,7 @@ HTTP_DateTime(const char* str)
 HTTP_DateTime::
 HTTP_DateTime(stringR str)
   {
-    if(!this->parse(str))
+    if(this->parse(str) == 0)
       POSEIDON_THROW((
           "Could not parse HTTP data/time string `$1`"),
           str);
@@ -365,41 +365,40 @@ print_asctime_partial(char* str) const noexcept
     return (size_t) (wptr - str);
   }
 
-bool
+size_t
 HTTP_DateTime::
-parse(const char* str, size_t len, size_t* outlen_opt)
+parse(const char* str, size_t len)
   {
-    size_t temp_outlen;
-    size_t& outlen = outlen_opt ? *outlen_opt : temp_outlen;
-    outlen = 0;
-
     // A string with an erroneous length will not be accepted, so
     // we just need to check for possibilities by `len`.
-    if((outlen == 0) && (len >= 29))
-      outlen = parse_rfc1123_partial(str);
+    if(len >= 29)
+      if(size_t acc_len = this->parse_rfc1123_partial(str))
+        return acc_len;
 
-    if((outlen == 0) && (len >= 30))
-      outlen = parse_rfc850_partial(str);
+    if(len >= 30)
+      if(size_t acc_len = this->parse_rfc850_partial(str))
+        return acc_len;
 
-    if((outlen == 0) && (len >= 24))
-      outlen = parse_asctime_partial(str);
+    if(len >= 24)
+      if(size_t acc_len = this->parse_asctime_partial(str))
+        return acc_len;
 
-    // Return whether any attempt has succeeded.
-    return outlen != 0;
+    // Nothing has been accepted. Fail.
+    return 0;
   }
 
-bool
+size_t
 HTTP_DateTime::
-parse(const char* str, size_t* outlen_opt)
+parse(const char* str)
   {
-    return this->parse(str, ::strlen(str), outlen_opt);
+    return this->parse(str, ::strlen(str));
   }
 
-bool
+size_t
 HTTP_DateTime::
-parse(stringR str, size_t* outlen_opt)
+parse(stringR str)
   {
-    return this->parse(str.data(), str.size(), outlen_opt);
+    return this->parse(str.data(), str.size());
   }
 
 tinyfmt&

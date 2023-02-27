@@ -107,19 +107,18 @@ class HTTP_DateTime
     size_t
     print_asctime_partial(char* str) const noexcept;
 
-    // Try parsing an HTTP date/time in any of the formats above. If `true` is
-    // returned and `outlen_opt` is not null, the number of characters that
-    // have been accepted will be stored into `*outlen_opt`.
-    // If `false` is returned or an exception is thrown, the contents of this
-    // object are unspecified.
-    bool
-    parse(const char* str, size_t len, size_t* outlen_opt = nullptr);
+    // Try parsing an HTTP date/time in any of the formats above. If a date/time
+    // string has been parsed, the number of characters that have been consumed
+    // is returned. If zero is returned or an exception is thrown, the contents
+    // of this object are unspecified.
+    size_t
+    parse(const char* str, size_t len);
 
-    bool
-    parse(const char* str, size_t* outlen_opt = nullptr);
+    size_t
+    parse(const char* str);
 
-    bool
-    parse(stringR str, size_t* outlen_opt = nullptr);
+    size_t
+    parse(stringR str);
 
     // Converts this timestamp to its string form, according to RFC 1123.
     tinyfmt&

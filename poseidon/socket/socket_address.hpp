@@ -94,19 +94,18 @@ class Socket_Address
 
     // Parses an address from a string, which may be an IPv4 address, or
     // an IPv6 address in brackets, followed by a port number. Examples
-    // are `127.0.0.1:80` and `[::1]:1300`. If `true` is returned and
-    // `outlen_opt` is not null, the number of characters that have been
-    // accepted will be stored into `*outlen_opt`.
-    // If `false` is returned or an exception is thrown, the contents of
-    // this object are unspecified.
-    bool
-    parse(const char* str, size_t len, size_t* outlen_opt = nullptr);
+    // are `127.0.0.1:80` and `[::1]:1300`. If an address has been parsed,
+    // the number of characters that have been consumed is returned. If
+    // zero is returned or an exception is thrown, the contents of this
+    // object are unspecified.
+    size_t
+    parse(const char* str, size_t len) noexcept;
 
-    bool
-    parse(const char* str, size_t* outlen_opt = nullptr);
+    size_t
+    parse(const char* str) noexcept;
 
-    bool
-    parse(stringR str, size_t* outlen_opt = nullptr);
+    size_t
+    parse(stringR str) noexcept;
 
     // Converts this address to its string form. The caller should supply
     // a buffer for 48 characters, which is capable of storing the longest
