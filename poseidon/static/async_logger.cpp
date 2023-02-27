@@ -148,46 +148,44 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
     ::localtime_r(&(ts.tv_sec), &tr);
 
     ::rocket::ascii_numput nump;
-    uint64_t datetime = (uint32_t) tr.tm_year + 1900;
-    datetime *= 100;
-    datetime += (uint32_t) tr.tm_mon + 1;
-    datetime *= 100;
-    datetime += (uint32_t) tr.tm_mday;
-    datetime *= 100;
-    datetime += (uint32_t) tr.tm_hour;
-    datetime *= 100;
-    datetime += (uint32_t) tr.tm_min;
-    datetime *= 100;
-    datetime += (uint32_t) tr.tm_sec;
-    nump.put_DU(datetime);
-
-    data.append(nump.data() +  0, 4);
-    data.push_back('-');
-    data.append(nump.data() +  4, 2);
-    data.push_back('-');
-    data.append(nump.data() +  6, 2);
-    data.push_back(' ');
-    data.append(nump.data() +  8, 2);
-    data.push_back(':');
-    data.append(nump.data() + 10, 2);
-    data.push_back(':');
-    data.append(nump.data() + 12, 2);
-
+    nump.put_DU((uint32_t) tr.tm_year + 1900, 4);
+    data += nump.data();
+    data += '-';
+    nump.put_DU((uint32_t) tr.tm_mon + 1, 2);
+    data += nump.data();
+    data += '-';
+    nump.put_DU((uint32_t) tr.tm_mday, 2);
+    data += nump.data();
+    data += ' ';
+    nump.put_DU((uint32_t) tr.tm_hour, 2);
+    data += nump.data();
+    data += ':';
+    nump.put_DU((uint32_t) tr.tm_min, 2);
+    data += nump.data();
+    data += ':';
+    nump.put_DU((uint32_t) tr.tm_sec, 2);
+    data += nump.data();
+    data += '.';
     nump.put_DU((uint32_t) ts.tv_nsec, 9);
-    data.push_back('.');
-    data.append(nump.data(), 9);
-    data.push_back(' ');
+    data += nump.data();
+    data += ' ';
+    data += (tr.tm_gmtoff >= 0) ? '+' : '-';
+    nump.put_DU((uint32_t) ::std::abs(tr.tm_gmtoff) / 3600, 2);
+    data += nump.data();
+    nump.put_DU((uint32_t) ::std::abs(tr.tm_gmtoff) / 60 % 60, 2);
+    data += nump.data();
+    data += ' ';
 
     do_color(data, lconf, "7");  // inverse
-    data.append(lconf.tag, 7);
+    data += lconf.tag;
     do_color(data, lconf, "0");  // reset
-    data += " ";
+    data += ' ';
 
     // Write the thread name and ID.
     do_color(data, lconf, "30;1");  // grey
     data += "THREAD ";
     nump.put_DU(msg.thrd_lwpid);
-    data.append(nump.data(), nump.size());
+    data += nump.data();
     data += " \"";
     data += msg.thrd_name;
     data += "\" ";
@@ -204,7 +202,7 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
     data += msg.ctx.file;
     data += ':';
     nump.put_DU(msg.ctx.line);
-    data.append(nump.data(), nump.size());
+    data += nump.data();
     data += "\'\n";
 
     // Write the message.
