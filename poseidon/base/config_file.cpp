@@ -19,7 +19,7 @@ Config_File::
   {
   }
 
-Config_File&
+void
 Config_File::
 reload(stringR file_path)
   {
@@ -38,7 +38,6 @@ reload(stringR file_path)
     // Set new contents. This shall not throw exceptions.
     this->m_path = ::std::move(path);
     this->m_root = ::std::move(root);
-    return *this;
   }
 
 const ::asteria::Value&

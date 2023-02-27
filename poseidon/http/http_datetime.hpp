@@ -38,6 +38,13 @@ class HTTP_DateTime
     explicit
     HTTP_DateTime(stringR str);
 
+    HTTP_DateTime&
+    swap(HTTP_DateTime& other) noexcept
+      {
+        ::std::swap(this->m_tp, other.m_tp);
+        return *this;
+      }
+
   public:
     // Accesses raw data.
     constexpr
@@ -50,26 +57,13 @@ class HTTP_DateTime
     as_seconds() const noexcept
       { return this->m_tp.time_since_epoch();  }
 
-    HTTP_DateTime&
+    void
     set_time_point(unix_time tp) noexcept
-      {
-        this->m_tp = tp;
-        return *this;
-      }
+      { this->m_tp = tp;  }
 
-    HTTP_DateTime&
+    void
     set_seconds(seconds s) noexcept
-      {
-        this->m_tp = (unix_time) s;
-        return *this;
-      }
-
-    HTTP_DateTime&
-    swap(HTTP_DateTime& other) noexcept
-      {
-        ::std::swap(this->m_tp, other.m_tp);
-        return *this;
-      }
+      { this->m_tp = (unix_time) s;  }
 
     // Try parsing an HTTP date/time in the formal RFC 1123 format. An example
     // is `Sun, 06 Nov 1994 08:49:37 GMT`. This function returns the number of

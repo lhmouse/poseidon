@@ -37,6 +37,13 @@ class openssl_ptr
     operator=(openssl_ptr&& other) & noexcept
       { return this->reset(other.release());  }
 
+    openssl_ptr&
+    swap(openssl_ptr& other) noexcept
+      {
+        ::std::swap(this->m_ptr, other.m_ptr);
+        return *this;
+      }
+
     ~openssl_ptr()
       { this->do_free();  }
 
@@ -88,13 +95,6 @@ class openssl_ptr
     release() noexcept
       {
         return ::std::exchange(this->m_ptr, nullptr);
-      }
-
-    openssl_ptr&
-    swap(openssl_ptr& other) noexcept
-      {
-        ::std::swap(this->m_ptr, other.m_ptr);
-        return *this;
       }
   };
 

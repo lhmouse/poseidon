@@ -39,30 +39,28 @@ class charbuf_256
         ::memcpy(this->m_data, str, len + 1);
       }
 
-  public:
     // Swaps two buffers.
     charbuf_256&
     swap(charbuf_256& other) noexcept
       {
-        char temp[256];
-        ::memcpy(temp, other.m_data, sizeof(temp));
-        ::memcpy(other.m_data, this->m_data, sizeof(temp));
-        ::memcpy(this->m_data, temp, sizeof(temp));
+        for(size_t k = 0;  k != 16;  ++k) {
+          alignas(16) char temp[16];
+          ::memcpy(temp, other.m_data + k * 16, sizeof(temp));
+          ::memcpy(other.m_data + k * 16, this->m_data + k * 16, sizeof(temp));
+          ::memcpy(this->m_data + k * 16, temp, sizeof(temp));
+        }
         return *this;
       }
 
+  public:
     // Performs 3-way comparison of two buffers.
     int
     compare(const charbuf_256& other) const noexcept
-      {
-        return ::strcmp(this->m_data, other.m_data);
-      }
+      { return ::strcmp(this->m_data, other.m_data);  }
 
     int
     compare(const char* other) const noexcept
-      {
-        return ::strcmp(this->m_data, other);
-      }
+      { return ::strcmp(this->m_data, other);  }
 
     // Returns a pointer to internal storage so a buffer can be passed as
     // an argument for `char*`.

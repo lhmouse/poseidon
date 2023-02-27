@@ -65,7 +65,7 @@ class Deflator
       { return this->m_strm;  }
 
     // Clears internal states. Pending data are discarded.
-    Deflator&
+    void
     clear() noexcept;
 
     // Compresses some data and returns the number of bytes that have been

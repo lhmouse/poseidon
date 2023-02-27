@@ -64,7 +64,7 @@ class Inflator
       { return this->m_strm;  }
 
     // Clears internal states. Pending data are discarded.
-    Inflator&
+    void
     clear() noexcept;
 
     // Decompresses some data and returns the number of bytes that have been

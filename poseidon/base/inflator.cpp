@@ -20,7 +20,7 @@ Inflator::
   {
   }
 
-Inflator&
+void
 Inflator::
 clear() noexcept
   {
@@ -31,8 +31,6 @@ clear() noexcept
           "[`inflateReset()` returned `$3`]",
           "[inflator `$1` (class `$2`)]"),
           this, typeid(*this), err, this->m_strm.message(err));
-
-    return *this;
   }
 
 void

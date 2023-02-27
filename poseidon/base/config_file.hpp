@@ -23,6 +23,14 @@ class Config_File
     explicit
     Config_File(stringR path);
 
+    Config_File&
+    swap(Config_File& other) noexcept
+      {
+        this->m_path.swap(other.m_path);
+        this->m_root.swap(other.m_root);
+        return *this;
+      }
+
   public:
     ASTERIA_COPYABLE_DESTRUCTOR(Config_File);
 
@@ -41,26 +49,17 @@ class Config_File
     empty() const noexcept
       { return this->m_root.empty();  }
 
-    Config_File&
+    void
     clear() noexcept
       {
         this->m_path.clear();
         this->m_root.clear();
-        return *this;
-      }
-
-    Config_File&
-    swap(Config_File& other) noexcept
-      {
-        this->m_path.swap(other.m_path);
-        this->m_root.swap(other.m_root);
-        return *this;
       }
 
     // Loads the file denoted by `path`.
     // This function provides strong exception guarantee. In case of failure,
     // an exception is thrown, and the contents of this object are unchanged.
-    Config_File&
+    void
     reload(stringR file_path);
 
     // Gets a value denoted by a path, which shall not be empty.

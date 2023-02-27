@@ -40,6 +40,14 @@ class Socket_Address
     explicit
     Socket_Address(stringR str);
 
+    Socket_Address&
+    swap(Socket_Address& other) noexcept
+      {
+        ::std::swap(this->m_addr, other.m_addr);
+        ::std::swap(this->m_port, other.m_port);
+        return *this;
+      }
+
   public:
     // Accesses raw data.
     constexpr
@@ -64,34 +72,19 @@ class Socket_Address
     mut_addr() noexcept
       { return this->m_addr;  }
 
-    Socket_Address&
+    void
     set_addr(const ::in6_addr& addr) noexcept
-      {
-        this->m_addr = addr;
-        return *this;
-      }
+      { this->m_addr = addr;  }
 
-    Socket_Address&
+    void
     set_port(uint16_t port) noexcept
-      {
-        this->m_port = port;
-        return *this;
-      }
+      { this->m_port = port;  }
 
-    Socket_Address&
+    void
     clear() noexcept
       {
         this->m_addr = ::in6_addr();
         this->m_port = 0;
-        return *this;
-      }
-
-    Socket_Address&
-    swap(Socket_Address& other) noexcept
-      {
-        ::std::swap(this->m_addr, other.m_addr);
-        ::std::swap(this->m_port, other.m_port);
-        return *this;
       }
 
     // Returns the address class, which is shared by both IPv4 and IPv6.

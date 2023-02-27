@@ -23,7 +23,7 @@ Deflator::
   {
   }
 
-Deflator&
+void
 Deflator::
 clear() noexcept
   {
@@ -34,8 +34,6 @@ clear() noexcept
           "[`deflateReset()` returned `$3`]",
           "[deflator `$1` (class `$2`)]"),
           this, typeid(*this), err, this->m_strm.message(err));
-
-    return *this;
   }
 
 void
