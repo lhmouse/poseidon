@@ -144,10 +144,13 @@ do_match(const char*& rptr_out, int& add_to_value, const char (&cstrs)[N][S], in
 
 }  // namespace
 
+const HTTP_DateTime http_datetime_min = (unix_time)(days) 0;
+const HTTP_DateTime http_datetime_max = (unix_time)(days) 2932532;
+
 HTTP_DateTime::
 HTTP_DateTime(const char* str, size_t len)
   {
-    if(!this->parse(str, len))
+    if(this->parse(str, len) == 0)
       POSEIDON_THROW((
           "Could not parse HTTP data/time string `$1`"),
           cow_string(str, len));
@@ -209,36 +212,6 @@ parse_rfc1123_partial(const char* str) noexcept
 
 size_t
 HTTP_DateTime::
-print_rfc1123_partial(char* str) const noexcept
-  {
-    char* wptr = str;
-    ::time_t tp = this->m_tp.time_since_epoch().count();
-    ::tm tm;
-    ::gmtime_r(&tp, &tm);
-
-    // `Sun, 06 Nov 1994 08:49:37 GMT`
-    nstpcpy(wptr, s_weekday[(uint32_t) tm.tm_wday], 3);
-    nstpcpy(wptr, ", ", 2);
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_mday], 2);
-    nstpset(wptr, ' ');
-    nstpcpy(wptr, s_month[(uint32_t) tm.tm_mon], 3);
-    nstpset(wptr, ' ');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_year / 100 + 19], 2);
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_year % 100], 2);
-    nstpset(wptr, ' ');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_hour], 2);
-    nstpset(wptr, ':');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_min], 2);
-    nstpset(wptr, ':');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_sec], 2);
-    nstpcpy(wptr, " GMT");
-
-    // Return the number of characters that have been written.
-    return (size_t) (wptr - str);
-  }
-
-size_t
-HTTP_DateTime::
 parse_rfc850_partial(const char* str) noexcept
   {
     const char* rptr = str;
@@ -269,36 +242,6 @@ parse_rfc850_partial(const char* str) noexcept
     // that have been accepted.
     this->m_tp = (unix_time)(seconds) ::timegm(&tm);
     return (size_t) (rptr - str);
-  }
-
-size_t
-HTTP_DateTime::
-print_rfc850_partial(char* str) const noexcept
-  {
-    char* wptr = str;
-    ::time_t tp = this->m_tp.time_since_epoch().count();
-    ::tm tm;
-    ::gmtime_r(&tp, &tm);
-
-    // `Sunday, 06-Nov-94 08:49:37 GMT`
-    nstpcpy(wptr, s_weekday[(uint32_t) tm.tm_wday]);
-    nstpset(wptr, ',');
-    nstpset(wptr, ' ');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_mday], 2);
-    nstpset(wptr, '-');
-    nstpcpy(wptr, s_month[(uint32_t) tm.tm_mon], 3);
-    nstpset(wptr, '-');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_year % 100], 2);
-    nstpset(wptr, ' ');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_hour], 2);
-    nstpset(wptr, ':');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_min], 2);
-    nstpset(wptr, ':');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_sec], 2);
-    nstpcpy(wptr, " GMT");
-
-    // Return the number of characters that have been written.
-    return (size_t) (wptr - str);
   }
 
 size_t
@@ -338,35 +281,6 @@ parse_asctime_partial(const char* str) noexcept
 
 size_t
 HTTP_DateTime::
-print_asctime_partial(char* str) const noexcept
-  {
-    char* wptr = str;
-    ::time_t tp = this->m_tp.time_since_epoch().count();
-    ::tm tm;
-    ::gmtime_r(&tp, &tm);
-
-    // `Sun Nov  6 08:49:37 1994`
-    nstpcpy(wptr, s_weekday[(uint32_t) tm.tm_wday], 3);
-    nstpset(wptr, ' ');
-    nstpcpy(wptr, s_month[(uint32_t) tm.tm_mon], 3);
-    nstpset(wptr, ' ');
-    nstpcpy(wptr, s_sp1digit[(uint32_t) tm.tm_mday], 2);
-    nstpset(wptr, ' ');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_hour], 2);
-    nstpset(wptr, ':');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_min], 2);
-    nstpset(wptr, ':');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_sec], 2);
-    nstpset(wptr, ' ');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_year / 100 + 19], 2);
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_year % 100], 2);
-
-    // Return the number of characters that have been written.
-    return (size_t) (wptr - str);
-  }
-
-size_t
-HTTP_DateTime::
 parse(const char* str, size_t len)
   {
     // A string with an erroneous length will not be accepted, so
@@ -401,6 +315,95 @@ parse(stringR str)
     return this->parse(str.data(), str.size());
   }
 
+size_t
+HTTP_DateTime::
+print_rfc1123_partial(char* str) const noexcept
+  {
+    char* wptr = str;
+    ::time_t tp = this->m_tp.time_since_epoch().count();
+    ::tm tm;
+    ::gmtime_r(&tp, &tm);
+
+    // `Sun, 06 Nov 1994 08:49:37 GMT`
+    nstpcpy(wptr, s_weekday[(uint32_t) tm.tm_wday], 3);
+    nstpcpy(wptr, ", ", 2);
+    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_mday], 2);
+    nstpset(wptr, ' ');
+    nstpcpy(wptr, s_month[(uint32_t) tm.tm_mon], 3);
+    nstpset(wptr, ' ');
+    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_year / 100 + 19], 2);
+    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_year % 100], 2);
+    nstpset(wptr, ' ');
+    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_hour], 2);
+    nstpset(wptr, ':');
+    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_min], 2);
+    nstpset(wptr, ':');
+    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_sec], 2);
+    nstpcpy(wptr, " GMT");
+
+    // Return the number of characters that have been written.
+    return (size_t) (wptr - str);
+  }
+
+size_t
+HTTP_DateTime::
+print_rfc850_partial(char* str) const noexcept
+  {
+    char* wptr = str;
+    ::time_t tp = this->m_tp.time_since_epoch().count();
+    ::tm tm;
+    ::gmtime_r(&tp, &tm);
+
+    // `Sunday, 06-Nov-94 08:49:37 GMT`
+    nstpcpy(wptr, s_weekday[(uint32_t) tm.tm_wday]);
+    nstpset(wptr, ',');
+    nstpset(wptr, ' ');
+    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_mday], 2);
+    nstpset(wptr, '-');
+    nstpcpy(wptr, s_month[(uint32_t) tm.tm_mon], 3);
+    nstpset(wptr, '-');
+    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_year % 100], 2);
+    nstpset(wptr, ' ');
+    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_hour], 2);
+    nstpset(wptr, ':');
+    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_min], 2);
+    nstpset(wptr, ':');
+    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_sec], 2);
+    nstpcpy(wptr, " GMT");
+
+    // Return the number of characters that have been written.
+    return (size_t) (wptr - str);
+  }
+
+size_t
+HTTP_DateTime::
+print_asctime_partial(char* str) const noexcept
+  {
+    char* wptr = str;
+    ::time_t tp = this->m_tp.time_since_epoch().count();
+    ::tm tm;
+    ::gmtime_r(&tp, &tm);
+
+    // `Sun Nov  6 08:49:37 1994`
+    nstpcpy(wptr, s_weekday[(uint32_t) tm.tm_wday], 3);
+    nstpset(wptr, ' ');
+    nstpcpy(wptr, s_month[(uint32_t) tm.tm_mon], 3);
+    nstpset(wptr, ' ');
+    nstpcpy(wptr, s_sp1digit[(uint32_t) tm.tm_mday], 2);
+    nstpset(wptr, ' ');
+    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_hour], 2);
+    nstpset(wptr, ':');
+    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_min], 2);
+    nstpset(wptr, ':');
+    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_sec], 2);
+    nstpset(wptr, ' ');
+    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_year / 100 + 19], 2);
+    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_year % 100], 2);
+
+    // Return the number of characters that have been written.
+    return (size_t) (wptr - str);
+  }
+
 tinyfmt&
 HTTP_DateTime::
 print(tinyfmt& fmt) const
@@ -418,8 +421,5 @@ print_to_string() const
     size_t len = this->print_rfc1123_partial(str);
     return cow_string(str, len);
   }
-
-const HTTP_DateTime http_datetime_min = (unix_time)(days) 0;
-const HTTP_DateTime http_datetime_max = (unix_time)(days) 2932532;
 
 }  // namespace poseidon

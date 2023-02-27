@@ -72,13 +72,6 @@ class HTTP_DateTime
     size_t
     parse_rfc1123_partial(const char* str) noexcept;
 
-    // Converts this timestamp to its RFC 1123 format, with a null terminator.
-    // There shall be at least 30 characters in the buffer which `str` points
-    // to. This function returns the number of characters that have been
-    // written, not including the null terminator, which is always 29.
-    size_t
-    print_rfc1123_partial(char* str) const noexcept;
-
     // Try parsing an HTTP date/time in the obsolete RFC 850 format. An example
     // is `Sunday, 06-Nov-94 08:49:37 GMT`. This function returns the number of
     // characters that have been accepted, which is within [30,33] upon success,
@@ -86,26 +79,12 @@ class HTTP_DateTime
     size_t
     parse_rfc850_partial(const char* str) noexcept;
 
-    // Converts this timestamp to its RFC 1123 format, with a null terminator.
-    // There shall be at least 34 characters in the buffer which `str` points
-    // to. This function returns the number of characters that have been
-    // written, not including the null terminator, which is within [30,33].
-    size_t
-    print_rfc850_partial(char* str) const noexcept;
-
     // Try parsing an HTTP date/time in the obsolete asctime format. An example
     // is `Sun Nov  6 08:49:37 1994`. This function returns the number of
     // characters that have been accepted, which is 24 upon success, and 0 upon
     // failure.
     size_t
     parse_asctime_partial(const char* str) noexcept;
-
-    // Converts this timestamp to its asctime format, with a null terminator.
-    // There shall be at least 25 characters in the buffer which `str` points
-    // to. This function returns the number of characters that have been
-    // written, not including the null terminator, which is always 24.
-    size_t
-    print_asctime_partial(char* str) const noexcept;
 
     // Try parsing an HTTP date/time in any of the formats above. If a date/time
     // string has been parsed, the number of characters that have been consumed
@@ -119,6 +98,27 @@ class HTTP_DateTime
 
     size_t
     parse(stringR str);
+
+    // Converts this timestamp to its RFC 1123 format, with a null terminator.
+    // There shall be at least 30 characters in the buffer which `str` points
+    // to. This function returns the number of characters that have been
+    // written, not including the null terminator, which is always 29.
+    size_t
+    print_rfc1123_partial(char* str) const noexcept;
+
+    // Converts this timestamp to its RFC 1123 format, with a null terminator.
+    // There shall be at least 34 characters in the buffer which `str` points
+    // to. This function returns the number of characters that have been
+    // written, not including the null terminator, which is within [30,33].
+    size_t
+    print_rfc850_partial(char* str) const noexcept;
+
+    // Converts this timestamp to its asctime format, with a null terminator.
+    // There shall be at least 25 characters in the buffer which `str` points
+    // to. This function returns the number of characters that have been
+    // written, not including the null terminator, which is always 24.
+    size_t
+    print_asctime_partial(char* str) const noexcept;
 
     // Converts this timestamp to its string form, according to RFC 1123.
     tinyfmt&
