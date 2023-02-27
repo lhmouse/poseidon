@@ -164,8 +164,12 @@ classify() const noexcept
 
 bool
 Socket_Address::
-parse(const char* str, size_t len) noexcept
+parse(const char* str, size_t len, size_t* outlen_opt)
   {
+    size_t temp_outlen;
+    size_t& outlen = outlen_opt ? *outlen_opt : temp_outlen;
+    outlen = 0;
+
     this->clear();
 
     // Validate arguments.
@@ -208,21 +212,22 @@ parse(const char* str, size_t len) noexcept
         return false;
     }
     this->m_port = url.port;
+    outlen = (size_t) url.field_data[UF_PORT].off + url.field_data[UF_PORT].len;
     return true;
   }
 
 bool
 Socket_Address::
-parse(const char* str) noexcept
+parse(const char* str, size_t* outlen_opt)
   {
-    return this->parse(str, ::strlen(str));
+    return this-> parse(str, ::strlen(str), outlen_opt);
   }
 
 bool
 Socket_Address::
-parse(stringR str) noexcept
+parse(stringR str, size_t* outlen_opt)
   {
-    return this->parse(str.data(), str.size());
+    return this->parse(str.data(), str.size(), outlen_opt);
   }
 
 size_t
