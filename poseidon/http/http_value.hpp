@@ -136,8 +136,8 @@ class HTTP_Value
 
     // Converts this value to its string form. The result will be suitable
     // for immediate use in an HTTP header. It is important to note that
-    // HTTP date/time, which contain a comma itself, is not enclosed in
-    // double quotes.
+    // HTTP date/time, which contain a comma itself, will not be enclosed
+    // in double quotes.
     tinyfmt&
     print(tinyfmt& fmt) const;
 
