@@ -389,7 +389,7 @@ launch(shptrR<Abstract_Fiber> fiber)
       POSEIDON_THROW(("Null fiber pointer not valid"));
 
     // Create the management node.
-    auto elem = ::std::make_shared<X_Queued_Fiber>();
+    auto elem = new_sh<X_Queued_Fiber>();
     elem->fiber = fiber;
     elem->yield_time = time_point_cast<milliseconds>(steady_clock::now());
     elem->check_time = elem->yield_time;

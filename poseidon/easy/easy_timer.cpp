@@ -66,7 +66,7 @@ struct Final_Timer final : Abstract_Timer
           return;
 
         // We are in the timer thread here, so create a new fiber.
-        fiber_scheduler.launch(::std::make_shared<Final_Fiber>(this->m_cb, now));
+        fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_cb, now));
       }
   };
 
@@ -81,9 +81,9 @@ void
 Easy_Timer::
 start(milliseconds delay, milliseconds period)
   {
-    this->m_uniq = ::std::make_shared<int>();
+    this->m_uniq = new_sh<int>();
     Shared_cb_args cb = { this->m_cb_obj, this->m_cb_thunk, this->m_uniq };
-    this->m_timer = ::std::make_shared<Final_Timer>(::std::move(cb));
+    this->m_timer = new_sh<Final_Timer>(::std::move(cb));
     timer_driver.insert(this->m_timer, delay, period);
   }
 

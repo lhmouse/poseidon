@@ -147,7 +147,7 @@ struct Final_TCP_Socket final : TCP_Socket
         if(!citer->second.fiber_active) {
           // Create a new fiber, if none is active. The fiber shall only reset
           // `m_fiber_private_buffer` if no event is pending.
-          fiber_scheduler.launch(::std::make_shared<Final_Fiber>(this->m_cb, this));
+          fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_cb, this));
           citer->second.fiber_active = true;
         }
 
@@ -203,7 +203,7 @@ struct Final_Listen_Socket final : Listen_Socket
           return nullptr;
 
         // Create the client socket.
-        auto client = ::std::make_shared<Final_TCP_Socket>(::std::move(fd), this->m_cb);
+        auto client = new_sh<Final_TCP_Socket>(::std::move(fd), this->m_cb);
         (void) addr;
 
         // We are in the network thread here.
@@ -233,9 +233,9 @@ void
 Easy_TCP_Server::
 start(const Socket_Address& addr)
   {
-    auto table = ::std::make_shared<X_Client_Table>();
+    auto table = new_sh<X_Client_Table>();
     Shared_cb_args cb = { this->m_cb_obj, this->m_cb_thunk, table };
-    auto socket = ::std::make_shared<Final_Listen_Socket>(addr, ::std::move(cb));
+    auto socket = new_sh<Final_Listen_Socket>(addr, ::std::move(cb));
     table->wsocket = socket;
 
     network_driver.insert(socket);

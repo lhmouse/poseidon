@@ -38,7 +38,7 @@ class Easy_TCP_Client
     ROCKET_DISABLE_IF(::std::is_same<::std::decay_t<CallbackT>, Easy_TCP_Client>::value)>
     explicit
     Easy_TCP_Client(CallbackT&& cb)
-      : m_cb_obj(::std::make_shared<::std::decay_t<CallbackT>>(::std::forward<CallbackT>(cb))),
+      : m_cb_obj(new_sh<::std::decay_t<CallbackT>>(::std::forward<CallbackT>(cb))),
         m_cb_thunk(callback_thunk<::std::decay_t<CallbackT>>)  { }
 
   public:

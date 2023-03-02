@@ -110,7 +110,7 @@ struct Final_UDP_Socket final : UDP_Socket
         if(!queue->fiber_active) {
           // Create a new fiber, if none is active. The fiber shall only reset
           // `m_fiber_active` if no packet is pending.
-          fiber_scheduler.launch(::std::make_shared<Final_Fiber>(this->m_cb));
+          fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_cb));
           queue->fiber_active = true;
         }
 
@@ -135,9 +135,9 @@ void
 Easy_UDP_Server::
 start(const Socket_Address& addr)
   {
-    auto queue = ::std::make_shared<X_Packet_Queue>();
+    auto queue = new_sh<X_Packet_Queue>();
     Shared_cb_args cb = { this->m_cb_obj, this->m_cb_thunk, queue };
-    auto socket = ::std::make_shared<Final_UDP_Socket>(addr, ::std::move(cb));
+    auto socket = new_sh<Final_UDP_Socket>(addr, ::std::move(cb));
     queue->wsocket = socket;
 
     network_driver.insert(socket);

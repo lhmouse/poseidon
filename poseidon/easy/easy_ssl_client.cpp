@@ -127,7 +127,7 @@ struct Final_SSL_Socket final : SSL_Socket
         if(!queue->fiber_active) {
           // Create a new fiber, if none is active. The fiber shall only reset
           // `m_fiber_private_buffer` if no event is pending.
-          fiber_scheduler.launch(::std::make_shared<Final_Fiber>(this->m_cb));
+          fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_cb));
           queue->fiber_active = true;
         }
 
@@ -181,9 +181,9 @@ void
 Easy_SSL_Client::
 start(const Socket_Address& addr)
   {
-    auto queue = ::std::make_shared<X_Event_Queue>();
+    auto queue = new_sh<X_Event_Queue>();
     Shared_cb_args cb = { this->m_cb_obj, this->m_cb_thunk, queue };
-    auto socket = ::std::make_shared<Final_SSL_Socket>(::std::move(cb));
+    auto socket = new_sh<Final_SSL_Socket>(::std::move(cb));
     socket->connect(addr);
     queue->wsocket = socket;
 

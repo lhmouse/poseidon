@@ -220,6 +220,7 @@ extern class Network_Driver& network_driver;
 
 // General utilities
 template<typename CopyT, typename... ArgsT>
+static
 void
 callback_thunk(void* ptr, ArgsT... args)
   {
@@ -228,6 +229,22 @@ callback_thunk(void* ptr, ArgsT... args)
 
 template<typename... ArgsT>
 using callback_thunk_ptr = void (*)(void*, ArgsT...);
+
+template<typename ValueT, typename... ArgsT>
+ROCKET_ALWAYS_INLINE
+uniptr<ValueT>
+new_uni(ArgsT&&... args)
+  {
+    return ::std::make_unique<ValueT>(::std::forward<ArgsT>(args)...);
+  }
+
+template<typename ValueT, typename... ArgsT>
+ROCKET_ALWAYS_INLINE
+shptr<ValueT>
+new_sh(ArgsT&&... args)
+  {
+    return ::std::make_shared<ValueT>(::std::forward<ArgsT>(args)...);
+  }
 
 // Composes a string and submits it to the logger.
 enum Log_Level : uint8_t

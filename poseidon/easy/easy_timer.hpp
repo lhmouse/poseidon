@@ -25,7 +25,7 @@ class Easy_Timer
     ROCKET_DISABLE_IF(::std::is_same<::std::decay_t<CallbackT>, Easy_Timer>::value)>
     explicit
     Easy_Timer(CallbackT&& cb)
-      : m_cb_obj(::std::make_shared<::std::decay_t<CallbackT>>(::std::forward<CallbackT>(cb))),
+      : m_cb_obj(new_sh<::std::decay_t<CallbackT>>(::std::forward<CallbackT>(cb))),
         m_cb_thunk(callback_thunk<::std::decay_t<CallbackT>>)  { }
 
   public:
