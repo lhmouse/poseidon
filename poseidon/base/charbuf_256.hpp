@@ -10,12 +10,11 @@ namespace poseidon {
 class charbuf_256
   {
   private:
-    char m_data[256];
+    alignas(max_align_t) char m_data[256];
 
   public:
     // Constructs a null-terminated string of zero characters.
     // This constructor is not explicit as it doesn't allocate memory.
-    inline
     charbuf_256() noexcept
       {
         this->m_data[0] = 0;
@@ -23,7 +22,6 @@ class charbuf_256
 
     // Constructs a null-terminated string.
     // This constructor is not explicit as it doesn't allocate memory.
-    inline
     charbuf_256(const char* str_opt)
       {
         const char* str = str_opt;
@@ -39,29 +37,19 @@ class charbuf_256
         ::memcpy(this->m_data, str, len + 1);
       }
 
-    // Swaps two buffers.
     charbuf_256&
     swap(charbuf_256& other) noexcept
       {
-        for(size_t k = 0;  k != 16;  ++k) {
-          alignas(16) char temp[16];
-          ::memcpy(temp, other.m_data + k * 16, sizeof(temp));
-          ::memcpy(other.m_data + k * 16, this->m_data + k * 16, sizeof(temp));
-          ::memcpy(this->m_data + k * 16, temp, sizeof(temp));
-        }
+        uintptr_t* my_data = reinterpret_cast<uintptr_t*>(this->m_data);
+        uintptr_t* others_data = reinterpret_cast<uintptr_t*>(other.m_data);
+
+        for(size_t k = 0;  k != sizeof(this->m_data) / sizeof(uintptr_t);  ++k)
+          ::std::swap(my_data[k], others_data[k]);
+
         return *this;
       }
 
   public:
-    // Performs 3-way comparison of two buffers.
-    int
-    compare(const charbuf_256& other) const noexcept
-      { return ::strcmp(this->m_data, other.m_data);  }
-
-    int
-    compare(const char* other) const noexcept
-      { return ::strcmp(this->m_data, other);  }
-
     // Returns a pointer to internal storage so a buffer can be passed as
     // an argument for `char*`.
     constexpr operator
