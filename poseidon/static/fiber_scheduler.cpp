@@ -85,10 +85,10 @@ do_pool_stack(::stack_t ss) noexcept
 
 struct Queued_Fiber
   {
-    shared_ptr<Abstract_Fiber> fiber;
+    shptr<Abstract_Fiber> fiber;
     atomic_relaxed<steady_time> async_time;  // volatile
 
-    weak_ptr<Abstract_Future> wfutr;
+    wkptr<Abstract_Future> wfutr;
     steady_time yield_time, check_time, fail_time;
     ::ucontext_t sched_inner[1];
   };
@@ -97,15 +97,15 @@ struct Fiber_Comparator
   {
     // We have to build a minheap here.
     bool
-    operator()(shared_ptrR<Queued_Fiber> lhs, shared_ptrR<Queued_Fiber> rhs) noexcept
+    operator()(shptrR<Queued_Fiber> lhs, shptrR<Queued_Fiber> rhs) noexcept
       { return lhs->check_time > rhs->check_time;  }
 
     bool
-    operator()(shared_ptrR<Queued_Fiber> lhs, steady_time rhs) noexcept
+    operator()(shptrR<Queued_Fiber> lhs, steady_time rhs) noexcept
       { return lhs->check_time > rhs;  }
 
     bool
-    operator()(steady_time lhs, shared_ptrR<Queued_Fiber> rhs) noexcept
+    operator()(steady_time lhs, shptrR<Queued_Fiber> rhs) noexcept
       { return lhs > rhs->check_time;  }
   }
   constexpr fiber_comparator;
@@ -383,7 +383,7 @@ size() const noexcept
 
 void
 Fiber_Scheduler::
-launch(shared_ptrR<Abstract_Fiber> fiber)
+launch(shptrR<Abstract_Fiber> fiber)
   {
     if(!fiber)
       POSEIDON_THROW(("Null fiber pointer not valid"));
@@ -417,7 +417,7 @@ self_opt() const noexcept
 
 void
 Fiber_Scheduler::
-check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override)
+check_and_yield(const Abstract_Fiber* self, shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override)
   {
     recursive_mutex::unique_lock sched_lock(this->m_sched_mutex);
 
@@ -442,7 +442,7 @@ check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_op
       if(futr_opt->m_state.load() != future_state_empty)
         return;
 
-      shared_ptr<atomic_relaxed<steady_time>> async_time_ptr(elem, &(elem->async_time));
+      shptr<atomic_relaxed<steady_time>> async_time_ptr(elem, &(elem->async_time));
       milliseconds real_fail_timeout = fail_timeout;
 
       if(fail_timeout_override != zero_duration)

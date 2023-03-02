@@ -10,10 +10,10 @@ using namespace ::poseidon;
 extern Easy_TCP_Client my_client;
 
 void
-event_callback(shared_ptrR<TCP_Socket> socket, Connection_Event event, linear_buffer& data)
+event_callback(shptrR<TCP_Socket> socket, Connection_Event event, linear_buffer& data)
   {
     Socket_Address addr = socket->remote_address();
-    cow_string str(data.data(), data.size());
+    string str(data.data(), data.size());
     data.clear();
     static constexpr char req[] = "GET / HTTP/1.1\r\nConnection: close\r\nHost: www.example.org\r\n\r\n";
 

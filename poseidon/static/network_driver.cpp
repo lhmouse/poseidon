@@ -14,7 +14,7 @@ namespace poseidon {
 namespace {
 
 void
-do_epoll_ctl(int epoll_fd, int op, shared_ptrR<Abstract_Socket> socket, uint32_t events = EPOLLIN | EPOLLPRI | EPOLLOUT | EPOLLET)
+do_epoll_ctl(int epoll_fd, int op, shptrR<Abstract_Socket> socket, uint32_t events = EPOLLIN | EPOLLPRI | EPOLLOUT | EPOLLET)
   {
     ::epoll_event event;
     event.events = events;
@@ -93,7 +93,7 @@ reload(const Config_File& file)
     // Parse new configuration. Default ones are defined here.
     int64_t event_buffer_size = 1024;
     int64_t throttle_size = 1048576;
-    cow_string default_certificate, default_private_key, trusted_ca_path;
+    string default_certificate, default_private_key, trusted_ca_path;
     SSL_CTX_ptr server_ssl_ctx, client_ssl_ctx;
 
     // Read the event buffer size from configuration.
@@ -261,7 +261,7 @@ Network_Driver::
 thread_loop()
   {
     // Await events.
-    shared_ptr<Abstract_Socket> socket;
+    shptr<Abstract_Socket> socket;
     ::epoll_event event;
 
     plain_mutex::unique_lock lock(this->m_conf_mutex);
@@ -461,7 +461,7 @@ thread_loop()
 
 void
 Network_Driver::
-insert(shared_ptrR<Abstract_Socket> socket)
+insert(shptrR<Abstract_Socket> socket)
   {
     // Validate arguments.
     if(!socket)

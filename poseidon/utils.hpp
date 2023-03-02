@@ -27,7 +27,7 @@ using ::asteria::format_errno;
 // Throws an exception, with backtraces.
 [[noreturn]]
 void
-throw_runtime_error_with_backtrace(const char* file, long line, const char* func, cow_string&& msg);
+throw_runtime_error_with_backtrace(const char* file, long line, const char* func, string&& msg);
 
 #define POSEIDON_THROW(TEMPLATE, ...)  \
     (::poseidon::throw_runtime_error_with_backtrace(__FILE__, __LINE__, __FUNCTION__,  \
@@ -37,16 +37,16 @@ throw_runtime_error_with_backtrace(const char* file, long line, const char* func
      __builtin_unreachable())
 
 // Converts all ASCII letters in a string into uppercase.
-cow_string
-ascii_uppercase(cow_string text);
+string
+ascii_uppercase(string text);
 
 // Converts all ASCII letters in a string into lowercase.
-cow_string
-ascii_lowercase(cow_string text);
+string
+ascii_lowercase(string text);
 
 // Removes all leading and trailing blank characters.
-cow_string
-ascii_trim(cow_string text);
+string
+ascii_trim(string text);
 
 // Checks whether two strings equal.
 template<typename StringT, typename OtherT>
@@ -126,13 +126,13 @@ ascii_ci_has_token(stringR text, const OtherT& other)
   }
 
 // Split a string into a vector of tokens, and vice versa.
-using cow_vstrings = ::rocket::cow_vector<cow_string>;
+using cow_vstrings = ::rocket::cow_vector<string>;
 
 size_t
 explode(cow_vstrings& segments, stringR text, char delim = ',', size_t limit = SIZE_MAX);
 
 size_t
-implode(cow_string& text, const cow_vstrings& segments, char delim = ',');
+implode(string& text, const cow_vstrings& segments, char delim = ',');
 
 }  // namespace poseidon
 #endif

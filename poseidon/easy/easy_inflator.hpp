@@ -10,8 +10,8 @@ namespace poseidon {
 class Easy_Inflator
   {
   private:
-    shared_ptr<Inflator> m_infl;
-    shared_ptr<linear_buffer> m_out;
+    shptr<Inflator> m_infl;
+    shptr<linear_buffer> m_out;
 
   public:
     // Constructs an empty data decompressor.

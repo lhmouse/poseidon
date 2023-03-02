@@ -13,9 +13,9 @@ namespace {
 struct Level_Config
   {
     char tag[8] = "";
-    cow_string color;
+    string color;
     int stdio = -1;
-    cow_string file;
+    string file;
     bool trivial = false;
   };
 
@@ -24,7 +24,7 @@ struct Log_Message
     Log_Context ctx;
     char thrd_name[16] = "unknown";
     uint32_t thrd_lwpid;
-    cow_string text;
+    string text;
   };
 
 constexpr char escapes[][5] =
@@ -81,7 +81,7 @@ do_load_level_config(Level_Config& lconf, const Config_File& file, const char* n
           name, value, file.path());
 
     // Read the output standard stream.
-    cow_string str;
+    string str;
     value = file.query("logger", name, "stdio");
     if(value.is_string())
       str = value.as_string();
@@ -126,7 +126,7 @@ do_load_level_config(Level_Config& lconf, const Config_File& file, const char* n
 
 inline
 void
-do_color(cow_string& data, const Level_Config& lconf, const char* code)
+do_color(string& data, const Level_Config& lconf, const char* code)
   {
     if(!lconf.color.empty())
       data << "\x1B[" << code << "m";
@@ -136,7 +136,7 @@ void
 do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
   try {
     // Compose the string to write.
-    cow_string data;
+    string data;
     data.reserve(2047);
 
     // Write the timestamp and tag for sorting.
@@ -332,7 +332,7 @@ thread_loop()
 
 void
 Async_Logger::
-enqueue(const Log_Context& ctx, cow_string text)
+enqueue(const Log_Context& ctx, string text)
   {
     // Fill in the name and LWP ID of the calling thread.
     X_Log_Message msg;

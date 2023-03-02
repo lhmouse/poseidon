@@ -23,7 +23,7 @@ class HTTP_Value
     variant<
       ROCKET_CDR(
         ,nullptr_t      // index_null
-        ,cow_string     // index_string
+        ,string     // index_string
         ,double         // index_number
         ,HTTP_DateTime  // index_datetime
       )>
@@ -70,16 +70,16 @@ class HTTP_Value
     is_string() const noexcept
       { return this->m_stor.index() == index_string;  }
 
-    const cow_string&
+    const string&
     as_string() const
       { return this->m_stor.as<index_string>();  }
 
-    cow_string&
+    string&
     mut_string()
       { return this->m_stor.mut<index_string>();  }
 
     void
-    set_string(const cow_string& str) noexcept
+    set_string(const string& str) noexcept
       { this->m_stor = str;  }
 
     bool
@@ -141,7 +141,7 @@ class HTTP_Value
     tinyfmt&
     print(tinyfmt& fmt) const;
 
-    cow_string
+    string
     print_to_string() const;
   };
 

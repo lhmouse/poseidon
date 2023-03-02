@@ -7,10 +7,10 @@
 namespace poseidon {
 
 void
-throw_runtime_error_with_backtrace(const char* file, long line, const char* func, cow_string&& msg)
+throw_runtime_error_with_backtrace(const char* file, long line, const char* func, string&& msg)
   {
     // Compose the string to throw.
-    cow_string data;
+    string data;
     data.reserve(2047);
 
     // Append the function name.
@@ -67,8 +67,8 @@ throw_runtime_error_with_backtrace(const char* file, long line, const char* func
     throw ::std::runtime_error(data.c_str());
   }
 
-cow_string
-ascii_uppercase(cow_string text)
+string
+ascii_uppercase(string text)
   {
     // Only modify the string when it really has to modified.
     for(size_t k = 0;  k != text.size();  ++k) {
@@ -79,8 +79,8 @@ ascii_uppercase(cow_string text)
     return ::std::move(text);
   }
 
-cow_string
-ascii_lowercase(cow_string text)
+string
+ascii_lowercase(string text)
   {
     // Only modify the string when it really has to modified.
     for(size_t k = 0;  k != text.size();  ++k) {
@@ -91,12 +91,12 @@ ascii_lowercase(cow_string text)
     return ::std::move(text);
   }
 
-cow_string
-ascii_trim(cow_string text)
+string
+ascii_trim(string text)
   {
     // Remove leading blank characters.
     // Return an empty string if all characters are blank.
-    size_t k = cow_string::npos;
+    size_t k = string::npos;
     for(;;) {
       if(++k == text.size())
         return { };
@@ -171,7 +171,7 @@ explode(cow_vstrings& segments, stringR text, char delim, size_t limit)
   }
 
 size_t
-implode(cow_string& text, const cow_vstrings& segments, char delim)
+implode(string& text, const cow_vstrings& segments, char delim)
   {
     text.clear();
     if(segments.size()) {

@@ -17,7 +17,7 @@ class SSL_Socket
     friend class Network_Driver;
 
     SSL_ptr m_ssl;
-    cow_string m_alpn_proto;
+    string m_alpn_proto;
 
     mutable atomic_acq_rel<bool> m_peername_ready;
     mutable Socket_Address m_peername;
@@ -121,7 +121,7 @@ class SSL_Socket
     // `do_on_ssl_alpn_request()` callback. For a client-side socket, this
     // string is only available since the `do_on_ssl_connected()` callback.
     // If no ALPN protocol has been selected, an empty string is returned.
-    cow_string
+    string
     alpn_protocol() const noexcept
       { return this->m_alpn_proto;  }
 

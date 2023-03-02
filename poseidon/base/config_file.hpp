@@ -11,7 +11,7 @@ namespace poseidon {
 class Config_File
   {
   private:
-    cow_string m_path;
+    string m_path;
     ::asteria::V_object m_root;
 
   public:
@@ -36,7 +36,7 @@ class Config_File
 
     // Returns the absolute file path.
     // If no file has been loaded, an empty string is returned.
-    cow_string
+    string
     path() const noexcept
       { return this->m_path;  }
 

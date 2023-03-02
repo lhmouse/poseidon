@@ -134,7 +134,7 @@ Socket_Address(const char* str, size_t len)
     if(this->parse(str, len) == 0)
       POSEIDON_THROW((
           "Could not parse socket address string `$1`"),
-          cow_string(str, len));
+          string(str, len));
   }
 
 Socket_Address::
@@ -263,13 +263,13 @@ print(tinyfmt& fmt) const
     return fmt.putn(str, len);
   }
 
-cow_string
+string
 Socket_Address::
 print_to_string() const
   {
     char str[64];
     size_t len = this->print_partial(str);
-    return cow_string(str, len);
+    return string(str, len);
   }
 
 }  // namespace poseidon

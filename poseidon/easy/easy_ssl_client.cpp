@@ -13,7 +13,7 @@ namespace {
 struct Event_Queue
   {
     mutable plain_mutex mutex;
-    weak_ptr<SSL_Socket> wsocket;  // read-only; no locking needed
+    wkptr<SSL_Socket> wsocket;  // read-only; no locking needed
     linear_buffer fiber_private_buffer;  // by fibers only; no locking needed
 
     struct Event
@@ -28,9 +28,9 @@ struct Event_Queue
 
 struct Shared_cb_args
   {
-    weak_ptr<void> wobj;
-    callback_thunk_ptr<shared_ptrR<SSL_Socket>, Connection_Event, linear_buffer&> thunk;
-    weak_ptr<Event_Queue> wqueue;
+    wkptr<void> wobj;
+    callback_thunk_ptr<shptrR<SSL_Socket>, Connection_Event, linear_buffer&> thunk;
+    wkptr<Event_Queue> wqueue;
   };
 
 struct Final_Fiber final : Abstract_Fiber

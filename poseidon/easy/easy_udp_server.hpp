@@ -13,15 +13,15 @@ class Easy_UDP_Server
   private:
     struct X_Packet_Queue;
 
-    shared_ptr<void> m_cb_obj;
-    callback_thunk_ptr<shared_ptrR<UDP_Socket>, Socket_Address&&, linear_buffer&&> m_cb_thunk;
+    shptr<void> m_cb_obj;
+    callback_thunk_ptr<shptrR<UDP_Socket>, Socket_Address&&, linear_buffer&&> m_cb_thunk;
 
-    shared_ptr<X_Packet_Queue> m_queue;
-    shared_ptr<UDP_Socket> m_socket;
+    shptr<X_Packet_Queue> m_queue;
+    shptr<UDP_Socket> m_socket;
 
   public:
     // Constructs a server. The argument shall be an invocable object taking
-    // `(shared_ptrR<UDP_Socket> socket, Socket_Address&& addr,
+    // `(shptrR<UDP_Socket> socket, Socket_Address&& addr,
     // linear_buffer&& data)`, where `socket` is a pointer to the server socket,
     // and `addr` and `data` are the source address and payload of the current
     // UDP packet, respectively. This server object stores a copy of the

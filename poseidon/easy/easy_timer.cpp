@@ -13,9 +13,9 @@ namespace {
 
 struct Shared_cb_args
   {
-    weak_ptr<void> wobj;
+    wkptr<void> wobj;
     callback_thunk_ptr<steady_time> thunk;
-    weak_ptr<void> wuniq;
+    wkptr<void> wuniq;
   };
 
 struct Final_Fiber final : Abstract_Fiber

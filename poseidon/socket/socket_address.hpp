@@ -116,7 +116,7 @@ class Socket_Address
     tinyfmt&
     print(tinyfmt& fmt) const;
 
-    cow_string
+    string
     print_to_string() const;
   };
 

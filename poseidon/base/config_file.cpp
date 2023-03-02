@@ -32,7 +32,7 @@ reload(stringR file_path)
           format_errno(), file_path);
 
     // Read the file.
-    cow_string path(abs_path.get());
+    string path(abs_path.get());
     ::asteria::V_object root = ::asteria::std_system_conf_load_file(path);
 
     // Set new contents. This shall not throw exceptions.
@@ -60,7 +60,7 @@ query(initializer_list<phsh_string> value_path) const
 
       if(!value->is_object()) {
         // Fail.
-        cow_string vpstr;
+        string vpstr;
         auto pbak = value_path.begin();
         vpstr << pbak->rdstr();
         while(++pbak != pcur)

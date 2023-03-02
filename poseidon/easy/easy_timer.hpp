@@ -10,11 +10,11 @@ namespace poseidon {
 class Easy_Timer
   {
   private:
-    shared_ptr<void> m_cb_obj;
+    shptr<void> m_cb_obj;
     callback_thunk_ptr<steady_time> m_cb_thunk;
 
-    shared_ptr<void> m_uniq;
-    shared_ptr<Abstract_Timer> m_timer;
+    shptr<void> m_uniq;
+    shptr<Abstract_Timer> m_timer;
 
   public:
     // Constructs a timer. The argument shall be an invocable object taking

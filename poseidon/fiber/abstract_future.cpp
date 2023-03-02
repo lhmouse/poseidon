@@ -31,7 +31,7 @@ do_try_set_future_state_slow(Future_State new_state, void* param)
     this->m_state.store(new_state);
 
     if(!this->m_waiters.empty()) {
-      shared_ptr<atomic_relaxed<steady_time>> async_time_ptr;
+      shptr<atomic_relaxed<steady_time>> async_time_ptr;
       const auto now = time_point_cast<milliseconds>(steady_clock::now());
 
       // Wake up all waiters. This will not throw exceptions.

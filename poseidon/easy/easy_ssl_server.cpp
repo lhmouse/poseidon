@@ -14,11 +14,11 @@ namespace {
 struct Client_Table
   {
     mutable plain_mutex mutex;
-    weak_ptr<Listen_Socket> wsocket;  // read-only; no locking needed
+    wkptr<Listen_Socket> wsocket;  // read-only; no locking needed
 
     struct Event_Queue
       {
-        shared_ptr<SSL_Socket> client;  // read-only; no locking needed
+        shptr<SSL_Socket> client;  // read-only; no locking needed
         linear_buffer fiber_private_buffer;  // by fibers only; no locking needed
 
         struct Event
@@ -36,9 +36,9 @@ struct Client_Table
 
 struct Shared_cb_args
   {
-    weak_ptr<void> wobj;
-    callback_thunk_ptr<shared_ptrR<SSL_Socket>, Connection_Event, linear_buffer&> thunk;
-    weak_ptr<Client_Table> wtable;
+    wkptr<void> wobj;
+    callback_thunk_ptr<shptrR<SSL_Socket>, Connection_Event, linear_buffer&> thunk;
+    wkptr<Client_Table> wtable;
   };
 
 struct Final_Fiber final : Abstract_Fiber
@@ -195,7 +195,7 @@ struct Final_Listen_Socket final : Listen_Socket
       : Listen_Socket(addr), m_cb(::std::move(cb))  { }
 
     virtual
-    shared_ptr<Abstract_Socket>
+    shptr<Abstract_Socket>
     do_on_listen_new_client_opt(Socket_Address&& addr, unique_posix_fd&& fd) override
       {
         auto table = this->m_cb.wtable.lock();

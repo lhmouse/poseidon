@@ -13,15 +13,15 @@ class Easy_SSL_Client
   private:
     struct X_Event_Queue;
 
-    shared_ptr<void> m_cb_obj;
-    callback_thunk_ptr<shared_ptrR<SSL_Socket>, Connection_Event, linear_buffer&> m_cb_thunk;
+    shptr<void> m_cb_obj;
+    callback_thunk_ptr<shptrR<SSL_Socket>, Connection_Event, linear_buffer&> m_cb_thunk;
 
-    shared_ptr<X_Event_Queue> m_queue;
-    shared_ptr<SSL_Socket> m_socket;
+    shptr<X_Event_Queue> m_queue;
+    shptr<SSL_Socket> m_socket;
 
   public:
     // Constructs a client. The argument shall be an invocable object taking
-    // `(shared_ptrR<SSL_Socket> socket, Connection_Event event,
+    // `(shptrR<SSL_Socket> socket, Connection_Event event,
     // linear_buffer& data)`, where `socket` is a pointer to a client socket
     // object, and if `event` is
     //  1) `connection_event_open`, then `data` is empty, or

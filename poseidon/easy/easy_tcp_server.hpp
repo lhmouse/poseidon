@@ -13,15 +13,15 @@ class Easy_TCP_Server
   private:
     struct X_Client_Table;
 
-    shared_ptr<void> m_cb_obj;
-    callback_thunk_ptr<shared_ptrR<TCP_Socket>, Connection_Event, linear_buffer&> m_cb_thunk;
+    shptr<void> m_cb_obj;
+    callback_thunk_ptr<shptrR<TCP_Socket>, Connection_Event, linear_buffer&> m_cb_thunk;
 
-    shared_ptr<X_Client_Table> m_client_table;
-    shared_ptr<Listen_Socket> m_socket;
+    shptr<X_Client_Table> m_client_table;
+    shptr<Listen_Socket> m_socket;
 
   public:
     // Constructs a server. The argument shall be an invocable object taking
-    // `(shared_ptrR<TCP_Socket> socket, Connection_Event event,
+    // `(shptrR<TCP_Socket> socket, Connection_Event event,
     // linear_buffer& data)`, where `socket` is a pointer to a client socket
     // object, and if `event` is
     //  1) `connection_event_open`, then `data` is empty, or
@@ -32,7 +32,7 @@ class Easy_TCP_Server
     //  3) `connection_event_closed`, then `data` is the error description in
     //     case of an error, or an empty string if no error has happened.
     // The server object owns all client socket objects. As a recommendation,
-    // applications should store only `weak_ptr`s to client sockets, and call
+    // applications should store only `wkptr`s to client sockets, and call
     // `.lock()` as needed. This server object stores a copy of the callback,
     // which is invoked accordingly in the main thread. The callback object is
     // never copied, and is allowed to modify itself.

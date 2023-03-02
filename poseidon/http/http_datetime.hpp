@@ -124,7 +124,7 @@ class HTTP_DateTime
     tinyfmt&
     print(tinyfmt& fmt) const;
 
-    cow_string
+    string
     print_to_string() const;
   };
 

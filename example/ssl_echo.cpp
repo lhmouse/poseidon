@@ -10,10 +10,10 @@ using namespace ::poseidon;
 extern Easy_SSL_Server my_server;
 
 void
-event_callback(shared_ptrR<SSL_Socket> socket, Connection_Event event, linear_buffer& data)
+event_callback(shptrR<SSL_Socket> socket, Connection_Event event, linear_buffer& data)
   {
     Socket_Address addr = socket->remote_address();
-    cow_string str(data.data(), data.size());
+    string str(data.data(), data.size());
     data.clear();
 
     switch((uint32_t) event) {

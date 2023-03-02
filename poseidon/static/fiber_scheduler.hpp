@@ -19,11 +19,11 @@ class Fiber_Scheduler
     seconds m_conf_fail_timeout = zero_duration;
 
     mutable plain_mutex m_pq_mutex;
-    vector<shared_ptr<X_Queued_Fiber>> m_pq;
+    vector<shptr<X_Queued_Fiber>> m_pq;
     ::timespec m_pq_wait[1] = { 0, 0, };
 
     mutable recursive_mutex m_sched_mutex;
-    weak_ptr<X_Queued_Fiber> m_sched_self_opt;
+    wkptr<X_Queued_Fiber> m_sched_self_opt;
     void* m_sched_asan_save;  // private data for address sanitizer
     ::ucontext_t m_sched_outer[1];  // yield target
 
@@ -56,7 +56,7 @@ class Fiber_Scheduler
     // can only be deleted after it finishes execution.
     // This function is thread-safe.
     void
-    launch(shared_ptrR<Abstract_Fiber> fiber);
+    launch(shptrR<Abstract_Fiber> fiber);
 
     // Gets the current fiber if one is being scheduled.
     // This function shall be called from the same thread as `thread_loop()`.
@@ -69,7 +69,7 @@ class Fiber_Scheduler
     // `fail_timeout_override` is non-zero, it overrides `fiber.fail_timeout`
     // in 'main.conf'. Suspension may not exceed the fail timeout.
     void
-    check_and_yield(const Abstract_Fiber* self, shared_ptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override);
+    check_and_yield(const Abstract_Fiber* self, shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override);
   };
 
 }  // namespace poseidon

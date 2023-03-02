@@ -13,7 +13,7 @@ namespace {
 struct Packet_Queue
   {
     mutable plain_mutex mutex;
-    weak_ptr<UDP_Socket> wsocket;  // read-only; no locking needed
+    wkptr<UDP_Socket> wsocket;  // read-only; no locking needed
 
     struct Packet
       {
@@ -27,9 +27,9 @@ struct Packet_Queue
 
 struct Shared_cb_args
   {
-    weak_ptr<void> wobj;
-    callback_thunk_ptr<shared_ptrR<UDP_Socket>, Socket_Address&&, linear_buffer&&> thunk;
-    weak_ptr<Packet_Queue> wqueue;
+    wkptr<void> wobj;
+    callback_thunk_ptr<shptrR<UDP_Socket>, Socket_Address&&, linear_buffer&&> thunk;
+    wkptr<Packet_Queue> wqueue;
   };
 
 struct Final_Fiber final : Abstract_Fiber

@@ -48,9 +48,9 @@ using ::std::exception;
 using ::std::exception_ptr;
 using ::std::type_info;
 using ::std::pair;
-using ::std::unique_ptr;
-using ::std::shared_ptr;
-using ::std::weak_ptr;
+template<typename T> using uniptr = ::std::unique_ptr<T>;  // default deleter
+template<typename T> using shptr = ::std::shared_ptr<T>;
+template<typename T> using wkptr = ::std::weak_ptr<T>;
 using ::std::array;
 using ::std::vector;
 using ::std::deque;
@@ -89,7 +89,7 @@ using ::rocket::condition_variable;
 using ::rocket::cow_vector;
 using ::rocket::cow_hashmap;
 using ::rocket::static_vector;
-using ::rocket::cow_string;
+using string = ::rocket::cow_string;
 using ::rocket::cow_u16string;
 using ::rocket::cow_u32string;
 using ::rocket::linear_buffer;
@@ -98,6 +98,8 @@ using ::rocket::tinyfmt;
 using ::rocket::unique_posix_fd;
 using ::rocket::unique_posix_file;
 using ::rocket::unique_posix_dir;
+using ::rocket::refcnt_base;
+template<typename T> using rcptr = ::rocket::refcnt_ptr<T>;
 
 using ::rocket::begin;
 using ::rocket::end;
@@ -111,10 +113,10 @@ using ::rocket::optional;
 using ::rocket::variant;
 using phsh_string = ::rocket::prehashed_string;
 
-using stringR = const cow_string&;
+using stringR = const string&;
 using phsh_stringR = const phsh_string&;
-template<typename T> using shared_ptrR = const shared_ptr<T>&;
-template<typename T> using weak_ptrR = const weak_ptr<T>&;
+template<typename T> using shptrR = const shptr<T>&;
+template<typename T> using wkptrR = const wkptr<T>&;
 
 // Enumerations
 enum zlib_Format : uint8_t
@@ -251,14 +253,14 @@ bool
 do_async_logger_check_level(Log_Level level) noexcept;
 
 void
-do_async_logger_enqueue(const Log_Context& ctx, void* cb_obj, callback_thunk_ptr<cow_string&> cb_thunk) noexcept;
+do_async_logger_enqueue(const Log_Context& ctx, void* cb_obj, callback_thunk_ptr<string&> cb_thunk) noexcept;
 
 template<typename... ParamsT>
 inline
 bool
 do_async_logger_enqueue_generic(const Log_Context& ctx, const ParamsT&... params) noexcept
   {
-    auto my_thunk = [&](cow_string& msg) { ::asteria::format(msg, params...);  };
+    auto my_thunk = [&](string& msg) { ::asteria::format(msg, params...);  };
     do_async_logger_enqueue(ctx, ::std::addressof(my_thunk), callback_thunk<decltype(my_thunk)>);
     return true;
   }

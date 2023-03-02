@@ -20,7 +20,7 @@ class Network_Driver
     SSL_CTX_ptr m_client_ssl_ctx;
 
     mutable plain_mutex m_epoll_mutex;
-    unordered_map<const volatile Abstract_Socket*, weak_ptr<Abstract_Socket>> m_epoll_sockets;
+    unordered_map<const volatile Abstract_Socket*, wkptr<Abstract_Socket>> m_epoll_sockets;
 
     mutable plain_mutex m_event_mutex;
     linear_buffer m_events;
@@ -63,7 +63,7 @@ class Network_Driver
     // to this socket.
     // This function is thread-safe.
     void
-    insert(shared_ptrR<Abstract_Socket> socket);
+    insert(shptrR<Abstract_Socket> socket);
   };
 
 }  // namespace poseidon
