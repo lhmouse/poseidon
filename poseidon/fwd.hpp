@@ -98,8 +98,6 @@ using ::rocket::tinyfmt;
 using ::rocket::unique_posix_fd;
 using ::rocket::unique_posix_file;
 using ::rocket::unique_posix_dir;
-using ::rocket::refcnt_base;
-template<typename T> using rcptr = ::rocket::refcnt_ptr<T>;
 
 using ::rocket::begin;
 using ::rocket::end;
