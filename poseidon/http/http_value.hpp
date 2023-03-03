@@ -10,24 +10,8 @@ namespace poseidon {
 
 class HTTP_Value
   {
-  public:
-    enum Index : uint8_t
-      {
-        index_null      = 0,
-        index_string    = 1,
-        index_number    = 2,
-        index_datetime  = 3,
-      };
-
   private:
-    variant<
-      ROCKET_CDR(
-        ,nullptr_t      // index_null
-        ,string     // index_string
-        ,double         // index_number
-        ,HTTP_DateTime  // index_datetime
-      )>
-      m_stor;
+    variant<nullptr_t, string, double, HTTP_DateTime> m_stor;
 
   public:
     // Value constructors
@@ -53,14 +37,9 @@ class HTTP_Value
 
   public:
     // Accesses raw data.
-    constexpr
-    Index
-    index() const noexcept
-      { return (Index) this->m_stor.index();  }
-
     bool
     is_null() const noexcept
-      { return this->m_stor.index() == index_null;  }
+      { return this->m_stor.ptr<nullptr_t>() != nullptr;  }
 
     void
     clear() noexcept
@@ -68,15 +47,15 @@ class HTTP_Value
 
     bool
     is_string() const noexcept
-      { return this->m_stor.index() == index_string;  }
+      { return this->m_stor.ptr<string>() != nullptr;  }
 
     const string&
     as_string() const
-      { return this->m_stor.as<index_string>();  }
+      { return this->m_stor.as<string>();  }
 
     string&
     mut_string()
-      { return this->m_stor.mut<index_string>();  }
+      { return this->m_stor.mut<string>();  }
 
     void
     set_string(const string& str) noexcept
@@ -84,15 +63,15 @@ class HTTP_Value
 
     bool
     is_number() const noexcept
-      { return this->m_stor.index() == index_number;  }
+      { return this->m_stor.ptr<double>() != nullptr;  }
 
     double
     as_number() const
-      { return this->m_stor.as<index_number>();  }
+      { return this->m_stor.as<double>();  }
 
     double&
     mut_number()
-      { return this->m_stor.mut<index_number>();  }
+      { return this->m_stor.mut<double>();  }
 
     void
     set_number(double num) noexcept
@@ -100,15 +79,15 @@ class HTTP_Value
 
     bool
     is_datetime() const noexcept
-      { return this->m_stor.index() == index_datetime;  }
+      { return this->m_stor.ptr<HTTP_DateTime>() != nullptr;  }
 
     const HTTP_DateTime&
     as_datetime() const
-      { return this->m_stor.as<index_datetime>();  }
+      { return this->m_stor.as<HTTP_DateTime>();  }
 
     HTTP_DateTime&
     mut_datetime()
-      { return this->m_stor.mut<index_datetime>();  }
+      { return this->m_stor.mut<HTTP_DateTime>();  }
 
     void
     set_datetime(const HTTP_DateTime& tm) noexcept

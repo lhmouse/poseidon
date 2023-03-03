@@ -110,58 +110,53 @@ tinyfmt&
 HTTP_Value::
 print(tinyfmt& fmt) const
   {
-    switch(this->index()) {
-      case index_null:
-        return fmt;
+    if(auto qstr = this->m_stor.ptr<string>()) {
+      // Check whether the string shall be quoted.
+      auto pos = ::std::find_if(qstr->begin(), qstr->end(), do_is_ctl_or_sep);
 
-      case index_string: {
-        // Check whether the string is to be quoted.
-        const auto& str = this->as_string();
-        auto pos = ::std::find_if(str.begin(), str.end(), do_is_ctl_or_sep);
+      // If the string is a valid token, write it verbatim.
+      if(pos == qstr->end())
+        return fmt << *qstr;
 
-        // If the string is a valid token, write it verbatim.
-        if(pos == str.end())
-          return fmt << str;
+      // ... no, so quote it.
+      fmt.putc('\"');
+      fmt.putn(qstr->data(), (size_t) (pos - qstr->begin()));
 
-        // ... no, so quote it.
-        fmt.putc('\"');
-        fmt.putn(str.data(), (size_t) (pos - str.begin()));
-
-        do {
-          if((*pos == '\\') || (*pos == '\"')) {
-            // Escape it.
-            char seq[2] = { '\\', *pos };
-            fmt.putn(seq, 2);
-            ++ pos;
-          }
-          else if(do_is_ctl_or_ws(*pos)) {
-            // Replace this sequence of control and space characters
-            // with a single space.
-            fmt.putc(' ');
-            pos = ::std::find_if_not(pos + 1, str.end(), do_is_ctl_or_ws);
-          }
-          else {
-            // Write this sequence verbatim.
-            auto from = pos;
-            pos = ::std::find_if(pos + 1, str.end(), do_is_ctl_or_sep);
-            fmt.putn(&*from, (size_t) (pos - from));
-          }
+      do {
+        if((*pos == '\\') || (*pos == '\"')) {
+          // Escape it.
+          char seq[2] = { '\\', *pos };
+          fmt.putn(seq, 2);
+          ++ pos;
         }
-        while(pos != str.end());
-
-        fmt.putc('\"');
-        return fmt;
+        else if(do_is_ctl_or_ws(*pos)) {
+          // Replace this sequence of control and space characters
+          // with a single space.
+          fmt.putc(' ');
+          pos = ::std::find_if_not(pos + 1, qstr->end(), do_is_ctl_or_ws);
+        }
+        else {
+          // Write this sequence verbatim.
+          auto from = pos;
+          pos = ::std::find_if(pos + 1, qstr->end(), do_is_ctl_or_sep);
+          fmt.putn(&*from, (size_t) (pos - from));
+        }
       }
+      while(pos != qstr->end());
 
-      case index_number:
-        return fmt << this->as_number();
-
-      case index_datetime:
-        return fmt << this->as_datetime();
-
-      default:
-        ROCKET_ASSERT(false);
+      fmt.putc('\"');
+      return fmt;
     }
+
+    if(auto qnum = this->m_stor.ptr<double>())
+      return fmt << *qnum;
+
+    if(auto qtm = this->m_stor.ptr<HTTP_DateTime>())
+      return fmt << *qtm;
+
+    // The value is null, so don't print anything.
+    ROCKET_ASSERT(this->m_stor.index() == 0);
+    return fmt;
   }
 
 string
