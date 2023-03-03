@@ -33,7 +33,7 @@ class HTTP_Value
     // Value constructors
     constexpr
     HTTP_Value(nullptr_t = nullptr) noexcept
-      : m_stor() { }
+      : m_stor()  { }
 
     HTTP_Value(stringR str) noexcept
       : m_stor(str)  { }
