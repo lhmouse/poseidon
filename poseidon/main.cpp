@@ -435,22 +435,22 @@ main(int argc, char** argv)
     network_driver.reload(main_config.copy());
     do_init_signal_handlers();
     do_create_threads();
-
     POSEIDON_LOG_INFO(("Starting up: $1"), PACKAGE_STRING);
 
     do_check_euid();
     do_check_ulimits();
     do_write_pid_file();
     do_load_addons();
-
     POSEIDON_LOG_INFO(("Startup complete: $1"), PACKAGE_STRING);
 
-    // Schedule fibers until a signal has been received and the scheduler is empty.
-    int sig = 0;
-    while(((sig = exit_signal.load()) == 0) || (fiber_scheduler.size() != 0))
+    // Schedule fibers if there is something to do, or no stop signal has
+    // been received.
+    while((fiber_scheduler.size() != 0) || (exit_signal.load() == 0))
       fiber_scheduler.thread_loop();
 
+    int sig = exit_signal.load();
     POSEIDON_LOG_INFO(("Shutting down (signal $1: $2)"), sig, ::strsignal(sig));
+
     do_exit_printf(exit_success, "");
   }
   catch(exception& stdex) {
