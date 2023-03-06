@@ -82,7 +82,6 @@ using ::rocket::atomic;
 using ::rocket::atomic_relaxed;
 using ::rocket::atomic_acq_rel;
 using ::rocket::atomic_seq_cst;
-using atomic_signal = atomic_relaxed<int>;
 using plain_mutex = ::rocket::mutex;
 using ::rocket::recursive_mutex;
 using ::rocket::condition_variable;
@@ -207,7 +206,7 @@ class Easy_Deflator;
 class Easy_Inflator;
 
 // Singletons
-extern atomic_signal exit_signal;
+extern atomic_relaxed<int> exit_signal;
 extern class Main_Config& main_config;
 extern class Fiber_Scheduler& fiber_scheduler;
 

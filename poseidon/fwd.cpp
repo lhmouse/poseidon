@@ -11,7 +11,7 @@
 #include "static/network_driver.hpp"
 namespace poseidon {
 
-atomic_signal exit_signal;
+atomic_relaxed<int> exit_signal;
 Main_Config& main_config = *new Main_Config;
 Fiber_Scheduler& fiber_scheduler = *new Fiber_Scheduler;
 
