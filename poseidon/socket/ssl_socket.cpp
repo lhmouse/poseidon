@@ -451,8 +451,8 @@ ssl_shut_down() noexcept
     auto& queue = this->do_abstract_socket_lock_write_queue(io_lock);
 
     // If there are data pending, mark this socket as being closed. If a full
-    // connection has been established, wait until all pending data to be sent.
-    // The connection should be closed thereafter.
+    // connection has been established, wait until all pending data have been
+    // sent. The connection should be closed thereafter.
     if(!queue.empty() && this->do_abstract_socket_set_state(socket_state_established, socket_state_closing))
       return true;
 
