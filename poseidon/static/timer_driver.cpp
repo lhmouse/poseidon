@@ -66,6 +66,7 @@ thread_loop()
     }
 
     ::std::pop_heap(this->m_pq.begin(), this->m_pq.end(), timer_comparator);
+    auto next = this->m_pq.back().next;
     auto timer = this->m_pq.back().wtimer.lock();
     Async_State next_state;
     if(!timer || (this->m_pq.back().serial != timer->m_serial)) {
@@ -92,7 +93,7 @@ thread_loop()
     timer->m_state.store(async_state_running);
 
     try {
-      timer->do_abstract_timer_on_tick(now);
+      timer->do_abstract_timer_on_tick(next);
     }
     catch(exception& stdex) {
       POSEIDON_LOG_ERROR((

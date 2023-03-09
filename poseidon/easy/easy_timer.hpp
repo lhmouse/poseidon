@@ -10,10 +10,12 @@ namespace poseidon {
 class Easy_Timer
   {
   private:
+    struct X_Event_Queue;
+
     shptr<void> m_cb_obj;
     callback_thunk_ptr<steady_time> m_cb_thunk;
 
-    shptr<void> m_uniq;
+    shptr<X_Event_Queue> m_queue;
     shptr<Abstract_Timer> m_timer;
 
   public:
