@@ -17,26 +17,11 @@ Abstract_Socket(unique_posix_fd&& fd)
     if(!this->m_fd)
       POSEIDON_THROW(("Null socket handle not valid"));
 
-    // Get the local address and address family.
-    ::sockaddr_in6 sa;
-    ::socklen_t salen = sizeof(sa);
-    if(::getsockname(this->m_fd, (::sockaddr*) &sa, &salen) != 0)
+    // Check the address family.
+    if(this->local_address() == ipv6_invalid)
       POSEIDON_THROW((
-          "Could not get socket local address",
-          "[`getsockname()` failed: $1]"),
+          "Could not get socket local address: $1"),
           format_errno());
-
-    if((sa.sin6_family != AF_INET6) || (salen != sizeof(sa)))
-      POSEIDON_THROW((
-          "Addresss family unimplemented: family = $1, salen = $2"),
-          sa.sin6_family, salen);
-
-    if(sa.sin6_port != htobe16(0)) {
-      // Cache the address.
-      this->m_sockname.set_addr(sa.sin6_addr);
-      this->m_sockname.set_port(be16toh(sa.sin6_port));
-      this->m_sockname_ready.store(true);
-    }
 
 #ifdef ROCKET_DEBUG
     // Require the socket be non-blocking here.
