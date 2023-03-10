@@ -57,7 +57,7 @@ do_inflate(uint8_t*& end_out, int flush)
     if(obuf.second == 0)
       POSEIDON_THROW((
           "Failed to allocate output buffer",
-          "[`do_on_inflate_get_output_buffer()` returned null",
+          "[`do_on_inflate_get_output_buffer()` returned null]",
           "[inflator `$1` (class `$2`)]"),
           this, typeid(*this));
 
