@@ -10,6 +10,19 @@ namespace poseidon {
 namespace {
 
 ROCKET_ALWAYS_INLINE
+array<uint8_t, 18>
+do_copy_bytes_be(const ::in6_addr& addr, uint16_t port) noexcept
+  {
+    array<uint8_t, 18> bytes;
+    void* wptr = bytes.begin();
+    nmempcpy(wptr, &addr, sizeof(addr));
+    uint16_t beport = htobe16(port);
+    nmempcpy(wptr, &beport, sizeof(beport));
+    ROCKET_ASSERT(wptr == bytes.end());
+    return bytes;
+  }
+
+ROCKET_ALWAYS_INLINE
 bool
 do_match_subnet(const void* addr, const void* mask, uint32_t bits) noexcept
   {
@@ -153,6 +166,15 @@ Socket_Address(stringR str)
       POSEIDON_THROW((
           "Could not parse socket address string `$1`"),
           str);
+  }
+
+int
+Socket_Address::
+compare(const Socket_Address& other) const noexcept
+  {
+    auto bl = do_copy_bytes_be(this->m_addr, this->m_port);
+    auto br = do_copy_bytes_be(other.m_addr, other.m_port);
+    return ::memcmp(bl.data(), br.data(), br.size());
   }
 
 IP_Address_Class

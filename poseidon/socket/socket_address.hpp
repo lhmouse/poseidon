@@ -87,6 +87,11 @@ class Socket_Address
         this->m_port = 0;
       }
 
+    // Performs bitwise comparison.
+    ROCKET_PURE
+    int
+    compare(const Socket_Address& other) const noexcept;
+
     // Returns the address class, which is shared by both IPv4 and IPv6.
     ROCKET_PURE
     IP_Address_Class
@@ -132,14 +137,42 @@ inline
 bool
 operator==(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
   {
-    return (::memcmp(lhs.data(), rhs.data(), sizeof(::in6_addr)) == 0) && (lhs.port() == rhs.port());
+    return lhs.compare(rhs) == 0;
   }
 
 inline
 bool
 operator!=(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
   {
-    return (::memcmp(lhs.data(), rhs.data(), sizeof(::in6_addr)) != 0) || (lhs.port() != rhs.port());
+    return lhs.compare(rhs) != 0;
+  }
+
+inline
+bool
+operator<(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
+  {
+    return lhs.compare(rhs) < 0;
+  }
+
+inline
+bool
+operator>(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
+  {
+    return lhs.compare(rhs) > 0;
+  }
+
+inline
+bool
+operator<=(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
+  {
+    return lhs.compare(rhs) <= 0;
+  }
+
+inline
+bool
+operator>=(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
+  {
+    return lhs.compare(rhs) >= 0;
   }
 
 inline

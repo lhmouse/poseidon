@@ -53,4 +53,30 @@ main()
     POSEIDON_TEST_CHECK(::memcmp(data,
         "\xfe\x80\x12\x54\x56\x78\x00\x00\x00\x00\x00\x00\x90\xAB\xCD\xEF", 16) == 0);
     POSEIDON_TEST_CHECK(addr.port() == 0);
+
+    Socket_Address cmp;
+    cmp.parse("[fe80:1254:5678::90ab:cdef]:0");
+    POSEIDON_TEST_CHECK(addr.compare(cmp) == 0);
+    POSEIDON_TEST_CHECK(cmp.compare(addr) == 0);
+    POSEIDON_TEST_CHECK(addr == cmp);
+
+    addr.parse("[fe80:1254:5678::90ab:cdef]:1");
+    POSEIDON_TEST_CHECK(addr.compare(cmp) > 0);
+    POSEIDON_TEST_CHECK(cmp.compare(addr) < 0);
+    POSEIDON_TEST_CHECK(addr > cmp);
+
+    addr.parse("[fe80:1254:5678::90ab:cdee]:1");
+    POSEIDON_TEST_CHECK(addr.compare(cmp) < 0);
+    POSEIDON_TEST_CHECK(cmp.compare(addr) > 0);
+    POSEIDON_TEST_CHECK(addr < cmp);
+
+    addr.parse("[fe80:1254:5678::90ab:ceee]:1");
+    POSEIDON_TEST_CHECK(addr.compare(cmp) > 0);
+    POSEIDON_TEST_CHECK(cmp.compare(addr) < 0);
+    POSEIDON_TEST_CHECK(addr > cmp);
+
+    addr.parse("[fe70:1254:5678::90ab:cdee]:1");
+    POSEIDON_TEST_CHECK(addr.compare(cmp) < 0);
+    POSEIDON_TEST_CHECK(cmp.compare(addr) > 0);
+    POSEIDON_TEST_CHECK(addr < cmp);
   }

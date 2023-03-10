@@ -60,7 +60,7 @@ ascii_ci_equal(const StringT& text, const OtherT& other)
 // Splices two strings.
 ROCKET_ALWAYS_INLINE
 size_t
-nstpcpy_nc(char*& dest_out, const char* src) noexcept
+nstpcpy_nonconst(char*& dest_out, const char* src) noexcept
   {
     char* b = dest_out;
     dest_out = ::stpcpy(dest_out, src);
@@ -83,7 +83,7 @@ nstpcpy(char*& dest_out, const char* src) noexcept
   {
     return ROCKET_CONSTANT_P(::strlen(src))
             ? noadl::nstpcpy(dest_out, src, ::strlen(src))
-            : nstpcpy_nc(dest_out, src);
+            : nstpcpy_nonconst(dest_out, src);
   }
 
 ROCKET_ALWAYS_INLINE
@@ -93,6 +93,24 @@ nstpset(char*& dest_out, int ch, size_t n = 1) noexcept
     ::memset(dest_out, ch, n);
     dest_out[n] = 0;
     dest_out += n;
+    return n;
+  }
+
+ROCKET_ALWAYS_INLINE
+size_t
+nmempcpy(void*& dest_out, const void* src, size_t n) noexcept
+  {
+    ::memcpy(dest_out, src, n);
+    dest_out = (char*) dest_out + n;
+    return n;
+  }
+
+ROCKET_ALWAYS_INLINE
+size_t
+nmempset(void*& dest_out, int ch, size_t n) noexcept
+  {
+    ::memset(dest_out, ch, n);
+    dest_out = (char*) dest_out + n;
     return n;
   }
 
