@@ -346,7 +346,7 @@ thread_loop()
 
     if(server_ssl_ctx) {
       // Set the ALPN callback.
-      auto alpn_callback = +[](::SSL* ssl, const uint8_t** outp, uint8_t* outn, const uint8_t* inp, unsigned int inn, void* arg) noexcept
+      auto alpn_callback = +[](::SSL* ssl, const uint8_t** outp, uint8_t* outn, const uint8_t* inp, unsigned inn, void* arg) noexcept
         {
           // Verify the socket.
           // These errors shouldn't happen unless we have really messed things up
