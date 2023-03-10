@@ -311,10 +311,12 @@ do_abstract_socket_on_writable()
       try {
         // Set the ALPN response for outgoing sockets. For incoming sockets, it is
         // set in the ALPN callback.
-        const char* alpn_str;
-        unsigned int alpn_len;
-        ::SSL_get0_alpn_selected(this->ssl(), (const uint8_t**) &alpn_str, &alpn_len);
-        this->m_alpn_proto.assign(alpn_str, alpn_len);
+        const uint8_t* alpn_str;
+        unsigned alpn_len;
+        ::SSL_get0_alpn_selected(this->ssl(), &alpn_str, &alpn_len);
+
+        this->m_alpn_proto.clear();
+        this->m_alpn_proto.append((const char*) alpn_str, alpn_len);
 
         // Deliver the establishment notification.
         POSEIDON_LOG_DEBUG(("SSL connection established: remote = $1, alpn = $2"), this->remote_address(), this->m_alpn_proto);
