@@ -23,7 +23,7 @@ Network_Driver& network_driver = *new Network_Driver;
 bool
 do_async_logger_check_level(Log_Level level) noexcept
   {
-    return async_logger.level_enabled(level);
+    return async_logger.enabled(level);
   }
 
 void

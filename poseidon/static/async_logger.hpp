@@ -47,7 +47,7 @@ class Async_Logger
     // This function is thread-safe.
     ROCKET_PURE
     bool
-    level_enabled(Log_Level level) const noexcept
+    enabled(Log_Level level) const noexcept
       {
         return (level <= 15U) && (this->m_conf_level_bits.load() >> level & 1U);
       }
