@@ -177,7 +177,6 @@ class Inflator;
 // Fiber types
 class Abstract_Future;
 class Abstract_Fiber;
-class Timer_Fiber;
 
 // Socket types
 class Socket_Address;
