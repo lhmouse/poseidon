@@ -131,13 +131,6 @@ enum Async_State : uint8_t
     async_state_finished   = 3,
   };
 
-enum Future_State : uint8_t
-  {
-    future_state_empty      = 0,
-    future_state_value      = 1,
-    future_state_exception  = 2,
-  };
-
 enum IP_Address_Class : uint8_t
   {
     ip_address_class_unspecified  = 0,  // all zeroes

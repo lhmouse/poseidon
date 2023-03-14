@@ -16,29 +16,34 @@ Abstract_Future::
   {
   }
 
+void
+Abstract_Future::
+do_notify_ready() noexcept
+  {
+    if(this->m_waiters.empty())
+      return;
+
+    vector<wkptr<atomic_relaxed<steady_time>>> waiters;
+    waiters.swap(this->m_waiters);
+    const auto now = time_point_cast<milliseconds>(steady_clock::now());
+
+    for(const auto& wp : waiters)
+      if(auto p = wp.lock())
+        p->store(now);
+  }
+
 bool
 Abstract_Future::
-do_try_set_future_state_slow(Future_State new_state, void* param)
+do_try_set_ready_slow(void* param)
   {
-    ROCKET_ASSERT(new_state != future_state_empty);
     plain_mutex::unique_lock lock(this->m_init_mutex);
 
-    if(this->m_state.load() != future_state_empty)
+    if(this->m_ready.load())
       return false;
 
-    // Perform initialization.
-    this->do_on_future_state_change(new_state, param);
-    this->m_state.store(new_state);
-
-    if(!this->m_waiters.empty()) {
-      shptr<atomic_relaxed<steady_time>> async_time_ptr;
-      const auto now = time_point_cast<milliseconds>(steady_clock::now());
-
-      // Wake up all waiters. This will not throw exceptions.
-      for(const auto& wp : this->m_waiters)
-        if((async_time_ptr = wp.lock()) != nullptr)
-          async_time_ptr->store(now);
-    }
+    this->do_on_future_ready(param);
+    this->m_ready.store(true);
+    this->do_notify_ready();
     return true;
   }
 

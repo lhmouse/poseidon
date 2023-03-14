@@ -13,7 +13,7 @@ class Abstract_Future
     friend class Fiber_Scheduler;
 
     mutable plain_mutex m_init_mutex;
-    atomic_acq_rel<Future_State> m_state;
+    atomic_acq_rel<bool> m_ready;
     vector<wkptr<atomic_relaxed<steady_time>>> m_waiters;
 
   protected:
@@ -22,35 +22,33 @@ class Abstract_Future
     Abstract_Future() noexcept;
 
   protected:
-    // This callback is invoked by `do_try_set_state()` below.
+    // This callback is invoked by `do_try_set_ready()` below.
     virtual
     void
-    do_on_future_state_change(Future_State new_state, void* param) = 0;
+    do_on_future_ready(void* param) = 0;
 
-    // Try updating the future state. If the current future state is not
-    // `future_state_empty`, this function returns immediately. Otherwise,
-    // `do_on_future_state_change(new_state, param)` is invoked, and if it
-    // returns normally, `m_state` is updated to `new_state`. If an
-    // exception is thrown, there is no effect. `new_state` shall not be
-    // `future_state_empty`.
+    // Wakes up all waiters. Not sure whether this will be useful for users.
+    void
+    do_notify_ready() noexcept;
+
+    // Tries updating the ready state. If `m_ready` is `true`, this function
+    // returns immediately. Otherwise, `do_on_future_ready(param)` is called,
+    // and only after it returns normally, is `m_ready` updated to `true`. If
+    // an exception is thrown, there is no effect.
     bool
-    do_try_set_future_state_slow(Future_State new_state, void* param);
+    do_try_set_ready_slow(void* param);
 
     bool
-    do_try_set_future_state(Future_State new_state, void* param)
-      {
-        ROCKET_ASSERT(new_state != future_state_empty);
-        return (this->m_state.load() == future_state_empty)
-               && this->do_try_set_future_state_slow(new_state, param);
-      }
+    do_try_set_ready(void* param)
+      { return this->m_ready.load() || this->do_try_set_ready_slow(param);  }
 
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Abstract_Future);
 
-    // Gets the future state. This function has acquire semantics.
-    Future_State
-    future_state() const noexcept
-      { return this->m_state.load();  }
+    // Gets the ready state. This function has acquire semantics.
+    bool
+    ready() const noexcept
+      { return this->m_ready.load();  }
   };
 
 }  // namespace poseidon

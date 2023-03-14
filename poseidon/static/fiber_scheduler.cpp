@@ -283,13 +283,13 @@ thread_loop()
           "Fiber `$1` (class `$2`) has been suspended for $3"),
           elem->fiber, typeid(*(elem->fiber)), now - elem->yield_time);
 
-    if((now >= elem->fail_time) && futr && (futr->m_state.load() == future_state_empty))
+    if((now >= elem->fail_time) && futr && !futr->ready())
       POSEIDON_LOG_ERROR((
           "Fiber `$1` (class `$2`) has been suspended for $3",
           "This circumstance looks permanent. Please check for deadlocks."),
           elem->fiber, typeid(*(elem->fiber)), now - elem->yield_time);
 
-    if((now < elem->fail_time) && (signal == 0) && futr && (futr->m_state.load() == future_state_empty))
+    if((now < elem->fail_time) && (signal == 0) && futr && !futr->ready())
       return;
 
     // Execute the fiber now. If no stack has been allocated, allocate one.
@@ -439,7 +439,7 @@ check_and_yield(const Abstract_Fiber* self, shptrR<Abstract_Future> futr_opt, mi
     if(futr_opt) {
       // Associate the future.
       lock.lock(futr_opt->m_init_mutex);
-      if(futr_opt->m_state.load() != future_state_empty)
+      if(futr_opt->ready())
         return;
 
       shptr<atomic_relaxed<steady_time>> async_time_ptr(elem, &(elem->async_time));
