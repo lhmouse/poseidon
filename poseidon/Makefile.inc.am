@@ -21,6 +21,7 @@ nobase_include_HEADERS +=  \
   %reldir%/base/deflator.hpp  \
   %reldir%/base/inflator.hpp  \
   %reldir%/fiber/abstract_future.hpp  \
+  %reldir%/fiber/dns_future.hpp  \
   %reldir%/fiber/abstract_fiber.hpp  \
   %reldir%/socket/socket_address.hpp  \
   %reldir%/socket/abstract_socket.hpp  \
@@ -59,6 +60,7 @@ lib_libposeidon_la_SOURCES =  \
   %reldir%/base/deflator.cpp  \
   %reldir%/base/inflator.cpp  \
   %reldir%/fiber/abstract_future.cpp  \
+  %reldir%/fiber/dns_future.cpp  \
   %reldir%/fiber/abstract_fiber.cpp  \
   %reldir%/socket/socket_address.cpp  \
   %reldir%/socket/abstract_socket.cpp  \

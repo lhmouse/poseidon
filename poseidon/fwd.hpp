@@ -169,6 +169,7 @@ class Inflator;
 
 // Fiber types
 class Abstract_Future;
+class DNS_Future;
 class Abstract_Fiber;
 
 // Socket types
