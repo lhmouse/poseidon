@@ -23,13 +23,13 @@
 namespace {
 using namespace poseidon;
 
-template<typename R, typename... Ps, typename... As>
+template<typename ResultT, typename... ParamsT, typename... ArgsT>
 ROCKET_ALWAYS_INLINE
-R
-do_syscall(R func(Ps...), As&&... a)
+ResultT
+do_syscall(ResultT func(ParamsT...), ArgsT&&... args)
   {
-    R r;
-    while(((r = func(a...)) < 0) && (errno == EINTR));
+    ResultT r;
+    while(((r = func(args...)) < 0) && (errno == EINTR));
     return r;
   }
 
