@@ -290,11 +290,12 @@ ROCKET_NEVER_INLINE
 void
 do_daemonize_finish()
   {
-    if(daemon_pipe_wfd == -1)
+    if(!daemon_pipe_wfd)
       return;
 
     // Notify the parent process. Errors are ignored.
     do_syscall(::write, daemon_pipe_wfd, "OK", 2U);
+    daemon_pipe_wfd.reset();
   }
 
 template<class ObjectT>
