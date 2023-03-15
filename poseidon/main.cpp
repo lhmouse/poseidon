@@ -389,18 +389,20 @@ ROCKET_NEVER_INLINE
 void
 do_init_signal_handlers()
   {
-    // Ignore `SIGPIPE` for good.
+    // Ignore some signals for good.
     struct ::sigaction sigact;
     ::sigemptyset(&(sigact.sa_mask));
     sigact.sa_flags = 0;
     sigact.sa_handler = SIG_IGN;
     ::sigaction(SIGPIPE, &sigact, nullptr);
 
+    if(cmdline.daemonize)
+      ::sigaction(SIGHUP, &sigact, nullptr);
+
     // Trap signals. Errors are ignored.
     sigact.sa_handler = +[](int n) { exit_signal.store(n);  };
     ::sigaction(SIGINT, &sigact, nullptr);
     ::sigaction(SIGTERM, &sigact, nullptr);
-    ::sigaction(SIGHUP, &sigact, nullptr);
     ::sigaction(SIGALRM, &sigact, nullptr);
   }
 
