@@ -17,10 +17,21 @@
 #include <stdarg.h>
 #include <dlfcn.h>
 #include <pthread.h>
+#include <sys/wait.h>
 #include <sys/file.h>
 #include <sys/resource.h>
 namespace {
 using namespace poseidon;
+
+template<typename R, typename... Ps, typename... As>
+ROCKET_ALWAYS_INLINE
+R
+do_syscall(R func(Ps...), As&&... a)
+  {
+    R r;
+    while(((r = func(a...)) < 0) && (errno == EINTR));
+    return r;
+  }
 
 [[noreturn]]
 int
@@ -32,6 +43,7 @@ do_print_help_and_exit(const char* self)
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""" R"'''''''''''''''(
 Usage: %s [OPTIONS] [[--] DIRECTORY]
 
+  -d      daemonize; detach from terminal and run in background
   -h      show help message then exit
   -V      show version information then exit
   -v      enable verbose mode
@@ -79,6 +91,7 @@ Report bugs to <%s>.
 struct Command_Line_Options
   {
     // options
+    bool daemonize = false;
     bool verbose = false;
 
     // non-options
@@ -87,6 +100,7 @@ struct Command_Line_Options
 
 // They are declared here for convenience.
 Command_Line_Options cmdline;
+unique_posix_fd daemon_pipe_wfd;
 
 // These are process exit status codes.
 enum Exit_Code : uint8_t
@@ -121,11 +135,12 @@ do_parse_command_line(int argc, char** argv)
     bool help = false;
     bool version = false;
 
+    optional<bool> daemonize;
     optional<bool> verbose;
     optional<string> cd_here;
 
-    // Check for some common options before calling `getopt()`.
     if(argc > 1) {
+      // Check for common long options before calling `getopt()`.
       if(::strcmp(argv[1], "--help") == 0)
         do_print_help_and_exit(argv[0]);
 
@@ -135,19 +150,23 @@ do_parse_command_line(int argc, char** argv)
 
     // Parse command-line options.
     int ch;
-    while((ch = ::getopt(argc, argv, "+hVv")) != -1) {
+    while((ch = ::getopt(argc, argv, "dhVv")) != -1) {
       switch(ch) {
+        case 'd':
+          daemonize = true;
+          break;
+
         case 'h':
           help = true;
-          continue;
+          break;
 
         case 'V':
           version = true;
-          continue;
+          break;
 
         case 'v':
           verbose = true;
-          continue;
+          break;
 
         default:
           do_exit_printf(exit_invalid_argument,
@@ -172,6 +191,10 @@ do_parse_command_line(int argc, char** argv)
     if(argc - optind > 0)
       cd_here = string(argv[optind]);
 
+    // Daemonization is off by default.
+    if(daemonize)
+      cmdline.daemonize = *daemonize;
+
     // Verbose mode is off by default.
     if(verbose)
       cmdline.verbose = *verbose;
@@ -193,6 +216,85 @@ do_set_working_directory()
           "Could not set working directory to '$2'",
           "[`chdir()` failed: $1]"),
           format_errno(), cmdline.cd_here);
+  }
+
+ROCKET_NEVER_INLINE
+void
+do_daemonize_start()
+  {
+    if(!cmdline.daemonize)
+      return;
+
+    // Create a pipe so the parent process can check for startup errors.
+    unique_posix_fd rfd;
+    int pipe_fds[2];
+
+    if(::pipe(pipe_fds) != 0)
+      POSEIDON_THROW((
+          "Could not create pipe",
+          "[`pipe()` failed: $1]"),
+          format_errno());
+
+    rfd.reset(pipe_fds[0]);
+    daemon_pipe_wfd.reset(pipe_fds[1]);
+
+    // Create the child process that will run in background.
+    ::printf("Daemonizing process %d...\n", (int) ::getpid());
+
+    ::pid_t child_pid = ::fork();
+    if(child_pid == -1)
+      POSEIDON_THROW((
+          "Could not create child process",
+          "[`fork()` failed: $1]"),
+          format_errno());
+
+    if(child_pid == 0) {
+      // The child process shall continue execution.
+      ::setsid();
+      return;
+    }
+
+    ::printf("Awaiting child process %d...\n", (int) child_pid);
+
+    // This is the parent process. Wait for notification.
+    daemon_pipe_wfd.reset();
+    char discard[4];
+    int wstat = 0;
+
+    if(do_syscall(::read, rfd, discard, sizeof(discard)) > 0) {
+      // Notification received. Finish.
+      ::printf("Detached child process %d successfully.\n", (int) child_pid);
+      ::_Exit(0);
+    }
+
+    // Something went wrong. Now wait for the child and forward its exit
+    // status. Note `waitpid()` may also return if the child has been stopped
+    // or continued.
+    do_syscall(::waitpid, child_pid, &wstat, 0);
+
+    if(WIFEXITED(wstat)) {
+      int st = WEXITSTATUS(wstat);
+      ::printf("Child process %d exited with %d\n", (int) child_pid, st);
+      ::_Exit(st);
+    }
+    else if(WIFSIGNALED(wstat)) {
+      int sig = WTERMSIG(wstat);
+      ::printf("Child process %d terminated by signal %d: %s\n", (int) child_pid, sig, ::strsignal(sig));
+      ::_Exit(128 + sig);
+    }
+    else
+      ::_Exit(-1);
+  }
+
+ROCKET_NEVER_INLINE
+void
+do_daemonize_finish()
+  {
+    if(daemon_pipe_wfd == -1)
+      return;
+
+    // Notify the parent process. Errors are ignored.
+    do_syscall(::write, daemon_pipe_wfd, "OK", 2U);
   }
 
 template<class ObjectT>
@@ -425,23 +527,23 @@ main(int argc, char** argv)
 
     // Note that this function shall not return in case of errors.
     do_parse_command_line(argc, argv);
-
-    // Load configuration.
     do_set_working_directory();
+    do_daemonize_start();
     main_config.reload();
+    POSEIDON_LOG_INFO(("Starting up: $1"), PACKAGE_STRING);
 
     async_logger.reload(main_config.copy());
     fiber_scheduler.reload(main_config.copy());
     network_driver.reload(main_config.copy());
     do_init_signal_handlers();
     do_create_threads();
-    POSEIDON_LOG_INFO(("Starting up: $1"), PACKAGE_STRING);
-
     do_check_euid();
     do_check_ulimits();
     do_write_pid_file();
     do_load_addons();
+
     POSEIDON_LOG_INFO(("Startup complete: $1"), PACKAGE_STRING);
+    do_daemonize_finish();
 
     // Schedule fibers if there is something to do, or no stop signal has
     // been received.
