@@ -226,9 +226,8 @@ do_daemonize_start()
       return;
 
     // Create a pipe so the parent process can check for startup errors.
-    unique_posix_fd rfd;
+    unique_posix_fd rfd, wfd;
     int pipe_fds[2];
-
     if(::pipe(pipe_fds) != 0)
       POSEIDON_THROW((
           "Could not create pipe",
@@ -236,12 +235,14 @@ do_daemonize_start()
           format_errno());
 
     rfd.reset(pipe_fds[0]);
-    daemon_pipe_wfd.reset(pipe_fds[1]);
+    wfd.reset(pipe_fds[1]);
 
     // Create the child process that will run in background.
-    ::printf("Daemonizing process %d...\n", (int) ::getpid());
+    ::fprintf(stderr,
+        "Daemonizing process %d...\n",
+        (int) ::getpid());
 
-    ::pid_t child_pid = ::fork();
+    int child_pid = ::fork();
     if(child_pid == -1)
       POSEIDON_THROW((
           "Could not create child process",
@@ -251,39 +252,42 @@ do_daemonize_start()
     if(child_pid == 0) {
       // The child process shall continue execution.
       ::setsid();
+      daemon_pipe_wfd = ::std::move(wfd);
       return;
     }
 
-    ::printf("Awaiting child process %d...\n", (int) child_pid);
+    ::fprintf(stderr,
+        "Awaiting child process %d...\n",
+        child_pid);
 
     // This is the parent process. Wait for notification.
-    daemon_pipe_wfd.reset();
     char discard[4];
-    int wstat = 0;
-
-    if(do_syscall(::read, rfd, discard, sizeof(discard)) > 0) {
-      // Notification received. Finish.
-      ::printf("Detached child process %d successfully.\n", (int) child_pid);
-      ::_Exit(0);
-    }
+    wfd.reset();
+    if(do_syscall(::read, rfd, discard, sizeof(discard)) > 0)
+      do_exit_printf(exit_success,
+          "Detached child process %d successfully.\n",
+          child_pid);
 
     // Something went wrong. Now wait for the child and forward its exit
     // status. Note `waitpid()` may also return if the child has been stopped
     // or continued.
-    do_syscall(::waitpid, child_pid, &wstat, 0);
+    int wstat = 0;
+    if(do_syscall(::waitpid, child_pid, &wstat, 0) < 0)
+      do_exit_printf(exit_system_error,
+          "Failed to await child process %d: %m\n",
+          child_pid);
 
-    if(WIFEXITED(wstat)) {
-      int st = WEXITSTATUS(wstat);
-      ::printf("Child process %d exited with %d\n", (int) child_pid, st);
-      ::_Exit(st);
-    }
-    else if(WIFSIGNALED(wstat)) {
-      int sig = WTERMSIG(wstat);
-      ::printf("Child process %d terminated by signal %d: %s\n", (int) child_pid, sig, ::strsignal(sig));
-      ::_Exit(128 + sig);
-    }
-    else
-      ::_Exit(-1);
+    if(WIFEXITED(wstat))
+      do_exit_printf(static_cast<Exit_Code>(WEXITSTATUS(wstat)),
+          "Child process %d exited with %d\n",
+          child_pid, WEXITSTATUS(wstat));
+
+    if(WIFSIGNALED(wstat))
+      do_exit_printf(static_cast<Exit_Code>(128 + WTERMSIG(wstat)),
+          "Child process %d terminated by signal %d: %s\n",
+          child_pid, WTERMSIG(wstat), ::strsignal(WTERMSIG(wstat)));
+
+    ::quick_exit(-1);
   }
 
 ROCKET_NEVER_INLINE
