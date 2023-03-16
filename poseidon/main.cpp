@@ -247,16 +247,20 @@ do_daemonize_start()
 
     if(cpid != 0) {
       // PARENT
-      r = (int) POSEIDON_SYSCALL_LOOP(::waitpid(cpid, &wstat, 0));
-      if(r < 0)
-        do_exit_printf(exit_system_error,
-            "Failed to get exit status of child process %d: %s",
-            (int) cpid, ::strerror(errno));
+      do {
+        r = (int) POSEIDON_SYSCALL_LOOP(::waitpid(cpid, &wstat, 0));
+        if(r < 0)
+          do_exit_printf(exit_system_error,
+              "Failed to get exit status of child process %d: %s",
+              (int) cpid, ::strerror(errno));
 
-      if(WIFSIGNALED(wstat))
-        ::_Exit(128 + WTERMSIG(wstat));
+        if(WIFEXITED(wstat))
+          ::_Exit(WEXITSTATUS(wstat));
 
-      ::_Exit(WEXITSTATUS(wstat));
+        if(WIFSIGNALED(wstat))
+          ::_Exit(128 + WTERMSIG(wstat));
+      }
+      while(true);
     }
 
     // CHILD
@@ -294,20 +298,24 @@ do_daemonize_start()
 
     // Something went wrong in the grandchild. Now wait and forward
     // its exit status.
-    r = (int) POSEIDON_SYSCALL_LOOP(::waitpid(cpid, &wstat, 0));
-    if(r < 0)
-      do_exit_printf(exit_system_error,
-          "Failed to get exit status of child process %d: %s",
-          (int) cpid, ::strerror(errno));
+    do {
+      r = (int) POSEIDON_SYSCALL_LOOP(::waitpid(cpid, &wstat, 0));
+      if(r < 0)
+        do_exit_printf(exit_system_error,
+            "Failed to get exit status of child process %d: %s",
+            (int) cpid, ::strerror(errno));
 
-    if(WIFSIGNALED(wstat))
-      do_exit_printf(128 + WTERMSIG(wstat),
-          "Child process %d terminated by signal %d: %s\n",
-          cpid, WTERMSIG(wstat), ::strsignal(WTERMSIG(wstat)));
+      if(WIFEXITED(wstat))
+        do_exit_printf(WEXITSTATUS(wstat),
+            "Child process %d exited with %d\n",
+            (int) cpid, WEXITSTATUS(wstat));
 
-    do_exit_printf(WEXITSTATUS(wstat),
-        "Child process %d exited with %d\n",
-        cpid, WEXITSTATUS(wstat));
+      if(WIFSIGNALED(wstat))
+        do_exit_printf(128 + WTERMSIG(wstat),
+            "Child process %d terminated by signal %d: %s\n",
+            (int) cpid, WTERMSIG(wstat), ::strsignal(WTERMSIG(wstat)));
+    }
+    while(true);
   }
 
 ROCKET_NEVER_INLINE
