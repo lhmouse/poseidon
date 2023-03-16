@@ -161,7 +161,7 @@ do_parse_command_line(int argc, char** argv)
         default:
           do_exit_printf(exit_invalid_argument,
               "%s: invalid argument -- '%c'\nTry `%s -h` for help.\n",
-              argv[0], optopt, argv[0]);
+              argv[0], ::optopt, argv[0]);
       }
     }
 
@@ -173,13 +173,13 @@ do_parse_command_line(int argc, char** argv)
       do_print_version_and_exit();
 
     // If more arguments follow, they denote the working directory.
-    if(argc - optind > 1)
+    if(argc - ::optind > 1)
       do_exit_printf(exit_invalid_argument,
           "%s: too many arguments -- '%s'\nTry `%s -h` for help.\n",
-          argv[0], argv[optind+1], argv[0]);
+          argv[0], argv[::optind+1], argv[0]);
 
-    if(argc - optind > 0)
-      cd_here = string(argv[optind]);
+    if(argc - ::optind > 0)
+      cd_here = string(argv[::optind]);
 
     // Daemonization is off by default.
     if(daemonize)
