@@ -559,18 +559,20 @@ main(int argc, char** argv)
     // Note that this function shall not return in case of errors.
     do_parse_command_line(argc, argv);
     do_set_working_directory();
-    do_daemonize_start();
     main_config.reload();
+
+    do_check_euid();
+    do_check_ulimits();
+    do_daemonize_start();
     POSEIDON_LOG_INFO(("Starting up: $1"), PACKAGE_STRING);
 
     async_logger.reload(main_config.copy());
     fiber_scheduler.reload(main_config.copy());
     network_driver.reload(main_config.copy());
+
     do_init_signal_handlers();
     do_write_pid_file();
     do_create_threads();
-    do_check_euid();
-    do_check_ulimits();
     do_load_addons();
 
     POSEIDON_LOG_INFO(("Startup complete: $1"), PACKAGE_STRING);
