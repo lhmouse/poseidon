@@ -24,6 +24,17 @@ using ::asteria::weaken_enum;
 using ::asteria::generate_random_seed;
 using ::asteria::format_errno;
 
+// Performs a syscall and retries upon interrupts.
+// Note the arguments may be evaluated more than once.
+#define POSEIDON_SYSCALL_LOOP(...)  \
+  ([&]{  \
+    for(;;) {  \
+      auto wdLAlUiJ = (__VA_ARGS__);  \
+      if((wdLAlUiJ >= 0) || (errno != EINTR))  \
+        return wdLAlUiJ;  \
+    }  \
+  }())
+
 // Throws an exception, with backtraces.
 [[noreturn]]
 void

@@ -23,16 +23,6 @@
 namespace {
 using namespace poseidon;
 
-template<typename ResultT, typename... ParamsT, typename... ArgsT>
-ROCKET_ALWAYS_INLINE
-ResultT
-do_syscall(ResultT func(ParamsT...), ArgsT&&... args)
-  {
-    ResultT r;
-    while(((r = func(args...)) < 0) && (errno == EINTR));
-    return r;
-  }
-
 [[noreturn]]
 int
 do_print_help_and_exit(const char* self)
@@ -103,7 +93,7 @@ Command_Line_Options cmdline;
 unique_posix_fd daemon_pipe_wfd;
 
 // These are process exit status codes.
-enum Exit_Code : uint8_t
+enum
   {
     exit_success            = 0,
     exit_system_error       = 1,
@@ -112,7 +102,7 @@ enum Exit_Code : uint8_t
 
 [[noreturn]] ROCKET_NEVER_INLINE
 int
-do_exit_printf(Exit_Code code, const char* fmt, ...) noexcept
+do_exit_printf(int code, const char* fmt, ...) noexcept
   {
     // Wait for pending logs to be flushed.
     async_logger.synchronize();
@@ -125,7 +115,7 @@ do_exit_printf(Exit_Code code, const char* fmt, ...) noexcept
 
     // Perform fast exit.
     ::fflush(nullptr);
-    ::quick_exit((int)code);
+    ::quick_exit(code);
   }
 
 ROCKET_NEVER_INLINE
@@ -224,69 +214,100 @@ do_daemonize_start()
     if(!cmdline.daemonize)
       return;
 
-    // Create a pipe so the parent process can check for startup errors.
-    unique_posix_fd rfd, wfd;
-    int pipe_fds[2];
-    if(::pipe(pipe_fds) != 0)
-      POSEIDON_THROW((
-          "Could not create pipe",
-          "[`pipe()` failed: $1]"),
-          format_errno());
+    // PARENT            CHILD             GRANDCHILD
+    //====================================================
+    // fork()
+    //   |   \---------> setsid()
+    //   |               pipe()
+    //   |               fork()
+    //   |                 |   \---------> initialize ...
+    //   |                 |                 |
+    //   |                 |                 v
+    //   |                 v               write(pipe)
+    //   |               read(pipe) <-----/  |
+    //   v               _Exit()             |
+    // waitpid() <------/                    v
+    // _Exit()                             loop ...
 
-    rfd.reset(pipe_fds[0]);
-    wfd.reset(pipe_fds[1]);
-
-    // Create the child process that will run in background.
     ::fprintf(stderr,
         "Daemonizing process %d...\n",
         (int) ::getpid());
 
-    int child_pid = ::fork();
-    if(child_pid == -1)
-      POSEIDON_THROW((
-          "Could not create child process",
-          "[`fork()` failed: $1]"),
-          format_errno());
+    ::pid_t cpid;
+    int wstat = 0;
+    char discard[4];
+    int pipefds[2];
+    int r;
 
-    if(child_pid == 0) {
-      // The child process shall continue execution.
-      ::setsid();
-      daemon_pipe_wfd = ::std::move(wfd);
+    cpid = ::fork();
+    if(cpid == -1)
+      do_exit_printf(exit_system_error,
+          "Could not create child process: %s\n",
+          ::strerror(errno));
+
+    if(cpid != 0) {
+      // PARENT
+      r = (int) POSEIDON_SYSCALL_LOOP(::waitpid(cpid, &wstat, 0));
+      if(r < 0)
+        do_exit_printf(exit_system_error,
+            "Failed to get exit status of child process %d: %s",
+            (int) cpid, ::strerror(errno));
+
+      if(WIFSIGNALED(wstat))
+        ::_Exit(128 + WTERMSIG(wstat));
+
+      ::_Exit(WEXITSTATUS(wstat));
+    }
+
+    // CHILD
+    ::setsid();
+
+    if(::pipe(pipefds) != 0)
+      do_exit_printf(exit_system_error,
+          "Could not create pipe: %s",
+          ::strerror(errno));
+
+    cpid = ::fork();
+    if(cpid == -1)
+      do_exit_printf(exit_system_error,
+          "Could not create grandchild process: %s\n",
+          ::strerror(errno));
+
+    if(cpid == 0) {
+      // GRANDCHILD
+      ::close(pipefds[0]);
+      daemon_pipe_wfd.reset(pipefds[1]);
       return;
     }
 
+    // CHILD
     ::fprintf(stderr,
         "Awaiting child process %d...\n",
-        child_pid);
+        (int) cpid);
 
-    // This is the parent process. Wait for notification.
-    char discard[4];
-    wfd.reset();
-    if(do_syscall(::read, rfd, discard, sizeof(discard)) > 0)
+    ::close(pipefds[1]);
+    r = (int) POSEIDON_SYSCALL_LOOP(::read(pipefds[0], discard, sizeof(discard)));
+    if(r > 0)
       do_exit_printf(exit_success,
           "Detached child process %d successfully.\n",
-          child_pid);
+          (int) cpid);
 
-    // Something went wrong. Now wait for the child and forward its exit
-    // status. Note `waitpid()` may also return if the child has been stopped
-    // or continued.
-    int wstat = 0;
-    if(do_syscall(::waitpid, child_pid, &wstat, 0) < 0)
+    // Something went wrong in the grandchild. Now wait and forward
+    // its exit status.
+    r = (int) POSEIDON_SYSCALL_LOOP(::waitpid(cpid, &wstat, 0));
+    if(r < 0)
       do_exit_printf(exit_system_error,
-          "Failed to await child process %d: %m\n",
-          child_pid);
-
-    if(WIFEXITED(wstat))
-      do_exit_printf(static_cast<Exit_Code>(WEXITSTATUS(wstat)),
-          "Child process %d exited with %d\n",
-          child_pid, WEXITSTATUS(wstat));
+          "Failed to get exit status of child process %d: %s",
+          (int) cpid, ::strerror(errno));
 
     if(WIFSIGNALED(wstat))
-      do_exit_printf(static_cast<Exit_Code>(128 + WTERMSIG(wstat)),
+      do_exit_printf(128 + WTERMSIG(wstat),
           "Child process %d terminated by signal %d: %s\n",
-          child_pid, WTERMSIG(wstat), ::strsignal(WTERMSIG(wstat)));
+          cpid, WTERMSIG(wstat), ::strsignal(WTERMSIG(wstat)));
 
-    ::quick_exit(-1);
+    do_exit_printf(WEXITSTATUS(wstat),
+        "Child process %d exited with %d\n",
+        cpid, WEXITSTATUS(wstat));
   }
 
 ROCKET_NEVER_INLINE
@@ -297,7 +318,7 @@ do_daemonize_finish()
       return;
 
     // Notify the parent process. Errors are ignored.
-    do_syscall(::write, daemon_pipe_wfd, "OK", 2U);
+    POSEIDON_SYSCALL_LOOP(::write(daemon_pipe_wfd, "OK", 2));
     daemon_pipe_wfd.reset();
   }
 
