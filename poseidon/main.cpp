@@ -212,10 +212,9 @@ do_set_working_directory()
       return;
 
     if(::chdir(cmdline.cd_here.safe_c_str()) != 0)
-      POSEIDON_THROW((
-          "Could not set working directory to '$2'",
-          "[`chdir()` failed: $1]"),
-          format_errno(), cmdline.cd_here);
+      do_exit_printf(exit_system_error,
+          "Could not set working directory to '%s': %s",
+          cmdline.cd_here.c_str(), ::strerror(errno));
   }
 
 ROCKET_NEVER_INLINE
@@ -340,11 +339,9 @@ do_create_resident_thread(ObjectT& obj, const char* name)
     ::pthread_t thrd;
     int err = ::pthread_create(&thrd, nullptr, thrd_function, ::std::addressof(obj));
     if(err != 0)
-      ::rocket::sprintf_and_throw<::std::runtime_error>(
-          "Could not create thread: %s\n"
-          "[`pthread_create()` failed: %d]"
-          "[static class `%s`]\n",
-          ::strerror(err), err, typeid(ObjectT).name());
+      do_exit_printf(exit_system_error,
+          "Could not create thread '%s': %s\n",
+          name, ::strerror(err));
 
     // Name the thread and detach it. Errors are ignored.
     ::pthread_setname_np(thrd, name);
@@ -381,13 +378,13 @@ do_check_euid()
           value, conf.path());
 
     if(!permit_root_startup && (::geteuid() == 0))
-      POSEIDON_THROW((
+      do_exit_printf(exit_invalid_argument,
           "Please do not start this program as root. If you insist, you may "
-          "set `general.permit_root_startup` in `$1` to `true` to bypass this "
+          "set `general.permit_root_startup` in '%s' to `true` to bypass this "
           "check. Note that starting as root should be considered insecure. An "
           "unprivileged user should have been created for this service. You "
-          "have been warned."),
-          conf.path());
+          "have been warned.",
+          conf.path().c_str());
   }
 
 ROCKET_NEVER_INLINE
@@ -433,16 +430,14 @@ do_write_pid_file()
     // Create the lock file and lock it in exclusive mode before overwriting.
     unique_posix_fd pid_file(::creat(pid_file_path.safe_c_str(), 0644));
     if(!pid_file)
-      POSEIDON_THROW((
-          "Could not create PID file '$2'",
-          "[`open()` failed: $1]"),
-          format_errno(), pid_file_path.c_str());
+      do_exit_printf(exit_system_error,
+          "Could not create PID file '%s': %s",
+          pid_file_path.c_str(), ::strerror(errno));
 
     if(::flock(pid_file, LOCK_EX | LOCK_NB) != 0)
-      POSEIDON_THROW((
-          "Could not lock PID file '$2' because it is being locked by another process",
-          "[`flock()` failed: $1]"),
-          format_errno(), pid_file_path.c_str());
+      do_exit_printf(exit_system_error,
+          "Could not lock PID file '%s': %s",
+          pid_file_path.c_str(), ::strerror(errno));
 
     // Write the PID of myself.
     POSEIDON_LOG_DEBUG(("Writing current process ID to '$1'"), pid_file_path.c_str());
@@ -543,10 +538,10 @@ main(int argc, char** argv)
     fiber_scheduler.reload(main_config.copy());
     network_driver.reload(main_config.copy());
     do_init_signal_handlers();
+    do_write_pid_file();
     do_create_threads();
     do_check_euid();
     do_check_ulimits();
-    do_write_pid_file();
     do_load_addons();
 
     POSEIDON_LOG_INFO(("Startup complete: $1"), PACKAGE_STRING);
