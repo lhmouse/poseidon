@@ -207,12 +207,42 @@ do_set_working_directory()
           cmdline.cd_here.c_str(), ::strerror(errno));
   }
 
+[[noreturn]]
+int
+do_await_child_process_and_exit(::pid_t cpid)
+  {
+    ::fprintf(stderr,
+        "Awaiting child process %d...\n",
+        (int) cpid);
+
+    for(;;) {
+      // Repeat waiting until the child process has terminated.
+      int wstat = 0;
+      ::pid_t r = POSEIDON_SYSCALL_LOOP(::waitpid(cpid, &wstat, 0));
+      if(r < 0)
+        do_exit_printf(exit_system_error,
+            "Failed to get exit status of child process %d: %s",
+            (int) cpid, ::strerror(errno));
+
+      if(r != cpid)
+        continue;
+
+      if(WIFEXITED(wstat))
+        do_exit_printf(WEXITSTATUS(wstat), "");
+
+      if(WIFSIGNALED(wstat))
+        do_exit_printf(128 + WTERMSIG(wstat),
+            "Child process %d terminated by signal %d: %s\n",
+            (int) cpid, WTERMSIG(wstat), ::strsignal(WTERMSIG(wstat)));
+    }
+  }
+
 ROCKET_NEVER_INLINE
-void
+int
 do_daemonize_start()
   {
     if(!cmdline.daemonize)
-      return;
+      return 0;
 
     // PARENT            CHILD             GRANDCHILD
     //====================================================
@@ -233,39 +263,22 @@ do_daemonize_start()
         "Daemonizing process %d...\n",
         (int) ::getpid());
 
-    ::pid_t cpid;
-    int wstat = 0;
-    char discard[4];
-    int pipefds[2];
-    int r;
-
-    cpid = ::fork();
+    ::pid_t cpid = ::fork();
     if(cpid == -1)
       do_exit_printf(exit_system_error,
           "Could not create child process: %s\n",
           ::strerror(errno));
 
     if(cpid != 0) {
-      // PARENT
-      do {
-        r = (int) POSEIDON_SYSCALL_LOOP(::waitpid(cpid, &wstat, 0));
-        if(r < 0)
-          do_exit_printf(exit_system_error,
-              "Failed to get exit status of child process %d: %s",
-              (int) cpid, ::strerror(errno));
-
-        if(WIFEXITED(wstat))
-          ::_Exit(WEXITSTATUS(wstat));
-
-        if(WIFSIGNALED(wstat))
-          ::_Exit(128 + WTERMSIG(wstat));
-      }
-      while(true);
+      // The PARENT shall await CHILD.
+      do_await_child_process_and_exit(cpid);
+      ROCKET_ASSERT(false);
     }
 
-    // CHILD
+    // The CHILD shall create a new session and becomes its leader.
     ::setsid();
 
+    int pipefds[2];
     if(::pipe(pipefds) != 0)
       do_exit_printf(exit_system_error,
           "Could not create pipe: %s",
@@ -278,44 +291,23 @@ do_daemonize_start()
           ::strerror(errno));
 
     if(cpid == 0) {
-      // GRANDCHILD
+      // The GRANDCHILD shall continue.
       ::close(pipefds[0]);
       daemon_pipe_wfd.reset(pipefds[1]);
-      return;
+      return 1;
     }
 
-    // CHILD
-    ::fprintf(stderr,
-        "Awaiting child process %d...\n",
-        (int) cpid);
-
+    // The CHILD shall wait for notification from the GRANDCHILD. If no
+    // notification is received or an error occurs, the GRANDCHILD will
+    // terminate and has to be reaped.
     ::close(pipefds[1]);
-    r = (int) POSEIDON_SYSCALL_LOOP(::read(pipefds[0], discard, sizeof(discard)));
-    if(r > 0)
-      do_exit_printf(exit_success,
-          "Detached child process %d successfully.\n",
-          (int) cpid);
+    char text[16];
+    if(POSEIDON_SYSCALL_LOOP(::read(pipefds[0], text, sizeof(text))) <= 0)
+      do_await_child_process_and_exit(cpid);
 
-    // Something went wrong in the grandchild. Now wait and forward
-    // its exit status.
-    do {
-      r = (int) POSEIDON_SYSCALL_LOOP(::waitpid(cpid, &wstat, 0));
-      if(r < 0)
-        do_exit_printf(exit_system_error,
-            "Failed to get exit status of child process %d: %s",
-            (int) cpid, ::strerror(errno));
-
-      if(WIFEXITED(wstat))
-        do_exit_printf(WEXITSTATUS(wstat),
-            "Child process %d exited with %d\n",
-            (int) cpid, WEXITSTATUS(wstat));
-
-      if(WIFSIGNALED(wstat))
-        do_exit_printf(128 + WTERMSIG(wstat),
-            "Child process %d terminated by signal %d: %s\n",
-            (int) cpid, WTERMSIG(wstat), ::strsignal(WTERMSIG(wstat)));
-    }
-    while(true);
+    do_exit_printf(exit_success,
+        "Detached child process %d successfully.\n",
+        (int) cpid);
   }
 
 ROCKET_NEVER_INLINE
