@@ -34,7 +34,7 @@ do_notify_ready() noexcept
 
 bool
 Abstract_Future::
-do_try_set_ready_slow(void* param)
+do_try_set_ready(void* param)
   {
     plain_mutex::unique_lock lock(this->m_init_mutex);
 

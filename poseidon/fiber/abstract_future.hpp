@@ -36,11 +36,7 @@ class Abstract_Future
     // and only after it returns normally, is `m_ready` updated to `true`. If
     // an exception is thrown, there is no effect.
     bool
-    do_try_set_ready_slow(void* param);
-
-    bool
-    do_try_set_ready(void* param)
-      { return this->m_ready.load() || this->do_try_set_ready_slow(param);  }
+    do_try_set_ready(void* param);
 
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Abstract_Future);
