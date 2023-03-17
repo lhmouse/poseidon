@@ -263,17 +263,15 @@ do_daemonize_start()
         "Daemonizing process %d...\n",
         (int) ::getpid());
 
+    // Create the CHILD and wait.
     ::pid_t cpid = ::fork();
     if(cpid == -1)
       do_exit_printf(exit_system_error,
           "Could not create child process: %s\n",
           ::strerror(errno));
 
-    if(cpid != 0) {
-      // The PARENT shall await CHILD.
+    if(cpid != 0)
       do_await_child_process_and_exit(cpid);
-      ROCKET_ASSERT(false);
-    }
 
     // The CHILD shall create a new session and becomes its leader.
     ::setsid();
