@@ -26,7 +26,7 @@ do_abstract_task_on_execute()
   try {
     // Warning: This is in the worker thread. Any operation that changes data
     // members of `*this` shall be put into `do_on_future_ready()`, where `*this`
-    // will have  been locked.
+    // will have been locked.
     ::addrinfo* res;
     int r = ::getaddrinfo(this->m_host.safe_c_str(), nullptr, nullptr, &res);
     if(r != 0)
@@ -35,12 +35,14 @@ do_abstract_task_on_execute()
           "[`getaddrinfo()` failed: $2]"),
           this->m_host, ::gai_strerror(r));
 
+    // Copy records into `m_result`. This requires locking `*this` so do it in
+    // `do_on_future_ready)(`.
     ::rocket::unique_ptr<::addrinfo, void (::addrinfo*)> guard(res, ::freeaddrinfo);
     this->do_try_set_ready(guard);
     POSEIDON_LOG_DEBUG(("DNS query success: host = $1"), this->m_host);
   }
   catch(exception& stdex) {
-    // Ensure an exception is set, even after the first call to
+    // Ensure an exception is always set, even after the first call to
     // `do_try_set_ready()` has failed.
     POSEIDON_LOG_DEBUG(("DNS query error: host = $1, stdex = $2"), this->m_host, stdex);
     this->do_try_set_ready(nullptr);
