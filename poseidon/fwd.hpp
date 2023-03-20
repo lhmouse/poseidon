@@ -78,6 +78,13 @@ using ::std::const_pointer_cast;
 using ::std::chrono::duration_cast;
 using ::std::chrono::time_point_cast;
 
+constexpr
+system_time
+system_time_from_timespec(const ::timespec& ts) noexcept
+  {
+    return (system_time)(milliseconds) (ts.tv_sec * 1000LL + (uint32_t) ts.tv_nsec / 1000000U);
+  }
+
 using ::rocket::atomic;
 using ::rocket::atomic_relaxed;
 using ::rocket::atomic_acq_rel;
@@ -170,6 +177,7 @@ class Inflator;
 // Fiber types
 class Abstract_Future;
 class DNS_Future;
+class Read_File_Future;
 class Abstract_Fiber;
 
 // Socket types
