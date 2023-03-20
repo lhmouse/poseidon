@@ -15,7 +15,10 @@ class DNS_Future
     public Abstract_Async_Task
   {
   private:
+    // read-only
     string m_host;
+
+    // result
     cow_vector<Socket_Address> m_result;
     exception_ptr m_except;
 
@@ -36,6 +39,11 @@ class DNS_Future
 
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(DNS_Future);
+
+    // Gets the argument.
+    const string&
+    host() const noexcept
+      { return this->m_host;  }
 
     // Gets the result.
     const cow_vector<Socket_Address>&
