@@ -19,6 +19,7 @@
 #include <pthread.h>
 #include <sys/wait.h>
 #include <sys/file.h>
+#include <sys/socket.h>
 #include <sys/resource.h>
 namespace {
 using namespace poseidon;
@@ -270,8 +271,10 @@ do_daemonize_start()
           "Could not create child process: %s\n",
           ::strerror(errno));
 
-    if(cpid != 0)
+    if(cpid != 0) {
+      // The PARENT shall wait for CHILD and forward its exit status.
       do_await_child_process_and_exit(cpid);
+    }
 
     // The CHILD shall create a new session and become its leader. This
     // ensures that a later GRANDCHILD will not be a session leader and
@@ -284,30 +287,44 @@ do_daemonize_start()
           "Could not create pipe: %s",
           ::strerror(errno));
 
+    unique_posix_fd rfd(pipefds[0]);
+    unique_posix_fd wfd(pipefds[1]);
+
+    // Create the GRANDCHILD.
     cpid = ::fork();
     if(cpid == -1)
       do_exit_printf(exit_system_error,
           "Could not create grandchild process: %s\n",
           ::strerror(errno));
 
-    if(cpid == 0) {
-      // The GRANDCHILD shall continue.
-      ::close(pipefds[0]);
-      daemon_pipe_wfd.reset(pipefds[1]);
-      return 1;
+    if(cpid != 0) {
+      wfd.reset();
+
+      // The CHILD shall wait for notification from the GRANDCHILD. If no
+      // notification is received or an error occurs, the GRANDCHILD will
+      // terminate and has to be reaped.
+      char text[16];
+      if(POSEIDON_SYSCALL_LOOP(::read(pipefds[0], text, sizeof(text))) <= 0)
+        do_await_child_process_and_exit(cpid);
+
+      do_exit_printf(exit_success,
+          "Detached grandchild process %d successfully.\n",
+          (int) cpid);
     }
 
-    // The CHILD shall wait for notification from the GRANDCHILD. If no
-    // notification is received or an error occurs, the GRANDCHILD will
-    // terminate and has to be reaped.
-    ::close(pipefds[1]);
-    char text[16];
-    if(POSEIDON_SYSCALL_LOOP(::read(pipefds[0], text, sizeof(text))) <= 0)
-      do_await_child_process_and_exit(cpid);
+    // Close standard streams in the GRANDCHILD. Errors are ignored.
+    rfd.reset(::socket(AF_UNIX, SOCK_STREAM, 0));
+    if(rfd) {
+      ::shutdown(rfd, SHUT_RDWR);
 
-    do_exit_printf(exit_success,
-        "Detached child process %d successfully.\n",
-        (int) cpid);
+      (void)! ::dup2(rfd, STDIN_FILENO);
+      (void)! ::dup2(rfd, STDOUT_FILENO);
+      (void)! ::dup2(rfd, STDERR_FILENO);
+    }
+
+    // The GRANDCHILD shall continue execution.
+    daemon_pipe_wfd = ::std::move(wfd);
+    return 1;
   }
 
 ROCKET_NEVER_INLINE
