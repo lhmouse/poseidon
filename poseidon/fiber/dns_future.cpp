@@ -24,10 +24,11 @@ void
 DNS_Future::
 do_abstract_task_on_execute()
   try {
+    // Warning: This is in the worker thread. Any operation that changes data
+    // members of `*this` shall be put into `do_on_future_ready()`, where `*this`
+    // will have  been locked.
     ::addrinfo* res;
-POSEIDON_LOG_FATAL(("GAI $1"), this->m_host);
     int r = ::getaddrinfo(this->m_host.safe_c_str(), nullptr, nullptr, &res);
-POSEIDON_LOG_FATAL(("GAI $1 = $2"), this->m_host, r);
     if(r != 0)
       POSEIDON_THROW((
           "Could not perform DNS query for host `$1`",
@@ -58,6 +59,7 @@ do_on_future_ready(void* param)
     this->m_result.clear();
     this->m_except = nullptr;
 
+    // Copy records.
     ::addrinfo* res = (::addrinfo*) param;
     while(res) {
       optional <Socket_Address> addr;
