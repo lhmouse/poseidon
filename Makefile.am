@@ -64,8 +64,9 @@ TESTS = ${check_PROGRAMS}
 ## Programs and libraries
 include poseidon/Makefile.inc.am
 
-## Example add-ons
+## Configuration files and example add-ons
 include example/Makefile.inc.am
+include etc/Makefile.inc.am
 
 ## Tests
 include test/Makefile.inc.am

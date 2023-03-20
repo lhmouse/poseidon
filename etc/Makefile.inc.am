@@ -1,0 +1,6 @@
+pkgsysconfdir = ${sysconfdir}/${PACKAGE}
+dist_pkgsysconf_DATA =  \
+  %reldir%/poseidon/main.conf  \
+  %reldir%/poseidon/ssl/test.crt  \
+  %reldir%/poseidon/ssl/test.key  \
+  ${END}
