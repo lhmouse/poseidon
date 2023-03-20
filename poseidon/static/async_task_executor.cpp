@@ -38,7 +38,7 @@ thread_loop()
     task->m_state.store(async_state_running);
 
     try {
-      task->do_abstract_task_on_execution();
+      task->do_abstract_task_on_execute();
     }
     catch(exception& stdex) {
       POSEIDON_LOG_ERROR((
@@ -61,6 +61,7 @@ enqueue(shptrR<Abstract_Async_Task> task)
     // Insert the task.
     plain_mutex::unique_lock lock(this->m_queue_mutex);
     this->m_queue.emplace_back(task);
+    this->m_queue_avail.notify_one();
   }
 
 }  // namespace poseidon
