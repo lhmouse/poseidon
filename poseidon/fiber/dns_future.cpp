@@ -35,10 +35,10 @@ do_abstract_task_on_execute()
           this->m_host, ::gai_strerror(r));
 
     // Copy records into `m_result`. This requires locking `*this` so do it in
-    // `do_on_future_ready)(`.
+    // `do_on_future_ready()`.
     ::rocket::unique_ptr<::addrinfo, void (::addrinfo*)> guard(res, ::freeaddrinfo);
-    this->do_try_set_ready(guard);
     POSEIDON_LOG_DEBUG(("DNS query success: host = $1"), this->m_host);
+    this->do_try_set_ready(guard);
   }
   catch(exception& stdex) {
     // Ensure an exception is always set, even after the first call to
