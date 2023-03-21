@@ -4,7 +4,6 @@
 #include "../precompiled.ipp"
 #include "dns_future.hpp"
 #include "../utils.hpp"
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 namespace poseidon {
