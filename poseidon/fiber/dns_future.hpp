@@ -14,12 +14,15 @@ class DNS_Future
   : public Abstract_Future,
     public Abstract_Async_Task
   {
+  public:
+    using result_type = cow_vector<Socket_Address>;
+
   private:
     // read-only
     string m_host;
 
     // result
-    cow_vector<Socket_Address> m_result;
+    result_type m_result;
     exception_ptr m_except;
 
   public:
@@ -49,7 +52,7 @@ class DNS_Future
       { return this->m_host;  }
 
     // Gets the result.
-    const cow_vector<Socket_Address>&
+    const result_type&
     result() const
       {
         if(!this->ready())
