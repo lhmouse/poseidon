@@ -325,21 +325,21 @@ print_rfc1123_partial(char* str) const noexcept
     ::gmtime_r(&tp, &tm);
 
     // `Sun, 06 Nov 1994 08:49:37 GMT`
-    nstpcpy(wptr, s_weekday[(uint32_t) tm.tm_wday], 3);
-    nstpcpy(wptr, ", ", 2);
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_mday], 2);
-    nstpset(wptr, ' ');
-    nstpcpy(wptr, s_month[(uint32_t) tm.tm_mon], 3);
-    nstpset(wptr, ' ');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_year / 100 + 19], 2);
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_year % 100], 2);
-    nstpset(wptr, ' ');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_hour], 2);
-    nstpset(wptr, ':');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_min], 2);
-    nstpset(wptr, ':');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_sec], 2);
-    nstpcpy(wptr, " GMT");
+    xmemrpcpy(wptr, s_weekday[(uint32_t) tm.tm_wday], 3);
+    xstrrpcpy(wptr, ", ");
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_mday], 2);
+    xstrrpcpy(wptr, " ");
+    xmemrpcpy(wptr, s_month[(uint32_t) tm.tm_mon], 3);
+    xstrrpcpy(wptr, " ");
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_year / 100 + 19], 2);
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_year % 100], 2);
+    xstrrpcpy(wptr, " ");
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_hour], 2);
+    xstrrpcpy(wptr, ":");
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_min], 2);
+    xstrrpcpy(wptr, ":");
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_sec], 2);
+    xstrrpcpy(wptr, " GMT");
 
     // Return the number of characters that have been written.
     return (size_t) (wptr - str);
@@ -355,21 +355,21 @@ print_rfc850_partial(char* str) const noexcept
     ::gmtime_r(&tp, &tm);
 
     // `Sunday, 06-Nov-94 08:49:37 GMT`
-    nstpcpy(wptr, s_weekday[(uint32_t) tm.tm_wday]);
-    nstpset(wptr, ',');
-    nstpset(wptr, ' ');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_mday], 2);
-    nstpset(wptr, '-');
-    nstpcpy(wptr, s_month[(uint32_t) tm.tm_mon], 3);
-    nstpset(wptr, '-');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_year % 100], 2);
-    nstpset(wptr, ' ');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_hour], 2);
-    nstpset(wptr, ':');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_min], 2);
-    nstpset(wptr, ':');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_sec], 2);
-    nstpcpy(wptr, " GMT");
+    xstrrpcpy(wptr, s_weekday[(uint32_t) tm.tm_wday]);
+    xstrrpcpy(wptr, ",");
+    xstrrpcpy(wptr, " ");
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_mday], 2);
+    xstrrpcpy(wptr, "-");
+    xmemrpcpy(wptr, s_month[(uint32_t) tm.tm_mon], 3);
+    xstrrpcpy(wptr, "-");
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_year % 100], 2);
+    xstrrpcpy(wptr, " ");
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_hour], 2);
+    xstrrpcpy(wptr, ":");
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_min], 2);
+    xstrrpcpy(wptr, ":");
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_sec], 2);
+    xstrrpcpy(wptr, " GMT");
 
     // Return the number of characters that have been written.
     return (size_t) (wptr - str);
@@ -385,20 +385,21 @@ print_asctime_partial(char* str) const noexcept
     ::gmtime_r(&tp, &tm);
 
     // `Sun Nov  6 08:49:37 1994`
-    nstpcpy(wptr, s_weekday[(uint32_t) tm.tm_wday], 3);
-    nstpset(wptr, ' ');
-    nstpcpy(wptr, s_month[(uint32_t) tm.tm_mon], 3);
-    nstpset(wptr, ' ');
-    nstpcpy(wptr, s_sp1digit[(uint32_t) tm.tm_mday], 2);
-    nstpset(wptr, ' ');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_hour], 2);
-    nstpset(wptr, ':');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_min], 2);
-    nstpset(wptr, ':');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_sec], 2);
-    nstpset(wptr, ' ');
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_year / 100 + 19], 2);
-    nstpcpy(wptr, s_2digit[(uint32_t) tm.tm_year % 100], 2);
+    xmemrpcpy(wptr, s_weekday[(uint32_t) tm.tm_wday], 3);
+    xstrrpcpy(wptr, " ");
+    xmemrpcpy(wptr, s_month[(uint32_t) tm.tm_mon], 3);
+    xstrrpcpy(wptr, " ");
+    xmemrpcpy(wptr, s_sp1digit[(uint32_t) tm.tm_mday], 2);
+    xstrrpcpy(wptr, " ");
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_hour], 2);
+    xstrrpcpy(wptr, ":");
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_min], 2);
+    xstrrpcpy(wptr, ":");
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_sec], 2);
+    xstrrpcpy(wptr, " ");
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_year / 100 + 19], 2);
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_year % 100], 2);
+    xstrrpcpy(wptr, "");
 
     // Return the number of characters that have been written.
     return (size_t) (wptr - str);

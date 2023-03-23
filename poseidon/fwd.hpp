@@ -16,6 +16,7 @@
 #include <rocket/unique_posix_fd.hpp>
 #include <rocket/unique_posix_file.hpp>
 #include <rocket/unique_posix_dir.hpp>
+#include <rocket/xstring.hpp>
 #include <array>
 #include <vector>
 #include <deque>
@@ -110,9 +111,18 @@ using ::rocket::end;
 using ::rocket::swap;
 using ::rocket::xswap;
 using ::rocket::size;
-using ::rocket::nullopt;
-using ::rocket::nullopt_t;
 using ::rocket::sref;
+using ::rocket::nullopt;
+using ::rocket::xstrlen;
+using ::rocket::xstrchr;
+using ::rocket::xstrrpcpy;
+using ::rocket::xstrcmp;
+using ::rocket::xmemchr;
+using ::rocket::xmemrpset;
+using ::rocket::xmemrpcpy;
+using ::rocket::xmemcmp;
+
+using ::rocket::nullopt_t;
 using ::rocket::optional;
 using ::rocket::variant;
 using phsh_string = ::rocket::prehashed_string;

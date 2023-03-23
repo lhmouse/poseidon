@@ -122,6 +122,7 @@ main()
   {
     HTTP_DateTime dt;
     POSEIDON_TEST_CHECK(dt == http_datetime_min);
+    char temp[64];
 
     for(const auto& r : tests) {
       dt.set_seconds(zero_duration);
@@ -153,13 +154,15 @@ main()
       dt.set_seconds((seconds) r.ts);
       POSEIDON_TEST_CHECK(dt.print_to_string() == r.rfc1123);
 
-      char temp[64];
+      ::memset(temp, '*', sizeof(temp));
       dt.print_rfc1123_partial(temp);
       POSEIDON_TEST_CHECK(::strcmp(temp, r.rfc1123) == 0);
 
+      ::memset(temp, '*', sizeof(temp));
       dt.print_rfc850_partial(temp);
       POSEIDON_TEST_CHECK(::strcmp(temp, r.rfc850) == 0);
 
+      ::memset(temp, '*', sizeof(temp));
       dt.print_asctime_partial(temp);
       POSEIDON_TEST_CHECK(::strcmp(temp, r.asctime) == 0);
     }

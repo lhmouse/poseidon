@@ -68,63 +68,6 @@ ascii_ci_equal(const StringT& text, const OtherT& other)
     return ::rocket::ascii_ci_equal(text.c_str(), text.length(), other.c_str(), other.length());
   }
 
-// Splices two strings.
-ROCKET_ALWAYS_INLINE
-size_t
-nstpcpy_nonconst(char*& dest_out, const char* src) noexcept
-  {
-    char* b = dest_out;
-    dest_out = ::stpcpy(dest_out, src);
-    return (size_t) (dest_out - b);
-  }
-
-ROCKET_ALWAYS_INLINE
-size_t
-nstpcpy(char*& dest_out, const char* src, size_t n) noexcept
-  {
-    ::memcpy(dest_out, src, n);
-    dest_out[n] = 0;
-    dest_out += n;
-    return n;
-  }
-
-ROCKET_ALWAYS_INLINE
-size_t
-nstpcpy(char*& dest_out, const char* src) noexcept
-  {
-    return ROCKET_CONSTANT_P(::strlen(src))
-            ? noadl::nstpcpy(dest_out, src, ::strlen(src))
-            : nstpcpy_nonconst(dest_out, src);
-  }
-
-ROCKET_ALWAYS_INLINE
-size_t
-nstpset(char*& dest_out, int ch, size_t n = 1) noexcept
-  {
-    ::memset(dest_out, ch, n);
-    dest_out[n] = 0;
-    dest_out += n;
-    return n;
-  }
-
-ROCKET_ALWAYS_INLINE
-size_t
-nmempcpy(void*& dest_out, const void* src, size_t n) noexcept
-  {
-    ::memcpy(dest_out, src, n);
-    dest_out = (char*) dest_out + n;
-    return n;
-  }
-
-ROCKET_ALWAYS_INLINE
-size_t
-nmempset(void*& dest_out, int ch, size_t n) noexcept
-  {
-    ::memset(dest_out, ch, n);
-    dest_out = (char*) dest_out + n;
-    return n;
-  }
-
 // Checks whether this list contains the specified token.
 // Tokens are case-insensitive.
 ROCKET_PURE

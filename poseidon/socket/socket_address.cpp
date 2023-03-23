@@ -14,10 +14,10 @@ array<uint8_t, 18>
 do_copy_bytes_be(const ::in6_addr& addr, uint16_t port) noexcept
   {
     array<uint8_t, 18> bytes;
-    void* wptr = bytes.begin();
-    nmempcpy(wptr, &addr, sizeof(addr));
+    uint8_t* wptr = bytes.begin();
+    xmemrpcpy(wptr, (const uint8_t*) &addr, sizeof(addr));
     uint16_t beport = htobe16(port);
-    nmempcpy(wptr, &beport, sizeof(beport));
+    xmemrpcpy(wptr, (const uint8_t*) &beport, sizeof(beport));
     ROCKET_ASSERT(wptr == bytes.end());
     return bytes;
   }
@@ -255,22 +255,22 @@ print_partial(char* str) const noexcept
       // IPv4
       addr += 12;
       if(::inet_ntop(AF_INET, addr, wptr, INET_ADDRSTRLEN) == nullptr)
-        return nstpcpy(wptr, "(invalid IPv4 address)");
+        return (size_t) (::stpcpy(wptr, "(invalid IPv4 address)") - str);
 
       wptr += ::strlen(wptr);
     }
     else {
       // IPv6
-      nstpset(wptr, '[');
+      xstrrpcpy(wptr, "[");
       if(::inet_ntop(AF_INET6, addr, wptr, INET6_ADDRSTRLEN) == nullptr)
-        return nstpcpy(wptr, "(invalid IPv6 address)");
+        return (size_t) (::stpcpy(wptr, "(invalid IPv6 address)") - str);
 
       wptr += ::strlen(wptr);
-      nstpset(wptr, ']');
+      xstrrpcpy(wptr, "]");
     }
-    nstpset(wptr, ':');
+    xstrrpcpy(wptr, ":");
     nump.put_DU(this->m_port);
-    nstpcpy(wptr, nump.data(), nump.size());
+    xmemrpcpy(wptr, nump.data(), nump.size());
 
     // Return the number of characters that have been written in total.
     return (size_t) (wptr - str);
