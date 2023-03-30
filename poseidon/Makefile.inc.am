@@ -85,7 +85,7 @@ lib_libposeidon_la_SOURCES =  \
   ${END}
 
 lib_libposeidon_la_CXXFLAGS = ${AM_CXXFLAGS}
-lib_libposeidon_la_LDFLAGS = -no-undefined -version-info @abi_major@:@abi_minor@
+lib_libposeidon_la_LDFLAGS = -no-undefined -version-number @abi_major@:@abi_minor@
 
 if enable_mysql
 endif
