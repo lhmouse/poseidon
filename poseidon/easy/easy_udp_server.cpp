@@ -38,7 +38,8 @@ struct Final_Fiber final : Abstract_Fiber
 
     explicit
     Final_Fiber(const Shared_cb_args& cb)
-      : m_cb(cb)  { }
+      : m_cb(cb)
+      { }
 
     virtual
     void
@@ -94,7 +95,8 @@ struct Final_UDP_Socket final : UDP_Socket
 
     explicit
     Final_UDP_Socket(const Socket_Address& addr, Shared_cb_args&& cb)
-      : UDP_Socket(addr), m_cb(::std::move(cb))  { }
+      : UDP_Socket(addr), m_cb(::std::move(cb))
+      { }
 
     virtual
     void

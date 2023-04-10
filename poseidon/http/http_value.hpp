@@ -17,16 +17,20 @@ class HTTP_Value
     // Value constructors
     constexpr
     HTTP_Value(nullptr_t = nullptr) noexcept
-      : m_stor()  { }
+      : m_stor()
+      { }
 
     HTTP_Value(stringR str) noexcept
-      : m_stor(str)  { }
+      : m_stor(str)
+      { }
 
     HTTP_Value(double num) noexcept
-      : m_stor(num)  { }
+      : m_stor(num)
+      { }
 
     HTTP_Value(const HTTP_DateTime& tm) noexcept
-      : m_stor(tm)  { }
+      : m_stor(tm)
+      { }
 
     HTTP_Value&
     swap(HTTP_Value& other) noexcept

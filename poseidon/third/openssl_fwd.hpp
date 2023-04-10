@@ -17,17 +17,21 @@ class openssl_ptr
   public:
     constexpr
     openssl_ptr() noexcept
-      : m_ptr(nullptr)  { }
+      : m_ptr(nullptr)
+      { }
 
     constexpr
     openssl_ptr(SSLxT* ptr) noexcept
-      : m_ptr(ptr)  { }
+      : m_ptr(ptr)
+      { }
 
     openssl_ptr(const openssl_ptr& other) noexcept
-      : m_ptr(other.do_up_ref())  { }
+      : m_ptr(other.do_up_ref())
+      { }
 
     openssl_ptr(openssl_ptr&& other) noexcept
-      : m_ptr(other.release())  { }
+      : m_ptr(other.release())
+      { }
 
     openssl_ptr&
     operator=(const openssl_ptr& other) & noexcept

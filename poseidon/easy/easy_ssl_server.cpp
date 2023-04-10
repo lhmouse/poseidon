@@ -48,7 +48,8 @@ struct Final_Fiber final : Abstract_Fiber
 
     explicit
     Final_Fiber(const Shared_cb_args& cb, const volatile SSL_Socket* key)
-      : m_cb(cb), m_key(key)  { }
+      : m_cb(cb), m_key(key)
+      { }
 
     virtual
     void
@@ -126,7 +127,8 @@ struct Final_SSL_Socket final : SSL_Socket
 
     explicit
     Final_SSL_Socket(unique_posix_fd&& fd, const Shared_cb_args& cb)
-      : SSL_Socket(::std::move(fd), network_driver.default_server_ssl_ctx()), m_cb(cb)  { }
+      : SSL_Socket(::std::move(fd), network_driver.default_server_ssl_ctx()), m_cb(cb)
+      { }
 
     void
     do_push_event_common(Connection_Event type, linear_buffer&& data) const
@@ -192,7 +194,8 @@ struct Final_Listen_Socket final : Listen_Socket
 
     explicit
     Final_Listen_Socket(const Socket_Address& addr, Shared_cb_args&& cb)
-      : Listen_Socket(addr), m_cb(::std::move(cb))  { }
+      : Listen_Socket(addr), m_cb(::std::move(cb))
+      { }
 
     virtual
     shptr<Abstract_Socket>

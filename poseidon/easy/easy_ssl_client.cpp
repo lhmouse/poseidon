@@ -39,7 +39,8 @@ struct Final_Fiber final : Abstract_Fiber
 
     explicit
     Final_Fiber(const Shared_cb_args& cb)
-      : m_cb(cb)  { }
+      : m_cb(cb)
+      { }
 
     virtual
     void
@@ -112,7 +113,8 @@ struct Final_SSL_Socket final : SSL_Socket
 
     explicit
     Final_SSL_Socket(Shared_cb_args&& cb)
-      : SSL_Socket(network_driver.default_client_ssl_ctx()), m_cb(::std::move(cb))  { }
+      : SSL_Socket(network_driver.default_client_ssl_ctx()), m_cb(::std::move(cb))
+      { }
 
     void
     do_push_event_common(Connection_Event type, linear_buffer&& data) const

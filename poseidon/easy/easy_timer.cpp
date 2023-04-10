@@ -33,7 +33,8 @@ struct Final_Fiber final : Abstract_Fiber
 
     explicit
     Final_Fiber(const Shared_cb_args& cb)
-      : m_cb(cb) { }
+      : m_cb(cb)
+      { }
 
     virtual
     void
@@ -89,7 +90,8 @@ struct Final_Timer final : Abstract_Timer
 
     explicit
     Final_Timer(Shared_cb_args&& cb)
-      : m_cb(::std::move(cb))  { }
+      : m_cb(::std::move(cb))
+      { }
 
     virtual
     void

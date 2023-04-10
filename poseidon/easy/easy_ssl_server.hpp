@@ -41,7 +41,8 @@ class Easy_SSL_Server
     explicit
     Easy_SSL_Server(CallbackT&& cb)
       : m_cb_obj(new_sh<::std::decay_t<CallbackT>>(::std::forward<CallbackT>(cb))),
-        m_cb_thunk(callback_thunk<::std::decay_t<CallbackT>>)  { }
+        m_cb_thunk(callback_thunk<::std::decay_t<CallbackT>>)
+      { }
 
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_SSL_Server);
