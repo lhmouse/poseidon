@@ -227,7 +227,7 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
     }
 
     // Remove trailing space characters.
-    size_t pos = data.find_last_not_of(" \f\n\r\t\v");
+    size_t pos = data.rfind_not_of(" \f\n\r\t\v");
     data.erase(pos + 1);
     data += "\n\v";
     do_color(data, lconf, "0");  // reset

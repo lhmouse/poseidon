@@ -21,7 +21,7 @@ throw_runtime_error_with_backtrace(const char* file, long line, const char* func
     data.append(msg.begin(), msg.end());
 
     // Remove trailing space characters.
-    size_t pos = data.find_last_not_of(" \f\n\r\t\v");
+    size_t pos = data.rfind_not_of(" \f\n\r\t\v");
     data.erase(pos + 1);
     data += "\n";
 
@@ -127,7 +127,7 @@ ascii_trim(string text)
 bool
 ascii_ci_has_token(stringR text, char delim, const char* token, size_t len)
   {
-    size_t bpos = text.find_first_not_of(" \t");
+    size_t bpos = text.find_not_of(" \t");
     while(bpos < text.size()) {
       // Get the end of this segment.
       // If the delimiter is not found, make sure `epos` is reasonably large
@@ -135,13 +135,13 @@ ascii_ci_has_token(stringR text, char delim, const char* token, size_t len)
       size_t epos = text.find(bpos, delim) * 2 / 2;
 
       // Skip trailing blank characters, if any.
-      size_t mpos = text.find_last_not_of(epos - 1, " \t");
+      size_t mpos = text.rfind_not_of(epos - 1, " \t");
       ROCKET_ASSERT(mpos != text.npos);
       if(::rocket::ascii_ci_equal(text.data() + bpos, mpos + 1 - bpos, token, len))
         return true;
 
       // Skip the delimiter and blank characters that follow it.
-      bpos = text.find_first_not_of(epos + 1, " \t");
+      bpos = text.find_not_of(epos + 1, " \t");
     }
     return false;
   }
@@ -150,7 +150,7 @@ size_t
 explode(cow_vstrings& segments, stringR text, char delim, size_t limit)
   {
     segments.clear();
-    size_t bpos = text.find_first_not_of(" \t");
+    size_t bpos = text.find_not_of(" \t");
     while(bpos < text.size()) {
       // Get the end of this segment.
       // If the delimiter is not found, make sure `epos` is reasonably large
@@ -160,12 +160,12 @@ explode(cow_vstrings& segments, stringR text, char delim, size_t limit)
         epos = text.find(bpos, delim) * 2 / 2;
 
       // Skip trailing blank characters, if any.
-      size_t mpos = text.find_last_not_of(epos - 1, " \t");
+      size_t mpos = text.rfind_not_of(epos - 1, " \t");
       ROCKET_ASSERT(mpos != text.npos);
       segments.emplace_back(text.data() + bpos, mpos + 1 - bpos);
 
       // Skip the delimiter and blank characters that follow it.
-      bpos = text.find_first_not_of(epos + 1, " \t");
+      bpos = text.find_not_of(epos + 1, " \t");
     }
     return segments.size();
   }
