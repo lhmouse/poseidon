@@ -16,7 +16,7 @@ ACLOCAL_AMFLAGS = -I m4
 END =
 
 ## Compiler & linker options
-AM_CPPFLAGS = -pipe -pthread -Wall -Wextra -Iposeidon  \
+AM_CPPFLAGS = -pipe -pthread -Wall -Wextra @host_asm_opt@ -Iposeidon  \
   -D_FILE_OFFSET_BITS=64 -D_POSIX_C_SOURCE=200809 -D_GNU_SOURCE  \
   -f{strict-{aliasing,overflow},merge-all-constants,fast-math}  \
   -fno-{stack-protector,align-{functions,jumps,loops}}  \

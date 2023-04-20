@@ -94,11 +94,16 @@ AM_COND_IF([enable_magic], [
   AC_DEFINE([POSEIDON_ENABLE_MAGIC], [1], [Define to 1 to build the Magic daemon.])
 ])
 
+# Set host-specific options
+AC_CHECK_DECL([__i386__], AS_VAR_SET([host_asm_opt], [-masm=intel -msse2 -mfpmath=sse]))
+AC_CHECK_DECL([__amd64__], AS_VAR_SET([host_asm_opt], [-masm=intel]))
+
 ## Finish
 AC_SUBST([abi_major])
 AC_SUBST([abi_minor])
 AC_SUBST([abi_suffix])
 AC_SUBST([sanitizer_flags])
+AC_SUBST([host_asm_opt])
 
 AC_CONFIG_FILES([Makefile poseidon/version.h])
 AC_OUTPUT
