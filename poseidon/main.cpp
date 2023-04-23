@@ -392,6 +392,7 @@ do_create_threads()
   {
     do_create_resident_thread(async_logger, "logger");
     do_create_resident_thread(timer_driver, "timer");
+    do_create_resident_thread(async_task_executor, "task0");
     do_create_resident_thread(async_task_executor, "task1");
     do_create_resident_thread(async_task_executor, "task2");
     do_create_resident_thread(async_task_executor, "task3");
