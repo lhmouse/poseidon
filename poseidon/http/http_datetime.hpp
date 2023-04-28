@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2023 - 2023, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_HTTP_HTTP_DATETIME_
 #define POSEIDON_HTTP_HTTP_DATETIME_
