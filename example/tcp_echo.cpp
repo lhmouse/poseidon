@@ -16,7 +16,10 @@ event_callback(shptrR<TCP_Socket> socket, Connection_Event event, linear_buffer&
     string str(data.data(), data.size());
     data.clear();
 
-    switch((uint32_t) event) {
+    switch(event) {
+      case connection_event_null:
+        break;
+
       case connection_event_open:
         POSEIDON_LOG_FATAL(("example TCP server accepted connection from `$1`"), addr);
         break;
