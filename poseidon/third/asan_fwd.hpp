@@ -20,7 +20,7 @@ asan_fiber_switch_start(void*& save, const ::ucontext_t* uctx) noexcept
 #ifdef POSEIDON_ENABLE_ADDRESS_SANITIZER
     __sanitizer_start_switch_fiber(&save, uctx->uc_stack.ss_sp, uctx->uc_stack.ss_size);
 #else
-    save = &uctx;
+    save = uctx->uc_stack.ss_sp;
 #endif
   }
 
