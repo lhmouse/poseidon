@@ -113,38 +113,37 @@ print(tinyfmt& fmt) const
     if(auto qstr = this->m_stor.ptr<string>()) {
       // Check whether the string shall be quoted.
       auto pos = ::std::find_if(qstr->begin(), qstr->end(), do_is_ctl_or_sep);
-
-      // If the string is a valid token, write it verbatim.
-      if(pos == qstr->end())
-        return fmt << *qstr;
-
-      // ... no, so quote it.
-      fmt.putc('\"');
-      fmt.putn(qstr->data(), (size_t) (pos - qstr->begin()));
-
-      do {
-        if((*pos == '\\') || (*pos == '\"')) {
-          // Escape it.
-          char seq[2] = { '\\', *pos };
-          fmt.putn(seq, 2);
-          ++ pos;
-        }
-        else if(do_is_ctl_or_ws(*pos)) {
-          // Replace this sequence of control and space characters
-          // with a single space.
-          fmt.putc(' ');
-          pos = ::std::find_if_not(pos + 1, qstr->end(), do_is_ctl_or_ws);
-        }
-        else {
-          // Write this sequence verbatim.
-          auto from = pos;
-          pos = ::std::find_if(pos + 1, qstr->end(), do_is_ctl_or_sep);
-          fmt.putn(&*from, (size_t) (pos - from));
-        }
+      if(pos == qstr->end()) {
+        // If the string is a valid token, write it verbatim.
+        fmt.putn(qstr->data(), qstr->size());
       }
-      while(pos != qstr->end());
-
-      fmt.putc('\"');
+      else {
+        // ... no, so quote it.
+        fmt.putc('\"');
+        fmt.putn(qstr->data(), (size_t) (pos - qstr->begin()));
+        do {
+          if((*pos == '\\') || (*pos == '\"')) {
+            // Escape it.
+            char seq[2] = { '\\', *pos };
+            fmt.putn(seq, 2);
+            ++ pos;
+          }
+          else if(do_is_ctl_or_ws(*pos)) {
+            // Replace this sequence of control and space characters
+            // with a single space.
+            fmt.putc(' ');
+            pos = ::std::find_if_not(pos + 1, qstr->end(), do_is_ctl_or_ws);
+          }
+          else {
+            // Write this sequence verbatim.
+            auto from = pos;
+            pos = ::std::find_if(pos + 1, qstr->end(), do_is_ctl_or_sep);
+            fmt.putn(&*from, (size_t) (pos - from));
+          }
+        }
+        while(pos != qstr->end());
+        fmt.putc('\"');
+      }
       return fmt;
     }
 
