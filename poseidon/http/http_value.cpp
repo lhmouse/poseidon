@@ -23,7 +23,7 @@ constexpr
 bool
 do_is_ctl_or_ws(char ch) noexcept
   {
-    return (ch >= 0x00) && (ch <= 0x20);
+    return ((ch >= 0x00) && (ch <= 0x20)) || (ch == 0x7F);
   }
 
 }  // namespace
