@@ -115,12 +115,15 @@ using ::rocket::sref;
 using ::rocket::nullopt;
 using ::rocket::xstrlen;
 using ::rocket::xstrchr;
-using ::rocket::xstrrpcpy;
 using ::rocket::xstrcmp;
+using ::rocket::xstrpcpy;
+using ::rocket::xstrrpcpy;
 using ::rocket::xmemchr;
-using ::rocket::xmemrpset;
-using ::rocket::xmemrpcpy;
 using ::rocket::xmemcmp;
+using ::rocket::xmempset;
+using ::rocket::xmemrpset;
+using ::rocket::xmempcpy;
+using ::rocket::xmemrpcpy;
 
 using ::rocket::nullopt_t;
 using ::rocket::optional;
