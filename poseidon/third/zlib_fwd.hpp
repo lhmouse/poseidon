@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2023 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_THIRD_ZLIB_FWD_
 #define POSEIDON_THIRD_ZLIB_FWD_
