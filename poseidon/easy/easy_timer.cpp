@@ -23,7 +23,7 @@ struct Event_Queue
 struct Shared_cb_args
   {
     wkptr<void> wobj;
-    callback_thunk_ptr<steady_time> thunk;
+    callback_thunk_ptr<Abstract_Fiber&, shptrR<Abstract_Timer>, steady_time> thunk;
     wkptr<Event_Queue> wqueue;
   };
 
@@ -73,7 +73,7 @@ struct Final_Fiber final : Abstract_Fiber
 
           try {
             // Invoke the user-defined data callback.
-            this->m_cb.thunk(cb_obj.get(), now);
+            this->m_cb.thunk(cb_obj.get(), *this, timer, now);
           }
           catch(exception& stdex) {
             POSEIDON_LOG_ERROR((

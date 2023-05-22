@@ -14,7 +14,7 @@ class Easy_TCP_Server
     struct X_Client_Table;
 
     shptr<void> m_cb_obj;
-    callback_thunk_ptr<shptrR<TCP_Socket>, Connection_Event, linear_buffer&> m_cb_thunk;
+    callback_thunk_ptr<Abstract_Fiber&, shptrR<TCP_Socket>, Connection_Event, linear_buffer&> m_cb_thunk;
 
     shptr<X_Client_Table> m_client_table;
     shptr<Listen_Socket> m_socket;

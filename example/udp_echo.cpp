@@ -10,7 +10,7 @@ using namespace ::poseidon;
 extern Easy_UDP_Server my_server;
 
 void
-data_callback(shptrR<UDP_Socket> socket, Socket_Address&& addr, linear_buffer&& data)
+data_callback(Abstract_Fiber& /*fiber*/, shptrR<UDP_Socket> socket, Socket_Address&& addr, linear_buffer&& data)
   {
     string str(data.data(), data.size());
     data.clear();

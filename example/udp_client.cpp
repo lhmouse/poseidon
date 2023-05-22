@@ -12,7 +12,7 @@ extern Easy_UDP_Client my_client;
 extern Easy_Timer text_timer;
 
 void
-data_callback(shptrR<UDP_Socket> socket, Socket_Address&& addr, linear_buffer&& data)
+data_callback(Abstract_Fiber& /*fiber*/, shptrR<UDP_Socket> socket, Socket_Address&& addr, linear_buffer&& data)
   {
     string str(data.data(), data.size());
     data.clear();
@@ -21,7 +21,7 @@ data_callback(shptrR<UDP_Socket> socket, Socket_Address&& addr, linear_buffer&& 
   }
 
 void
-timer_callback(steady_time now)
+timer_callback(Abstract_Fiber& /*fiber*/, shptrR<Abstract_Timer> /*timer*/, steady_time now)
   {
     Socket_Address addr("127.0.0.1:3801");
     string str = format_string("ticks = $1", now.time_since_epoch());

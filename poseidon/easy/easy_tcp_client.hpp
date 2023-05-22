@@ -14,7 +14,7 @@ class Easy_TCP_Client
     struct X_Event_Queue;
 
     shptr<void> m_cb_obj;
-    callback_thunk_ptr<shptrR<TCP_Socket>, Connection_Event, linear_buffer&> m_cb_thunk;
+    callback_thunk_ptr<Abstract_Fiber&, shptrR<TCP_Socket>, Connection_Event, linear_buffer&> m_cb_thunk;
 
     shptr<X_Event_Queue> m_queue;
     shptr<TCP_Socket> m_socket;
