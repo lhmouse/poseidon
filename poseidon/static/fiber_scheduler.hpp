@@ -23,7 +23,7 @@ class Fiber_Scheduler
     ::timespec m_pq_wait[1] = { 0, 0, };
 
     mutable recursive_mutex m_sched_mutex;
-    wkptr<X_Queued_Fiber> m_sched_self_opt;
+    shptr<X_Queued_Fiber> m_sched_elem;
     void* m_sched_asan_save;  // private data for address sanitizer
     ::ucontext_t m_sched_outer[1];  // yield target
 
@@ -31,6 +31,15 @@ class Fiber_Scheduler
     // Constructs an empty scheduler.
     explicit
     Fiber_Scheduler();
+
+  private:
+    inline
+    void
+    do_fiber_function() noexcept;
+
+    inline
+    void
+    do_yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override);
 
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Fiber_Scheduler);
@@ -57,19 +66,6 @@ class Fiber_Scheduler
     // This function is thread-safe.
     void
     launch(shptrR<Abstract_Fiber> fiber);
-
-    // Gets the current fiber if one is being scheduled.
-    // This function shall be called from the same thread as `thread_loop()`.
-    ROCKET_CONST
-    Abstract_Fiber*
-    self_opt() const noexcept;
-
-    // Suspends the current fiber until a future becomes satisfied. `self_opt()`
-    // must not return a null pointer when this function is called. If
-    // `fail_timeout_override` is non-zero, it overrides `fiber.fail_timeout`
-    // in 'main.conf'. Suspension may not exceed the fail timeout.
-    void
-    check_and_yield(const Abstract_Fiber* self, shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override);
   };
 
 }  // namespace poseidon

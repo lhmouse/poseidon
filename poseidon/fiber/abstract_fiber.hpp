@@ -12,7 +12,10 @@ class Abstract_Fiber
   private:
     friend class Fiber_Scheduler;
 
-    Fiber_Scheduler* m_scheduler = nullptr;
+    using yield_function = void (Fiber_Scheduler*, const Abstract_Fiber*, shptrR<Abstract_Future>, milliseconds);
+    yield_function* m_yield = nullptr;
+    Fiber_Scheduler* m_sched = nullptr;
+
     atomic_relaxed<Async_State> m_state;
 
   protected:
@@ -26,8 +29,8 @@ class Abstract_Fiber
     Fiber_Scheduler&
     do_abstract_fiber_scheduler() const noexcept
       {
-        ROCKET_ASSERT(this->m_scheduler);
-        return *(this->m_scheduler);
+        ROCKET_ASSERT(this->m_sched != nullptr);
+        return *(this->m_sched);
       }
 
     // This callback is invoked by the fiber scheduler and is intended to be
@@ -38,20 +41,19 @@ class Abstract_Fiber
 
     // This callback is invoked before `do_abstract_fiber_on_execution()`, and
     // after it is resumed from a preivous yield operation. `async_state()` can
-    // be used to examine the current operation. Exceptions are ignored during
-    // startup.
+    // be used to examine the current operation.
     // The default implementations merely print a message.
     virtual
     void
-    do_abstract_fiber_on_resumed();
+    do_abstract_fiber_on_resumed() noexcept;
 
     // This callback is invoked after `do_abstract_fiber_on_execution()`, and
     // before it is suspended by a yield operation. `async_state()` can  be
-    // used to examine the current operation. Exceptions are ignored during
-    // termination.
+    // used to examine the current operation.
     // The default implementations merely print a message.
+    virtual
     void
-    do_abstract_fiber_on_suspended();
+    do_abstract_fiber_on_suspended() noexcept;
 
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Abstract_Fiber);

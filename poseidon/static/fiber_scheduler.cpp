@@ -128,6 +128,97 @@ Fiber_Scheduler::
 
 void
 Fiber_Scheduler::
+do_fiber_function() noexcept
+  {
+    asan_fiber_switch_finish(this->m_sched_asan_save);
+    const auto& elem = this->m_sched_elem;
+    ROCKET_ASSERT(elem);
+
+    // Change the fiber state from PENDING to RUNNING.
+    elem->fiber->do_abstract_fiber_on_resumed();
+    ROCKET_ASSERT(elem->fiber->m_state.load() == async_state_pending);
+    elem->fiber->m_state.store(async_state_running);
+    POSEIDON_LOG_TRACE(("Starting fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
+
+    try {
+      elem->fiber->do_abstract_fiber_on_work();
+    }
+    catch(exception& stdex) {
+      POSEIDON_LOG_ERROR((
+          "Unhandled exception thrown from fiber: $1",
+          "[fiber class `$2`]"),
+          stdex, typeid(*(elem->fiber)));
+    }
+
+    // Change the fiber state from RUNNING to FINISHED.
+    ROCKET_ASSERT(elem->fiber->m_state.load() == async_state_running);
+    elem->fiber->m_state.store(async_state_finished);
+    POSEIDON_LOG_TRACE(("Terminating fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
+    elem->fiber->do_abstract_fiber_on_suspended();
+
+    // Return to the scheduler.
+    elem->async_time.store(time_point_cast<milliseconds>(steady_clock::now()));
+    asan_fiber_switch_start(this->m_sched_asan_save, elem->sched_inner->uc_link);
+  }
+
+void
+Fiber_Scheduler::
+do_yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override)
+  {
+    const auto& elem = this->m_sched_elem;
+    ROCKET_ASSERT(elem);
+
+    plain_mutex::unique_lock lock(this->m_conf_mutex);
+    const seconds warn_timeout = this->m_conf_warn_timeout;
+    const seconds fail_timeout = this->m_conf_fail_timeout;
+    lock.unlock();
+
+    // Set re-scheduling parameters.
+    elem->yield_time = time_point_cast<milliseconds>(steady_clock::now());
+    elem->fail_time = elem->yield_time;
+    elem->async_time.store(elem->yield_time);
+
+    if(futr_opt) {
+      // Associate the future. If the future is already in the READY state,
+      // don't block at all.
+      lock.lock(futr_opt->m_init_mutex);
+      if(futr_opt->ready())
+        return;
+
+      shptr<atomic_relaxed<steady_time>> async_time_ptr(elem, &(elem->async_time));
+      milliseconds real_fail_timeout = fail_timeout;
+
+      // Clamp the timeout for safety.
+      if(fail_timeout_override != zero_duration)
+        real_fail_timeout = clamp(fail_timeout_override, (hours) 0, (hours) 1);
+
+      elem->fail_time = elem->yield_time + real_fail_timeout;
+      elem->async_time.store(min(elem->yield_time + warn_timeout, elem->fail_time));
+      futr_opt->m_waiters.emplace_back(async_time_ptr);
+    }
+    lock.unlock();
+
+    // Suspend the current fiber...
+    elem->fiber->do_abstract_fiber_on_suspended();
+    elem->wfutr = futr_opt;
+    ROCKET_ASSERT(elem->fiber->m_state.load() == async_state_running);
+    elem->fiber->m_state.store(async_state_suspended);
+    POSEIDON_LOG_TRACE(("Suspending fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
+
+    asan_fiber_switch_start(this->m_sched_asan_save, this->m_sched_outer);
+    ::swapcontext(elem->sched_inner, this->m_sched_outer);
+    asan_fiber_switch_finish(this->m_sched_asan_save);
+
+    // ... and return here.
+    POSEIDON_LOG_TRACE(("Resumed fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
+    ROCKET_ASSERT(elem->fiber->m_state.load() == async_state_suspended);
+    elem->fiber->m_state.store(async_state_running);
+    elem->wfutr.reset();
+    elem->fiber->do_abstract_fiber_on_resumed();
+  }
+
+void
+Fiber_Scheduler::
 reload(const Config_File& file)
   {
     // Parse new configuration. Default ones are defined here.
@@ -268,7 +359,7 @@ thread_loop()
     ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), fiber_comparator);
 
     recursive_mutex::unique_lock sched_lock(this->m_sched_mutex);
-    elem->fiber->m_scheduler = this;
+    elem->fiber->m_sched = this;
     lock.unlock();
 
     POSEIDON_LOG_TRACE((
@@ -292,85 +383,53 @@ thread_loop()
     if((now < elem->fail_time) && (signal == 0) && futr && !futr->ready())
       return;
 
-    // Execute the fiber now. If no stack has been allocated, allocate one.
     if(!elem->sched_inner->uc_stack.ss_sp) {
       POSEIDON_LOG_TRACE(("Initializing fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
+
+      // Initialize the fiber procedure and its stack.
       ::getcontext(elem->sched_inner);
       elem->sched_inner->uc_stack = do_alloc_stack(stack_vm_size);  // may throw
       elem->sched_inner->uc_link = this->m_sched_outer;
 
-      auto fiber_function = +[](int a0, int a1) noexcept
-        {
-          // Unpack arguments.
-          Fiber_Scheduler* xthis;
-          int args[2] = { a0, a1 };
-          ::memcpy(&xthis, args, sizeof(xthis));
-
-          asan_fiber_switch_finish(xthis->m_sched_asan_save);
-          const auto elec = xthis->m_sched_self_opt.lock();
-          ROCKET_ASSERT(elec);
-
-          try {
-            elec->fiber->do_abstract_fiber_on_resumed();
-          }
-          catch(exception& stdex) {
-            POSEIDON_LOG_ERROR((
-                "Fiber exception: $1",
-                "[fiber class `$2`]"),
-                stdex, typeid(*(elec->fiber)));
-          }
-
-          ROCKET_ASSERT(elec->fiber->m_state.load() == async_state_pending);
-          elec->fiber->m_state.store(async_state_running);
-          POSEIDON_LOG_TRACE(("Starting fiber `$1` (class `$2`)"), elec->fiber, typeid(*(elec->fiber)));
-
-          try {
-            elec->fiber->do_abstract_fiber_on_work();
-          }
-          catch(exception& stdex) {
-            POSEIDON_LOG_ERROR((
-                "Fiber exception: $1",
-                "[fiber class `$2`]"),
-                stdex, typeid(*(elec->fiber)));
-          }
-
-          POSEIDON_LOG_TRACE(("Exited from fiber `$1` (class `$2`)"), elec->fiber, typeid(*(elec->fiber)));
-          ROCKET_ASSERT(elec->fiber->m_state.load() == async_state_running);
-          elec->fiber->m_state.store(async_state_finished);
-
-          try {
-            elec->fiber->do_abstract_fiber_on_suspended();
-          }
-          catch(exception& stdex) {
-            POSEIDON_LOG_ERROR((
-                "Fiber exception: $1",
-                "[fiber class `$2`]"),
-                stdex, typeid(*(elec->fiber)));
-          }
-
-          // Return to `m_sched_outer`.
-          elec->async_time.store(time_point_cast<milliseconds>(steady_clock::now()));
-          asan_fiber_switch_start(xthis->m_sched_asan_save, elec->sched_inner->uc_link);
-        };
-
-      int args[2];
+      int xargs[2];
       Fiber_Scheduler* xthis = this;
-      ::memcpy(args, &xthis, sizeof(xthis));
-      ::makecontext(elem->sched_inner, (void (*)()) fiber_function, 2, args[0], args[1]);
+      ::memcpy(xargs, &xthis, sizeof(xthis));
+
+      ::makecontext(elem->sched_inner,
+          (void (*)()) +[](int xarg0, int xarg1)
+            {
+              Fiber_Scheduler* ythis;
+              int yargs[2] = { xarg0, xarg1 };
+              ::memcpy(&ythis, yargs, sizeof(ythis));
+
+              ythis->do_fiber_function();
+            },
+          2, xargs[0], xargs[1]);
+
+      elem->fiber->m_yield =
+          +[](Fiber_Scheduler* ythis, const Abstract_Fiber* yfiber, shptrR<Abstract_Future> yfutr, milliseconds ytimeout)
+            {
+              if(!ythis->m_sched_elem->fiber)
+                POSEIDON_THROW(("No current fiber"));
+              else if(yfiber != ythis->m_sched_elem->fiber.get())
+                POSEIDON_THROW(("Cannot yield execution outside current fiber"));
+
+              ythis->do_yield(yfutr, ytimeout);
+            };
     }
 
-    // Resume this fiber...
-    this->m_sched_self_opt = elem;
+    // Start or resume this fiber.
+    ROCKET_ASSERT(this->m_sched_elem == nullptr);
+    this->m_sched_elem = elem;
     POSEIDON_LOG_TRACE(("Resuming fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
 
     asan_fiber_switch_start(this->m_sched_asan_save, elem->sched_inner);
     ::swapcontext(this->m_sched_outer, elem->sched_inner);
     asan_fiber_switch_finish(this->m_sched_asan_save);
 
-    // ... and return here.
+    ROCKET_ASSERT(this->m_sched_elem == elem);
+    this->m_sched_elem = nullptr;
     POSEIDON_LOG_TRACE(("Suspended fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
-    elem->fiber->m_scheduler = nullptr;
-    this->m_sched_self_opt.reset();
   }
 
 size_t
@@ -399,78 +458,6 @@ launch(shptrR<Abstract_Fiber> fiber)
     plain_mutex::unique_lock lock(this->m_pq_mutex);
     this->m_pq.emplace_back(::std::move(elem));
     ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), fiber_comparator);
-  }
-
-Abstract_Fiber*
-Fiber_Scheduler::
-self_opt() const noexcept
-  {
-    recursive_mutex::unique_lock sched_lock(this->m_sched_mutex);
-
-    auto elem = this->m_sched_self_opt.lock();
-    if(!elem)
-      return nullptr;
-
-    ROCKET_ASSERT(elem->fiber);
-    return elem->fiber.get();
-  }
-
-void
-Fiber_Scheduler::
-check_and_yield(const Abstract_Fiber* self, shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override)
-  {
-    recursive_mutex::unique_lock sched_lock(this->m_sched_mutex);
-
-    auto elem = this->m_sched_self_opt.lock();
-    if(!elem)
-      POSEIDON_THROW(("Cannot yield execution outside a fiber"));
-    else if(elem->fiber.get() != self)
-      POSEIDON_THROW(("Cannot yield execution outside current fiber"));
-
-    plain_mutex::unique_lock lock(this->m_conf_mutex);
-    const seconds warn_timeout = this->m_conf_warn_timeout;
-    const seconds fail_timeout = this->m_conf_fail_timeout;
-    lock.unlock();
-
-    elem->yield_time = time_point_cast<milliseconds>(steady_clock::now());
-    elem->fail_time = elem->yield_time;
-    elem->async_time.store(elem->yield_time);
-
-    if(futr_opt) {
-      // Associate the future.
-      lock.lock(futr_opt->m_init_mutex);
-      if(futr_opt->ready())
-        return;
-
-      shptr<atomic_relaxed<steady_time>> async_time_ptr(elem, &(elem->async_time));
-      milliseconds real_fail_timeout = fail_timeout;
-
-      if(fail_timeout_override != zero_duration)
-        real_fail_timeout = clamp(fail_timeout_override, (hours) 0, (hours) 1);
-
-      elem->fail_time = elem->yield_time + real_fail_timeout;
-      elem->async_time.store(min(elem->yield_time + warn_timeout, elem->fail_time));
-      futr_opt->m_waiters.emplace_back(async_time_ptr);
-    }
-    lock.unlock();
-
-    // Suspend the current fiber...
-    elem->fiber->do_abstract_fiber_on_suspended();
-    elem->wfutr = futr_opt;
-    ROCKET_ASSERT(elem->fiber->m_state.load() == async_state_running);
-    elem->fiber->m_state.store(async_state_suspended);
-    POSEIDON_LOG_TRACE(("Suspending fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
-
-    asan_fiber_switch_start(this->m_sched_asan_save, this->m_sched_outer);
-    ::swapcontext(elem->sched_inner, this->m_sched_outer);
-    asan_fiber_switch_finish(this->m_sched_asan_save);
-
-    // ... and return here.
-    POSEIDON_LOG_TRACE(("Resumed fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
-    ROCKET_ASSERT(elem->fiber->m_state.load() == async_state_suspended);
-    elem->fiber->m_state.store(async_state_running);
-    elem->wfutr.reset();
-    elem->fiber->do_abstract_fiber_on_resumed();
   }
 
 }  // namespace poseidon
