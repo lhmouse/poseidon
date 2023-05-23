@@ -16,6 +16,7 @@ namespace poseidon {
 namespace {
 
 plain_mutex s_stack_pool_mutex;
+const uint32_t s_page_size = (uint32_t) ::sysconf(_SC_PAGESIZE);
 ::stack_t s_stack_pool;
 
 void
@@ -24,7 +25,7 @@ do_free_stack(::stack_t ss) noexcept
     if(!ss.ss_sp)
       return;
 
-    if(::munmap((char*) ss.ss_sp - 0x1000, ss.ss_size + 0x2000) != 0)
+    if(::munmap((char*) ss.ss_sp - s_page_size, ss.ss_size + s_page_size * 2) != 0)
       POSEIDON_LOG_FATAL((
           "Failed to unmap fiber stack memory `$2` of size `$3`",
           "[`munmap()` failed: $1]"),
@@ -34,7 +35,7 @@ do_free_stack(::stack_t ss) noexcept
 ::stack_t
 do_alloc_stack(size_t stack_vm_size)
   {
-    if(stack_vm_size > 0x7FFF0000)
+    if(stack_vm_size > 0x7F000000)
       POSEIDON_THROW(("Invalid stack size: $1"), stack_vm_size);
 
     for(;;) {
@@ -58,7 +59,7 @@ do_alloc_stack(size_t stack_vm_size)
     // Allocate a new stack.
     ::stack_t ss;
     ss.ss_size = stack_vm_size;
-    ss.ss_sp = ::mmap(nullptr, ss.ss_size + 0x2000, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    ss.ss_sp = ::mmap(nullptr, ss.ss_size + s_page_size * 2, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if(ss.ss_sp == (void*) -1)
       POSEIDON_THROW((
           "Could not allocate fiber stack memory of size `$2`",
@@ -66,7 +67,7 @@ do_alloc_stack(size_t stack_vm_size)
           format_errno(), ss.ss_size);
 
     // Adjust the pointer to writable memory, and make it so.
-    ss.ss_sp = (char*) ss.ss_sp + 0x1000;
+    ss.ss_sp = (char*) ss.ss_sp + s_page_size;
     ::mprotect(ss.ss_sp, ss.ss_size, PROT_READ | PROT_WRITE);
     return ss;
   }
