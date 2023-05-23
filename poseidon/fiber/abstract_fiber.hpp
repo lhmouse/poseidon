@@ -12,8 +12,7 @@ class Abstract_Fiber
   private:
     friend class Fiber_Scheduler;
 
-    using yield_function = void (Fiber_Scheduler*, const Abstract_Fiber*, shptrR<Abstract_Future>, milliseconds);
-    yield_function* m_yield = nullptr;
+    callback_thunk_ptr<const Abstract_Fiber*, shptrR<Abstract_Future>, milliseconds> m_yield = nullptr;
     Fiber_Scheduler* m_sched = nullptr;
 
     atomic_relaxed<Async_State> m_state;

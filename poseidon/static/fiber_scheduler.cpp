@@ -407,11 +407,10 @@ thread_loop()
           2, xargs[0], xargs[1]);
 
       elem->fiber->m_yield =
-          +[](Fiber_Scheduler* ythis, const Abstract_Fiber* yfiber, shptrR<Abstract_Future> yfutr, milliseconds ytimeout)
+          +[](void* ptr, const Abstract_Fiber* yfiber, shptrR<Abstract_Future> yfutr, milliseconds ytimeout)
             {
-              if(!ythis->m_sched_elem->fiber)
-                POSEIDON_THROW(("No current fiber"));
-              else if(yfiber != ythis->m_sched_elem->fiber.get())
+              Fiber_Scheduler* ythis = static_cast<Fiber_Scheduler*>(ptr);
+              if(yfiber != ythis->m_sched_elem->fiber.get())
                 POSEIDON_THROW(("Cannot yield execution outside current fiber"));
 
               ythis->do_yield(yfutr, ytimeout);
