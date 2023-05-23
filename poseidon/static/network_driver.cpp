@@ -58,6 +58,57 @@ Network_Driver::
   {
   }
 
+int
+Network_Driver::
+do_alpn_callback(::SSL* ssl, const uint8_t** outp, uint8_t* outn, const uint8_t* inp, unsigned inn, void* arg) noexcept
+  {
+    // Verify the socket.
+    // These errors shouldn't happen unless we have really messed things up
+    // e.g. when `arg` is a dangling pointer.
+    auto socket = dynamic_cast<SSL_Socket*>(static_cast<Abstract_Socket*>(arg));
+    if(!socket)
+      return SSL_TLSEXT_ERR_ALERT_FATAL;
+
+    if(socket->ssl() != ssl)
+      return SSL_TLSEXT_ERR_ALERT_FATAL;
+
+    try {
+      cow_vector<charbuf_256> alpn_req;
+      auto bp = inp;
+      const auto ep = inp + inn;
+
+      while(bp != ep) {
+        size_t len = *bp;
+        ++ bp;
+        if((size_t) (ep - bp) < len)
+          return SSL_TLSEXT_ERR_ALERT_FATAL;  // malformed
+
+        char* str = alpn_req.emplace_back();
+        ::memcpy(str, bp, len);
+        str[len] = 0;
+        bp += len;
+        POSEIDON_LOG_TRACE(("Received ALPN protocol: $1"), str);
+      }
+
+      charbuf_256 alpn_resp = socket->do_on_ssl_alpn_request(::std::move(alpn_req));
+      socket->m_alpn_proto.assign(alpn_resp);
+    }
+    catch(exception& stdex) {
+      POSEIDON_LOG_ERROR((
+          "Unhandled exception thrown from socket ALPN callback: $1",
+          "[socket class `$2`]"),
+          stdex, typeid(*socket));
+    }
+
+    if(socket->m_alpn_proto.empty())  // no protocol
+      return SSL_TLSEXT_ERR_NOACK;
+
+    POSEIDON_LOG_TRACE(("Responding ALPN protocol: $1"), socket->m_alpn_proto);
+    *outp = (const uint8_t*) socket->m_alpn_proto.data();
+    *outn = (uint8_t) socket->m_alpn_proto.size();
+    return SSL_TLSEXT_ERR_OK;
+  }
+
 SSL_CTX_ptr
 Network_Driver::
 default_server_ssl_ctx() const
@@ -287,7 +338,7 @@ thread_loop()
 
     // Get the socket.
     lock.lock(this->m_epoll_mutex);
-    auto socket_it = this->m_epoll_sockets.find((Abstract_Socket*) event.data.ptr);
+    auto socket_it = this->m_epoll_sockets.find(static_cast<Abstract_Socket*>(event.data.ptr));
     if(socket_it == this->m_epoll_sockets.end())
       return;
 
@@ -344,59 +395,8 @@ thread_loop()
       return;
     }
 
-    if(server_ssl_ctx) {
-      // Set the ALPN callback.
-      auto alpn_callback = +[](::SSL* ssl, const uint8_t** outp, uint8_t* outn, const uint8_t* inp, unsigned inn, void* arg) noexcept
-        {
-          // Verify the socket.
-          // These errors shouldn't happen unless we have really messed things up
-          // e.g. when `arg` is a dangling pointer.
-          auto rsock = dynamic_cast<SSL_Socket*>(static_cast<decltype(socket.get())>(arg));
-          if(!rsock)
-            return SSL_TLSEXT_ERR_ALERT_FATAL;
-
-          if(rsock->ssl() != ssl)
-            return SSL_TLSEXT_ERR_ALERT_FATAL;
-
-          try {
-            cow_vector<charbuf_256> alpn_req;
-            auto bp = inp;
-            const auto ep = inp + inn;
-
-            while(bp != ep) {
-              size_t len = *bp;
-              ++ bp;
-              if((size_t) (ep - bp) < len)
-                return SSL_TLSEXT_ERR_ALERT_FATAL;  // malformed
-
-              char* str = alpn_req.emplace_back();
-              ::memcpy(str, bp, len);
-              str[len] = 0;
-              bp += len;
-              POSEIDON_LOG_TRACE(("Received ALPN protocol: $1"), str);
-            }
-
-            charbuf_256 alpn_resp = rsock->do_on_ssl_alpn_request(::std::move(alpn_req));
-            rsock->m_alpn_proto.assign(alpn_resp);
-          }
-          catch(exception& stdex) {
-            POSEIDON_LOG_ERROR((
-                "Unhandled exception thrown from socket ALPN callback: $1",
-                "[socket class `$2`]"),
-                stdex, typeid(*rsock));
-          }
-
-          if(rsock->m_alpn_proto.empty())  // no protocol
-            return SSL_TLSEXT_ERR_NOACK;
-
-          POSEIDON_LOG_TRACE(("Responding ALPN protocol: $1"), rsock->m_alpn_proto);
-          *outp = (const uint8_t*) rsock->m_alpn_proto.data();
-          *outn = (uint8_t) rsock->m_alpn_proto.size();
-          return SSL_TLSEXT_ERR_OK;
-        };
-
-      ::SSL_CTX_set_alpn_select_cb(server_ssl_ctx, alpn_callback, socket.get());
-    }
+    if(server_ssl_ctx)
+      ::SSL_CTX_set_alpn_select_cb(server_ssl_ctx, do_alpn_callback, static_cast<Abstract_Socket*>(socket.get()));
 
     if(event.events & EPOLLPRI) {
       try {

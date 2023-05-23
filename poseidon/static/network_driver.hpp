@@ -30,6 +30,11 @@ class Network_Driver
     explicit
     Network_Driver();
 
+  private:
+    static inline
+    int
+    do_alpn_callback(::SSL* ssl, const uint8_t** outp, uint8_t* outn, const uint8_t* inp, unsigned inn, void* arg) noexcept;
+
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Network_Driver);
 
