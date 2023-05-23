@@ -21,9 +21,9 @@ class Easy_SSL_Server
 
   public:
     // Constructs a server. The argument shall be an invocable object taking
-    // `(shptrR<SSL_Socket> socket, Connection_Event event,
-    // linear_buffer& data)`, where `socket` is a pointer to a client socket
-    // object, and if `event` is
+    // `(Abstract_Fiber& fiber, shptrR<SSL_Socket> socket, Connection_Event
+    // event, linear_buffer& data)`, where `socket` is a pointer to a client
+    // socket object, and if `event` is
     //  1) `connection_event_open`, then `data` is empty, or
     //  2) `connection_event_stream`, then `data` contains all data that have
     //     been received and have not been removed so far (this callback shall

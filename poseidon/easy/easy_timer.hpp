@@ -20,9 +20,10 @@ class Easy_Timer
 
   public:
     // Constructs a timer. The argument shall be an invocable object taking
-    // `(steady_time now)`. This timer stores a copy of the callback,
-    // which is invoked accordingly in the main thread. The callback object is
-    // never copied, and is allowed to modify itself.
+    // `(Abstract_Fiber& fiber, shptrR<Abstract_Timer> timer, steady_time now)`.
+    // This timer stores a copy of the callback, which is invoked accordingly in
+    // the main thread. The callback object is never copied, and is allowed to
+    // modify itself.
     template<typename CallbackT,
     ROCKET_DISABLE_IF(::std::is_same<::std::decay_t<CallbackT>, Easy_Timer>::value)>
     explicit

@@ -21,7 +21,7 @@ class Easy_UDP_Client
 
   public:
     // Constructs a client. The argument shall be an invocable object taking
-    // `(shptrR<UDP_Socket> socket, Socket_Address&& addr,
+    // `(Abstract_Fiber& fiber, shptrR<UDP_Socket> socket, Socket_Address&& addr,
     // linear_buffer&& data)`, where `socket` is a pointer to the client socket,
     // and `addr` and `data` are the source address and payload of the current
     // UDP packet, respectively. This client object stores a copy of the
