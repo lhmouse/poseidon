@@ -67,10 +67,10 @@ using days = ::std::chrono::duration<int64_t, ::std::ratio<86400>>;
 using weeks = ::std::chrono::duration<int64_t, ::std::ratio<604800>>;
 using ::std::chrono::time_point;
 using ::std::chrono::system_clock;
-using system_time = time_point<system_clock, milliseconds>;
+using system_time = system_clock::time_point;
 using unix_time = time_point<system_clock, seconds>;
 using ::std::chrono::steady_clock;
-using steady_time = time_point<steady_clock, milliseconds>;
+using steady_time = steady_clock::time_point;
 
 constexpr weeks zero_duration = { };
 using ::std::static_pointer_cast;

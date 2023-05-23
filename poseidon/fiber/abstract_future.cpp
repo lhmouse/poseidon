@@ -25,7 +25,7 @@ do_notify_ready() noexcept
 
     vector<wkptr<atomic_relaxed<steady_time>>> waiters;
     waiters.swap(this->m_waiters);
-    const auto now = time_point_cast<milliseconds>(steady_clock::now());
+    const auto now = steady_clock::now();
 
     for(const auto& wp : waiters)
       if(auto p = wp.lock())

@@ -149,7 +149,7 @@ do_fiber_function() noexcept
     elem->fiber->do_abstract_fiber_on_suspended();
 
     // Return to the scheduler.
-    elem->async_time.store(time_point_cast<milliseconds>(steady_clock::now()));
+    elem->async_time.store(steady_clock::now());
     asan_fiber_switch_start(this->m_sched_asan_save, elem->sched_inner->uc_link);
   }
 
@@ -166,7 +166,7 @@ do_yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override)
     lock.unlock();
 
     // Set re-scheduling parameters.
-    elem->yield_time = time_point_cast<milliseconds>(steady_clock::now());
+    elem->yield_time = steady_clock::now();
     elem->fail_time = elem->yield_time;
     elem->async_time.store(elem->yield_time);
 
@@ -302,7 +302,7 @@ thread_loop()
 
     lock.lock(this->m_pq_mutex);
     const int signal = exit_signal.load();
-    const auto now = time_point_cast<milliseconds>(steady_clock::now());
+    const auto now = steady_clock::now();
 
     if(signal == 0) {
       if(!this->m_pq.empty() && (now < this->m_pq.front()->check_time)) {
@@ -441,7 +441,7 @@ launch(shptrR<Abstract_Fiber> fiber)
     // Create the management node.
     auto elem = new_sh<X_Queued_Fiber>();
     elem->fiber = fiber;
-    elem->yield_time = time_point_cast<milliseconds>(steady_clock::now());
+    elem->yield_time = steady_clock::now();
     elem->check_time = elem->yield_time;
     elem->async_time.store(elem->yield_time);
 

@@ -59,7 +59,7 @@ thread_loop()
     while(this->m_pq.empty())
       this->m_pq_avail.wait(lock);
 
-    const auto now = time_point_cast<milliseconds>(steady_clock::now());
+    const auto now = steady_clock::now();
     if(now < this->m_pq.front().next) {
       this->m_pq_avail.wait_for(lock, this->m_pq.front().next - now);
       return;
@@ -122,7 +122,7 @@ insert(shptrR<Abstract_Timer> timer, milliseconds delay, milliseconds period)
     // Calculate the end time point.
     X_Queued_Timer elem;
     elem.wtimer = timer;
-    elem.next = time_point_cast<milliseconds>(steady_clock::now()) + delay;
+    elem.next = steady_clock::now() + delay;
     elem.period = period;
 
     // Insert the timer.
