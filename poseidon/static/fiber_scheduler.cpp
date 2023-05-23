@@ -40,10 +40,10 @@ do_alloc_stack(size_t stack_vm_size)
     for(;;) {
       // Try popping a cached one.
       plain_mutex::unique_lock lock(s_stack_pool_mutex);
-      ::stack_t ss = s_stack_pool;
-      if(!ss.ss_sp)
+      if(!s_stack_pool.ss_sp)
         break;
 
+      ::stack_t ss = s_stack_pool;
       ::memcpy(&s_stack_pool, ss.ss_sp, sizeof(ss));
       lock.unlock();
 
