@@ -25,41 +25,41 @@ do_alloc_stack(size_t stack_vm_size)
     if(stack_vm_size > 0x7F000000)
       POSEIDON_THROW(("Invalid stack size: $1"), stack_vm_size);
 
-    for(;;) {
-      // Try popping a cached one.
-      plain_mutex::unique_lock lock(s_stack_pool_mutex);
-      if(!s_stack_pool.ss_sp)
-        break;
+    const plain_mutex::unique_lock lock(s_stack_pool_mutex);
 
+    while(s_stack_pool.ss_sp && (s_stack_pool.ss_size != stack_vm_size)) {
+      // This cached stack is not large enough. Deallocate it.
       ::stack_t ss = s_stack_pool;
-      ::memcpy(&s_stack_pool, ss.ss_sp, sizeof(ss));
-      lock.unlock();
+      s_stack_pool = *(const ::stack_t*) ss.ss_sp;
 
-      // If it is large enough, return it.
-      if(ss.ss_size >= stack_vm_size)
-        return ss;
-
-      // Otherwise, deallocate it and try the next one.
       if(::munmap((char*) ss.ss_sp - s_page_size, ss.ss_size + s_page_size * 2) != 0)
         POSEIDON_LOG_FATAL((
-            "Failed to unmap fiber stack memory `$2` of size `$3`",
+            "Failed to unmap fiber stack memory: ss_sp = `$2`, ss_size = `$3`",
             "[`munmap()` failed: $1]"),
             format_errno(), ss.ss_sp, ss.ss_size);
     }
 
-    // Allocate a new stack.
-    ::stack_t ss;
-    ss.ss_size = stack_vm_size;
-    ss.ss_sp = ::mmap(nullptr, ss.ss_size + s_page_size * 2, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    if(ss.ss_sp == MAP_FAILED)
-      POSEIDON_THROW((
-          "Could not allocate fiber stack memory of size `$2`",
-          "[`mmap()` failed: $1]"),
-          format_errno(), ss.ss_size);
+    if(!s_stack_pool.ss_sp) {
+      // The pool has been exhausted. Allocate a new stack.
+      void* addr = ::mmap(nullptr, stack_vm_size + s_page_size * 2, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+      if(addr == MAP_FAILED)
+        POSEIDON_THROW((
+            "Could not allocate fiber stack memory: size = `$2`",
+            "[`mmap()` failed: $1]"),
+            format_errno(), stack_vm_size);
 
-    // Adjust the pointer to writable memory, and make it so.
-    ss.ss_sp = (char*) ss.ss_sp + s_page_size;
-    ::mprotect(ss.ss_sp, ss.ss_size, PROT_READ | PROT_WRITE);
+      s_stack_pool.ss_sp = (char*) addr + s_page_size;
+      s_stack_pool.ss_size = stack_vm_size;
+      ::mprotect(s_stack_pool.ss_sp, s_stack_pool.ss_size, PROT_READ | PROT_WRITE);
+    }
+
+    // Pop the first stack from the pool.
+    ROCKET_ASSERT(s_stack_pool.ss_sp && (s_stack_pool.ss_size >= stack_vm_size));
+    ::stack_t ss = s_stack_pool;
+    s_stack_pool = *(const ::stack_t*) ss.ss_sp;
+#ifdef ROCKET_DEBUG
+    ::memset(ss.ss_sp, 0xE9, ss.ss_size);
+#endif
     return ss;
   }
 
@@ -69,9 +69,13 @@ do_free_stack(::stack_t ss) noexcept
     if(!ss.ss_sp)
       return;
 
-    // Prepend the stack to the list.
-    plain_mutex::unique_lock lock(s_stack_pool_mutex);
-    ::memcpy(ss.ss_sp, &s_stack_pool, sizeof(ss));
+    const plain_mutex::unique_lock lock(s_stack_pool_mutex);
+
+    // Prepend the stack to the pool.
+#ifdef ROCKET_DEBUG
+    ::memset(ss.ss_sp, 0xCD, ss.ss_size);
+#endif
+    *(::stack_t*) ss.ss_sp = s_stack_pool;
     s_stack_pool = ss;
   }
 
