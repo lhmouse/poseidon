@@ -23,12 +23,12 @@ class Abstract_Fiber
     Abstract_Fiber() noexcept;
 
   protected:
-    // Gets the scheduler instance inside the callbacks hereafter.
+    // Gets the scheduler instance inside one of the fiber callbacks.
     // If this function is called elsewhere, the behavior is undefined.
     Fiber_Scheduler&
     do_abstract_fiber_scheduler() const noexcept
       {
-        ROCKET_ASSERT(this->m_sched != nullptr);
+        ROCKET_ASSERT_MSG(this->m_sched, "this function shall only be called inside a fiber");
         return *(this->m_sched);
       }
 
@@ -37,6 +37,11 @@ class Abstract_Fiber
     virtual
     void
     do_abstract_fiber_on_work() = 0;
+
+    // Yields execution to another fiber. If `futr_opt` is non-null, the
+    // current fiber is suspended until `*futr_opt` becomes ready.
+    void
+    do_yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override = zero_duration) const;
 
     // This callback is invoked before `do_abstract_fiber_on_execution()`, and
     // after it is resumed from a preivous yield operation. `async_state()` can
@@ -61,11 +66,6 @@ class Abstract_Fiber
     Async_State
     async_state() const noexcept
       { return this->m_state.load();  }
-
-    // Calls `m_scheduler->check_and_yield(futr_opt, fail_timeout_override)`.
-    // This function can only be called from `do_abstract_fiber_on_execution()`.
-    void
-    yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override = zero_duration) const;
   };
 
 }  // namespace poseidon

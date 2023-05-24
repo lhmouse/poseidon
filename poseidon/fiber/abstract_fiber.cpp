@@ -32,7 +32,7 @@ do_abstract_fiber_on_suspended() noexcept
 
 void
 Abstract_Fiber::
-yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override) const
+do_yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override) const
   {
     if(!this->m_yield)
       POSEIDON_THROW(("Fiber not yieldable unless assigned to a scheduler"));
