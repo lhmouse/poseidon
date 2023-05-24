@@ -59,14 +59,14 @@ thread_loop()
     while(this->m_pq.empty())
       this->m_pq_avail.wait(lock);
 
-    const auto now = steady_clock::now();
+    const steady_time now = steady_clock::now();
     if(now < this->m_pq.front().next) {
       this->m_pq_avail.wait_for(lock, this->m_pq.front().next - now);
       return;
     }
 
     ::std::pop_heap(this->m_pq.begin(), this->m_pq.end(), timer_comparator);
-    auto next = this->m_pq.back().next;
+    steady_time next = this->m_pq.back().next;
     auto timer = this->m_pq.back().wtimer.lock();
     Async_State next_state;
     if(!timer || (this->m_pq.back().serial != timer->m_serial)) {

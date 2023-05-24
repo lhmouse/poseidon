@@ -46,8 +46,8 @@ do_abstract_task_on_execute()
 
     result_type res;
     res.file_size = st.st_size;
-    res.accessed_on = system_time_from_timespec(st.st_atim);
-    res.modified_on = system_time_from_timespec(st.st_mtim);
+    res.accessed_on = (system_time)(seconds) st.st_atim.tv_sec + (nanoseconds) st.st_atim.tv_nsec;
+    res.modified_on = (system_time)(seconds) st.st_mtim.tv_sec + (nanoseconds) st.st_mtim.tv_nsec;
     res.offset = 0;
 
     if(this->m_offset != 0) {

@@ -306,7 +306,7 @@ thread_loop()
 
     lock.lock(this->m_pq_mutex);
     const int signal = exit_signal.load();
-    const auto now = steady_clock::now();
+    const steady_time now = steady_clock::now();
 
     if(signal == 0) {
       if(!this->m_pq.empty() && (now < this->m_pq.front()->check_time)) {
