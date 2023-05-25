@@ -85,7 +85,9 @@ struct Queued_Fiber
     atomic_relaxed<steady_time> async_time;  // volatile
 
     wkptr<Abstract_Future> wfutr;
-    steady_time yield_time, check_time, fail_time;
+    steady_time yield_time;
+    steady_time check_time;
+    steady_time fail_time;
     ::ucontext_t sched_inner[1];
   };
 
@@ -309,29 +311,30 @@ thread_loop()
     const steady_time now = steady_clock::now();
 
     if(signal == 0) {
-      if(!this->m_pq.empty() && (now < this->m_pq.front()->check_time)) {
-        // Rebuild the heap when there is nothing to do. `async_time` can be
-        // modified by other threads arbitrarily, so has to be copied to
-        // somewhere safe first.
-        for(const auto& elem : this->m_pq)
-          elem->check_time = elem->async_time.load();
+      int64_t timeout_ns = INT_MAX;
+      if(!this->m_pq.empty()) {
+        timeout_ns = duration_cast<nanoseconds>(this->m_pq.front()->check_time - now).count();
+        if(timeout_ns > 0) {
+          // Rebuild the heap when there is nothing to do. `async_time` can be
+          // modified by other threads arbitrarily, so has to be copied to
+          // somewhere safe first.
+          for(const auto& elem : this->m_pq)
+            elem->check_time = elem->async_time.load();
 
-        ::std::make_heap(this->m_pq.begin(), this->m_pq.end(), fiber_comparator);
-        POSEIDON_LOG_TRACE(("Rebuilt heap for fiber scheduler: size = $1"), this->m_pq.size());
+          ::std::make_heap(this->m_pq.begin(), this->m_pq.end(), fiber_comparator);
+          POSEIDON_LOG_TRACE(("Rebuilt heap for fiber scheduler: size = $1"), this->m_pq.size());
+          timeout_ns = duration_cast<nanoseconds>(this->m_pq.front()->check_time - now).count();
+        }
       }
 
-      // Calculate the number of nanoseconds to sleep.
-      this->m_pq_wait->tv_nsec = min(
-             this->m_pq_wait->tv_nsec * 2 + 1,  // binary exponential backoff
-             200'000000L,  // maximum value
-             this->m_pq.empty() ? LONG_MAX
-                : clamp((this->m_pq.front()->check_time - now).count(), 0, 10000) * 1000000L);
-
-      if(this->m_pq_wait->tv_nsec != 0) {
+      // Calculate the duration to wait, using binary exponential backoff.
+      timeout_ns = min(this->m_pq_wait.tv_nsec * 2 + 1, timeout_ns);
+      this->m_pq_wait.tv_nsec = clamp_cast<long>(timeout_ns, 0, 200'000000);
+      if(this->m_pq_wait.tv_nsec != 0) {
         lock.unlock();
 
-        ROCKET_ASSERT(this->m_pq_wait->tv_sec == 0);
-        ::nanosleep(this->m_pq_wait, nullptr);
+        ROCKET_ASSERT(this->m_pq_wait.tv_sec == 0);
+        ::nanosleep(&(this->m_pq_wait), nullptr);
         return;
       }
     }
