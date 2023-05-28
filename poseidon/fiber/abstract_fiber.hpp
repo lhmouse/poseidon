@@ -38,11 +38,6 @@ class Abstract_Fiber
     void
     do_abstract_fiber_on_work() = 0;
 
-    // Yields execution to another fiber. If `futr_opt` is non-null, the
-    // current fiber is suspended until `*futr_opt` becomes ready.
-    void
-    do_yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override = zero_duration) const;
-
     // This callback is invoked before `do_abstract_fiber_on_execution()`, and
     // after it is resumed from a preivous yield operation. `async_state()` can
     // be used to examine the current operation.
@@ -66,6 +61,13 @@ class Abstract_Fiber
     Async_State
     async_state() const noexcept
       { return this->m_state.load();  }
+
+    // Yields execution to another fiber. If `futr_opt` is not null, the
+    // current fiber is suspended until `*futr_opt` becomes ready. If
+    // `fail_timeout_override` is not zero, it specifies the maximum timeout
+    // that the current fiber can be suspended.
+    void
+    yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override = zero_duration) const;
   };
 
 }  // namespace poseidon
