@@ -327,8 +327,8 @@ thread_loop()
         }
       }
 
-      // Calculate the duration to wait, using binary exponential backoff.
-      timeout_ns = min(this->m_pq_wait.tv_nsec * 2 + 1, timeout_ns);
+      // Calculate the duration to wait, using an exponential backoff algorithm.
+      timeout_ns = min(this->m_pq_wait.tv_nsec * 9 + 7, timeout_ns);
       this->m_pq_wait.tv_nsec = clamp_cast<long>(timeout_ns, 0, 200'000000);
       if(this->m_pq_wait.tv_nsec != 0) {
         lock.unlock();
