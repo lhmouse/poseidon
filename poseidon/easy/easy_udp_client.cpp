@@ -20,7 +20,8 @@ struct Packet_Queue
         linear_buffer data;
       };
 
-    alignas(64) mutable plain_mutex mutex;
+    char avoid_false_sharing_with_network_thread[64];
+    mutable plain_mutex mutex;
     deque<Packet> packets;
     bool fiber_active = false;
   };

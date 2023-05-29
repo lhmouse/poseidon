@@ -14,7 +14,8 @@ struct Event_Queue
   {
     wkptr<SSL_Socket> wsocket;  // read-only; no locking needed
 
-    alignas(64) linear_buffer data_stream;  // by fibers only; no locking needed
+    char avoid_false_sharing_with_fiber_thread[64];
+    linear_buffer data_stream;  // by fibers only; no locking needed
 
     struct Event
       {
@@ -22,7 +23,8 @@ struct Event_Queue
         linear_buffer data;
       };
 
-    alignas(64) mutable plain_mutex mutex;
+    char avoid_false_sharing_with_network_thread[64];
+    mutable plain_mutex mutex;
     deque<Event> events;
     bool fiber_active = false;
   };

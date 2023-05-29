@@ -20,7 +20,8 @@ struct Event_Queue
         steady_time time;
       };
 
-    alignas(64) mutable plain_mutex mutex;
+    char avoid_false_sharing_with_timer_thread[64];
+    mutable plain_mutex mutex;
     deque<Event> events;
     bool fiber_active = false;
   };
