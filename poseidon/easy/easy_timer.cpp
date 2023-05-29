@@ -67,9 +67,7 @@ struct Final_Fiber final : Abstract_Fiber
           ROCKET_ASSERT(queue->fiber_active);
           auto now = ::std::move(queue->events.front());
           queue->events.pop_front();
-
           lock.unlock();
-          queue = nullptr;
 
           try {
             // Invoke the user-defined data callback.
