@@ -12,9 +12,9 @@ namespace {
 
 struct Event_Queue
   {
-    mutable plain_mutex mutex;
     wkptr<TCP_Socket> wsocket;  // read-only; no locking needed
-    linear_buffer fiber_private_buffer;  // by fibers only; no locking needed
+
+    alignas(64) linear_buffer data_stream;  // by fibers only; no locking needed
 
     struct Event
       {
@@ -22,6 +22,7 @@ struct Event_Queue
         linear_buffer data;
       };
 
+    alignas(64) mutable plain_mutex mutex;
     deque<Event> events;
     bool fiber_active = false;
   };
@@ -46,11 +47,11 @@ struct Final_Fiber final : Abstract_Fiber
     void
     do_abstract_fiber_on_work()
       {
-        for(;;) {
-          auto cb_obj = this->m_cb.wobj.lock();
-          if(!cb_obj)
-            return;
+        auto cb_obj = this->m_cb.wobj.lock();
+        if(!cb_obj)
+          return;
 
+        for(;;) {
           // The event callback may stop this client, so we have to check for
           // expiry in every iteration.
           auto queue = this->m_cb.wqueue.lock();
@@ -61,40 +62,42 @@ struct Final_Fiber final : Abstract_Fiber
           if(!socket)
             return;
 
-          // We are in the main thread here.
-          plain_mutex::unique_lock lock(queue->mutex);
-
-          if(queue->events.empty()) {
-            // Leave now.
-            queue->fiber_active = false;
-            return;
-          }
-
-          ROCKET_ASSERT(queue->fiber_active);
-          auto event = ::std::move(queue->events.front());
-          queue->events.pop_front();
-          lock.unlock();
-
           try {
-            // Invoke the user-defined event callback.
-            // `connection_event_stream` is special. We append new data to the
-            // private buffer which is then passed to the callback instead of
-            // `event.data`. The private buffer is preserved across callbacks
-            // and may be consumed partially by user code.
-            auto data = &(event.data);
-            if(event.type == connection_event_stream) {
-              queue->fiber_private_buffer.putn(data->data(), data->size());
-              data = &(queue->fiber_private_buffer);
+            // Pop an event and invoke the user-defined callback here in the
+            // main thread. Exceptions are ignored.
+            plain_mutex::unique_lock lock(queue->mutex);
+
+            if(queue->events.empty()) {
+              // Terminate now.
+              queue->fiber_active = false;
+              return;
             }
-            this->m_cb.thunk(cb_obj.get(), socket, *this, event.type, *data);
+
+            ROCKET_ASSERT(queue->fiber_active);
+            auto event = ::std::move(queue->events.front());
+            queue->events.pop_front();
+            lock.unlock();
+
+            if(event.type == connection_event_stream) {
+              // `connection_event_stream` is special. We append new data to
+              // `data_stream` which is then passed to the callback instead of
+              // `event.data`. `data_stream` may be consumed partially by user
+              // code, and shall be preserved across callbacks.
+              queue->data_stream.putn(event.data.data(), event.data.size());
+              this->m_cb.thunk(cb_obj.get(), socket, *this, event.type, queue->data_stream);
+            }
+            else
+              this->m_cb.thunk(cb_obj.get(), socket, *this, event.type, event.data);
           }
           catch(exception& stdex) {
+            // Shut the connection down asynchronously. Pending output data
+            // are discarded, but the user-defined callback will still be called
+            // for remaining input data, in case there is something useful.
+            socket->quick_shut_down();
+
             POSEIDON_LOG_ERROR((
                 "Unhandled exception thrown from easy TCP client: $1"),
                 stdex);
-
-            socket->quick_shut_down();
-            continue;
           }
         }
       }
