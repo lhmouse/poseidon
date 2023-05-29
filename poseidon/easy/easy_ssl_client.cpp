@@ -73,13 +73,7 @@ struct Final_Fiber final : Abstract_Fiber
           ROCKET_ASSERT(queue->fiber_active);
           auto event = ::std::move(queue->events.front());
           queue->events.pop_front();
-          auto fiber_private_buffer = &(queue->fiber_private_buffer);
-
-          if(event.type != connection_event_stream)
-            fiber_private_buffer = nullptr;
-
           lock.unlock();
-          queue = nullptr;
 
           try {
             // Invoke the user-defined event callback.
@@ -87,13 +81,12 @@ struct Final_Fiber final : Abstract_Fiber
             // private buffer which is then passed to the callback instead of
             // `event.data`. The private buffer is preserved across callbacks
             // and may be consumed partially by user code.
-            if(event.type == connection_event_stream)
-              this->m_cb.thunk(cb_obj.get(), socket, *this, event.type,
-                      fiber_private_buffer->empty()
-                         ? fiber_private_buffer->swap(event.data)
-                         : fiber_private_buffer->putn(event.data.data(), event.data.size()));
-            else
-              this->m_cb.thunk(cb_obj.get(), socket, *this, event.type, event.data);
+            auto data = &(event.data);
+            if(event.type == connection_event_stream) {
+              queue->fiber_private_buffer.putn(data->data(), data->size());
+              data = &(queue->fiber_private_buffer);
+            }
+            this->m_cb.thunk(cb_obj.get(), socket, *this, event.type, *data);
           }
           catch(exception& stdex) {
             POSEIDON_LOG_ERROR((
