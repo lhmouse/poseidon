@@ -11,11 +11,10 @@ namespace poseidon {
 class Easy_TCP_Client
   {
   private:
-    struct X_Event_Queue;
-
     shptr<void> m_cb_obj;
     callback_thunk_ptr<shptrR<TCP_Socket>, Abstract_Fiber&, Connection_Event, linear_buffer&> m_cb_thunk;
 
+    struct X_Event_Queue;
     shptr<X_Event_Queue> m_queue;
     shptr<TCP_Socket> m_socket;
 
