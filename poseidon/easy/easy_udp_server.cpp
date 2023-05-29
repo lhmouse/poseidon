@@ -45,11 +45,11 @@ struct Final_Fiber final : Abstract_Fiber
     void
     do_abstract_fiber_on_work()
       {
-        for(;;) {
-          auto cb_obj = this->m_cb.wobj.lock();
-          if(!cb_obj)
-            return;
+        auto cb_obj = this->m_cb.wobj.lock();
+        if(!cb_obj)
+          return;
 
+        for(;;) {
           // The packet callback may stop this server, so we have to check for
           // expiry in every iteration.
           auto queue = this->m_cb.wqueue.lock();
@@ -60,22 +60,22 @@ struct Final_Fiber final : Abstract_Fiber
           if(!socket)
             return;
 
-          // We are in the main thread here.
-          plain_mutex::unique_lock lock(queue->mutex);
-
-          if(queue->packets.empty()) {
-            // Leave now.
-            queue->fiber_active = false;
-            return;
-          }
-
-          ROCKET_ASSERT(queue->fiber_active);
-          auto packet = ::std::move(queue->packets.front());
-          queue->packets.pop_front();
-          lock.unlock();
-
           try {
-            // Invoke the user-defined data callback.
+            // Pop an event and invoke the user-defined callback here in the
+            // main thread. Exceptions are ignored.
+            plain_mutex::unique_lock lock(queue->mutex);
+
+            if(queue->packets.empty()) {
+              // Terminate now.
+              queue->fiber_active = false;
+              return;
+            }
+
+            ROCKET_ASSERT(queue->fiber_active);
+            auto packet = ::std::move(queue->packets.front());
+            queue->packets.pop_front();
+            lock.unlock();
+
             this->m_cb.thunk(cb_obj.get(), socket, *this, ::std::move(packet.addr), ::std::move(packet.data));
           }
           catch(exception& stdex) {

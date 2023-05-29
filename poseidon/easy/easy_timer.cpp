@@ -16,7 +16,12 @@ struct Event_Queue
     mutable plain_mutex mutex;
     wkptr<Abstract_Timer> wtimer;  // read-only; no locking needed
 
-    deque<steady_time> events;
+    struct Event
+      {
+        steady_time time;
+      };
+
+    deque<Event> events;
     bool fiber_active = false;
   };
 
@@ -40,11 +45,11 @@ struct Final_Fiber final : Abstract_Fiber
     void
     do_abstract_fiber_on_work() override
       {
-        for(;;) {
-          auto cb_obj = this->m_cb.wobj.lock();
-          if(!cb_obj)
-            return;
+        auto cb_obj = this->m_cb.wobj.lock();
+        if(!cb_obj)
+          return;
 
+        for(;;) {
           // The packet callback may stop this timer, so we have to check for
           // expiry in every iteration.
           auto queue = this->m_cb.wqueue.lock();
@@ -55,27 +60,27 @@ struct Final_Fiber final : Abstract_Fiber
           if(!timer)
             return;
 
-          // We are in the main thread here.
-          plain_mutex::unique_lock lock(queue->mutex);
-
-          if(queue->events.empty()) {
-            // Leave now.
-            queue->fiber_active = false;
-            return;
-          }
-
-          ROCKET_ASSERT(queue->fiber_active);
-          auto now = ::std::move(queue->events.front());
-          queue->events.pop_front();
-          lock.unlock();
-
           try {
-            // Invoke the user-defined data callback.
-            this->m_cb.thunk(cb_obj.get(), timer, *this, now);
+            // Pop an event and invoke the user-defined callback here in the
+            // main thread. Exceptions are ignored.
+            plain_mutex::unique_lock lock(queue->mutex);
+
+            if(queue->events.empty()) {
+              // Terminate now.
+              queue->fiber_active = false;
+              return;
+            }
+
+            ROCKET_ASSERT(queue->fiber_active);
+            auto event = ::std::move(queue->events.front());
+            queue->events.pop_front();
+            lock.unlock();
+
+            this->m_cb.thunk(cb_obj.get(), timer, *this, event.time);
           }
           catch(exception& stdex) {
             POSEIDON_LOG_ERROR((
-              "Unhandled exception thrown from easy timer: $1"),
+                "Unhandled exception thrown from easy timer: $1"),
                 stdex);
           }
         }
@@ -93,7 +98,7 @@ struct Final_Timer final : Abstract_Timer
 
     virtual
     void
-    do_abstract_timer_on_tick(steady_time now) override
+    do_abstract_timer_on_tick(steady_time time) override
       {
         auto queue = this->m_cb.wqueue.lock();
         if(!queue)
@@ -109,7 +114,8 @@ struct Final_Timer final : Abstract_Timer
           queue->fiber_active = true;
         }
 
-        queue->events.push_back(now);
+        auto& event = queue->events.emplace_back();
+        event.time = time;
       }
   };
 
