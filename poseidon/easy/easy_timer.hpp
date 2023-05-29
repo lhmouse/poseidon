@@ -13,14 +13,14 @@ class Easy_Timer
     struct X_Event_Queue;
 
     shptr<void> m_cb_obj;
-    callback_thunk_ptr<Abstract_Fiber&, shptrR<Abstract_Timer>, steady_time> m_cb_thunk;
+    callback_thunk_ptr<shptrR<Abstract_Timer>, Abstract_Fiber&, steady_time> m_cb_thunk;
 
     shptr<X_Event_Queue> m_queue;
     shptr<Abstract_Timer> m_timer;
 
   public:
     // Constructs a timer. The argument shall be an invocable object taking
-    // `(Abstract_Fiber& fiber, shptrR<Abstract_Timer> timer, steady_time now)`.
+    // `(shptrR<Abstract_Timer> timer, Abstract_Fiber& fiber, steady_time now)`.
     // This timer stores a copy of the callback, which is invoked accordingly in
     // the main thread. The callback object is never copied, and is allowed to
     // modify itself.

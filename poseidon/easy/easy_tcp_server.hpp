@@ -14,14 +14,14 @@ class Easy_TCP_Server
     struct X_Client_Table;
 
     shptr<void> m_cb_obj;
-    callback_thunk_ptr<Abstract_Fiber&, shptrR<TCP_Socket>, Connection_Event, linear_buffer&> m_cb_thunk;
+    callback_thunk_ptr<shptrR<TCP_Socket>, Abstract_Fiber&, Connection_Event, linear_buffer&> m_cb_thunk;
 
     shptr<X_Client_Table> m_client_table;
     shptr<Listen_Socket> m_socket;
 
   public:
     // Constructs a server. The argument shall be an invocable object taking
-    // `(Abstract_Fiber& fiber, shptrR<TCP_Socket> socket, Connection_Event
+    // `(shptrR<TCP_Socket> socket, Abstract_Fiber& fiber, Connection_Event
     // event, linear_buffer& data)`, where `socket` is a pointer to a client
     // socket object, and if `event` is
     //  1) `connection_event_open`, then `data` is empty, or

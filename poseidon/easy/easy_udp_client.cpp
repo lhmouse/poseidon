@@ -28,7 +28,7 @@ struct Packet_Queue
 struct Shared_cb_args
   {
     wkptr<void> wobj;
-    callback_thunk_ptr<Abstract_Fiber&, shptrR<UDP_Socket>, Socket_Address&&, linear_buffer&&> thunk;
+    callback_thunk_ptr<shptrR<UDP_Socket>, Abstract_Fiber&, Socket_Address&&, linear_buffer&&> thunk;
     wkptr<Packet_Queue> wqueue;
   };
 
@@ -72,13 +72,11 @@ struct Final_Fiber final : Abstract_Fiber
           ROCKET_ASSERT(queue->fiber_active);
           auto packet = ::std::move(queue->packets.front());
           queue->packets.pop_front();
-
           lock.unlock();
-          queue = nullptr;
 
           try {
             // Invoke the user-defined data callback.
-            this->m_cb.thunk(cb_obj.get(), *this, socket, ::std::move(packet.addr), ::std::move(packet.data));
+            this->m_cb.thunk(cb_obj.get(), socket, *this, ::std::move(packet.addr), ::std::move(packet.data));
           }
           catch(exception& stdex) {
             POSEIDON_LOG_ERROR((

@@ -37,7 +37,7 @@ struct Client_Table
 struct Shared_cb_args
   {
     wkptr<void> wobj;
-    callback_thunk_ptr<Abstract_Fiber&, shptrR<TCP_Socket>, Connection_Event, linear_buffer&> thunk;
+    callback_thunk_ptr<shptrR<TCP_Socket>, Abstract_Fiber&, Connection_Event, linear_buffer&> thunk;
     wkptr<Client_Table> wtable;
   };
 
@@ -102,12 +102,12 @@ struct Final_Fiber final : Abstract_Fiber
             // `event.data`. The private buffer is preserved across callbacks
             // and may be consumed partially by user code.
             if(event.type == connection_event_stream)
-              this->m_cb.thunk(cb_obj.get(), *this, client, event.type,
+              this->m_cb.thunk(cb_obj.get(), client, *this, event.type,
                       fiber_private_buffer->empty()
                          ? fiber_private_buffer->swap(event.data)
                          : fiber_private_buffer->putn(event.data.data(), event.data.size()));
             else
-              this->m_cb.thunk(cb_obj.get(), *this, client, event.type, event.data);
+              this->m_cb.thunk(cb_obj.get(), client, *this, event.type, event.data);
           }
           catch(exception& stdex) {
             POSEIDON_LOG_ERROR((

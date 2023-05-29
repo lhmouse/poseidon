@@ -14,14 +14,14 @@ class Easy_UDP_Client
     struct X_Packet_Queue;
 
     shptr<void> m_cb_obj;
-    callback_thunk_ptr<Abstract_Fiber&, shptrR<UDP_Socket>, Socket_Address&&, linear_buffer&&> m_cb_thunk;
+    callback_thunk_ptr<shptrR<UDP_Socket>, Abstract_Fiber&, Socket_Address&&, linear_buffer&&> m_cb_thunk;
 
     shptr<X_Packet_Queue> m_queue;
     shptr<UDP_Socket> m_socket;
 
   public:
     // Constructs a client. The argument shall be an invocable object taking
-    // `(Abstract_Fiber& fiber, shptrR<UDP_Socket> socket, Socket_Address&& addr,
+    // `(shptrR<UDP_Socket> socket, Abstract_Fiber& fiber, Socket_Address&& addr,
     // linear_buffer&& data)`, where `socket` is a pointer to the client socket,
     // and `addr` and `data` are the source address and payload of the current
     // UDP packet, respectively. This client object stores a copy of the
