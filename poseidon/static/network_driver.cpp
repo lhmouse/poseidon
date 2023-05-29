@@ -412,20 +412,6 @@ thread_loop()
       POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`) out-of-band read done"), socket, typeid(*socket));
     }
 
-    if(event.events & EPOLLIN) {
-      try {
-        socket->do_abstract_socket_on_readable();
-      }
-      catch(exception& stdex) {
-        POSEIDON_LOG_ERROR((
-            "Unhandled exception thrown from socket read callback: $1",
-            "[socket class `$2`]"),
-            stdex, typeid(*socket));
-      }
-
-      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`) read done"), socket, typeid(*socket));
-    }
-
     if(event.events & EPOLLOUT) {
       try {
         socket->do_abstract_socket_on_writable();
@@ -438,6 +424,20 @@ thread_loop()
       }
 
       POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`) write done"), socket, typeid(*socket));
+    }
+
+    if(event.events & EPOLLIN) {
+      try {
+        socket->do_abstract_socket_on_readable();
+      }
+      catch(exception& stdex) {
+        POSEIDON_LOG_ERROR((
+            "Unhandled exception thrown from socket read callback: $1",
+            "[socket class `$2`]"),
+            stdex, typeid(*socket));
+      }
+
+      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`) read done"), socket, typeid(*socket));
     }
 
     bool throttled = socket->m_io_write_queue.size() > throttle_size;
