@@ -43,14 +43,17 @@
 #include <type_traits>
 #include <functional>
 #include <algorithm>
-#include <array>
 #include <string>
-#include <vector>
-#include <deque>
-#include <unordered_map>
-#include <unordered_set>
 #include <bitset>
 #include <chrono>
+#include <array>
+#include <vector>
+#include <deque>
+#include <list>
+#include <map>
+#include <set>
+#include <unordered_map>
+#include <unordered_set>
 
 #include <cstdio>
 #include <climits>

@@ -13,13 +13,12 @@ namespace {
 
 struct Client_Table
   {
-    mutable plain_mutex mutex;
-    wkptr<Listen_Socket> wsocket;  // read-only; no locking needed
-
     struct Event_Queue
       {
-        shptr<SSL_Socket> client;  // read-only; no locking needed
-        linear_buffer fiber_private_buffer;  // by fibers only; no locking needed
+        shptr<SSL_Socket> socket;  // read-only; no locking needed
+
+        char avoid_false_sharing_with_fiber_thread[64];
+        linear_buffer data_stream;  // by fibers only; no locking needed
 
         struct Event
           {
@@ -27,11 +26,13 @@ struct Client_Table
             linear_buffer data;
           };
 
+        char avoid_false_sharing_with_network_thread[64];
         deque<Event> events;
         bool fiber_active = false;
       };
 
-    unordered_map<const volatile SSL_Socket*, Event_Queue> clients;
+    mutable plain_mutex mutex;
+    map<const volatile SSL_Socket*, Event_Queue> client_map;
   };
 
 struct Shared_cb_args
@@ -44,78 +45,71 @@ struct Shared_cb_args
 struct Final_Fiber final : Abstract_Fiber
   {
     Shared_cb_args m_cb;
-    const volatile SSL_Socket* m_key;
+    const volatile SSL_Socket* m_refptr;
 
     explicit
-    Final_Fiber(const Shared_cb_args& cb, const volatile SSL_Socket* key)
-      : m_cb(cb), m_key(key)
+    Final_Fiber(const Shared_cb_args& cb, const volatile SSL_Socket* refptr)
+      : m_cb(cb), m_refptr(refptr)
       { }
 
     virtual
     void
     do_abstract_fiber_on_work()
       {
-        for(;;) {
-          auto cb_obj = this->m_cb.wobj.lock();
-          if(!cb_obj)
-            return;
+        auto cb_obj = this->m_cb.wobj.lock();
+        if(!cb_obj)
+          return;
 
+        for(;;) {
           // The event callback may stop this server, so we have to check for
           // expiry in every iteration.
           auto table = this->m_cb.wtable.lock();
           if(!table)
             return;
 
-          // We are in the main thread here.
+          // Pop an event and invoke the user-defined callback here in the
+          // main thread. Exceptions are ignored.
           plain_mutex::unique_lock lock(table->mutex);
 
-          auto citer = table->clients.find(this->m_key);
-          if(citer == table->clients.end())
+          auto client_iter = table->client_map.find(this->m_refptr);
+          if(client_iter == table->client_map.end())
             return;
 
-          if(citer->second.events.empty()) {
-            // Leave now.
-            citer->second.fiber_active = false;
+          if(client_iter->second.events.empty()) {
+            // Terminate now.
+            client_iter->second.fiber_active = false;
             return;
           }
 
-          ROCKET_ASSERT(citer->second.client.get() == this->m_key);
-          ROCKET_ASSERT(citer->second.fiber_active);
-          auto event = ::std::move(citer->second.events.front());
-          citer->second.events.pop_front();
-          auto client = citer->second.client;
-          auto fiber_private_buffer = &(citer->second.fiber_private_buffer);
-
-          if(event.type != connection_event_stream)
-            fiber_private_buffer = nullptr;
-
-          if(event.type == connection_event_closed)
-            table->clients.erase(citer);
-
+          ROCKET_ASSERT(client_iter->second.fiber_active);
+          auto socket = client_iter->second.socket;
+          auto event = ::std::move(client_iter->second.events.front());
+          client_iter->second.events.pop_front();
+          if(ROCKET_UNEXPECT(event.type == connection_event_closed))
+            table->client_map.erase(client_iter);
           lock.unlock();
-          table = nullptr;
 
           try {
-            // Invoke the user-defined event callback.
-            // `connection_event_stream` is special. We append new data to the
-            // private buffer which is then passed to the callback instead of
-            // `event.data`. The private buffer is preserved across callbacks
-            // and may be consumed partially by user code.
-            if(event.type == connection_event_stream)
-              this->m_cb.thunk(cb_obj.get(), client, *this, event.type,
-                      fiber_private_buffer->empty()
-                         ? fiber_private_buffer->swap(event.data)
-                         : fiber_private_buffer->putn(event.data.data(), event.data.size()));
+            if(event.type == connection_event_stream) {
+              // `connection_event_stream` is special. We append new data to
+              // `data_stream` which is then passed to the callback instead of
+              // `event.data`. `data_stream` may be consumed partially by user
+              // code, and shall be preserved across callbacks.
+              client_iter->second.data_stream.putn(event.data.data(), event.data.size());
+              this->m_cb.thunk(cb_obj.get(), socket, *this, event.type, client_iter->second.data_stream);
+            }
             else
-              this->m_cb.thunk(cb_obj.get(), client, *this, event.type, event.data);
+              this->m_cb.thunk(cb_obj.get(), socket, *this, event.type, event.data);
           }
           catch(exception& stdex) {
-            POSEIDON_LOG_ERROR((
-                "Unhandled exception thrown from easy SSL server: $1"),
-                stdex);
+            // Shut the connection down asynchronously. Pending output data
+            // are discarded, but the user-defined callback will still be called
+            // for remaining input data, in case there is something useful.
+            socket->quick_shut_down();
 
-            client->quick_shut_down();
-            continue;
+            POSEIDON_LOG_ERROR((
+                "Unhandled exception thrown from easy SSL client: $1"),
+                stdex);
           }
         }
       }
@@ -140,20 +134,18 @@ struct Final_SSL_Socket final : SSL_Socket
         // We are in the network thread here.
         plain_mutex::unique_lock lock(table->mutex);
 
-        auto citer = table->clients.find(this);
-        if(citer == table->clients.end())
+        auto client_iter = table->client_map.find(this);
+        if(client_iter == table->client_map.end())
           return;
 
-        ROCKET_ASSERT(citer->second.client.get() == this);
-
-        if(!citer->second.fiber_active) {
+        if(!client_iter->second.fiber_active) {
           // Create a new fiber, if none is active. The fiber shall only reset
           // `m_fiber_private_buffer` if no event is pending.
           fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_cb, this));
-          citer->second.fiber_active = true;
+          client_iter->second.fiber_active = true;
         }
 
-        auto& event = citer->second.events.emplace_back();
+        auto& event = client_iter->second.events.emplace_back();
         event.type = type;
         event.data = ::std::move(data);
       }
@@ -205,19 +197,18 @@ struct Final_Listen_Socket final : Listen_Socket
         if(!table)
           return nullptr;
 
-        // Create the client socket.
-        auto client = new_sh<Final_SSL_Socket>(::std::move(fd), this->m_cb);
+        auto socket = new_sh<Final_SSL_Socket>(::std::move(fd), this->m_cb);
         (void) addr;
 
         // We are in the network thread here.
         plain_mutex::unique_lock lock(table->mutex);
 
-        auto& queue = table->clients[client.get()];
-        queue.client = client;
-        ROCKET_ASSERT(queue.events.empty());
+        auto r = table->client_map.try_emplace(socket.get());
+        ROCKET_ASSERT(r.second);
+        r.first->second.socket = socket;
 
-        // Take ownership of the client socket.
-        return client;
+        // Take its ownership.
+        return socket;
       }
   };
 
@@ -239,7 +230,6 @@ start(const Socket_Address& addr)
     auto table = new_sh<X_Client_Table>();
     Shared_cb_args cb = { this->m_cb_obj, this->m_cb_thunk, table };
     auto socket = new_sh<Final_Listen_Socket>(addr, ::std::move(cb));
-    table->wsocket = socket;
 
     network_driver.insert(socket);
     this->m_client_table = ::std::move(table);

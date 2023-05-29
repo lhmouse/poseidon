@@ -64,22 +64,22 @@ struct Final_Fiber final : Abstract_Fiber
           if(!socket)
             return;
 
+          // Pop an event and invoke the user-defined callback here in the
+          // main thread. Exceptions are ignored.
+          plain_mutex::unique_lock lock(queue->mutex);
+
+          if(queue->events.empty()) {
+            // Terminate now.
+            queue->fiber_active = false;
+            return;
+          }
+
+          ROCKET_ASSERT(queue->fiber_active);
+          auto event = ::std::move(queue->events.front());
+          queue->events.pop_front();
+          lock.unlock();
+
           try {
-            // Pop an event and invoke the user-defined callback here in the
-            // main thread. Exceptions are ignored.
-            plain_mutex::unique_lock lock(queue->mutex);
-
-            if(queue->events.empty()) {
-              // Terminate now.
-              queue->fiber_active = false;
-              return;
-            }
-
-            ROCKET_ASSERT(queue->fiber_active);
-            auto event = ::std::move(queue->events.front());
-            queue->events.pop_front();
-            lock.unlock();
-
             if(event.type == connection_event_stream) {
               // `connection_event_stream` is special. We append new data to
               // `data_stream` which is then passed to the callback instead of

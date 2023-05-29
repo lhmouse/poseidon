@@ -20,6 +20,9 @@
 #include <array>
 #include <vector>
 #include <deque>
+#include <list>
+#include <map>
+#include <set>
 #include <unordered_map>
 #include <unordered_set>
 #include <chrono>
@@ -55,8 +58,15 @@ template<typename T> using wkptr = ::std::weak_ptr<T>;
 using ::std::array;
 using ::std::vector;
 using ::std::deque;
+using ::std::list;
+using ::std::map;
+using ::std::multimap;
+using ::std::set;
+using ::std::multiset;
 using ::std::unordered_map;
+using ::std::unordered_multimap;
 using ::std::unordered_set;
+using ::std::unordered_multiset;
 
 using ::std::chrono::duration;
 using ::std::chrono::nanoseconds;

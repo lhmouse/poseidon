@@ -61,22 +61,22 @@ struct Final_Fiber final : Abstract_Fiber
           if(!timer)
             return;
 
+          // Pop an event and invoke the user-defined callback here in the
+          // main thread. Exceptions are ignored.
+          plain_mutex::unique_lock lock(queue->mutex);
+
+          if(queue->events.empty()) {
+            // Terminate now.
+            queue->fiber_active = false;
+            return;
+          }
+
+          ROCKET_ASSERT(queue->fiber_active);
+          auto event = ::std::move(queue->events.front());
+          queue->events.pop_front();
+          lock.unlock();
+
           try {
-            // Pop an event and invoke the user-defined callback here in the
-            // main thread. Exceptions are ignored.
-            plain_mutex::unique_lock lock(queue->mutex);
-
-            if(queue->events.empty()) {
-              // Terminate now.
-              queue->fiber_active = false;
-              return;
-            }
-
-            ROCKET_ASSERT(queue->fiber_active);
-            auto event = ::std::move(queue->events.front());
-            queue->events.pop_front();
-            lock.unlock();
-
             this->m_cb.thunk(cb_obj.get(), timer, *this, event.time);
           }
           catch(exception& stdex) {
