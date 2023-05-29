@@ -13,7 +13,6 @@ namespace {
 
 struct Event_Queue
   {
-    mutable plain_mutex mutex;
     wkptr<Abstract_Timer> wtimer;  // read-only; no locking needed
 
     struct Event
@@ -21,6 +20,7 @@ struct Event_Queue
         steady_time time;
       };
 
+    alignas(64) mutable plain_mutex mutex;
     deque<Event> events;
     bool fiber_active = false;
   };

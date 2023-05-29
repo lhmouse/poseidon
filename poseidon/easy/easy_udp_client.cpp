@@ -12,7 +12,6 @@ namespace {
 
 struct Packet_Queue
   {
-    mutable plain_mutex mutex;
     wkptr<UDP_Socket> wsocket;  // read-only; no locking needed
 
     struct Packet
@@ -21,6 +20,7 @@ struct Packet_Queue
         linear_buffer data;
       };
 
+    alignas(64) mutable plain_mutex mutex;
     deque<Packet> packets;
     bool fiber_active = false;
   };
