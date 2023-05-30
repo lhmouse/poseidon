@@ -35,7 +35,7 @@ struct Client_Table
       };
 
     mutable plain_mutex mutex;
-    map<const volatile SSL_Socket*, Event_Queue> client_map;
+    unordered_map<const volatile SSL_Socket*, Event_Queue> client_map;
   };
 
 struct Shared_cb_args
