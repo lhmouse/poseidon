@@ -84,12 +84,21 @@ struct Final_Fiber final : Abstract_Fiber
             return;
           }
 
-          ROCKET_ASSERT(client_iter->second.fiber_active);
-          auto socket = client_iter->second.socket;
-          auto event = ::std::move(client_iter->second.events.front());
-          client_iter->second.events.pop_front();
-          if(ROCKET_UNEXPECT(event.type == connection_event_closed))
+          // After `table->mutex` is unlocked, other threads may modify
+          // `table->client_map` and invalidate all iterators, so maintain a
+          // reference outside it for safety.
+          auto queue = &(client_iter->second);
+          ROCKET_ASSERT(queue->fiber_active);
+          auto socket = queue->socket;
+          auto event = ::std::move(queue->events.front());
+          queue->events.pop_front();
+
+          if(ROCKET_UNEXPECT(event.type == connection_event_closed)) {
+            // This will be the last event on this socket.
+            queue = nullptr;
             table->client_map.erase(client_iter);
+          }
+          client_iter = table->client_map.end();
           lock.unlock();
 
           try {
@@ -98,8 +107,8 @@ struct Final_Fiber final : Abstract_Fiber
               // `data_stream` which is then passed to the callback instead of
               // `event.data`. `data_stream` may be consumed partially by user
               // code, and shall be preserved across callbacks.
-              client_iter->second.data_stream.putn(event.data.data(), event.data.size());
-              this->m_cb.thunk(cb_obj.get(), socket, *this, event.type, client_iter->second.data_stream);
+              queue->data_stream.putn(event.data.data(), event.data.size());
+              this->m_cb.thunk(cb_obj.get(), socket, *this, event.type, queue->data_stream);
             }
             else
               this->m_cb.thunk(cb_obj.get(), socket, *this, event.type, event.data);
