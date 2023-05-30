@@ -13,14 +13,16 @@ namespace {
 
 struct Event_Queue
   {
-    wkptr<Abstract_Timer> wtimer;  // read-only; no locking needed
+    // read-only fields; no locking needed
+    wkptr<Abstract_Timer> wtimer;
+    cacheline_barrier xcb_1;
 
+    // shared fields between threads
     struct Event
       {
         steady_time time;
       };
 
-    char avoid_false_sharing_with_timer_thread[64];
     mutable plain_mutex mutex;
     deque<Event> events;
     bool fiber_active = false;

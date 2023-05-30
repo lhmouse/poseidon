@@ -12,15 +12,17 @@ namespace {
 
 struct Packet_Queue
   {
-    wkptr<UDP_Socket> wsocket;  // read-only; no locking needed
+    // read-only fields; no locking needed
+    wkptr<UDP_Socket> wsocket;
+    cacheline_barrier xcb_1;
 
+    // shared fields between threads
     struct Packet
       {
         Socket_Address addr;
         linear_buffer data;
       };
 
-    char avoid_false_sharing_with_network_thread[64];
     mutable plain_mutex mutex;
     deque<Packet> packets;
     bool fiber_active = false;

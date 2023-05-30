@@ -140,6 +140,17 @@ using phsh_stringR = const phsh_string&;
 template<typename T> using shptrR = const shptr<T>&;
 template<typename T> using wkptrR = const wkptr<T>&;
 
+class cacheline_barrier
+  {
+  private:
+    alignas(max_align_t) ::std::array<char, 64U - alignof(max_align_t)> bytes;
+
+  public:
+    cacheline_barrier() noexcept = default;
+    cacheline_barrier(const cacheline_barrier&) = delete;
+    cacheline_barrier& operator=(cacheline_barrier&) = delete;
+  };
+
 // Enumerations
 enum zlib_Format : uint8_t
   {

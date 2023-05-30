@@ -12,18 +12,21 @@ namespace {
 
 struct Event_Queue
   {
-    wkptr<SSL_Socket> wsocket;  // read-only; no locking needed
+    // read-only fields; no locking needed
+    wkptr<SSL_Socket> wsocket;
+    cacheline_barrier xcb_1;
 
-    char avoid_false_sharing_with_fiber_thread[64];
-    linear_buffer data_stream;  // by fibers only; no locking needed
+    // fiber-private fields; no locking needed
+    linear_buffer data_stream;
+    cacheline_barrier xcb_2;
 
+    // shared fields between threads
     struct Event
       {
         Connection_Event type;
         linear_buffer data;
       };
 
-    char avoid_false_sharing_with_network_thread[64];
     mutable plain_mutex mutex;
     deque<Event> events;
     bool fiber_active = false;
