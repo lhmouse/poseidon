@@ -21,10 +21,11 @@ struct Final_Deflator final : Deflator
     pair<char*, size_t>
     do_on_deflate_get_output_buffer() override
       {
-        size_t cap = this->m_out.reserve_after_end(1024);
-        char* ptr = this->m_out.mut_end();
-        this->m_out.accept(cap);
-        return { ptr, cap };
+        pair<char*, size_t> r;
+        r.second = this->m_out.reserve_after_end(1024);
+        r.first = this->m_out.mut_end();
+        this->m_out.accept(r.second);  // uninitialized
+        return r;
       }
 
     virtual
