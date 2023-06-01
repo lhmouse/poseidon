@@ -118,7 +118,7 @@ void
 UDP_Socket::
 do_abstract_socket_on_writable()
   {
-    if(this->do_abstract_socket_set_state(socket_state_pending, socket_state_established)) {
+    if(this->do_abstract_socket_change_state(socket_state_pending, socket_state_established)) {
       try {
         // Deliver the establishment notification.
         POSEIDON_LOG_DEBUG(("UDP port opened: local = $1"), this->local_address());

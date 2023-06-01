@@ -153,7 +153,7 @@ do_abstract_socket_on_writable()
       queue.discard((size_t) io_result);
     }
 
-    if(this->do_abstract_socket_set_state(socket_state_pending, socket_state_established)) {
+    if(this->do_abstract_socket_change_state(socket_state_pending, socket_state_established)) {
       try {
         // Deliver the establishment notification.
         POSEIDON_LOG_DEBUG(("TCP connection established: remote = $1"), this->remote_address());
@@ -170,7 +170,7 @@ do_abstract_socket_on_writable()
       }
     }
 
-    if(queue.empty() && this->do_abstract_socket_set_state(socket_state_closing, socket_state_closed)) {
+    if(queue.empty() && this->do_abstract_socket_change_state(socket_state_closing, socket_state_closed)) {
       // If the socket has been marked closing and there are no more data, perform
       // complete shutdown.
       ::shutdown(this->do_get_fd(), SHUT_RDWR);
@@ -308,10 +308,11 @@ tcp_shut_down() noexcept
     // If there are data pending, mark this socket as being closed. If a full
     // connection has been established, wait until all pending data have been
     // sent. The connection should be closed thereafter.
-    if(!queue.empty() && this->do_abstract_socket_set_state(socket_state_established, socket_state_closing))
+    if(!queue.empty() && this->do_abstract_socket_change_state(socket_state_established, socket_state_closing))
       return true;
 
-    // If there are no data pending, shut it down immediately.
+    // If there are no data pending, close it immediately.
+    this->do_abstract_socket_set_state(socket_state_closed);
     return ::shutdown(this->do_get_fd(), SHUT_RDWR) == 0;
   }
 

@@ -68,11 +68,18 @@ class Abstract_Socket
       }
 
     // Sets the socket state.
+    void
+    do_abstract_socket_set_state(Socket_State to) noexcept
+      {
+        this->m_state.store(to);
+      }
+
     bool
-    do_abstract_socket_set_state(Socket_State from, Socket_State to) noexcept
+    do_abstract_socket_change_state(Socket_State from, Socket_State to) noexcept
       {
         Socket_State comp = from;
-        return this->m_state.cmpxchg(comp, to);
+        bool eq = this->m_state.cmpxchg(comp, to);
+        return eq;
       }
 
     // This callback is invoked by the network thread when the socket has
