@@ -12,7 +12,7 @@ bool
 do_is_ctl_or_sep(char ch) noexcept
   {
     // https://www.rfc-editor.org/rfc/rfc2616#section-2.2
-    return ((ch >= 0x00) && (ch <= 0x1F)) || (ch == '(') || (ch == ')') || (ch == '<')
+    return ((ch >= 0x00) && (ch <= 0x20)) || (ch == '(') || (ch == ')') || (ch == '<')
            || (ch == '>') || (ch == '@') || (ch == ',') || (ch == ';') || (ch == ':')
            || (ch == '\\') || (ch == '\"') || (ch == '/') || (ch == '[') || (ch == ']')
            || (ch == '?') || (ch == '=') || (ch == '{') || (ch == '}');
