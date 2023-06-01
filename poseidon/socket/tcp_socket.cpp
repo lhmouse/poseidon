@@ -59,7 +59,7 @@ do_abstract_socket_on_readable()
             "[TCP socket `$1` (class `$2`)]"),
             this, typeid(*this), format_errno());
 
-        this->quick_shut_down();
+        this->quick_close();
         return;
       }
 
@@ -81,7 +81,7 @@ do_abstract_socket_on_readable()
             "[socket class `$2`]"),
             stdex, typeid(*socket));
 
-        this->quick_shut_down();
+        this->quick_close();
         return;
       }
     }
@@ -114,7 +114,7 @@ do_abstract_socket_on_oob_readable()
             "[socket class `$2`]"),
             stdex, typeid(*socket));
 
-        this->quick_shut_down();
+        this->quick_close();
         return;
       }
     }
@@ -145,7 +145,7 @@ do_abstract_socket_on_writable()
             "[TCP socket `$1` (class `$2`)]"),
             this, typeid(*this), format_errno());
 
-        this->quick_shut_down();
+        this->quick_close();
         return;
       }
 
@@ -165,7 +165,7 @@ do_abstract_socket_on_writable()
             "[socket class `$2`]"),
             stdex, typeid(*socket));
 
-        this->quick_shut_down();
+        this->quick_close();
         return;
       }
     }
@@ -276,7 +276,7 @@ tcp_send(const char* data, size_t size)
             "[TCP socket `$1` (class `$2`)]"),
             this, typeid(*this), format_errno());
 
-        this->quick_shut_down();
+        this->quick_close();
         return false;
       }
 
@@ -300,7 +300,7 @@ tcp_send_oob(char data) noexcept
 
 bool
 TCP_Socket::
-tcp_shut_down() noexcept
+tcp_close() noexcept
   {
     recursive_mutex::unique_lock io_lock;
     auto& queue = this->do_abstract_socket_lock_write_queue(io_lock);

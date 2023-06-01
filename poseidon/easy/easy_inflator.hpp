@@ -23,7 +23,7 @@ class Easy_Inflator
 
     // Starts a stream.
     void
-    start(zlib_Format format);
+    open(zlib_Format format);
 
     // Clears the current stream. Pending data are discarded.
     void

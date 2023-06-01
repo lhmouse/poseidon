@@ -45,7 +45,7 @@ Easy_Deflator::
 
 void
 Easy_Deflator::
-start(zlib_Format format, int level)
+open(zlib_Format format, int level)
   {
     auto defl = new_sh<Final_Deflator>(format, level);
     this->m_defl = defl;

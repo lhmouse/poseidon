@@ -98,7 +98,7 @@ struct Final_Fiber final : Abstract_Fiber
             // Shut the connection down asynchronously. Pending output data
             // are discarded, but the user-defined callback will still be called
             // for remaining input data, in case there is something useful.
-            socket->quick_shut_down();
+            socket->quick_close();
 
             POSEIDON_LOG_ERROR((
                 "Unhandled exception thrown from easy TCP client: $1"),
@@ -182,7 +182,7 @@ Easy_TCP_Client::
 
 void
 Easy_TCP_Client::
-start(const Socket_Address& addr)
+open(const Socket_Address& addr)
   {
     auto queue = new_sh<X_Event_Queue>();
     Shared_cb_args cb = { this->m_cb_obj, this->m_cb_thunk, queue };
@@ -197,7 +197,7 @@ start(const Socket_Address& addr)
 
 void
 Easy_TCP_Client::
-stop() noexcept
+close() noexcept
   {
     this->m_queue = nullptr;
     this->m_socket = nullptr;
@@ -235,12 +235,12 @@ tcp_send(const char* data, size_t size)
 
 bool
 Easy_TCP_Client::
-tcp_shut_down() noexcept
+tcp_close() noexcept
   {
     if(!this->m_socket)
       return false;
 
-    return this->m_socket->tcp_shut_down();
+    return this->m_socket->tcp_close();
   }
 
 }  // namespace poseidon

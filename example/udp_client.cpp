@@ -32,7 +32,7 @@ timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/, stea
 int
 start_client()
   {
-    my_client.start();
+    my_client.open();
     text_timer.start((seconds) 2, (seconds) 1);
     POSEIDON_LOG_FATAL(("example UDP client started: local = $1"), my_client.local_address());
     return 0;

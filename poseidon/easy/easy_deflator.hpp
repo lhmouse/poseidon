@@ -24,7 +24,7 @@ class Easy_Deflator
     // Starts a stream. `level` shall be an integer between 0 (no
     // compression) and 9 (best compression).
     void
-    start(zlib_Format format, int level = 8);
+    open(zlib_Format format, int level = 8);
 
     // Clears the current stream. Pending data are discarded.
     void

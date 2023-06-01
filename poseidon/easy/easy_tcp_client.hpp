@@ -46,14 +46,14 @@ class Easy_TCP_Client
 
     // Initiates a new connection to the given address.
     void
-    start(const Socket_Address& addr);
+    open(const Socket_Address& addr);
 
     // Destroys the current connection without graceful shutdown. This function
     // should only be called after all data from the server have been read and
-    // processed properly. If graceful shutdown is desired, `tcp_shut_down()`
+    // processed properly. If graceful shutdown is desired, `tcp_close()`
     // shall be called first.
     void
-    stop() noexcept;
+    close() noexcept;
 
     // Gets the local address of this client for incoming data. In case of
     // errors, `ipv6_unspecified` is returned.
@@ -80,7 +80,7 @@ class Easy_TCP_Client
     // are ignored.
     // This function is thread-safe.
     bool
-    tcp_shut_down() noexcept;
+    tcp_close() noexcept;
   };
 
 }  // namespace poseidon

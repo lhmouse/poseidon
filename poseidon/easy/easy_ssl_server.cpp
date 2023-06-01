@@ -117,7 +117,7 @@ struct Final_Fiber final : Abstract_Fiber
             // Shut the connection down asynchronously. Pending output data
             // are discarded, but the user-defined callback will still be called
             // for remaining input data, in case there is something useful.
-            socket->quick_shut_down();
+            socket->quick_close();
 
             POSEIDON_LOG_ERROR((
                 "Unhandled exception thrown from easy SSL client: $1"),

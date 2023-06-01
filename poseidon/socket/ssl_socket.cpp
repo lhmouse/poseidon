@@ -195,7 +195,7 @@ do_abstract_socket_on_readable()
             this, typeid(*this), ssl_err, ::ERR_reason_error_string(::ERR_peek_error()), format_errno());
 
         // The connection is now broken.
-        this->quick_shut_down();
+        this->quick_close();
         return;
       }
 
@@ -214,7 +214,7 @@ do_abstract_socket_on_readable()
             "[socket class `$2`]"),
             stdex, typeid(*socket));
 
-        this->quick_shut_down();
+        this->quick_close();
         return;
       }
     }
@@ -248,7 +248,7 @@ do_abstract_socket_on_oob_readable()
             "[socket class `$2`]"),
             stdex, typeid(*socket));
 
-        this->quick_shut_down();
+        this->quick_close();
         return;
       }
     }
@@ -275,7 +275,7 @@ do_abstract_socket_on_writable()
           this, typeid(*this), ssl_err, ::ERR_reason_error_string(::ERR_peek_error()), format_errno());
 
       // The connection is now broken.
-      this->quick_shut_down();
+      this->quick_close();
       return;
     }
 
@@ -299,7 +299,7 @@ do_abstract_socket_on_writable()
             this, typeid(*this), ssl_err, ::ERR_reason_error_string(::ERR_peek_error()), format_errno());
 
         // The connection is now broken.
-        this->quick_shut_down();
+        this->quick_close();
         return;
       }
 
@@ -328,7 +328,7 @@ do_abstract_socket_on_writable()
             "[socket class `$2`]"),
             stdex, typeid(*socket));
 
-        this->quick_shut_down();
+        this->quick_close();
         return;
       }
     }
@@ -445,7 +445,7 @@ ssl_send(const char* data, size_t size)
             this, typeid(*this), ssl_err, ::ERR_reason_error_string(::ERR_peek_error()), format_errno());
 
         // The connection is now broken.
-        this->quick_shut_down();
+        this->quick_close();
         return false;
       }
 
@@ -469,7 +469,7 @@ ssl_send_oob(char data) noexcept
 
 bool
 SSL_Socket::
-ssl_shut_down() noexcept
+ssl_close() noexcept
   {
     recursive_mutex::unique_lock io_lock;
     auto& queue = this->do_abstract_socket_lock_write_queue(io_lock);

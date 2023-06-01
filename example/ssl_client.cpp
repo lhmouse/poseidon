@@ -41,7 +41,7 @@ start_client()
   {
     Socket_Address addr("93.184.216.34:443");  // www.example.org
 
-    my_client.start(addr);
+    my_client.open(addr);
     POSEIDON_LOG_FATAL(("example SSL client started: local = $1"), my_client.local_address());
     return 0;
   }

@@ -138,7 +138,7 @@ class Abstract_Socket
     // notifications.
     // This function is thread-safe.
     bool
-    quick_shut_down() noexcept;
+    quick_close() noexcept;
   };
 
 }  // namespace poseidon

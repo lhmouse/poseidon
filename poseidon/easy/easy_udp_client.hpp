@@ -39,11 +39,11 @@ class Easy_UDP_Client
 
     // Creates a socket for sending data.
     void
-    start();
+    open();
 
     // Shuts down the socket, if any.
     void
-    stop() noexcept;
+    close() noexcept;
 
     // Gets the bound address of this client for incoming packets. In case of
     // errors, `ipv6_invalid` is returned.

@@ -105,7 +105,7 @@ connect(const Socket_Address& addr)
 
 bool
 Abstract_Socket::
-quick_shut_down() noexcept
+quick_close() noexcept
   {
     this->m_state.store(socket_state_closed);
 

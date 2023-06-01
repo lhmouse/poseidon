@@ -45,7 +45,7 @@ Easy_Inflator::
 
 void
 Easy_Inflator::
-start(zlib_Format format)
+open(zlib_Format format)
   {
     auto infl = new_sh<Final_Inflator>(format);
     this->m_infl = infl;

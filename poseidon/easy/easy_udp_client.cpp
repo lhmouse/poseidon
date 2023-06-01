@@ -136,7 +136,7 @@ Easy_UDP_Client::
 
 void
 Easy_UDP_Client::
-start()
+open()
   {
     auto queue = new_sh<X_Packet_Queue>();
     Shared_cb_args cb = { this->m_cb_obj, this->m_cb_thunk, queue };
@@ -150,7 +150,7 @@ start()
 
 void
 Easy_UDP_Client::
-stop() noexcept
+close() noexcept
   {
     this->m_queue = nullptr;
     this->m_socket = nullptr;
