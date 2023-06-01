@@ -72,7 +72,7 @@ parse(const char* str, size_t len)
       // sure it is not part of a token.
       ::rocket::ascii_numget numg;
       size_t r = numg.parse_D(str, len);
-      if(r && ((r == len) || do_is_ctl_or_sep(str[r]))) {
+      if((r != 0) && do_is_ctl_or_sep(str[r])) {
         double num;
         numg.cast_D(num, -HUGE_VAL, +HUGE_VAL);
         this->m_stor = num;
