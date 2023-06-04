@@ -36,7 +36,7 @@ class Easy_SSL_Server
     // which is invoked accordingly in the main thread. The callback object is
     // never copied, and is allowed to modify itself.
     template<typename CallbackT,
-    ROCKET_DISABLE_IF(::std::is_same<::std::decay_t<CallbackT>, Easy_SSL_Server>::value)>
+    ROCKET_DISABLE_SELF(Easy_SSL_Server, CallbackT)>
     explicit
     Easy_SSL_Server(CallbackT&& cb)
       : m_cb_obj(new_sh<::std::decay_t<CallbackT>>(::std::forward<CallbackT>(cb))),

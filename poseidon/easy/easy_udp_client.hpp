@@ -27,7 +27,7 @@ class Easy_UDP_Client
     // callback, which is invoked accordingly in the main thread. The callback
     // object is never copied, and is allowed to modify itself.
     template<typename CallbackT,
-    ROCKET_DISABLE_IF(::std::is_same<::std::decay_t<CallbackT>, Easy_UDP_Client>::value)>
+    ROCKET_DISABLE_SELF(Easy_UDP_Client, CallbackT)>
     explicit
     Easy_UDP_Client(CallbackT&& cb)
       : m_cb_obj(new_sh<::std::decay_t<CallbackT>>(::std::forward<CallbackT>(cb))),
