@@ -24,6 +24,18 @@ class HTTP_Value
       : m_stor(str)
       { }
 
+    HTTP_Value(int num) noexcept
+      : m_stor((double) num)
+      { }
+
+    HTTP_Value(long num) noexcept
+      : m_stor((double) num)
+      { }
+
+    HTTP_Value(long long num) noexcept
+      : m_stor((double) num)
+      { }
+
     HTTP_Value(double num) noexcept
       : m_stor(num)
       { }
