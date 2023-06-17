@@ -11,37 +11,6 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 namespace poseidon {
-namespace {
-
-void
-do_epoll_ctl(int epoll_fd, int op, shptrR<Abstract_Socket> socket, uint32_t events = EPOLLIN | EPOLLPRI | EPOLLOUT | EPOLLET)
-  {
-    ::epoll_event event;
-    event.events = events;
-    event.data.ptr = socket.get();
-    if(::epoll_ctl(epoll_fd, op, socket->fd(), &event) != 0) {
-      // When adding a socket, if the operation has failed, an exception shall be
-      // thrown. For the other operations, errors are ignored.
-      if(op == EPOLL_CTL_ADD)
-        POSEIDON_THROW((
-            "Could not add socket `$2` (class `$3`)",
-            "[`epoll_ctl()` failed: $1]"),
-            format_errno(), socket, typeid(*socket));
-
-      POSEIDON_LOG_ERROR((
-          "Could not modify socket `$2` (class `$3`)",
-          "[`epoll_ctl()` failed: $1]"),
-          format_errno(), socket, typeid(*socket));
-    }
-
-    if((op == EPOLL_CTL_ADD) || (op == EPOLL_CTL_MOD))
-      POSEIDON_LOG_TRACE((
-          "Updated epoll flags for socket `$1` (class `$2`): ET = $3, IN = $4, PRI = $5, OUT = $6"),
-          socket, typeid(*socket), (event.events / EPOLLET) & 1U, (event.events / EPOLLIN) & 1U,
-          (event.events / EPOLLPRI) & 1U, (event.events / EPOLLOUT) & 1U);
-  }
-
-}  // namespace
 
 Network_Driver::
 Network_Driver()
@@ -49,13 +18,41 @@ Network_Driver()
     if(!this->m_epoll.reset(::epoll_create1(0)))
       POSEIDON_THROW((
           "Could not create epoll object",
-          "[`epoll_create1()` failed: $1]"),
-          format_errno());
+          "[`epoll_create1()` failed: ${errno:full}]"));
   }
 
 Network_Driver::
 ~Network_Driver()
   {
+  }
+
+void
+Network_Driver::
+do_epoll_ctl(int op, shptrR<Abstract_Socket> socket, uint32_t events)
+  {
+    ::epoll_event event;
+    event.events = events;
+    event.data.ptr = socket.get();
+    if(::epoll_ctl(this->m_epoll, op, socket->fd(), &event) != 0) {
+      // When adding a socket, if the operation has failed, an exception shall be
+      // thrown. For the other operations, errors are ignored.
+      if(op == EPOLL_CTL_ADD)
+        POSEIDON_THROW((
+            "Could not add socket `$1` (class `$2`)",
+            "[`epoll_ctl()` failed: ${errno:full}]"),
+            socket, typeid(*socket));
+
+      POSEIDON_LOG_ERROR((
+          "Could not modify socket `$1` (class `$2`)",
+          "[`epoll_ctl()` failed: ${errno:full}]"),
+          socket, typeid(*socket));
+    }
+
+    if((op == EPOLL_CTL_ADD) || (op == EPOLL_CTL_MOD))
+      POSEIDON_LOG_TRACE((
+          "Updated epoll flags for socket `$1` (class `$2`): ET = $3, IN = $4, PRI = $5, OUT = $6"),
+          socket, typeid(*socket), (event.events / EPOLLET) & 1U, (event.events / EPOLLIN) & 1U,
+          (event.events / EPOLLPRI) & 1U, (event.events / EPOLLOUT) & 1U);
   }
 
 int
@@ -353,7 +350,7 @@ thread_loop()
       // Remove the socket due to an error, or an end-of-file condition.
       POSEIDON_LOG_TRACE(("Removing closed socket `$1` (class `$2`)"), socket, typeid(*socket));
       this->m_epoll_sockets.erase(socket_it);
-      do_epoll_ctl(this->m_epoll, EPOLL_CTL_DEL, socket);
+      this->do_epoll_ctl(EPOLL_CTL_DEL, socket, 0);
     }
     recursive_mutex::unique_lock io_lock(socket->m_io_mutex);
     socket->m_io_driver = this;
@@ -368,13 +365,12 @@ thread_loop()
       try {
         socket->m_state.store(socket_state_closed);
 
-        int err = 0;
-        if(event.events & EPOLLERR) {
-          ::socklen_t optlen = sizeof(err);
-          if(::getsockopt(socket->fd(), SOL_SOCKET, SO_ERROR, &err, &optlen) != 0)
-            err = errno;
-        }
-        socket->do_abstract_socket_on_closed(err);
+        errno = 0;
+        ::socklen_t optlen = sizeof(errno);
+        if(event.events & EPOLLERR)
+          ::getsockopt(socket->m_fd, SOL_SOCKET, SO_ERROR, &errno, &optlen);
+
+        socket->do_abstract_socket_on_closed();
       }
       catch(exception& stdex) {
         POSEIDON_LOG_ERROR((
@@ -390,7 +386,7 @@ thread_loop()
 
     if(socket->m_state.load() == socket_state_closed) {
       // Force closure.
-      ::shutdown(socket->fd(), SHUT_RDWR);
+      ::shutdown(socket->m_fd, SHUT_RDWR);
       POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`) shutdown pending"), socket, typeid(*socket));
       return;
     }
@@ -445,11 +441,7 @@ thread_loop()
       socket->m_io_throttled = throttled;
 
       // If there are too many bytes pending, disable `EPOLLIN` notification.
-      // The socket will be set to write-only, level-triggered mode.
-      if(throttled)
-        do_epoll_ctl(this->m_epoll, EPOLL_CTL_MOD, socket, EPOLLOUT);
-      else
-        do_epoll_ctl(this->m_epoll, EPOLL_CTL_MOD, socket);
+      this->do_epoll_ctl(EPOLL_CTL_MOD, socket, throttled ? EPOLLOUT : (EPOLLIN | EPOLLPRI | EPOLLOUT | EPOLLET));
     }
 
     if(server_ssl_ctx)
@@ -471,7 +463,7 @@ insert(shptrR<Abstract_Socket> socket)
     // The socket will be deleted from an epoll automatically when it's closed,
     // so there is no need to remove it in case of an exception.
     plain_mutex::unique_lock lock(this->m_epoll_mutex);
-    do_epoll_ctl(this->m_epoll, EPOLL_CTL_ADD, socket);
+    this->do_epoll_ctl(EPOLL_CTL_ADD, socket, EPOLLIN | EPOLLPRI | EPOLLOUT | EPOLLET);
     this->m_epoll_sockets[socket.get()] = socket;
   }
 

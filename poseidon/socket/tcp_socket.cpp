@@ -27,12 +27,12 @@ TCP_Socket::
 
 void
 TCP_Socket::
-do_abstract_socket_on_closed(int err)
+do_abstract_socket_on_closed()
   {
     POSEIDON_LOG_INFO((
-        "TCP connection to `$3` closed: $4",
+        "TCP connection to `$3` closed: ${errno:full}",
         "[TCP socket `$1` (class `$2`)]"),
-        this, typeid(*this), this->remote_address(), format_errno(err));
+        this, typeid(*this), this->remote_address());
   }
 
 void
@@ -55,9 +55,9 @@ do_abstract_socket_on_readable()
 
         POSEIDON_LOG_ERROR((
             "Error reading TCP socket",
-            "[`recv()` failed: $3]",
+            "[`recv()` failed: ${errno:full}]",
             "[TCP socket `$1` (class `$2`)]"),
-            this, typeid(*this), format_errno());
+            this, typeid(*this));
 
         this->quick_close();
         return;
@@ -141,9 +141,9 @@ do_abstract_socket_on_writable()
 
         POSEIDON_LOG_ERROR((
             "Error writing TCP socket",
-            "[`send()` failed: $3]",
+            "[`send()` failed: ${errno:full}]",
             "[TCP socket `$1` (class `$2`)]"),
-            this, typeid(*this), format_errno());
+            this, typeid(*this));
 
         this->quick_close();
         return;
@@ -272,9 +272,9 @@ tcp_send(const char* data, size_t size)
 
         POSEIDON_LOG_ERROR((
             "Error writing TCP socket",
-            "[`send()` failed: $3]",
+            "[`send()` failed: ${errno:full}]",
             "[TCP socket `$1` (class `$2`)]"),
-            this, typeid(*this), format_errno());
+            this, typeid(*this));
 
         this->quick_close();
         return false;

@@ -31,6 +31,10 @@ class Network_Driver
     Network_Driver();
 
   private:
+    inline
+    void
+    do_epoll_ctl(int op, shptrR<Abstract_Socket> socket, uint32_t events);
+
     static inline
     int
     do_alpn_callback(::SSL* ssl, const uint8_t** outp, uint8_t* outn, const uint8_t* inp, unsigned inn, void* arg) noexcept;

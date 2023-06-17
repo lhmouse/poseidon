@@ -180,13 +180,12 @@ struct Final_SSL_Socket final : SSL_Socket
 
     virtual
     void
-    do_abstract_socket_on_closed(int err) override
+    do_abstract_socket_on_closed() override
       {
         linear_buffer data;
-        if(err != 0) {
-          char msg_buf[256];
-          const char* msg = ::strerror_r(err, msg_buf, sizeof(msg_buf));
-          data.puts(msg);
+        if(errno != 0) {
+          char sbuf[1024];
+          data.puts(::strerror_r(errno, sbuf, sizeof(sbuf)));
         }
         this->do_push_event_common(connection_event_closed, ::std::move(data));
       }

@@ -34,9 +34,9 @@ do_alloc_stack(size_t stack_vm_size)
 
       if(::munmap((char*) ss.ss_sp - s_page_size, ss.ss_size + s_page_size * 2) != 0)
         POSEIDON_LOG_FATAL((
-            "Failed to unmap fiber stack memory: ss_sp = `$2`, ss_size = `$3`",
-            "[`munmap()` failed: $1]"),
-            format_errno(), ss.ss_sp, ss.ss_size);
+            "Failed to unmap fiber stack memory: ss_sp `$1`, ss_size `$2`",
+            "[`munmap()` failed: ${errno:full}]"),
+            ss.ss_sp, ss.ss_size);
     }
 
     if(!s_stack_pool.ss_sp) {
@@ -44,9 +44,9 @@ do_alloc_stack(size_t stack_vm_size)
       void* addr = ::mmap(nullptr, stack_vm_size + s_page_size * 2, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
       if(addr == MAP_FAILED)
         POSEIDON_THROW((
-            "Could not allocate fiber stack memory: size = `$2`",
-            "[`mmap()` failed: $1]"),
-            format_errno(), stack_vm_size);
+            "Could not allocate fiber stack memory: size `$1`",
+            "[`mmap()` failed: ${errno:full}]"),
+            stack_vm_size);
 
       s_stack_pool.ss_sp = (char*) addr + s_page_size;
       s_stack_pool.ss_size = stack_vm_size;
@@ -240,8 +240,7 @@ reload(const Config_File& file)
       if(::getrlimit(RLIMIT_STACK, &rlim) != 0)
         POSEIDON_THROW((
             "Could not get system stack size",
-            "[`getrlimit()` failed: $1]"),
-            format_errno());
+            "[`getrlimit()` failed: ${errno:full}]"));
 
       // Hmmm this should be enough.
       stack_vm_size = (uint32_t) rlim.rlim_cur;

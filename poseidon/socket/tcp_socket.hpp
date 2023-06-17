@@ -31,7 +31,7 @@ class TCP_Socket
     // These callbacks implement `Abstract_Socket`.
     virtual
     void
-    do_abstract_socket_on_closed(int err) override;
+    do_abstract_socket_on_closed() override;
 
     virtual
     void

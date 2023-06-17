@@ -29,15 +29,15 @@ do_abstract_task_on_execute()
     if(!fd)
       POSEIDON_THROW((
           "Could not open file `$1` for reading",
-          "[`open()` failed: $2]"),
-          this->m_path, format_errno());
+          "[`open()` failed: ${errno:full}]"),
+          this->m_path);
 
     struct ::stat64 st;
     if(::fstat64(fd, &st) != 0)
       POSEIDON_THROW((
           "Could not get information about file `$1`",
-          "[`fstat64()` failed: $2]"),
-          this->m_path, format_errno());
+          "[`fstat64()` failed: ${errno:full}]"),
+          this->m_path);
 
     if(!S_ISREG(st.st_mode))
       POSEIDON_THROW((
@@ -56,8 +56,8 @@ do_abstract_task_on_execute()
       if(roff == (::off_t) -1)
         POSEIDON_THROW((
             "Could not reposition file `$1`",
-            "[`lseek64()` failed: $2]"),
-            this->m_path, format_errno());
+            "[`lseek64()` failed: ${errno:full}]"),
+            this->m_path);
 
       // This is the real offset from the beginning of the file.
       res.offset = (int64_t) roff;
@@ -73,8 +73,8 @@ do_abstract_task_on_execute()
       if(nread < 0)
         POSEIDON_THROW((
             "Could not read file `$1`",
-            "[`read()` failed: $2]"),
-            this->m_path, format_errno());
+            "[`read()` failed: ${errno:full}]"),
+            this->m_path);
 
       res.data.erase(bufp + nread, res.data.end());
       if(nread == 0)

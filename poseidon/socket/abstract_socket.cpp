@@ -19,9 +19,7 @@ Abstract_Socket(unique_posix_fd&& fd)
 
     // Check the address family.
     if(this->local_address() == ipv6_invalid)
-      POSEIDON_THROW((
-          "Could not get socket local address: $1"),
-          format_errno());
+      POSEIDON_THROW(("Could not get socket local address"));
 
 #ifdef ROCKET_DEBUG
     // Require the socket be non-blocking here.
@@ -38,9 +36,9 @@ Abstract_Socket(int type, int protocol)
     this->m_fd.reset(::socket(AF_INET6, type | SOCK_NONBLOCK, protocol));
     if(!this->m_fd)
       POSEIDON_THROW((
-          "Could not create IPv6 socket: type `$2`, protocol `$3`",
-          "[`socket()` failed: $1]"),
-          format_errno(), type, protocol);
+          "Could not create IPv6 socket: type `$1`, protocol `$2`",
+          "[`socket()` failed: ${errno:full}]"),
+          type, protocol);
 
     // Use `TCP_NODELAY`. Errors are ignored.
     static constexpr int true_value = 1;
@@ -97,10 +95,10 @@ connect(const Socket_Address& addr)
     sa.sin6_scope_id = 0;
     if((::connect(this->m_fd, (const ::sockaddr*) &sa, sizeof(sa)) != 0) && (errno != EINPROGRESS))
       POSEIDON_THROW((
-          "Failed to initiate TCP connection to `$4`",
-          "[`connect()` failed: $3]",
+          "Failed to initiate TCP connection to `$3`",
+          "[`connect()` failed: ${errno:full}]",
           "[TCP socket `$1` (class `$2`)]"),
-          this, typeid(*this), format_errno(), addr);
+          this, typeid(*this), addr);
   }
 
 bool

@@ -84,11 +84,11 @@ class Abstract_Socket
 
     // This callback is invoked by the network thread when the socket has
     // been closed, and is intended to be overriden by derived classes.
-    // The argument is zero for normal closure, or an error number in the
-    // case of an error.
+    // `errno` is zero for normal closure, or an error number in the case of
+    // an error.
     virtual
     void
-    do_abstract_socket_on_closed(int err) = 0;
+    do_abstract_socket_on_closed() = 0;
 
     // This callback is invoked by the network thread when incoming data are
     // available, and is intended to be overriden by derived classes.

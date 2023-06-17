@@ -151,12 +151,12 @@ do_ssl_alpn_request(const charbuf_256& proto)
 
 void
 SSL_Socket::
-do_abstract_socket_on_closed(int err)
+do_abstract_socket_on_closed()
   {
     POSEIDON_LOG_INFO((
-        "SSL connection to `$3` closed: $4",
+        "SSL connection to `$3` closed: ${errno:full}",
         "[SSL socket `$1` (class `$2`)]"),
-        this, typeid(*this), this->remote_address(), format_errno(err));
+        this, typeid(*this), this->remote_address() );
   }
 
 void
@@ -190,9 +190,9 @@ do_abstract_socket_on_readable()
 
         POSEIDON_LOG_ERROR((
             "Error reading SSL socket",
-            "[`SSL_read_ex()` failed: SSL_get_error = `$3`, ERR_peek_error = `$4`, errno = `$5`]",
+            "[`SSL_read_ex()` failed: SSL_get_error = `$3`, ERR_peek_error = `$4`, errno = `${errno:full}`]",
             "[SSL socket `$1` (class `$2`)]"),
-            this, typeid(*this), ssl_err, ::ERR_reason_error_string(::ERR_peek_error()), format_errno());
+            this, typeid(*this), ssl_err, ::ERR_reason_error_string(::ERR_peek_error()));
 
         // The connection is now broken.
         this->quick_close();
@@ -270,9 +270,9 @@ do_abstract_socket_on_writable()
 
       POSEIDON_LOG_ERROR((
           "Error performing SSL handshake",
-          "[`SSL_do_handshake()` failed: SSL_get_error = `$3`, ERR_peek_error = `$4`, errno = `$5`]",
+          "[`SSL_do_handshake()` failed: SSL_get_error = `$3`, ERR_peek_error = `$4`, errno = `${errno:full}`]",
           "[SSL socket `$1` (class `$2`)]"),
-          this, typeid(*this), ssl_err, ::ERR_reason_error_string(::ERR_peek_error()), format_errno());
+          this, typeid(*this), ssl_err, ::ERR_reason_error_string(::ERR_peek_error()));
 
       // The connection is now broken.
       this->quick_close();
@@ -294,9 +294,9 @@ do_abstract_socket_on_writable()
 
         POSEIDON_LOG_ERROR((
             "Error writing SSL socket",
-            "[`SSL_write_ex()` failed: SSL_get_error = `$3`, ERR_peek_error = `$4`, errno = `$5`]",
+            "[`SSL_write_ex()` failed: SSL_get_error = `$3`, ERR_peek_error = `$4`, errno = `${errno:full}`]",
             "[SSL socket `$1` (class `$2`)]"),
-            this, typeid(*this), ssl_err, ::ERR_reason_error_string(::ERR_peek_error()), format_errno());
+            this, typeid(*this), ssl_err, ::ERR_reason_error_string(::ERR_peek_error()));
 
         // The connection is now broken.
         this->quick_close();
@@ -440,9 +440,9 @@ ssl_send(const char* data, size_t size)
 
         POSEIDON_LOG_ERROR((
             "Error writing SSL socket",
-            "[`SSL_write_ex()` failed: SSL_get_error = `$3`, ERR_peek_error = `$4`, errno = `$5`]",
+            "[`SSL_write_ex()` failed: SSL_get_error = `$3`, ERR_peek_error = `$4`, errno = `${errno:full}`]",
             "[SSL socket `$1` (class `$2`)]"),
-            this, typeid(*this), ssl_err, ::ERR_reason_error_string(::ERR_peek_error()), format_errno());
+            this, typeid(*this), ssl_err, ::ERR_reason_error_string(::ERR_peek_error()));
 
         // The connection is now broken.
         this->quick_close();

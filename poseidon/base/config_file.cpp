@@ -27,9 +27,9 @@ reload(stringR file_path)
     ::rocket::unique_ptr<char, void (void*)> abs_path(::free);
     if(!abs_path.reset(::realpath(file_path.safe_c_str(), nullptr)))
       POSEIDON_THROW((
-          "Could not find configuration file '$2'",
-          "[`realpath()` failed: $1]"),
-          format_errno(), file_path);
+          "Could not find configuration file '$1'",
+          "[`realpath()` failed: ${errno:full}]"),
+          file_path);
 
     // Read the file.
     string path(abs_path.get());

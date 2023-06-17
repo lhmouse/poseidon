@@ -27,17 +27,17 @@ Listen_Socket(const Socket_Address& addr)
 
     if(::bind(this->do_get_fd(), (const ::sockaddr*) &sa, sizeof(sa)) != 0)
       POSEIDON_THROW((
-          "Failed to bind TCP socket onto `$4`",
-          "[`bind()` failed: $3]",
+          "Failed to bind TCP socket onto `$3`",
+          "[`bind()` failed: ${errno:full}]",
           "[TCP socket `$1` (class `$2`)]"),
-          this, typeid(*this), format_errno(), addr);
+          this, typeid(*this), addr);
 
     if(::listen(this->do_get_fd(), SOMAXCONN) != 0)
       POSEIDON_THROW((
-          "Failed to start listening on `$4`",
-          "[`listen()` failed: $3]",
+          "Failed to start listening on `$3`",
+          "[`listen()` failed: ${errno:full}]",
           "[TCP listen socket `$1` (class `$2`)]"),
-          this, typeid(*this), format_errno(), addr);
+          this, typeid(*this), addr);
 
     POSEIDON_LOG_INFO((
         "TCP server started listening on `$3`",
@@ -53,12 +53,12 @@ Listen_Socket::
 
 void
 Listen_Socket::
-do_abstract_socket_on_closed(int err)
+do_abstract_socket_on_closed()
   {
     POSEIDON_LOG_INFO((
-        "TCP server stopped listening on `$3`: $4",
+        "TCP server stopped listening on `$3`: ${errno:full}",
         "[TCP listen socket `$1` (class `$2`)]"),
-        this, typeid(*this), this->local_address(), format_errno(err));
+        this, typeid(*this), this->local_address());
   }
 
 void
@@ -80,9 +80,9 @@ do_abstract_socket_on_readable()
 
         POSEIDON_LOG_ERROR((
             "Error accepting TCP connection",
-            "[`accept4()` failed: $3]",
+            "[`accept4()` failed: ${errno:full}]",
             "[TCP listen socket `$1` (class `$2`)]"),
-            this, typeid(*this), format_errno());
+            this, typeid(*this));
 
         // Errors are ignored.
         continue;
