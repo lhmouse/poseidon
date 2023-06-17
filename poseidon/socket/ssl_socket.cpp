@@ -190,9 +190,9 @@ do_abstract_socket_on_readable()
 
         POSEIDON_LOG_ERROR((
             "Error reading SSL socket",
-            "[`SSL_read_ex()` failed: SSL_get_error = `$3`, ERR_peek_error = `$4`, errno = `${errno:full}`]",
+            "[`SSL_read_ex()` failed: ERR_peek_error = `$3`, errno = `${errno:full}`]",
             "[SSL socket `$1` (class `$2`)]"),
-            this, typeid(*this), ssl_err, ::ERR_reason_error_string(::ERR_peek_error()));
+            this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
 
         // The connection is now broken.
         this->quick_close();
@@ -270,9 +270,9 @@ do_abstract_socket_on_writable()
 
       POSEIDON_LOG_ERROR((
           "Error performing SSL handshake",
-          "[`SSL_do_handshake()` failed: SSL_get_error = `$3`, ERR_peek_error = `$4`, errno = `${errno:full}`]",
+          "[`SSL_do_handshake()` failed: ERR_peek_error = `$3`, errno = `${errno:full}`]",
           "[SSL socket `$1` (class `$2`)]"),
-          this, typeid(*this), ssl_err, ::ERR_reason_error_string(::ERR_peek_error()));
+          this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
 
       // The connection is now broken.
       this->quick_close();
@@ -294,9 +294,9 @@ do_abstract_socket_on_writable()
 
         POSEIDON_LOG_ERROR((
             "Error writing SSL socket",
-            "[`SSL_write_ex()` failed: SSL_get_error = `$3`, ERR_peek_error = `$4`, errno = `${errno:full}`]",
+            "[`SSL_write_ex()` failed: ERR_peek_error = `$3`, errno = `${errno:full}`]",
             "[SSL socket `$1` (class `$2`)]"),
-            this, typeid(*this), ssl_err, ::ERR_reason_error_string(::ERR_peek_error()));
+            this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
 
         // The connection is now broken.
         this->quick_close();
@@ -440,9 +440,9 @@ ssl_send(const char* data, size_t size)
 
         POSEIDON_LOG_ERROR((
             "Error writing SSL socket",
-            "[`SSL_write_ex()` failed: SSL_get_error = `$3`, ERR_peek_error = `$4`, errno = `${errno:full}`]",
+            "[`SSL_write_ex()` failed: ERR_peek_error = `$3`, errno = `${errno:full}`]",
             "[SSL socket `$1` (class `$2`)]"),
-            this, typeid(*this), ssl_err, ::ERR_reason_error_string(::ERR_peek_error()));
+            this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
 
         // The connection is now broken.
         this->quick_close();
