@@ -363,13 +363,12 @@ thread_loop()
 
     if(event.events & (EPOLLHUP | EPOLLERR)) {
       try {
-        socket->m_state.store(socket_state_closed);
-
         errno = 0;
         ::socklen_t optlen = sizeof(errno);
         if(event.events & EPOLLERR)
           ::getsockopt(socket->m_fd, SOL_SOCKET, SO_ERROR, &errno, &optlen);
 
+        socket->m_state.store(socket_state_closed);
         socket->do_abstract_socket_on_closed();
       }
       catch(exception& stdex) {
@@ -396,6 +395,7 @@ thread_loop()
 
     if(event.events & EPOLLPRI) {
       try {
+        ::ERR_clear_error();
         socket->do_abstract_socket_on_oob_readable();
       }
       catch(exception& stdex) {
@@ -410,6 +410,7 @@ thread_loop()
 
     if(event.events & EPOLLOUT) {
       try {
+        ::ERR_clear_error();
         socket->do_abstract_socket_on_writable();
       }
       catch(exception& stdex) {
@@ -424,6 +425,7 @@ thread_loop()
 
     if(event.events & EPOLLIN) {
       try {
+        ::ERR_clear_error();
         socket->do_abstract_socket_on_readable();
       }
       catch(exception& stdex) {
