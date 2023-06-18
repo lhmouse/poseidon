@@ -136,7 +136,7 @@ using ::rocket::optional;
 using ::rocket::variant;
 using phsh_string = ::rocket::prehashed_string;
 
-template<typename T, typename U> using cow_bivector = cow_vector<T, U>;
+template<typename T, typename U> using cow_bivector = cow_vector<pair<T, U>>;
 using cow_stringR = const cow_string&;
 using phsh_stringR = const phsh_string&;
 template<typename T> using shptrR = const shptr<T>&;
