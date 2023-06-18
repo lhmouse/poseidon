@@ -52,4 +52,10 @@ main()
     POSEIDON_TEST_CHECK(infl.inflate("\x6f\x00\x00\x00\xFF\xFF", 6) == 6);
     POSEIDON_TEST_CHECK(infl.output_size() == 5);
     POSEIDON_TEST_CHECK(::memcmp(infl.output_data(), "Hello", 5) == 0);
+
+    // invalid data test
+    infl.clear();
+    POSEIDON_TEST_CHECK(infl.output_size() == 0);
+    infl.open(zlib_format_raw);
+    POSEIDON_TEST_CHECK_CATCH(infl.inflate("invalid data", 9));
   }
