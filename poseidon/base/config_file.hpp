@@ -11,7 +11,7 @@ namespace poseidon {
 class Config_File
   {
   private:
-    string m_path;
+    cow_string m_path;
     ::asteria::V_object m_root;
 
   public:
@@ -21,7 +21,7 @@ class Config_File
 
     // Loads the file denoted by `path`, like `reload(path)`.
     explicit
-    Config_File(stringR path);
+    Config_File(cow_stringR path);
 
     Config_File&
     swap(Config_File& other) noexcept
@@ -36,7 +36,7 @@ class Config_File
 
     // Returns the absolute file path.
     // If no file has been loaded, an empty string is returned.
-    string
+    cow_string
     path() const noexcept
       { return this->m_path;  }
 
@@ -60,7 +60,7 @@ class Config_File
     // This function provides strong exception guarantee. In case of failure,
     // an exception is thrown, and the contents of this object are unchanged.
     void
-    reload(stringR file_path);
+    reload(cow_stringR file_path);
 
     // Gets a value denoted by a path, which shall not be empty.
     // If the path does not denote an existent value, a statically allocated

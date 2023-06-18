@@ -153,7 +153,7 @@ HTTP_DateTime(const char* str, size_t len)
     if(this->parse(str, len) == 0)
       POSEIDON_THROW((
           "Could not parse HTTP data/time string `$1`"),
-          string(str, len));
+          cow_string(str, len));
   }
 
 HTTP_DateTime::
@@ -166,7 +166,7 @@ HTTP_DateTime(const char* str)
   }
 
 HTTP_DateTime::
-HTTP_DateTime(stringR str)
+HTTP_DateTime(cow_stringR str)
   {
     if(this->parse(str) == 0)
       POSEIDON_THROW((
@@ -310,7 +310,7 @@ parse(const char* str)
 
 size_t
 HTTP_DateTime::
-parse(stringR str)
+parse(cow_stringR str)
   {
     return this->parse(str.data(), str.size());
   }
@@ -414,13 +414,13 @@ print(tinyfmt& fmt) const
     return fmt.putn(str, len);
   }
 
-string
+cow_string
 HTTP_DateTime::
 print_to_string() const
   {
     char str[64];
     size_t len = this->print_rfc1123_partial(str);
-    return string(str, len);
+    return cow_string(str, len);
   }
 
 }  // namespace poseidon

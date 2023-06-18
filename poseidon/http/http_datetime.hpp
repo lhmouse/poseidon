@@ -39,7 +39,7 @@ class HTTP_DateTime
     HTTP_DateTime(const char* str);
 
     explicit
-    HTTP_DateTime(stringR str);
+    HTTP_DateTime(cow_stringR str);
 
     HTTP_DateTime&
     swap(HTTP_DateTime& other) noexcept
@@ -100,7 +100,7 @@ class HTTP_DateTime
     parse(const char* str);
 
     size_t
-    parse(stringR str);
+    parse(cow_stringR str);
 
     // Converts this timestamp to its RFC 1123 format, with a null terminator.
     // There shall be at least 30 characters in the buffer that `str` points to.
@@ -127,7 +127,7 @@ class HTTP_DateTime
     tinyfmt&
     print(tinyfmt& fmt) const;
 
-    string
+    cow_string
     print_to_string() const;
   };
 

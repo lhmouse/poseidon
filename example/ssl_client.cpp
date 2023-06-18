@@ -13,7 +13,7 @@ void
 event_callback(shptrR<SSL_Socket> socket, Abstract_Fiber& /*fiber*/, Connection_Event event, linear_buffer& data)
   {
     Socket_Address addr = socket->remote_address();
-    string str(data.data(), data.size());
+    cow_string str(data.data(), data.size());
     data.clear();
     static constexpr char req[] = "GET / HTTP/1.1\r\nConnection: close\r\nHost: www.example.org\r\n\r\n";
 

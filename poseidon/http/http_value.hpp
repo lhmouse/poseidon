@@ -11,7 +11,7 @@ namespace poseidon {
 class HTTP_Value
   {
   private:
-    variant<nullptr_t, string, double, HTTP_DateTime> m_stor;
+    variant<nullptr_t, cow_string, double, HTTP_DateTime> m_stor;
 
   public:
     // Value constructors
@@ -20,7 +20,7 @@ class HTTP_Value
       : m_stor()
       { }
 
-    HTTP_Value(stringR str) noexcept
+    HTTP_Value(cow_stringR str) noexcept
       : m_stor(str)
       { }
 
@@ -63,18 +63,18 @@ class HTTP_Value
 
     bool
     is_string() const noexcept
-      { return this->m_stor.ptr<string>() != nullptr;  }
+      { return this->m_stor.ptr<cow_string>() != nullptr;  }
 
-    const string&
+    const cow_string&
     as_string() const
-      { return this->m_stor.as<string>();  }
+      { return this->m_stor.as<cow_string>();  }
 
-    string&
+    cow_string&
     mut_string()
-      { return this->m_stor.mut<string>();  }
+      { return this->m_stor.mut<cow_string>();  }
 
     void
-    set_string(const string& str) noexcept
+    set_string(const cow_string& str) noexcept
       { this->m_stor = str;  }
 
     bool
@@ -127,7 +127,7 @@ class HTTP_Value
     parse(const char* str);
 
     size_t
-    parse(stringR str);
+    parse(cow_stringR str);
 
     // Converts this value to its string form. The result will be suitable
     // for immediate use in an HTTP header. It is important to note that
@@ -136,7 +136,7 @@ class HTTP_Value
     tinyfmt&
     print(tinyfmt& fmt) const;
 
-    string
+    cow_string
     print_to_string() const;
   };
 

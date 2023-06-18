@@ -8,7 +8,7 @@
 namespace poseidon {
 
 Read_File_Future::
-Read_File_Future(stringR path, int64_t offset, size_t limit)
+Read_File_Future(cow_stringR path, int64_t offset, size_t limit)
   : m_path(path), m_offset(offset), m_limit(limit)
   {
   }

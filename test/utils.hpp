@@ -47,7 +47,7 @@
       catch(::std::exception& stdex) {  \
         /* successful */  \
         ::asteria::write_log_to_stderr(__FILE__, __LINE__, __func__,  \
-            ::rocket::string("POSEIDON_TEST_CHECK XFAIL: " #expr)  \
+            ::rocket::cow_string("POSEIDON_TEST_CHECK XFAIL: " #expr)  \
               + "\n" + stdex.what());  \
       }  \
     while(false)

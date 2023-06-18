@@ -37,7 +37,7 @@ using ::asteria::generate_random_seed;
 // Throws an exception, with backtraces.
 [[noreturn]]
 void
-throw_runtime_error_with_backtrace(const char* file, long line, const char* func, string&& msg);
+throw_runtime_error_with_backtrace(const char* file, long line, const char* func, cow_string&& msg);
 
 #define POSEIDON_THROW(TEMPLATE, ...)  \
     (::poseidon::throw_runtime_error_with_backtrace(__FILE__, __LINE__, __FUNCTION__,  \
@@ -47,16 +47,16 @@ throw_runtime_error_with_backtrace(const char* file, long line, const char* func
      __builtin_unreachable())
 
 // Converts all ASCII letters in a string into uppercase.
-string
-ascii_uppercase(string text);
+cow_string
+ascii_uppercase(cow_string text);
 
 // Converts all ASCII letters in a string into lowercase.
-string
-ascii_lowercase(string text);
+cow_string
+ascii_lowercase(cow_string text);
 
 // Removes all leading and trailing blank characters.
-string
-ascii_trim(string text);
+cow_string
+ascii_trim(cow_string text);
 
 // Checks whether two strings equal.
 template<typename StringT, typename OtherT>
@@ -71,19 +71,19 @@ ascii_ci_equal(const StringT& text, const OtherT& other)
 // Tokens are case-insensitive.
 ROCKET_PURE
 bool
-ascii_ci_has_token(stringR text, char delim, const char* token, size_t len);
+ascii_ci_has_token(cow_stringR text, char delim, const char* token, size_t len);
 
 template<typename OtherT>
 inline
 bool
-ascii_ci_has_token(stringR text, char delim, const OtherT& other)
+ascii_ci_has_token(cow_stringR text, char delim, const OtherT& other)
   {
     return noadl::ascii_ci_has_token(text, delim, other.c_str(), other.length());
   }
 
 ROCKET_PURE inline
 bool
-ascii_ci_has_token(stringR text, const char* token, size_t len)
+ascii_ci_has_token(cow_stringR text, const char* token, size_t len)
   {
     return noadl::ascii_ci_has_token(text, ',', token, len);
   }
@@ -91,19 +91,19 @@ ascii_ci_has_token(stringR text, const char* token, size_t len)
 template<typename OtherT>
 inline
 bool
-ascii_ci_has_token(stringR text, const OtherT& other)
+ascii_ci_has_token(cow_stringR text, const OtherT& other)
   {
     return noadl::ascii_ci_has_token(text, other.c_str(), other.length());
   }
 
 // Split a string into a vector of tokens, and vice versa.
-using cow_vstrings = ::rocket::cow_vector<string>;
+using cow_vstrings = ::rocket::cow_vector<cow_string>;
 
 size_t
-explode(cow_vstrings& segments, stringR text, char delim = ',', size_t limit = SIZE_MAX);
+explode(cow_vstrings& segments, cow_stringR text, char delim = ',', size_t limit = SIZE_MAX);
 
 size_t
-implode(string& text, const cow_vstrings& segments, char delim = ',');
+implode(cow_string& text, const cow_vstrings& segments, char delim = ',');
 
 }  // namespace poseidon
 #endif

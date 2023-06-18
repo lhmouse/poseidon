@@ -14,7 +14,7 @@ extern Easy_Timer text_timer;
 void
 data_callback(shptrR<UDP_Socket> socket, Abstract_Fiber& /*fiber*/, Socket_Address&& addr, linear_buffer&& data)
   {
-    string str(data.data(), data.size());
+    cow_string str(data.data(), data.size());
     data.clear();
     POSEIDON_LOG_DEBUG(("example UDP client received data from `$1`: $2"), addr, str);
     (void) socket;
@@ -24,7 +24,7 @@ void
 timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/, steady_time now)
   {
     Socket_Address addr("127.0.0.1:3801");
-    string str = format_string("ticks = $1", now.time_since_epoch());
+    cow_string str = format_string("ticks = $1", now.time_since_epoch());
     POSEIDON_LOG_INFO(("example UDP client sending data to `$1`: $2"), addr, str);
     my_client.udp_send(addr, str.data(), str.size());
   }

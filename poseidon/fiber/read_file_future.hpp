@@ -20,12 +20,12 @@ class Read_File_Future
         system_time accessed_on;  // time of last access
         system_time modified_on;  // time of last modification
         int64_t offset;  // data offset
-        string data;
+        cow_string data;
       };
 
   private:
     // read-only
-    string m_path;
+    cow_string m_path;
     int64_t m_offset;
     size_t m_limit;
 
@@ -39,7 +39,7 @@ class Read_File_Future
     // asynchronous task, which can be enqueued into an `Async_Task_Executor`. This
     // future will become ready once the read operation is complete.
     explicit
-    Read_File_Future(stringR path, int64_t offset = 0, size_t limit = INT_MAX);
+    Read_File_Future(cow_stringR path, int64_t offset = 0, size_t limit = INT_MAX);
 
   private:
     // Performs the read operation.

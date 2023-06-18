@@ -86,7 +86,7 @@ struct Command_Line_Options
     bool verbose = false;
 
     // non-options
-    string cd_here;
+    cow_string cd_here;
   };
 
 // They are declared here for convenience.
@@ -128,7 +128,7 @@ do_parse_command_line(int argc, char** argv)
 
     optional<bool> daemonize;
     optional<bool> verbose;
-    optional<string> cd_here;
+    optional<cow_string> cd_here;
 
     if(argc > 1) {
       // Check for common long options before calling `getopt()`.
@@ -180,7 +180,7 @@ do_parse_command_line(int argc, char** argv)
           argv[0], argv[::optind+1], argv[0]);
 
     if(argc - ::optind > 0)
-      cd_here = string(argv[::optind]);
+      cd_here = cow_string(argv[::optind]);
 
     // Daemonization is off by default.
     if(daemonize)
@@ -451,7 +451,7 @@ ROCKET_NEVER_INLINE
 void
 do_write_pid_file()
   {
-    string pid_file_path;
+    cow_string pid_file_path;
     const auto conf = main_config.copy();
 
     auto value = conf.query("general", "pid_file_path");
@@ -523,7 +523,7 @@ do_load_addons()
           value, conf.path());
 
     for(const auto& addon : addons) {
-      string path;
+      cow_string path;
 
       if(addon.is_string())
         path = addon.as_string();

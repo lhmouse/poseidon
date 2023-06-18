@@ -141,7 +141,7 @@ reload(const Config_File& file)
     // Parse new configuration. Default ones are defined here.
     int64_t event_buffer_size = 1024;
     int64_t throttle_size = 1048576;
-    string default_certificate, default_private_key, trusted_ca_path;
+    cow_string default_certificate, default_private_key, trusted_ca_path;
     SSL_CTX_ptr server_ssl_ctx, client_ssl_ctx;
 
     // Read the event buffer size from configuration.

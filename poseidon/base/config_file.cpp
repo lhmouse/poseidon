@@ -9,7 +9,7 @@
 namespace poseidon {
 
 Config_File::
-Config_File(stringR path)
+Config_File(cow_stringR path)
   {
     this->reload(path);
   }
@@ -21,7 +21,7 @@ Config_File::
 
 void
 Config_File::
-reload(stringR file_path)
+reload(cow_stringR file_path)
   {
     // Resolve the path to an absolute one.
     ::rocket::unique_ptr<char, void (void*)> abs_path(::free);
@@ -32,7 +32,7 @@ reload(stringR file_path)
           file_path);
 
     // Read the file.
-    string path(abs_path.get());
+    cow_string path(abs_path.get());
     ::asteria::V_object root = ::asteria::std_system_conf_load_file(path);
 
     // Set new contents. This shall not throw exceptions.
@@ -60,7 +60,7 @@ query(initializer_list<phsh_string> value_path) const
 
       if(!value->is_object()) {
         // Fail.
-        string vpstr;
+        cow_string vpstr;
         auto pbak = value_path.begin();
         vpstr << pbak->rdstr();
         while(++pbak != pcur)

@@ -101,7 +101,7 @@ using ::rocket::condition_variable;
 using ::rocket::cow_vector;
 using ::rocket::cow_hashmap;
 using ::rocket::static_vector;
-using string = ::rocket::cow_string;
+using ::rocket::cow_string;
 using ::rocket::cow_u16string;
 using ::rocket::cow_u32string;
 using ::rocket::linear_buffer;
@@ -136,7 +136,8 @@ using ::rocket::optional;
 using ::rocket::variant;
 using phsh_string = ::rocket::prehashed_string;
 
-using stringR = const string&;
+template<typename T, typename U> using cow_bivector = cow_vector<T, U>;
+using cow_stringR = const cow_string&;
 using phsh_stringR = const phsh_string&;
 template<typename T> using shptrR = const shptr<T>&;
 template<typename T> using wkptrR = const wkptr<T>&;
@@ -298,14 +299,14 @@ bool
 do_async_logger_check_level(Log_Level level) noexcept;
 
 void
-do_async_logger_enqueue(const Log_Context& ctx, void* cb_obj, callback_thunk_ptr<string&> cb_thunk) noexcept;
+do_async_logger_enqueue(const Log_Context& ctx, void* cb_obj, callback_thunk_ptr<cow_string&> cb_thunk) noexcept;
 
 template<typename... ParamsT>
 inline
 bool
 do_async_logger_enqueue_generic(const Log_Context& ctx, const ParamsT&... params) noexcept
   {
-    auto my_thunk = [&](string& msg) { ::asteria::format(msg, params...);  };
+    auto my_thunk = [&](cow_string& msg) { ::asteria::format(msg, params...);  };
     do_async_logger_enqueue(ctx, ::std::addressof(my_thunk), callback_thunk<decltype(my_thunk)>);
     return true;
   }

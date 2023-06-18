@@ -41,7 +41,7 @@ class Socket_Address
     Socket_Address(const char* str);
 
     explicit
-    Socket_Address(stringR str);
+    Socket_Address(cow_stringR str);
 
     Socket_Address&
     swap(Socket_Address& other) noexcept
@@ -113,7 +113,7 @@ class Socket_Address
     parse(const char* str) noexcept;
 
     size_t
-    parse(stringR str) noexcept;
+    parse(cow_stringR str) noexcept;
 
     // Converts this address to its string form. The caller should supply
     // a buffer for 48 characters, which is capable of storing the longest
@@ -124,7 +124,7 @@ class Socket_Address
     tinyfmt&
     print(tinyfmt& fmt) const;
 
-    string
+    cow_string
     print_to_string() const;
   };
 

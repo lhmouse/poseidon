@@ -13,7 +13,7 @@ void
 event_callback(shptrR<TCP_Socket> socket, Abstract_Fiber& /*fiber*/, Connection_Event event, linear_buffer& data)
   {
     Socket_Address addr = socket->remote_address();
-    string str(data.data(), data.size());
+    cow_string str(data.data(), data.size());
     data.clear();
 
     switch(event) {

@@ -19,7 +19,7 @@ class DNS_Future
 
   private:
     // read-only
-    string m_host;
+    cow_string m_host;
 
     // result
     result_type m_result;
@@ -30,7 +30,7 @@ class DNS_Future
     // task, which can be enqueued into an `Async_Task_Executor`. This future will
     // become ready once the DNS query is complete.
     explicit
-    DNS_Future(stringR host);
+    DNS_Future(cow_stringR host);
 
   private:
     // Performs DNS lookup.
@@ -47,7 +47,7 @@ class DNS_Future
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(DNS_Future);
 
     // Gets the argument.
-    const string&
+    const cow_string&
     host() const noexcept
       { return this->m_host;  }
 

@@ -56,7 +56,7 @@ class Async_Logger
     // If this function fails, an exception is thrown, and there is no effect.
     // This function is thread-safe.
     void
-    enqueue(const Log_Context& ctx, string text);
+    enqueue(const Log_Context& ctx, cow_string text);
 
     // Waits until all pending log entries are delivered to output devices.
     // This function is thread-safe.

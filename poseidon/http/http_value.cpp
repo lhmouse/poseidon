@@ -48,7 +48,7 @@ parse(const char* str, size_t len)
 
     if(*str == '\"') {
       // Get a quoted string.
-      string unesc;
+      cow_string unesc;
       bool escaped = false;
       size_t sp = 0;
       while(++ sp != len) {
@@ -83,7 +83,7 @@ parse(const char* str, size_t len)
     // Try a token.
     auto etok = ::std::find_if(str, str + len, do_is_ctl_or_sep);
     if(etok != str) {
-      this->m_stor = string(str, etok);
+      this->m_stor = cow_string(str, etok);
       return (size_t) (etok - str);
     }
 
@@ -100,7 +100,7 @@ parse(const char* str)
 
 size_t
 HTTP_Value::
-parse(stringR str)
+parse(cow_stringR str)
   {
     return this->parse(str.data(), str.size());
   }
@@ -109,7 +109,7 @@ tinyfmt&
 HTTP_Value::
 print(tinyfmt& fmt) const
   {
-    if(auto qstr = this->m_stor.ptr<string>()) {
+    if(auto qstr = this->m_stor.ptr<cow_string>()) {
       // Check whether the string shall be quoted.
       auto pos = ::std::find_if(qstr->begin(), qstr->end(), do_is_ctl_or_sep);
       if(pos == qstr->end()) {
@@ -157,7 +157,7 @@ print(tinyfmt& fmt) const
     return fmt;
   }
 
-string
+cow_string
 HTTP_Value::
 print_to_string() const
   {

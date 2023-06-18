@@ -9,7 +9,7 @@
 namespace poseidon {
 
 DNS_Future::
-DNS_Future(stringR host)
+DNS_Future(cow_stringR host)
   : m_host(host)
   {
   }
