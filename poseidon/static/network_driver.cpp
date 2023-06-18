@@ -395,7 +395,6 @@ thread_loop()
 
     if(event.events & EPOLLPRI) {
       try {
-        ::ERR_clear_error();
         socket->do_abstract_socket_on_oob_readable();
       }
       catch(exception& stdex) {
@@ -410,7 +409,6 @@ thread_loop()
 
     if(event.events & EPOLLOUT) {
       try {
-        ::ERR_clear_error();
         socket->do_abstract_socket_on_writable();
       }
       catch(exception& stdex) {
@@ -425,7 +423,6 @@ thread_loop()
 
     if(event.events & EPOLLIN) {
       try {
-        ::ERR_clear_error();
         socket->do_abstract_socket_on_readable();
       }
       catch(exception& stdex) {
