@@ -125,6 +125,7 @@ using ::rocket::xstrpcpy;
 using ::rocket::xstrrpcpy;
 using ::rocket::xmemchr;
 using ::rocket::xmemcmp;
+using ::rocket::xmemeq;
 using ::rocket::xmempset;
 using ::rocket::xmemrpset;
 using ::rocket::xmempcpy;
