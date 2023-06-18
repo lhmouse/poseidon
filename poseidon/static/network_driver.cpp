@@ -352,23 +352,21 @@ thread_loop()
       this->m_epoll_sockets.erase(socket_it);
       this->do_epoll_ctl(EPOLL_CTL_DEL, socket, 0);
     }
+
     recursive_mutex::unique_lock io_lock(socket->m_io_mutex);
     socket->m_io_driver = this;
     lock.unlock();
 
-    POSEIDON_LOG_TRACE((
-        "Processing socket `$1` (class `$2`): HUP = $3, ERR = $4, IN = $5, PRI = $6, OUT = $7"),
-        socket, typeid(*socket), (event.events / EPOLLHUP) & 1U, (event.events / EPOLLERR) & 1U,
-        (event.events / EPOLLIN) & 1U, (event.events / EPOLLPRI) & 1U, (event.events / EPOLLOUT) & 1U);
-
     if(event.events & (EPOLLHUP | EPOLLERR)) {
-      try {
-        errno = 0;
-        ::socklen_t optlen = sizeof(errno);
-        if(event.events & EPOLLERR)
-          ::getsockopt(socket->m_fd, SOL_SOCKET, SO_ERROR, &errno, &optlen);
+      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLHUP | EPOLLERR"), socket, typeid(*socket));
 
-        socket->m_state.store(socket_state_closed);
+      socket->m_state.store(socket_state_closed);
+      errno = 0;
+      ::socklen_t optlen = sizeof(errno);
+      if(event.events & EPOLLERR)
+        ::getsockopt(socket->m_fd, SOL_SOCKET, SO_ERROR, &errno, &optlen);
+
+      try {
         socket->do_abstract_socket_on_closed();
       }
       catch(exception& stdex) {
@@ -377,16 +375,13 @@ thread_loop()
             "[socket class `$2`]"),
             stdex, typeid(*socket));
       }
-
-      // Exit now. This socket shall have been removed from this epoll.
-      socket->m_state.store(socket_state_closed);
-      return;
     }
 
     if(socket->m_state.load() == socket_state_closed) {
       // Force closure.
       ::shutdown(socket->m_fd, SHUT_RDWR);
       POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`) shutdown pending"), socket, typeid(*socket));
+      socket->m_io_driver = (Network_Driver*) 123456789;
       return;
     }
 
@@ -394,6 +389,8 @@ thread_loop()
       ::SSL_CTX_set_alpn_select_cb(server_ssl_ctx, do_alpn_callback, static_cast<Abstract_Socket*>(socket.get()));
 
     if(event.events & EPOLLPRI) {
+      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLPRI"), socket, typeid(*socket));
+
       try {
         socket->do_abstract_socket_on_oob_readable();
       }
@@ -403,11 +400,11 @@ thread_loop()
             "[socket class `$2`]"),
             stdex, typeid(*socket));
       }
-
-      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`) out-of-band read done"), socket, typeid(*socket));
     }
 
     if(event.events & EPOLLOUT) {
+      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLOUT"), socket, typeid(*socket));
+
       try {
         socket->do_abstract_socket_on_writable();
       }
@@ -417,11 +414,11 @@ thread_loop()
             "[socket class `$2`]"),
             stdex, typeid(*socket));
       }
-
-      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`) write done"), socket, typeid(*socket));
     }
 
     if(event.events & EPOLLIN) {
+      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLIN"), socket, typeid(*socket));
+
       try {
         socket->do_abstract_socket_on_readable();
       }
@@ -431,8 +428,6 @@ thread_loop()
             "[socket class `$2`]"),
             stdex, typeid(*socket));
       }
-
-      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`) read done"), socket, typeid(*socket));
     }
 
     bool throttled = socket->m_io_write_queue.size() > throttle_size;
