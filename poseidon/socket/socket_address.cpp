@@ -10,30 +10,17 @@ namespace poseidon {
 namespace {
 
 ROCKET_ALWAYS_INLINE
-array<uint8_t, 18>
-do_copy_bytes_be(const ::in6_addr& addr, uint16_t port) noexcept
-  {
-    array<uint8_t, 18> bytes;
-    uint8_t* wptr = bytes.begin();
-    xmemrpcpy(wptr, (const uint8_t*) &addr, sizeof(addr));
-    uint16_t beport = htobe16(port);
-    xmemrpcpy(wptr, (const uint8_t*) &beport, sizeof(beport));
-    ROCKET_ASSERT(wptr == bytes.end());
-    return bytes;
-  }
-
-ROCKET_ALWAYS_INLINE
 bool
-do_match_subnet(const void* addr, const void* mask, uint32_t bits) noexcept
+do_match_subnet(const char* addr, const char* mask, uint32_t bits) noexcept
   {
-    return (::memcmp(addr, mask, bits / 8) == 0) &&
-           (((*((const uint8_t*) addr + bits / 8) ^ *((const uint8_t*) mask + bits / 8))
-             & (0xFF00U >> bits % 8)) == 0);
+    uint32_t bi = bits / 8;
+    return (::memcmp(addr, mask, bi) == 0)
+           && (((addr[bi] ^ mask[bi]) & 0xFF & (0xFF00 >> bits % 8)) == 0);
   }
 
 inline
 IP_Address_Class
-do_classify_ipv4_generic(const void* addr) noexcept
+do_classify_ipv4_generic(const char* addr) noexcept
   {
     // 0.0.0.0/32: Unspecified
     if(do_match_subnet(addr, "\x00\x00\x00\x00", 32))
@@ -81,11 +68,11 @@ do_classify_ipv4_generic(const void* addr) noexcept
 
 inline
 IP_Address_Class
-do_classify_ipv6_generic(const void* addr) noexcept
+do_classify_ipv6_generic(const char* addr) noexcept
   {
     // ::ffff:0:0/96: IPv4-mapped
     if(do_match_subnet(addr, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF", 96))
-      return do_classify_ipv4_generic((const uint8_t*) addr + 12);
+      return do_classify_ipv4_generic(addr + 12);
 
     // ::/128: Unspecified
     if(do_match_subnet(addr, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 128))
@@ -97,11 +84,11 @@ do_classify_ipv6_generic(const void* addr) noexcept
 
     // 64:ff9b::/96: IPv4 to IPv6
     if(do_match_subnet(addr, "\x00\x64\xFF\x9B\x00\x00\x00\x00\x00\x00\x00\x00", 96))
-      return do_classify_ipv4_generic((const uint8_t*) addr + 12);
+      return do_classify_ipv4_generic(addr + 12);
 
     // 64:ff9b:1::/48: Local-Use IPv4/IPv6
     if(do_match_subnet(addr, "\x00\x64\xFF\x9B\x00\x01", 48))
-      return do_classify_ipv4_generic((const uint8_t*) addr + 12);
+      return do_classify_ipv4_generic(addr + 12);
 
     // 100::/64: Discard-Only
     if(do_match_subnet(addr, "\x01\x00\x00\x00\x00\x00\x00\x00", 64))
@@ -113,7 +100,7 @@ do_classify_ipv6_generic(const void* addr) noexcept
 
     // 2002::/16: 6to4
     if(do_match_subnet(addr, "\x20\x02", 16))
-      return do_classify_ipv4_generic((const uint8_t*) addr + 2);
+      return do_classify_ipv4_generic(addr + 2);
 
     // fc00::/7: Unique Local Unicast
     if(do_match_subnet(addr, "\xFC\x00", 7))
@@ -133,13 +120,13 @@ do_classify_ipv6_generic(const void* addr) noexcept
 
 }  // namespace
 
-const Socket_Address ipv6_unspecified  = (::in6_addr) {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-const Socket_Address ipv6_loopback     = (::in6_addr) {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1};
-const Socket_Address ipv6_invalid      = (::in6_addr) {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+const Socket_Address ipv6_unspecified  = (::in6_addr) { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+const Socket_Address ipv6_loopback     = (::in6_addr) { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 };
+const Socket_Address ipv6_invalid      = (::in6_addr) { 1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 
-const Socket_Address ipv4_unspecified  = (::in6_addr) {0,0,0,0,0,0,0,0,0,0,255,255,0,0,0,0};
-const Socket_Address ipv4_loopback     = (::in6_addr) {0,0,0,0,0,0,0,0,0,0,255,255,127,0,0,1};
-const Socket_Address ipv4_broadcast    = (::in6_addr) {0,0,0,0,0,0,0,0,0,0,255,255,255,255,255,255};
+const Socket_Address ipv4_unspecified  = (::in6_addr) { 0,0,0,0,0,0,0,0,0,0,255,255,0,0,0,0 };
+const Socket_Address ipv4_loopback     = (::in6_addr) { 0,0,0,0,0,0,0,0,0,0,255,255,127,0,0,1 };
+const Socket_Address ipv4_broadcast    = (::in6_addr) { 0,0,0,0,0,0,0,0,0,0,255,255,255,255,255,255 };
 
 Socket_Address::
 Socket_Address(const char* str, size_t len)
@@ -172,16 +159,24 @@ int
 Socket_Address::
 compare(const Socket_Address& other) const noexcept
   {
-    auto bl = do_copy_bytes_be(this->m_addr, this->m_port);
-    auto br = do_copy_bytes_be(other.m_addr, other.m_port);
-    return ::memcmp(bl.data(), br.data(), br.size());
+    char tdata[18];
+    ::memcpy(tdata, &(this->m_addr), 16);
+    uint16_t port_be = htobe16(this->m_port);
+    ::memcpy(tdata + 16, &port_be, 2);
+
+    char odata[18];
+    ::memcpy(odata, &(other.m_addr), 16);
+    port_be = htobe16(other.m_port);
+    ::memcpy(odata + 16, &port_be, 2);
+
+    return ::memcmp(tdata, odata, 18);
   }
 
 IP_Address_Class
 Socket_Address::
 classify() const noexcept
   {
-    return do_classify_ipv6_generic(&(this->m_addr));
+    return do_classify_ipv6_generic((const char*) &(this->m_addr));
   }
 
 size_t
@@ -196,14 +191,13 @@ parse(const char* str, size_t len) noexcept
     // Break down the host:port string as a URL.
     ::http_parser_url url;
     url.field_set = 0;
-
     if(::http_parser_parse_url(str, len, true, &url) != 0)
       return 0;
 
+    char* addr = (char*) &(this->m_addr);
+    char sbuf[64];
     const char* host = str + url.field_data[UF_HOST].off;
     size_t hostlen = url.field_data[UF_HOST].len;
-    uint8_t* addr = (uint8_t*) &(this->m_addr);
-    char sbuf[64];
 
     if((hostlen < 1) || (hostlen > 63))
       return 0;
@@ -247,7 +241,7 @@ size_t
 Socket_Address::
 print_partial(char* str) const noexcept
   {
-    const uint8_t* addr = (const uint8_t*) &(this->m_addr);
+    const char* addr = (const char*) &(this->m_addr);
     ::rocket::ascii_numput nump;
     char* wptr = str;
 
