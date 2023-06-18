@@ -149,9 +149,9 @@ swap(HTTP_Value& lhs, HTTP_Value& rhs) noexcept
 
 inline
 tinyfmt&
-operator<<(tinyfmt& fmt, const HTTP_Value& ts)
+operator<<(tinyfmt& fmt, const HTTP_Value& val)
   {
-    return ts.print(fmt);
+    return val.print(fmt);
   }
 
 }  // namespace poseidon
