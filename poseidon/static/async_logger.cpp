@@ -29,7 +29,7 @@ struct Log_Message
 
 #define NEL_HT   "\x1B\x45\t"
 
-constexpr char escapes[][5] =
+constexpr char s_escapes[][5] =
   {
     "\\0",   "\\x01", "\\x02", "\\x03", "\\x04", "\\x05", "\\x06", "\\a",
     "\\b",   "\t",    NEL_HT,  "\\v",   "\\f",   "\\r",   "\\x0E", "\\x0F",
@@ -128,124 +128,134 @@ do_load_level_config(Level_Config& lconf, const Config_File& file, const char* n
 
 inline
 void
-do_color(cow_string& data, const Level_Config& lconf, const char* code)
+do_color(linear_buffer& mtext, const Level_Config& lconf, const char* code)
   {
-    if(!lconf.color.empty())
-      data << "\x1B[" << code << "m";
+    if(lconf.color.empty())
+      return;
+
+    // Emit the sequence only if colors are enabled.
+    mtext.putc('\x1B');
+    mtext.putc('[');
+    mtext.puts(code);
+    mtext.putc('m');
+  }
+
+inline
+unique_posix_fd
+do_open_log_file_opt(const Level_Config& lconf)
+  {
+    unique_posix_fd lfd(::close);
+    if(ROCKET_EXPECT(!lconf.file.empty()))
+      lfd.reset(::open(lconf.file.c_str(), O_WRONLY | O_APPEND | O_CREAT, 0644));
+    return lfd;
   }
 
 void
 do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
   try {
-    // Compose the string to write.
-    cow_string data;
-    data.reserve(2047);
-
-    // Write the timestamp and tag for sorting.
-    do_color(data, lconf, lconf.color.c_str());
-
-    ::timespec ts;
-    ::clock_gettime(CLOCK_REALTIME, &ts);
-    ::tm tr;
-    ::localtime_r(&(ts.tv_sec), &tr);
-
+    // Compose the message to write.
+    linear_buffer mtext;
+    char stemp[] = "2014-09-26 00:58:26.123456789";
+    uint64_t date;
     ::rocket::ascii_numput nump;
-    nump.put_DU((uint32_t) tr.tm_year + 1900, 4);
-    data += nump.data();
-    data += '-';
-    nump.put_DU((uint32_t) tr.tm_mon + 1, 2);
-    data += nump.data();
-    data += '-';
-    nump.put_DU((uint32_t) tr.tm_mday, 2);
-    data += nump.data();
-    data += ' ';
-    nump.put_DU((uint32_t) tr.tm_hour, 2);
-    data += nump.data();
-    data += ':';
-    nump.put_DU((uint32_t) tr.tm_min, 2);
-    data += nump.data();
-    data += ':';
-    nump.put_DU((uint32_t) tr.tm_sec, 2);
-    data += nump.data();
-    data += '.';
-    nump.put_DU((uint32_t) ts.tv_nsec, 9);
-    data += nump.data();
-    data += ' ';
-    data += (tr.tm_gmtoff >= 0) ? '+' : '-';
-    nump.put_DU((uint32_t) ::std::abs(tr.tm_gmtoff) / 3600, 2);
-    data += nump.data();
-    nump.put_DU((uint32_t) ::std::abs(tr.tm_gmtoff) / 60 % 60, 2);
-    data += nump.data();
-    data += ' ';
 
-    do_color(data, lconf, "7");  // inverse
-    data += lconf.tag;
-    do_color(data, lconf, "0");  // reset
-    data += ' ';
+    ::timespec tv;
+    ::clock_gettime(CLOCK_REALTIME, &tv);
+    ::tm tm;
+    ::localtime_r(&(tv.tv_sec), &tm);
+
+    date = (uint32_t) tm.tm_year + 1900;
+    date *= 1000;
+    date += (uint32_t) tm.tm_mon + 1;
+    date *= 1000;
+    date += (uint32_t) tm.tm_mday;
+    date *= 1000;
+    date += (uint32_t) tm.tm_hour;
+    date *= 1000;
+    date += (uint32_t) tm.tm_min;
+    date *= 1000;
+    date += (uint32_t) tm.tm_sec;
+
+    nump.put_DU(date, 19);
+    ::memcpy(stemp, nump.data(), 19);
+
+    stemp[4] = '-';
+    stemp[7] = '-';
+    stemp[10] = ' ';
+    stemp[13] = ':';
+    stemp[16] = ':';
+
+    nump.put_DU((uint32_t) tv.tv_nsec, 9);
+    ::memcpy(stemp + 20, nump.data(), 9);
+
+    // Write the timestamp and tag.
+    do_color(mtext, lconf, lconf.color.c_str());  // level color
+    mtext.putn(stemp, 29);
+    do_color(mtext, lconf, "7");  // inverse
+    mtext.puts(lconf.tag);
+    do_color(mtext, lconf, "0");  // reset
+    mtext.putc(' ');
 
     // Write the thread name and ID.
-    do_color(data, lconf, "30;1");  // grey
-    data += "THREAD ";
+    do_color(mtext, lconf, "30;1");  // grey
+    mtext.puts("THREAD ");
     nump.put_DU(msg.thrd_lwpid);
-    data += nump.data();
-    data += " \"";
-    data += msg.thrd_name;
-    data += "\" ";
+    mtext.putn(nump.data(), nump.size());
+    mtext.puts(" \"");
+    mtext.puts(msg.thrd_name);
+    mtext.puts("\" ");
 
     // Write the function name.
-    do_color(data, lconf, "37;1");  // bright white
-    data += "FUNCTION `";
-    data += msg.ctx.func;
-    data += "` ";
+    do_color(mtext, lconf, "37;1");  // bright white
+    mtext.puts("FUNCTION `");
+    mtext.puts(msg.ctx.func);
+    mtext.puts("` ");
 
     // Write the source file name and line number.
-    do_color(data, lconf, "34;1");  // bright blue
-    data += "SOURCE \'";
-    data += msg.ctx.file;
-    data += ':';
+    do_color(mtext, lconf, "34;1");  // bright blue
+    mtext.puts("SOURCE \'");
+    mtext.puts(msg.ctx.file);
+    mtext.putc(':');
     nump.put_DU(msg.ctx.line);
-    data += nump.data();
-    data += "\'" NEL_HT;
+    mtext.putn(nump.data(), nump.size());
+    mtext.puts("\'" NEL_HT);
 
     // Write the message.
-    do_color(data, lconf, "0");  // reset
-    do_color(data, lconf, lconf.color.c_str());
+    do_color(mtext, lconf, "0");  // reset
+    do_color(mtext, lconf, lconf.color.c_str());
 
     for(char ch : msg.text) {
-      const char* seq = escapes[(uint8_t) ch];
+      // Escape harmful characters.
+      const char* seq = s_escapes[(uint8_t) ch];
       if(seq[1] == 0) {
         // non-escaped
-        data.push_back(seq[0]);
+        mtext.putc(seq[0]);
       }
       else if(seq[0] == '\\') {
         // non-printable or bad
-        do_color(data, lconf, "7");
-        data.append(seq);
-        do_color(data, lconf, "27");
+        do_color(mtext, lconf, "7");
+        mtext.puts(seq);
+        do_color(mtext, lconf, "27");
       }
       else
-        data.append(seq);
+        mtext.puts(seq);
     }
 
     // Remove trailing space characters.
-    size_t pos = data.rfind_not_of(" \f\n\r\t\v");
-    data.erase(pos + 1);
-    do_color(data, lconf, "0");  // reset
-    data += NEL_HT;
-    data.mut_back() = '\n';
+    while(::asteria::is_cmask(mtext.end()[-1], ::asteria::cmask_space))
+      mtext.unaccept(1);
 
-    // Prepare output streams.
-    array<unique_posix_fd, 8> fds;
+    // Terminate the message.
+    do_color(mtext, lconf, "0");  // reset
+    mtext.puts(NEL_HT);
+    mtext.mut_end()[-1] = '\n';
 
+    // Write it. Errors are ignored.
     if(lconf.stdio != -1)
-      fds.at(0).reset(lconf.stdio, nullptr);  // no closer
+      (void)! ::write(lconf.stdio, mtext.data(), mtext.size());
 
-    if(lconf.file != "")
-      fds.at(1).reset(::open(lconf.file.c_str(), O_WRONLY | O_APPEND | O_CREAT, 0644), ::close);
-
-    // Write text to streams. Errors are ignored.
-    for(int fd : fds)
-      (void) !::write(fd, data.data(), data.size());
+    if(auto lfd = do_open_log_file_opt(lconf))
+      (void)! ::write(lfd, mtext.data(), mtext.size());
   }
   catch(exception& stdex) {
     ::fprintf(stderr,
