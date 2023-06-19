@@ -223,6 +223,8 @@ class SSL_Socket;
 class HTTP_DateTime;
 class HTTP_Value;
 class HTTP_Header;
+class HTTP_Request_Headers;
+class HTTP_Response_Headers;
 
 // Easy types
 // Being 'easy' means all callbacks are invoked in fibers and can perform
