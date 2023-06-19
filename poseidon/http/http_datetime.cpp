@@ -176,7 +176,7 @@ HTTP_DateTime(cow_stringR str)
 
 size_t
 HTTP_DateTime::
-parse_rfc1123_partial(const char* str) noexcept
+parse_rfc1123_partial(const char* str)
   {
     const char* rptr = str;
     ::tm tm = { };
@@ -212,7 +212,7 @@ parse_rfc1123_partial(const char* str) noexcept
 
 size_t
 HTTP_DateTime::
-parse_rfc850_partial(const char* str) noexcept
+parse_rfc850_partial(const char* str)
   {
     const char* rptr = str;
     ::tm tm = { };
@@ -246,7 +246,7 @@ parse_rfc850_partial(const char* str) noexcept
 
 size_t
 HTTP_DateTime::
-parse_asctime_partial(const char* str) noexcept
+parse_asctime_partial(const char* str)
   {
     const char* rptr = str;
     ::tm tm = { };
