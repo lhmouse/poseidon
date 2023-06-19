@@ -9,4 +9,9 @@ namespace {
 
 }  // namespace
 
+HTTP_Request_Headers::
+~HTTP_Request_Headers()
+  {
+  }
+
 }  // namespace poseidon
