@@ -189,8 +189,7 @@ parse_rfc1123_partial(const char* str)
     do_match(rptr, tm.tm_mon, s_month, 3);
     do_match(rptr, " ", 1);
     do_match(rptr, tm.tm_year, s_2digit, 2);
-    tm.tm_year -= 19;
-    tm.tm_year *= 100;
+    tm.tm_year = tm.tm_year * 100 - 1900;
     do_match(rptr, tm.tm_year, s_2digit, 2);
     do_match(rptr, " ", 1);
     do_match(rptr, tm.tm_hour, s_2digit, 2);
@@ -265,8 +264,7 @@ parse_asctime_partial(const char* str)
     do_match(rptr, tm.tm_sec, s_2digit, 2);
     do_match(rptr, " ", 1);
     do_match(rptr, tm.tm_year, s_2digit, 2);
-    tm.tm_year -= 19;
-    tm.tm_year *= 100;
+    tm.tm_year = tm.tm_year * 100 - 1900;
     do_match(rptr, tm.tm_year, s_2digit, 2);
 
     // Accept nothing if any of the operations above has failed.
@@ -285,20 +283,18 @@ parse(const char* str, size_t len)
   {
     // A string with an erroneous length will not be accepted, so
     // we just need to check for possibilities by `len`.
-    if(len >= 29)
-      if(size_t acc_len = this->parse_rfc1123_partial(str))
-        return acc_len;
+    size_t acc_len = 0;
 
-    if(len >= 30)
-      if(size_t acc_len = this->parse_rfc850_partial(str))
-        return acc_len;
+    if((acc_len == 0) && (len >= 29))
+      acc_len = this->parse_rfc1123_partial(str);
 
-    if(len >= 24)
-      if(size_t acc_len = this->parse_asctime_partial(str))
-        return acc_len;
+    if((acc_len == 0) && (len >= 30))
+      acc_len = this->parse_rfc850_partial(str);
 
-    // Nothing has been accepted. Fail.
-    return 0;
+    if((acc_len == 0) && (len >= 24))
+      acc_len = this->parse_asctime_partial(str);
+
+    return acc_len;
   }
 
 size_t
