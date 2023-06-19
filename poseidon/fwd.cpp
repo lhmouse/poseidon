@@ -27,7 +27,7 @@ do_async_logger_check_level(Log_Level level) noexcept
   }
 
 void
-do_async_logger_enqueue(const Log_Context& ctx, void* cb_obj, callback_thunk_ptr<cow_string&> cb_thunk) noexcept
+do_async_logger_enqueue(const Log_Context& ctx, callback_thunk_ptr<cow_string&> cb_thunk, void* cb_obj) noexcept
   {
     try {
       cow_string msg;

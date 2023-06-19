@@ -299,15 +299,15 @@ bool
 do_async_logger_check_level(Log_Level level) noexcept;
 
 void
-do_async_logger_enqueue(const Log_Context& ctx, void* cb_obj, callback_thunk_ptr<cow_string&> cb_thunk) noexcept;
+do_async_logger_enqueue(const Log_Context& ctx, callback_thunk_ptr<cow_string&> cb_thunk, void* cb_obj) noexcept;
 
 template<typename... ParamsT>
 inline
 bool
 do_async_logger_enqueue_generic(const Log_Context& ctx, const ParamsT&... params) noexcept
   {
-    auto my_thunk = [&](cow_string& msg) { ::asteria::format(msg, params...);  };
-    do_async_logger_enqueue(ctx, ::std::addressof(my_thunk), callback_thunk<decltype(my_thunk)>);
+    auto formatter = [&](cow_string& msg) { ::asteria::format(msg, params...);  };
+    noadl::do_async_logger_enqueue(ctx, callback_thunk<decltype(formatter)>, &formatter);
     return true;
   }
 
