@@ -52,6 +52,8 @@ class HTTP_Value
       }
 
   public:
+    ASTERIA_COPYABLE_DESTRUCTOR(HTTP_Value);
+
     // Accesses raw data.
     bool
     is_null() const noexcept

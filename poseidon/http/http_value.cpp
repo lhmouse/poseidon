@@ -27,6 +27,11 @@ do_is_ctl_or_ws(char ch) noexcept
 
 }  // namespace
 
+HTTP_Value::
+~HTTP_Value()
+  {
+  }
+
 size_t
 HTTP_Value::
 parse(const char* str, size_t len)
