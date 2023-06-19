@@ -37,7 +37,7 @@ size_t
 HTTP_Value::
 parse_quoted_string_partial(const char* str, size_t len)
   {
-    if((len <  2) || (*str != '\"'))
+    if((len <= 1) || (*str != '\"'))
       return 0;
 
     // Get a quoted string. Zero shall be returned in case of any errors.
