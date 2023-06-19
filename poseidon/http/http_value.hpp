@@ -65,7 +65,7 @@ class HTTP_Value
     is_string() const noexcept
       { return this->m_stor.ptr<cow_string>() != nullptr;  }
 
-    const cow_string&
+    cow_stringR
     as_string() const
       { return this->m_stor.as<cow_string>();  }
 
@@ -74,7 +74,7 @@ class HTTP_Value
       { return this->m_stor.mut<cow_string>();  }
 
     void
-    set_string(const cow_string& str) noexcept
+    set_string(cow_stringR str) noexcept
       { this->m_stor = str;  }
 
     bool
