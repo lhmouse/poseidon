@@ -27,10 +27,12 @@ struct Log_Message
     cow_string text;
   };
 
+#define NEL_HT   "\x1B\x45\t"
+
 constexpr char escapes[][5] =
   {
     "\\0",   "\\x01", "\\x02", "\\x03", "\\x04", "\\x05", "\\x06", "\\a",
-    "\\b",   "\t",    "\n\t",  "\\v",   "\\f",   "\\r",   "\\x0E", "\\x0F",
+    "\\b",   "\t",    NEL_HT,  "\\v",   "\\f",   "\\r",   "\\x0E", "\\x0F",
     "\\x10", "\\x11", "\\x12", "\\x13", "\\x14", "\\x15", "\\x16", "\\x17",
     "\\x18", "\\x19", "\\x1A", "\\x1B", "\\x1C", "\\x1D", "\\x1E", "\\x1F",
     " ",     "!",     "\"",    "#",     "$",     "%",     "&",     "\'",
@@ -203,12 +205,11 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
     data += ':';
     nump.put_DU(msg.ctx.line);
     data += nump.data();
-    data += "\'\n";
+    data += "\'" NEL_HT;
 
     // Write the message.
     do_color(data, lconf, "0");  // reset
     do_color(data, lconf, lconf.color.c_str());
-    data += '\t';
 
     for(char ch : msg.text) {
       const char* seq = escapes[(uint8_t) ch];
@@ -229,7 +230,7 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
     // Remove trailing space characters.
     size_t pos = data.rfind_not_of(" \f\n\r\t\v");
     data.erase(pos + 1);
-    data += "\n\v";
+    data += NEL_HT "\n";
     do_color(data, lconf, "0");  // reset
 
     // Prepare output streams.
