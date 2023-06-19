@@ -111,17 +111,42 @@ class HTTP_Value
     set_datetime(const HTTP_DateTime& tm) noexcept
       { this->m_stor = tm;  }
 
-    // Try parsing an HTTP value, from a possible HTTP message header. The
-    // string is matched against these rules (in this order):
+    // Try parsing a quoted string. Upon success, the number of characters that
+    // have been accepted is returned. Otherwise zero is returned, and the
+    // contents of this object is indeterminate.
+    size_t
+    parse_quoted_string_partial(const char* str, size_t len);
+
+    // Try parsing a floating-point number, starting with a decimal digit. Upon
+    // success, the number of characters that have been accepted is returned.
+    // Otherwise zero is returned, and the contents of this object are
+    // indeterminate.
+    size_t
+    parse_number_partial(const char* str, size_t len);
+
+    // Try parsing an HTTP date/time partially from a string. Upon success, the
+    // number of characters that have been accepted is returned. Otherwise zero
+    // is returned, and the contents of this object are indeterminate.
+    size_t
+    parse_datetime_partial(const char* str, size_t len);
+
+    // Try parsing an HTTP token and store it as a string. Upon success, the
+    // number of characters that have been accepted is returned. Otherwise zero
+    // is returned, and the contents of this object are indeterminate.
+    size_t
+    parse_token_partial(const char* str, size_t len);
+
+    // Try parsing an HTTP value, possibly from an HTTP header. The string is
+    // matched against these rules (in this order):
     //
-    // * an HTTP date/time, starting with a weekday
     // * a quoted string, enclosed in a pair of double quotes
     // * a floating-point number, starting with a digit
+    // * an HTTP date/time, starting with a weekday
     // * an HTTP token
     //
-    // If a match has been found and parsed accordingly, the number of
-    // characters that have been consumed is returned. Otherwise zero is
-    // returned, and the contents of this object is indeterminate.
+    // If a match is found and parsed accordingly, the number of characters
+    // that have been consumed is returned. Otherwise zero is  returned, and
+    // the contents of this object are indeterminate.
     size_t
     parse(const char* str, size_t len);
 

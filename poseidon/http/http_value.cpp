@@ -12,10 +12,11 @@ bool
 do_is_ctl_or_sep(char ch) noexcept
   {
     // https://www.rfc-editor.org/rfc/rfc2616#section-2.2
-    return ((ch >= 0x00) && (ch <= 0x20)) || (ch == '(') || (ch == ')') || (ch == '<')
-           || (ch == '>') || (ch == '@') || (ch == ',') || (ch == ';') || (ch == ':')
-           || (ch == '\\') || (ch == '\"') || (ch == '/') || (ch == '[') || (ch == ']')
-           || (ch == '?') || (ch == '=') || (ch == '{') || (ch == '}');
+    return ((ch >= 0x00) && (ch <= 0x20)) || (ch == '(') || (ch == ')')
+           || (ch == '<') || (ch == '>') || (ch == '@') || (ch == ',')
+           || (ch == ';') || (ch == ':') || (ch == '\\') || (ch == '\"')
+           || (ch == '/') || (ch == '[') || (ch == ']') || (ch == '?')
+           || (ch == '=') || (ch == '{') || (ch == '}');
   }
 
 constexpr
@@ -34,66 +35,121 @@ HTTP_Value::
 
 size_t
 HTTP_Value::
+parse_quoted_string_partial(const char* str, size_t len)
+  {
+    if((len <  2) || (*str != '\"'))
+      return 0;
+
+    // Get a quoted string. Zero shall be returned in case of any errors.
+    cow_string unescaped;
+    size_t plain = 1;
+    const char* bp = str + 1;
+
+    while(!plain || (*bp != '\"')) {
+      // A previous escape character exists if `plain` equals zero.
+      if(!plain || (*bp != '\\'))
+        unescaped.push_back(*bp);
+      else
+        plain = SIZE_MAX;
+
+      plain ++;
+      bp ++;
+
+      // Fail if there is no closing quote.
+      if(bp == str + len)
+        return 0;
+    }
+
+    this->m_stor = ::std::move(unescaped);
+    return (size_t) (bp + 1 - str);
+  }
+
+size_t
+HTTP_Value::
+parse_datetime_partial(const char* str, size_t len)
+  {
+    HTTP_DateTime tm;
+    size_t ac = tm.parse(str, len);
+    if(ac == 0)
+      return 0;
+
+    this->m_stor = tm;
+    return ac;
+  }
+
+size_t
+HTTP_Value::
+parse_number_partial(const char* str, size_t len)
+  {
+    ::rocket::ascii_numget numg;
+    size_t ac = numg.parse_D(str, len);
+    if(ac == 0)
+      return 0;
+
+    // Make sure it's not part of a token.
+    if((ac < len) && !do_is_ctl_or_sep(str[ac]))
+      return 0;
+
+    double num;
+    numg.cast_D(num, -HUGE_VAL, +HUGE_VAL);
+    this->m_stor = num;
+    return ac;
+  }
+
+size_t
+HTTP_Value::
+parse_token_partial(const char* str, size_t len)
+  {
+    auto pos = ::std::find_if(str, str + len, do_is_ctl_or_sep);
+    if(pos == str)
+      return 0;
+
+    this->m_stor = cow_string(str, pos);
+    return (size_t) (pos - str);
+  }
+
+size_t
+HTTP_Value::
 parse(const char* str, size_t len)
   {
-    this->m_stor = nullptr;
-
     if(len == 0)
       return 0;
 
-    if((*str == 'S') || (*str == 'M') || (*str == 'T') || (*str == 'W') || (*str == 'F')) {
-      // This might start a weekday. Try HTTP date/time.
-      HTTP_DateTime tm;
-      size_t r = tm.parse(str, len);
-      if(r) {
-        this->m_stor = tm;
-        return r;
-      }
+    size_t acc_len = 0;
+
+    // What does the string look like?
+    switch(*str) {
+      case '\"':
+        acc_len = this->parse_quoted_string_partial(str, len);
+        break;
+
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
+        acc_len = this->parse_number_partial(str, len);
+        break;
+
+      case 'S':  // Sun, Sat
+      case 'M':  // Mon
+      case 'T':  // Tue, Thu
+      case 'W':  // Wed
+      case 'F':  // Fri
+        acc_len = this->parse_datetime_partial(str, len);
+        break;
     }
 
-    if(*str == '\"') {
-      // Get a quoted string.
-      cow_string unesc;
-      bool escaped = false;
-      size_t sp = 0;
-      while(++ sp != len) {
-        // Escaped characters, including control characters, are accepted
-        // unconditionally for maximum compatibility.
-        if(!escaped && (str[sp] == '\\')) {
-          escaped = true;
-          continue;
-        }
-        else if(!escaped && (str[sp] == '\"')) {
-          this->m_stor = ::std::move(unesc);
-          return sp + 1;
-        }
-        unesc.push_back(str[sp]);
-        escaped = false;
-      }
-    }
+    // If previous attempts have failed, try this generic one.
+    if(acc_len == 0)
+      acc_len = this->parse_token_partial(str, len);
 
-    if((*str >= '0') && (*str <= '9')) {
-      // This might start a number. Try parsing a `double`, but also make
-      // sure it is not part of a token.
-      ::rocket::ascii_numget numg;
-      size_t r = numg.parse_D(str, len);
-      if((r != 0) && do_is_ctl_or_sep(str[r])) {
-        double num;
-        numg.cast_D(num, -HUGE_VAL, +HUGE_VAL);
-        this->m_stor = num;
-        return r;
-      }
-    }
-
-    // Try a token.
-    auto etok = ::std::find_if(str, str + len, do_is_ctl_or_sep);
-    if(etok != str) {
-      this->m_stor = cow_string(str, etok);
-      return (size_t) (etok - str);
-    }
-
-    // Nothing has been accepted. Fail.
-    return 0;
+    return acc_len;
   }
 
 size_t

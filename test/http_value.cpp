@@ -68,5 +68,4 @@ main()
     POSEIDON_TEST_CHECK(hval.as_string() == "Thu");
 
     POSEIDON_TEST_CHECK(hval.parse(" mumble") == 0);
-    POSEIDON_TEST_CHECK(hval.is_null());
   }
