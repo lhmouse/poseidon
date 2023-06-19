@@ -230,8 +230,9 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
     // Remove trailing space characters.
     size_t pos = data.rfind_not_of(" \f\n\r\t\v");
     data.erase(pos + 1);
-    data += NEL_HT "\n";
     do_color(data, lconf, "0");  // reset
+    data += NEL_HT;
+    data.mut_back() = '\n';
 
     // Prepare output streams.
     array<unique_posix_fd, 8> fds;
