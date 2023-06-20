@@ -80,6 +80,14 @@ class HTTP_Response_Headers
     header_name(size_t index) const
       { return this->m_headers.at(index).first;  }
 
+    bool
+    header_name_equals(size_t index, cow_stringR cmp) const
+      {
+        const auto& my = this->m_headers.at(index).first;
+        bool eq = ::rocket::ascii_ci_equal(my.data(), my.size(), cmp.data(), cmp.size());
+        return eq;
+      }
+
     const HTTP_Value&
     header_value(size_t index) const
       { return this->m_headers.at(index).second;  }
