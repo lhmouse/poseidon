@@ -1,0 +1,23 @@
+// This file is part of Poseidon.
+// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+
+#ifndef POSEIDON_SOCKET_HTTPS_CLIENT_SESSION_
+#define POSEIDON_SOCKET_HTTPS_CLIENT_SESSION_
+
+#include "../fwd.hpp"
+#include "ssl_socket.hpp"
+namespace poseidon {
+
+class HTTPS_Client_Session
+  : public SSL_Socket
+  {
+  private:
+    friend class Network_Driver;
+
+  public:
+    ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(HTTPS_Client_Session);
+
+  };
+
+}  // namespace poseidon
+#endif

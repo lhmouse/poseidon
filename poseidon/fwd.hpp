@@ -218,6 +218,10 @@ class Listen_Socket;
 class UDP_Socket;
 class TCP_Socket;
 class SSL_Socket;
+class HTTP_Server_Session;
+class HTTP_Client_Session;
+class HTTPS_Server_Session;
+class HTTPS_Client_Session;
 
 // HTTP types
 class HTTP_DateTime;

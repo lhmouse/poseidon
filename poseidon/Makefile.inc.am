@@ -30,6 +30,10 @@ nobase_include_HEADERS +=  \
   %reldir%/socket/listen_socket.hpp  \
   %reldir%/socket/tcp_socket.hpp  \
   %reldir%/socket/ssl_socket.hpp  \
+  %reldir%/socket/http_client_session.hpp  \
+  %reldir%/socket/http_server_session.hpp  \
+  %reldir%/socket/https_client_session.hpp  \
+  %reldir%/socket/https_server_session.hpp  \
   %reldir%/http/http_datetime.hpp  \
   %reldir%/http/http_value.hpp  \
   %reldir%/http/http_request_headers.hpp  \
@@ -71,6 +75,10 @@ lib_libposeidon_la_SOURCES =  \
   %reldir%/socket/listen_socket.cpp  \
   %reldir%/socket/tcp_socket.cpp  \
   %reldir%/socket/ssl_socket.cpp  \
+  %reldir%/socket/http_client_session.cpp  \
+  %reldir%/socket/http_server_session.cpp  \
+  %reldir%/socket/https_client_session.cpp  \
+  %reldir%/socket/https_server_session.cpp  \
   %reldir%/http/http_datetime.cpp  \
   %reldir%/http/http_value.cpp  \
   %reldir%/http/http_request_headers.cpp  \
