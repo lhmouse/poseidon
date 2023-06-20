@@ -222,7 +222,6 @@ class SSL_Socket;
 // HTTP types
 class HTTP_DateTime;
 class HTTP_Value;
-class HTTP_Header;
 class HTTP_Request_Headers;
 class HTTP_Response_Headers;
 
