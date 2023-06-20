@@ -18,7 +18,7 @@ class HTTP_Request_Headers
   public:
     // Constructors
     explicit
-    HTTP_Request_Headers(const cow_string& verb, const cow_string& uri)
+    HTTP_Request_Headers(cow_stringR verb, cow_stringR uri) noexcept
       : m_verb(verb), m_uri(uri)
       { }
 
@@ -112,9 +112,9 @@ swap(HTTP_Request_Headers& lhs, HTTP_Request_Headers& rhs) noexcept
 
 inline
 tinyfmt&
-operator<<(tinyfmt& fmt, const HTTP_Request_Headers& headers)
+operator<<(tinyfmt& fmt, const HTTP_Request_Headers& req)
   {
-    return headers.print(fmt);
+    return req.print(fmt);
   }
 
 }  // namespace poseidon
