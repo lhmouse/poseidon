@@ -14,8 +14,8 @@ nobase_include_HEADERS +=  \
   %reldir%/static/fiber_scheduler.hpp  \
   %reldir%/static/async_task_executor.hpp  \
   %reldir%/static/network_driver.hpp  \
+  %reldir%/base/char256.hpp  \
   %reldir%/base/config_file.hpp  \
-  %reldir%/base/charbuf_256.hpp  \
   %reldir%/base/abstract_timer.hpp  \
   %reldir%/base/abstract_async_task.hpp  \
   %reldir%/base/deflator.hpp  \

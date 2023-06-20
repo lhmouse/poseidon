@@ -69,9 +69,9 @@ SSL_Socket::
     POSEIDON_LOG_INFO(("Destroying `$1` (class `$2`)"), this, typeid(*this));
   }
 
-charbuf_256
+char256
 SSL_Socket::
-do_on_ssl_alpn_request(cow_vector<charbuf_256>&& protos)
+do_on_ssl_alpn_request(cow_vector<char256>&& protos)
   {
     for(const char* proto : protos)
       POSEIDON_LOG_DEBUG((
@@ -84,7 +84,7 @@ do_on_ssl_alpn_request(cow_vector<charbuf_256>&& protos)
 
 void
 SSL_Socket::
-do_ssl_alpn_request(const charbuf_256* protos_opt, size_t protos_size)
+do_ssl_alpn_request(const char256* protos_opt, size_t protos_size)
   {
     if(protos_size == 1)
       return this->do_ssl_alpn_request(*protos_opt);
@@ -114,21 +114,21 @@ do_ssl_alpn_request(const charbuf_256* protos_opt, size_t protos_size)
 
 void
 SSL_Socket::
-do_ssl_alpn_request(const cow_vector<charbuf_256>& protos)
+do_ssl_alpn_request(const cow_vector<char256>& protos)
   {
     this->do_ssl_alpn_request(protos.data(), protos.size());
   }
 
 void
 SSL_Socket::
-do_ssl_alpn_request(initializer_list<charbuf_256> protos)
+do_ssl_alpn_request(initializer_list<char256> protos)
   {
     this->do_ssl_alpn_request(protos.begin(), protos.size());
   }
 
 void
 SSL_Socket::
-do_ssl_alpn_request(const charbuf_256& proto)
+do_ssl_alpn_request(const char256& proto)
   {
     static_vector<uint8_t, 256> pbuf;
 
