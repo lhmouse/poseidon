@@ -125,33 +125,33 @@ main()
     char temp[64];
 
     for(const auto& r : tests) {
-      dt.set_seconds(zero_duration);
+      dt.set_unix_time({});
       POSEIDON_TEST_CHECK(dt.parse_rfc1123_partial(r.rfc1123) == ::strlen(r.rfc1123));
-      POSEIDON_TEST_CHECK(dt.as_seconds() == (seconds) r.ts);
+      POSEIDON_TEST_CHECK(dt.as_seconds_since_epoch() == (seconds) r.ts);
 
-      dt.set_seconds(zero_duration);
+      dt.set_unix_time({});
       POSEIDON_TEST_CHECK(dt.parse_rfc850_partial(r.rfc850) == ::strlen(r.rfc850));
-      POSEIDON_TEST_CHECK(dt.as_seconds() == (seconds) r.ts);
+      POSEIDON_TEST_CHECK(dt.as_seconds_since_epoch() == (seconds) r.ts);
 
-      dt.set_seconds(zero_duration);
+      dt.set_unix_time({});
       POSEIDON_TEST_CHECK(dt.parse_asctime_partial(r.asctime) == ::strlen(r.asctime));
-      POSEIDON_TEST_CHECK(dt.as_seconds() == (seconds) r.ts);
+      POSEIDON_TEST_CHECK(dt.as_seconds_since_epoch() == (seconds) r.ts);
 
-      dt.set_seconds(zero_duration);
+      dt.set_unix_time({});
       POSEIDON_TEST_CHECK(dt.parse(r.rfc1123) == ::strlen(r.rfc1123));
-      POSEIDON_TEST_CHECK(dt.as_seconds() == (seconds) r.ts);
+      POSEIDON_TEST_CHECK(dt.as_seconds_since_epoch() == (seconds) r.ts);
 
-      dt.set_seconds(zero_duration);
+      dt.set_unix_time({});
       POSEIDON_TEST_CHECK(dt.parse(r.rfc850) == ::strlen(r.rfc850));
-      POSEIDON_TEST_CHECK(dt.as_seconds() == (seconds) r.ts);
+      POSEIDON_TEST_CHECK(dt.as_seconds_since_epoch() == (seconds) r.ts);
 
-      dt.set_seconds(zero_duration);
+      dt.set_unix_time({});
       POSEIDON_TEST_CHECK(dt.parse(r.asctime) == ::strlen(r.asctime));
-      POSEIDON_TEST_CHECK(dt.as_seconds() == (seconds) r.ts);
+      POSEIDON_TEST_CHECK(dt.as_seconds_since_epoch() == (seconds) r.ts);
     }
 
     for(const auto& r : tests) {
-      dt.set_seconds((seconds) r.ts);
+      dt.set_unix_time((unix_time)(seconds) r.ts);
       POSEIDON_TEST_CHECK(dt.print_to_string() == r.rfc1123);
 
       ::memset(temp, '*', sizeof(temp));

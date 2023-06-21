@@ -25,11 +25,6 @@ class HTTP_DateTime
       : m_tp(tp)
       { }
 
-    constexpr
-    HTTP_DateTime(seconds s) noexcept
-      : m_tp(s)
-      { }
-
     // Parses a timestamp from an HTTP date/time string, like `parse()`.
     // An exception is thrown if the date/time string is not valid.
     explicit
@@ -57,16 +52,12 @@ class HTTP_DateTime
 
     constexpr
     seconds
-    as_seconds() const noexcept
+    as_seconds_since_epoch() const noexcept
       { return this->m_tp.time_since_epoch();  }
 
     void
-    set_time_point(unix_time tp) noexcept
+    set_unix_time(unix_time tp) noexcept
       { this->m_tp = tp;  }
-
-    void
-    set_seconds(seconds s) noexcept
-      { this->m_tp = (unix_time) s;  }
 
     // Try parsing an HTTP date/time in the formal RFC 1123 format. An example
     // is `Sun, 06 Nov 1994 08:49:37 GMT`. This function returns the number of
