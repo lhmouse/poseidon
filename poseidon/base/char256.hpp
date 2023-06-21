@@ -76,130 +76,130 @@ operator<<(tinyfmt& fmt, const char256& cbuf)
     return fmt << cbuf.c_str();
   }
 
-inline
+constexpr
 bool
 operator==(const char256& lhs, const char256& rhs) noexcept
   {
-    return ::strcmp(lhs, rhs) == 0;
+    return ::rocket::xstrcmp(lhs.c_str(), rhs.c_str()) == 0;
   }
 
-inline
+constexpr
 bool
 operator==(const char* lhs, const char256& rhs) noexcept
   {
-    return ::strcmp(lhs, rhs) == 0;
+    return ::rocket::xstrcmp(lhs, rhs.c_str()) == 0;
   }
 
-inline
+constexpr
 bool
 operator==(const char256& lhs, const char* rhs) noexcept
   {
-    return ::strcmp(lhs, rhs) == 0;
+    return ::rocket::xstrcmp(lhs.c_str(), rhs) == 0;
   }
 
-inline
+constexpr
 bool
 operator!=(const char256& lhs, const char256& rhs) noexcept
   {
-    return ::strcmp(lhs, rhs) != 0;
+    return ::rocket::xstrcmp(lhs.c_str(), rhs.c_str()) != 0;
   }
 
-inline
+constexpr
 bool
 operator!=(const char* lhs, const char256& rhs) noexcept
   {
-    return ::strcmp(lhs, rhs) != 0;
+    return ::rocket::xstrcmp(lhs, rhs.c_str()) != 0;
   }
 
-inline
+constexpr
 bool
 operator!=(const char256& lhs, const char* rhs) noexcept
   {
-    return ::strcmp(lhs, rhs) != 0;
+    return ::rocket::xstrcmp(lhs.c_str(), rhs) != 0;
   }
 
-inline
+constexpr
 bool
 operator<(const char256& lhs, const char256& rhs) noexcept
   {
-    return ::strcmp(lhs, rhs) < 0;
+    return ::rocket::xstrcmp(lhs.c_str(), rhs.c_str()) < 0;
   }
 
-inline
+constexpr
 bool
 operator<(const char* lhs, const char256& rhs) noexcept
   {
-    return ::strcmp(lhs, rhs) < 0;
+    return ::rocket::xstrcmp(lhs, rhs.c_str()) < 0;
   }
 
-inline
+constexpr
 bool
 operator<(const char256& lhs, const char* rhs) noexcept
   {
-    return ::strcmp(lhs, rhs) < 0;
+    return ::rocket::xstrcmp(lhs.c_str(), rhs) < 0;
   }
 
-inline
+constexpr
 bool
 operator>(const char256& lhs, const char256& rhs) noexcept
   {
-    return ::strcmp(lhs, rhs) > 0;
+    return ::rocket::xstrcmp(lhs.c_str(), rhs.c_str()) > 0;
   }
 
-inline
+constexpr
 bool
 operator>(const char* lhs, const char256& rhs) noexcept
   {
-    return ::strcmp(lhs, rhs) > 0;
+    return ::rocket::xstrcmp(lhs, rhs.c_str()) > 0;
   }
 
-inline
+constexpr
 bool
 operator>(const char256& lhs, const char* rhs) noexcept
   {
-    return ::strcmp(lhs, rhs) > 0;
+    return ::rocket::xstrcmp(lhs.c_str(), rhs) > 0;
   }
 
-inline
+constexpr
 bool
 operator<=(const char256& lhs, const char256& rhs) noexcept
   {
-    return ::strcmp(lhs, rhs) <= 0;
+    return ::rocket::xstrcmp(lhs.c_str(), rhs.c_str()) <= 0;
   }
 
-inline
+constexpr
 bool
 operator<=(const char* lhs, const char256& rhs) noexcept
   {
-    return ::strcmp(lhs, rhs) <= 0;
+    return ::rocket::xstrcmp(lhs, rhs.c_str()) <= 0;
   }
 
-inline
+constexpr
 bool
 operator<=(const char256& lhs, const char* rhs) noexcept
   {
-    return ::strcmp(lhs, rhs) <= 0;
+    return ::rocket::xstrcmp(lhs.c_str(), rhs) <= 0;
   }
 
-inline
+constexpr
 bool
 operator>=(const char256& lhs, const char256& rhs) noexcept
   {
-    return ::strcmp(lhs, rhs) >= 0;
+    return ::rocket::xstrcmp(lhs.c_str(), rhs.c_str()) >= 0;
   }
 
-inline
+constexpr
 bool
 operator>=(const char* lhs, const char256& rhs) noexcept
   {
-    return ::strcmp(lhs, rhs) >= 0;
+    return ::rocket::xstrcmp(lhs, rhs.c_str()) >= 0;
   }
 
-inline
+constexpr
 bool
 operator>=(const char256& lhs, const char* rhs) noexcept
   {
-    return ::strcmp(lhs, rhs) >= 0;
+    return ::rocket::xstrcmp(lhs.c_str(), rhs) >= 0;
   }
 
 }  // namespace poseidon
