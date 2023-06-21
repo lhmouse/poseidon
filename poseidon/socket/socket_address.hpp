@@ -109,12 +109,6 @@ class Socket_Address
     size_t
     parse(const char* str, size_t len) noexcept;
 
-    size_t
-    parse(const char* str) noexcept;
-
-    size_t
-    parse(cow_stringR str) noexcept;
-
     // Converts this address to its string form. The caller should supply
     // a buffer for 48 characters, which is capable of storing the longest
     // string `[fedc:ba98:7654:3210:fedc:ba98:7654:3210]:65535`.

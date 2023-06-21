@@ -150,7 +150,8 @@ const HTTP_DateTime http_datetime_max = (unix_time)(days) 2932532;
 HTTP_DateTime::
 HTTP_DateTime(const char* str, size_t len)
   {
-    if(this->parse(str, len) == 0)
+    size_t r = this->parse(str, len);
+    if(r != len)
       POSEIDON_THROW((
           "Could not parse HTTP data/time string `$1`"),
           cow_string(str, len));
@@ -159,7 +160,8 @@ HTTP_DateTime(const char* str, size_t len)
 HTTP_DateTime::
 HTTP_DateTime(const char* str)
   {
-    if(this->parse(str) == 0)
+    size_t r = this->parse(str, ::strlen(str));
+    if(str[r] != 0)
       POSEIDON_THROW((
           "Could not parse HTTP data/time string `$1`"),
           str);
@@ -168,7 +170,8 @@ HTTP_DateTime(const char* str)
 HTTP_DateTime::
 HTTP_DateTime(cow_stringR str)
   {
-    if(this->parse(str) == 0)
+    size_t r = this->parse(str.data(), str.size());
+    if(r != str.size())
       POSEIDON_THROW((
           "Could not parse HTTP data/time string `$1`"),
           str);
@@ -295,20 +298,6 @@ parse(const char* str, size_t len)
       acc_len = this->parse_asctime_partial(str);
 
     return acc_len;
-  }
-
-size_t
-HTTP_DateTime::
-parse(const char* str)
-  {
-    return this->parse(str, ::strlen(str));
-  }
-
-size_t
-HTTP_DateTime::
-parse(cow_stringR str)
-  {
-    return this->parse(str.data(), str.size());
   }
 
 size_t

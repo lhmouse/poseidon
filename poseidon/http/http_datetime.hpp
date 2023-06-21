@@ -87,12 +87,6 @@ class HTTP_DateTime
     size_t
     parse(const char* str, size_t len);
 
-    size_t
-    parse(const char* str);
-
-    size_t
-    parse(cow_stringR str);
-
     // Converts this timestamp to its RFC 1123 format, with a null terminator.
     // There shall be at least 30 characters in the buffer that `str` points to.
     // This function returns the number of characters that have been written,

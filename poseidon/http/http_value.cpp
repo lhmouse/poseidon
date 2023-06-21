@@ -152,20 +152,6 @@ parse(const char* str, size_t len)
     return acc_len;
   }
 
-size_t
-HTTP_Value::
-parse(const char* str)
-  {
-    return this->parse(str, ::strlen(str));
-  }
-
-size_t
-HTTP_Value::
-parse(cow_stringR str)
-  {
-    return this->parse(str.data(), str.size());
-  }
-
 tinyfmt&
 HTTP_Value::
 print(tinyfmt& fmt) const

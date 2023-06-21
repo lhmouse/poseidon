@@ -131,7 +131,8 @@ const Socket_Address ipv4_broadcast    = (::in6_addr) { 0,0,0,0,0,0,0,0,0,0,255,
 Socket_Address::
 Socket_Address(const char* str, size_t len)
   {
-    if(this->parse(str, len) == 0)
+    size_t r = this->parse(str, len);
+    if(r != len)
       POSEIDON_THROW((
           "Could not parse socket address string `$1`"),
           cow_string(str, len));
@@ -140,7 +141,8 @@ Socket_Address(const char* str, size_t len)
 Socket_Address::
 Socket_Address(const char* str)
   {
-    if(this->parse(str) == 0)
+    size_t r = this->parse(str, ::strlen(str));
+    if(str[r] != 0)
       POSEIDON_THROW((
           "Could not parse socket address string `$1`"),
           str);
@@ -149,7 +151,8 @@ Socket_Address(const char* str)
 Socket_Address::
 Socket_Address(cow_stringR str)
   {
-    if(this->parse(str) == 0)
+    size_t r = this->parse(str.data(), str.size());
+    if(r != str.size())
       POSEIDON_THROW((
           "Could not parse socket address string `$1`"),
           str);
@@ -221,20 +224,6 @@ parse(const char* str, size_t len) noexcept
 
     // Return the number of characters up to the end of the port field.
     return (size_t) url.field_data[UF_PORT].off + url.field_data[UF_PORT].len;
-  }
-
-size_t
-Socket_Address::
-parse(const char* str) noexcept
-  {
-    return this->parse(str, ::strlen(str));
-  }
-
-size_t
-Socket_Address::
-parse(cow_stringR str) noexcept
-  {
-    return this->parse(str.data(), str.size());
   }
 
 size_t

@@ -150,12 +150,6 @@ class HTTP_Value
     size_t
     parse(const char* str, size_t len);
 
-    size_t
-    parse(const char* str);
-
-    size_t
-    parse(cow_stringR str);
-
     // Converts this value to its string form. The result will be suitable
     // for immediate use in an HTTP header. It is important to note that
     // HTTP date/time, which contain a comma itself, will not be enclosed
