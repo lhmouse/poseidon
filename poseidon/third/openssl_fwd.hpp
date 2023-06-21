@@ -8,7 +8,10 @@
 #include <openssl/ossl_typ.h>
 namespace poseidon {
 
-template<class SSLxT, int uprefT(SSLxT*), void freeT(SSLxT*)>
+template<class SSLxT>
+struct openssl_ptr_traits;
+
+template<class SSLxT>
 class openssl_ptr
   {
   private:
@@ -58,7 +61,7 @@ class openssl_ptr
         if(this->m_ptr == nullptr)
           return nullptr;
 
-        int r = uprefT(this->m_ptr);
+        int r = openssl_ptr_traits<SSLxT>::up_ref(this->m_ptr);
         ROCKET_ASSERT(r == 1);
         return this->m_ptr;
       }
@@ -69,8 +72,8 @@ class openssl_ptr
         if(this->m_ptr == nullptr)
           return;
 
-        freeT(this->m_ptr);
-        ROCKET_ASSERT(!!(this->m_ptr = (SSLxT*) 0xDEADBEEF));
+        openssl_ptr_traits<SSLxT>::free(this->m_ptr);
+        this->m_ptr = (SSLxT*) -0xDEADBEEF;
       }
 
   public:
@@ -102,45 +105,30 @@ class openssl_ptr
       }
   };
 
-template<class SSLxT, int uprefT(SSLxT*), void freeT(SSLxT*)>
+template<class SSLxT>
 inline
 void
-swap(openssl_ptr<SSLxT, uprefT, freeT>& lhs, openssl_ptr<SSLxT, uprefT, freeT>& rhs) noexcept
+swap(openssl_ptr<SSLxT>& lhs, openssl_ptr<SSLxT>& rhs) noexcept
   {
     lhs.swap(rhs);
   }
 
-extern "C" int BIO_up_ref(::BIO* a);
-extern "C" void BIO_free(::BIO* a);
-using BIO_ptr = openssl_ptr<::BIO, BIO_up_ref, BIO_free>;
+#define POSEIDON_OPENSSL_FWD_DEFINE_PTR_(OBJ, xFree)  \
+  extern "C" int OBJ##_up_ref(::OBJ* a) __attribute__((__nothrow__));  \
+  extern "C" xFree OBJ##_free(::OBJ* a) __attribute__((__nothrow__));  \
+  template<>  \
+  struct openssl_ptr_traits<::OBJ>  \
+    {  \
+      static int up_ref(::OBJ* a) noexcept { return OBJ##_up_ref(a);  }  \
+      static void free(::OBJ* a) noexcept { OBJ##_free(a);  }  \
+    };  \
+  using OBJ##_ptr = openssl_ptr<::OBJ>;
 
-extern "C" int ENGINE_up_ref(::ENGINE* e);
-extern "C" void ENGINE_free(::ENGINE* e);
-using ENGINE_ptr = openssl_ptr<::ENGINE, ENGINE_up_ref, ENGINE_free>;
-
-extern "C" int SSL_CTX_up_ref(::SSL_CTX* ctx);
-extern "C" void SSL_CTX_free(::SSL_CTX* ctx);
-using SSL_CTX_ptr = openssl_ptr<::SSL_CTX, SSL_CTX_up_ref, SSL_CTX_free>;
-
-extern "C" int SSL_up_ref(::SSL* s);
-extern "C" void SSL_free(::SSL* s);
-using SSL_ptr = openssl_ptr<::SSL, SSL_up_ref, SSL_free>;
-
-extern "C" int EC_KEY_up_ref(::EC_KEY* key);
-extern "C" void EC_KEY_free(::EC_KEY* key);
-using EC_KEY_ptr = openssl_ptr<::EC_KEY, EC_KEY_up_ref, EC_KEY_free>;
-
-extern "C" int EVP_PKEY_up_ref(::EVP_PKEY* key);
-extern "C" void EVP_PKEY_free(::EVP_PKEY* key);
-using EVP_PKEY_ptr = openssl_ptr<::EVP_PKEY, EVP_PKEY_up_ref, EVP_PKEY_free>;
-
-extern "C" int X509_STORE_up_ref(::X509_STORE* v);
-extern "C" void X509_STORE_free(::X509_STORE* v);
-using X509_STORE_ptr = openssl_ptr<::X509_STORE, X509_STORE_up_ref, X509_STORE_free>;
-
-extern "C" int X509_up_ref(::X509* a);
-extern "C" void X509_free(::X509* a);
-using X509_ptr = openssl_ptr<::X509, X509_up_ref, X509_free>;
+POSEIDON_OPENSSL_FWD_DEFINE_PTR_(BIO, int)          // class BIO_ptr
+POSEIDON_OPENSSL_FWD_DEFINE_PTR_(X509_STORE, void)  // class X509_STORE_ptr
+POSEIDON_OPENSSL_FWD_DEFINE_PTR_(X509, void)        // class X509_ptr
+POSEIDON_OPENSSL_FWD_DEFINE_PTR_(SSL_CTX, void)     // class SSL_CTX_ptr
+POSEIDON_OPENSSL_FWD_DEFINE_PTR_(SSL, void)         // class SSL_ptr
 
 } // namespace poseidon
 #endif

@@ -36,7 +36,12 @@ class char256
               "char256: string `%s` (length `%lld`) too long",
               str, (long long) len);
 
+#ifdef __clang__
+        // XXX: Remove this?
+        ::rocket::details_xstring::maybe_constexpr::ymempcpy(this->m_data, str, len + 1);
+#else
         ::rocket::xmempcpy(this->m_data, str, len + 1);
+#endif
       }
 
     char256&
