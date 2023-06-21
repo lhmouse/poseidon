@@ -11,7 +11,7 @@ class char256
   {
   private:
     union {
-      char m_data[256];
+      char m_data[sizeof(void*)];
       ::std::aligned_storage<256>::type m_storage;
     };
 
