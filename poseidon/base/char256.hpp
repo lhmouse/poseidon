@@ -11,7 +11,6 @@ class char256
   {
   private:
     union {
-      char m_first;
       char m_data[256];
       ::std::aligned_storage<256>::type m_storage;
     };
@@ -21,12 +20,14 @@ class char256
     // This constructor is not explicit as it doesn't allocate memory.
     constexpr
     char256() noexcept
-      : m_first()
+      : m_data()
       { }
 
     // Constructs a null-terminated string.
     // This constructor is not explicit as it doesn't allocate memory.
+    constexpr
     char256(const char* str_opt)
+      : m_data()
       {
         const char* str = str_opt ? str_opt : "";
         size_t len = ::rocket::xstrlen(str);
@@ -35,7 +36,7 @@ class char256
               "char256: string `%s` (length `%lld`) too long",
               str, (long long) len);
 
-        ::memcpy(this->m_data, str, len + 1);
+        ::rocket::xmempcpy(this->m_data, str, len + 1);
       }
 
     char256&

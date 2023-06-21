@@ -60,6 +60,7 @@ lib_libposeidon_la_SOURCES =  \
   %reldir%/static/fiber_scheduler.cpp  \
   %reldir%/static/async_task_executor.cpp  \
   %reldir%/static/network_driver.cpp  \
+  %reldir%/base/char256.cpp  \
   %reldir%/base/config_file.cpp  \
   %reldir%/base/abstract_timer.cpp  \
   %reldir%/base/abstract_async_task.cpp  \
