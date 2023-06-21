@@ -18,9 +18,6 @@ event_callback(shptrR<SSL_Socket> socket, Abstract_Fiber& /*fiber*/, Connection_
     static constexpr char req[] = "GET / HTTP/1.1\r\nConnection: close\r\nHost: www.example.org\r\n\r\n";
 
     switch(event) {
-      case connection_event_null:
-        break;
-
       case connection_event_open:
         socket->ssl_send(req, ::strlen(req));
         POSEIDON_LOG_FATAL(("example SSL client sent data to `$1`:\n\n$2"), addr, req);

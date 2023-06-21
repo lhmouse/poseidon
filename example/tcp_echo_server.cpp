@@ -17,9 +17,6 @@ event_callback(shptrR<TCP_Socket> socket, Abstract_Fiber& /*fiber*/, Connection_
     data.clear();
 
     switch(event) {
-      case connection_event_null:
-        break;
-
       case connection_event_open:
         POSEIDON_LOG_FATAL(("example TCP server accepted connection from `$1`"), addr);
         break;

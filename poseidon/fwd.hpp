@@ -191,10 +191,9 @@ enum Socket_State : uint8_t
 
 enum Connection_Event : uint8_t
   {
-    connection_event_null    = 0,
-    connection_event_open    = 1,
-    connection_event_stream  = 2,
-    connection_event_closed  = 3,
+    connection_event_open    = 0,
+    connection_event_stream  = 1,
+    connection_event_closed  = 2,
   };
 
 // Base types
