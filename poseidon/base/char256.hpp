@@ -13,7 +13,7 @@ class char256
     union {
       char m_first;
       char m_data[256];
-      ::std::aligned_storage<256> m_stor;
+      ::std::aligned_storage<256>::type m_stor;
     };
 
   public:
