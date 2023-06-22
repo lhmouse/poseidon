@@ -92,6 +92,14 @@ class Socket_Address
 
     // Performs bitwise comparison.
     ROCKET_PURE
+    bool
+    equals(const Socket_Address& other) const noexcept
+      {
+        return (::memcmp(&(this->m_addr), &(other.m_addr), sizeof(m_addr)) == 0)
+               && (this->m_port == other.m_port);
+      }
+
+    ROCKET_PURE
     int
     compare(const Socket_Address& other) const noexcept;
 
@@ -134,14 +142,14 @@ inline
 bool
 operator==(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
   {
-    return lhs.compare(rhs) == 0;
+    return lhs.equals(rhs) != false;
   }
 
 inline
 bool
 operator!=(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
   {
-    return lhs.compare(rhs) != 0;
+    return lhs.equals(rhs) == false;
   }
 
 inline
