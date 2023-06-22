@@ -139,17 +139,31 @@ extern const Socket_Address ipv4_loopback;     // [::ffff:127.0.0.1]:0
 extern const Socket_Address ipv4_broadcast;    // [::ffff:255.255.255.255]:0
 
 inline
+void
+swap(Socket_Address& lhs, Socket_Address& rhs) noexcept
+  {
+    lhs.swap(rhs);
+  }
+
+inline
+tinyfmt&
+operator<<(tinyfmt& fmt, const Socket_Address& addr)
+  {
+    return addr.print(fmt);
+  }
+
+inline
 bool
 operator==(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
   {
-    return lhs.equals(rhs) == true;
+    return lhs.equals(rhs);
   }
 
 inline
 bool
 operator!=(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
   {
-    return lhs.equals(rhs) != true;
+    return not lhs.equals(rhs);
   }
 
 inline
@@ -178,20 +192,6 @@ bool
 operator>=(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
   {
     return lhs.compare(rhs) >= 0;
-  }
-
-inline
-void
-swap(Socket_Address& lhs, Socket_Address& rhs) noexcept
-  {
-    lhs.swap(rhs);
-  }
-
-inline
-tinyfmt&
-operator<<(tinyfmt& fmt, const Socket_Address& addr)
-  {
-    return addr.print(fmt);
   }
 
 }  // namespace poseidon
