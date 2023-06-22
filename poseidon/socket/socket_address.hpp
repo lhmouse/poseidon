@@ -142,14 +142,14 @@ inline
 bool
 operator==(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
   {
-    return lhs.equals(rhs) != false;
+    return lhs.equals(rhs) == true;
   }
 
 inline
 bool
 operator!=(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
   {
-    return lhs.equals(rhs) == false;
+    return lhs.equals(rhs) != true;
   }
 
 inline
