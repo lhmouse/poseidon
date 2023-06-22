@@ -288,14 +288,23 @@ parse(const char* str, size_t len)
     // we just need to check for possibilities by `len`.
     size_t acc_len = 0;
 
-    if((acc_len == 0) && (len >= 29))
-      acc_len = this->parse_rfc1123_partial(str);
+    if(len >= 30) {
+      acc_len = this->parse_rfc850_partial(str);  // 30
 
-    if((acc_len == 0) && (len >= 30))
-      acc_len = this->parse_rfc850_partial(str);
+      if(acc_len == 0)
+        acc_len = this->parse_rfc1123_partial(str);  // 29
 
-    if((acc_len == 0) && (len >= 24))
-      acc_len = this->parse_asctime_partial(str);
+      if(acc_len == 0)
+        acc_len = this->parse_asctime_partial(str);  // 24
+    }
+    else if(len >= 29) {
+      acc_len = this->parse_rfc1123_partial(str);  // 29
+
+      if(acc_len == 0)
+        acc_len = this->parse_asctime_partial(str);  // 24
+    }
+    else if(len >= 24)
+      acc_len = this->parse_asctime_partial(str);  // 24
 
     return acc_len;
   }
