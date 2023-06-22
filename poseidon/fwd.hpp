@@ -145,7 +145,7 @@ template<typename T> using wkptrR = const wkptr<T>&;
 class cacheline_barrier
   {
   private:
-    alignas(max_align_t) ::std::array<char, 64U - alignof(max_align_t)> bytes;
+    alignas(max_align_t) array<char, 64U - alignof(max_align_t)> bytes;
 
   public:
     cacheline_barrier() noexcept = default;
