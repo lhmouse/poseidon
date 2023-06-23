@@ -9,7 +9,7 @@
 namespace poseidon {
 
 #ifdef POSEIDON_ENABLE_ADDRESS_SANITIZER
-extern "C" void __sanitizer_start_switch_fiber(void**, const void*, size_t) __attribute__((__nothrow__))
+extern "C" void __sanitizer_start_switch_fiber(void**, const void*, size_t) __attribute__((__nothrow__));
 extern "C" void __sanitizer_finish_switch_fiber(void*, const void**, size_t*) __attribute__((__nothrow__));
 #endif
 
