@@ -176,66 +176,42 @@ size_t
 uuid::
 print_partial(char* str) const noexcept
   {
-    __m128i tval, val_hi, val_lo;
-    alignas(16) char xdigits_hi[16], xdigits_lo[16];
-
-    const __m128i epi8_07 = _mm_set1_epi8(7);
-    const __m128i epi8_09 = _mm_set1_epi8(9);
-    const __m128i epi8_0F = _mm_set1_epi8(0x0F);
-    const __m128i epi8_30 = _mm_set1_epi8('0');
+    __m128i tval, hi, lo;
 
     // Split the higher and lower halves into two SSE registers.
     tval = _mm_loadu_si128((const __m128i*) &(this->m_stor));
-    val_hi = _mm_and_si128(_mm_srli_epi64(tval, 4), epi8_0F);
-    val_lo = _mm_and_si128(tval, epi8_0F);
+    hi = _mm_and_si128(_mm_srli_epi64(tval, 4), _mm_set1_epi8(0x0F));
+    lo = _mm_and_si128(tval, _mm_set1_epi8(0x0F));
 
     // Convert digits into their string forms:
     //   xdigit := val + '0' + ((val > 9) ? 7 : 0)
-    tval = _mm_and_si128(_mm_cmpgt_epi8(val_hi, epi8_09), epi8_07);
-    val_hi = _mm_add_epi8(_mm_add_epi8(val_hi, epi8_30), tval);
-    _mm_store_si128((__m128i*) xdigits_hi, val_hi);
+    tval = _mm_and_si128(_mm_cmpgt_epi8(hi, _mm_set1_epi8(9)), _mm_set1_epi8(7));
+    hi = _mm_add_epi8(_mm_add_epi8(hi, _mm_set1_epi8('0')), tval);
+    tval = _mm_and_si128(_mm_cmpgt_epi8(lo, _mm_set1_epi8(9)), _mm_set1_epi8(7));
+    lo = _mm_add_epi8(_mm_add_epi8(lo, _mm_set1_epi8('0')), tval);
 
-    tval = _mm_and_si128(_mm_cmpgt_epi8(val_lo, epi8_09), epi8_07);
-    val_lo = _mm_add_epi8(_mm_add_epi8(val_lo, epi8_30), tval);
-    _mm_store_si128((__m128i*) xdigits_lo, val_lo);
+    // Insert dashes first. Instead of writing four dashes into `str[8]`,
+    // `str[13]`, `str[18]` and `str[23]`, we can overwrite that 16-byte
+    // range with a single store operation.
+    _mm_storeu_si128((__m128i*) (str + 8), _mm_set1_epi8('-'));
 
-    // Assemble the string.
-    str [ 0] = xdigits_hi [ 0];
-    str [ 1] = xdigits_lo [ 0];
-    str [ 2] = xdigits_hi [ 1];
-    str [ 3] = xdigits_lo [ 1];
-    str [ 4] = xdigits_hi [ 2];
-    str [ 5] = xdigits_lo [ 2];
-    str [ 6] = xdigits_hi [ 3];
-    str [ 7] = xdigits_lo [ 3];
-    str [ 8] = '-';
-    str [ 9] = xdigits_hi [ 4];
-    str [10] = xdigits_lo [ 4];
-    str [11] = xdigits_hi [ 5];
-    str [12] = xdigits_lo [ 5];
-    str [13] = '-';
-    str [14] = xdigits_hi [ 6];
-    str [15] = xdigits_lo [ 6];
-    str [16] = xdigits_hi [ 7];
-    str [17] = xdigits_lo [ 7];
-    str [18] = '-';
-    str [19] = xdigits_hi [ 8];
-    str [20] = xdigits_lo [ 8];
-    str [21] = xdigits_hi [ 9];
-    str [22] = xdigits_lo [ 9];
-    str [23] = '-';
-    str [24] = xdigits_hi [10];
-    str [25] = xdigits_lo [10];
-    str [26] = xdigits_hi [11];
-    str [27] = xdigits_lo [11];
-    str [28] = xdigits_hi [12];
-    str [29] = xdigits_lo [12];
-    str [30] = xdigits_hi [13];
-    str [31] = xdigits_lo [13];
-    str [32] = xdigits_hi [14];
-    str [33] = xdigits_lo [14];
-    str [34] = xdigits_hi [15];
-    str [35] = xdigits_lo [15];
+    // Rearrange digits in the correct order.
+#if defined(__GNUC__) && (__GNUC__ < 11)
+#  define _mm_storeu_si64(ptr, val)   _mm_store_sd((double*) (ptr), _mm_castsi128_pd(val))
+#  define _mm_storeu_si32(ptr, val)   _mm_store_ss((float*) (ptr), _mm_castsi128_ps(val))
+#endif  // GCC < 11
+    tval = _mm_unpacklo_epi8(hi, lo);
+    _mm_storeu_si64(str, tval);
+    tval = _mm_bsrli_si128(tval, 8);
+    _mm_storeu_si32(str + 9, tval);
+    tval = _mm_bsrli_si128(tval, 4);
+    _mm_storeu_si32(str + 14, tval);
+    tval = _mm_unpackhi_epi8(hi, lo);
+    _mm_storeu_si32(str + 19, tval);
+    tval = _mm_bsrli_si128(tval, 4);
+    _mm_storeu_si32(str + 24, tval);
+    tval = _mm_bsrli_si128(tval, 4);
+    _mm_storeu_si64(str + 28, tval);
 
     // Return the number of characters that have been written, which is
     // always `36` for this function.
