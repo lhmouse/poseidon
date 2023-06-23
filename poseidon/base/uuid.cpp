@@ -176,6 +176,11 @@ size_t
 uuid::
 print_partial(char* str) const noexcept
   {
+    // These hacks for GCC 10- shall be removed in the future.
+#if defined(__GNUC__) && (__GNUC__ < 11)
+#  define _mm_storeu_si64(ptr, val)   _mm_store_sd((double*) (ptr), _mm_castsi128_pd(val))
+#  define _mm_storeu_si32(ptr, val)   _mm_store_ss((float*) (ptr), _mm_castsi128_ps(val))
+#endif
     __m128i tval, hi, lo;
 
     // Split the higher and lower halves into two SSE registers.
@@ -196,10 +201,6 @@ print_partial(char* str) const noexcept
     _mm_storeu_si128((__m128i*) (str + 8), _mm_set1_epi8('-'));
 
     // Rearrange digits in the correct order.
-#if defined(__GNUC__) && (__GNUC__ < 11)
-#  define _mm_storeu_si64(ptr, val)   _mm_store_sd((double*) (ptr), _mm_castsi128_pd(val))
-#  define _mm_storeu_si32(ptr, val)   _mm_store_ss((float*) (ptr), _mm_castsi128_ps(val))
-#endif  // GCC < 11
     tval = _mm_unpacklo_epi8(hi, lo);
     _mm_storeu_si64(str, tval);
     tval = _mm_bsrli_si128(tval, 8);
