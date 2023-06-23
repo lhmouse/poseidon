@@ -9,17 +9,6 @@
 namespace poseidon {
 namespace {
 
-#define DUMMY_       32,1,13,184,243,151,214,23,   // 2001:db8:f397:d617::/64
-#define V4_MAPPED_   0,0,0,0,0,0,0,0,0,0,255,255,  // ::ffff:0:0/96
-
-constexpr ::in6_addr s_in6_addr_ipv6_unspecified  = IN6ADDR_ANY_INIT;
-constexpr ::in6_addr s_in6_addr_ipv6_loopback     = IN6ADDR_LOOPBACK_INIT;
-constexpr ::in6_addr s_in6_addr_ipv6_invalid      = { DUMMY_ 74,162,130,224,44,95,237,217 };
-
-constexpr ::in6_addr s_in6_addr_ipv4_unspecified  = { V4_MAPPED_ 0,0,0,0 };
-constexpr ::in6_addr s_in6_addr_ipv4_loopback     = { V4_MAPPED_ 127,0,0,1 };
-constexpr ::in6_addr s_in6_addr_ipv4_broadcast    = { V4_MAPPED_ 255,255,255,255 };
-
 ROCKET_ALWAYS_INLINE
 bool
 do_match_subnet(const char* addr, const char* mask, uint32_t bits) noexcept
@@ -131,13 +120,16 @@ do_classify_ipv6_generic(const char* addr) noexcept
 
 }  // namespace
 
-const Socket_Address ipv6_unspecified   = { s_in6_addr_ipv6_unspecified,  0 };
-const Socket_Address ipv6_loopback      = { s_in6_addr_ipv6_loopback,     0 };
-const Socket_Address ipv6_invalid       = { s_in6_addr_ipv6_invalid,      0 };
+#define DUMMY_       32,1,13,184,243,151,214,23,   // 2001:db8:f397:d617::/64
+#define V4_MAPPED_   0,0,0,0,0,0,0,0,0,0,255,255,  // ::ffff:0:0/96
 
-const Socket_Address ipv4_unspecified   = { s_in6_addr_ipv4_unspecified,  0 };
-const Socket_Address ipv4_loopback      = { s_in6_addr_ipv4_loopback,     0 };
-const Socket_Address ipv4_broadcast     = { s_in6_addr_ipv4_broadcast,    0 };
+const Socket_Address ipv6_unspecified   = { (::in6_addr)   IN6ADDR_ANY_INIT,                       0 };
+const Socket_Address ipv6_loopback      = { (::in6_addr)   IN6ADDR_LOOPBACK_INIT,                  0 };
+const Socket_Address ipv6_invalid       = { (::in6_addr) { DUMMY_ 74,162,130,224,44,95,237,217 },  0 };
+
+const Socket_Address ipv4_unspecified   = { (::in6_addr) { V4_MAPPED_ 0,0,0,0 },          0 };
+const Socket_Address ipv4_loopback      = { (::in6_addr) { V4_MAPPED_ 127,0,0,1 },        0 };
+const Socket_Address ipv4_broadcast     = { (::in6_addr) { V4_MAPPED_ 255,255,255,255 },  0 };
 
 Socket_Address::
 Socket_Address(const char* str, size_t len)
