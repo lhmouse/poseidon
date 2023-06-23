@@ -154,9 +154,9 @@ class uuid
     ROCKET_PURE operator
     bool() const noexcept
       {
-        __m128i tval = ::_mm_loadu_si128((const __m128i*) &(this->m_stor));
-        __m128i oval = ::_mm_setzero_si128();
-        int cmp = ::_mm_movemask_epi8(::_mm_cmpeq_epi8(tval, oval));  // bits := 0xFFFF if equal
+        __m128i tval = _mm_loadu_si128((const __m128i*) &(this->m_stor));
+        __m128i oval = _mm_setzero_si128();
+        int cmp = _mm_movemask_epi8(_mm_cmpeq_epi8(tval, oval));  // bits := 0xFFFF if equal
         return cmp == 0xFFFF;
       }
 
@@ -165,9 +165,9 @@ class uuid
     bool
     equals(const uuid& other) const noexcept
       {
-        __m128i tval = ::_mm_loadu_si128((const __m128i*) &(this->m_stor));
-        __m128i oval = ::_mm_loadu_si128((const __m128i*) &(other.m_stor));
-        int cmp = ::_mm_movemask_epi8(::_mm_cmpeq_epi8(tval, oval));  // bits := 0xFFFF if equal
+        __m128i tval = _mm_loadu_si128((const __m128i*) &(this->m_stor));
+        __m128i oval = _mm_loadu_si128((const __m128i*) &(other.m_stor));
+        int cmp = _mm_movemask_epi8(_mm_cmpeq_epi8(tval, oval));  // bits := 0xFFFF if equal
         return cmp == 0xFFFF;
       }
 

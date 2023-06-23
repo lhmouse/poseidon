@@ -179,25 +179,25 @@ print_partial(char* str) const noexcept
     __m128i tval, val_hi, val_lo;
     alignas(16) char xdigits_hi[16], xdigits_lo[16];
 
-    const __m128i epi8_07 = ::_mm_set1_epi8(7);
-    const __m128i epi8_09 = ::_mm_set1_epi8(9);
-    const __m128i epi8_0F = ::_mm_set1_epi8(0x0F);
-    const __m128i epi8_30 = ::_mm_set1_epi8('0');
+    const __m128i epi8_07 = _mm_set1_epi8(7);
+    const __m128i epi8_09 = _mm_set1_epi8(9);
+    const __m128i epi8_0F = _mm_set1_epi8(0x0F);
+    const __m128i epi8_30 = _mm_set1_epi8('0');
 
     // Split the higher and lower halves into two SSE registers.
-    tval = ::_mm_loadu_si128((const __m128i*) &(this->m_stor));
-    val_hi = ::_mm_and_si128(::_mm_srli_epi64(tval, 4), epi8_0F);
-    val_lo = ::_mm_and_si128(tval, epi8_0F);
+    tval = _mm_loadu_si128((const __m128i*) &(this->m_stor));
+    val_hi = _mm_and_si128(_mm_srli_epi64(tval, 4), epi8_0F);
+    val_lo = _mm_and_si128(tval, epi8_0F);
 
     // Convert digits into their string forms:
     //   xdigit := val + '0' + ((val > 9) ? 7 : 0)
-    tval = ::_mm_and_si128(::_mm_cmpgt_epi8(val_hi, epi8_09), epi8_07);
-    val_hi = ::_mm_add_epi8(::_mm_add_epi8(val_hi, epi8_30), tval);
-    ::_mm_store_si128((__m128i*) xdigits_hi, val_hi);
+    tval = _mm_and_si128(_mm_cmpgt_epi8(val_hi, epi8_09), epi8_07);
+    val_hi = _mm_add_epi8(_mm_add_epi8(val_hi, epi8_30), tval);
+    _mm_store_si128((__m128i*) xdigits_hi, val_hi);
 
-    tval = ::_mm_and_si128(::_mm_cmpgt_epi8(val_lo, epi8_09), epi8_07);
-    val_lo = ::_mm_add_epi8(::_mm_add_epi8(val_lo, epi8_30), tval);
-    ::_mm_store_si128((__m128i*) xdigits_lo, val_lo);
+    tval = _mm_and_si128(_mm_cmpgt_epi8(val_lo, epi8_09), epi8_07);
+    val_lo = _mm_add_epi8(_mm_add_epi8(val_lo, epi8_30), tval);
+    _mm_store_si128((__m128i*) xdigits_lo, val_lo);
 
     // Assemble the string.
     str [ 0] = xdigits_hi [ 0];
