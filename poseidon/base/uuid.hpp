@@ -49,6 +49,7 @@ class uuid
         uint8_t m_data_5_0;
       };
 
+      uint8_t m_bytes[16];
       ::std::aligned_storage<16>::type m_stor;
     };
 
@@ -56,13 +57,13 @@ class uuid
     // Constructs a nil UUID.
     constexpr
     uuid() noexcept
-      : m_stor()
+      : m_bytes()
       { }
 
     // Constructs a UUID in the RFC 4122 format.
     constexpr
     uuid(const fields& fs) noexcept
-      : m_stor()
+      : m_bytes()
       {
         this->m_data_1_3 = (uint8_t) (fs.time_low >> 24);
         this->m_data_1_2 = (uint8_t) (fs.time_low >> 16);
@@ -116,6 +117,39 @@ class uuid
       }
 
   public:
+    // Gets raw bytes.
+    constexpr
+    const uint8_t*
+    data() const noexcept
+      { return this->m_bytes;  }
+
+    uint8_t*
+    mut_data() noexcept
+      { return this->m_bytes;  }
+
+    constexpr
+    size_t
+    size() const noexcept
+      { return 16;  }
+
+    constexpr
+    const uint8_t*
+    begin() const noexcept
+      { return this->m_bytes;  }
+
+    constexpr
+    const uint8_t*
+    end() const noexcept
+      { return this->m_bytes + 16;  }
+
+    uint8_t*
+    mut_begin() noexcept
+      { return this->m_bytes;  }
+
+    uint8_t*
+    mut_end() noexcept
+      { return this->m_bytes + 16;  }
+
     // Checks whether this UUID is the nil UUID.
     ROCKET_PURE operator
     bool() const noexcept
