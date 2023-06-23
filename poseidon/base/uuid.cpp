@@ -192,6 +192,7 @@ print_partial(char* str) const noexcept
     //   xdigit := val + '0' + ((val > 9) ? 7 : 0)
     tval = _mm_and_si128(_mm_cmpgt_epi8(hi, _mm_set1_epi8(9)), _mm_set1_epi8(7));
     hi = _mm_add_epi8(_mm_add_epi8(hi, _mm_set1_epi8('0')), tval);
+
     tval = _mm_and_si128(_mm_cmpgt_epi8(lo, _mm_set1_epi8(9)), _mm_set1_epi8(7));
     lo = _mm_add_epi8(_mm_add_epi8(lo, _mm_set1_epi8('0')), tval);
 
@@ -200,11 +201,11 @@ print_partial(char* str) const noexcept
     // range with a single store operation.
     _mm_storeu_si128((__m128i*) (str + 8), _mm_set1_epi8('-'));
 
-    // Rearrange digits in the correct order.
     tval = _mm_unpacklo_epi8(hi, lo);
     _mm_storeu_si64(str, tval);
     _mm_storeu_si32(str + 9, _mm_bsrli_si128(tval, 8));
     _mm_storeu_si32(str + 14, _mm_bsrli_si128(tval, 12));
+
     tval = _mm_unpackhi_epi8(hi, lo);
     _mm_storeu_si32(str + 19, tval);
     _mm_storeu_si32(str + 24, _mm_bsrli_si128(tval, 4));
