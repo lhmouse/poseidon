@@ -95,8 +95,11 @@ class Socket_Address
     bool
     equals(const Socket_Address& other) const noexcept
       {
-        return (::memcmp(&(this->m_addr), &(other.m_addr), sizeof(m_addr)) == 0)
-               && (this->m_port == other.m_port);
+        __m128i tdata = ::_mm_loadu_si128((const __m128i*) &(this->m_addr));
+        __m128i odata = ::_mm_loadu_si128((const __m128i*) &(other.m_addr));
+        int cmp = ::_mm_movemask_epi8(::_mm_cmpeq_epi8(tdata, odata));  // low 16-bits := 0xFFFF if equal
+        cmp |= (int) (this->m_port ^ other.m_port) << 16;  // high 16-bits := 0 if equal
+        return cmp == 0xFFFF;
       }
 
     ROCKET_PURE
