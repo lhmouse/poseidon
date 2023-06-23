@@ -198,6 +198,9 @@ enum Connection_Event : uint8_t
 
 // Base types
 class char256;
+class uuid;
+using guid = uuid;
+
 class Config_File;
 class Abstract_Timer;
 class Abstract_Async_Task;

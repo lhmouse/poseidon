@@ -5,6 +5,7 @@ check_PROGRAMS +=  \
   %reldir%/inflator.test  \
   %reldir%/http_datetime.test  \
   %reldir%/http_value.test  \
+  %reldir%/uuid.test  \
   ${END}
 
 EXTRA_DIST +=  \
