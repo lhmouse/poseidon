@@ -203,16 +203,12 @@ print_partial(char* str) const noexcept
     // Rearrange digits in the correct order.
     tval = _mm_unpacklo_epi8(hi, lo);
     _mm_storeu_si64(str, tval);
-    tval = _mm_bsrli_si128(tval, 8);
-    _mm_storeu_si32(str + 9, tval);
-    tval = _mm_bsrli_si128(tval, 4);
-    _mm_storeu_si32(str + 14, tval);
+    _mm_storeu_si32(str + 9, _mm_bsrli_si128(tval, 8));
+    _mm_storeu_si32(str + 14, _mm_bsrli_si128(tval, 12));
     tval = _mm_unpackhi_epi8(hi, lo);
     _mm_storeu_si32(str + 19, tval);
-    tval = _mm_bsrli_si128(tval, 4);
-    _mm_storeu_si32(str + 24, tval);
-    tval = _mm_bsrli_si128(tval, 4);
-    _mm_storeu_si64(str + 28, tval);
+    _mm_storeu_si32(str + 24, _mm_bsrli_si128(tval, 4));
+    _mm_storeu_si64(str + 28, _mm_bsrli_si128(tval, 8));
 
     // Return the number of characters that have been written, which is
     // always `36` for this function.
