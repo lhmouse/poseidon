@@ -12,7 +12,7 @@ class char256
   private:
     union {
       char m_data[sizeof(void*)];
-      ::std::aligned_storage<256>::type m_storage;
+      ::std::aligned_storage<256>::type m_stor;
     };
 
   public:
@@ -47,7 +47,7 @@ class char256
     char256&
     swap(char256& other) noexcept
       {
-        ::std::swap(this->m_storage, other.m_storage);
+        ::std::swap(this->m_stor, other.m_stor);
         return *this;
       }
 
