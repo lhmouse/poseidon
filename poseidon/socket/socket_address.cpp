@@ -131,13 +131,13 @@ do_classify_ipv6_generic(const char* addr) noexcept
 
 }  // namespace
 
-const Socket_Address ipv6_unspecified   (s_in6_addr_ipv6_unspecified,  0);
-const Socket_Address ipv6_loopback      (s_in6_addr_ipv6_loopback,     0);
-const Socket_Address ipv6_invalid       (s_in6_addr_ipv6_invalid,      0);
+const Socket_Address ipv6_unspecified   = { s_in6_addr_ipv6_unspecified,  0 };
+const Socket_Address ipv6_loopback      = { s_in6_addr_ipv6_loopback,     0 };
+const Socket_Address ipv6_invalid       = { s_in6_addr_ipv6_invalid,      0 };
 
-const Socket_Address ipv4_unspecified   (s_in6_addr_ipv4_unspecified,  0);
-const Socket_Address ipv4_loopback      (s_in6_addr_ipv4_loopback,     0);
-const Socket_Address ipv4_broadcast     (s_in6_addr_ipv4_broadcast,    0);
+const Socket_Address ipv4_unspecified   = { s_in6_addr_ipv4_unspecified,  0 };
+const Socket_Address ipv4_loopback      = { s_in6_addr_ipv4_loopback,     0 };
+const Socket_Address ipv4_broadcast     = { s_in6_addr_ipv4_broadcast,    0 };
 
 Socket_Address::
 Socket_Address(const char* str, size_t len)
