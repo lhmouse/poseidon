@@ -185,4 +185,29 @@ implode(cow_string& text, const cow_vector<cow_string>& segments, char delim)
     return segments.size();
   }
 
+char*
+hex_encode_16_partial(char* str, const void* data) noexcept
+  {
+    // Split the higher and lower halves into two SSE registers.
+    __m128i tval = _mm_loadu_si128((const __m128i*) data);
+    __m128i hi = _mm_and_si128(_mm_srli_epi64(tval, 4), _mm_set1_epi8(0x0F));
+    __m128i lo = _mm_and_si128(tval, _mm_set1_epi8(0x0F));
+
+    // Convert digits into their string forms:
+    //   xdigit := val + '0' + ((val > 9) ? 7 : 0)
+    tval = _mm_and_si128(_mm_cmpgt_epi8(hi, _mm_set1_epi8(9)), _mm_set1_epi8(39));
+    hi = _mm_add_epi8(_mm_add_epi8(hi, _mm_set1_epi8('0')), tval);
+
+    tval = _mm_and_si128(_mm_cmpgt_epi8(lo, _mm_set1_epi8(9)), _mm_set1_epi8(39));
+    lo = _mm_add_epi8(_mm_add_epi8(lo, _mm_set1_epi8('0')), tval);
+
+    // Rearrange digits in the correct order.
+    // Insert dashes first. Instead of writing four dashes into `str[8]`,
+    // `str[13]`, `str[18]` and `str[23]`, we can overwrite that 16-byte
+    // range with a single store operation.
+    _mm_storeu_si128((__m128i*) str, _mm_unpacklo_epi8(hi, lo));
+    _mm_storeu_si128((__m128i*) (str + 16), _mm_unpackhi_epi8(hi, lo));
+    return str;
+  }
+
 }  // namespace poseidon

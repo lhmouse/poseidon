@@ -103,5 +103,10 @@ explode(cow_vector<cow_string>& segments, cow_stringR text, char delim = ',', si
 size_t
 implode(cow_string& text, const cow_vector<cow_string>& segments, char delim = ',');
 
+// Converts 16 bytes into a hexadecimal string. Exact 32 characters will
+// be written. No null terminator will be appended.
+char*
+hex_encode_16_partial(char* str, const void* data) noexcept;
+
 }  // namespace poseidon
 #endif
