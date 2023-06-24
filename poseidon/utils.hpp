@@ -96,14 +96,12 @@ ascii_ci_has_token(cow_stringR text, const OtherT& other)
     return noadl::ascii_ci_has_token(text, other.c_str(), other.length());
   }
 
-// Split a string into a vector of tokens, and vice versa.
-using cow_vstrings = ::rocket::cow_vector<cow_string>;
+// Splits a string into a vector of tokens, and vice versa.
+size_t
+explode(cow_vector<cow_string>& segments, cow_stringR text, char delim = ',', size_t limit = SIZE_MAX);
 
 size_t
-explode(cow_vstrings& segments, cow_stringR text, char delim = ',', size_t limit = SIZE_MAX);
-
-size_t
-implode(cow_string& text, const cow_vstrings& segments, char delim = ',');
+implode(cow_string& text, const cow_vector<cow_string>& segments, char delim = ',');
 
 }  // namespace poseidon
 #endif

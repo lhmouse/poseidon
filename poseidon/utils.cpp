@@ -147,7 +147,7 @@ ascii_ci_has_token(cow_stringR text, char delim, const char* token, size_t len)
   }
 
 size_t
-explode(cow_vstrings& segments, cow_stringR text, char delim, size_t limit)
+explode(cow_vector<cow_string>& segments, cow_stringR text, char delim, size_t limit)
   {
     segments.clear();
     size_t bpos = text.find_not_of(" \t");
@@ -171,7 +171,7 @@ explode(cow_vstrings& segments, cow_stringR text, char delim, size_t limit)
   }
 
 size_t
-implode(cow_string& text, const cow_vstrings& segments, char delim)
+implode(cow_string& text, const cow_vector<cow_string>& segments, char delim)
   {
     text.clear();
     if(segments.size()) {
