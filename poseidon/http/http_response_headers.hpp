@@ -76,9 +76,22 @@ class HTTP_Response_Headers
     resize_headers(size_t count)
       { this->m_headers.resize(count);  }
 
+    template<typename ValueT>
+    void
+    push_header(cow_stringR name, ValueT&& value)
+      { this->m_headers.emplace_back(name, ::std::forward<ValueT>(value));  }
+
+    void
+    pop_header() noexcept
+      { this->m_headers.pop_back();  }
+
     cow_stringR
     header_name(size_t index) const
       { return this->m_headers.at(index).first;  }
+
+    const HTTP_Value&
+    header_value(size_t index) const
+      { return this->m_headers.at(index).second;  }
 
     bool
     header_name_equals(size_t index, cow_stringR cmp) const
@@ -86,10 +99,6 @@ class HTTP_Response_Headers
         const auto& my = this->m_headers.at(index).first;
         return ::rocket::ascii_ci_equal(my.data(), my.size(), cmp.data(), cmp.size());
       }
-
-    const HTTP_Value&
-    header_value(size_t index) const
-      { return this->m_headers.at(index).second;  }
 
     template<typename ValueT>
     void
@@ -99,11 +108,10 @@ class HTTP_Response_Headers
         this->m_headers.mut(index).second = ::std::forward<ValueT>(value);
       }
 
-    template<typename ValueT>
     void
-    add_header(cow_stringR name, ValueT&& value)
+    erase_header(size_t index)
       {
-        this->m_headers.emplace_back(name, ::std::forward<ValueT>(value));
+        this->m_headers.erase(index, 1);
       }
 
     // Writes response headers in raw format, which can be sent through a
