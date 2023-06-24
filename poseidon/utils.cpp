@@ -202,9 +202,6 @@ hex_encode_16_partial(char* str, const void* data) noexcept
     lo = _mm_add_epi8(_mm_add_epi8(lo, _mm_set1_epi8('0')), tval);
 
     // Rearrange digits in the correct order.
-    // Insert dashes first. Instead of writing four dashes into `str[8]`,
-    // `str[13]`, `str[18]` and `str[23]`, we can overwrite that 16-byte
-    // range with a single store operation.
     _mm_storeu_si128((__m128i*) str, _mm_unpacklo_epi8(hi, lo));
     _mm_storeu_si128((__m128i*) (str + 16), _mm_unpackhi_epi8(hi, lo));
     return str;
