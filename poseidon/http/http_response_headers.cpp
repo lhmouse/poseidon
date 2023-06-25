@@ -17,18 +17,27 @@ HTTP_Response_Headers::
 print(tinyfmt& fmt) const
   {
     // `HTTP/1.1 400 Bad Request`
+    fmt << "HTTP/1.1 " << this->m_status << " ";
+
     if(this->m_reason.empty())
-      fmt << "HTTP/1.1 " << this->m_status << " " << ::http_status_str((::http_status) this->m_status) << "\r\n";
+      fmt << ::http_status_str((::http_status) this->m_status) << "\r\n";
     else
-      fmt << "HTTP/1.1 " << this->m_status << " " << this->m_reason << "\r\n";
+      fmt << this->m_reason << "\r\n";
 
     // `Server: test`
     // `Content-Length: 42`
-    for(const auto& r : this->m_headers)
+    for(const auto& r : this->m_headers) {
+      // Ignore empty names, making it easier to use.
+      if(r.first.empty())
+        continue;
+
+      fmt << r.first << ": ";
+
       if(r.second.is_string())
-        fmt << r.first << ": " << r.second.as_string() << "\r\n";
+        fmt << r.second.as_string() << "r\n";
       else
-        fmt << r.first << ": " << r.second << "\r\n";
+        fmt << r.second << "\r\n";
+    }
 
     // Terminate the header with an empty line.
     fmt << "\r\n";

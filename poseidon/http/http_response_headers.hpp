@@ -109,13 +109,21 @@ class HTTP_Response_Headers
       }
 
     void
+    clear_header(size_t index)
+      {
+        this->m_headers.mut(index).first.clear();
+        this->m_headers.mut(index).second.clear();
+      }
+
+    void
     erase_header(size_t index)
       {
         this->m_headers.erase(index, 1);
       }
 
     // Writes response headers in raw format, which can be sent through a
-    // stream socket. Lines are separated by CR LF pairs.
+    // stream socket. Lines are separated by CR LF pairs. Headers with empty
+    // names are ignored silently.
     tinyfmt&
     print(tinyfmt& fmt) const;
 
