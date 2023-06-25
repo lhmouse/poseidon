@@ -17,6 +17,9 @@ class HTTP_Request_Headers
 
   public:
     // Constructors
+    constexpr
+    HTTP_Request_Headers() noexcept = default;
+
     explicit
     HTTP_Request_Headers(cow_stringR verb, cow_stringR uri) noexcept
       : m_verb(verb), m_uri(uri)

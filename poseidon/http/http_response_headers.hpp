@@ -11,12 +11,15 @@ namespace poseidon {
 class HTTP_Response_Headers
   {
   private:
-    uint32_t m_status;
+    uint32_t m_status = 0;
     cow_string m_reason;
     cow_bivector<cow_string, HTTP_Value> m_headers;
 
   public:
     // Constructors
+    constexpr
+    HTTP_Response_Headers() noexcept = default;
+
     explicit
     HTTP_Response_Headers(uint32_t status) noexcept
       : m_status(status)
