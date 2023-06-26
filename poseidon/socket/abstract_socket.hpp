@@ -15,7 +15,7 @@ class Abstract_Socket
 
     unique_posix_fd m_fd;
     atomic_relaxed<Socket_State> m_state;
-    mutable atomic_acq_rel<bool> m_sockname_ready;
+    mutable atomic_relaxed<bool> m_sockname_ready;
     mutable Socket_Address m_sockname;
 
     mutable recursive_mutex m_io_mutex;

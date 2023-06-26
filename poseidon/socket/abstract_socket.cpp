@@ -79,6 +79,7 @@ local_address() const noexcept
     // Cache the address.
     this->m_sockname.set_addr(sa.sin6_addr);
     this->m_sockname.set_port(be16toh(sa.sin6_port));
+    ::std::atomic_thread_fence(::std::memory_order_release);
     this->m_sockname_ready.store(true);
     return this->m_sockname;
   }

@@ -13,7 +13,7 @@ class Abstract_Future
     friend class Fiber_Scheduler;
 
     mutable plain_mutex m_init_mutex;
-    atomic_acq_rel<bool> m_ready;
+    atomic_relaxed<bool> m_ready;
     vector<wkptr<atomic_relaxed<steady_time>>> m_waiters;
 
   protected:
@@ -26,10 +26,6 @@ class Abstract_Future
     virtual
     void
     do_on_future_ready(void* param) = 0;
-
-    // Wakes up all waiters. Not sure whether this will be useful for users.
-    void
-    do_notify_ready() noexcept;
 
     // Tries updating the ready state. If `m_ready` is `true`, this function
     // returns immediately. Otherwise, `do_on_future_ready(param)` is called,

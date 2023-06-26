@@ -16,22 +16,6 @@ Abstract_Future::
   {
   }
 
-void
-Abstract_Future::
-do_notify_ready() noexcept
-  {
-    if(this->m_waiters.empty())
-      return;
-
-    vector<wkptr<atomic_relaxed<steady_time>>> waiters;
-    waiters.swap(this->m_waiters);
-    const steady_time now = steady_clock::now();
-
-    for(const auto& wp : waiters)
-      if(auto p = wp.lock())
-        p->store(now);
-  }
-
 bool
 Abstract_Future::
 do_try_set_ready(void* param)
@@ -41,9 +25,22 @@ do_try_set_ready(void* param)
     if(this->m_ready.load())
       return false;
 
+    // Initialize the value of this future.
     this->do_on_future_ready(param);
+    ::std::atomic_thread_fence(::std::memory_order_release);
     this->m_ready.store(true);
-    this->do_notify_ready();
+
+    if(!this->m_waiters.empty()) {
+      // Notify waiters.
+      const steady_time now = steady_clock::now();
+      do {
+        auto timep = this->m_waiters.back().lock();
+        if(timep)
+          timep->store(now);
+        this->m_waiters.pop_back();
+      }
+      while(!this->m_waiters.empty());
+    }
     return true;
   }
 

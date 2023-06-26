@@ -19,7 +19,7 @@ class SSL_Socket
     SSL_ptr m_ssl;
     cow_string m_alpn_proto;
 
-    mutable atomic_acq_rel<bool> m_peername_ready;
+    mutable atomic_relaxed<bool> m_peername_ready;
     mutable Socket_Address m_peername;
 
   protected:

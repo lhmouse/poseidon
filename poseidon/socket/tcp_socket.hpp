@@ -14,7 +14,7 @@ class TCP_Socket
   private:
     friend class Network_Driver;
 
-    mutable atomic_acq_rel<bool> m_peername_ready;
+    mutable atomic_relaxed<bool> m_peername_ready;
     mutable Socket_Address m_peername;
 
   protected:

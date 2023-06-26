@@ -225,6 +225,7 @@ remote_address() const noexcept
     // Cache the address.
     this->m_peername.set_addr(sa.sin6_addr);
     this->m_peername.set_port(be16toh(sa.sin6_port));
+    ::std::atomic_thread_fence(::std::memory_order_release);
     this->m_peername_ready.store(true);
     return this->m_peername;
   }
