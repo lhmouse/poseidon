@@ -12,22 +12,19 @@ extern Easy_TCP_Server my_server;
 void
 event_callback(shptrR<TCP_Socket> socket, Abstract_Fiber& /*fiber*/, Connection_Event event, linear_buffer& data, int code)
   {
-    Socket_Address addr = socket->remote_address();
-    cow_string str(data.data(), data.size());
-    data.clear();
-
     switch(event) {
       case connection_event_open:
-        POSEIDON_LOG_FATAL(("example TCP server accepted connection from `$1`"), addr);
+        POSEIDON_LOG_FATAL(("example TCP server accepted connection from `$1`"), socket->remote_address());
         break;
 
       case connection_event_stream:
-        POSEIDON_LOG_WARN(("example TCP server received data from `$1` (eof = $2): $3"), addr, code, str);
-        socket->tcp_send(str.data(), str.size());
+        POSEIDON_LOG_WARN(("example TCP server received data from `$1` (eof = $2): $3"), socket->remote_address(), code, data);
+        socket->tcp_send(data.data(), data.size());
+        data.clear();
         break;
 
       case connection_event_closed:
-        POSEIDON_LOG_FATAL(("example TCP server shut down connection `$1` (errno = $2): $3"), addr, code, str);
+        POSEIDON_LOG_FATAL(("example TCP server shut down connection `$1` (errno = $2): $3"), socket->remote_address(), code, data);
         break;
     }
   }

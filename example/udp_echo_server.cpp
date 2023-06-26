@@ -12,11 +12,9 @@ extern Easy_UDP_Server my_server;
 void
 data_callback(shptrR<UDP_Socket> socket, Abstract_Fiber& /*fiber*/, Socket_Address&& addr, linear_buffer&& data)
   {
-    cow_string str(data.data(), data.size());
+    POSEIDON_LOG_WARN(("example UDP server received data from `$1`: $2"), addr, data);
+    socket->udp_send(addr, data.data(), data.size());
     data.clear();
-
-    POSEIDON_LOG_WARN(("example UDP server received data from `$1`: $2"), addr, str);
-    socket->udp_send(addr, str.data(), str.size());
   }
 
 int

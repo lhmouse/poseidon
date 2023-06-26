@@ -12,23 +12,20 @@ extern Easy_TCP_Client my_client;
 void
 event_callback(shptrR<TCP_Socket> socket, Abstract_Fiber& /*fiber*/, Connection_Event event, linear_buffer& data, int code)
   {
-    Socket_Address addr = socket->remote_address();
-    cow_string str(data.data(), data.size());
-    data.clear();
-    static constexpr char req[] = "GET / HTTP/1.1\r\nConnection: close\r\nHost: www.example.org\r\n\r\n";
-
     switch(event) {
       case connection_event_open:
+        static constexpr char req[] = "GET / HTTP/1.1\r\nConnection: close\r\nHost: www.example.org\r\n\r\n";
         socket->tcp_send(req, ::strlen(req));
-        POSEIDON_LOG_FATAL(("example TCP client sent data to `$1`:\n\n$2"), addr, req);
+        POSEIDON_LOG_FATAL(("example TCP client sent data to `$1`:\n\n$2"), socket->remote_address(), req);
         break;
 
       case connection_event_stream:
-        POSEIDON_LOG_WARN(("example TCP client received data from `$1` (eof = $2):\n\n$3"), addr, code, str);
+        POSEIDON_LOG_WARN(("example TCP client received data from `$1` (eof = $2):\n\n$3"), socket->remote_address(), code, data);
+        data.clear();
         break;
 
       case connection_event_closed:
-        POSEIDON_LOG_FATAL(("example TCP client shut down connection `$1` (errno = $2): $3"), addr, code, str);
+        POSEIDON_LOG_FATAL(("example TCP client shut down connection `$1` (errno = $2): $3"), socket->remote_address(), code, data);
         break;
     }
   }

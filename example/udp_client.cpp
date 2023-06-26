@@ -14,9 +14,7 @@ extern Easy_Timer text_timer;
 void
 data_callback(shptrR<UDP_Socket> socket, Abstract_Fiber& /*fiber*/, Socket_Address&& addr, linear_buffer&& data)
   {
-    cow_string str(data.data(), data.size());
-    data.clear();
-    POSEIDON_LOG_DEBUG(("example UDP client received data from `$1`: $2"), addr, str);
+    POSEIDON_LOG_DEBUG(("example UDP client received data from `$1`: $2"), addr, data);
     (void) socket;
   }
 

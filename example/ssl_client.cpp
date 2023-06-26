@@ -12,23 +12,20 @@ extern Easy_SSL_Client my_client;
 void
 event_callback(shptrR<SSL_Socket> socket, Abstract_Fiber& /*fiber*/, Connection_Event event, linear_buffer& data, int code)
   {
-    Socket_Address addr = socket->remote_address();
-    cow_string str(data.data(), data.size());
-    data.clear();
-    static constexpr char req[] = "GET / HTTP/1.1\r\nConnection: close\r\nHost: www.example.org\r\n\r\n";
-
     switch(event) {
       case connection_event_open:
-        socket->ssl_send(req, ::strlen(req));
-        POSEIDON_LOG_FATAL(("example SSL client sent data to `$1`:\n\n$2"), addr, req);
+        static constexpr char req[] = "GET / HTTP/1.1\r\nConnection: close\r\nHost: www.example.org\r\n\r\n";
+        socket->ssl_send(req, ::rocket::xstrlen(req));
+        POSEIDON_LOG_FATAL(("example SSL client sent data to `$1`:\n\n$2"), socket->remote_address(), req);
         break;
 
       case connection_event_stream:
-        POSEIDON_LOG_WARN(("example SSL client received data from `$1` (eof = $2):\n\n$3"), addr, code, str);
+        POSEIDON_LOG_WARN(("example SSL client received data from `$1` (eof = $2):\n\n$3"), socket->remote_address(), code, data);
+        data.clear();
         break;
 
       case connection_event_closed:
-        POSEIDON_LOG_FATAL(("example SSL client shut down connection `$1` (errno = $2): $3"), addr, code, str);
+        POSEIDON_LOG_FATAL(("example SSL client shut down connection `$1` (errno = $2): $3"), socket->remote_address(), code, data);
         break;
     }
   }
