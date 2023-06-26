@@ -118,18 +118,20 @@ void
 UDP_Socket::
 do_abstract_socket_on_writable()
   {
-    if(this->do_abstract_socket_change_state(socket_state_pending, socket_state_established)) {
-      try {
-        // Deliver the establishment notification.
-        POSEIDON_LOG_DEBUG(("UDP port opened: local = $1"), this->local_address());
-        this->do_on_udp_opened();
-      }
-      catch(exception& stdex) {
-        POSEIDON_LOG_ERROR((
-            "Unhandled exception thrown from `do_on_udp_opened()`: $1",
-            "[socket class `$2`]"),
-            stdex, typeid(*socket));
-      }
+    if(this->do_abstract_socket_change_state(socket_state_pending, socket_state_established))
+    try {
+      // Deliver the establishment notification.
+      POSEIDON_LOG_DEBUG(("UDP port opened: local = $1"), this->local_address());
+      this->do_on_udp_opened();
+    }
+    catch(exception& stdex) {
+      POSEIDON_LOG_ERROR((
+          "Unhandled exception thrown from `do_on_udp_opened()`: $1",
+          "[socket class `$2`]"),
+          stdex, typeid(*socket));
+
+      this->quick_close();
+      return;
     }
   }
 
