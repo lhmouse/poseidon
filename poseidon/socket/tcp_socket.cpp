@@ -70,10 +70,10 @@ do_abstract_socket_on_readable()
       queue.accept((size_t) io_result);
     }
 
-    if(old_size != queue.size()) {
+    if((old_size != queue.size()) || (io_result == 0)) {
       try {
         // Process received data.
-        this->do_on_tcp_stream(queue);
+        this->do_on_tcp_stream(queue, io_result == 0);
       }
       catch(exception& stdex) {
         POSEIDON_LOG_ERROR((

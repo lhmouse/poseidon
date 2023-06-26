@@ -25,6 +25,7 @@ struct Event_Queue
       {
         Connection_Event type;
         linear_buffer data;
+        int code;
       };
 
     mutable plain_mutex mutex;
@@ -35,7 +36,7 @@ struct Event_Queue
 struct Shared_cb_args
   {
     wkptr<void> wobj;
-    callback_thunk_ptr<shptrR<SSL_Socket>, Abstract_Fiber&, Connection_Event, linear_buffer&> thunk;
+    callback_thunk_ptr<shptrR<SSL_Socket>, Abstract_Fiber&, Connection_Event, linear_buffer&, int> thunk;
     wkptr<Event_Queue> wqueue;
   };
 
@@ -89,10 +90,10 @@ struct Final_Fiber final : Abstract_Fiber
               // `event.data`. `data_stream` may be consumed partially by user
               // code, and shall be preserved across callbacks.
               queue->data_stream.putn(event.data.data(), event.data.size());
-              this->m_cb.thunk(cb_obj.get(), socket, *this, event.type, queue->data_stream);
+              this->m_cb.thunk(cb_obj.get(), socket, *this, event.type, queue->data_stream, event.code);
             }
             else
-              this->m_cb.thunk(cb_obj.get(), socket, *this, event.type, event.data);
+              this->m_cb.thunk(cb_obj.get(), socket, *this, event.type, event.data, event.code);
           }
           catch(exception& stdex) {
             // Shut the connection down asynchronously. Pending output data
@@ -118,7 +119,7 @@ struct Final_SSL_Socket final : SSL_Socket
       { }
 
     void
-    do_push_event_common(Connection_Event type, linear_buffer&& data) const
+    do_push_event_common(Connection_Event type, linear_buffer&& data, int code) const
       {
         auto queue = this->m_cb.wqueue.lock();
         if(!queue)
@@ -137,6 +138,7 @@ struct Final_SSL_Socket final : SSL_Socket
         auto& event = queue->events.emplace_back();
         event.type = type;
         event.data = ::std::move(data);
+        event.code = code;
       }
 
     virtual
@@ -144,14 +146,14 @@ struct Final_SSL_Socket final : SSL_Socket
     do_on_ssl_connected() override
       {
         linear_buffer data;
-        this->do_push_event_common(connection_event_open, ::std::move(data));
+        this->do_push_event_common(connection_event_open, ::std::move(data), 0);
       }
 
     virtual
     void
-    do_on_ssl_stream(linear_buffer& data) override
+    do_on_ssl_stream(linear_buffer& data, bool eof) override
       {
-        this->do_push_event_common(connection_event_stream, ::std::move(data));
+        this->do_push_event_common(connection_event_stream, ::std::move(data), eof);
         data.clear();
       }
 
@@ -159,12 +161,11 @@ struct Final_SSL_Socket final : SSL_Socket
     void
     do_abstract_socket_on_closed() override
       {
+        int sys_errno = errno;
         linear_buffer data;
-        if(errno != 0) {
-          char sbuf[1024];
-          data.puts(::strerror_r(errno, sbuf, sizeof(sbuf)));
-        }
-        this->do_push_event_common(connection_event_closed, ::std::move(data));
+        char sbuf[1024];
+        data.puts(::strerror_r(sys_errno, sbuf, sizeof(sbuf)));
+        this->do_push_event_common(connection_event_closed, ::std::move(data), sys_errno);
       }
   };
 

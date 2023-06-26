@@ -12,7 +12,7 @@ class Easy_TCP_Server
   {
   private:
     shptr<void> m_cb_obj;
-    callback_thunk_ptr<shptrR<TCP_Socket>, Abstract_Fiber&, Connection_Event, linear_buffer&> m_cb_thunk;
+    callback_thunk_ptr<shptrR<TCP_Socket>, Abstract_Fiber&, Connection_Event, linear_buffer&, int> m_cb_thunk;
 
     struct X_Client_Table;
     shptr<X_Client_Table> m_client_table;
@@ -21,15 +21,16 @@ class Easy_TCP_Server
   public:
     // Constructs a server. The argument shall be an invocable object taking
     // `(shptrR<TCP_Socket> socket, Abstract_Fiber& fiber, Connection_Event
-    // event, linear_buffer& data)`, where `socket` is a pointer to a client
-    // socket object, and if `event` is
-    //  1) `connection_event_open`, then `data` is empty, or
+    // event, linear_buffer& data, int code)`, where `socket` is a pointer to
+    // a client socket object, and if `event` is
+    //  1) `connection_event_open`, then `data` is empty; or
     //  2) `connection_event_stream`, then `data` contains all data that have
     //     been received and have not been removed so far (this callback shall
     //     `.discard()` processed data from `data`, otherwise they will remain
-    //     there for the next call), or
-    //  3) `connection_event_closed`, then `data` is the error description in
-    //     case of an error, or an empty string if no error has happened.
+    //     there for the next call); `code` is non-zero if the remote peer has
+    //     closed the connection; or
+    //  3) `connection_event_closed`, then `data` is the error description and
+    //     `code` is the system error number.
     // The server object owns all client socket objects. As a recommendation,
     // applications should store only `wkptr`s to client sockets, and call
     // `.lock()` as needed. This server object stores a copy of the callback,

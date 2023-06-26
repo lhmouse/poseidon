@@ -10,7 +10,7 @@ using namespace ::poseidon;
 extern Easy_TCP_Client my_client;
 
 void
-event_callback(shptrR<TCP_Socket> socket, Abstract_Fiber& /*fiber*/, Connection_Event event, linear_buffer& data)
+event_callback(shptrR<TCP_Socket> socket, Abstract_Fiber& /*fiber*/, Connection_Event event, linear_buffer& data, int code)
   {
     Socket_Address addr = socket->remote_address();
     cow_string str(data.data(), data.size());
@@ -24,11 +24,11 @@ event_callback(shptrR<TCP_Socket> socket, Abstract_Fiber& /*fiber*/, Connection_
         break;
 
       case connection_event_stream:
-        POSEIDON_LOG_WARN(("example TCP client received data from `$1`:\n\n$2"), addr, str);
+        POSEIDON_LOG_WARN(("example TCP client received data from `$1` (eof = $2):\n\n$3"), addr, code, str);
         break;
 
       case connection_event_closed:
-        POSEIDON_LOG_FATAL(("example TCP client shut down connection `$1`: $2"), addr, str);
+        POSEIDON_LOG_FATAL(("example TCP client shut down connection `$1` (errno = $2): $3"), addr, code, str);
         break;
     }
   }

@@ -64,7 +64,7 @@ class SSL_Socket
     // should remove processed bytes.
     virtual
     void
-    do_on_ssl_stream(linear_buffer& data) = 0;
+    do_on_ssl_stream(linear_buffer& data, bool eof) = 0;
 
     // This callback is invoked by the network thread when an out-of-band byte
     // has been received, and is intended to be overriden by derived classes.

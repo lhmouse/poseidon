@@ -203,10 +203,10 @@ do_abstract_socket_on_readable()
       queue.accept(datalen);
     }
 
-    if(old_size != queue.size()) {
+    if((old_size != queue.size()) || (ssl_err == SSL_ERROR_ZERO_RETURN)) {
       try {
         // Process received data.
-        this->do_on_ssl_stream(queue);
+        this->do_on_ssl_stream(queue, ssl_err == SSL_ERROR_ZERO_RETURN);
       }
       catch(exception& stdex) {
         POSEIDON_LOG_ERROR((
