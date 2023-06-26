@@ -41,7 +41,6 @@ do_abstract_socket_on_readable()
   {
     recursive_mutex::unique_lock io_lock;
     auto& queue = this->do_abstract_socket_lock_read_queue(io_lock);
-    size_t old_size = queue.size();
     ::ssize_t io_result = 0;
 
     for(;;) {
@@ -70,20 +69,18 @@ do_abstract_socket_on_readable()
       queue.accept((size_t) io_result);
     }
 
-    if((old_size != queue.size()) || (io_result == 0)) {
-      try {
-        // Process received data.
-        this->do_on_tcp_stream(queue, io_result == 0);
-      }
-      catch(exception& stdex) {
-        POSEIDON_LOG_ERROR((
-            "Unhandled exception thrown from `do_on_tcp_stream()`: $1",
-            "[socket class `$2`]"),
-            stdex, typeid(*socket));
+    try {
+      // Process received data.
+      this->do_on_tcp_stream(queue, io_result == 0);
+    }
+    catch(exception& stdex) {
+      POSEIDON_LOG_ERROR((
+          "Unhandled exception thrown from `do_on_tcp_stream()`: $1",
+          "[socket class `$2`]"),
+          stdex, typeid(*socket));
 
-        this->quick_close();
-        return;
-      }
+      this->quick_close();
+      return;
     }
 
     if(io_result == 0) {
@@ -99,24 +96,20 @@ TCP_Socket::
 do_abstract_socket_on_oob_readable()
   {
     char data;
-    ::ssize_t io_result;
+    ::ssize_t io_result = ::recv(this->do_get_fd(), &data, 1, MSG_OOB);
+    if(io_result > 0)
+    try {
+      // Process received byte.
+      this->do_on_tcp_oob_byte(data);
+    }
+    catch(exception& stdex) {
+      POSEIDON_LOG_ERROR((
+          "Unhandled exception thrown from `do_on_tcp_oob_byte()`: $1",
+          "[socket class `$2`]"),
+          stdex, typeid(*socket));
 
-    // If there are no OOB data, `recv()` fails with `EINVAL`.
-    io_result = ::recv(this->do_get_fd(), &data, 1, MSG_OOB);
-    if(io_result > 0) {
-      try {
-        // Process received byte.
-        this->do_on_tcp_oob_byte(data);
-      }
-      catch(exception& stdex) {
-        POSEIDON_LOG_ERROR((
-            "Unhandled exception thrown from `do_on_tcp_oob_byte()`: $1",
-            "[socket class `$2`]"),
-            stdex, typeid(*socket));
-
-        this->quick_close();
-        return;
-      }
+      this->quick_close();
+      return;
     }
   }
 
@@ -153,21 +146,20 @@ do_abstract_socket_on_writable()
       queue.discard((size_t) io_result);
     }
 
-    if(this->do_abstract_socket_change_state(socket_state_pending, socket_state_established)) {
-      try {
-        // Deliver the establishment notification.
-        POSEIDON_LOG_DEBUG(("TCP connection established: remote = $1"), this->remote_address());
-        this->do_on_tcp_connected();
-      }
-      catch(exception& stdex) {
-        POSEIDON_LOG_ERROR((
-            "Unhandled exception thrown from `do_on_tcp_connected()`: $1",
-            "[socket class `$2`]"),
-            stdex, typeid(*socket));
+    if(this->do_abstract_socket_change_state(socket_state_pending, socket_state_established))
+    try {
+      // Deliver the establishment notification.
+      POSEIDON_LOG_DEBUG(("TCP connection established: remote = $1"), this->remote_address());
+      this->do_on_tcp_connected();
+    }
+    catch(exception& stdex) {
+      POSEIDON_LOG_ERROR((
+          "Unhandled exception thrown from `do_on_tcp_connected()`: $1",
+          "[socket class `$2`]"),
+          stdex, typeid(*socket));
 
-        this->quick_close();
-        return;
-      }
+      this->quick_close();
+      return;
     }
 
     if(queue.empty() && this->do_abstract_socket_change_state(socket_state_closing, socket_state_closed)) {
