@@ -79,9 +79,9 @@ class HTTP_Client_Session
 
     // This callback is invoked by the network thread for each fragment of the
     // response body that has been received. As with `TCP_Connection::
-    // do_on_tcp_stream`, the argument buffer contains all data that have been
-    // accumulated so far and callees are supposed to remove bytes that have
-    // been processed.
+    // do_on_tcp_stream()`, the argument buffer contains all data that have
+    // been accumulated so far and callees are supposed to remove bytes that
+    // have been processed.
     // The default implementation leaves all data alone for consumption by
     // `do_on_http_response_finish()`, but it checks the total length of the
     // body so it will not exceed `network.http.max_response_content_length`
