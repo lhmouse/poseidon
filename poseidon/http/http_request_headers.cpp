@@ -23,7 +23,7 @@ print(tinyfmt& fmt) const
       fmt << r.first << ": ";
 
       if(r.second.is_string())
-        fmt << r.second.as_string() << "r\n";
+        fmt << r.second.as_string() << "\r\n";
       else
         fmt << r.second << "\r\n";
     }
