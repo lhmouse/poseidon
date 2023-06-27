@@ -289,17 +289,23 @@ http_request(HTTP_Request_Headers&& resp, const char* data, size_t size)
           || resp.header_name_equals(hindex, sref("Transfer-Encoding")))
         resp.headers.erase(hindex --);
 
-    if(size != 0) {
-      // By default, request messages do not have bodies. Hence the length is
-      // only necessary if the body is non-empty.
+    // By default, request messages do not have bodies. Hence the length is
+    // only necessary if the body is non-empty.
+    if(size != 0)
       resp.headers.emplace_back(sref("Content-Length"), (int64_t) size);
-    }
 
     // Compose the message and send it as a whole.
     ::rocket::tinyfmt_str fmt;
     fmt << resp;
     fmt.putn(data, size);
     return this->tcp_send(fmt.c_str(), fmt.length());
+  }
+
+bool
+HTTP_Client_Session::
+http_request(HTTP_Request_Headers&& resp)
+  {
+    return this->http_request(::std::move(resp), "", 0);
   }
 
 bool
@@ -322,10 +328,14 @@ http_chunked_request_start(HTTP_Request_Headers&& resp)
 
 bool
 HTTP_Client_Session::
-http_chunked_request_data(const char* data, size_t size)
+http_chunked_request_send(const char* data, size_t size)
   {
-    // Compose a chunk header and send it as a whole. The length of this chunk
-    // is written as a hexadecimal integer without the `0x` prefix.
+    // Ignore empty chunks, which would mark the end of the body.
+    if(size == 0)
+      return this->socket_state() <= socket_state_established;
+
+    // Compose a chunk and send it as a whole. The length of data of this
+    // chunk is written as a hexadecimal integer without the `0x` prefix.
     ::rocket::tinyfmt_str fmt;
     ::rocket::ascii_numput nump;
     nump.put_XU(size);
@@ -334,6 +344,13 @@ http_chunked_request_data(const char* data, size_t size)
     fmt.putn(data, size);
     fmt << "\r\n";
     return this->tcp_send(fmt.c_str(), fmt.length());
+  }
+
+bool
+HTTP_Client_Session::
+http_chunked_request_finish()
+  {
+    return this->tcp_send("0\r\n\r\n", 5);
   }
 
 }  // namespace poseidon
