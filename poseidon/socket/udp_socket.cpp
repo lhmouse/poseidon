@@ -97,14 +97,19 @@ do_abstract_socket_on_readable()
         this->m_taddr.set_addr(sa.sin6_addr);
         this->m_taddr.set_port(be16toh(sa.sin6_port));
         queue.accept((size_t) io_result);
+
         this->do_on_udp_packet(::std::move(this->m_taddr), ::std::move(queue));
       }
       catch(exception& stdex) {
         POSEIDON_LOG_ERROR((
-            "Unhandled exception thrown from `do_on_udp_packet()`: $1",
-            "[socket class `$2`]"),
-            stdex, typeid(*socket));
+            "Unhandled exception thrown from `do_on_udp_packet()`: $3",
+            "[UDP socket `$1` (class `$2`)]"),
+            this, typeid(*this), stdex);
       }
+
+      POSEIDON_LOG_TRACE((
+          "UDP socket `$1` (class `$2`): `do_on_udp_packet()` done"),
+          this, typeid(*this));
     }
   }
 
@@ -118,31 +123,7 @@ void
 UDP_Socket::
 do_abstract_socket_on_writable()
   {
-    if(this->do_abstract_socket_change_state(socket_state_pending, socket_state_established))
-    try {
-      // Deliver the establishment notification.
-      POSEIDON_LOG_DEBUG(("UDP port opened: local = $1"), this->local_address());
-      this->do_on_udp_opened();
-    }
-    catch(exception& stdex) {
-      POSEIDON_LOG_ERROR((
-          "Unhandled exception thrown from `do_on_udp_opened()`: $1",
-          "[socket class `$2`]"),
-          stdex, typeid(*socket));
-
-      this->quick_close();
-      return;
-    }
-  }
-
-void
-UDP_Socket::
-do_on_udp_opened()
-  {
-    POSEIDON_LOG_INFO((
-        "UDP socket on `$3` opened",
-        "[UDP socket `$1` (class `$2`)]"),
-        this, typeid(*this), this->local_address());
+    this->do_abstract_socket_change_state(socket_state_pending, socket_state_established);
   }
 
 void

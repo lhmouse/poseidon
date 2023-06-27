@@ -364,6 +364,7 @@ thread_loop()
       socket->m_state.store(socket_state_closed);
 
       try {
+        // Pass the socket error code via `errno`... Is this good?
         ::socklen_t optlen = sizeof(errno);
         errno = 0;
         if(event.events & EPOLLERR)
@@ -373,12 +374,12 @@ thread_loop()
       }
       catch(exception& stdex) {
         POSEIDON_LOG_ERROR((
-            "Unhandled exception thrown from socket closure callback: $1",
+            "Unhandled exception thrown from `do_abstract_socket_on_closed()`: $1",
             "[socket class `$2`]"),
             stdex, typeid(*socket));
       }
-
       POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`) shutdown pending"), socket, typeid(*socket));
+
       socket->m_io_driver = (Network_Driver*) 123456789;
       return;
     }
@@ -394,11 +395,14 @@ thread_loop()
       }
       catch(exception& stdex) {
         POSEIDON_LOG_ERROR((
-            "Unhandled exception thrown from socket write callback: $1",
+            "Unhandled exception thrown from `do_abstract_socket_on_writable()`: $1",
             "[socket class `$2`]"),
             stdex, typeid(*socket));
-      }
 
+        socket->quick_close();
+        socket->m_io_driver = (Network_Driver*) 123456789;
+        return;
+      }
       POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLOUT done"), socket, typeid(*socket));
     }
 
@@ -410,12 +414,14 @@ thread_loop()
       }
       catch(exception& stdex) {
         POSEIDON_LOG_ERROR((
-            "Unhandled exception thrown from socket out-of-band read callback: $1",
+            "Unhandled exception thrown from `do_abstract_socket_on_oob_readable()`: $1",
             "[socket class `$2`]"),
             stdex, typeid(*socket));
-      }
 
-      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLPRI done"), socket, typeid(*socket));
+        socket->quick_close();
+        socket->m_io_driver = (Network_Driver*) 123456789;
+        return;
+      }
     }
 
     if(event.events & EPOLLIN) {
@@ -426,11 +432,14 @@ thread_loop()
       }
       catch(exception& stdex) {
         POSEIDON_LOG_ERROR((
-            "Unhandled exception thrown from socket read callback: $1",
+            "Unhandled exception thrown from `do_abstract_socket_on_readable()`: $1",
             "[socket class `$2`]"),
             stdex, typeid(*socket));
-      }
 
+        socket->quick_close();
+        socket->m_io_driver = (Network_Driver*) 123456789;
+        return;
+      }
       POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLIN done"), socket, typeid(*socket));
     }
 

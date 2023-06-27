@@ -88,17 +88,18 @@ do_abstract_socket_on_readable()
         continue;
       }
 
-      // Use `TCP_NODELAY`. Errors are ignored.
-      static constexpr int true_value = 1;
-      ::setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &true_value, sizeof(int));
-
       try {
+        // Use `TCP_NODELAY`. Errors are ignored.
+        static constexpr int true_value = 1;
+        ::setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &true_value, sizeof(int));
+
         // Accept the client socket. If a null pointer is returned, the accepted
         // socket will be closed immediately.
         this->m_taddr.set_addr(sa.sin6_addr);
         this->m_taddr.set_port(be16toh(sa.sin6_port));
+
         auto client = this->do_on_listen_new_client_opt(::std::move(this->m_taddr), ::std::move(fd));
-        if(!client)
+        if(ROCKET_UNEXPECT(!client))
           continue;
 
         POSEIDON_LOG_INFO((
@@ -110,10 +111,14 @@ do_abstract_socket_on_readable()
       }
       catch(exception& stdex) {
         POSEIDON_LOG_ERROR((
-            "Unhandled exception thrown from `do_on_listen_new_client_opt()`: $1",
-            "[socket class `$2`]"),
-            stdex, typeid(*socket));
+            "Unhandled exception thrown from `do_on_listen_new_client_opt()`: $3",
+            "[TCP listen socket `$1` (class `$2`)]"),
+            this, typeid(*this), stdex);
       }
+
+      POSEIDON_LOG_TRACE((
+          "TCP listen socket `$1` (class `$2`): `do_on_listen_new_client_opt()` done"),
+          this, typeid(*this));
     }
   }
 
