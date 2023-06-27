@@ -223,7 +223,7 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
         nullptr,
       }};
 
-    if(!data.empty())
+    if(data.size() != 0)
       data.discard(::http_parser_execute(this->m_parser, settings, data.data(), data.size()));
 
     if(eof)
