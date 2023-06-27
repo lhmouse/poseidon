@@ -139,7 +139,7 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
     }
 
     // Parse incoming data and remove parsed bytes from the queue. Errors are
-    // are passed via exceptions.
+    // passed via exceptions.
     static constexpr ::http_parser_settings settings[1] =
       {{
         // on_message_begin
