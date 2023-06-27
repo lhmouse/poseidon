@@ -7,26 +7,21 @@
 #include <http_parser.h>
 namespace poseidon {
 
-HTTP_Response_Headers::
-~HTTP_Response_Headers()
-  {
-  }
-
 tinyfmt&
 HTTP_Response_Headers::
 print(tinyfmt& fmt) const
   {
     // `HTTP/1.1 400 Bad Request`
-    fmt << "HTTP/1.1 " << this->m_status << " ";
+    fmt << "HTTP/1.1 " << this->status << " ";
 
-    if(this->m_reason.empty())
-      fmt << ::http_status_str((::http_status) this->m_status) << "\r\n";
+    if(this->reason.empty())
+      fmt << ::http_status_str((::http_status) this->status) << "\r\n";
     else
-      fmt << this->m_reason << "\r\n";
+      fmt << this->reason << "\r\n";
 
     // `Server: test`
     // `Content-Length: 42`
-    for(const auto& r : this->m_headers) {
+    for(const auto& r : this->headers) {
       // Ignore empty names, making it easier to use.
       if(r.first.empty())
         continue;

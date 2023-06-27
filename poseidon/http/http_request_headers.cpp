@@ -6,21 +6,16 @@
 #include "../utils.hpp"
 namespace poseidon {
 
-HTTP_Request_Headers::
-~HTTP_Request_Headers()
-  {
-  }
-
 tinyfmt&
 HTTP_Request_Headers::
 print(tinyfmt& fmt) const
   {
     // `POST /index.php HTTP/1.1`
-    fmt << this->m_verb << " " << this->m_uri << " HTTP/1.1\r\n";
+    fmt << this->verb << " " << this->uri << " HTTP/1.1\r\n";
 
     // `User-Agent: test (foo)`
     // `Content-Length: 42`
-    for(const auto& r : this->m_headers) {
+    for(const auto& r : this->headers) {
       // Ignore empty names, making it easier to use.
       if(r.first.empty())
         continue;

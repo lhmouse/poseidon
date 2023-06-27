@@ -235,8 +235,8 @@ class HTTPS_Client_Session;
 // HTTP types
 class HTTP_DateTime;
 class HTTP_Value;
-class HTTP_Request_Headers;
-class HTTP_Response_Headers;
+struct HTTP_Request_Headers;
+struct HTTP_Response_Headers;
 
 // Easy types
 // Being 'easy' means all callbacks are invoked in fibers and can perform
