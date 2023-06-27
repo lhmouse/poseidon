@@ -98,7 +98,7 @@ class HTTP_Client_Session
 
     // This callback is invoked by the network thread on a connection that has
     // switched to another protocol. Arguments have the same semantics with
-    // `SSL_Socket::do_on_ssl_stream()`.
+    // `TCP_Socket::do_on_tcp_stream()`.
     // The default implementation throws an exception.
     virtual
     void
