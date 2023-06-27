@@ -112,7 +112,7 @@ do_http_parser_on_headers_complete()
     }
 
     // The headers are complete, so determine whether we want a response body.
-    return this->do_on_http_response_headers(this->m_resp);
+    return this->do_on_https_response_headers(this->m_resp);
   }
 
 void
@@ -120,14 +120,14 @@ HTTPS_Client_Session::
 do_http_parser_on_body(const char* str, size_t len)
   {
     this->m_body.putn(str, len);
-    this->do_on_http_response_body_stream(this->m_body);
+    this->do_on_https_response_body_stream(this->m_body);
   }
 
 void
 HTTPS_Client_Session::
 do_http_parser_on_message_complete()
   {
-    this->do_on_http_response_finish(::std::move(this->m_resp), ::std::move(this->m_body));
+    this->do_on_https_response_finish(::std::move(this->m_resp), ::std::move(this->m_body));
   }
 
 void
@@ -237,7 +237,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
 
 HTTP_Message_Body_Type
 HTTPS_Client_Session::
-do_on_http_response_headers(HTTP_Response_Headers& resp)
+do_on_https_response_headers(HTTP_Response_Headers& resp)
   {
     POSEIDON_LOG_INFO((
         "HTTP client received response: $3 $4",
@@ -250,9 +250,9 @@ do_on_http_response_headers(HTTP_Response_Headers& resp)
 
 void
 HTTPS_Client_Session::
-do_on_http_response_body_stream(linear_buffer& data)
+do_on_https_response_body_stream(linear_buffer& data)
   {
-    // Leave `data` alone for consumption by `do_on_http_response_finish()`,
+    // Leave `data` alone for consumption by `do_on_https_response_finish()`,
     // but perform some safety checks, so we won't be affected by compromized
     // 3rd-party servers.
     const auto conf_file = main_config.copy();
@@ -282,7 +282,7 @@ do_on_http_response_body_stream(linear_buffer& data)
 
 bool
 HTTPS_Client_Session::
-http_request(HTTP_Request_Headers&& resp, const char* data, size_t size)
+https_request(HTTP_Request_Headers&& resp, const char* data, size_t size)
   {
     // Erase bad headers.
     for(size_t hindex = 0;  hindex < resp.headers.size();  hindex ++)
@@ -290,11 +290,10 @@ http_request(HTTP_Request_Headers&& resp, const char* data, size_t size)
           || resp.header_name_equals(hindex, sref("Transfer-Encoding")))
         resp.headers.erase(hindex --);
 
-    if(size != 0) {
-      // By default, request messages do not have bodies. Hence the length is
-      // only necessary if the body is non-empty.
+    // By default, request messages do not have bodies. Hence the length is
+    // only necessary if the body is non-empty.
+    if(size != 0)
       resp.headers.emplace_back(sref("Content-Length"), (int64_t) size);
-    }
 
     // Compose the message and send it as a whole.
     ::rocket::tinyfmt_str fmt;
@@ -305,7 +304,14 @@ http_request(HTTP_Request_Headers&& resp, const char* data, size_t size)
 
 bool
 HTTPS_Client_Session::
-http_chunked_request_start(HTTP_Request_Headers&& resp)
+https_request(HTTP_Request_Headers&& resp)
+  {
+    return this->https_request(::std::move(resp), "", 0);
+  }
+
+bool
+HTTPS_Client_Session::
+https_chunked_request_start(HTTP_Request_Headers&& resp)
   {
     // Erase bad headers.
     for(size_t hindex = 0;  hindex < resp.headers.size();  hindex ++)
@@ -323,10 +329,14 @@ http_chunked_request_start(HTTP_Request_Headers&& resp)
 
 bool
 HTTPS_Client_Session::
-http_chunked_request_data(const char* data, size_t size)
+https_chunked_request_send(const char* data, size_t size)
   {
-    // Compose a chunk header and send it as a whole. The length of this chunk
-    // is written as a hexadecimal integer without the `0x` prefix.
+    // Ignore empty chunks, which would mark the end of the body.
+    if(size == 0)
+      return this->socket_state() <= socket_state_established;
+
+    // Compose a chunk and send it as a whole. The length of data of this
+    // chunk is written as a hexadecimal integer without the `0x` prefix.
     ::rocket::tinyfmt_str fmt;
     ::rocket::ascii_numput nump;
     nump.put_XU(size);
@@ -335,6 +345,13 @@ http_chunked_request_data(const char* data, size_t size)
     fmt.putn(data, size);
     fmt << "\r\n";
     return this->ssl_send(fmt.c_str(), fmt.length());
+  }
+
+bool
+HTTPS_Client_Session::
+https_chunked_request_finish()
+  {
+    return this->ssl_send("0\r\n\r\n", 5);
   }
 
 }  // namespace poseidon

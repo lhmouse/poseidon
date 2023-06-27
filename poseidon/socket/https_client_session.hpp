@@ -75,7 +75,7 @@ class HTTPS_Client_Session
     // and returns `http_message_body_normal`.
     virtual
     HTTP_Message_Body_Type
-    do_on_http_response_headers(HTTP_Response_Headers& resp);
+    do_on_https_response_headers(HTTP_Response_Headers& resp);
 
     // This callback is invoked by the network thread for each fragment of the
     // response body that has been received. As with `SSL_Connection::
@@ -88,40 +88,45 @@ class HTTPS_Client_Session
     // in 'main.conf'.
     virtual
     void
-    do_on_http_response_body_stream(linear_buffer& data);
+    do_on_https_response_body_stream(linear_buffer& data);
 
     // This callback is invoked by the network thread at the end of a response
     // message. Arguments have the same semantics with the other callbacks.
     virtual
     void
-    do_on_http_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data) = 0;
+    do_on_https_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data) = 0;
 
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(HTTPS_Client_Session);
 
-    // Sends a simple request, possibly with a complete body. Callers should
+    // Send a simple request, possibly with a complete body. Callers should
     // not supply `Content-Length` or `Transfer-Encoding` headers, as they
     // will be rewritten.
-    // If this function throws an exception, there is no effect.
-    // This function is thread-safe.
+    // If these function throw an exception, there is no effect.
+    // These functions are thread-safe.
     bool
-    http_request(HTTP_Request_Headers&& resp, const char* data, size_t size);
+    https_request(HTTP_Request_Headers&& resp, const char* data, size_t size);
 
-    // Initiates a request with a chunked body. Callers should not supply
-    // a `Transfer-Encoding` header, as it will be rewritten.
-    // If this function throws an exception, there is no effect.
-    // This function is thread-safe.
     bool
-    http_chunked_request_start(HTTP_Request_Headers&& resp);
+    https_request(HTTP_Request_Headers&& resp);
 
-    // Sends a chunk of the request body. The HTTP/1.1 specification says that
-    // a chunk of length zero terminates the chunked body. Chunked trailers
-    // have not yet been supported. This function shall only be called when a
-    // chunked request is active, otherwise it will corrupt the connection.
-    // If this function throws an exception, there is no effect.
-    // This function is thread-safe.
+    // Send a request with a chunked body, which may contain multiple chunks.
+    // Callers should not supply `Transfer-Encoding` headers, as they will be
+    // rewritten. The HTTP/1.1 specification says that a chunk of length zero
+    // terminates the chunked body; therefore, empty chunks are ignored by
+    // `http_chunked_request_send()`. These functions do little error checking.
+    // Calling `http_chunked_request_send()` or `http_chunked_request_finish()`
+    // when no chunked request is active will corrupt the connection.
+    // If these function throw an exception, there is no effect.
+    // These functions are thread-safe.
     bool
-    http_chunked_request_data(const char* data, size_t size);
+    https_chunked_request_start(HTTP_Request_Headers&& resp);
+
+    bool
+    https_chunked_request_send(const char* data, size_t size);
+
+    bool
+    https_chunked_request_finish();
   };
 
 }  // namespace poseidon
