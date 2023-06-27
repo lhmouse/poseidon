@@ -113,10 +113,10 @@ class HTTPS_Client_Session
     // If these function throw an exception, there is no effect.
     // These functions are thread-safe.
     bool
-    https_request(HTTP_Request_Headers&& resp, const char* data, size_t size);
+    https_request(HTTP_Request_Headers&& req, const char* data, size_t size);
 
     bool
-    https_request(HTTP_Request_Headers&& resp);
+    https_request(HTTP_Request_Headers&& req);
 
     // Send a request with a chunked body, which may contain multiple chunks.
     // Callers should not supply `Transfer-Encoding` headers, as they will be
@@ -128,7 +128,7 @@ class HTTPS_Client_Session
     // If these function throw an exception, there is no effect.
     // These functions are thread-safe.
     bool
-    https_chunked_request_start(HTTP_Request_Headers&& resp);
+    https_chunked_request_start(HTTP_Request_Headers&& req);
 
     bool
     https_chunked_request_send(const char* data, size_t size);

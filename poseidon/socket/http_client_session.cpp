@@ -295,22 +295,22 @@ do_on_http_response_body_stream(linear_buffer& data)
 
 bool
 HTTP_Client_Session::
-http_request(HTTP_Request_Headers&& resp, const char* data, size_t size)
+http_request(HTTP_Request_Headers&& req, const char* data, size_t size)
   {
     // Erase bad headers.
-    for(size_t hindex = 0;  hindex < resp.headers.size();  hindex ++)
-      if(resp.header_name_equals(hindex, sref("Content-Length"))
-          || resp.header_name_equals(hindex, sref("Transfer-Encoding")))
-        resp.headers.erase(hindex --);
+    for(size_t hindex = 0;  hindex < req.headers.size();  hindex ++)
+      if(req.header_name_equals(hindex, sref("Content-Length"))
+          || req.header_name_equals(hindex, sref("Transfer-Encoding")))
+        req.headers.erase(hindex --);
 
     // By default, request messages do not have bodies. Hence the length is
     // only necessary if the body is non-empty.
     if(size != 0)
-      resp.headers.emplace_back(sref("Content-Length"), (int64_t) size);
+      req.headers.emplace_back(sref("Content-Length"), (int64_t) size);
 
     // Compose the message and send it as a whole.
     ::rocket::tinyfmt_str fmt;
-    fmt << resp;
+    fmt << req;
     fmt.putn(data, size);
     return this->tcp_send(fmt.c_str(), fmt.length());
   }
@@ -328,26 +328,26 @@ do_on_http_upgraded_stream(linear_buffer& /*data*/, bool /*eof*/)
 
 bool
 HTTP_Client_Session::
-http_request(HTTP_Request_Headers&& resp)
+http_request(HTTP_Request_Headers&& req)
   {
-    return this->http_request(::std::move(resp), "", 0);
+    return this->http_request(::std::move(req), "", 0);
   }
 
 bool
 HTTP_Client_Session::
-http_chunked_request_start(HTTP_Request_Headers&& resp)
+http_chunked_request_start(HTTP_Request_Headers&& req)
   {
     // Erase bad headers.
-    for(size_t hindex = 0;  hindex < resp.headers.size();  hindex ++)
-      if(resp.header_name_equals(hindex, sref("Transfer-Encoding")))
-        resp.headers.erase(hindex --);
+    for(size_t hindex = 0;  hindex < req.headers.size();  hindex ++)
+      if(req.header_name_equals(hindex, sref("Transfer-Encoding")))
+        req.headers.erase(hindex --);
 
     // Write a chunked header.
-    resp.headers.emplace_back(sref("Transfer-Encoding"), sref("chunked"));
+    req.headers.emplace_back(sref("Transfer-Encoding"), sref("chunked"));
 
     // Compose the message header and send it as a whole.
     ::rocket::tinyfmt_str fmt;
-    fmt << resp;
+    fmt << req;
     return this->tcp_send(fmt.c_str(), fmt.length());
   }
 
