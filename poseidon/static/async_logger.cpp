@@ -68,9 +68,12 @@ constexpr char s_escapes[][5] =
 void
 do_load_level_config(Level_Config& lconf, const Config_File& file, const char* name)
   {
-    // Set the tag.
-    ::snprintf(lconf.tag, sizeof(lconf.tag), "[%s]", name);
-    ::rocket::for_each(lconf.tag, [](char& ch) { ch = ::rocket::ascii_to_upper(ch);  });
+    // Set the tag. Three characters shall be reserved for the pair of brackets
+    // and the null terminator.
+    char* tag_wp = lconf.tag;
+    xstrrpcpy(tag_wp, "[");
+    xmemrpcpy(tag_wp, name, clamp_cast<size_t>(xstrlen(name), 0U, sizeof(lconf.tag) - 3U));
+    xstrrpcpy(tag_wp, "]");
 
     // Read the color code sequence of the level.
     auto value = file.query("logger", name, "color");
@@ -155,7 +158,7 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
   try {
     // Compose the message to write.
     linear_buffer mtext;
-    char stemp[] = "2014-09-26 00:58:26.123456789";
+    char stemp[] = "2014-09-26 00:58:26.123456789 ";
     uint64_t date;
     ::rocket::ascii_numput nump;
 
@@ -190,7 +193,7 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
 
     // Write the timestamp and tag.
     do_color(mtext, lconf, lconf.color.c_str());  // level color
-    mtext.putn(stemp, 29);
+    mtext.putn(stemp, 30);
     do_color(mtext, lconf, "7");  // inverse
     mtext.puts(lconf.tag);
     do_color(mtext, lconf, "0");  // reset
