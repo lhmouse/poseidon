@@ -68,9 +68,9 @@ class HTTP_Client_Session
     // header. Returning `http_message_body_empty` indicates that the message
     // does not have a body even if it appears so, such as the response to a
     // HEAD request. Returning `http_message_body_upgrade` causes all further
-    // data on this connection to be delivered via `do_on_http_body_stream()`.
-    // This callback is primarily used to examine the status code before
-    // processing response data.
+    // incoming data to be delivered via `do_on_http_upgraded_stream()`. This
+    // callback is primarily used to examine the status code before processing
+    // response data.
     // The default implementation does not check for HEAD or upgrade responses
     // and returns `http_message_body_normal`.
     virtual
@@ -95,6 +95,14 @@ class HTTP_Client_Session
     virtual
     void
     do_on_http_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data) = 0;
+
+    // This callback is invoked by the network thread on a connection that has
+    // switched to another protocol. Arguments have the same semantics with
+    // `SSL_Socket::do_on_ssl_stream()`.
+    // The default implementation throws an exception.
+    virtual
+    void
+    do_on_http_upgraded_stream(linear_buffer& data, bool eof);
 
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(HTTP_Client_Session);

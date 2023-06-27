@@ -133,6 +133,13 @@ void
 HTTP_Client_Session::
 do_on_tcp_stream(linear_buffer& data, bool eof)
   {
+    if((HTTP_PARSER_ERRNO(this->m_parser) == HPE_PAUSED) && this->m_parser->upgrade) {
+      this->do_on_http_upgraded_stream(data, eof);
+      return;
+    }
+
+    // Parse incoming data and remove parsed bytes from the queue. Errors are
+    // are passed via exceptions.
     static constexpr ::http_parser_settings settings[1] =
       {{
         // on_message_begin
@@ -216,9 +223,7 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
         nullptr,
       }};
 
-    // Parse incoming data and remove parsed bytes from the queue. Errors are
-    // are passed via exceptions.
-    if(data.size() > 0)
+    if(!data.empty())
       data.discard(::http_parser_execute(this->m_parser, settings, data.data(), data.size()));
 
     if(eof)
@@ -232,6 +237,13 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
           "[HTTPS client `$1` (class `$2`)]"),
           this, typeid(*this), HTTP_PARSER_ERRNO(this->m_parser),
           ::http_errno_description(HTTP_PARSER_ERRNO(this->m_parser)));
+
+    if(this->m_parser->upgrade) {
+      // If the connection has upgraded, pause the parser.
+      ::http_parser_pause(this->m_parser, 1);
+      this->do_on_http_upgraded_stream(data, eof);
+      return;
+    }
   }
 
 HTTP_Message_Body_Type
@@ -299,6 +311,17 @@ http_request(HTTP_Request_Headers&& resp, const char* data, size_t size)
     fmt << resp;
     fmt.putn(data, size);
     return this->tcp_send(fmt.c_str(), fmt.length());
+  }
+
+__attribute__((__noreturn__))
+void
+HTTP_Client_Session::
+do_on_http_upgraded_stream(linear_buffer& /*data*/, bool /*eof*/)
+  {
+    POSEIDON_THROW((
+        "`do_on_http_upgraded_stream()` not implemented for upgraded connection",
+        "[HTTP client `$1` (class `$2`)]"),
+        this, typeid(*this));
   }
 
 bool
