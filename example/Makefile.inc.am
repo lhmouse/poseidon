@@ -32,3 +32,13 @@ lib_LTLIBRARIES += lib/poseidon-example_ssl_client.la
 lib_poseidon_example_ssl_client_la_SOURCES = %reldir%/ssl_client.cpp
 lib_poseidon_example_ssl_client_la_LDFLAGS = -module
 lib_poseidon_example_ssl_client_la_LIBADD = lib/libposeidon.la
+
+lib_LTLIBRARIES += lib/poseidon-example_http_server.la
+lib_poseidon_example_http_server_la_SOURCES = %reldir%/http_server.cpp
+lib_poseidon_example_http_server_la_LDFLAGS = -module
+lib_poseidon_example_http_server_la_LIBADD = lib/libposeidon.la
+
+lib_LTLIBRARIES += lib/poseidon-example_https_server.la
+lib_poseidon_example_https_server_la_SOURCES = %reldir%/https_server.cpp
+lib_poseidon_example_https_server_la_LDFLAGS = -module
+lib_poseidon_example_https_server_la_LIBADD = lib/libposeidon.la
