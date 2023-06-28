@@ -356,7 +356,7 @@ bool
 HTTPS_Client_Session::
 https_chunked_request_send(const char* data, size_t size)
   {
-    // Ignore empty chunks, which would mark the end of the body.
+    // Ignore empty chunks, which would have marked the end of the body.
     if(size == 0)
       return this->socket_state() <= socket_state_established;
 
