@@ -288,9 +288,9 @@ do_on_http_response_body_stream(linear_buffer& data)
 
     if(data.size() > (uint64_t) max_response_content_length)
       POSEIDON_THROW((
-         "HTTP response body too large: `$3` > `$4`",
-         "[HTTP client session `$1` (class `$2`)]"),
-         this, typeid(*this), data.size(), max_response_content_length);
+          "HTTP response body too large: `$3` > `$4`",
+          "[HTTP client session `$1` (class `$2`)]"),
+          this, typeid(*this), data.size(), max_response_content_length);
   }
 
 __attribute__((__noreturn__))
