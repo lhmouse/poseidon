@@ -11,7 +11,7 @@ HTTP_Request_Headers::
 print(tinyfmt& fmt) const
   {
     // `POST /index.php HTTP/1.1`
-    fmt << this->verb << " " << this->uri << " HTTP/1.1\r\n";
+    fmt << this->method << " " << this->uri << " HTTP/1.1\r\n";
 
     // `User-Agent: test (foo)`
     // `Content-Length: 42`

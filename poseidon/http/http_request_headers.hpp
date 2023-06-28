@@ -10,7 +10,7 @@ namespace poseidon {
 
 struct HTTP_Request_Headers
   {
-    cow_string verb;
+    cow_string method;
     cow_string uri;
     cow_bivector<cow_string, HTTP_Value> headers;
 
@@ -21,7 +21,7 @@ struct HTTP_Request_Headers
     HTTP_Request_Headers&
     swap(HTTP_Request_Headers& other) noexcept
       {
-        this->verb.swap(other.verb);
+        this->method.swap(other.method);
         this->uri.swap(other.uri);
         this->headers.swap(other.headers);
         return *this;
