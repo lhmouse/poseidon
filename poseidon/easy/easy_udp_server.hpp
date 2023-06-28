@@ -12,7 +12,8 @@ class Easy_UDP_Server
   {
   private:
     shptr<void> m_cb_obj;
-    callback_thunk_ptr<shptrR<UDP_Socket>, Abstract_Fiber&, Socket_Address&&, linear_buffer&&> m_cb_thunk;
+    callback_thunk_ptr<shptrR<UDP_Socket>, Abstract_Fiber&,
+        Socket_Address&&, linear_buffer&&> m_cb_thunk;
 
     struct X_Packet_Queue;
     shptr<X_Packet_Queue> m_queue;

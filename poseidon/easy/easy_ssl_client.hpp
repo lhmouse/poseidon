@@ -12,7 +12,8 @@ class Easy_SSL_Client
   {
   private:
     shptr<void> m_cb_obj;
-    callback_thunk_ptr<shptrR<SSL_Socket>, Abstract_Fiber&, Connection_Event, linear_buffer&, int> m_cb_thunk;
+    callback_thunk_ptr<shptrR<SSL_Socket>, Abstract_Fiber&,
+        Connection_Event, linear_buffer&, int> m_cb_thunk;
 
     struct X_Event_Queue;
     shptr<X_Event_Queue> m_queue;

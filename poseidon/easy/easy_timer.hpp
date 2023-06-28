@@ -13,7 +13,8 @@ class Easy_Timer
     struct X_Event_Queue;
 
     shptr<void> m_cb_obj;
-    callback_thunk_ptr<shptrR<Abstract_Timer>, Abstract_Fiber&, steady_time> m_cb_thunk;
+    callback_thunk_ptr<shptrR<Abstract_Timer>, Abstract_Fiber&,
+        steady_time> m_cb_thunk;
 
     shptr<X_Event_Queue> m_queue;
     shptr<Abstract_Timer> m_timer;

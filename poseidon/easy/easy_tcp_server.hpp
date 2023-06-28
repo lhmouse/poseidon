@@ -12,7 +12,8 @@ class Easy_TCP_Server
   {
   private:
     shptr<void> m_cb_obj;
-    callback_thunk_ptr<shptrR<TCP_Socket>, Abstract_Fiber&, Connection_Event, linear_buffer&, int> m_cb_thunk;
+    callback_thunk_ptr<shptrR<TCP_Socket>, Abstract_Fiber&,
+       Connection_Event, linear_buffer&, int> m_cb_thunk;
 
     struct X_Client_Table;
     shptr<X_Client_Table> m_client_table;

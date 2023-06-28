@@ -12,7 +12,8 @@ class Easy_HTTPS_Server
   {
   private:
     shptr<void> m_cb_obj;
-    callback_thunk_ptr<shptrR<HTTPS_Server_Session>, Abstract_Fiber&, HTTP_Request_Headers&&, linear_buffer&&> m_cb_thunk;
+    callback_thunk_ptr<shptrR<HTTPS_Server_Session>, Abstract_Fiber&,
+        HTTP_Request_Headers&&, linear_buffer&&> m_cb_thunk;
 
     struct X_Client_Table;
     shptr<X_Client_Table> m_client_table;
