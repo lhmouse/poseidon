@@ -44,6 +44,66 @@ class HTTP_Value
       : m_stor(tm)
       { }
 
+    HTTP_Value(system_time tm) noexcept
+      : m_stor((HTTP_DateTime) time_point_cast<seconds>(tm))
+      { }
+
+    HTTP_Value&
+    operator=(nullptr_t) & noexcept
+      {
+        this->m_stor = nullptr;
+        return *this;
+      }
+
+    HTTP_Value&
+    operator=(cow_stringR str) & noexcept
+      {
+        this->m_stor = str;
+        return *this;
+      }
+
+    HTTP_Value&
+    operator=(int num) & noexcept
+      {
+        this->m_stor = (double) num;
+        return *this;
+      }
+
+    HTTP_Value&
+    operator=(long num) & noexcept
+      {
+        this->m_stor = (double) num;
+        return *this;
+      }
+
+    HTTP_Value&
+    operator=(long long num) & noexcept
+      {
+        this->m_stor = (double) num;
+        return *this;
+      }
+
+    HTTP_Value&
+    operator=(double num) & noexcept
+      {
+        this->m_stor = num;
+        return *this;
+      }
+
+    HTTP_Value&
+    operator=(const HTTP_DateTime& tm) & noexcept
+      {
+        this->m_stor = tm;
+        return *this;
+      }
+
+    HTTP_Value&
+    operator=(system_time tm) & noexcept
+      {
+        this->m_stor = (HTTP_DateTime) time_point_cast<seconds>(tm);
+        return *this;
+      }
+
     HTTP_Value&
     swap(HTTP_Value& other) noexcept
       {
