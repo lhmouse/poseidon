@@ -31,7 +31,7 @@ struct Event_Queue
 struct Shared_cb_args
   {
     wkptr<void> wobj;
-    callback_thunk_ptr<shptrR<Abstract_Timer>, Abstract_Fiber&, steady_time> thunk;
+    thunk_ptr<shptrR<Abstract_Timer>, Abstract_Fiber&, steady_time> thunk;
     wkptr<Event_Queue> wqueue;
   };
 

@@ -12,7 +12,7 @@ class Easy_TCP_Server
   {
   private:
     shptr<void> m_cb_obj;
-    callback_thunk_ptr<shptrR<TCP_Socket>, Abstract_Fiber&,
+    thunk_ptr<shptrR<TCP_Socket>, Abstract_Fiber&,
        Connection_Event, linear_buffer&, int> m_cb_thunk;
 
     struct X_Client_Table;
@@ -42,7 +42,7 @@ class Easy_TCP_Server
     explicit
     Easy_TCP_Server(CallbackT&& cb)
       : m_cb_obj(new_sh<::std::decay_t<CallbackT>>(::std::forward<CallbackT>(cb))),
-        m_cb_thunk(callback_thunk<::std::decay_t<CallbackT>>)
+        m_cb_thunk(thunk<::std::decay_t<CallbackT>>)
       { }
 
   public:

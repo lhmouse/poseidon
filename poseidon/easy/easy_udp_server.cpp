@@ -31,7 +31,7 @@ struct Packet_Queue
 struct Shared_cb_args
   {
     wkptr<void> wobj;
-    callback_thunk_ptr<shptrR<UDP_Socket>, Abstract_Fiber&, Socket_Address&&, linear_buffer&&> thunk;
+    thunk_ptr<shptrR<UDP_Socket>, Abstract_Fiber&, Socket_Address&&, linear_buffer&&> thunk;
     wkptr<Packet_Queue> wqueue;
   };
 

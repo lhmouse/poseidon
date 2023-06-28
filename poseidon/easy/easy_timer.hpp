@@ -13,7 +13,7 @@ class Easy_Timer
     struct X_Event_Queue;
 
     shptr<void> m_cb_obj;
-    callback_thunk_ptr<shptrR<Abstract_Timer>, Abstract_Fiber&,
+    thunk_ptr<shptrR<Abstract_Timer>, Abstract_Fiber&,
         steady_time> m_cb_thunk;
 
     shptr<X_Event_Queue> m_queue;
@@ -30,7 +30,7 @@ class Easy_Timer
     explicit
     Easy_Timer(CallbackT&& cb)
       : m_cb_obj(new_sh<::std::decay_t<CallbackT>>(::std::forward<CallbackT>(cb))),
-        m_cb_thunk(callback_thunk<::std::decay_t<CallbackT>>)
+        m_cb_thunk(thunk<::std::decay_t<CallbackT>>)
       { }
 
   public:

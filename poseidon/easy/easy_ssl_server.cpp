@@ -42,7 +42,7 @@ struct Client_Table
 struct Shared_cb_args
   {
     wkptr<void> wobj;
-    callback_thunk_ptr<shptrR<SSL_Socket>, Abstract_Fiber&, Connection_Event, linear_buffer&, int> thunk;
+    thunk_ptr<shptrR<SSL_Socket>, Abstract_Fiber&, Connection_Event, linear_buffer&, int> thunk;
     wkptr<Client_Table> wtable;
   };
 

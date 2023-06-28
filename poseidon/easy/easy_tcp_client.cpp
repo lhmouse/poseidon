@@ -36,7 +36,7 @@ struct Event_Queue
 struct Shared_cb_args
   {
     wkptr<void> wobj;
-    callback_thunk_ptr<shptrR<TCP_Socket>, Abstract_Fiber&, Connection_Event, linear_buffer&, int> thunk;
+    thunk_ptr<shptrR<TCP_Socket>, Abstract_Fiber&, Connection_Event, linear_buffer&, int> thunk;
     wkptr<Event_Queue> wqueue;
   };
 

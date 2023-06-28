@@ -39,7 +39,7 @@ struct Client_Table
 struct Shared_cb_args
   {
     wkptr<void> wobj;
-    callback_thunk_ptr<shptrR<HTTPS_Server_Session>, Abstract_Fiber&, HTTP_Request_Headers&&, linear_buffer&&> thunk;
+    thunk_ptr<shptrR<HTTPS_Server_Session>, Abstract_Fiber&, HTTP_Request_Headers&&, linear_buffer&&> thunk;
     wkptr<Client_Table> wtable;
   };
 

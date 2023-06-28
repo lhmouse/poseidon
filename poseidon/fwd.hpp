@@ -265,18 +265,19 @@ extern class Timer_Driver& timer_driver;
 extern class Async_Task_Executor& async_task_executor;
 extern class Network_Driver& network_driver;
 
-// General utilities
+// Thunks for invocable objects
+template<typename... ArgsT>
+using thunk_ptr = void (*)(void*, ArgsT...);
+
 template<typename CopyT, typename... ArgsT>
 static
 void
-callback_thunk(void* ptr, ArgsT... args)
+thunk(void* ptr, ArgsT... args)
   {
     ::std::invoke(*(CopyT*) ptr, ::std::forward<ArgsT>(args)...);
   }
 
-template<typename... ArgsT>
-using callback_thunk_ptr = void (*)(void*, ArgsT...);
-
+// Smart pointers
 template<typename ValueT, typename... ArgsT>
 ROCKET_ALWAYS_INLINE
 uniptr<ValueT>
@@ -293,7 +294,7 @@ new_sh(ArgsT&&... args)
     return ::std::make_shared<ValueT>(::std::forward<ArgsT>(args)...);
   }
 
-// Composes a string and submits it to the logger.
+// Logging with prettification
 enum Log_Level : uint8_t
   {
     log_level_fatal  = 0,
@@ -317,7 +318,7 @@ bool
 do_async_logger_check_level(Log_Level level) noexcept;
 
 void
-do_async_logger_enqueue(const Log_Context& ctx, callback_thunk_ptr<cow_string&> cb_thunk, void* cb_obj) noexcept;
+do_async_logger_enqueue(const Log_Context& ctx, thunk_ptr<cow_string&> cb_thunk, void* cb_obj) noexcept;
 
 template<typename... ParamsT>
 inline
@@ -325,7 +326,7 @@ bool
 do_async_logger_enqueue_generic(const Log_Context& ctx, const ParamsT&... params) noexcept
   {
     auto formatter = [&](cow_string& msg) { ::asteria::format(msg, params...);  };
-    noadl::do_async_logger_enqueue(ctx, callback_thunk<decltype(formatter)>, &formatter);
+    noadl::do_async_logger_enqueue(ctx, thunk<decltype(formatter)>, &formatter);
     return true;
   }
 
