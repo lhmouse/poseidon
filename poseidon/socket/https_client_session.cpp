@@ -139,6 +139,19 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
       return;
     }
 
+    if(HTTP_PARSER_ERRNO(this->m_parser) != HPE_OK) {
+      // This can't be recovered. All further data will be discarded. There is
+      // not much we can do.
+      POSEIDON_LOG_WARN((
+          "HTTP parser error `$3`: $4",
+          "[HTTP client session `$1` (class `$2`)]"),
+          this, typeid(*this), HTTP_PARSER_ERRNO(this->m_parser),
+          ::http_errno_description(HTTP_PARSER_ERRNO(this->m_parser)));
+
+      data.clear();
+      return;
+    }
+
     // Parse incoming data and remove parsed bytes from the queue. Errors are
     // passed via exceptions.
     static constexpr ::http_parser_settings settings[1] =
@@ -232,15 +245,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
 
     // Assuming the error code won't be clobbered by the second call for EOF
     // above. Not sure.
-    if(HTTP_PARSER_ERRNO(this->m_parser) != HPE_OK)
-      POSEIDON_THROW((
-          "HTTP parser error `$3`: $4",
-          "[HTTPS client session `$1` (class `$2`)]"),
-          this, typeid(*this), HTTP_PARSER_ERRNO(this->m_parser),
-          ::http_errno_description(HTTP_PARSER_ERRNO(this->m_parser)));
-
-    if(this->m_parser->upgrade) {
-      // If the connection has upgraded, pause the parser.
+    if((HTTP_PARSER_ERRNO(this->m_parser) == HPE_OK) && this->m_parser->upgrade) {
       ::http_parser_pause(this->m_parser, 1);
       this->do_on_https_upgraded_stream(data, eof);
       return;
