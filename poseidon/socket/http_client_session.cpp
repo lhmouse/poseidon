@@ -293,6 +293,17 @@ do_on_http_response_body_stream(linear_buffer& data)
           this, typeid(*this), data.size(), max_response_content_length);
   }
 
+__attribute__((__noreturn__))
+void
+HTTP_Client_Session::
+do_on_http_upgraded_stream(linear_buffer& /*data*/, bool /*eof*/)
+  {
+    POSEIDON_THROW((
+        "`do_on_http_upgraded_stream()` not implemented for upgraded connection",
+        "[HTTP client session `$1` (class `$2`)]"),
+        this, typeid(*this));
+  }
+
 bool
 HTTP_Client_Session::
 http_request(HTTP_Request_Headers&& req, const char* data, size_t size)
@@ -313,17 +324,6 @@ http_request(HTTP_Request_Headers&& req, const char* data, size_t size)
     fmt << req;
     fmt.putn(data, size);
     return this->tcp_send(fmt.c_str(), fmt.length());
-  }
-
-__attribute__((__noreturn__))
-void
-HTTP_Client_Session::
-do_on_http_upgraded_stream(linear_buffer& /*data*/, bool /*eof*/)
-  {
-    POSEIDON_THROW((
-        "`do_on_http_upgraded_stream()` not implemented for upgraded connection",
-        "[HTTP client session `$1` (class `$2`)]"),
-        this, typeid(*this));
   }
 
 bool
