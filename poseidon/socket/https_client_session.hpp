@@ -53,7 +53,7 @@ class HTTPS_Client_Session
 
     inline
     void
-    do_http_parser_on_message_complete();
+    do_http_parser_on_message_complete(bool close_now);
 
   protected:
     // This function implements `SSL_Socket`.
@@ -92,9 +92,11 @@ class HTTPS_Client_Session
 
     // This callback is invoked by the network thread at the end of a response
     // message. Arguments have the same semantics with the other callbacks.
+    // `close_now` indicates whether the response contains `close` in its
+    // `Connection` header.
     virtual
     void
-    do_on_https_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data) = 0;
+    do_on_https_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data, bool close_now) = 0;
 
     // This callback is invoked by the network thread on a connection that has
     // switched to another protocol. Arguments have the same semantics with

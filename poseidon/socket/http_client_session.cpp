@@ -124,9 +124,9 @@ do_http_parser_on_body(const char* str, size_t len)
 
 void
 HTTP_Client_Session::
-do_http_parser_on_message_complete()
+do_http_parser_on_message_complete(bool close_now)
   {
-    this->do_on_http_response_finish(::std::move(this->m_resp), ::std::move(this->m_body));
+    this->do_on_http_response_finish(::std::move(this->m_resp), ::std::move(this->m_body), close_now);
   }
 
 void
@@ -212,7 +212,7 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
         +[](::http_parser* ps)
           {
             const auto xthis = (HTTP_Client_Session*) ps->data;
-            xthis->do_http_parser_on_message_complete();
+            xthis->do_http_parser_on_message_complete(::http_should_keep_alive(ps) == 0);
             return 0;
           },
 
