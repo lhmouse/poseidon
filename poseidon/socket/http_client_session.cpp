@@ -257,7 +257,7 @@ do_on_http_response_headers(HTTP_Response_Headers& resp)
         "[HTTP client session `$1` (class `$2`)]"),
         this, typeid(*this), resp.status, resp.reason);
 
-    // The default handler doesn't handle HEAD, CONNECT or Upgrade requests.
+    // The default handler doesn't handle HEAD, CONNECT or Upgrade responses.
     return http_message_body_normal;
   }
 
