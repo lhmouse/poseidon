@@ -218,8 +218,6 @@ struct Final_Listen_Socket final : Listen_Socket
         auto r = table->client_map.try_emplace(socket.get());
         ROCKET_ASSERT(r.second);
         r.first->second.socket = socket;
-
-        // Take its ownership.
         return socket;
       }
   };
