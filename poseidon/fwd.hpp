@@ -12,7 +12,7 @@
 #include <rocket/recursive_mutex.hpp>
 #include <rocket/condition_variable.hpp>
 #include <rocket/linear_buffer.hpp>
-#include <rocket/tinyfmt.hpp>
+#include <rocket/tinyfmt_str.hpp>
 #include <rocket/unique_posix_fd.hpp>
 #include <rocket/unique_posix_file.hpp>
 #include <rocket/unique_posix_dir.hpp>
@@ -106,7 +106,9 @@ using ::rocket::cow_u16string;
 using ::rocket::cow_u32string;
 using ::rocket::linear_buffer;
 using ::rocket::tinybuf;
+using ::rocket::tinybuf_str;
 using ::rocket::tinyfmt;
+using ::rocket::tinyfmt_str;
 using ::rocket::unique_posix_fd;
 using ::rocket::unique_posix_file;
 using ::rocket::unique_posix_dir;

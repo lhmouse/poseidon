@@ -326,7 +326,7 @@ https_request(HTTP_Request_Headers&& req, const char* data, size_t size)
       req.headers.emplace_back(sref("Content-Length"), (int64_t) size);
 
     // Compose the message and send it as a whole.
-    ::rocket::tinyfmt_str fmt;
+    tinyfmt_str fmt;
     fmt << req;
     fmt.putn(data, size);
     return this->ssl_send(fmt.c_str(), fmt.length());
@@ -352,7 +352,7 @@ https_chunked_request_start(HTTP_Request_Headers&& req)
     req.headers.emplace_back(sref("Transfer-Encoding"), sref("chunked"));
 
     // Compose the message header and send it as a whole.
-    ::rocket::tinyfmt_str fmt;
+    tinyfmt_str fmt;
     fmt << req;
     return this->ssl_send(fmt.c_str(), fmt.length());
   }
@@ -367,7 +367,7 @@ https_chunked_request_send(const char* data, size_t size)
 
     // Compose a chunk and send it as a whole. The length of data of this
     // chunk is written as a hexadecimal integer without the `0x` prefix.
-    ::rocket::tinyfmt_str fmt;
+    tinyfmt_str fmt;
     ::rocket::ascii_numput nump;
     nump.put_XU(size);
     fmt.putn(nump.data() + 2, nump.size() - 2);

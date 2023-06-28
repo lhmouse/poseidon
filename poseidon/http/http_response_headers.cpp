@@ -43,7 +43,7 @@ cow_string
 HTTP_Response_Headers::
 print_to_string() const
   {
-    ::rocket::tinyfmt_str fmt;
+    tinyfmt_str fmt;
     this->print(fmt);
     return fmt.extract_string();
   }
