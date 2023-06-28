@@ -385,6 +385,12 @@ thread_loop()
     if(!elem->sched_inner->uc_stack.ss_sp) {
       POSEIDON_LOG_TRACE(("Initializing fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
 
+      elem->fiber->m_yield =
+          +[](Fiber_Scheduler* xthis, shptrR<Abstract_Future> xfutr, milliseconds xtimeout)
+            {
+              xthis->do_yield(xfutr, xtimeout);
+            };
+
       // Initialize the fiber procedure and its stack.
       ::getcontext(elem->sched_inner);
       elem->sched_inner->uc_stack = do_alloc_stack(stack_vm_size);  // may throw
@@ -404,16 +410,6 @@ thread_loop()
               ythis->do_fiber_function();
             },
           2, xargs[0], xargs[1]);
-
-      elem->fiber->m_yield =
-          +[](void* ptr, const Abstract_Fiber* yfiber, shptrR<Abstract_Future> yfutr, milliseconds ytimeout)
-            {
-              Fiber_Scheduler* ythis = static_cast<Fiber_Scheduler*>(ptr);
-              if(yfiber != ythis->m_sched_elem->fiber.get())
-                POSEIDON_THROW(("Cannot yield execution outside current fiber"));
-
-              ythis->do_yield(yfutr, ytimeout);
-            };
     }
 
     // Start or resume this fiber.

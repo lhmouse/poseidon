@@ -52,9 +52,6 @@ using ::std::exception;
 using ::std::exception_ptr;
 using ::std::type_info;
 using ::std::pair;
-template<typename T> using uniptr = ::std::unique_ptr<T>;  // default deleter
-template<typename T> using shptr = ::std::shared_ptr<T>;
-template<typename T> using wkptr = ::std::weak_ptr<T>;
 using ::std::array;
 using ::std::vector;
 using ::std::deque;
@@ -139,6 +136,11 @@ using ::rocket::variant;
 using phsh_string = ::rocket::prehashed_string;
 
 template<typename T, typename U> using cow_bivector = cow_vector<pair<T, U>>;
+template<typename T> using ptr = T*;
+template<typename T> using uniptr = ::std::unique_ptr<T>;  // default deleter
+template<typename T> using shptr = ::std::shared_ptr<T>;
+template<typename T> using wkptr = ::std::weak_ptr<T>;
+
 using cow_stringR = const cow_string&;
 using phsh_stringR = const phsh_string&;
 template<typename T> using shptrR = const shptr<T>&;

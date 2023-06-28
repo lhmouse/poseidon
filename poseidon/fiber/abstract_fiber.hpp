@@ -12,10 +12,11 @@ class Abstract_Fiber
   private:
     friend class Fiber_Scheduler;
 
-    thunk_ptr<const Abstract_Fiber*, shptrR<Abstract_Future>, milliseconds> m_yield = nullptr;
-    Fiber_Scheduler* m_sched = nullptr;
-
     atomic_relaxed<Async_State> m_state;
+
+    using yield_function = void (Fiber_Scheduler*, shptrR<Abstract_Future>, milliseconds);
+    yield_function* m_yield = nullptr;
+    Fiber_Scheduler* m_sched = nullptr;
 
   protected:
     // Constructs an empty fiber.
@@ -28,8 +29,9 @@ class Abstract_Fiber
     Fiber_Scheduler&
     do_abstract_fiber_scheduler() const noexcept
       {
-        ROCKET_ASSERT_MSG(this->m_sched, "this function shall only be called inside a fiber");
-        return *(this->m_sched);
+        auto sched = this->m_sched;
+        ROCKET_ASSERT_MSG(sched, "this function shall only be called inside a fiber");
+        return *sched;
       }
 
     // This callback is invoked by the fiber scheduler and is intended to be
