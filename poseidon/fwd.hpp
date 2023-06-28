@@ -250,6 +250,8 @@ class Easy_SSL_Server;
 class Easy_SSL_Client;
 class Easy_Deflator;
 class Easy_Inflator;
+class Easy_HTTP_Server;
+class Easy_HTTPS_Server;
 
 // Singletons
 extern atomic_relaxed<int> exit_signal;
