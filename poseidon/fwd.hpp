@@ -332,11 +332,9 @@ do_async_logger_enqueue_generic(const Log_Context& ctx, const ParamsT&... params
     return true;
   }
 
-// Define helper macros that compose log messages.
-// The `TEMPLATE` argument shall be a list of string literals in parentheses.
-// Multiple strings are joined with new line characters. No trailing new line
-// is appended. An example is:
-//  `POSEIDON_LOG_ERROR(("invalid argument: $1", "error: $2"), arg, err);`
+// Define helper macros that compose log messages. The `TEMPLATE` argument
+// shall be a list of string literals in parentheses. Multiple strings are
+// joined with line separators.
 #define POSEIDON_LOG_GENERIC(LEVEL, TEMPLATE, ...)  \
   (::poseidon::do_async_logger_check_level(::poseidon::log_level_##LEVEL)  \
    && ::poseidon::do_async_logger_enqueue_generic(  \
