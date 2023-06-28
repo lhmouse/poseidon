@@ -195,7 +195,7 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
               default:
                 POSEIDON_THROW((
                     "Invalid body type `$3` returned from `do_http_parser_on_headers_complete()`",
-                    "[HTTP client `$1` (class `$2`)]"),
+                    "[HTTP client session `$1` (class `$2`)]"),
                     xthis, typeid(*xthis), body_type);
             }
           },
@@ -234,7 +234,7 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
     if(HTTP_PARSER_ERRNO(this->m_parser) != HPE_OK)
       POSEIDON_THROW((
           "HTTP parser error `$3`: $4",
-          "[HTTP client `$1` (class `$2`)]"),
+          "[HTTP client session `$1` (class `$2`)]"),
           this, typeid(*this), HTTP_PARSER_ERRNO(this->m_parser),
           ::http_errno_description(HTTP_PARSER_ERRNO(this->m_parser)));
 
@@ -245,7 +245,7 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
       return;
     }
 
-    POSEIDON_LOG_TRACE(("HTTP client parser done: data.size `$1`, eof `$2`"), data.size(), eof);
+    POSEIDON_LOG_TRACE(("HTTP parser done: data.size `$1`, eof `$2`"), data.size(), eof);
   }
 
 HTTP_Message_Body_Type
@@ -254,7 +254,7 @@ do_on_http_response_headers(HTTP_Response_Headers& resp)
   {
     POSEIDON_LOG_INFO((
         "HTTP client received response: $3 $4",
-        "[HTTP client `$1` (class `$2`)]"),
+        "[HTTP client session `$1` (class `$2`)]"),
         this, typeid(*this), resp.status, resp.reason);
 
     // The default handler doesn't handle HEAD, CONNECT or Upgrade requests.
@@ -289,7 +289,7 @@ do_on_http_response_body_stream(linear_buffer& data)
     if(data.size() > (uint64_t) max_response_content_length)
        POSEIDON_THROW((
           "HTTP response body too large: `$3` > `$4`",
-          "[HTTP client `$1` (class `$2`)]"),
+          "[HTTP client session `$1` (class `$2`)]"),
           this, typeid(*this), data.size(), max_response_content_length);
   }
 
@@ -322,7 +322,7 @@ do_on_http_upgraded_stream(linear_buffer& /*data*/, bool /*eof*/)
   {
     POSEIDON_THROW((
         "`do_on_http_upgraded_stream()` not implemented for upgraded connection",
-        "[HTTP client `$1` (class `$2`)]"),
+        "[HTTP client session `$1` (class `$2`)]"),
         this, typeid(*this));
   }
 

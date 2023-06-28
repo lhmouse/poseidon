@@ -196,7 +196,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
               default:
                 POSEIDON_THROW((
                     "Invalid body type `$3` returned from `do_http_parser_on_headers_complete()`",
-                    "[HTTPS client `$1` (class `$2`)]"),
+                    "[HTTPS client session `$1` (class `$2`)]"),
                     xthis, typeid(*xthis), body_type);
             }
           },
@@ -235,7 +235,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
     if(HTTP_PARSER_ERRNO(this->m_parser) != HPE_OK)
       POSEIDON_THROW((
           "HTTP parser error `$3`: $4",
-          "[HTTPS client `$1` (class `$2`)]"),
+          "[HTTPS client session `$1` (class `$2`)]"),
           this, typeid(*this), HTTP_PARSER_ERRNO(this->m_parser),
           ::http_errno_description(HTTP_PARSER_ERRNO(this->m_parser)));
 
@@ -246,7 +246,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
       return;
     }
 
-    POSEIDON_LOG_TRACE(("HTTPS client parser done: data.size `$1`, eof `$2`"), data.size(), eof);
+    POSEIDON_LOG_TRACE(("HTTPS parser done: data.size `$1`, eof `$2`"), data.size(), eof);
   }
 
 HTTP_Message_Body_Type
@@ -255,7 +255,7 @@ do_on_https_response_headers(HTTP_Response_Headers& resp)
   {
     POSEIDON_LOG_INFO((
         "HTTPS client received response: $3 $4",
-        "[HTTPS client `$1` (class `$2`)]"),
+        "[HTTPS client session `$1` (class `$2`)]"),
         this, typeid(*this), resp.status, resp.reason);
 
     // The default handler doesn't handle HEAD, CONNECT or Upgrade requests.
@@ -290,7 +290,7 @@ do_on_https_response_body_stream(linear_buffer& data)
     if(data.size() > (uint64_t) max_response_content_length)
        POSEIDON_THROW((
           "HTTP response body too large: `$3` > `$4`",
-          "[HTTPS client `$1` (class `$2`)]"),
+          "[HTTPS client session `$1` (class `$2`)]"),
           this, typeid(*this), data.size(), max_response_content_length);
   }
 
@@ -301,7 +301,7 @@ do_on_https_upgraded_stream(linear_buffer& /*data*/, bool /*eof*/)
   {
     POSEIDON_THROW((
         "`do_on_https_upgraded_stream()` not implemented for upgraded connection",
-        "[HTTPS client `$1` (class `$2`)]"),
+        "[HTTPS client session `$1` (class `$2`)]"),
         this, typeid(*this));
   }
 
