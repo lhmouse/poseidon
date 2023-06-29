@@ -375,7 +375,7 @@ http_response(HTTP_Response_Headers&& resp, const char* data, size_t size)
 
     // Some responses are required to have no payload body and require no
     // `Content-Length` header.
-    if((resp.status <= 199) || (resp.status == 204) || (resp.status == 304))
+    if((resp.status <= 199) || is_any_of(resp.status, { HTTP_STATUS_NO_CONTENT, HTTP_STATUS_NOT_MODIFIED }))
       return this->do_http_raw_response(resp, "", 0);
 
     // Otherwise, a `Content-Length` is required; otherwise the response would
