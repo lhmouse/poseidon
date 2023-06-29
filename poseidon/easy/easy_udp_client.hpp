@@ -57,8 +57,8 @@ class Easy_UDP_Client
     void
     close() noexcept;
 
-    // Gets the bound address of this client for incoming packets. In case of
-    // errors, `ipv6_invalid` is returned.
+    // Gets the bound address of this client for outgoing packets. In case of an
+    // error, `ipv6_invalid` is returned.
     ROCKET_PURE
     const Socket_Address&
     local_address() const noexcept;

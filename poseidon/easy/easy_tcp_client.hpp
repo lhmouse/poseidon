@@ -69,8 +69,8 @@ class Easy_TCP_Client
     void
     close() noexcept;
 
-    // Gets the local address of this client for incoming data. In case of
-    // errors, `ipv6_unspecified` is returned.
+    // Gets the local address of this client for outgoing data. In case of an
+    // error, `ipv6_unspecified` is returned.
     ROCKET_PURE
     const Socket_Address&
     local_address() const noexcept;
