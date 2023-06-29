@@ -8,30 +8,15 @@ lib_poseidon_example_udp_echo_server_la_SOURCES = %reldir%/udp_echo_server.cpp
 lib_poseidon_example_udp_echo_server_la_LDFLAGS = -module
 lib_poseidon_example_udp_echo_server_la_LIBADD = lib/libposeidon.la
 
-lib_LTLIBRARIES += lib/poseidon-example_udp_client.la
-lib_poseidon_example_udp_client_la_SOURCES = %reldir%/udp_client.cpp
-lib_poseidon_example_udp_client_la_LDFLAGS = -module
-lib_poseidon_example_udp_client_la_LIBADD = lib/libposeidon.la
-
 lib_LTLIBRARIES += lib/poseidon-example_tcp_echo_server.la
 lib_poseidon_example_tcp_echo_server_la_SOURCES = %reldir%/tcp_echo_server.cpp
 lib_poseidon_example_tcp_echo_server_la_LDFLAGS = -module
 lib_poseidon_example_tcp_echo_server_la_LIBADD = lib/libposeidon.la
 
-lib_LTLIBRARIES += lib/poseidon-example_tcp_client.la
-lib_poseidon_example_tcp_client_la_SOURCES = %reldir%/tcp_client.cpp
-lib_poseidon_example_tcp_client_la_LDFLAGS = -module
-lib_poseidon_example_tcp_client_la_LIBADD = lib/libposeidon.la
-
 lib_LTLIBRARIES += lib/poseidon-example_ssl_echo_server.la
 lib_poseidon_example_ssl_echo_server_la_SOURCES = %reldir%/ssl_echo_server.cpp
 lib_poseidon_example_ssl_echo_server_la_LDFLAGS = -module
 lib_poseidon_example_ssl_echo_server_la_LIBADD = lib/libposeidon.la
-
-lib_LTLIBRARIES += lib/poseidon-example_ssl_client.la
-lib_poseidon_example_ssl_client_la_SOURCES = %reldir%/ssl_client.cpp
-lib_poseidon_example_ssl_client_la_LDFLAGS = -module
-lib_poseidon_example_ssl_client_la_LIBADD = lib/libposeidon.la
 
 lib_LTLIBRARIES += lib/poseidon-example_http_server.la
 lib_poseidon_example_http_server_la_SOURCES = %reldir%/http_server.cpp
