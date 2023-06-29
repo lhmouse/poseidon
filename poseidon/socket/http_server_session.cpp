@@ -339,6 +339,12 @@ bool
 HTTP_Server_Session::
 http_response_headers_only(HTTP_Response_Headers&& resp)
   {
+    if(this->m_upgrade_ack.load())
+      POSEIDON_THROW((
+          "HTTP connection switched to another protocol",
+          "[HTTP server session `$1` (class `$2`)]"),
+          this, typeid(*this));
+
     // Compose the header and send it. No error checking is performed.
     tinyfmt_str fmt;
     fmt << resp;
@@ -349,6 +355,12 @@ bool
 HTTP_Server_Session::
 http_response(HTTP_Response_Headers&& resp, const char* data, size_t size)
   {
+    if(this->m_upgrade_ack.load())
+      POSEIDON_THROW((
+          "HTTP connection switched to another protocol",
+          "[HTTP server session `$1` (class `$2`)]"),
+          this, typeid(*this));
+
     // Erase bad headers.
     for(size_t hindex = 0;  hindex < resp.headers.size();  hindex ++)
       if(resp.header_name_equals(hindex, sref("Content-Length"))
@@ -368,15 +380,14 @@ http_response(HTTP_Response_Headers&& resp, const char* data, size_t size)
 
 bool
 HTTP_Server_Session::
-http_response(HTTP_Response_Headers&& resp)
-  {
-    return this->http_response(::std::move(resp), "", 0);
-  }
-
-bool
-HTTP_Server_Session::
 http_chunked_response_start(HTTP_Response_Headers&& resp)
   {
+    if(this->m_upgrade_ack.load())
+      POSEIDON_THROW((
+          "HTTP connection switched to another protocol",
+          "[HTTP server session `$1` (class `$2`)]"),
+          this, typeid(*this));
+
     // Erase bad headers.
     for(size_t hindex = 0;  hindex < resp.headers.size();  hindex ++)
       if(resp.header_name_equals(hindex, sref("Transfer-Encoding")))
@@ -395,6 +406,12 @@ bool
 HTTP_Server_Session::
 http_chunked_response_send(const char* data, size_t size)
   {
+    if(this->m_upgrade_ack.load())
+      POSEIDON_THROW((
+          "HTTP connection switched to another protocol",
+          "[HTTP server session `$1` (class `$2`)]"),
+          this, typeid(*this));
+
     // Ignore empty chunks, which would mark the end of the body.
     if(size == 0)
       return this->socket_state() <= socket_state_established;
@@ -415,6 +432,12 @@ bool
 HTTP_Server_Session::
 http_chunked_respnse_finish()
   {
+    if(this->m_upgrade_ack.load())
+      POSEIDON_THROW((
+          "HTTP connection switched to another protocol",
+          "[HTTP server session `$1` (class `$2`)]"),
+          this, typeid(*this));
+
     return this->tcp_send("0\r\n\r\n", 5);
   }
 

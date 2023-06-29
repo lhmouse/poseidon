@@ -20,6 +20,7 @@ class HTTP_Server_Session
     ::http_parser m_parser[1];
     HTTP_Request_Headers m_req;
     linear_buffer m_body;
+    atomic_relaxed<bool> m_upgrade_ack;
 
   public:
     // Constructs a socket for incoming connections.
@@ -54,6 +55,10 @@ class HTTP_Server_Session
     inline
     void
     do_http_parser_on_message_complete(bool close_now);
+
+    inline
+    bool
+    do_check_response(const HTTP_Response_Headers& resp, bool sent);
 
   protected:
     // This function implements `TCP_Socket`.
@@ -131,21 +136,20 @@ class HTTP_Server_Session
     // closure of the connection. In the latter case, callers must not supply
     // `Content-Length` or `Transfer-Encoding` headers, and shall send further
     // data with `tcp_send()`.
+    // If this function throws an exception, there is no effect.
+    // This function is thread-safe.
     bool
     http_response_headers_only(HTTP_Response_Headers&& resp);
 
-    // Send a simple response, possibly with a complete body. Callers should
+    // Sends a simple response, possibly with a complete body. Callers should
     // not supply `Content-Length` or `Transfer-Encoding` headers, as they
     // will be rewritten. If `resp.status` equals 1xx, 204 or 304, the HTTP
     // specification requires that the response shall have no message body, in
     // which case `data` and `size` are ignored.
-    // If these function throw an exception, there is no effect.
-    // These functions are thread-safe.
+    // If this function throws an exception, there is no effect.
+    // This function is thread-safe.
     bool
     http_response(HTTP_Response_Headers&& resp, const char* data, size_t size);
-
-    bool
-    http_response(HTTP_Response_Headers&& resp);
 
     // Send a response with a chunked body, which may contain multiple chunks.
     // Callers should not supply `Transfer-Encoding` headers, as they will be
