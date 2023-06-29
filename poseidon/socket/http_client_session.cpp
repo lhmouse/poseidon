@@ -317,6 +317,21 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
 bool
 HTTP_Client_Session::
+do_http_raw_request(const HTTP_Request_Headers& req, const char* data, size_t size)
+  {
+    // Compose the message and send it as a whole.
+    tinyfmt_str fmt;
+    fmt << req;
+    fmt.putn(data, size);
+    bool sent = this->tcp_send(fmt.data(), fmt.size());
+
+    // The return value indicates whether no error has occurred. There is no
+    // guarantee that data will eventually arrive, due to network flapping.
+    return sent;
+  }
+
+bool
+HTTP_Client_Session::
 http_request(HTTP_Request_Headers&& req, const char* data, size_t size)
   {
     if(this->m_upgrade_ack.load())
@@ -336,11 +351,7 @@ http_request(HTTP_Request_Headers&& req, const char* data, size_t size)
     if(size != 0)
       req.headers.emplace_back(sref("Content-Length"), (int64_t) size);
 
-    // Compose the message and send it as a whole.
-    tinyfmt_str fmt;
-    fmt << req;
-    fmt.putn(data, size);
-    return this->tcp_send(fmt.data(), fmt.size());
+    return this->do_http_raw_request(req, data, size);
   }
 
 bool
@@ -361,10 +372,7 @@ http_chunked_request_start(HTTP_Request_Headers&& req)
     // Write a chunked header.
     req.headers.emplace_back(sref("Transfer-Encoding"), sref("chunked"));
 
-    // Compose the message header and send it as a whole.
-    tinyfmt_str fmt;
-    fmt << req;
-    return this->tcp_send(fmt.data(), fmt.size());
+    return this->do_http_raw_request(req, "", 0);
   }
 
 bool
@@ -381,8 +389,8 @@ http_chunked_request_send(const char* data, size_t size)
     if(size == 0)
       return this->socket_state() <= socket_state_established;
 
-    // Compose a chunk and send it as a whole. The length of data of this
-    // chunk is written as a hexadecimal integer without the `0x` prefix.
+    // Compose a chunk and send it as a whole. The length of this chunk is
+    // written as a hexadecimal integer without the `0x` prefix.
     tinyfmt_str fmt;
     ::rocket::ascii_numput nump;
     nump.put_XU(size);

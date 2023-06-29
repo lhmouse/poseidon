@@ -107,6 +107,12 @@ class HTTPS_Client_Session
     void
     do_on_https_upgraded_stream(linear_buffer& data, bool eof);
 
+    // Sends request headers with some additional data. No error checking is
+    // performed. This function is provided for convenience only, and maybe
+    // isn't very useful unless for some low-level hacks.
+    bool
+    do_https_raw_request(const HTTP_Request_Headers& req, const char* data, size_t size);
+
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(HTTPS_Client_Session);
 

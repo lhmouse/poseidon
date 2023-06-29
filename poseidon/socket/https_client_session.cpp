@@ -249,7 +249,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
       // not much we can do.
       POSEIDON_LOG_WARN((
           "HTTP parser error `$3`: $4",
-          "[HTTP client session `$1` (class `$2`)]"),
+          "[HTTPS client session `$1` (class `$2`)]"),
           this, typeid(*this), HTTP_PARSER_ERRNO(this->m_parser),
           ::http_errno_description(HTTP_PARSER_ERRNO(this->m_parser)));
 
@@ -318,6 +318,21 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
 
 bool
 HTTPS_Client_Session::
+do_https_raw_request(const HTTP_Request_Headers& req, const char* data, size_t size)
+  {
+    // Compose the message and send it as a whole.
+    tinyfmt_str fmt;
+    fmt << req;
+    fmt.putn(data, size);
+    bool sent = this->ssl_send(fmt.data(), fmt.size());
+
+    // The return value indicates whether no error has occurred. There is no
+    // guarantee that data will eventually arrive, due to network flapping.
+    return sent;
+  }
+
+bool
+HTTPS_Client_Session::
 https_request(HTTP_Request_Headers&& req, const char* data, size_t size)
   {
     if(this->m_upgrade_ack.load())
@@ -337,11 +352,7 @@ https_request(HTTP_Request_Headers&& req, const char* data, size_t size)
     if(size != 0)
       req.headers.emplace_back(sref("Content-Length"), (int64_t) size);
 
-    // Compose the message and send it as a whole.
-    tinyfmt_str fmt;
-    fmt << req;
-    fmt.putn(data, size);
-    return this->ssl_send(fmt.data(), fmt.size());
+    return this->do_https_raw_request(req, data, size);
   }
 
 bool
@@ -362,10 +373,7 @@ https_chunked_request_start(HTTP_Request_Headers&& req)
     // Write a chunked header.
     req.headers.emplace_back(sref("Transfer-Encoding"), sref("chunked"));
 
-    // Compose the message header and send it as a whole.
-    tinyfmt_str fmt;
-    fmt << req;
-    return this->ssl_send(fmt.data(), fmt.size());
+    return this->do_https_raw_request(req, "", 0);
   }
 
 bool
@@ -382,8 +390,8 @@ https_chunked_request_send(const char* data, size_t size)
     if(size == 0)
       return this->socket_state() <= socket_state_established;
 
-    // Compose a chunk and send it as a whole. The length of data of this
-    // chunk is written as a hexadecimal integer without the `0x` prefix.
+    // Compose a chunk and send it as a whole. The length of this chunk is
+    // written as a hexadecimal integer without the `0x` prefix.
     tinyfmt_str fmt;
     ::rocket::ascii_numput nump;
     nump.put_XU(size);
