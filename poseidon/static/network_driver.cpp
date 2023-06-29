@@ -241,6 +241,9 @@ reload(const Config_File& file)
             "[in configuration file '$2']"),
             ::ERR_reason_error_string(::ERR_peek_error()), file.path(), default_certificate, default_private_key);
 
+      // The session context ID is composed from the DNS name of the running
+      // machine. This determines which SSL sessions can be reused to improve
+      // performance.
       uint8_t sid_ctx[32];
       ::memset(sid_ctx, '*', sizeof(sid_ctx));
       ::gethostname((char*) sid_ctx, sizeof(sid_ctx));
