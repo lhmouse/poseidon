@@ -20,6 +20,7 @@ class HTTP_Client_Session
     ::http_parser m_parser[1];
     HTTP_Response_Headers m_resp;
     linear_buffer m_body;
+    atomic_relaxed<bool> m_upgrade_ack;
 
   public:
     // Constructs a socket for outgoing connections.
@@ -109,16 +110,13 @@ class HTTP_Client_Session
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(HTTP_Client_Session);
 
-    // Send a simple request, possibly with a complete body. Callers should
+    // Sends a simple request, possibly with a complete body. Callers should
     // not supply `Content-Length` or `Transfer-Encoding` headers, as they
     // will be rewritten.
-    // If these function throw an exception, there is no effect.
-    // These functions are thread-safe.
+    // If this function throws an exception, there is no effect.
+    // This function is thread-safe.
     bool
     http_request(HTTP_Request_Headers&& req, const char* data, size_t size);
-
-    bool
-    http_request(HTTP_Request_Headers&& req);
 
     // Send a request with a chunked body, which may contain multiple chunks.
     // Callers should not supply `Transfer-Encoding` headers, as they will be

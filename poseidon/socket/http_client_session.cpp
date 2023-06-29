@@ -133,21 +133,8 @@ void
 HTTP_Client_Session::
 do_on_tcp_stream(linear_buffer& data, bool eof)
   {
-    if((HTTP_PARSER_ERRNO(this->m_parser) == HPE_PAUSED) && this->m_parser->upgrade) {
+    if(this->m_upgrade_ack.load()) {
       this->do_on_http_upgraded_stream(data, eof);
-      return;
-    }
-
-    if(HTTP_PARSER_ERRNO(this->m_parser) != HPE_OK) {
-      // This can't be recovered. All further data will be discarded. There is
-      // not much we can do.
-      POSEIDON_LOG_WARN((
-          "HTTP parser error `$3`: $4",
-          "[HTTP client session `$1` (class `$2`)]"),
-          this, typeid(*this), HTTP_PARSER_ERRNO(this->m_parser),
-          ::http_errno_description(HTTP_PARSER_ERRNO(this->m_parser)));
-
-      data.clear();
       return;
     }
 
@@ -226,6 +213,13 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
           {
             const auto xthis = (HTTP_Client_Session*) ps->data;
             xthis->do_http_parser_on_message_complete(::http_should_keep_alive(ps) == 0);
+
+            if((ps->http_errno == HPE_OK) && (ps->status_code == HTTP_STATUS_SWITCHING_PROTOCOLS)) {
+              // For client sessions, this indicates that the server has
+              // switched to another protocol.
+              ps->http_errno = HPE_PAUSED;
+              xthis->m_upgrade_ack.store(true);
+            }
             return 0;
           },
 
@@ -244,14 +238,21 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
 
     // Assuming the error code won't be clobbered by the second call for EOF
     // above. Not sure.
-    if((HTTP_PARSER_ERRNO(this->m_parser) == HPE_OK) && this->m_parser->upgrade) {
-      this->m_parser->http_errno = HPE_PAUSED;
-      if(data.size() != 0) {
-        // These data will be in another protocol, so don't miss them.
-        this->do_on_http_upgraded_stream(data, eof);
-      }
+    if((HTTP_PARSER_ERRNO(this->m_parser) == HPE_PAUSED) && this->m_upgrade_ack.load()) {
+      this->do_on_http_upgraded_stream(data, eof);
+      return;
+    }
 
-      POSEIDON_LOG_TRACE(("HTTP parser upgrade done"));
+    if(HTTP_PARSER_ERRNO(this->m_parser) != HPE_OK) {
+      // This can't be recovered. All further data will be discarded. There is
+      // not much we can do.
+      POSEIDON_LOG_WARN((
+          "HTTP parser error `$3`: $4",
+          "[HTTP client session `$1` (class `$2`)]"),
+          this, typeid(*this), HTTP_PARSER_ERRNO(this->m_parser),
+          ::http_errno_description(HTTP_PARSER_ERRNO(this->m_parser)));
+
+      data.clear();
       return;
     }
 
@@ -318,6 +319,12 @@ bool
 HTTP_Client_Session::
 http_request(HTTP_Request_Headers&& req, const char* data, size_t size)
   {
+    if(this->m_upgrade_ack.load())
+      POSEIDON_THROW((
+          "HTTP connection switched to another protocol",
+          "[HTTP client session `$1` (class `$2`)]"),
+          this, typeid(*this));
+
     // Erase bad headers.
     for(size_t hindex = 0;  hindex < req.headers.size();  hindex ++)
       if(req.header_name_equals(hindex, sref("Content-Length"))
@@ -338,15 +345,14 @@ http_request(HTTP_Request_Headers&& req, const char* data, size_t size)
 
 bool
 HTTP_Client_Session::
-http_request(HTTP_Request_Headers&& req)
-  {
-    return this->http_request(::std::move(req), "", 0);
-  }
-
-bool
-HTTP_Client_Session::
 http_chunked_request_start(HTTP_Request_Headers&& req)
   {
+    if(this->m_upgrade_ack.load())
+      POSEIDON_THROW((
+          "HTTP connection switched to another protocol",
+          "[HTTP client session `$1` (class `$2`)]"),
+          this, typeid(*this));
+
     // Erase bad headers.
     for(size_t hindex = 0;  hindex < req.headers.size();  hindex ++)
       if(req.header_name_equals(hindex, sref("Transfer-Encoding")))
@@ -365,6 +371,12 @@ bool
 HTTP_Client_Session::
 http_chunked_request_send(const char* data, size_t size)
   {
+    if(this->m_upgrade_ack.load())
+      POSEIDON_THROW((
+          "HTTP connection switched to another protocol",
+          "[HTTP client session `$1` (class `$2`)]"),
+          this, typeid(*this));
+
     // Ignore empty chunks, which would have marked the end of the body.
     if(size == 0)
       return this->socket_state() <= socket_state_established;
@@ -385,6 +397,12 @@ bool
 HTTP_Client_Session::
 http_chunked_request_finish()
   {
+    if(this->m_upgrade_ack.load())
+      POSEIDON_THROW((
+          "HTTP connection switched to another protocol",
+          "[HTTP client session `$1` (class `$2`)]"),
+          this, typeid(*this));
+
     return this->tcp_send("0\r\n\r\n", 5);
   }
 
