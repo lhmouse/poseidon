@@ -15,6 +15,9 @@ namespace poseidon {
 Network_Driver::
 Network_Driver()
   {
+    this->m_epoll_sockets.set_empty_key(reinterpret_cast<Abstract_Socket*>(-1));
+    this->m_epoll_sockets.set_deleted_key(reinterpret_cast<Abstract_Socket*>(-3));
+
     if(!this->m_epoll.reset(::epoll_create1(0)))
       POSEIDON_THROW((
           "Could not create epoll object",
