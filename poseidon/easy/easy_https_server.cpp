@@ -38,8 +38,7 @@ struct Client_Table
 
 struct Shared_cb_args
   {
-    wkptr<void> wobj;
-    thunk_ptr<shptrR<HTTPS_Server_Session>, Abstract_Fiber&, HTTP_Request_Headers&&, linear_buffer&&> thunk;
+    Easy_HTTPS_Server::thunk_type thunk;
     wkptr<Client_Table> wtable;
   };
 
@@ -57,10 +56,6 @@ struct Final_Fiber final : Abstract_Fiber
     void
     do_abstract_fiber_on_work()
       {
-        auto cb_obj = this->m_cb.wobj.lock();
-        if(!cb_obj)
-          return;
-
         for(;;) {
           // The event callback may stop this server, so we have to check for
           // expiry in every iteration.
@@ -102,7 +97,7 @@ struct Final_Fiber final : Abstract_Fiber
           try {
             if(event.has_status == 0) {
               // Process a request.
-              this->m_cb.thunk(cb_obj.get(), session, *this, ::std::move(event.req), ::std::move(event.data));
+              this->m_cb.thunk(session, *this, ::std::move(event.req), ::std::move(event.data));
             }
             else {
               // Send a bad request response.
@@ -260,7 +255,7 @@ Easy_HTTPS_Server::
 start(const Socket_Address& addr)
   {
     auto table = new_sh<X_Client_Table>();
-    Shared_cb_args cb = { this->m_cb_obj, this->m_cb_thunk, table };
+    Shared_cb_args cb = { this->m_thunk, table };
     auto socket = new_sh<Final_Listen_Socket>(addr, ::std::move(cb));
 
     network_driver.insert(socket);

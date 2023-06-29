@@ -9,13 +9,18 @@ namespace poseidon {
 
 class Easy_Timer
   {
+  public:
+    // This is also the prototype of callbacks for the constructor.
+    using thunk_type =
+      thunk<
+        shptrR<Abstract_Timer>,  // timer
+        Abstract_Fiber&,         // fiber for current callback
+        steady_time>;            // time of trigger
+
   private:
+    thunk_type m_thunk;
+
     struct X_Event_Queue;
-
-    shptr<void> m_cb_obj;
-    thunk_ptr<shptrR<Abstract_Timer>, Abstract_Fiber&,
-        steady_time> m_cb_thunk;
-
     shptr<X_Event_Queue> m_queue;
     shptr<Abstract_Timer> m_timer;
 
@@ -26,11 +31,10 @@ class Easy_Timer
     // the main thread. The callback object is never copied, and is allowed to
     // modify itself.
     template<typename CallbackT,
-    ROCKET_DISABLE_SELF(Easy_Timer, CallbackT)>
+    ROCKET_ENABLE_IF(thunk_type::is_invocable<CallbackT>::value)>
     explicit
     Easy_Timer(CallbackT&& cb)
-      : m_cb_obj(new_sh<::std::decay_t<CallbackT>>(::std::forward<CallbackT>(cb))),
-        m_cb_thunk(thunk<::std::decay_t<CallbackT>>)
+      : m_thunk(new_sh(::std::forward<CallbackT>(cb)))
       { }
 
   public:

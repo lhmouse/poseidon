@@ -10,10 +10,17 @@ namespace poseidon {
 
 class Easy_HTTPS_Server
   {
+  public:
+    // This is also the prototype of callbacks for the constructor.
+    using thunk_type =
+      thunk<
+        shptrR<HTTPS_Server_Session>,  // server data socket
+        Abstract_Fiber&,               // fiber for current callback
+        HTTP_Request_Headers&&,        // request method, URI, and headers
+        linear_buffer&&>;              // request payload body
+
   private:
-    shptr<void> m_cb_obj;
-    thunk_ptr<shptrR<HTTPS_Server_Session>, Abstract_Fiber&,
-        HTTP_Request_Headers&&, linear_buffer&&> m_cb_thunk;
+    thunk_type m_thunk;
 
     struct X_Client_Table;
     shptr<X_Client_Table> m_client_table;
@@ -31,11 +38,10 @@ class Easy_HTTPS_Server
     // accordingly in the main thread. The callback object is never copied,
     // and is allowed to modify itself.
     template<typename CallbackT,
-    ROCKET_DISABLE_SELF(Easy_HTTPS_Server, CallbackT)>
+    ROCKET_ENABLE_IF(thunk_type::is_invocable<CallbackT>::value)>
     explicit
     Easy_HTTPS_Server(CallbackT&& cb)
-      : m_cb_obj(new_sh<::std::decay_t<CallbackT>>(::std::forward<CallbackT>(cb))),
-        m_cb_thunk(thunk<::std::decay_t<CallbackT>>)
+      : m_thunk(new_sh(::std::forward<CallbackT>(cb)))
       { }
 
   public:

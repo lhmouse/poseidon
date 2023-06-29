@@ -30,8 +30,7 @@ struct Event_Queue
 
 struct Shared_cb_args
   {
-    wkptr<void> wobj;
-    thunk_ptr<shptrR<Abstract_Timer>, Abstract_Fiber&, steady_time> thunk;
+    Easy_Timer::thunk_type thunk;
     wkptr<Event_Queue> wqueue;
   };
 
@@ -48,10 +47,6 @@ struct Final_Fiber final : Abstract_Fiber
     void
     do_abstract_fiber_on_work() override
       {
-        auto cb_obj = this->m_cb.wobj.lock();
-        if(!cb_obj)
-          return;
-
         for(;;) {
           // The packet callback may stop this timer, so we have to check for
           // expiry in every iteration.
@@ -79,7 +74,7 @@ struct Final_Fiber final : Abstract_Fiber
           lock.unlock();
 
           try {
-            this->m_cb.thunk(cb_obj.get(), timer, *this, event.time);
+            this->m_cb.thunk(timer, *this, event.time);
           }
           catch(exception& stdex) {
             POSEIDON_LOG_ERROR((
@@ -138,7 +133,7 @@ Easy_Timer::
 start(milliseconds delay, milliseconds period)
   {
     auto queue = new_sh<X_Event_Queue>();
-    Shared_cb_args cb = { this->m_cb_obj, this->m_cb_thunk, queue };
+    Shared_cb_args cb = { this->m_thunk, queue };
     auto timer = new_sh<Final_Timer>(::std::move(cb));
     queue->wtimer = timer;
 

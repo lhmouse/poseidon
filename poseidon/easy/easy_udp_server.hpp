@@ -10,10 +10,17 @@ namespace poseidon {
 
 class Easy_UDP_Server
   {
+  public:
+    // This is also the prototype of callbacks for the constructor.
+    using thunk_type =
+      thunk<
+        shptrR<UDP_Socket>,  // server data socket
+        Abstract_Fiber&,     // fiber for current callback
+        Socket_Address&&,    // address of incoming packet
+        linear_buffer&&>;    // data of incoming packet
+
   private:
-    shptr<void> m_cb_obj;
-    thunk_ptr<shptrR<UDP_Socket>, Abstract_Fiber&,
-        Socket_Address&&, linear_buffer&&> m_cb_thunk;
+    thunk_type m_thunk;
 
     struct X_Packet_Queue;
     shptr<X_Packet_Queue> m_queue;
@@ -28,11 +35,10 @@ class Easy_UDP_Server
     // callback, which is invoked accordingly in the main thread. The callback
     // object is never copied, and is allowed to modify itself.
     template<typename CallbackT,
-    ROCKET_DISABLE_SELF(Easy_UDP_Server, CallbackT)>
+    ROCKET_ENABLE_IF(thunk_type::is_invocable<CallbackT>::value)>
     explicit
     Easy_UDP_Server(CallbackT&& cb)
-      : m_cb_obj(new_sh<::std::decay_t<CallbackT>>(::std::forward<CallbackT>(cb))),
-        m_cb_thunk(thunk<::std::decay_t<CallbackT>>)
+      : m_thunk(new_sh(::std::forward<CallbackT>(cb)))
       { }
 
   public:

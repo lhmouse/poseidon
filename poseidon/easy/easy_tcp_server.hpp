@@ -10,10 +10,18 @@ namespace poseidon {
 
 class Easy_TCP_Server
   {
+  public:
+    // This is also the prototype of callbacks for the constructor.
+    using thunk_type =
+      thunk<
+        shptrR<TCP_Socket>,  // server data socket
+        Abstract_Fiber&,     // fiber for current callback
+        Connection_Event,    // event type; see comments above constructor
+        linear_buffer&,      // accumulative data that have been received
+        int>;                // event code; see comments above constructor
+
   private:
-    shptr<void> m_cb_obj;
-    thunk_ptr<shptrR<TCP_Socket>, Abstract_Fiber&,
-       Connection_Event, linear_buffer&, int> m_cb_thunk;
+    thunk_type m_thunk;
 
     struct X_Client_Table;
     shptr<X_Client_Table> m_client_table;
@@ -38,11 +46,10 @@ class Easy_TCP_Server
     // which is invoked accordingly in the main thread. The callback object is
     // never copied, and is allowed to modify itself.
     template<typename CallbackT,
-    ROCKET_DISABLE_SELF(Easy_TCP_Server, CallbackT)>
+    ROCKET_ENABLE_IF(thunk_type::is_invocable<CallbackT>::value)>
     explicit
     Easy_TCP_Server(CallbackT&& cb)
-      : m_cb_obj(new_sh<::std::decay_t<CallbackT>>(::std::forward<CallbackT>(cb))),
-        m_cb_thunk(thunk<::std::decay_t<CallbackT>>)
+      : m_thunk(new_sh(::std::forward<CallbackT>(cb)))
       { }
 
   public:

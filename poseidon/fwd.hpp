@@ -270,17 +270,35 @@ extern class Timer_Driver& timer_driver;
 extern class Async_Task_Executor& async_task_executor;
 extern class Network_Driver& network_driver;
 
-// Thunks for invocable objects
+// Thunks for invocable objects, for type erasure
 template<typename... ArgsT>
-using thunk_ptr = void (*)(void*, ArgsT...);
-
-template<typename CopyT, typename... ArgsT>
-static
-void
-thunk(void* ptr, ArgsT... args)
+class thunk
   {
-    ::std::invoke(*(CopyT*) ptr, ::std::forward<ArgsT>(args)...);
-  }
+  public:
+    template<typename RealT>
+    using is_invocable = ::std::is_invocable<RealT&, ArgsT&&...>;
+
+  private:
+    vfptr<void*, ArgsT&&...> m_func;
+    shptr<void> m_obj;
+
+  public:
+    // Points this callback to a target object, with its type erased.
+    template<typename RealT,
+    ROCKET_ENABLE_IF(is_invocable<RealT>::value)>
+    explicit
+    thunk(const shptr<RealT>& obj) noexcept
+      {
+        this->m_func = +[](void* p, ArgsT&&... ap) { (*(RealT*) p) ((ArgsT&&) ap...);  };
+        this->m_obj = obj;
+      }
+
+    void
+    operator()(ArgsT... args) const
+      {
+        this->m_func(this->m_obj.get(), (ArgsT&&) args...);
+      }
+  };
 
 // Smart pointers
 template<typename ValueT, typename... ArgsT>
@@ -291,12 +309,28 @@ new_uni(ArgsT&&... args)
     return ::std::make_unique<ValueT>(::std::forward<ArgsT>(args)...);
   }
 
+template<typename ValueT>
+ROCKET_ALWAYS_INLINE
+uniptr<typename ::std::decay<ValueT>::type>
+new_uni(ValueT&& value)
+  {
+    return ::std::make_unique<typename ::std::decay<ValueT>::type>(::std::forward<ValueT>(value));
+  }
+
 template<typename ValueT, typename... ArgsT>
 ROCKET_ALWAYS_INLINE
 shptr<ValueT>
 new_sh(ArgsT&&... args)
   {
     return ::std::make_shared<ValueT>(::std::forward<ArgsT>(args)...);
+  }
+
+template<typename ValueT>
+ROCKET_ALWAYS_INLINE
+shptr<typename ::std::decay<ValueT>::type>
+new_sh(ValueT&& value)
+  {
+    return ::std::make_shared<typename ::std::decay<ValueT>::type>(::std::forward<ValueT>(value));
   }
 
 // Logging with prettification

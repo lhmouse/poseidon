@@ -30,8 +30,7 @@ struct Packet_Queue
 
 struct Shared_cb_args
   {
-    wkptr<void> wobj;
-    thunk_ptr<shptrR<UDP_Socket>, Abstract_Fiber&, Socket_Address&&, linear_buffer&&> thunk;
+    Easy_UDP_Client::thunk_type thunk;
     wkptr<Packet_Queue> wqueue;
   };
 
@@ -48,10 +47,6 @@ struct Final_Fiber final : Abstract_Fiber
     void
     do_abstract_fiber_on_work()
       {
-        auto cb_obj = this->m_cb.wobj.lock();
-        if(!cb_obj)
-          return;
-
         for(;;) {
           // The packet callback may stop this server, so we have to check for
           // expiry in every iteration.
@@ -79,7 +74,7 @@ struct Final_Fiber final : Abstract_Fiber
           lock.unlock();
 
           try {
-            this->m_cb.thunk(cb_obj.get(), socket, *this, ::std::move(packet.addr), ::std::move(packet.data));
+            this->m_cb.thunk(socket, *this, ::std::move(packet.addr), ::std::move(packet.data));
           }
           catch(exception& stdex) {
             POSEIDON_LOG_ERROR((
@@ -139,7 +134,7 @@ Easy_UDP_Client::
 open()
   {
     auto queue = new_sh<X_Packet_Queue>();
-    Shared_cb_args cb = { this->m_cb_obj, this->m_cb_thunk, queue };
+    Shared_cb_args cb = { this->m_thunk, queue };
     auto socket = new_sh<Final_UDP_Socket>(::std::move(cb));
     queue->wsocket = socket;
 

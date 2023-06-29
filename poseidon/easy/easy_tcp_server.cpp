@@ -41,8 +41,7 @@ struct Client_Table
 
 struct Shared_cb_args
   {
-    wkptr<void> wobj;
-    thunk_ptr<shptrR<TCP_Socket>, Abstract_Fiber&, Connection_Event, linear_buffer&, int> thunk;
+    Easy_TCP_Server::thunk_type thunk;
     wkptr<Client_Table> wtable;
   };
 
@@ -60,10 +59,6 @@ struct Final_Fiber final : Abstract_Fiber
     void
     do_abstract_fiber_on_work()
       {
-        auto cb_obj = this->m_cb.wobj.lock();
-        if(!cb_obj)
-          return;
-
         for(;;) {
           // The event callback may stop this server, so we have to check for
           // expiry in every iteration.
@@ -109,10 +104,10 @@ struct Final_Fiber final : Abstract_Fiber
               // `event.data`. `data_stream` may be consumed partially by user
               // code, and shall be preserved across callbacks.
               queue->data_stream.putn(event.data.data(), event.data.size());
-              this->m_cb.thunk(cb_obj.get(), socket, *this, event.type, queue->data_stream, event.code);
+              this->m_cb.thunk(socket, *this, event.type, queue->data_stream, event.code);
             }
             else
-              this->m_cb.thunk(cb_obj.get(), socket, *this, event.type, event.data, event.code);
+              this->m_cb.thunk(socket, *this, event.type, event.data, event.code);
           }
           catch(exception& stdex) {
             // Shut the connection down asynchronously. Pending output data
@@ -238,7 +233,7 @@ Easy_TCP_Server::
 start(const Socket_Address& addr)
   {
     auto table = new_sh<X_Client_Table>();
-    Shared_cb_args cb = { this->m_cb_obj, this->m_cb_thunk, table };
+    Shared_cb_args cb = { this->m_thunk, table };
     auto socket = new_sh<Final_Listen_Socket>(addr, ::std::move(cb));
 
     network_driver.insert(socket);
