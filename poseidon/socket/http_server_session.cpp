@@ -336,7 +336,7 @@ http_response_headers_only(HTTP_Response_Headers&& resp)
     // Compose the header and send it. No error checking is performed.
     tinyfmt_str fmt;
     fmt << resp;
-    return this->tcp_send(fmt.c_str(), fmt.length());
+    return this->tcp_send(fmt.data(), fmt.size());
   }
 
 bool
@@ -357,7 +357,7 @@ http_response(HTTP_Response_Headers&& resp, const char* data, size_t size)
     tinyfmt_str fmt;
     fmt << resp;
     fmt.putn(data, size);
-    return this->tcp_send(fmt.c_str(), fmt.length());
+    return this->tcp_send(fmt.data(), fmt.size());
   }
 
 bool
@@ -382,7 +382,7 @@ http_chunked_response_start(HTTP_Response_Headers&& resp)
     // Compose the message header and send it as a whole.
     tinyfmt_str fmt;
     fmt << resp;
-    return this->tcp_send(fmt.c_str(), fmt.length());
+    return this->tcp_send(fmt.data(), fmt.size());
   }
 
 bool
@@ -402,7 +402,7 @@ http_chunked_response_send(const char* data, size_t size)
     fmt << "\r\n";
     fmt.putn(data, size);
     fmt << "\r\n";
-    return this->tcp_send(fmt.c_str(), fmt.length());
+    return this->tcp_send(fmt.data(), fmt.size());
   }
 
 bool

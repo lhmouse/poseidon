@@ -328,7 +328,7 @@ http_request(HTTP_Request_Headers&& req, const char* data, size_t size)
     tinyfmt_str fmt;
     fmt << req;
     fmt.putn(data, size);
-    return this->tcp_send(fmt.c_str(), fmt.length());
+    return this->tcp_send(fmt.data(), fmt.size());
   }
 
 bool
@@ -353,7 +353,7 @@ http_chunked_request_start(HTTP_Request_Headers&& req)
     // Compose the message header and send it as a whole.
     tinyfmt_str fmt;
     fmt << req;
-    return this->tcp_send(fmt.c_str(), fmt.length());
+    return this->tcp_send(fmt.data(), fmt.size());
   }
 
 bool
@@ -373,7 +373,7 @@ http_chunked_request_send(const char* data, size_t size)
     fmt << "\r\n";
     fmt.putn(data, size);
     fmt << "\r\n";
-    return this->tcp_send(fmt.c_str(), fmt.length());
+    return this->tcp_send(fmt.data(), fmt.size());
   }
 
 bool
