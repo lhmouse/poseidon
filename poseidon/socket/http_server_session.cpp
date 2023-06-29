@@ -258,9 +258,15 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
     }
 
     if((HTTP_PARSER_ERRNO(this->m_parser) == HPE_OK) && this->m_parser->upgrade) {
-      // If the connection has upgraded, pause the parser.
       this->m_parser->http_errno = HPE_PAUSED;
-      this->do_on_http_upgraded_stream(data, eof);
+      if(data.size() != 0) {
+        // Clients shouldn't have sent more data before the upgrade response
+        // has been received, as the server might not understand the upgraded
+        // protocol. But if they do, don't miss these data.
+        this->do_on_http_upgraded_stream(data, eof);
+      }
+
+      POSEIDON_LOG_TRACE(("HTTP parser upgrade done"));
       return;
     }
 
@@ -321,12 +327,12 @@ do_on_http_request_body_stream(linear_buffer& data)
 __attribute__((__noreturn__))
 void
 HTTP_Server_Session::
-do_on_http_upgraded_stream(linear_buffer& /*data*/, bool /*eof*/)
+do_on_http_upgraded_stream(linear_buffer& data, bool eof)
   {
     POSEIDON_THROW((
-        "`do_on_http_upgraded_stream()` not implemented for upgraded connection",
+        "`do_on_http_upgraded_stream()` not implemented: data.size `$3`, eof `$4`",
         "[HTTP server session `$1` (class `$2`)]"),
-        this, typeid(*this));
+        this, typeid(*this), data.size(), eof);
   }
 
 bool
