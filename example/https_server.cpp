@@ -32,7 +32,7 @@ start_server()
   {
     Socket_Address addr("[::]:3805");
     my_server.start(addr);
-    POSEIDON_LOG_ERROR(("example HTTPS server started: bind = $1"), my_server.local_address());
+    POSEIDON_LOG_WARN(("example HTTPS server started: bind = $1"), my_server.local_address());
     return 0;
   }
 

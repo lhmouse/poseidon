@@ -12,7 +12,7 @@ extern Easy_UDP_Server my_server;
 void
 data_callback(shptrR<UDP_Socket> socket, Abstract_Fiber& /*fiber*/, Socket_Address&& addr, linear_buffer&& data)
   {
-    POSEIDON_LOG_WARN(("example UDP server received data from `$1`: $2"), addr, data);
+    POSEIDON_LOG_FATAL(("example UDP server received data from `$1`: $2"), addr, data);
     socket->udp_send(addr, data.data(), data.size());
     data.clear();
   }
@@ -22,7 +22,7 @@ start_server()
   {
     Socket_Address addr("[::]:3801");
     my_server.start(addr);
-    POSEIDON_LOG_ERROR(("example UDP server started: bind = $1"), my_server.local_address());
+    POSEIDON_LOG_FATAL(("example UDP server started: bind = $1"), my_server.local_address());
     return 0;
   }
 

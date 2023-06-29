@@ -14,17 +14,17 @@ event_callback(shptrR<TCP_Socket> socket, Abstract_Fiber& /*fiber*/, Connection_
   {
     switch(event) {
       case connection_event_open:
-        POSEIDON_LOG_FATAL(("example TCP server accepted connection from `$1`"), socket->remote_address());
+        POSEIDON_LOG_ERROR(("example SSL server accepted connection: $1"), socket->remote_address());
         break;
 
       case connection_event_stream:
-        POSEIDON_LOG_WARN(("example TCP server received data from `$1` (eof = $2): $3"), socket->remote_address(), code, data);
+        POSEIDON_LOG_ERROR(("example SSL server received data (eof = $1): $2"), code, data);
         socket->tcp_send(data.data(), data.size());
         data.clear();
         break;
 
       case connection_event_closed:
-        POSEIDON_LOG_FATAL(("example TCP server shut down connection `$1` (errno = $2): $3"), socket->remote_address(), code, data);
+        POSEIDON_LOG_ERROR(("example SSL server shut down connection: (errno = $1) $2"), code, data);
         break;
     }
   }

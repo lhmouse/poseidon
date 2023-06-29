@@ -14,17 +14,17 @@ event_callback(shptrR<SSL_Socket> socket, Abstract_Fiber& /*fiber*/, Connection_
   {
     switch(event) {
       case connection_event_open:
-        POSEIDON_LOG_FATAL(("example SSL server accepted connection from `$1`"), socket->remote_address());
+        POSEIDON_LOG_WARN(("example SSL server accepted connection: $1"), socket->remote_address());
         break;
 
       case connection_event_stream:
-        POSEIDON_LOG_WARN(("example SSL server received data from `$1` (eof = $2): $3"), socket->remote_address(), code, data);
+        POSEIDON_LOG_WARN(("example SSL server received data (eof = $1): $2"), code, data);
         socket->ssl_send(data.data(), data.size());
         data.clear();
         break;
 
       case connection_event_closed:
-        POSEIDON_LOG_FATAL(("example SSL server shut down connection `$1` (errno = $2): $3"), socket->remote_address(), code, data);
+        POSEIDON_LOG_WARN(("example SSL server shut down connection: (errno = $1) $2"), code, data);
         break;
     }
   }
@@ -34,7 +34,7 @@ start_server()
   {
     Socket_Address addr("[::]:3803");
     my_server.start(addr);
-    POSEIDON_LOG_ERROR(("example SSL server started: bind = $1"), my_server.local_address());
+    POSEIDON_LOG_WARN(("example SSL server started: bind = $1"), my_server.local_address());
     return 0;
   }
 
