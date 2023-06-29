@@ -123,6 +123,8 @@ HTTPS_Server_Session::
 do_on_ssl_stream(linear_buffer& data, bool eof)
   {
     if(this->m_upgrade_ack.load()) {
+      // Deallocate the body buffer, as it is no longer useful.
+      linear_buffer().swap(this->m_body);
       this->do_on_https_upgraded_stream(data, eof);
       return;
     }

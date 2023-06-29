@@ -135,6 +135,8 @@ HTTPS_Client_Session::
 do_on_ssl_stream(linear_buffer& data, bool eof)
   {
     if(this->m_upgrade_ack.load()) {
+      // Deallocate the body buffer, as it is no longer useful.
+      linear_buffer().swap(this->m_body);
       this->do_on_https_upgraded_stream(data, eof);
       return;
     }
@@ -239,6 +241,11 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
 
     // Assuming the error code won't be clobbered by the second call for EOF
     // above. Not sure.
+    if(this->m_upgrade_ack.load()) {
+      this->do_on_https_upgraded_stream(data, eof);
+      return;
+    }
+
     if(HTTP_PARSER_ERRNO(this->m_parser) != HPE_OK) {
       // This can't be recovered. All further data will be discarded. There is
       // not much we can do.
