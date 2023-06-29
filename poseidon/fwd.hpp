@@ -136,7 +136,6 @@ using ::rocket::variant;
 using phsh_string = ::rocket::prehashed_string;
 
 template<typename T, typename U> using cow_bivector = cow_vector<pair<T, U>>;
-template<typename T> using ptr = T*;
 template<typename T> using uniptr = ::std::unique_ptr<T>;  // default deleter
 template<typename T> using shptr = ::std::shared_ptr<T>;
 template<typename T> using wkptr = ::std::weak_ptr<T>;
@@ -145,6 +144,10 @@ using cow_stringR = const cow_string&;
 using phsh_stringR = const phsh_string&;
 template<typename T> using shptrR = const shptr<T>&;
 template<typename T> using wkptrR = const wkptr<T>&;
+
+template<typename T> using ptr = T*;
+template<typename... T> using vfptr = void (*)(T...);
+using vufptr = void (*)(...);
 
 class cacheline_barrier
   {
@@ -320,15 +323,16 @@ bool
 do_async_logger_check_level(Log_Level level) noexcept;
 
 void
-do_async_logger_enqueue(const Log_Context& ctx, thunk_ptr<cow_string&> cb_thunk, void* cb_obj) noexcept;
+do_async_logger_enqueue(const Log_Context& ctx, vfptr<cow_string&, const void*> invoke, const void* compose) noexcept;
 
 template<typename... ParamsT>
 inline
 bool
 do_async_logger_enqueue_generic(const Log_Context& ctx, const ParamsT&... params) noexcept
   {
-    auto formatter = [&](cow_string& msg) { ::asteria::format(msg, params...);  };
-    noadl::do_async_logger_enqueue(ctx, thunk<decltype(formatter)>, &formatter);
+    const auto compose = [&](cow_string& sbuf) { ::asteria::format(sbuf, params...);  };
+    constexpr auto invoke = +[](cow_string& sbuf, const void* vp) { (*(decltype(compose)*) vp) (sbuf);  };
+    noadl::do_async_logger_enqueue(ctx, invoke, &compose);
     return true;
   }
 
@@ -339,7 +343,7 @@ do_async_logger_enqueue_generic(const Log_Context& ctx, const ParamsT&... params
   (::poseidon::do_async_logger_check_level(::poseidon::log_level_##LEVEL)  \
    && ::poseidon::do_async_logger_enqueue_generic(  \
           { __FILE__, __LINE__, ::poseidon::log_level_##LEVEL, __FUNCTION__ }, \
-          (::asteria::make_string_template TEMPLATE), ##__VA_ARGS__))
+            (::asteria::make_string_template TEMPLATE), ##__VA_ARGS__))
 
 #define POSEIDON_LOG_FATAL(...)   POSEIDON_LOG_GENERIC(fatal, __VA_ARGS__)
 #define POSEIDON_LOG_ERROR(...)   POSEIDON_LOG_GENERIC(error, __VA_ARGS__)

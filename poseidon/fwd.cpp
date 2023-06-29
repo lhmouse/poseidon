@@ -27,19 +27,19 @@ do_async_logger_check_level(Log_Level level) noexcept
   }
 
 void
-do_async_logger_enqueue(const Log_Context& ctx, thunk_ptr<cow_string&> cb_thunk, void* cb_obj) noexcept
-  {
-    try {
-      cow_string msg;
-      cb_thunk(cb_obj, msg);
-      async_logger.enqueue(ctx, ::std::move(msg));
-    }
-    catch(::std::exception& stdex) {
-      ::fprintf(stderr, "WARNING: Could not compose log message: %s\n", stdex.what());
-    }
+do_async_logger_enqueue(const Log_Context& ctx, vfptr<cow_string&, const void*> invoke, const void* compose) noexcept
+  try {
+    cow_string sbuf;
+    invoke(sbuf, compose);
+    async_logger.enqueue(ctx, sbuf);
 
     if(ctx.level <= log_level_error)
       async_logger.synchronize();
+  }
+  catch(::std::exception& stdex) {
+    ::fprintf(stderr,
+        "WARNING: Could not compose log message: %s\n",
+        stdex.what());
   }
 
 }  // namespace poseidon
