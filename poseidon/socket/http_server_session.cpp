@@ -337,6 +337,28 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
 bool
 HTTP_Server_Session::
+do_http_raw_response(const HTTP_Response_Headers& resp, const char* data, size_t size)
+  {
+    // Compose the message and send it as a whole.
+    tinyfmt_str fmt;
+    fmt << resp;
+    fmt.putn(data, size);
+    bool sent = this->tcp_send(fmt.data(), fmt.size());
+
+    if(resp.status == HTTP_STATUS_SWITCHING_PROTOCOLS) {
+      // For server sessions, this indicates that the server has switched to
+      // another protocol. The client might have sent more data before this,
+      // which would violate RFC 6455 anyway, so we don't care.
+      this->m_upgrade_ack.store(true);
+    }
+
+    // The return value indicates whether no error has occurred. There is no
+    // guarantee that data will eventually arrive, due to network flapping.
+    return sent;
+  }
+
+bool
+HTTP_Server_Session::
 http_response_headers_only(HTTP_Response_Headers&& resp)
   {
     if(this->m_upgrade_ack.load())
@@ -345,10 +367,7 @@ http_response_headers_only(HTTP_Response_Headers&& resp)
           "[HTTP server session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    // Compose the header and send it. No error checking is performed.
-    tinyfmt_str fmt;
-    fmt << resp;
-    return this->tcp_send(fmt.data(), fmt.size());
+    return this->do_http_raw_response(resp, "", 0);
   }
 
 bool
@@ -367,15 +386,16 @@ http_response(HTTP_Response_Headers&& resp, const char* data, size_t size)
           || resp.header_name_equals(hindex, sref("Transfer-Encoding")))
         resp.headers.erase(hindex --);
 
-    // Add a `Content-Length` if the response message has to have one.
-    if((resp.status >= 200) && (resp.status != 204) && (resp.status != 304))
-      resp.headers.emplace_back(sref("Content-Length"), (int64_t) size);
+    // Some responses are required to have no payload body and require no
+    // `Content-Length` header.
+    if((resp.status <= 199) || (resp.status == 204) || (resp.status == 304))
+      return this->do_http_raw_response(resp, "", 0);
 
-    // Compose the message and send it as a whole.
-    tinyfmt_str fmt;
-    fmt << resp;
-    fmt.putn(data, size);
-    return this->tcp_send(fmt.data(), fmt.size());
+    // Otherwise, a `Content-Length` is required; otherwise the response would
+    // be interpreted as terminating by closure ofthe connection.
+    resp.headers.emplace_back(sref("Content-Length"), (int64_t) size);
+
+    return this->do_http_raw_response(resp, data, size);
   }
 
 bool
@@ -396,10 +416,7 @@ http_chunked_response_start(HTTP_Response_Headers&& resp)
     // Write a chunked header.
     resp.headers.emplace_back(sref("Transfer-Encoding"), sref("chunked"));
 
-    // Compose the message header and send it as a whole.
-    tinyfmt_str fmt;
-    fmt << resp;
-    return this->tcp_send(fmt.data(), fmt.size());
+    return this->do_http_raw_response(resp, "", 0);
   }
 
 bool
@@ -416,8 +433,8 @@ http_chunked_response_send(const char* data, size_t size)
     if(size == 0)
       return this->socket_state() <= socket_state_established;
 
-    // Compose a chunk and send it as a whole. The length of data of this
-    // chunk is written as a hexadecimal integer without the `0x` prefix.
+    // Compose a chunk and send it as a whole. The length of this chunk is
+    // written as a hexadecimal integer without the `0x` prefix.
     tinyfmt_str fmt;
     ::rocket::ascii_numput nump;
     nump.put_XU(size);

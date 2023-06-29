@@ -128,6 +128,12 @@ class HTTP_Server_Session
     void
     do_on_http_upgraded_stream(linear_buffer& data, bool eof);
 
+    // Sends response headers with some additional data. No error checking is
+    // performed. This function is provided for convenience only, and maybe
+    // isn't very useful unless for some low-level hacks.
+    bool
+    do_http_raw_response(const HTTP_Response_Headers& resp, const char* data, size_t size);
+
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(HTTP_Server_Session);
 
