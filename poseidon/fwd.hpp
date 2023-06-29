@@ -272,11 +272,11 @@ extern class Network_Driver& network_driver;
 
 // Thunks for invocable objects, for type erasure
 template<typename... ArgsT>
-class thunk
+class Thunk
   {
   public:
-    template<typename RealT>
-    using is_invocable = ::std::is_invocable<RealT&, ArgsT&&...>;
+    using function_type = void (ArgsT...);
+    template<typename T> using is_invocable = ::std::is_invocable<T&, ArgsT&&...>;
 
   private:
     vfptr<void*, ArgsT&&...> m_func;
@@ -287,16 +287,29 @@ class thunk
     template<typename RealT,
     ROCKET_ENABLE_IF(is_invocable<RealT>::value)>
     explicit
-    thunk(const shptr<RealT>& obj) noexcept
+    Thunk(const shptr<RealT>& obj) noexcept
       {
         this->m_func = +[](void* p, ArgsT&&... ap) { (*(RealT*) p) ((ArgsT&&) ap...);  };
         this->m_obj = obj;
       }
 
+    // And this is an optimized overload if the target object is a plain
+    // function pointer, which can be stored into `m_obj` directly.
+    explicit
+    Thunk(function_type* fptr) noexcept
+      {
+        this->m_func = nullptr;
+        this->m_obj = shptr<void>(shptr<int>(), (void*)(intptr_t) fptr);
+      }
+
+    // Performs a virtual call to the target object.
     void
     operator()(ArgsT... args) const
       {
-        this->m_func(this->m_obj.get(), (ArgsT&&) args...);
+        if(this->m_func)
+          this->m_func(this->m_obj.get(), (ArgsT&&) args...);
+        else
+          ((function_type*)(intptr_t) this->m_obj.get()) ((ArgsT&&) args...);
       }
   };
 

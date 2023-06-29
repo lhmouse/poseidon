@@ -12,7 +12,7 @@ class Easy_Timer
   public:
     // This is also the prototype of callbacks for the constructor.
     using thunk_type =
-      thunk<
+      Thunk<
         shptrR<Abstract_Timer>,  // timer
         Abstract_Fiber&,         // fiber for current callback
         steady_time>;            // time of trigger
@@ -35,6 +35,11 @@ class Easy_Timer
     explicit
     Easy_Timer(CallbackT&& cb)
       : m_thunk(new_sh(::std::forward<CallbackT>(cb)))
+      { }
+
+    explicit
+    Easy_Timer(thunk_type::function_type* fptr)
+      : m_thunk(fptr)
       { }
 
   public:

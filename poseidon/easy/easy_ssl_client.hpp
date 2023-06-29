@@ -13,7 +13,7 @@ class Easy_SSL_Client
   public:
     // This is also the prototype of callbacks for the constructor.
     using thunk_type =
-      thunk<
+      Thunk<
         shptrR<SSL_Socket>,  // client data socket
         Abstract_Fiber&,     // fiber for current callback
         Connection_Event,    // event type; see comments above constructor
@@ -48,6 +48,11 @@ class Easy_SSL_Client
     explicit
     Easy_SSL_Client(CallbackT&& cb)
       : m_thunk(new_sh(::std::forward<CallbackT>(cb)))
+      { }
+
+    explicit
+    Easy_SSL_Client(thunk_type::function_type* fptr)
+      : m_thunk(fptr)
       { }
 
   public:

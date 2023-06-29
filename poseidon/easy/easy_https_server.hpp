@@ -13,7 +13,7 @@ class Easy_HTTPS_Server
   public:
     // This is also the prototype of callbacks for the constructor.
     using thunk_type =
-      thunk<
+      Thunk<
         shptrR<HTTPS_Server_Session>,  // server data socket
         Abstract_Fiber&,               // fiber for current callback
         HTTP_Request_Headers&&,        // request method, URI, and headers
@@ -42,6 +42,11 @@ class Easy_HTTPS_Server
     explicit
     Easy_HTTPS_Server(CallbackT&& cb)
       : m_thunk(new_sh(::std::forward<CallbackT>(cb)))
+      { }
+
+    explicit
+    Easy_HTTPS_Server(thunk_type::function_type* fptr)
+      : m_thunk(fptr)
       { }
 
   public:
