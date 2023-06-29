@@ -49,7 +49,9 @@ nobase_include_HEADERS +=  \
   %reldir%/easy/easy_ssl_server.hpp  \
   %reldir%/easy/easy_ssl_client.hpp  \
   %reldir%/easy/easy_http_server.hpp  \
+  %reldir%/easy/easy_http_client.hpp  \
   %reldir%/easy/easy_https_server.hpp  \
+  %reldir%/easy/easy_https_client.hpp  \
   ${END}
 
 lib_libposeidon_la_SOURCES =  \
@@ -98,7 +100,9 @@ lib_libposeidon_la_SOURCES =  \
   %reldir%/easy/easy_ssl_server.cpp  \
   %reldir%/easy/easy_ssl_client.cpp  \
   %reldir%/easy/easy_http_server.cpp  \
+  %reldir%/easy/easy_http_client.cpp  \
   %reldir%/easy/easy_https_server.cpp  \
+  %reldir%/easy/easy_https_client.cpp  \
   ${END}
 
 lib_libposeidon_la_CXXFLAGS = ${AM_CXXFLAGS}

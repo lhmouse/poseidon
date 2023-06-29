@@ -258,7 +258,7 @@ HTTP_Message_Body_Type
 HTTP_Client_Session::
 do_on_http_response_headers(HTTP_Response_Headers& resp)
   {
-    POSEIDON_LOG_INFO((
+    POSEIDON_LOG_DEBUG((
         "HTTP client received response: $3 $4",
         "[HTTP client session `$1` (class `$2`)]"),
         this, typeid(*this), resp.status, resp.reason);

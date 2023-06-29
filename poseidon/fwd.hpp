@@ -248,6 +248,8 @@ struct HTTP_Response_Headers;
 // Easy types
 // Being 'easy' means all callbacks are invoked in fibers and can perform
 // async/await operations. These are suitable for agile development.
+class Easy_Deflator;
+class Easy_Inflator;
 class Easy_Timer;
 class Easy_UDP_Server;
 class Easy_UDP_Client;
@@ -255,10 +257,10 @@ class Easy_TCP_Server;
 class Easy_TCP_Client;
 class Easy_SSL_Server;
 class Easy_SSL_Client;
-class Easy_Deflator;
-class Easy_Inflator;
 class Easy_HTTP_Server;
+class Easy_HTTP_Client;
 class Easy_HTTPS_Server;
+class Easy_HTTPS_Client;
 
 // Singletons
 extern atomic_relaxed<int> exit_signal;
