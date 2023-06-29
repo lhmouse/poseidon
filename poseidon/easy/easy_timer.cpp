@@ -28,19 +28,14 @@ struct Event_Queue
     bool fiber_active = false;
   };
 
-struct Shared_cb_args
-  {
-    Easy_Timer::thunk_type thunk;
-    wkptr<Event_Queue> wqueue;
-  };
-
 struct Final_Fiber final : Abstract_Fiber
   {
-    Shared_cb_args m_cb;
+    Easy_Timer::thunk_type m_thunk;
+    wkptr<Event_Queue> m_wqueue;
 
     explicit
-    Final_Fiber(const Shared_cb_args& cb)
-      : m_cb(cb)
+    Final_Fiber(const Easy_Timer::thunk_type& thunk, const shptr<Event_Queue>& queue)
+      : m_thunk(thunk), m_wqueue(queue)
       { }
 
     virtual
@@ -50,7 +45,7 @@ struct Final_Fiber final : Abstract_Fiber
         for(;;) {
           // The packet callback may stop this timer, so we have to check for
           // expiry in every iteration.
-          auto queue = this->m_cb.wqueue.lock();
+          auto queue = this->m_wqueue.lock();
           if(!queue)
             return;
 
@@ -74,7 +69,7 @@ struct Final_Fiber final : Abstract_Fiber
           lock.unlock();
 
           try {
-            this->m_cb.thunk(timer, *this, event.time);
+            this->m_thunk(timer, *this, event.time);
           }
           catch(exception& stdex) {
             POSEIDON_LOG_ERROR((
@@ -87,18 +82,19 @@ struct Final_Fiber final : Abstract_Fiber
 
 struct Final_Timer final : Abstract_Timer
   {
-    Shared_cb_args m_cb;
+    Easy_Timer::thunk_type m_thunk;
+    wkptr<Event_Queue> m_wqueue;
 
     explicit
-    Final_Timer(Shared_cb_args&& cb)
-      : m_cb(::std::move(cb))
+    Final_Timer(const Easy_Timer::thunk_type& thunk, const shptr<Event_Queue>& queue)
+      : m_thunk(thunk), m_wqueue(queue)
       { }
 
     virtual
     void
     do_abstract_timer_on_tick(steady_time time) override
       {
-        auto queue = this->m_cb.wqueue.lock();
+        auto queue = this->m_wqueue.lock();
         if(!queue)
           return;
 
@@ -108,7 +104,7 @@ struct Final_Timer final : Abstract_Timer
         if(!queue->fiber_active) {
           // Create a new fiber, if none is active. The fiber shall only reset
           // `m_fiber_active` if no packet is pending.
-          fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_cb));
+          fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, queue));
           queue->fiber_active = true;
         }
 
@@ -133,8 +129,7 @@ Easy_Timer::
 start(milliseconds delay, milliseconds period)
   {
     auto queue = new_sh<X_Event_Queue>();
-    Shared_cb_args cb = { this->m_thunk, queue };
-    auto timer = new_sh<Final_Timer>(::std::move(cb));
+    auto timer = new_sh<Final_Timer>(this->m_thunk, queue);
     queue->wtimer = timer;
 
     timer_driver.insert(timer, delay, period);

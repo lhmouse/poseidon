@@ -39,20 +39,15 @@ struct Client_Table
     unordered_map<const volatile SSL_Socket*, Event_Queue> client_map;
   };
 
-struct Shared_cb_args
-  {
-    Easy_SSL_Server::thunk_type thunk;
-    wkptr<Client_Table> wtable;
-  };
-
 struct Final_Fiber final : Abstract_Fiber
   {
-    Shared_cb_args m_cb;
+    Easy_SSL_Server::thunk_type m_thunk;
+    wkptr<Client_Table> m_wtable;
     const volatile SSL_Socket* m_refptr;
 
     explicit
-    Final_Fiber(const Shared_cb_args& cb, const volatile SSL_Socket* refptr)
-      : m_cb(cb), m_refptr(refptr)
+    Final_Fiber(const Easy_SSL_Server::thunk_type& thunk, const shptr<Client_Table>& table, const volatile SSL_Socket* refptr)
+      : m_thunk(thunk), m_wtable(table), m_refptr(refptr)
       { }
 
     virtual
@@ -62,7 +57,7 @@ struct Final_Fiber final : Abstract_Fiber
         for(;;) {
           // The event callback may stop this server, so we have to check for
           // expiry in every iteration.
-          auto table = this->m_cb.wtable.lock();
+          auto table = this->m_wtable.lock();
           if(!table)
             return;
 
@@ -104,10 +99,10 @@ struct Final_Fiber final : Abstract_Fiber
               // `event.data`. `data_stream` may be consumed partially by user
               // code, and shall be preserved across callbacks.
               queue->data_stream.putn(event.data.data(), event.data.size());
-              this->m_cb.thunk(socket, *this, event.type, queue->data_stream, event.code);
+              this->m_thunk(socket, *this, event.type, queue->data_stream, event.code);
             }
             else
-              this->m_cb.thunk(socket, *this, event.type, event.data, event.code);
+              this->m_thunk(socket, *this, event.type, event.data, event.code);
           }
           catch(exception& stdex) {
             // Shut the connection down asynchronously. Pending output data
@@ -125,17 +120,19 @@ struct Final_Fiber final : Abstract_Fiber
 
 struct Final_SSL_Socket final : SSL_Socket
   {
-    Shared_cb_args m_cb;
+    Easy_SSL_Server::thunk_type m_thunk;
+    wkptr<Client_Table> m_wtable;
 
     explicit
-    Final_SSL_Socket(unique_posix_fd&& fd, const Shared_cb_args& cb)
-      : SSL_Socket(::std::move(fd), network_driver.default_server_ssl_ctx()), m_cb(cb)
+    Final_SSL_Socket(unique_posix_fd&& fd, const Easy_SSL_Server::thunk_type& thunk, const shptr<Client_Table>& table)
+      : SSL_Socket(::std::move(fd), network_driver.default_server_ssl_ctx()),
+        m_thunk(thunk), m_wtable(table)
       { }
 
     void
     do_push_event_common(Connection_Event type, linear_buffer&& data, int code) const
       {
-        auto table = this->m_cb.wtable.lock();
+        auto table = this->m_wtable.lock();
         if(!table)
           return;
 
@@ -149,7 +146,7 @@ struct Final_SSL_Socket final : SSL_Socket
         if(!client_iter->second.fiber_active) {
           // Create a new fiber, if none is active. The fiber shall only reset
           // `m_fiber_private_buffer` if no event is pending.
-          fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_cb, this));
+          fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, table, this));
           client_iter->second.fiber_active = true;
         }
 
@@ -189,22 +186,23 @@ struct Final_SSL_Socket final : SSL_Socket
 
 struct Final_Listen_Socket final : Listen_Socket
   {
-    Shared_cb_args m_cb;
+    Easy_SSL_Server::thunk_type m_thunk;
+    wkptr<Client_Table> m_wtable;
 
     explicit
-    Final_Listen_Socket(const Socket_Address& addr, Shared_cb_args&& cb)
-      : Listen_Socket(addr), m_cb(::std::move(cb))
+    Final_Listen_Socket(const Socket_Address& addr, const Easy_SSL_Server::thunk_type& thunk, const shptr<Client_Table>& table)
+      : Listen_Socket(addr), m_thunk(thunk), m_wtable(table)
       { }
 
     virtual
     shptr<Abstract_Socket>
     do_on_listen_new_client_opt(Socket_Address&& addr, unique_posix_fd&& fd) override
       {
-        auto table = this->m_cb.wtable.lock();
+        auto table = this->m_wtable.lock();
         if(!table)
           return nullptr;
 
-        auto socket = new_sh<Final_SSL_Socket>(::std::move(fd), this->m_cb);
+        auto socket = new_sh<Final_SSL_Socket>(::std::move(fd), this->m_thunk, table);
         (void) addr;
 
         // We are in the network thread here.
@@ -233,8 +231,7 @@ Easy_SSL_Server::
 start(const Socket_Address& addr)
   {
     auto table = new_sh<X_Client_Table>();
-    Shared_cb_args cb = { this->m_thunk, table };
-    auto socket = new_sh<Final_Listen_Socket>(addr, ::std::move(cb));
+    auto socket = new_sh<Final_Listen_Socket>(addr, this->m_thunk, table);
 
     network_driver.insert(socket);
     this->m_client_table = ::std::move(table);

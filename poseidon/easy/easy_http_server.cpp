@@ -36,20 +36,15 @@ struct Client_Table
     unordered_map<const volatile HTTP_Server_Session*, Event_Queue> client_map;
   };
 
-struct Shared_cb_args
-  {
-    Easy_HTTP_Server::thunk_type thunk;
-    wkptr<Client_Table> wtable;
-  };
-
 struct Final_Fiber final : Abstract_Fiber
   {
-    Shared_cb_args m_cb;
+    Easy_HTTP_Server::thunk_type m_thunk;
+    wkptr<Client_Table> m_wtable;
     const volatile HTTP_Server_Session* m_refptr;
 
     explicit
-    Final_Fiber(const Shared_cb_args& cb, const volatile HTTP_Server_Session* refptr)
-      : m_cb(cb), m_refptr(refptr)
+    Final_Fiber(const Easy_HTTP_Server::thunk_type& thunk, const shptr<Client_Table>& table, const volatile HTTP_Server_Session* refptr)
+      : m_thunk(thunk), m_wtable(table), m_refptr(refptr)
       { }
 
     virtual
@@ -59,7 +54,7 @@ struct Final_Fiber final : Abstract_Fiber
         for(;;) {
           // The event callback may stop this server, so we have to check for
           // expiry in every iteration.
-          auto table = this->m_cb.wtable.lock();
+          auto table = this->m_wtable.lock();
           if(!table)
             return;
 
@@ -97,7 +92,7 @@ struct Final_Fiber final : Abstract_Fiber
           try {
             if(event.has_status == 0) {
               // Process a request.
-              this->m_cb.thunk(session, *this, ::std::move(event.req), ::std::move(event.data));
+              this->m_thunk(session, *this, ::std::move(event.req), ::std::move(event.data));
             }
             else {
               // Send a bad request response.
@@ -130,11 +125,12 @@ struct Final_Fiber final : Abstract_Fiber
 
 struct Final_HTTP_Server_Session final : HTTP_Server_Session
   {
-    Shared_cb_args m_cb;
+    Easy_HTTP_Server::thunk_type m_thunk;
+    wkptr<Client_Table> m_wtable;
 
     explicit
-    Final_HTTP_Server_Session(unique_posix_fd&& fd, const Shared_cb_args& cb)
-      : HTTP_Server_Session(::std::move(fd)), m_cb(cb)
+    Final_HTTP_Server_Session(unique_posix_fd&& fd, const Easy_HTTP_Server::thunk_type& thunk, const shptr<Client_Table>& table)
+      : HTTP_Server_Session(::std::move(fd)), m_thunk(thunk), m_wtable(table)
       { }
 
     virtual
@@ -143,7 +139,7 @@ struct Final_HTTP_Server_Session final : HTTP_Server_Session
       {
         HTTP_Server_Session::do_abstract_socket_on_closed();
 
-        auto table = this->m_cb.wtable.lock();
+        auto table = this->m_wtable.lock();
         if(!table)
           return;
 
@@ -157,7 +153,7 @@ struct Final_HTTP_Server_Session final : HTTP_Server_Session
     void
     do_on_http_request_finish(HTTP_Request_Headers&& req, linear_buffer&& data, bool close_now) override
       {
-        auto table = this->m_cb.wtable.lock();
+        auto table = this->m_wtable.lock();
         if(!table)
           return;
 
@@ -171,7 +167,7 @@ struct Final_HTTP_Server_Session final : HTTP_Server_Session
         if(!client_iter->second.fiber_active) {
           // Create a new fiber, if none is active. The fiber shall only reset
           // `m_fiber_private_buffer` if no event is pending.
-          fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_cb, this));
+          fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, table, this));
           client_iter->second.fiber_active = true;
         }
 
@@ -185,7 +181,7 @@ struct Final_HTTP_Server_Session final : HTTP_Server_Session
     void
     do_on_http_request_error(uint32_t status) override
       {
-        auto table = this->m_cb.wtable.lock();
+        auto table = this->m_wtable.lock();
         if(!table)
           return;
 
@@ -199,7 +195,7 @@ struct Final_HTTP_Server_Session final : HTTP_Server_Session
         if(!client_iter->second.fiber_active) {
           // Create a new fiber, if none is active. The fiber shall only reset
           // `m_fiber_private_buffer` if no event is pending.
-          fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_cb, this));
+          fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, table, this));
           client_iter->second.fiber_active = true;
         }
 
@@ -211,22 +207,23 @@ struct Final_HTTP_Server_Session final : HTTP_Server_Session
 
 struct Final_Listen_Socket final : Listen_Socket
   {
-    Shared_cb_args m_cb;
+    Easy_HTTP_Server::thunk_type m_thunk;
+    wkptr<Client_Table> m_wtable;
 
     explicit
-    Final_Listen_Socket(const Socket_Address& addr, Shared_cb_args&& cb)
-      : Listen_Socket(addr), m_cb(::std::move(cb))
+    Final_Listen_Socket(const Socket_Address& addr, const Easy_HTTP_Server::thunk_type& thunk, const shptr<Client_Table>& table)
+      : Listen_Socket(addr), m_thunk(thunk), m_wtable(table)
       { }
 
     virtual
     shptr<Abstract_Socket>
     do_on_listen_new_client_opt(Socket_Address&& addr, unique_posix_fd&& fd) override
       {
-        auto table = this->m_cb.wtable.lock();
+        auto table = this->m_wtable.lock();
         if(!table)
           return nullptr;
 
-        auto session = new_sh<Final_HTTP_Server_Session>(::std::move(fd), this->m_cb);
+        auto session = new_sh<Final_HTTP_Server_Session>(::std::move(fd), this->m_thunk, table);
         (void) addr;
 
         // We are in the network thread here.
@@ -255,8 +252,7 @@ Easy_HTTP_Server::
 start(const Socket_Address& addr)
   {
     auto table = new_sh<X_Client_Table>();
-    Shared_cb_args cb = { this->m_thunk, table };
-    auto socket = new_sh<Final_Listen_Socket>(addr, ::std::move(cb));
+    auto socket = new_sh<Final_Listen_Socket>(addr, this->m_thunk, table);
 
     network_driver.insert(socket);
     this->m_client_table = ::std::move(table);

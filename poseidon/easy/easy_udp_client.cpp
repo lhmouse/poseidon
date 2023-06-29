@@ -28,19 +28,14 @@ struct Packet_Queue
     bool fiber_active = false;
   };
 
-struct Shared_cb_args
-  {
-    Easy_UDP_Client::thunk_type thunk;
-    wkptr<Packet_Queue> wqueue;
-  };
-
 struct Final_Fiber final : Abstract_Fiber
   {
-    Shared_cb_args m_cb;
+    Easy_UDP_Client::thunk_type m_thunk;
+    wkptr<Packet_Queue> m_wqueue;
 
     explicit
-    Final_Fiber(const Shared_cb_args& cb)
-      : m_cb(cb)
+    Final_Fiber(const Easy_UDP_Client::thunk_type& thunk, const shptr<Packet_Queue>& queue)
+      : m_thunk(thunk), m_wqueue(queue)
       { }
 
     virtual
@@ -50,7 +45,7 @@ struct Final_Fiber final : Abstract_Fiber
         for(;;) {
           // The packet callback may stop this server, so we have to check for
           // expiry in every iteration.
-          auto queue = this->m_cb.wqueue.lock();
+          auto queue = this->m_wqueue.lock();
           if(!queue)
             return;
 
@@ -74,7 +69,7 @@ struct Final_Fiber final : Abstract_Fiber
           lock.unlock();
 
           try {
-            this->m_cb.thunk(socket, *this, ::std::move(packet.addr), ::std::move(packet.data));
+            this->m_thunk(socket, *this, ::std::move(packet.addr), ::std::move(packet.data));
           }
           catch(exception& stdex) {
             POSEIDON_LOG_ERROR((
@@ -87,18 +82,19 @@ struct Final_Fiber final : Abstract_Fiber
 
 struct Final_UDP_Socket final : UDP_Socket
   {
-    Shared_cb_args m_cb;
+    Easy_UDP_Client::thunk_type m_thunk;
+    wkptr<Packet_Queue> m_wqueue;
 
     explicit
-    Final_UDP_Socket(Shared_cb_args&& cb)
-      : UDP_Socket(), m_cb(::std::move(cb))
+    Final_UDP_Socket(const Easy_UDP_Client::thunk_type& thunk, const shptr<Packet_Queue>& queue)
+      : UDP_Socket(), m_thunk(thunk), m_wqueue(queue)
       { }
 
     virtual
     void
     do_on_udp_packet(Socket_Address&& addr, linear_buffer&& data) override
       {
-        auto queue = this->m_cb.wqueue.lock();
+        auto queue = this->m_wqueue.lock();
         if(!queue)
           return;
 
@@ -108,7 +104,7 @@ struct Final_UDP_Socket final : UDP_Socket
         if(!queue->fiber_active) {
           // Create a new fiber, if none is active. The fiber shall only reset
           // `m_fiber_active` if no packet is pending.
-          fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_cb));
+          fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, queue));
           queue->fiber_active = true;
         }
 
@@ -134,8 +130,7 @@ Easy_UDP_Client::
 open()
   {
     auto queue = new_sh<X_Packet_Queue>();
-    Shared_cb_args cb = { this->m_thunk, queue };
-    auto socket = new_sh<Final_UDP_Socket>(::std::move(cb));
+    auto socket = new_sh<Final_UDP_Socket>(this->m_thunk, queue);
     queue->wsocket = socket;
 
     network_driver.insert(socket);

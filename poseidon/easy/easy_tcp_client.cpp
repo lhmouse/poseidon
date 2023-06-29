@@ -33,19 +33,14 @@ struct Event_Queue
     bool fiber_active = false;
   };
 
-struct Shared_cb_args
-  {
-    Easy_TCP_Client::thunk_type thunk;
-    wkptr<Event_Queue> wqueue;
-  };
-
 struct Final_Fiber final : Abstract_Fiber
   {
-    Shared_cb_args m_cb;
+    Easy_TCP_Client::thunk_type m_thunk;
+    wkptr<Event_Queue> m_wqueue;
 
     explicit
-    Final_Fiber(const Shared_cb_args& cb)
-      : m_cb(cb)
+    Final_Fiber(const Easy_TCP_Client::thunk_type& thunk, const shptr<Event_Queue>& queue)
+      : m_thunk(thunk), m_wqueue(queue)
       { }
 
     virtual
@@ -55,7 +50,7 @@ struct Final_Fiber final : Abstract_Fiber
         for(;;) {
           // The event callback may stop this client, so we have to check for
           // expiry in every iteration.
-          auto queue = this->m_cb.wqueue.lock();
+          auto queue = this->m_wqueue.lock();
           if(!queue)
             return;
 
@@ -85,10 +80,10 @@ struct Final_Fiber final : Abstract_Fiber
               // `event.data`. `data_stream` may be consumed partially by user
               // code, and shall be preserved across callbacks.
               queue->data_stream.putn(event.data.data(), event.data.size());
-              this->m_cb.thunk(socket, *this, event.type, queue->data_stream, event.code);
+              this->m_thunk(socket, *this, event.type, queue->data_stream, event.code);
             }
             else
-              this->m_cb.thunk(socket, *this, event.type, event.data, event.code);
+              this->m_thunk(socket, *this, event.type, event.data, event.code);
           }
           catch(exception& stdex) {
             // Shut the connection down asynchronously. Pending output data
@@ -106,17 +101,18 @@ struct Final_Fiber final : Abstract_Fiber
 
 struct Final_TCP_Socket final : TCP_Socket
   {
-    Shared_cb_args m_cb;
+    Easy_TCP_Client::thunk_type m_thunk;
+    wkptr<Event_Queue> m_wqueue;
 
     explicit
-    Final_TCP_Socket(Shared_cb_args&& cb)
-      : TCP_Socket(), m_cb(::std::move(cb))
+    Final_TCP_Socket(const Easy_TCP_Client::thunk_type& thunk, const shptr<Event_Queue>& queue)
+      : TCP_Socket(), m_thunk(thunk), m_wqueue(queue)
       { }
 
     void
     do_push_event_common(Connection_Event type, linear_buffer&& data, int code) const
       {
-        auto queue = this->m_cb.wqueue.lock();
+        auto queue = this->m_wqueue.lock();
         if(!queue)
           return;
 
@@ -126,7 +122,7 @@ struct Final_TCP_Socket final : TCP_Socket
         if(!queue->fiber_active) {
           // Create a new fiber, if none is active. The fiber shall only reset
           // `m_fiber_private_buffer` if no event is pending.
-          fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_cb));
+          fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, queue));
           queue->fiber_active = true;
         }
 
@@ -180,10 +176,9 @@ Easy_TCP_Client::
 open(const Socket_Address& addr)
   {
     auto queue = new_sh<X_Event_Queue>();
-    Shared_cb_args cb = { this->m_thunk, queue };
-    auto socket = new_sh<Final_TCP_Socket>(::std::move(cb));
-    socket->connect(addr);
+    auto socket = new_sh<Final_TCP_Socket>(this->m_thunk, queue);
     queue->wsocket = socket;
+    socket->connect(addr);
 
     network_driver.insert(socket);
     this->m_queue = ::std::move(queue);
