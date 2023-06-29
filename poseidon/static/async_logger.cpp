@@ -347,14 +347,14 @@ thread_loop()
 
 void
 Async_Logger::
-enqueue(const Log_Context& ctx, cow_string text)
+enqueue(const Log_Context& ctx, cow_stringR text)
   {
     // Fill in the name and LWP ID of the calling thread.
     X_Log_Message msg;
     msg.ctx = ctx;
     ::pthread_getname_np(::pthread_self(), msg.thrd_name, sizeof(msg.thrd_name));
     msg.thrd_lwpid = (uint32_t) ::syscall(SYS_gettid);
-    msg.text = ::std::move(text);
+    msg.text = text;
 
     // Enqueue the element.
     plain_mutex::unique_lock lock(this->m_queue_mutex);
