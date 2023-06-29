@@ -122,7 +122,7 @@ void
 HTTP_Server_Session::
 do_on_tcp_stream(linear_buffer& data, bool eof)
   {
-    if((HTTP_PARSER_ERRNO(this->m_parser) == HPE_PAUSED) && this->m_parser->upgrade) {
+    if(this->m_upgrade_ack.load()) {
       this->do_on_http_upgraded_stream(data, eof);
       return;
     }
@@ -255,19 +255,6 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
       default:
         this->do_on_http_request_error(HTTP_STATUS_BAD_REQUEST);
         break;
-    }
-
-    if((HTTP_PARSER_ERRNO(this->m_parser) == HPE_OK) && this->m_parser->upgrade) {
-      this->m_parser->http_errno = HPE_PAUSED;
-      if(data.size() != 0) {
-        // Clients shouldn't have sent more data before the upgrade response
-        // has been received, as the server might not understand the upgraded
-        // protocol. But if they do, don't miss these data.
-        this->do_on_http_upgraded_stream(data, eof);
-      }
-
-      POSEIDON_LOG_TRACE(("HTTP parser upgrade done"));
-      return;
     }
 
     POSEIDON_LOG_TRACE(("HTTP parser done: data.size `$1`, eof `$2`"), data.size(), eof);
