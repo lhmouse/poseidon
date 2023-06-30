@@ -39,6 +39,7 @@ nobase_include_HEADERS +=  \
   %reldir%/http/http_value.hpp  \
   %reldir%/http/http_request_headers.hpp  \
   %reldir%/http/http_response_headers.hpp  \
+  %reldir%/http/http_header_parser.hpp  \
   %reldir%/easy/easy_deflator.hpp  \
   %reldir%/easy/easy_inflator.hpp  \
   %reldir%/easy/easy_timer.hpp  \
@@ -90,6 +91,7 @@ lib_libposeidon_la_SOURCES =  \
   %reldir%/http/http_value.cpp  \
   %reldir%/http/http_request_headers.cpp  \
   %reldir%/http/http_response_headers.cpp  \
+  %reldir%/http/http_header_parser.cpp  \
   %reldir%/easy/easy_timer.cpp  \
   %reldir%/easy/easy_deflator.cpp  \
   %reldir%/easy/easy_inflator.cpp  \
