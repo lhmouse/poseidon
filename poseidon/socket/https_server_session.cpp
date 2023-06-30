@@ -193,7 +193,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
               case http_message_body_empty:
                 return 1;
 
-              case http_message_body_upgrade:
+              case http_message_body_connect:
                 return 2;
 
               default:

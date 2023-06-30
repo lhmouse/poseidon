@@ -205,9 +205,9 @@ enum Connection_Event : uint8_t
 
 enum HTTP_Message_Body_Type : uint8_t
   {
-    http_message_body_normal    = 0,
-    http_message_body_empty     = 1,
-    http_message_body_upgrade   = 2,
+    http_message_body_normal   = 0,
+    http_message_body_empty    = 1,
+    http_message_body_connect  = 2,
   };
 
 // Base types

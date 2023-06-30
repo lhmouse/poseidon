@@ -68,7 +68,7 @@ class HTTP_Client_Session
     // length is described by the `Content-Length` or `Transfer-Encoding`
     // header. Returning `http_message_body_empty` indicates that the message
     // does not have a body even if it appears so, such as the response to a
-    // HEAD request. Returning `http_message_body_upgrade` causes all further
+    // HEAD request. Returning `http_message_body_connect` causes all further
     // incoming data to be delivered via `do_on_http_upgraded_stream()`. This
     // callback is primarily used to examine the status code before processing
     // response data.
