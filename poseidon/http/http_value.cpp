@@ -156,17 +156,17 @@ tinyfmt&
 HTTP_Value::
 print(tinyfmt& fmt) const
   {
-    if(auto qstr = this->m_stor.ptr<cow_string>()) {
-      // Check whether the string shall be quoted.
-      auto pos = ::std::find_if(qstr->begin(), qstr->end(), do_is_ctl_or_sep);
-      if(pos == qstr->end()) {
-        // If the string is a valid token, write it verbatim.
-        fmt.putn(qstr->data(), qstr->size());
-      }
-      else {
-        // ... no, so quote it.
+    if(this->is_null())
+      return fmt;
+
+    if(this->is_string()) {
+      // Check whether the string has to be quoted.
+      const auto& str = this->m_stor.as<cow_string>();
+      auto pos = ::std::find_if(str.begin(), str.end(), do_is_ctl_or_sep);
+      if(pos != str.end()) {
         fmt.putc('\"');
-        fmt.putn(qstr->data(), (size_t) (pos - qstr->begin()));
+
+        fmt.putn(str.data(), (size_t) (pos - str.begin()));
         do {
           if((*pos == '\\') || (*pos == '\"')) {
             // Escape it.
@@ -178,29 +178,24 @@ print(tinyfmt& fmt) const
             // Replace this sequence of control and space characters
             // with a single space.
             fmt.putc(' ');
-            pos = ::std::find_if_not(pos + 1, qstr->end(), do_is_ctl_or_ws);
+            pos = ::std::find_if_not(pos + 1, str.end(), do_is_ctl_or_ws);
           }
           else {
             // Write this sequence verbatim.
             auto from = pos;
-            pos = ::std::find_if(pos + 1, qstr->end(), do_is_ctl_or_sep);
+            pos = ::std::find_if(pos + 1, str.end(), do_is_ctl_or_sep);
             fmt.putn(&*from, (size_t) (pos - from));
           }
         }
-        while(pos != qstr->end());
+        while(pos != str.end());
+
         fmt.putc('\"');
+        return fmt;
       }
-      return fmt;
     }
 
-    if(auto qnum = this->m_stor.ptr<double>())
-      return fmt << *qnum;
-
-    if(auto qtm = this->m_stor.ptr<HTTP_DateTime>())
-      return fmt << *qtm;
-
-    // The value is null, so don't print anything.
-    ROCKET_ASSERT(this->m_stor.index() == 0);
+    // Write the value verbatim.
+    this->m_stor.visit([&](const auto& val) { fmt << val;  });
     return fmt;
   }
 
