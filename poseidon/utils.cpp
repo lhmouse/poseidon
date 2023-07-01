@@ -204,6 +204,7 @@ hex_encode_16_partial(char* str, const void* data) noexcept
     // Rearrange digits in the correct order.
     _mm_storeu_si128((__m128i*) str, _mm_unpacklo_epi8(hi, lo));
     _mm_storeu_si128((__m128i*) (str + 16), _mm_unpackhi_epi8(hi, lo));
+    str[32] = 0;
     return str;
   }
 
