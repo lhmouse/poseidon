@@ -80,6 +80,12 @@ class HTTP_DateTime
     size_t
     parse_asctime_partial(const char* str);
 
+    // Try parsing an HTTP date/time in the cookie format. An example is `Sun,
+    // 06-Nov-1994 08:49:37 GMT`. This function returns the number of characters
+    // that have been accepted, which is 29 upon success, and 0 upon failure.
+    size_t
+    parse_cookie_partial(const char* str);
+
     // Try parsing an HTTP date/time in any of the formats above. If a date/time
     // string has been parsed, the number of characters that have been consumed
     // is returned. If zero is returned or an exception is thrown, the contents
@@ -107,6 +113,13 @@ class HTTP_DateTime
     // excluding the null terminator, which is always 24.
     size_t
     print_asctime_partial(char* str) const noexcept;
+
+    // Converts this timestamp to its cookie format, with a null terminator.
+    // There shall be at least 30 characters in the buffer that `str` points to.
+    // This function returns the number of characters that have been written,
+    // excluding the null terminator, which is always 29.
+    size_t
+    print_cookie_partial(char* str) const noexcept;
 
     // Converts this timestamp to its string form, according to RFC 1123.
     tinyfmt&

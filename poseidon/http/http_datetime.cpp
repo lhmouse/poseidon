@@ -282,29 +282,59 @@ parse_asctime_partial(const char* str)
 
 size_t
 HTTP_DateTime::
+parse_cookie_partial(const char* str)
+  {
+    const char* rptr = str;
+    ::tm tm = { };
+
+    // `Sun, 06-Nov-1994 08:49:37 GMT`
+    do_match(rptr, tm.tm_wday, s_weekday, 3);
+    do_match(rptr, ", ", 2);
+    do_match(rptr, tm.tm_mday, s_2digit, 2);
+    do_match(rptr, "-", 1);
+    do_match(rptr, tm.tm_mon, s_month, 3);
+    do_match(rptr, "-", 1);
+    do_match(rptr, tm.tm_year, s_2digit, 2);
+    tm.tm_year = tm.tm_year * 100 - 1900;
+    do_match(rptr, tm.tm_year, s_2digit, 2);
+    do_match(rptr, " ", 1);
+    do_match(rptr, tm.tm_hour, s_2digit, 2);
+    do_match(rptr, ":", 1);
+    do_match(rptr, tm.tm_min, s_2digit, 2);
+    do_match(rptr, ":", 1);
+    do_match(rptr, tm.tm_sec, s_2digit, 2);
+    do_match(rptr, " GMT", 4);
+
+    // Accept nothing if any of the operations above has failed.
+    if(rptr == nullptr)
+      return 0;
+
+    // Compose the timestamp and return the number of characters
+    // that have been accepted.
+    this->m_tp = (unix_time)(seconds) ::timegm(&tm);
+    return (size_t) (rptr - str);
+  }
+
+size_t
+HTTP_DateTime::
 parse(const char* str, size_t len)
   {
-    // A string with an erroneous length will not be accepted, so
-    // we just need to check for possibilities by `len`.
+    if(len == 0)
+      return 0;
+
     size_t acc_len = 0;
 
-    if(len >= 30) {
-      acc_len = this->parse_rfc850_partial(str);  // 30
+    if((len >= 29) && (acc_len == 0))
+      acc_len = this->parse_rfc1123_partial(str);
 
-      if(acc_len == 0)
-        acc_len = this->parse_rfc1123_partial(str);  // 29
+    if((len >= 30) && (acc_len == 0))
+      acc_len = this->parse_rfc850_partial(str);
 
-      if(acc_len == 0)
-        acc_len = this->parse_asctime_partial(str);  // 24
-    }
-    else if(len >= 29) {
-      acc_len = this->parse_rfc1123_partial(str);  // 29
+    if((len >= 24) && (acc_len == 0))
+      acc_len = this->parse_asctime_partial(str);
 
-      if(acc_len == 0)
-        acc_len = this->parse_asctime_partial(str);  // 24
-    }
-    else if(len >= 24)
-      acc_len = this->parse_asctime_partial(str);  // 24
+    if((len >= 29) && (acc_len == 0))
+      acc_len = this->parse_cookie_partial(str);
 
     return acc_len;
   }
@@ -394,6 +424,36 @@ print_asctime_partial(char* str) const noexcept
     xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_year / 100 + 19], 2);
     xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_year % 100], 2);
     xstrrpcpy(wptr, "");
+
+    // Return the number of characters that have been written.
+    return (size_t) (wptr - str);
+  }
+
+size_t
+HTTP_DateTime::
+print_cookie_partial(char* str) const noexcept
+  {
+    char* wptr = str;
+    ::time_t tp = this->m_tp.time_since_epoch().count();
+    ::tm tm;
+    ::gmtime_r(&tp, &tm);
+
+    // `Sun, 06-Nov-1994 08:49:37 GMT`
+    xmemrpcpy(wptr, s_weekday[(uint32_t) tm.tm_wday], 3);
+    xstrrpcpy(wptr, ", ");
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_mday], 2);
+    xstrrpcpy(wptr, "-");
+    xmemrpcpy(wptr, s_month[(uint32_t) tm.tm_mon], 3);
+    xstrrpcpy(wptr, "-");
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_year / 100 + 19], 2);
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_year % 100], 2);
+    xstrrpcpy(wptr, " ");
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_hour], 2);
+    xstrrpcpy(wptr, ":");
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_min], 2);
+    xstrrpcpy(wptr, ":");
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_sec], 2);
+    xstrrpcpy(wptr, " GMT");
 
     // Return the number of characters that have been written.
     return (size_t) (wptr - str);
