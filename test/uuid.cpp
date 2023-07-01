@@ -27,8 +27,8 @@ main()
     POSEIDON_TEST_CHECK(tid == ((uuid::fields) { 0xef8a3765,0xa4f4,0x4d24,0x9c72,0xee61d7b1253d }));
 
     char uuid_dstr[64];
+    ::memset(uuid_dstr, '*', sizeof(uuid_dstr));
     tid.print_partial(uuid_dstr);
-    uuid_dstr[36] = 0;
     POSEIDON_TEST_CHECK(::strcmp(uuid_dstr, "EF8A3765-A4F4-4D24-9C72-EE61D7B1253D") == 0);
 
     uuid t1 = uuid::random();

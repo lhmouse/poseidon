@@ -190,8 +190,8 @@ print_partial(char* str) const noexcept
     lo = _mm_add_epi8(_mm_add_epi8(lo, _mm_set1_epi8('0')), tval);
 
     // Insert dashes first. Instead of writing four dashes into `str[8]`,
-    // `str[13]`, `str[18]` and `str[23]`, we can overwrite that 16-byte
-    // range with a single store operation.
+    // `str[13]`, `str[18]` and `str[23]`, we can overwrite that 16-byte range
+    // with a single store operation.
     _mm_storeu_si128((__m128i*) (str + 8), _mm_set1_epi8('-'));
 
     tval = _mm_unpacklo_epi8(hi, lo);
@@ -204,8 +204,9 @@ print_partial(char* str) const noexcept
     _mm_storeu_si32(str + 24, _mm_bsrli_si128(tval, 4));
     _mm_storeu_si64(str + 28, _mm_bsrli_si128(tval, 8));
 
-    // Return the number of characters that have been written, which is
-    // always `36` for this function.
+    // Return the number of characters that have been written, not including
+    // the null terminator.
+    str[36] = 0;
     return 36;
   }
 
