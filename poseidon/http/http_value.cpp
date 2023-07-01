@@ -12,11 +12,20 @@ bool
 do_is_ctl_or_sep(char ch) noexcept
   {
     // https://www.rfc-editor.org/rfc/rfc2616#section-2.2
-    return ((ch >= 0x00) && (ch <= 0x20)) || (ch == '(') || (ch == ')')
-           || (ch == '<') || (ch == '>') || (ch == '@') || (ch == ',')
-           || (ch == ';') || (ch == ':') || (ch == '\\') || (ch == '\"')
+    return ((ch >= 0x00) && (ch <= 0x20)) || (ch == 0x7F)
+           || (ch == '\\') || (ch == '\"')
+           || (ch == '(') || (ch == ')') || (ch == '<') || (ch == '>')
+           || (ch == '@') || (ch == ',') || (ch == ';') || (ch == ':')
            || (ch == '/') || (ch == '[') || (ch == ']') || (ch == '?')
            || (ch == '=') || (ch == '{') || (ch == '}');
+  }
+
+constexpr
+bool
+do_is_ctl_or_unquoted_sep(char ch) noexcept
+  {
+    return ((ch >= 0x00) && (ch <= 0x20)) || (ch == 0x7F)
+           || (ch == '=') || (ch == ',') || (ch == ';');
   }
 
 constexpr
@@ -110,6 +119,18 @@ parse_token_partial(const char* str, size_t len)
 
 size_t
 HTTP_Value::
+parse_unquoted_partial(const char* str, size_t len)
+  {
+    auto pos = ::std::find_if(str, str + len, do_is_ctl_or_unquoted_sep);
+    if(pos == str)
+      return 0;
+
+    this->m_stor = cow_string(str, pos);
+    return (size_t) (pos - str);
+  }
+
+size_t
+HTTP_Value::
 parse(const char* str, size_t len)
   {
     if(len == 0)
@@ -147,7 +168,7 @@ parse(const char* str, size_t len)
 
     // If previous attempts have failed, try this generic one.
     if(acc_len == 0)
-      acc_len = this->parse_token_partial(str, len);
+      acc_len = this->parse_unquoted_partial(str, len);
 
     return acc_len;
   }

@@ -196,13 +196,21 @@ class HTTP_Value
     size_t
     parse_token_partial(const char* str, size_t len);
 
+    // Try parsing an HTTP unquoted string and store it. This is a more
+    // permissive variant of a token. All characters other than whitespace,
+    // control characters, `=`, `,` and `;` are accepted. Upon success, the
+    // number of characters that have been accepted is returned. Otherwise zero
+    // is returned, and the contents of this object are indeterminate.
+    size_t
+    parse_unquoted_partial(const char* str, size_t len);
+
     // Try parsing an HTTP value, possibly from an HTTP header. The string is
     // matched against these rules (in this order):
     //
     // * a quoted string, enclosed in a pair of double quotes
     // * a floating-point number, starting with a digit
     // * an HTTP date/time, starting with a weekday
-    // * an HTTP token
+    // * an HTTP unquoted string
     //
     // If a match is found and parsed accordingly, the number of characters
     // that have been consumed is returned. Otherwise zero is  returned, and
