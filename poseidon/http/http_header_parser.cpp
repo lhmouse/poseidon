@@ -28,7 +28,7 @@ do_next_attribute_from_separator()
     // Skip the current separator.
     size_t& hpos = this->m_hpos;
     hpos ++;
-    ROCKET_ASSERT(hpos < this->m_hstr.size());
+    ROCKET_ASSERT(hpos <= this->m_hstr.size());
 
     // Skip whitespace and attribute separators. This function shall not move
     // across element boundaries.
