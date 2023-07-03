@@ -25,7 +25,7 @@ bool
 do_is_ctl_or_unquoted_sep(char ch) noexcept
   {
     return ((ch >= 0x00) && (ch <= 0x20)) || (ch == 0x7F)
-           || (ch == '=') || (ch == ',') || (ch == ';');
+           || (ch == ',') || (ch == ';');
   }
 
 constexpr
