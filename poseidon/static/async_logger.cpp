@@ -269,13 +269,8 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
 
 }  // namespace
 
-struct POSEIDON_VISIBILITY_HIDDEN Async_Logger::X_Level_Config : Level_Config
-  {
-  };
-
-struct POSEIDON_VISIBILITY_HIDDEN Async_Logger::X_Log_Message : Log_Message
-  {
-  };
+POSEIDON_HIDDEN_X_STRUCT(Async_Logger, Level_Config);
+POSEIDON_HIDDEN_X_STRUCT(Async_Logger, Log_Message);
 
 Async_Logger::
 Async_Logger()

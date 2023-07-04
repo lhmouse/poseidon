@@ -216,9 +216,7 @@ struct Final_Listen_Socket final : Listen_Socket
 
 }  // namespace
 
-struct POSEIDON_VISIBILITY_HIDDEN Easy_TCP_Server::X_Client_Table : Client_Table
-  {
-  };
+POSEIDON_HIDDEN_X_STRUCT(Easy_TCP_Server, Client_Table);
 
 Easy_TCP_Server::
 ~Easy_TCP_Server()

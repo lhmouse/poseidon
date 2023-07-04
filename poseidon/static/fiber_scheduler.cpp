@@ -110,9 +110,7 @@ struct Fiber_Comparator
 
 }  // namespace
 
-struct POSEIDON_VISIBILITY_HIDDEN Fiber_Scheduler::X_Queued_Fiber : Queued_Fiber
-  {
-  };
+POSEIDON_HIDDEN_X_STRUCT(Fiber_Scheduler, Queued_Fiber);
 
 Fiber_Scheduler::
 Fiber_Scheduler()

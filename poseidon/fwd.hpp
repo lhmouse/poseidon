@@ -29,6 +29,14 @@
 namespace poseidon {
 namespace noadl = poseidon;
 
+// Macros
+#define POSEIDON_HIDDEN_X_STRUCT(C, S)  \
+  struct __attribute__((__visibility__("hidden"))) C::X_##S : S  \
+    {  \
+      using S::S;  \
+      using S::operator=;  \
+    }  // no semicolon
+
 #define POSEIDON_VISIBILITY_HIDDEN   __attribute__((__visibility__("hidden")))
 
 // Aliases

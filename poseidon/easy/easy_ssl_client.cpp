@@ -163,9 +163,7 @@ struct Final_SSL_Socket final : SSL_Socket
 
 }  // namespace
 
-struct POSEIDON_VISIBILITY_HIDDEN Easy_SSL_Client::X_Event_Queue : Event_Queue
-  {
-  };
+POSEIDON_HIDDEN_X_STRUCT(Easy_SSL_Client, Event_Queue);
 
 Easy_SSL_Client::
 ~Easy_SSL_Client()

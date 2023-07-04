@@ -116,9 +116,7 @@ struct Final_UDP_Socket final : UDP_Socket
 
 }  // namespace
 
-struct POSEIDON_VISIBILITY_HIDDEN Easy_UDP_Client::X_Packet_Queue : Packet_Queue
-  {
-  };
+POSEIDON_HIDDEN_X_STRUCT(Easy_UDP_Client, Packet_Queue);
 
 Easy_UDP_Client::
 ~Easy_UDP_Client()
