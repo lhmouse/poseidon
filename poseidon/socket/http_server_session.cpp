@@ -13,6 +13,7 @@ HTTP_Server_Session(unique_posix_fd&& fd)
   : TCP_Socket(::std::move(fd))  // server constructor
   {
     ::http_parser_init(this->m_parser, HTTP_REQUEST);
+    this->m_parser->allow_chunked_length = true;
     this->m_parser->data = this;
   }
 

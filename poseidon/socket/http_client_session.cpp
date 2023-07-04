@@ -13,6 +13,7 @@ HTTP_Client_Session()
   : TCP_Socket()  // client constructor
   {
     ::http_parser_init(this->m_parser, HTTP_RESPONSE);
+    this->m_parser->allow_chunked_length = true;
     this->m_parser->data = this;
   }
 
