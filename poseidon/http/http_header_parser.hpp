@@ -34,23 +34,13 @@ class HTTP_Header_Parser
         this->reload(hstr);
       }
 
-    HTTP_Header_Parser&
-    swap(HTTP_Header_Parser& other) noexcept
-      {
-        this->m_hstr.swap(other.m_hstr);
-        ::std::swap(this->m_hpos, other.m_hpos);
-        this->m_name.swap(other.m_name);
-        this->m_value.swap(other.m_value);
-        return *this;
-      }
-
   private:
     inline
     int
     do_next_attribute_from_separator();
 
   public:
-    ASTERIA_COPYABLE_DESTRUCTOR(HTTP_Header_Parser);
+    ASTERIA_NONCOPYABLE_DESTRUCTOR(HTTP_Header_Parser);
 
     // Has an error occurred?
     bool
@@ -104,13 +94,6 @@ class HTTP_Header_Parser
     mut_current_value() noexcept
       { return this->m_value;  }
   };
-
-inline
-void
-swap(HTTP_Header_Parser& lhs, HTTP_Header_Parser& rhs) noexcept
-  {
-    lhs.swap(rhs);
-  }
 
 }  // namespace poseidon
 #endif
