@@ -73,15 +73,6 @@ class HTTP_Header_Parser
     mut_current_name() noexcept
       { return this->m_name;  }
 
-    constexpr
-    bool
-    current_name_equals(cow_stringR cmp) const noexcept
-      {
-        return ::rocket::ascii_ci_equal(
-                    this->m_name.data(), this->m_name.size(),
-                    cmp.data(), cmp.size());
-      }
-
     // Get the value of the current attribute.
     constexpr
     const HTTP_Value&

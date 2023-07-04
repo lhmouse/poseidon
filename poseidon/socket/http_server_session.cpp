@@ -371,8 +371,8 @@ http_response(HTTP_Response_Headers&& resp, const char* data, size_t size)
 
     // Erase bad headers.
     for(size_t hindex = 0;  hindex < resp.headers.size();  hindex ++)
-      if(resp.header_name_equals(hindex, sref("Content-Length"))
-          || resp.header_name_equals(hindex, sref("Transfer-Encoding")))
+      if(ascii_ci_equal(resp.headers.at(hindex).first, sref("Content-Length"))
+         || ascii_ci_equal(resp.headers.at(hindex).first, sref("Transfer-Encoding")))
         resp.headers.erase(hindex --);
 
     // Some responses are required to have no payload body and require no
@@ -399,7 +399,7 @@ http_chunked_response_start(HTTP_Response_Headers&& resp)
 
     // Erase bad headers.
     for(size_t hindex = 0;  hindex < resp.headers.size();  hindex ++)
-      if(resp.header_name_equals(hindex, sref("Transfer-Encoding")))
+      if(ascii_ci_equal(resp.headers.at(hindex).first, sref("Transfer-Encoding")))
         resp.headers.erase(hindex --);
 
     // Write a chunked header.

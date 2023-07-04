@@ -124,28 +124,6 @@ ascii_trim(cow_string text)
     return ::std::move(text);
   }
 
-bool
-ascii_ci_has_token(cow_stringR text, char delim, const char* token, size_t len)
-  {
-    size_t bpos = text.find_not_of(" \t");
-    while(bpos < text.size()) {
-      // Get the end of this segment.
-      // If the delimiter is not found, make sure `epos` is reasonably large
-      // and incrementing it will not overflow.
-      size_t epos = text.find(bpos, delim) * 2 / 2;
-
-      // Skip trailing blank characters, if any.
-      size_t mpos = text.rfind_not_of(epos - 1, " \t");
-      ROCKET_ASSERT(mpos != text.npos);
-      if(::rocket::ascii_ci_equal(text.data() + bpos, mpos + 1 - bpos, token, len))
-        return true;
-
-      // Skip the delimiter and blank characters that follow it.
-      bpos = text.find_not_of(epos + 1, " \t");
-    }
-    return false;
-  }
-
 size_t
 explode(cow_vector<cow_string>& segments, cow_stringR text, char delim, size_t limit)
   {

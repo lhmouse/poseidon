@@ -67,35 +67,6 @@ ascii_ci_equal(const StringT& text, const OtherT& other)
     return ::rocket::ascii_ci_equal(text.c_str(), text.length(), other.c_str(), other.length());
   }
 
-// Checks whether this list contains the specified token.
-// Tokens are case-insensitive.
-ROCKET_PURE
-bool
-ascii_ci_has_token(cow_stringR text, char delim, const char* token, size_t len);
-
-template<typename OtherT>
-inline
-bool
-ascii_ci_has_token(cow_stringR text, char delim, const OtherT& other)
-  {
-    return noadl::ascii_ci_has_token(text, delim, other.c_str(), other.length());
-  }
-
-ROCKET_PURE inline
-bool
-ascii_ci_has_token(cow_stringR text, const char* token, size_t len)
-  {
-    return noadl::ascii_ci_has_token(text, ',', token, len);
-  }
-
-template<typename OtherT>
-inline
-bool
-ascii_ci_has_token(cow_stringR text, const OtherT& other)
-  {
-    return noadl::ascii_ci_has_token(text, other.c_str(), other.length());
-  }
-
 // Splits a string into a vector of tokens, and vice versa.
 size_t
 explode(cow_vector<cow_string>& segments, cow_stringR text, char delim = ',', size_t limit = SIZE_MAX);
