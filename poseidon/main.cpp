@@ -12,8 +12,6 @@
 #include "utils.hpp"
 #include <locale.h>
 #include <signal.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <stdarg.h>
 #include <dlfcn.h>
 #include <pthread.h>
@@ -564,7 +562,6 @@ main(int argc, char** argv)
     ::tzset();
     ::pthread_setname_np(::pthread_self(), PACKAGE);
     ::pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &::opterr);
-    ::srandom((uint32_t) ::clock());
 
     // Note that this function shall not return in case of errors.
     do_parse_command_line(argc, argv);
