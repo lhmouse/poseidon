@@ -11,7 +11,10 @@ namespace poseidon {
 class Socket_Address
   {
   private:
-    ::in6_addr m_addr;
+    union {
+      ::in6_addr m_addr;
+      __m128i m_addr_stor;
+    };
     uint16_t m_port;
 
   public:
@@ -95,8 +98,8 @@ class Socket_Address
     bool
     equals(const Socket_Address& other) const noexcept
       {
-        __m128i tval = _mm_loadu_si128((const __m128i*) &(this->m_addr));
-        __m128i oval = _mm_loadu_si128((const __m128i*) &(other.m_addr));
+        __m128i tval = _mm_loadu_si128(&(this->m_addr_stor));
+        __m128i oval = _mm_loadu_si128(&(other.m_addr_stor));
         int cmp = _mm_movemask_epi8(_mm_cmpeq_epi8(tval, oval));  // low 16-bits := 0xFFFF if equal
         cmp |= (int) (this->m_port ^ other.m_port) << 16;  // high 16-bits := 0 if equal
         return cmp == 0xFFFF;
