@@ -374,19 +374,19 @@ struct Log_Context
 
 ROCKET_CONST
 bool
-do_async_logger_check_level(Log_Level level) noexcept;
+async_logger_check_level(Log_Level level) noexcept;
 
 void
-do_async_logger_enqueue(const Log_Context& ctx, vfptr<cow_string&, const void*> invoke, const void* compose) noexcept;
+async_logger_enqueue(const Log_Context& ctx, vfptr<cow_string&, const void*> invoke, const void* compose) noexcept;
 
 template<typename... ParamsT>
 static ROCKET_ALWAYS_INLINE
 bool
-do_async_logger_enqueue_generic(const Log_Context& ctx, const ParamsT&... params) noexcept
+async_logger_enqueue_generic(const Log_Context& ctx, const ParamsT&... params) noexcept
   {
     const auto compose = [&](cow_string& sbuf) { ::asteria::format(sbuf, params...);  };
     constexpr auto invoke = +[](cow_string& sbuf, const void* vp) { (*(decltype(compose)*) vp) (sbuf);  };
-    noadl::do_async_logger_enqueue(ctx, invoke, &compose);
+    noadl::async_logger_enqueue(ctx, invoke, &compose);
     return true;
   }
 
@@ -394,8 +394,8 @@ do_async_logger_enqueue_generic(const Log_Context& ctx, const ParamsT&... params
 // shall be a list of string literals in parentheses. Multiple strings are
 // joined with line separators.
 #define POSEIDON_LOG_GENERIC(LEVEL, TEMPLATE, ...)  \
-  (::poseidon::do_async_logger_check_level(::poseidon::log_level_##LEVEL)  \
-   && ::poseidon::do_async_logger_enqueue_generic(  \
+  (::poseidon::async_logger_check_level(::poseidon::log_level_##LEVEL)  \
+   && ::poseidon::async_logger_enqueue_generic(  \
           { __FILE__, __LINE__, ::poseidon::log_level_##LEVEL, __FUNCTION__ }, \
             (::asteria::make_string_template TEMPLATE), ##__VA_ARGS__))
 
