@@ -42,8 +42,7 @@ struct POSEIDON_VISIBILITY_HIDDEN Timer_Driver::X_Queued_Timer : Queued_Timer
 Timer_Driver::
 Timer_Driver()
   {
-    // Generate a random serial.
-    this->m_serial = (uint64_t) ::random();
+    this->m_serial = generate_random_seed();
   }
 
 Timer_Driver::
