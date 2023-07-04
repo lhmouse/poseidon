@@ -128,7 +128,7 @@ struct Final_HTTPS_Client_Session final : HTTPS_Client_Session
 
 }  // namespace
 
-struct Easy_HTTPS_Client::X_Event_Queue : Event_Queue
+struct POSEIDON_VISIBILITY_HIDDEN Easy_HTTPS_Client::X_Event_Queue : Event_Queue
   {
   };
 

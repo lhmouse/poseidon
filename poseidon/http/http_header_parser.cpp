@@ -21,6 +21,7 @@ reload(cow_stringR hstr)
     this->m_value.clear();
   }
 
+POSEIDON_VISIBILITY_HIDDEN
 int
 HTTP_Header_Parser::
 do_next_attribute_from_separator()

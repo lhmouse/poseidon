@@ -32,7 +32,6 @@ class Network_Driver
     Network_Driver();
 
   private:
-    inline
     void
     do_epoll_ctl(int op, shptrR<Abstract_Socket> socket, uint32_t events);
 

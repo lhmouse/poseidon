@@ -28,31 +28,24 @@ class HTTPS_Server_Session
     HTTPS_Server_Session(unique_posix_fd&& fd, const SSL_CTX_ptr& ssl_ctx);
 
   private:
-    inline
     void
     do_http_parser_on_message_begin();
 
-    inline
     void
     do_http_parser_on_uri(uint32_t method, const char* str, size_t len);
 
-    inline
     void
     do_http_parser_on_header_field(const char* str, size_t len);
 
-    inline
     void
     do_http_parser_on_header_value(const char* str, size_t len);
 
-    inline
     HTTP_Message_Body_Type
     do_http_parser_on_headers_complete();
 
-    inline
     void
     do_http_parser_on_body(const char* str, size_t len);
 
-    inline
     void
     do_http_parser_on_message_complete(bool close_now);
 

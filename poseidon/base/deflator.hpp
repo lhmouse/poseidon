@@ -22,15 +22,12 @@ class Deflator
     Deflator(zlib_Format format, int level = 8, int wbits = 15);
 
   private:
-    inline
     void
     do_deflate_prepare(const char* data);
 
-    inline
     int
     do_deflate(uint8_t*& end_out, int flush);
 
-    inline
     void
     do_deflate_cleanup(uint8_t* end_out);
 

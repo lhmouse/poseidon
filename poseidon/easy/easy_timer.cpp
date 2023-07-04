@@ -115,7 +115,7 @@ struct Final_Timer final : Abstract_Timer
 
 }  // namespace
 
-struct Easy_Timer::X_Event_Queue : Event_Queue
+struct POSEIDON_VISIBILITY_HIDDEN Easy_Timer::X_Event_Queue : Event_Queue
   {
   };
 

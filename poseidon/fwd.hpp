@@ -29,6 +29,8 @@
 namespace poseidon {
 namespace noadl = poseidon;
 
+#define POSEIDON_VISIBILITY_HIDDEN   __attribute__((__visibility__("hidden")))
+
 // Aliases
 using ::std::initializer_list;
 using ::std::nullptr_t;
@@ -378,7 +380,7 @@ void
 do_async_logger_enqueue(const Log_Context& ctx, vfptr<cow_string&, const void*> invoke, const void* compose) noexcept;
 
 template<typename... ParamsT>
-inline
+static ROCKET_ALWAYS_INLINE
 bool
 do_async_logger_enqueue_generic(const Log_Context& ctx, const ParamsT&... params) noexcept
   {

@@ -22,6 +22,7 @@ HTTP_Client_Session::
   {
   }
 
+POSEIDON_VISIBILITY_HIDDEN
 void
 HTTP_Client_Session::
 do_http_parser_on_message_begin()
@@ -32,6 +33,7 @@ do_http_parser_on_message_begin()
     this->m_body.clear();
   }
 
+POSEIDON_VISIBILITY_HIDDEN
 void
 HTTP_Client_Session::
 do_http_parser_on_status(uint32_t status, const char* str, size_t len)
@@ -51,6 +53,7 @@ do_http_parser_on_status(uint32_t status, const char* str, size_t len)
       this->m_resp.reason.append(str, len);
   }
 
+POSEIDON_VISIBILITY_HIDDEN
 void
 HTTP_Client_Session::
 do_http_parser_on_header_field(const char* str, size_t len)
@@ -79,6 +82,7 @@ do_http_parser_on_header_field(const char* str, size_t len)
     this->m_resp.headers.mut_back().first.append(str, len);
   }
 
+POSEIDON_VISIBILITY_HIDDEN
 void
 HTTP_Client_Session::
 do_http_parser_on_header_value(const char* str, size_t len)
@@ -92,6 +96,7 @@ do_http_parser_on_header_value(const char* str, size_t len)
     this->m_body.putn(str, len);
   }
 
+POSEIDON_VISIBILITY_HIDDEN
 HTTP_Message_Body_Type
 HTTP_Client_Session::
 do_http_parser_on_headers_complete()
@@ -115,6 +120,7 @@ do_http_parser_on_headers_complete()
     return this->do_on_http_response_headers(this->m_resp);
   }
 
+POSEIDON_VISIBILITY_HIDDEN
 void
 HTTP_Client_Session::
 do_http_parser_on_body(const char* str, size_t len)
@@ -123,6 +129,7 @@ do_http_parser_on_body(const char* str, size_t len)
     this->do_on_http_response_body_stream(this->m_body);
   }
 
+POSEIDON_VISIBILITY_HIDDEN
 void
 HTTP_Client_Session::
 do_http_parser_on_message_complete(bool close_now)

@@ -35,7 +35,7 @@ struct Timer_Comparator
 
 }  // namespace
 
-struct Timer_Driver::X_Queued_Timer : Queued_Timer
+struct POSEIDON_VISIBILITY_HIDDEN Timer_Driver::X_Queued_Timer : Queued_Timer
   {
   };
 

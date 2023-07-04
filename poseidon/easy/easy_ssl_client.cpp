@@ -163,7 +163,7 @@ struct Final_SSL_Socket final : SSL_Socket
 
 }  // namespace
 
-struct Easy_SSL_Client::X_Event_Queue : Event_Queue
+struct POSEIDON_VISIBILITY_HIDDEN Easy_SSL_Client::X_Event_Queue : Event_Queue
   {
   };
 

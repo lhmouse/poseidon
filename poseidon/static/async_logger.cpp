@@ -269,11 +269,11 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
 
 }  // namespace
 
-struct Async_Logger::X_Level_Config : Level_Config
+struct POSEIDON_VISIBILITY_HIDDEN Async_Logger::X_Level_Config : Level_Config
   {
   };
 
-struct Async_Logger::X_Log_Message : Log_Message
+struct POSEIDON_VISIBILITY_HIDDEN Async_Logger::X_Log_Message : Log_Message
   {
   };
 

@@ -29,6 +29,7 @@ Network_Driver::
   {
   }
 
+POSEIDON_VISIBILITY_HIDDEN
 void
 Network_Driver::
 do_epoll_ctl(int op, shptrR<Abstract_Socket> socket, uint32_t events)

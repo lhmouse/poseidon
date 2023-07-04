@@ -116,7 +116,7 @@ struct Final_UDP_Socket final : UDP_Socket
 
 }  // namespace
 
-struct Easy_UDP_Client::X_Packet_Queue : Packet_Queue
+struct POSEIDON_VISIBILITY_HIDDEN Easy_UDP_Client::X_Packet_Queue : Packet_Queue
   {
   };
 

@@ -110,7 +110,7 @@ struct Fiber_Comparator
 
 }  // namespace
 
-struct Fiber_Scheduler::X_Queued_Fiber : Queued_Fiber
+struct POSEIDON_VISIBILITY_HIDDEN Fiber_Scheduler::X_Queued_Fiber : Queued_Fiber
   {
   };
 
@@ -124,6 +124,7 @@ Fiber_Scheduler::
   {
   }
 
+POSEIDON_VISIBILITY_HIDDEN
 void
 Fiber_Scheduler::
 do_fiber_function() noexcept
@@ -159,6 +160,7 @@ do_fiber_function() noexcept
     asan_fiber_switch_start(this->m_sched_asan_save, elem->sched_inner->uc_link);
   }
 
+POSEIDON_VISIBILITY_HIDDEN
 void
 Fiber_Scheduler::
 do_yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override)

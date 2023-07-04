@@ -33,7 +33,6 @@ class HTTP_Header_Parser
       }
 
   private:
-    inline
     int
     do_next_attribute_from_separator();
 

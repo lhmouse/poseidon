@@ -36,6 +36,7 @@ clear() noexcept
           this, typeid(*this), err, this->m_strm.message(err));
   }
 
+POSEIDON_VISIBILITY_HIDDEN
 void
 Deflator::
 do_deflate_prepare(const char* data)
@@ -46,6 +47,7 @@ do_deflate_prepare(const char* data)
     this->m_strm->avail_out = 0;
   }
 
+POSEIDON_VISIBILITY_HIDDEN
 int
 Deflator::
 do_deflate(uint8_t*& end_out, int flush)
@@ -71,6 +73,7 @@ do_deflate(uint8_t*& end_out, int flush)
     return ::deflate(this->m_strm, flush);
   }
 
+POSEIDON_VISIBILITY_HIDDEN
 void
 Deflator::
 do_deflate_cleanup(uint8_t* end_out)

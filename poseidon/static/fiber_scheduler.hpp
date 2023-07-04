@@ -33,11 +33,9 @@ class Fiber_Scheduler
     Fiber_Scheduler();
 
   private:
-    inline
     void
     do_fiber_function() noexcept;
 
-    inline
     void
     do_yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override);
 

@@ -33,6 +33,7 @@ clear() noexcept
           this, typeid(*this), err, this->m_strm.message(err));
   }
 
+POSEIDON_VISIBILITY_HIDDEN
 void
 Inflator::
 do_inflate_prepare(const char* data)
@@ -43,6 +44,7 @@ do_inflate_prepare(const char* data)
     this->m_strm->avail_out = 0;
   }
 
+POSEIDON_VISIBILITY_HIDDEN
 int
 Inflator::
 do_inflate(uint8_t*& end_out, int flush)
@@ -68,6 +70,7 @@ do_inflate(uint8_t*& end_out, int flush)
     return ::inflate(this->m_strm, flush);
   }
 
+POSEIDON_VISIBILITY_HIDDEN
 void
 Inflator::
 do_inflate_cleanup(uint8_t* end_out)

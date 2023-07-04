@@ -162,7 +162,7 @@ struct Final_TCP_Socket final : TCP_Socket
 
 }  // namespace
 
-struct Easy_TCP_Client::X_Event_Queue : Event_Queue
+struct POSEIDON_VISIBILITY_HIDDEN Easy_TCP_Client::X_Event_Queue : Event_Queue
   {
   };
 
