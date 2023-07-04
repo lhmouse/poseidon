@@ -14,6 +14,7 @@ HTTPS_Client_Session(const SSL_CTX_ptr& ssl_ctx)
   {
     this->do_ssl_alpn_request("http/1.1");
     ::http_parser_init(this->m_parser, HTTP_RESPONSE);
+    this->m_parser->allow_chunked_length = true;
     this->m_parser->data = this;
   }
 
