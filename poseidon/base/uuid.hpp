@@ -48,7 +48,6 @@ class uuid
         uint8_t m_data_5_1;
         uint8_t m_data_5_0;
       };
-
       uint8_t m_bytes[16];
       __m128i m_stor;
     };
