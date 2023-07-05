@@ -24,6 +24,7 @@ class HTTP_Header_Parser
     // Constructs a parser for a single HTTP header, suitable for parsing
     // various HTTP headers in the semicolon-inside-comma-separated format,
     // such as `Cookie` and `Accept-Encoding`.
+    constexpr
     HTTP_Header_Parser() noexcept = default;
 
     explicit
