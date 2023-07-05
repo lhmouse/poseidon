@@ -353,8 +353,8 @@ https_request(HTTP_Request_Headers&& req, const char* data, size_t size)
 
     // Erase bad headers.
     for(size_t hindex = 0;  hindex < req.headers.size();  hindex ++)
-      if(req.header_name_equals(hindex, sref("Content-Length"))
-          || req.header_name_equals(hindex, sref("Transfer-Encoding")))
+      if(ascii_ci_equal(req.headers.at(hindex).first, sref("Content-Length"))
+          || ascii_ci_equal(req.headers.at(hindex).first, sref("Transfer-Encoding")))
         req.headers.erase(hindex --);
 
     // By default, request messages do not have bodies. Hence the length is
@@ -377,7 +377,7 @@ https_chunked_request_start(HTTP_Request_Headers&& req)
 
     // Erase bad headers.
     for(size_t hindex = 0;  hindex < req.headers.size();  hindex ++)
-      if(req.header_name_equals(hindex, sref("Transfer-Encoding")))
+      if(ascii_ci_equal(req.headers.at(hindex).first, sref("Transfer-Encoding")))
         req.headers.erase(hindex --);
 
     // Write a chunked header.

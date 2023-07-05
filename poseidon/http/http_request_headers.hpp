@@ -27,15 +27,6 @@ struct HTTP_Request_Headers
         return *this;
       }
 
-    bool
-    header_name_equals(size_t index, cow_stringR cmp) const
-      {
-        return ::rocket::ascii_ci_equal(
-                    this->headers.at(index).first.data(),
-                    this->headers.at(index).first.size(),
-                    cmp.data(), cmp.size());
-      }
-
     // Writes request headers in raw format, which can be sent through a
     // stream socket. Lines are separated by CR LF pairs. Headers with empty
     // names are ignored silently.
