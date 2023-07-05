@@ -35,7 +35,7 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
 
     // Parse incoming data and remove parsed bytes from the queue. Errors are
     // passed via exceptions.
-#define this   ((HTTP_Client_Session*) ps->data)
+#define this   static_cast<HTTP_Client_Session*>(ps->data)
     static constexpr ::http_parser_settings settings[1] =
       {{
         // on_message_begin

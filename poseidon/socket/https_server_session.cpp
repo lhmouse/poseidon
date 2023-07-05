@@ -47,7 +47,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
 
     // Parse incoming data and remove parsed bytes from the queue. Errors are
     // passed via exceptions.
-#define this   ((HTTPS_Server_Session*) ps->data)
+#define this   static_cast<HTTPS_Server_Session*>(ps->data)
     static constexpr ::http_parser_settings settings[1] =
       {{
         // on_message_begin
