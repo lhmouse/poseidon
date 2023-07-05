@@ -332,7 +332,22 @@ do_http_raw_request(const HTTP_Request_Headers& req, const char* data, size_t si
     // Compose the message and send it as a whole.
     tinyfmt_str fmt;
     fmt.reserve(1023 + size);
-    fmt << req;
+
+    fmt << req.method << " " << req.uri << " HTTP/1.1";
+
+    for(const auto& hpair : req.headers) {
+      if(hpair.first.empty())
+        continue;
+
+      fmt << "\r\n" << hpair.first << ": ";
+      if(hpair.second.is_string())
+        fmt << hpair.second.as_string();
+      else
+        fmt << hpair.second;
+    }
+
+    fmt << "\r\n\r\n";
+
     fmt.putn(data, size);
     bool sent = this->tcp_send(fmt.data(), fmt.size());
 

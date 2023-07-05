@@ -30,11 +30,8 @@ struct HTTP_Response_Headers
     // Writes response headers in raw format, which can be sent through a
     // stream socket. Lines are separated by CR LF pairs. Headers with empty
     // names are ignored silently.
-    tinyfmt&
-    print(tinyfmt& fmt) const;
-
-    cow_string
-    print_to_string() const;
+    void
+    encode(tinyfmt& fmt) const;
   };
 
 inline
@@ -42,13 +39,6 @@ void
 swap(HTTP_Response_Headers& lhs, HTTP_Response_Headers& rhs) noexcept
   {
     lhs.swap(rhs);
-  }
-
-inline
-tinyfmt&
-operator<<(tinyfmt& fmt, const HTTP_Response_Headers& resp)
-  {
-    return resp.print(fmt);
   }
 
 }  // namespace poseidon

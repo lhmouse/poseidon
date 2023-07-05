@@ -350,7 +350,26 @@ do_https_raw_response(const HTTP_Response_Headers& resp, const char* data, size_
     // Compose the message and send it as a whole.
     tinyfmt_str fmt;
     fmt.reserve(1023 + size);
-    fmt << resp;
+
+    fmt << "HTTP/1.1 " << resp.status << " ";
+    if(resp.reason.empty())
+      fmt << ::http_status_str((::http_status) resp.status);
+    else
+      fmt << resp.reason;
+
+    for(const auto& hpair : resp.headers) {
+      if(hpair.first.empty())
+        continue;
+
+      fmt << "\r\n" << hpair.first << ": ";
+      if(hpair.second.is_string())
+        fmt << hpair.second.as_string();
+      else
+        fmt << hpair.second;
+    }
+
+    fmt << "\r\n\r\n";
+
     fmt.putn(data, size);
     bool sent = this->ssl_send(fmt.data(), fmt.size());
 
