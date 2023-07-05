@@ -253,7 +253,6 @@ class HTTPS_Client_Session;
 class HTTP_DateTime;
 class HTTP_Value;
 class HTTP_Header_Parser;
-class WebSocket_Streamer;
 
 struct HTTP_Request_Headers;
 struct HTTP_Response_Headers;
