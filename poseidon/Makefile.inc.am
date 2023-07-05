@@ -40,6 +40,7 @@ nobase_include_HEADERS +=  \
   %reldir%/http/http_request_headers.hpp  \
   %reldir%/http/http_response_headers.hpp  \
   %reldir%/http/http_header_parser.hpp  \
+  %reldir%/http/websocket_frame_header.hpp  \
   %reldir%/http/websocket_streamer.hpp  \
   %reldir%/easy/easy_deflator.hpp  \
   %reldir%/easy/easy_inflator.hpp  \
