@@ -26,12 +26,6 @@ struct HTTP_Request_Headers
         this->headers.swap(other.headers);
         return *this;
       }
-
-    // Writes request headers in raw format, which can be sent through a
-    // stream socket. Lines are separated by CR LF pairs. Headers with empty
-    // names are ignored silently.
-    void
-    encode(tinyfmt& fmt) const;
   };
 
 inline
