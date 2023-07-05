@@ -11,14 +11,14 @@ struct WebSocket_Frame_Header
   {
     union {
       struct {
-        // These fields resemble the WebSocket frame header. The payload length is
-        // always stored as a 64-bit integer. `compressed` corresponds to the RSV1
-        // bit.
+        // The payload length is always stored as a 64-bit integer. If the
+        // Per-Message Compression Extension (PMCE) is enabled, `compressed`
+        // corresponds to the RSV1 bit.
         // Reference: https://datatracker.ietf.org/doc/html/rfc6455
         // Reference: https://datatracker.ietf.org/doc/html/rfc7692
         bool fin = false;
         bool compressed = false;
-        uint8_t m_unused = 0;
+        uint8_t m_padding_1 = 0;
         uint8_t opcode = 0;
         char masking_key[4] = { };
         uint64_t payload_length = 0;
