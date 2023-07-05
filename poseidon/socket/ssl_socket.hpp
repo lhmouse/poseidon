@@ -93,12 +93,6 @@ class SSL_Socket
     do_ssl_alpn_request(const char256* protos_opt, size_t protos_size);
 
     void
-    do_ssl_alpn_request(const cow_vector<char256>& protos);
-
-    void
-    do_ssl_alpn_request(initializer_list<char256> protos);
-
-    void
     do_ssl_alpn_request(const char256& proto);
 
   public:

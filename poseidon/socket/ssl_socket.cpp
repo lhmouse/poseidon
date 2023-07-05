@@ -95,12 +95,12 @@ do_ssl_alpn_request(const char256* protos_opt, size_t protos_size)
 
     for(size_t k = 0;  k != protos_size;  ++k) {
       // Encode this protocol name in the SSL ALPN wire format.
-      const char* str = protos_opt[k];
-      size_t len = ::strlen(str);
+      const uint8_t* str = (const uint8_t*) protos_opt[k].c_str();
+      size_t len = xstrlen(str);
       if(len != 0) {
         ROCKET_ASSERT(len <= 255);
         pbuf.push_back((uint8_t) len);
-        pbuf.insert(pbuf.end(), (const uint8_t*) str, (const uint8_t*) str + len);
+        pbuf.insert(pbuf.end(), str, str + len);
       }
     }
 
@@ -114,31 +114,17 @@ do_ssl_alpn_request(const char256* protos_opt, size_t protos_size)
 
 void
 SSL_Socket::
-do_ssl_alpn_request(const cow_vector<char256>& protos)
-  {
-    this->do_ssl_alpn_request(protos.data(), protos.size());
-  }
-
-void
-SSL_Socket::
-do_ssl_alpn_request(initializer_list<char256> protos)
-  {
-    this->do_ssl_alpn_request(protos.begin(), protos.size());
-  }
-
-void
-SSL_Socket::
 do_ssl_alpn_request(const char256& proto)
   {
     static_vector<uint8_t, 256> pbuf;
 
     // Encode this protocol name in the SSL ALPN wire format.
-    const char* str = proto;
-    size_t len = ::strlen(str);
+    const uint8_t* str = (const uint8_t*) proto.c_str();
+    size_t len = xstrlen(str);
     if(len != 0) {
       ROCKET_ASSERT(len <= 255);
       pbuf.push_back((uint8_t) len);
-      pbuf.insert(pbuf.end(), (const uint8_t*) str, (const uint8_t*) str + len);
+      pbuf.insert(pbuf.end(), str, str + len);
     }
 
     if(::SSL_set_alpn_protos(this->ssl(), pbuf.data(), (uint32_t) pbuf.size()) != 0)
