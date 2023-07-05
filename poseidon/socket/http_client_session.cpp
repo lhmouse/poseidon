@@ -22,121 +22,6 @@ HTTP_Client_Session::
   {
   }
 
-POSEIDON_VISIBILITY_HIDDEN
-void
-HTTP_Client_Session::
-do_http_parser_on_message_begin()
-  {
-    this->m_resp.status = 0;
-    this->m_resp.reason.clear();
-    this->m_resp.headers.clear();
-    this->m_body.clear();
-  }
-
-POSEIDON_VISIBILITY_HIDDEN
-void
-HTTP_Client_Session::
-do_http_parser_on_status(uint32_t status, const char* str, size_t len)
-  {
-    this->m_resp.status = status;
-
-    if(this->m_resp.reason.empty()) {
-      // The reason string is very likely a predefined one, so don't bother
-      // allocating storage for it.
-      auto static_reason = sref(::http_status_str((::http_status) this->m_resp.status));
-      if((static_reason.length() == len) && (::memcmp(static_reason.c_str(), str, len) == 0))
-        this->m_resp.reason = static_reason;
-      else
-        this->m_resp.reason.assign(str, len);
-    }
-    else
-      this->m_resp.reason.append(str, len);
-  }
-
-POSEIDON_VISIBILITY_HIDDEN
-void
-HTTP_Client_Session::
-do_http_parser_on_header_field(const char* str, size_t len)
-  {
-    if(this->m_resp.headers.empty())
-      this->m_resp.headers.emplace_back();
-
-    if(this->m_body.size() != 0) {
-      // If `m_body` is not empty, a previous header will now be complete, so
-      // commit it.
-      const char* value_str = this->m_body.data() + 1;
-      ROCKET_ASSERT(value_str[-1] == '\n');  // magic character
-      size_t value_len = this->m_body.size() - 1;
-
-      auto& value = this->m_resp.headers.mut_back().second;
-      if(value.parse(value_str, value_len) != value_len)
-        value.set_string(cow_string(value_str, value_len));
-
-      // Create the next header.
-      this->m_resp.headers.emplace_back();
-      this->m_body.clear();
-    }
-
-    // Append the header name to the last key, as this callback might
-    // be invoked repeatedly.
-    this->m_resp.headers.mut_back().first.append(str, len);
-  }
-
-POSEIDON_VISIBILITY_HIDDEN
-void
-HTTP_Client_Session::
-do_http_parser_on_header_value(const char* str, size_t len)
-  {
-    // Add a magic character to indicate that a part of the value has been
-    // received. This makes `m_body` non-empty.
-    if(this->m_body.empty())
-       this->m_body.putc('\n');
-
-    // Abuse `m_body` to store the header value.
-    this->m_body.putn(str, len);
-  }
-
-POSEIDON_VISIBILITY_HIDDEN
-HTTP_Message_Body_Type
-HTTP_Client_Session::
-do_http_parser_on_headers_complete()
-  {
-    if(this->m_body.size() != 0) {
-      // If `m_body` is not empty, a previous header will now be complete, so
-      // commit it.
-      const char* value_str = this->m_body.data() + 1;
-      ROCKET_ASSERT(value_str[-1] == '\n');  // magic character
-      size_t value_len = this->m_body.size() - 1;
-
-      auto& value = this->m_resp.headers.mut_back().second;
-      if(value.parse(value_str, value_len) != value_len)
-        value.set_string(cow_string(value_str, value_len));
-
-      // Finish abuse of `m_body`.
-      this->m_body.clear();
-    }
-
-    // The headers are complete, so determine whether we want a response body.
-    return this->do_on_http_response_headers(this->m_resp);
-  }
-
-POSEIDON_VISIBILITY_HIDDEN
-void
-HTTP_Client_Session::
-do_http_parser_on_body(const char* str, size_t len)
-  {
-    this->m_body.putn(str, len);
-    this->do_on_http_response_body_stream(this->m_body);
-  }
-
-POSEIDON_VISIBILITY_HIDDEN
-void
-HTTP_Client_Session::
-do_http_parser_on_message_complete(bool close_now)
-  {
-    this->do_on_http_response_finish(::std::move(this->m_resp), ::std::move(this->m_body), close_now);
-  }
-
 void
 HTTP_Client_Session::
 do_on_tcp_stream(linear_buffer& data, bool eof)
@@ -150,13 +35,16 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
 
     // Parse incoming data and remove parsed bytes from the queue. Errors are
     // passed via exceptions.
+#define this   ((HTTP_Client_Session*) ps->data)
     static constexpr ::http_parser_settings settings[1] =
       {{
         // on_message_begin
         +[](::http_parser* ps)
           {
-            const auto xthis = (HTTP_Client_Session*) ps->data;
-            xthis->do_http_parser_on_message_begin();
+            this->m_resp.status = 0;
+            this->m_resp.reason.clear();
+            this->m_resp.headers.clear();
+            this->m_body.clear();
             return 0;
           },
 
@@ -166,32 +54,83 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
         // on_status
         +[](::http_parser* ps, const char* str, size_t len)
           {
-            const auto xthis = (HTTP_Client_Session*) ps->data;
-            xthis->do_http_parser_on_status(ps->status_code, str, len);
+            this->m_resp.status = ps->status_code;
+            if(this->m_resp.reason.empty()) {
+              // The reason string is very likely a predefined one, so don't bother
+              // allocating storage for it.
+              auto stat_sh = sref(::http_status_str((::http_status) ps->status_code));
+              if(xmemeq(stat_sh.data(), stat_sh.size(), str, len))
+                this->m_resp.reason = stat_sh;
+              else
+                this->m_resp.reason.assign(str, len);
+            }
+            else {
+              this->m_resp.reason.append(str, len);
+            }
             return 0;
           },
 
         // on_header_field
         +[](::http_parser* ps, const char* str, size_t len)
           {
-            const auto xthis = (HTTP_Client_Session*) ps->data;
-            xthis->do_http_parser_on_header_field(str, len);
+            if(this->m_resp.headers.empty())
+              this->m_resp.headers.emplace_back();
+
+            if(this->m_body.size() != 0) {
+              // If `m_body` is not empty, a previous header will now be complete, so
+              // commit it.
+              const char* value_str = this->m_body.data() + 1;
+              ROCKET_ASSERT(value_str[-1] == '\n');  // magic character
+              size_t value_len = this->m_body.size() - 1;
+
+              auto& value = this->m_resp.headers.mut_back().second;
+              if(value.parse(value_str, value_len) != value_len)
+                value.set_string(cow_string(value_str, value_len));
+
+              // Create the next header.
+              this->m_resp.headers.emplace_back();
+              this->m_body.clear();
+            }
+
+            // Append the header name to the last key, as this callback might
+            // be invoked repeatedly.
+            this->m_resp.headers.mut_back().first.append(str, len);
             return 0;
           },
 
         // on_header_value
         +[](::http_parser* ps, const char* str, size_t len)
           {
-            const auto xthis = (HTTP_Client_Session*) ps->data;
-            xthis->do_http_parser_on_header_value(str, len);
+            // Add a magic character to indicate that a part of the value has been
+            // received. This makes `m_body` non-empty.
+            if(this->m_body.empty())
+               this->m_body.putc('\n');
+
+            // Abuse `m_body` to store the header value.
+            this->m_body.putn(str, len);
             return 0;
           },
 
         // on_headers_complete
         +[](::http_parser* ps)
           {
-            const auto xthis = (HTTP_Client_Session*) ps->data;
-            auto body_type = xthis->do_http_parser_on_headers_complete();
+            if(this->m_body.size() != 0) {
+              // If `m_body` is not empty, a previous header will now be complete, so
+              // commit it.
+              const char* value_str = this->m_body.data() + 1;
+              ROCKET_ASSERT(value_str[-1] == '\n');  // magic character
+              size_t value_len = this->m_body.size() - 1;
+
+              auto& value = this->m_resp.headers.mut_back().second;
+              if(value.parse(value_str, value_len) != value_len)
+                value.set_string(cow_string(value_str, value_len));
+
+              // Finish abuse of `m_body`.
+              this->m_body.clear();
+            }
+
+            // The headers are complete, so determine whether we want a response body.
+            auto body_type = this->do_on_http_response_headers(this->m_resp);
             switch(body_type) {
               case http_message_body_normal:
                 return 0;
@@ -206,29 +145,29 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
                 POSEIDON_THROW((
                     "Invalid body type `$3` returned from `do_http_parser_on_headers_complete()`",
                     "[HTTP client session `$1` (class `$2`)]"),
-                    xthis, typeid(*xthis), body_type);
+                    this, typeid(*this), body_type);
             }
           },
 
         // on_body
         +[](::http_parser* ps, const char* str, size_t len)
           {
-            const auto xthis = (HTTP_Client_Session*) ps->data;
-            xthis->do_http_parser_on_body(str, len);
+            this->m_body.putn(str, len);
+            this->do_on_http_response_body_stream(this->m_body);
             return 0;
           },
 
         // on_message_complete
         +[](::http_parser* ps)
           {
-            const auto xthis = (HTTP_Client_Session*) ps->data;
-            xthis->do_http_parser_on_message_complete(::http_should_keep_alive(ps) == 0);
+            bool close_now = ::http_should_keep_alive(ps);
+            this->do_on_http_response_finish(::std::move(this->m_resp), ::std::move(this->m_body), close_now);
 
             if((ps->http_errno == HPE_OK) && (ps->status_code == HTTP_STATUS_SWITCHING_PROTOCOLS)) {
               // For client sessions, this indicates that the server has
               // switched to another protocol.
               ps->http_errno = HPE_PAUSED;
-              xthis->m_upgrade_ack.store(true);
+              this->m_upgrade_ack.store(true);
             }
             return 0;
           },
@@ -239,6 +178,7 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
         // on_chunk_complete
         nullptr,
       }};
+#undef this
 
     if(data.size() != 0)
       data.discard(::http_parser_execute(this->m_parser, settings, data.data(), data.size()));
