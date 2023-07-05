@@ -177,7 +177,7 @@ uuid::
 print_partial(char* str) const noexcept
   {
     // Split the higher and lower halves into two SSE registers.
-    __m128i tval = _mm_loadu_si128(&(this->m_stor));
+    __m128i tval = _mm_load_si128(&(this->m_stor));
     __m128i hi = _mm_and_si128(_mm_srli_epi64(tval, 4), _mm_set1_epi8(0x0F));
     __m128i lo = _mm_and_si128(tval, _mm_set1_epi8(0x0F));
 
