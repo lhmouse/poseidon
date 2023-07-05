@@ -37,11 +37,11 @@ nobase_include_HEADERS +=  \
   %reldir%/socket/https_client_session.hpp  \
   %reldir%/http/http_datetime.hpp  \
   %reldir%/http/http_value.hpp  \
+  %reldir%/http/http_header_parser.hpp  \
+  %reldir%/http/websocket_streamer.hpp  \
   %reldir%/http/http_request_headers.hpp  \
   %reldir%/http/http_response_headers.hpp  \
-  %reldir%/http/http_header_parser.hpp  \
   %reldir%/http/websocket_frame_header.hpp  \
-  %reldir%/http/websocket_streamer.hpp  \
   %reldir%/easy/easy_deflator.hpp  \
   %reldir%/easy/easy_inflator.hpp  \
   %reldir%/easy/easy_timer.hpp  \
