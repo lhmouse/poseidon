@@ -252,12 +252,11 @@ class HTTPS_Client_Session;
 // HTTP types
 class HTTP_DateTime;
 class HTTP_Value;
-class HTTP_Header_Parser;
-
+using HTTP_Header_Vector = cow_bivector<cow_string, HTTP_Value>;
 struct HTTP_Request_Headers;
 struct HTTP_Response_Headers;
+class HTTP_Header_Parser;
 struct WebSocket_Frame_Header;
-using HTTP_Header_Vector = cow_bivector<cow_string, HTTP_Value>;
 
 // Easy types
 // Being 'easy' means all callbacks are invoked in fibers and can perform
