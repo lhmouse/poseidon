@@ -206,6 +206,10 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
         this->do_on_https_request_error(HTTP_STATUS_METHOD_NOT_ALLOWED);
         break;
 
+      case HPE_INVALID_TRANSFER_ENCODING:
+        this->do_on_https_request_error(HTTP_STATUS_LENGTH_REQUIRED);
+        break;
+
       default:
         this->do_on_https_request_error(HTTP_STATUS_BAD_REQUEST);
         break;
