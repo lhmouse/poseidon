@@ -30,6 +30,9 @@ class uuid
 
   private:
     union {
+      uint8_t m_bytes[16] = { };
+      __m128i m_stor;
+
       struct {
         uint8_t m_data_1_3;
         uint8_t m_data_1_2;
@@ -48,21 +51,16 @@ class uuid
         uint8_t m_data_5_1;
         uint8_t m_data_5_0;
       };
-      uint8_t m_bytes[16];
-      __m128i m_stor;
     };
 
   public:
     // Constructs a nil UUID.
     constexpr
-    uuid() noexcept
-      : m_bytes()
-      { }
+    uuid() noexcept = default;
 
     // Constructs a UUID in the RFC 4122 format.
     constexpr
     uuid(const fields& fs) noexcept
-      : m_bytes()
       {
         this->m_data_1_3 = (uint8_t) (fs.time_low >> 24);
         this->m_data_1_2 = (uint8_t) (fs.time_low >> 16);
