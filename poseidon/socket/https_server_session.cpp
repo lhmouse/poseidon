@@ -25,6 +25,12 @@ void
 HTTPS_Server_Session::
 do_on_ssl_stream(linear_buffer& data, bool eof)
   {
+    if((HTTP_PARSER_ERRNO(this->m_parser) != HPE_PAUSED) && this->m_upgrade_ack.load()) {
+      // This check is necessary for server sessions, as upgrade responses may
+      // be sent asynchronously. Client sessions need no such check.
+      this->m_parser->http_errno = HPE_PAUSED;
+    }
+
     if(HTTP_PARSER_ERRNO(this->m_parser) == HPE_PAUSED) {
       // The protocol has changed, so HTTP parser objects are no longer useful,
       // so free dynamic memory, if any
