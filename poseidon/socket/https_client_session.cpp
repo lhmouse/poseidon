@@ -274,7 +274,8 @@ do_https_raw_request(const HTTP_Request_Headers& req, const char* data, size_t s
     // Compose the message and send it as a whole.
     tinyfmt_str fmt;
     fmt.reserve(1023 + size);
-    req.encode(fmt, data, size);
+    req.encode(fmt);
+    fmt.putn(data, size);
     bool sent = this->ssl_send(fmt.data(), fmt.size());
 
     // The return value indicates whether no error has occurred. There is no

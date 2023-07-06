@@ -9,7 +9,7 @@ namespace poseidon {
 
 void
 HTTP_Response_Headers::
-encode(tinyfmt& fmt, const char* data, size_t size) const
+encode(tinyfmt& fmt) const
   {
     // Write the status line. If `reason` is empty, a default reason string
     // is written. This function does not validate whether these fields
@@ -34,7 +34,6 @@ encode(tinyfmt& fmt, const char* data, size_t size) const
 
     // Terminate the response with an empty line.
     fmt << "\r\n\r\n";
-    fmt.putn(data, size);
   }
 
 }  // namespace poseidon
