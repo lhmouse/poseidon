@@ -27,10 +27,11 @@ struct HTTP_Request_Headers
         return *this;
       }
 
-    // Encode headers in wire format. Lines are separated by CR LF pairs. The
-    // output will be suitable for sending through a stream socket.
+    // Encode headers in wire format, with optional additional data. Lines are
+    // separated with CRLF. The output will be suitable for sending through
+    // a stream socket.
     void
-    encode(tinyfmt& fmt) const;
+    encode(tinyfmt& fmt, const char* data, size_t size) const;
   };
 
 inline

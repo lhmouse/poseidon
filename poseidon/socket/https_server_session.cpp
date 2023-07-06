@@ -297,8 +297,7 @@ do_https_raw_response(const HTTP_Response_Headers& resp, const char* data, size_
     // Compose the message and send it as a whole.
     tinyfmt_str fmt;
     fmt.reserve(1023 + size);
-    resp.encode(fmt);
-    fmt.putn(data, size);
+    resp.encode(fmt, data, size);
     bool sent = this->ssl_send(fmt.data(), fmt.size());
 
     if(resp.status == HTTP_STATUS_SWITCHING_PROTOCOLS) {

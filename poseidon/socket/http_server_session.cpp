@@ -285,8 +285,7 @@ do_http_raw_response(const HTTP_Response_Headers& resp, const char* data, size_t
     // Compose the message and send it as a whole.
     tinyfmt_str fmt;
     fmt.reserve(1023 + size);
-    resp.encode(fmt);
-    fmt.putn(data, size);
+    resp.encode(fmt, data, size);
     bool sent = this->tcp_send(fmt.data(), fmt.size());
 
     if(resp.status == HTTP_STATUS_SWITCHING_PROTOCOLS) {

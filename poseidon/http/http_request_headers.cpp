@@ -8,7 +8,7 @@ namespace poseidon {
 
 void
 HTTP_Request_Headers::
-encode(tinyfmt& fmt) const
+encode(tinyfmt& fmt, const char* data, size_t size) const
   {
     // Write the request line. This function does not validate whether these
     // fields contain valid values.
@@ -28,6 +28,7 @@ encode(tinyfmt& fmt) const
 
     // Terminate the request with an empty line.
     fmt << "\r\n\r\n";
+    fmt.putn(data, size);
   }
 
 }  // namespace poseidon
