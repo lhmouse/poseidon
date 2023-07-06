@@ -16,7 +16,9 @@ class Easy_Inflator
   public:
     // Constructs an empty data decompressor.
     explicit
-    Easy_Inflator() = default;
+    Easy_Inflator() noexcept
+      : m_infl(), m_out()
+      { }
 
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_Inflator);

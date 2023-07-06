@@ -11,7 +11,7 @@ class char256
   {
   private:
     union {
-      char m_data[8] = { };
+      char m_data[8];
       ::std::aligned_storage<256>::type m_stor;
     };
 
@@ -19,12 +19,15 @@ class char256
     // Constructs a null-terminated string of zero characters.
     // This constructor is not explicit as it doesn't allocate memory.
     constexpr
-    char256() noexcept = default;
+    char256() noexcept
+      : m_data()
+      { }
 
     // Constructs a null-terminated string.
     // This constructor is not explicit as it doesn't allocate memory.
     constexpr
     char256(const char* str_opt)
+      : m_data()
       {
         const char* str = str_opt ? str_opt : "";
         size_t len = ::rocket::xstrlen(str);
@@ -33,12 +36,8 @@ class char256
               "char256: string `%s` (length `%lld`) too long",
               str, (long long) len);
 
-#ifdef __clang__
-        // XXX: Remove this?
+        // XXX: This should be `xmempcpy()` but clang doesn't like it?
         ::rocket::details_xstring::maybe_constexpr::ymempcpy(this->m_data, str, len + 1);
-#else
-        ::rocket::xmempcpy(this->m_data, str, len + 1);
-#endif
       }
 
     char256&

@@ -16,7 +16,9 @@ class Easy_Deflator
   public:
     // Constructs an empty data compressor.
     explicit
-    Easy_Deflator() = default;
+    Easy_Deflator() noexcept
+      : m_defl(), m_out()
+      { }
 
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_Deflator);

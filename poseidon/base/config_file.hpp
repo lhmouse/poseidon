@@ -17,7 +17,9 @@ class Config_File
   public:
     // Constructs an empty file.
     constexpr
-    Config_File() noexcept = default;
+    Config_File() noexcept
+      : m_path(), m_root()
+      { }
 
     // Loads the file denoted by `path`, like `reload(path)`.
     explicit

@@ -16,7 +16,9 @@ struct HTTP_Request_Headers
 
     // Define some helper functions.
     constexpr
-    HTTP_Request_Headers() noexcept = default;
+    HTTP_Request_Headers() noexcept
+      : method(), uri(), headers()
+      { }
 
     HTTP_Request_Headers&
     swap(HTTP_Request_Headers& other) noexcept
