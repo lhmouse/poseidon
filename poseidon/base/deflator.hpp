@@ -21,23 +21,13 @@ class Deflator
     explicit
     Deflator(zlib_Format format, int level = 8, int wbits = 15);
 
-  private:
-    void
-    do_deflate_prepare(const char* data);
-
-    int
-    do_deflate(uint8_t*& end_out, int flush);
-
-    void
-    do_deflate_cleanup(uint8_t* end_out);
-
   protected:
     // This callback is invoked to request an output buffer if none has been
     // requested, or when the previous output buffer is full. Derived classes
     // shall return a temporary memory region where compressed data will be
-    // written, or throw an exception if the request cannot be honored. Note
-    // that if this function returns a buffer that is too small (for example
-    // 3 or 4 bytes) then `finish()` will fail.
+    // written, or throw an exception if the request cannot be honored. This
+    // function shall ensure that there are more than 10 available bytes in the
+    // output buffer, otherwise the behavior may be unpredictable.
     // If an exception is thrown, the state of this stream is unspecified.
     virtual
     pair<char*, size_t>
@@ -75,6 +65,11 @@ class Deflator
     // described by zlib about its `Z_SYNC_FLUSH` argument.
     bool
     sync_flush();
+
+    // Completes the current deflate block. The effect of this function is
+    // described by zlib about its `Z_FULL_FLUSH` argument.
+    bool
+    full_flush();
 
     // Completes the current stream. No data shall be written any further. The
     // effect of this function is described by zlib about its `Z_FINISH`

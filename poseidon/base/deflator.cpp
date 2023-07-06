@@ -36,109 +36,129 @@ clear() noexcept
           this, typeid(*this), err, this->m_strm.message(err));
   }
 
-POSEIDON_VISIBILITY_HIDDEN
-void
-Deflator::
-do_deflate_prepare(const char* data)
-  {
-    this->m_strm->next_in = (const uint8_t*) data;
-    this->m_strm->avail_in = 0;
-    this->m_strm->next_out = nullptr;
-    this->m_strm->avail_out = 0;
-  }
-
-POSEIDON_VISIBILITY_HIDDEN
-int
-Deflator::
-do_deflate(uint8_t*& end_out, int flush)
-  {
-    // Set the output size...
-    this->m_strm->avail_out = clamp_cast<uint32_t>(end_out - this->m_strm->next_out, 0, INT_MAX);
-    if(this->m_strm->avail_out != 0)
-      return ::deflate(this->m_strm, flush);
-
-    // .. When there is no more room, ask for a new buffer.
-    auto obuf = this->do_on_deflate_get_output_buffer();
-    if(obuf.second == 0)
-      POSEIDON_THROW((
-          "Failed to allocate output buffer",
-          "[`do_on_deflate_get_output_buffer()` returned null]",
-          "[deflator `$1` (class `$2`)]"),
-          this, typeid(*this));
-
-    this->m_strm->next_out = (uint8_t*) obuf.first;
-    this->m_strm->avail_out = clamp_cast<uint32_t>(obuf.second, 0, INT_MAX);
-    end_out = this->m_strm->next_out + obuf.second;
-
-    return ::deflate(this->m_strm, flush);
-  }
-
-POSEIDON_VISIBILITY_HIDDEN
-void
-Deflator::
-do_deflate_cleanup(uint8_t* end_out)
-  {
-    if(this->m_strm->avail_out != 0)
-      this->do_on_deflate_truncate_output_buffer((size_t) (end_out - this->m_strm->next_out));
-
-    this->m_strm->next_in = nullptr;
-    this->m_strm->next_out = nullptr;
-  }
-
 size_t
 Deflator::
 deflate(const char* data, size_t size)
   {
-    this->do_deflate_prepare(data);
-    const uint8_t* end_in = (const uint8_t*) data + size;
-    uint8_t* end_out = nullptr;
-    int err = Z_OK;
+    // Set up the output and input buffers.
+    this->m_strm->next_out = nullptr;
+    this->m_strm->avail_out = 0;
+    this->m_strm->next_in = (const ::Bytef*) data;
 
-    while(err == Z_OK)
-      this->m_strm->avail_in = clamp_cast<uint32_t>(end_in - this->m_strm->next_in, 0, INT_MAX),
-        err = this->do_deflate(end_out, Z_NO_FLUSH);
+    const ::Bytef* const end_in = (const ::Bytef*) data + size;
+    while(this->m_strm->next_in < end_in) {
+      this->m_strm->avail_in = clamp_cast<::uInt>(end_in - this->m_strm->next_in, 0, INT_MAX);
 
-    if(is_none_of(err, { Z_BUF_ERROR, Z_STREAM_ERROR }))
-      this->m_strm.throw_exception("deflate", err);
+      while(this->m_strm->avail_out == 0) {
+        // Extend the output buffer.
+        auto outp = this->do_on_deflate_get_output_buffer();
+        this->m_strm->next_out = (::Byte*) outp.first;
+        this->m_strm->avail_out = clamp_cast<::uInt>(outp.second, 0, INT_MAX);
+      }
 
-    end_in = this->m_strm->next_in;
-    this->do_deflate_cleanup(end_out);
-    return (size_t) (end_in - (const uint8_t*) data);
+      // Perform compression now. This will never fail with `Z_BUF_ERROR`.
+      int err = ::deflate(this->m_strm, Z_NO_FLUSH);
+      if(is_none_of(err, { Z_OK, Z_STREAM_END, Z_STREAM_ERROR }))
+        this->m_strm.throw_exception("deflate", err);
+      else if(err != Z_OK)
+        break;
+    }
+
+    // Discard reserved but unused bytes from the output buffer.
+    if(this->m_strm->avail_out != 0)
+      this->do_on_deflate_truncate_output_buffer(this->m_strm->avail_out);
+
+    // Return the number of bytes that have been processed.
+    return size - (size_t) (end_in - this->m_strm->next_in);
   }
 
 bool
 Deflator::
 sync_flush()
   {
-    this->do_deflate_prepare(nullptr);
-    uint8_t* end_out = nullptr;
-    int err = Z_OK;
+    // Set up the output and input buffers.
+    this->m_strm->next_out = nullptr;
+    this->m_strm->avail_out = 0;
+    this->m_strm->next_in = (const ::Bytef*) "";
+    this->m_strm->avail_in = 0;
 
-    while(err == Z_OK)
-      err = this->do_deflate(end_out, Z_SYNC_FLUSH);
+    while(this->m_strm->avail_out == 0) {
+      // Extend the output buffer.
+      auto outp = this->do_on_deflate_get_output_buffer();
+      this->m_strm->next_out = (::Byte*) outp.first;
+      this->m_strm->avail_out = clamp_cast<::uInt>(outp.second, 0, INT_MAX);
+    }
 
-    if(is_none_of(err, { Z_BUF_ERROR, Z_STREAM_ERROR }))
+    // Perform compression now.
+    int err = ::deflate(this->m_strm, Z_SYNC_FLUSH);
+    if(is_none_of(err, { Z_OK, Z_STREAM_ERROR, Z_BUF_ERROR }))
       this->m_strm.throw_exception("deflate", err);
 
-    this->do_deflate_cleanup(end_out);
-    return err == Z_BUF_ERROR;
+    // Discard reserved but unused bytes from the output buffer.
+    if(this->m_strm->avail_out != 0)
+      this->do_on_deflate_truncate_output_buffer(this->m_strm->avail_out);
+
+    // Return whether something has been written.
+    return err != Z_BUF_ERROR;
+  }
+
+bool
+Deflator::
+full_flush()
+  {
+    // Set up the output and input buffers.
+    this->m_strm->next_out = nullptr;
+    this->m_strm->avail_out = 0;
+    this->m_strm->next_in = (const ::Bytef*) "";
+    this->m_strm->avail_in = 0;
+
+    while(this->m_strm->avail_out == 0) {
+      // Extend the output buffer.
+      auto outp = this->do_on_deflate_get_output_buffer();
+      this->m_strm->next_out = (::Byte*) outp.first;
+      this->m_strm->avail_out = clamp_cast<::uInt>(outp.second, 0, INT_MAX);
+    }
+
+    // Perform compression now.
+    int err = ::deflate(this->m_strm, Z_FULL_FLUSH);
+    if(is_none_of(err, { Z_OK, Z_STREAM_ERROR, Z_BUF_ERROR }))
+      this->m_strm.throw_exception("deflate", err);
+
+    // Discard reserved but unused bytes from the output buffer.
+    if(this->m_strm->avail_out != 0)
+      this->do_on_deflate_truncate_output_buffer(this->m_strm->avail_out);
+
+    // Return whether something has been written.
+    return err != Z_BUF_ERROR;
   }
 
 bool
 Deflator::
 finish()
   {
-    this->do_deflate_prepare(nullptr);
-    uint8_t* end_out = nullptr;
-    int err = Z_OK;
+    // Set up the output and input buffers.
+    this->m_strm->next_out = nullptr;
+    this->m_strm->avail_out = 0;
+    this->m_strm->next_in = (const ::Bytef*) "";
+    this->m_strm->avail_in = 0;
 
-    while(err == Z_OK)
-      err = this->do_deflate(end_out, Z_FINISH);
+    while(this->m_strm->avail_out == 0) {
+      // Extend the output buffer.
+      auto outp = this->do_on_deflate_get_output_buffer();
+      this->m_strm->next_out = (::Byte*) outp.first;
+      this->m_strm->avail_out = clamp_cast<::uInt>(outp.second, 0, INT_MAX);
+    }
 
-    if(is_none_of(err, { Z_STREAM_END, Z_STREAM_ERROR }))
+    // Perform compression now.
+    int err = ::deflate(this->m_strm, Z_FINISH);
+    if(is_none_of(err, { Z_OK, Z_STREAM_END }))
       this->m_strm.throw_exception("deflate", err);
 
-    this->do_deflate_cleanup(end_out);
+    // Discard reserved but unused bytes from the output buffer.
+    if(this->m_strm->avail_out != 0)
+      this->do_on_deflate_truncate_output_buffer(this->m_strm->avail_out);
+
+    // Return whether the stream has ended.
     return err == Z_STREAM_END;
   }
 

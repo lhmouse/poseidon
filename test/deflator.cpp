@@ -40,6 +40,8 @@ main()
     POSEIDON_TEST_CHECK(defl.deflate("Hello", 5) == 0);
     POSEIDON_TEST_CHECK(defl.finish() == true);
     POSEIDON_TEST_CHECK(defl.output_size() == 0);
+    POSEIDON_TEST_CHECK(defl.sync_flush() == true);
+    POSEIDON_TEST_CHECK(defl.output_size() == 0);
 
     // reset
     defl.clear();

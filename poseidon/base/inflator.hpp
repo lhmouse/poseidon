@@ -20,16 +20,6 @@ class Inflator
     explicit
     Inflator(zlib_Format format, int wbits = 15);
 
-  private:
-    void
-    do_inflate_prepare(const char* data);
-
-    int
-    do_inflate(uint8_t*& end_out, int flush);
-
-    void
-    do_inflate_cleanup(uint8_t* end_out);
-
   protected:
     // This callback is invoked to request an output buffer if none has been
     // requested, or when the previous output buffer is full. Derived classes
