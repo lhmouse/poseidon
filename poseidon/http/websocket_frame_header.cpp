@@ -48,26 +48,13 @@ mask_payload(char* data, size_t size) noexcept
 
     char* cur = data;
     char* const esdata = data + size;
+    const __m128i exmask = _mm_set1_epi32((int32_t) be32toh(this->mask_key_u32));
 
-    if(size >= 16) {
-      const __m128i exmask = _mm_set1_epi32((int32_t) be32toh(this->mask_key_u32));
-
-      if((uintptr_t) cur % 16 == 0) {
-        // aligned
-        while(esdata - cur >= 16) {
-          __m128i* xcur = (__m128i*) cur;
-          _mm_store_si128(xcur, _mm_load_si128(xcur) ^ exmask);
-          cur += 16;
-        }
-      }
-      else {
-        // unaligned
-        while(esdata - cur >= 16) {
-          __m128i* xcur = (__m128i*) cur;
-          _mm_storeu_si128(xcur, _mm_loadu_si128(xcur) ^ exmask);
-          cur += 16;
-        }
-      }
+    // This is the optimized implementation with SSE2.
+    while(esdata - cur >= 16) {
+      __m128i* xcur = (__m128i*) cur;
+      _mm_storeu_si128(xcur, _mm_loadu_si128(xcur) ^ exmask);
+      cur += 16;
     }
 
     // This is the generic byte-wise implementation.
