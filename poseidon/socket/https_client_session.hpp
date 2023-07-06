@@ -20,6 +20,7 @@ class HTTPS_Client_Session
     ::http_parser m_parser[1];
     HTTP_Response_Headers m_resp;
     linear_buffer m_body;
+    bool m_upgrade_done = false;
     atomic_relaxed<bool> m_upgrade_ack;
 
   public:

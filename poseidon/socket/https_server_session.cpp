@@ -25,23 +25,17 @@ void
 HTTPS_Server_Session::
 do_on_ssl_stream(linear_buffer& data, bool eof)
   {
-    if(this->m_upgrade_ack.load()) {
-      // Deallocate the body buffer, as it is no longer useful.
-      linear_buffer().swap(this->m_body);
+    if(HTTP_PARSER_ERRNO(this->m_parser) == HPE_PAUSED) {
+      // The protocol has changed, so HTTP parser objects are no longer useful,
+      // so free dynamic memory, if any
+      if(ROCKET_UNEXPECT(!this->m_upgrade_done)) {
+        ::rocket::reconstruct(&(this->m_req));
+        ::rocket::reconstruct(&(this->m_body));
+        this->m_upgrade_done = true;
+      }
+
+      // Forward data to the new handler.
       this->do_on_https_upgraded_stream(data, eof);
-      return;
-    }
-
-    if(HTTP_PARSER_ERRNO(this->m_parser) != HPE_OK) {
-      // This can't be recovered. All further data will be discarded. There is
-      // not much we can do.
-      POSEIDON_LOG_WARN((
-          "HTTP parser error `$3`: $4",
-          "[HTTPS server session `$1` (class `$2`)]"),
-          this, typeid(*this), HTTP_PARSER_ERRNO(this->m_parser),
-          ::http_errno_description(HTTP_PARSER_ERRNO(this->m_parser)));
-
-      data.clear();
       return;
     }
 
@@ -192,6 +186,10 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
     // above. Not sure.
     switch((uint32_t) HTTP_PARSER_ERRNO(this->m_parser)) {
       case HPE_OK:
+        break;
+
+      case HPE_PAUSED:
+        this->do_on_https_upgraded_stream(data, eof);
         break;
 
       case HPE_HEADER_OVERFLOW:

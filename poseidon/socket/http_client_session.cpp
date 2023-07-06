@@ -26,9 +26,16 @@ void
 HTTP_Client_Session::
 do_on_tcp_stream(linear_buffer& data, bool eof)
   {
-    if(this->m_upgrade_ack.load()) {
-      // Deallocate the body buffer, as it is no longer useful.
-      linear_buffer().swap(this->m_body);
+    if(HTTP_PARSER_ERRNO(this->m_parser) == HPE_PAUSED) {
+      // The protocol has changed, so HTTP parser objects are no longer useful,
+      // so free dynamic memory, if any
+      if(ROCKET_UNEXPECT(!this->m_upgrade_done)) {
+        ::rocket::reconstruct(&(this->m_resp));
+        ::rocket::reconstruct(&(this->m_body));
+        this->m_upgrade_done = true;
+      }
+
+      // Forward data to the new handler.
       this->do_on_http_upgraded_stream(data, eof);
       return;
     }
@@ -187,22 +194,25 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
 
     // Assuming the error code won't be clobbered by the second call for EOF
     // above. Not sure.
-    if(this->m_upgrade_ack.load()) {
-      this->do_on_http_upgraded_stream(data, eof);
-      return;
-    }
+    switch((uint32_t) HTTP_PARSER_ERRNO(this->m_parser)) {
+      case HPE_OK:
+        break;
 
-    if(HTTP_PARSER_ERRNO(this->m_parser) != HPE_OK) {
-      // This can't be recovered. All further data will be discarded. There is
-      // not much we can do.
-      POSEIDON_LOG_WARN((
-          "HTTP parser error `$3`: $4",
-          "[HTTP client session `$1` (class `$2`)]"),
-          this, typeid(*this), HTTP_PARSER_ERRNO(this->m_parser),
-          ::http_errno_description(HTTP_PARSER_ERRNO(this->m_parser)));
+      case HPE_PAUSED:
+        this->do_on_http_upgraded_stream(data, eof);
+        break;
 
-      data.clear();
-      return;
+      default:
+        POSEIDON_LOG_WARN((
+            "HTTP parser error `$3`: $4",
+            "[HTTP client session `$1` (class `$2`)]"),
+            this, typeid(*this), HTTP_PARSER_ERRNO(this->m_parser),
+            ::http_errno_description(HTTP_PARSER_ERRNO(this->m_parser)));
+
+        // This can't be recovered. All further data will be discarded. There
+        // is not much we can do.
+        this->quick_close();
+        break;
     }
 
     POSEIDON_LOG_TRACE(("HTTP parser done: data.size `$1`, eof `$2`"), data.size(), eof);
