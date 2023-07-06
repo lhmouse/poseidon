@@ -56,7 +56,6 @@ deflate(const char* data, size_t size)
         this->m_strm->avail_out = clamp_cast<::uInt>(outp.second, 0, INT_MAX);
       }
 
-      // Perform compression now. This will never fail with `Z_BUF_ERROR`.
       int err = ::deflate(this->m_strm, Z_NO_FLUSH);
       if(is_none_of(err, { Z_OK, Z_STREAM_END, Z_STREAM_ERROR }))
         this->m_strm.throw_exception("deflate", err);
@@ -89,7 +88,6 @@ sync_flush()
       this->m_strm->avail_out = clamp_cast<::uInt>(outp.second, 0, INT_MAX);
     }
 
-    // Perform compression now.
     int err = ::deflate(this->m_strm, Z_SYNC_FLUSH);
     if(is_none_of(err, { Z_OK, Z_STREAM_ERROR, Z_BUF_ERROR }))
       this->m_strm.throw_exception("deflate", err);
@@ -119,7 +117,6 @@ full_flush()
       this->m_strm->avail_out = clamp_cast<::uInt>(outp.second, 0, INT_MAX);
     }
 
-    // Perform compression now.
     int err = ::deflate(this->m_strm, Z_FULL_FLUSH);
     if(is_none_of(err, { Z_OK, Z_STREAM_ERROR, Z_BUF_ERROR }))
       this->m_strm.throw_exception("deflate", err);
@@ -149,7 +146,6 @@ finish()
       this->m_strm->avail_out = clamp_cast<::uInt>(outp.second, 0, INT_MAX);
     }
 
-    // Perform compression now.
     int err = ::deflate(this->m_strm, Z_FINISH);
     if(is_none_of(err, { Z_OK, Z_STREAM_END }))
       this->m_strm.throw_exception("deflate", err);

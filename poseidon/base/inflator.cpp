@@ -53,7 +53,6 @@ inflate(const char* data, size_t size)
         this->m_strm->avail_out = clamp_cast<::uInt>(outp.second, 0, INT_MAX);
       }
 
-      // Perform decompression now. This will never fail with `Z_BUF_ERROR`.
       int err = ::inflate(this->m_strm, Z_SYNC_FLUSH);
       if(is_none_of(err, { Z_OK, Z_STREAM_END }))
         this->m_strm.throw_exception("inflate", err);
@@ -86,7 +85,6 @@ finish()
       this->m_strm->avail_out = clamp_cast<::uInt>(outp.second, 0, INT_MAX);
     }
 
-    // Perform compression now.
     int err = ::inflate(this->m_strm, Z_FINISH);
     if(is_none_of(err, { Z_OK, Z_STREAM_END }))
       this->m_strm.throw_exception("inflate", err);
