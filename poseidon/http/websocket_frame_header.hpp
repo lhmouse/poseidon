@@ -10,20 +10,24 @@ namespace poseidon {
 struct WebSocket_Frame_Header
   {
     union {
+      __m128i m_stor = { };
+
       struct {
         // The payload length is always stored as a 64-bit integer. If the
         // Per-Message Compression Extension (PMCE) is enabled, `compressed`
         // corresponds to the RSV1 bit.
         // Reference: https://datatracker.ietf.org/doc/html/rfc6455
         // Reference: https://datatracker.ietf.org/doc/html/rfc7692
-        bool fin = false;
-        bool compressed = false;
-        uint8_t m_padding_1 = 0;
-        uint8_t opcode = 0;
-        char masking_key[4] = { };
-        uint64_t payload_length = 0;
+        uint32_t fin : 1;
+        uint32_t compressed : 1;
+        uint32_t rsv2 : 1;
+        uint32_t rsv3 : 1;
+        uint32_t opcode : 4;
+        uint32_t mask : 1;
+        uint32_t reserved_1 : 23;
+        uint8_t masking_key[4];
+        uint64_t payload_length;
       };
-      __m128i m_stor;
     };
 
     // Define some helper functions.
