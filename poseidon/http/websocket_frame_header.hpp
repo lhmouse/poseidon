@@ -13,20 +13,21 @@ struct WebSocket_Frame_Header
       __m128i m_stor = { };
 
       struct {
-        // The payload length is always stored as a 64-bit integer. If the
-        // Per-Message Compression Extension (PMCE) is enabled, `compressed`
-        // corresponds to the RSV1 bit.
+        // The payload length is always stored as an `uint64_t`. The `encode()`
+        // function will deduce the correct field basing on its value.
         // Reference: https://datatracker.ietf.org/doc/html/rfc6455
-        // Reference: https://datatracker.ietf.org/doc/html/rfc7692
         uint32_t fin : 1;
-        uint32_t compressed : 1;
+        uint32_t rsv1 : 1;
         uint32_t rsv2 : 1;
         uint32_t rsv3 : 1;
         uint32_t opcode : 4;
         uint32_t mask : 1;
         uint32_t reserved_1 : 23;
-        uint8_t masking_key[4];
-        uint64_t payload_length;
+        union {
+          char mask_key[4];
+          uint32_t mask_key_u32;
+        };
+        uint64_t payload_len;
       };
     };
 
@@ -40,6 +41,23 @@ struct WebSocket_Frame_Header
         ::std::swap(this->m_stor, other.m_stor);
         return *this;
       }
+
+    // Clears all fields.
+    void
+    clear() noexcept
+      {
+        this->m_stor = _mm_setzero_si128();
+      }
+
+    // Encodes this frame header in wire format. The output will be suitable
+    // for sending through a stream socket.
+    void
+    encode(tinyfmt& fmt) const;
+
+    // Masks a part (or unmasks a masked part) of the frame payload, and update
+    // `mkey` incrementally. If `mask` is unset, this function does nothing.
+    void
+    mask_payload(char* data, size_t size) noexcept;
   };
 
 inline
