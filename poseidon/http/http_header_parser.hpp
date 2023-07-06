@@ -45,6 +45,16 @@ class HTTP_Header_Parser
     error() const noexcept
       { return this->m_hpos == hpos_error;  }
 
+    // Clears all fields.
+    void
+    clear() noexcept
+      {
+        this->m_hstr.clear();
+        this->m_hpos = 0;
+        this->m_name.clear();
+        this->m_value.clear();
+      }
+
     // Reloads a new string. All existent contents are destroyed.
     void
     reload(cow_stringR hstr);

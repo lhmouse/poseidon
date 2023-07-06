@@ -53,9 +53,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
         // on_message_begin
         +[](::http_parser* ps)
           {
-            this->m_req.method.clear();
-            this->m_req.uri.clear();
-            this->m_req.headers.clear();
+            this->m_req.clear();
             this->m_body.clear();
             return 0;
           },

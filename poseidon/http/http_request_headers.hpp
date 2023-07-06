@@ -27,7 +27,16 @@ struct HTTP_Request_Headers
         return *this;
       }
 
-    // Encode headers in wire format. Lines are separated by CR LF pairs. The
+    // Clears all fields.
+    void
+    clear() noexcept
+      {
+        this->method.clear();
+        this->uri.clear();
+        this->headers.clear();
+      }
+
+    // Encodes headers in wire format. Lines are separated by CR LF pairs. The
     // output will be suitable for sending through a stream socket.
     void
     encode(tinyfmt& fmt) const;
