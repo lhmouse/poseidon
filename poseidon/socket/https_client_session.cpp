@@ -3,8 +3,8 @@
 
 #include "../precompiled.ipp"
 #include "https_client_session.hpp"
-#include "base/config_file.hpp"
-#include "static/main_config.hpp"
+#include "../base/config_file.hpp"
+#include "../static/main_config.hpp"
 #include "../utils.hpp"
 namespace poseidon {
 
