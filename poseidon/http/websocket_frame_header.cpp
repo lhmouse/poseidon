@@ -50,12 +50,7 @@ mask_payload(char* data, size_t size) noexcept
     char* const esdata = data + size;
 
     if(size >= 16) {
-      // Use SSE2.
-      __m128i exmask = _mm_setr_epi8(
-          this->mask_key[0], this->mask_key[1], this->mask_key[2], this->mask_key[3],
-          this->mask_key[0], this->mask_key[1], this->mask_key[2], this->mask_key[3],
-          this->mask_key[0], this->mask_key[1], this->mask_key[2], this->mask_key[3],
-          this->mask_key[0], this->mask_key[1], this->mask_key[2], this->mask_key[3]);
+      const __m128i exmask = _mm_set1_epi32((int32_t) be32toh(this->mask_key_u32));
 
       if((uintptr_t) cur % 16 == 0) {
         // aligned
