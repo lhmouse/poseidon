@@ -279,8 +279,7 @@ HTTP_Client_Session::
 do_http_raw_request(const HTTP_Request_Headers& req, const char* data, size_t size)
   {
     // Compose the message and send it as a whole.
-    tinyfmt_str fmt;
-    fmt.reserve(1023 + size);
+    tinyfmt_ln fmt;
     req.encode(fmt);
     fmt.putn(data, size);
     bool sent = this->tcp_send(fmt.data(), fmt.size());
@@ -351,8 +350,7 @@ http_chunked_request_send(const char* data, size_t size)
 
     // Compose a chunk and send it as a whole. The length of this chunk is
     // written as a hexadecimal integer without the `0x` prefix.
-    tinyfmt_str fmt;
-    fmt.reserve(1023);
+    tinyfmt_ln fmt;
     ::rocket::ascii_numput nump;
     nump.put_XU(size);
     fmt.putn(nump.data() + 2, nump.size() - 2);

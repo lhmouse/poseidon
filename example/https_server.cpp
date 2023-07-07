@@ -21,7 +21,7 @@ event_callback(shptrR<HTTPS_Server_Session> session, Abstract_Fiber& /*fiber*/, 
     resp.headers.emplace_back(sref("Date"), system_clock::now());
     resp.headers.emplace_back(sref("Content-Type"), sref("text/plain"));
 
-    tinyfmt_str fmt;
+    tinyfmt_ln fmt;
     fmt << "request payload length = " << data.size() << "\n";
 
     session->https_response(::std::move(resp), fmt.data(), fmt.size());

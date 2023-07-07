@@ -301,8 +301,7 @@ HTTPS_Server_Session::
 do_https_raw_response(const HTTP_Response_Headers& resp, const char* data, size_t size)
   {
     // Compose the message and send it as a whole.
-    tinyfmt_str fmt;
-    fmt.reserve(1023 + size);
+    tinyfmt_ln fmt;
     resp.encode(fmt);
     fmt.putn(data, size);
     bool sent = this->ssl_send(fmt.data(), fmt.size());
@@ -397,8 +396,7 @@ https_chunked_response_send(const char* data, size_t size)
 
     // Compose a chunk and send it as a whole. The length of this chunk is
     // written as a hexadecimal integer without the `0x` prefix.
-    tinyfmt_str fmt;
-    fmt.reserve(1023);
+    tinyfmt_ln fmt;
     ::rocket::ascii_numput nump;
     nump.put_XU(size);
     fmt.putn(nump.data() + 2, nump.size() - 2);
