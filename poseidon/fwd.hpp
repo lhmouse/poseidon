@@ -255,10 +255,11 @@ class HTTPS_Client_Session;
 // HTTP types
 class HTTP_DateTime;
 class HTTP_Value;
-using HTTP_Header_Vector = cow_bivector<cow_string, HTTP_Value>;
-struct HTTP_Request_Headers;
-struct HTTP_Response_Headers;
 class HTTP_Header_Parser;
+struct HTTP_Request_Headers;
+class HTTP_Request_Parser;
+struct HTTP_Response_Headers;
+class HTTP_Response_Parser;
 struct WebSocket_Frame_Header;
 
 // Easy types

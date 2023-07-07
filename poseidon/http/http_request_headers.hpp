@@ -12,7 +12,7 @@ struct HTTP_Request_Headers
   {
     cow_string method;
     cow_string uri;
-    HTTP_Header_Vector headers;
+    cow_bivector<cow_string, HTTP_Value> headers;
 
     // Define some helper functions.
     constexpr

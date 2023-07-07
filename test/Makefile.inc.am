@@ -3,10 +3,10 @@ check_PROGRAMS +=  \
   %reldir%/socket_address.test  \
   %reldir%/deflator.test  \
   %reldir%/inflator.test  \
+  %reldir%/uuid.test  \
   %reldir%/http_datetime.test  \
   %reldir%/http_value.test  \
   %reldir%/http_header_parser.test  \
-  %reldir%/uuid.test  \
   %reldir%/websocket_frame_header.test  \
   ${END}
 

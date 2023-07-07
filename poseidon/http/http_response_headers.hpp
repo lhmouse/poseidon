@@ -12,7 +12,7 @@ struct HTTP_Response_Headers
   {
     uint32_t status;
     cow_string reason;
-    HTTP_Header_Vector headers;
+    cow_bivector<cow_string, HTTP_Value> headers;
 
     // Define some helper functions.
     constexpr
