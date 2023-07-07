@@ -37,7 +37,8 @@ namespace noadl = poseidon;
       using S::operator=;  \
     }  // no semicolon
 
-#define POSEIDON_VISIBILITY_HIDDEN   __attribute__((__visibility__("hidden")))
+#define POSEIDON_VISIBILITY_HIDDEN   \
+  __attribute__((__visibility__("hidden"))) inline
 
 // Aliases
 using ::std::initializer_list;

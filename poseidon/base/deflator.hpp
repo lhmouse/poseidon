@@ -21,12 +21,19 @@ class Deflator
     explicit
     Deflator(zlib_Format format, int level = 8, int wbits = 15);
 
+  private:
+    void
+    do_check_output_buffer();
+
+    void
+    do_clear_pointers();
+
   protected:
     // This callback is invoked to request an output buffer if none has been
     // requested, or when the previous output buffer is full. Derived classes
     // shall return a temporary memory region where compressed data will be
     // written, or throw an exception if the request cannot be honored. This
-    // function shall ensure that there are more than 10 available bytes in the
+    // function shall ensure that there are at least 12 bytes available in the
     // output buffer, otherwise the behavior may be unpredictable.
     // If an exception is thrown, the state of this stream is unspecified.
     virtual

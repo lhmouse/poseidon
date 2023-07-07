@@ -20,6 +20,13 @@ class Inflator
     explicit
     Inflator(zlib_Format format, int wbits = 15);
 
+  private:
+    void
+    do_check_output_buffer();
+
+    void
+    do_clear_pointers();
+
   protected:
     // This callback is invoked to request an output buffer if none has been
     // requested, or when the previous output buffer is full. Derived classes
