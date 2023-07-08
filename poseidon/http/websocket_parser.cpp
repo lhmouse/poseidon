@@ -18,12 +18,11 @@ do_make_websocket_key(char* ws_key_25, const volatile WebSocket_Parser* self)
   {
     ::SHA_CTX sha[1];
     uint8_t checksum[20];
+    intptr_t value;
 
     ::SHA1_Init(sha);
-    uint64_t value = (uint32_t) ::getpid();
-    ::SHA1_Update(sha, &value, sizeof(value));
-    value = (uintptr_t) self;
-    ::SHA1_Update(sha, &value, sizeof(value));
+    ::SHA1_Update(sha, &(value = ::getpid()), sizeof(value));
+    ::SHA1_Update(sha, &(value = (intptr_t) self), sizeof(value));
     ::SHA1_Final(checksum, sha);
     ::EVP_EncodeBlock((uint8_t*) ws_key_25, checksum, 16);
   }
