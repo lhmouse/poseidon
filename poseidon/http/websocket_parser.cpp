@@ -11,6 +11,37 @@
 #include <openssl/sha.h>
 #include <openssl/evp.h>
 namespace poseidon {
+namespace {
+
+void
+do_make_websocket_key(char* ws_key_25, const volatile WebSocket_Parser* self)
+  {
+    ::SHA_CTX sha[1];
+    uint8_t checksum[20];
+
+    ::SHA1_Init(sha);
+    uint64_t value = (uint32_t) ::getpid();
+    ::SHA1_Update(sha, &value, sizeof(value));
+    value = (uintptr_t) self;
+    ::SHA1_Update(sha, &value, sizeof(value));
+    ::SHA1_Final(checksum, sha);
+    ::EVP_EncodeBlock((uint8_t*) ws_key_25, checksum, 16);
+  }
+
+void
+do_make_websocket_accept(char* ws_accept_29, const char* ws_key)
+  {
+    ::SHA_CTX sha[1];
+    uint8_t checksum[20];
+
+    ::SHA1_Init(sha);
+    ::SHA1_Update(sha, ws_key, 24);
+    ::SHA1_Update(sha, "258EAFA5-E914-47DA-95CA-C5AB0DC85B11", 36);
+    ::SHA1_Final(checksum, sha);
+    ::EVP_EncodeBlock((uint8_t*) ws_accept_29, checksum, 20);
+  }
+
+}  // namespace
 
 WebSocket_Parser::
 ~WebSocket_Parser()
@@ -29,20 +60,8 @@ create_handshake_request(HTTP_Request_Headers& req) const
     req.headers.emplace_back(sref("Upgrade"), sref("websocket"));
     req.headers.emplace_back(sref("Sec-WebSocket-Version"), 13);
 
-    // The key is a truncated checksum of the current process ID and the address
-    // of the current parser object.
-    ::SHA_CTX sha[1];
-    uint64_t value;
-    uint8_t checksum[20], ws_key[25];
-
-    ::SHA1_Init(sha);
-    value = (uint32_t) ::getpid();
-    ::SHA1_Update(sha, &value, sizeof(value));
-    value = (uintptr_t) this;
-    ::SHA1_Update(sha, &value, sizeof(value));
-    ::SHA1_Final(checksum, sha);
-    ::EVP_EncodeBlock(ws_key, checksum, 16);
-
+    char ws_key[25];
+    do_make_websocket_key(ws_key, this);
     req.headers.emplace_back(sref("Sec-WebSocket-Key"), cow_string((const char*) ws_key, 24));
   }
 
@@ -118,16 +137,8 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
     resp.headers.emplace_back(sref("Connection"), sref("Upgrade"));
     resp.headers.emplace_back(sref("Upgrade"), sref("websocket"));
 
-    // Calculate the key response.
-    ::SHA_CTX sha[1];
-    uint8_t checksum[20], ws_accept[29];
-
-    ::SHA1_Init(sha);
-    ::SHA1_Update(sha, ws_key_req.data(), ws_key_req.size());
-    ::SHA1_Update(sha, "258EAFA5-E914-47DA-95CA-C5AB0DC85B11", 36);
-    ::SHA1_Final(checksum, sha);
-    ::EVP_EncodeBlock(ws_accept, checksum, 20);
-
+    char ws_accept[29];
+    do_make_websocket_accept(ws_accept, ws_key_req.c_str());
     resp.headers.emplace_back(sref("Sec-WebSocket-Accept"), cow_string((const char*) ws_accept, 28));
   }
 
@@ -144,7 +155,7 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
     // Parse request headers from the server.
     bool connection_ok = false;
     bool upgrade_ok = false;
-    cow_string ws_acc_resp;
+    cow_string ws_accept_resp;
     HTTP_Header_Parser hparser;
 
     for(const auto& hpair : resp.headers)
@@ -174,36 +185,22 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
           continue;
 
         if(hpair.second.as_string().length() == 28)
-          ws_acc_resp = hpair.second.as_string();
+          ws_accept_resp = hpair.second.as_string();
       }
 
-    if(!connection_ok || !upgrade_ok || ws_acc_resp.empty())
+    if(!connection_ok || !upgrade_ok || ws_accept_resp.empty())
       return;
 
-    // Validate the key response. The key was a truncated checksum of the current
-    // process ID and the address of the current parser object.
-    ::SHA_CTX sha[1];
-    uint64_t value;
-    uint8_t checksum[20], ws_key[25], ws_acc[29];
+    // Validate the key response. In theory, the final base64 block contains two
+    // padding bits that may vary, but do we have to check that?
+    char ws_key[25], ws_accept[29];
+    do_make_websocket_key(ws_key, this);
+    do_make_websocket_accept(ws_accept, ws_key);
 
-    ::SHA1_Init(sha);
-    value = (uint32_t) ::getpid();
-    ::SHA1_Update(sha, &value, sizeof(value));
-    value = (uintptr_t) this;
-    ::SHA1_Update(sha, &value, sizeof(value));
-    ::SHA1_Final(checksum, sha);
-    ::EVP_EncodeBlock(ws_key, checksum, 16);
-
-    ::SHA1_Init(sha);
-    ::SHA1_Update(sha, ws_key, 24);
-    ::SHA1_Update(sha, "258EAFA5-E914-47DA-95CA-C5AB0DC85B11", 36);
-    ::SHA1_Final(checksum, sha);
-    ::EVP_EncodeBlock(ws_acc, checksum, 20);
-
-    if(::memcmp(ws_acc_resp.data(), ws_acc, 28) != 0)
+    if(::memcmp(ws_accept_resp.c_str(), ws_accept, 28) != 0)
       return;
 
-    // Clear the error status. WebSocket frames can be sent now.
+    // Clear the error status to enable the parser.
     this->m_data_opcode = 0;
   }
 
