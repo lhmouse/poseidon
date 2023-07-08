@@ -6,5 +6,9 @@
 #include "../utils.hpp"
 namespace poseidon {
 
+WebSocket_Frame_Parser::
+~WebSocket_Frame_Parser()
+  {
+  }
 
 }  // namespace
