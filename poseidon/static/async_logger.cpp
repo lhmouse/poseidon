@@ -194,7 +194,7 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
     // Write the timestamp and tag.
     do_color(mtext, lconf, lconf.color.c_str());  // level color
     mtext.putn(stemp, 30);
-    do_color(mtext, lconf, "7");  // inverse
+    do_color(mtext, lconf, "22;7");  // no bright; inverse
     mtext.puts(lconf.tag);
     do_color(mtext, lconf, "0");  // reset
     mtext.putc(' ');
