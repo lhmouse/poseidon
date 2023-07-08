@@ -307,7 +307,7 @@ class Thunk
     explicit
     Thunk(const shptr<RealT>& obj) noexcept
       {
-        this->m_func = +[](void* p, ArgsT&&... ap) { (*(RealT*) p) ((ArgsT&&) ap...);  };
+        this->m_func = +[](void* p, ArgsT&&... args) { (*(RealT*) p) (::std::forward<ArgsT>(args)...);  };
         this->m_obj = obj;
       }
 
@@ -325,9 +325,9 @@ class Thunk
     operator()(ArgsT... args) const
       {
         if(this->m_func)
-          this->m_func(this->m_obj.get(), (ArgsT&&) args...);
+          this->m_func(this->m_obj.get(), ::std::forward<ArgsT>(args)...);
         else
-          ((function_type*)(intptr_t) this->m_obj.get()) ((ArgsT&&) args...);
+          ((function_type*)(intptr_t) this->m_obj.get()) (::std::forward<ArgsT>(args)...);
       }
   };
 
