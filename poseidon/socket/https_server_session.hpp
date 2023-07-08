@@ -6,9 +6,8 @@
 
 #include "../fwd.hpp"
 #include "ssl_socket.hpp"
-#include "../http/http_request_headers.hpp"
+#include "../http/http_request_parser.hpp"
 #include "../http/http_response_headers.hpp"
-#include <http_parser.h>
 namespace poseidon {
 
 class HTTPS_Server_Session
@@ -17,9 +16,7 @@ class HTTPS_Server_Session
   private:
     friend class Network_Driver;
 
-    ::http_parser m_parser[1];
-    HTTP_Request_Headers m_req;
-    linear_buffer m_body;
+    HTTP_Request_Parser m_req_parser;
     bool m_upgrade_done = false;
     atomic_relaxed<bool> m_upgrade_ack;
 
@@ -40,15 +37,13 @@ class HTTPS_Server_Session
 
     // This callback is invoked by the network thread after all headers of a
     // request have been received, just before the body of it. Returning
-    // `http_message_body_normal` indicatesthat the request has a body whose
+    // `http_message_body_normal` indicates that the request has a body whose
     // length is described by the `Content-Length` or `Transfer-Encoding`
-    // header. Returning `http_message_body_empty` indicates that the message
-    // does not have a body even if it appears so, such as a CONNECT request.
-    // Returning `http_message_body_connect` causes all further incoming data
-    // to be delivered via `do_on_http_upgraded_stream()`. This callback is
-    // primarily used to examine request paths and headers before processing
-    // request data.
-    // The default implementation invokes `do_on_http_request_error()` if the
+    // header. Returning `http_message_body_connect` causes all further
+    // incoming data to be delivered via `do_on_https_upgraded_stream()`. This
+    // callback is primarily used to examine request paths and headers before
+    // request bodies.
+    // The default implementation invokes `do_on_https_request_error()` if the
     // request method is CONNECT or the request URI is absolute (this usually
     // causes shutdown of the connection), ignores upgrade requests, and
     // returns `http_message_body_normal`.
