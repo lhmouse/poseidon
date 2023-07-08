@@ -160,7 +160,6 @@ template<typename T> using wkptrR = const wkptr<T>&;
 
 template<typename T> using ptr = T*;
 template<typename... T> using vfptr = void (*)(T...);
-using vufptr = void (*)(...);
 
 class cacheline_barrier
   {
