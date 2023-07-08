@@ -12,7 +12,7 @@ extern Easy_HTTPS_Client my_client;
 void
 event_callback(shptrR<HTTPS_Client_Session> session, Abstract_Fiber& /*fiber*/, HTTP_Response_Headers&& resp, linear_buffer&& data)
   {
-    POSEIDON_LOG_WARN(("HTTP client received response from `$1`: $2 $3"),
+    POSEIDON_LOG_WARN(("HTTPS client received response from `$1`: $2 $3"),
         session->remote_address(), resp.status, resp.reason);
 
     for(const auto& pair : resp.headers)
