@@ -43,7 +43,7 @@ nobase_include_HEADERS +=  \
   %reldir%/http/http_response_headers.hpp  \
   %reldir%/http/http_response_parser.hpp  \
   %reldir%/http/websocket_frame_header.hpp  \
-  %reldir%/http/websocket_frame_parser.hpp  \
+  %reldir%/http/websocket_parser.hpp  \
   %reldir%/easy/easy_deflator.hpp  \
   %reldir%/easy/easy_inflator.hpp  \
   %reldir%/easy/easy_timer.hpp  \
@@ -99,7 +99,7 @@ lib_libposeidon_la_SOURCES =  \
   %reldir%/http/http_response_headers.cpp  \
   %reldir%/http/http_response_parser.cpp  \
   %reldir%/http/websocket_frame_header.cpp  \
-  %reldir%/http/websocket_frame_parser.cpp  \
+  %reldir%/http/websocket_parser.cpp  \
   %reldir%/easy/easy_timer.cpp  \
   %reldir%/easy/easy_deflator.cpp  \
   %reldir%/easy/easy_inflator.cpp  \
