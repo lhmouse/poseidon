@@ -13,7 +13,7 @@ class HTTP_Header_Parser
   private:
     // source header string
     cow_string m_hstr;
-    static constexpr size_t hpos_error = (size_t) -127;
+    static constexpr size_t error_hpos = (size_t) -127;
     size_t m_hpos;
 
     // name and value of current attribute
@@ -39,7 +39,7 @@ class HTTP_Header_Parser
     // Has an error occurred?
     bool
     error() const noexcept
-      { return this->m_hpos == hpos_error;  }
+      { return this->m_hpos == error_hpos;  }
 
     // Clears all fields.
     void

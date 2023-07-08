@@ -42,7 +42,7 @@ do_next_attribute_from_separator()
     // Parse the name of an attribute, and initialize its value to null.
     size_t tlen = this->m_value.parse_token_partial(this->m_hstr.data() + hpos, this->m_hstr.size() - hpos);
     if(tlen == 0) {
-      this->m_hpos = hpos_error;
+      this->m_hpos = error_hpos;
       return -1;
     }
 
@@ -70,7 +70,7 @@ do_next_attribute_from_separator()
 
     // The attribute shall be terminated by a separator.
     if((this->m_hstr[hpos] != ';') && (this->m_hstr[hpos] != ',') && (hpos != this->m_hstr.size())) {
-      this->m_hpos = hpos_error;
+      this->m_hpos = error_hpos;
       return -1;
     }
 
@@ -94,7 +94,7 @@ next_attribute()
       return false;
 
     if(this->m_hstr[this->m_hpos] != ';') {
-      this->m_hpos = hpos_error;
+      this->m_hpos = error_hpos;
       return false;
     }
 
@@ -119,7 +119,7 @@ next_element()
       return false;
 
     if(this->m_hstr[this->m_hpos] != ',') {
-      this->m_hpos = hpos_error;
+      this->m_hpos = error_hpos;
       return false;
     }
 
