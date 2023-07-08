@@ -1,8 +1,8 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
 
-#ifndef POSEIDON_SOCKET_HTTP_RESPONSE_PARSER_
-#define POSEIDON_SOCKET_HTTP_RESPONSE_PARSER_
+#ifndef POSEIDON_HTTP_HTTP_RESPONSE_PARSER_
+#define POSEIDON_HTTP_HTTP_RESPONSE_PARSER_
 
 #include "../fwd.hpp"
 #include "http_response_headers.hpp"
