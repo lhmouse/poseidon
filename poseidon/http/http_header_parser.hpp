@@ -57,15 +57,13 @@ class HTTP_Header_Parser
 
     // Advances to the next attribute of the current element, separated by a
     // semicolon. This function will not advance pass a comma.
-    // Returns whether the end of source string has been reached or an error
-    // has happened.
+    // Returns whether an attribute has been fetched and no error has occurred.
     bool
     next_attribute();
 
     // Advances to the next element, separated by a comma. All in-between
     // attributes are skipped.
-    // Returns whether the end of source string has been reached or an error
-    // has happened.
+    // Returns whether an element has been fetched and no error has occurred.
     bool
     next_element();
 
