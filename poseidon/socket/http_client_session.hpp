@@ -6,9 +6,8 @@
 
 #include "../fwd.hpp"
 #include "tcp_socket.hpp"
+#include "../http/http_response_parser.hpp"
 #include "../http/http_request_headers.hpp"
-#include "../http/http_response_headers.hpp"
-#include <http_parser.h>
 namespace poseidon {
 
 class HTTP_Client_Session
@@ -17,9 +16,7 @@ class HTTP_Client_Session
   private:
     friend class Network_Driver;
 
-    ::http_parser m_parser[1];
-    HTTP_Response_Headers m_resp;
-    linear_buffer m_body;
+    HTTP_Response_Parser m_resp_parser;
     bool m_upgrade_done = false;
     atomic_relaxed<bool> m_upgrade_ack;
 
