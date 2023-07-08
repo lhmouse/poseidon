@@ -16,16 +16,15 @@ class HTTP_Request_Parser
     ::http_parser m_parser[1];
     HTTP_Request_Headers m_headers;
     linear_buffer m_body;
-    bool m_close_after_body = false;
-    bool m_headers_complete = false;
-    bool m_message_complete = false;
+    bool m_close_after_body;
+    bool m_headers_complete;
+    bool m_message_complete;
 
   public:
     // Constructs a parser for incoming requests.
     HTTP_Request_Parser() noexcept
       {
-        this->m_parser->data = this;
-        ::http_parser_init(this->m_parser, HTTP_REQUEST);
+        this->clear();
       }
 
   public:
@@ -47,6 +46,8 @@ class HTTP_Request_Parser
     clear() noexcept
       {
         ::http_parser_init(this->m_parser, HTTP_REQUEST);
+        this->m_parser->data = this;
+
         this->m_headers.clear();
         this->m_body.clear();
         this->m_close_after_body = false;

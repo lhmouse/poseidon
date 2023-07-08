@@ -14,7 +14,7 @@ class HTTP_Header_Parser
     // source header string
     cow_string m_hstr;
     static constexpr size_t hpos_error = (size_t) -127;
-    size_t m_hpos = 0;
+    size_t m_hpos;
 
     // name and value of current attribute
     cow_string m_name;
@@ -24,12 +24,9 @@ class HTTP_Header_Parser
     // Constructs a parser for a single HTTP header, suitable for parsing
     // various HTTP headers in the semicolon-inside-comma-separated format,
     // such as `Cookie` and `Accept-Encoding`.
-    HTTP_Header_Parser() noexcept = default;
-
-    explicit
-    HTTP_Header_Parser(cow_stringR hstr) noexcept
+    HTTP_Header_Parser() noexcept
       {
-        this->reload(hstr);
+        this->clear();
       }
 
   private:

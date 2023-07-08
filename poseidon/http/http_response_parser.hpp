@@ -16,16 +16,15 @@ class HTTP_Response_Parser
     ::http_parser m_parser[1];
     HTTP_Response_Headers m_headers;
     linear_buffer m_body;
-    bool m_close_after_body = false;
-    bool m_headers_complete = false;
-    bool m_message_complete = false;
+    bool m_close_after_body;
+    bool m_headers_complete;
+    bool m_message_complete;
 
   public:
     // Constructs a parser for incoming responses.
     HTTP_Response_Parser() noexcept
       {
-        this->m_parser->data = this;
-        ::http_parser_init(this->m_parser, HTTP_RESPONSE);
+        this->clear();
       }
 
   public:
@@ -42,6 +41,9 @@ class HTTP_Response_Parser
     clear() noexcept
       {
         ::http_parser_init(this->m_parser, HTTP_RESPONSE);
+        this->m_parser->allow_chunked_length = true;
+        this->m_parser->data = this;
+
         this->m_headers.clear();
         this->m_body.clear();
         this->m_close_after_body = false;
