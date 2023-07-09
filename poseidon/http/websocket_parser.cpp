@@ -8,36 +8,31 @@
 #include "http_header_parser.hpp"
 #include "../utils.hpp"
 #define OPENSSL_API_COMPAT  0x10100000L
+#include <openssl/md5.h>
 #include <openssl/sha.h>
 #include <openssl/evp.h>
 namespace poseidon {
 namespace {
 
 void
-do_make_websocket_key(char* ws_key_25, const volatile WebSocket_Parser* self)
+do_make_websocket_key(uchar_array<16>& ws_key, const volatile WebSocket_Parser* self)
   {
-    ::SHA_CTX sha[1];
-    uint8_t checksum[20];
+    ::MD5_CTX ctx[1];
+    ::MD5_Init(ctx);
     intptr_t value;
-
-    ::SHA1_Init(sha);
-    ::SHA1_Update(sha, &(value = ::getpid()), sizeof(value));
-    ::SHA1_Update(sha, &(value = (intptr_t) self), sizeof(value));
-    ::SHA1_Final(checksum, sha);
-    ::EVP_EncodeBlock((uint8_t*) ws_key_25, checksum, 16);
+    ::MD5_Update(ctx, &(value = ::getpid()), sizeof(value));
+    ::MD5_Update(ctx, &(value = (intptr_t) self), sizeof(value));
+    ::MD5_Final(ws_key.data(), ctx);
   }
 
 void
-do_make_websocket_accept(char* ws_accept_29, const char* ws_key)
+do_make_websocket_accept(uchar_array<20>& ws_accept, const uchar_array<25>& ws_key_str)
   {
-    ::SHA_CTX sha[1];
-    uint8_t checksum[20];
-
-    ::SHA1_Init(sha);
-    ::SHA1_Update(sha, ws_key, 24);
-    ::SHA1_Update(sha, "258EAFA5-E914-47DA-95CA-C5AB0DC85B11", 36);
-    ::SHA1_Final(checksum, sha);
-    ::EVP_EncodeBlock((uint8_t*) ws_accept_29, checksum, 20);
+    ::SHA_CTX ctx[1];
+    ::SHA1_Init(ctx);
+    ::SHA1_Update(ctx, ws_key_str.data(), 24);
+    ::SHA1_Update(ctx, "258EAFA5-E914-47DA-95CA-C5AB0DC85B11", 36);
+    ::SHA1_Final(ws_accept.data(), ctx);
   }
 
 }  // namespace
@@ -59,9 +54,11 @@ create_handshake_request(HTTP_Request_Headers& req) const
     req.headers.emplace_back(sref("Upgrade"), sref("websocket"));
     req.headers.emplace_back(sref("Sec-WebSocket-Version"), 13);
 
-    char ws_key[25];
+    uchar_array<16> ws_key;
     do_make_websocket_key(ws_key, this);
-    req.headers.emplace_back(sref("Sec-WebSocket-Key"), cow_string((const char*) ws_key, 24));
+    uchar_array<25> ws_key_str;
+    ::EVP_EncodeBlock(ws_key_str.data(), ws_key.data(), 16);
+    req.headers.emplace_back(sref("Sec-WebSocket-Key"), cow_string((const char*) ws_key_str.data(), 24));
   }
 
 void
@@ -78,7 +75,7 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
     bool connection_ok = false;
     bool upgrade_ok = false;
     bool ws_version_ok = false;
-    cow_string ws_key_req;
+    uchar_array<25> ws_key_str = { };
     HTTP_Header_Parser hparser;
 
     for(const auto& hpair : req.headers)
@@ -124,10 +121,10 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
           continue;
 
         if(hpair.second.as_string().length() == 24)
-          ws_key_req = hpair.second.as_string();
+          ::memcpy(ws_key_str.data(), hpair.second.as_string().c_str(), 25);
       }
 
-    if(!connection_ok || !upgrade_ok || !ws_version_ok || ws_key_req.empty())
+    if(!connection_ok || !upgrade_ok || !ws_version_ok || !ws_key_str[0])
       return;
 
     // Compose the response.
@@ -136,9 +133,11 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
     resp.headers.emplace_back(sref("Connection"), sref("Upgrade"));
     resp.headers.emplace_back(sref("Upgrade"), sref("websocket"));
 
-    char ws_accept[29];
-    do_make_websocket_accept(ws_accept, ws_key_req.c_str());
-    resp.headers.emplace_back(sref("Sec-WebSocket-Accept"), cow_string((const char*) ws_accept, 28));
+    uchar_array<20> ws_accept;
+    do_make_websocket_accept(ws_accept, ws_key_str);
+    uchar_array<29> ws_accept_str;
+    ::EVP_EncodeBlock(ws_accept_str.data(), ws_accept.data(), 20);
+    resp.headers.emplace_back(sref("Sec-WebSocket-Accept"), cow_string((const char *) ws_accept_str.data(), 28));
   }
 
 void
@@ -154,7 +153,7 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
     // Parse request headers from the server.
     bool connection_ok = false;
     bool upgrade_ok = false;
-    cow_string ws_accept_resp;
+    uchar_array<29> ws_accept_str = { };
     HTTP_Header_Parser hparser;
 
     for(const auto& hpair : resp.headers)
@@ -184,19 +183,26 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
           continue;
 
         if(hpair.second.as_string().length() == 28)
-          ws_accept_resp = hpair.second.as_string();
+          ::memcpy(ws_accept_str.data(), hpair.second.as_string().c_str(), 29);
       }
 
-    if(!connection_ok || !upgrade_ok || ws_accept_resp.empty())
+    if(!connection_ok || !upgrade_ok || !ws_accept_str[0])
       return;
 
-    // Validate the key response. In theory, the final base64 block contains two
-    // padding bits that may vary, but do we have to check that?
-    char ws_key[25], ws_accept[29];
+    // Validate the key response.
+    uchar_array<16> ws_key;
     do_make_websocket_key(ws_key, this);
-    do_make_websocket_accept(ws_accept, ws_key);
+    uchar_array<25> ws_key_str;
+    ::EVP_EncodeBlock(ws_key_str.data(), ws_key.data(), 16);
+    uchar_array<20> ws_accept;
+    do_make_websocket_accept(ws_accept, ws_key_str);
 
-    if(::memcmp(ws_accept_resp.c_str(), ws_accept, 28) != 0)
+    // The size of output of `EVP_DecodeBlock()` is always a multiple of three
+    // due to padding. The extra zero byte will be ignored.
+    uchar_array<21> ws_accept_from_server;
+    if(::EVP_DecodeBlock(ws_accept_from_server.data(), ws_accept_str.data(), 28) != 21)
+      return;
+    else if(::memcmp(ws_accept.data(), ws_accept_from_server.data(), 20) != 0)
       return;
 
     // Clear the error status to enable the parser.
