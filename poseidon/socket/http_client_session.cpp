@@ -12,6 +12,7 @@ HTTP_Client_Session::
 HTTP_Client_Session()
   : TCP_Socket()  // client constructor
   {
+    this->m_resp_parser.emplace();
   }
 
 HTTP_Client_Session::
@@ -25,45 +26,38 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
   {
     for(;;) {
       // Check whether the connection has switched to another protocol.
-      if(this->m_upgrade_done)
-        return this->do_on_http_upgraded_stream(data, eof);
-
       if(this->m_upgrade_ack.load()) {
   do_upgrade:
-        // The HTTP parser is no longer useful, so deallocate dynamic memory.
-        ::rocket::reconstruct(&(this->m_resp_parser.mut_headers()));
-        ::rocket::reconstruct(&(this->m_resp_parser.mut_body()));
-        this->m_upgrade_done = true;
-
+        this->m_resp_parser.reset();
         return this->do_on_http_upgraded_stream(data, eof);
       }
 
       // If something has gone wrong, ignore further incoming data.
-      if(this->m_resp_parser.error()) {
+      if(this->m_resp_parser->error()) {
         data.clear();
         return;
       }
 
-      if(!this->m_resp_parser.headers_complete()) {
-        this->m_resp_parser.parse_headers_from_stream(data, eof);
+      if(!this->m_resp_parser->headers_complete()) {
+        this->m_resp_parser->parse_headers_from_stream(data, eof);
 
-        if(this->m_resp_parser.error()) {
+        if(this->m_resp_parser->error()) {
           data.clear();
           this->quick_close();
           return;
         }
 
-        if(!this->m_resp_parser.headers_complete())
+        if(!this->m_resp_parser->headers_complete())
           return;
 
         // Check response headers.
-        auto body_type = this->do_on_http_response_headers(this->m_resp_parser.mut_headers());
+        auto body_type = this->do_on_http_response_headers(this->m_resp_parser->mut_headers());
         switch(body_type) {
           case http_message_body_normal:
             break;
 
           case http_message_body_empty:
-            this->m_resp_parser.set_no_body();
+            this->m_resp_parser->set_no_body();
             break;
 
           case http_message_body_connect:
@@ -78,27 +72,27 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
         }
       }
 
-      if(!this->m_resp_parser.body_complete()) {
-        this->m_resp_parser.parse_body_from_stream(data, eof);
+      if(!this->m_resp_parser->body_complete()) {
+        this->m_resp_parser->parse_body_from_stream(data, eof);
 
-        if(this->m_resp_parser.error()) {
+        if(this->m_resp_parser->error()) {
           data.clear();
           this->quick_close();
           return;
         }
 
-        this->do_on_http_response_body_stream(this->m_resp_parser.mut_body());
+        this->do_on_http_response_body_stream(this->m_resp_parser->mut_body());
 
-        if(!this->m_resp_parser.body_complete())
+        if(!this->m_resp_parser->body_complete())
           return;
 
         // Check response headers and the body.
-        this->do_on_http_response_finish(::std::move(this->m_resp_parser.mut_headers()),
-                ::std::move(this->m_resp_parser.mut_body()),
-                this->m_resp_parser.should_close_after_body());
+        this->do_on_http_response_finish(::std::move(this->m_resp_parser->mut_headers()),
+                ::std::move(this->m_resp_parser->mut_body()),
+                this->m_resp_parser->should_close_after_body());
       }
 
-      this->m_resp_parser.next_message();
+      this->m_resp_parser->next_message();
       POSEIDON_LOG_TRACE(("HTTP parser done: data.size `$1`, eof `$2`"), data.size(), eof);
     }
   }

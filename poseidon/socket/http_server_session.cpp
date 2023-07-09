@@ -12,6 +12,7 @@ HTTP_Server_Session::
 HTTP_Server_Session(unique_posix_fd&& fd)
   : TCP_Socket(::std::move(fd))  // server constructor
   {
+    this->m_req_parser.emplace();
   }
 
 HTTP_Server_Session::
@@ -25,39 +26,32 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
   {
     for(;;) {
       // Check whether the connection has switched to another protocol.
-      if(this->m_upgrade_done)
-        return this->do_on_http_upgraded_stream(data, eof);
-
       if(this->m_upgrade_ack.load()) {
   do_upgrade:
-        // The HTTP parser is no longer useful, so deallocate dynamic memory.
-        ::rocket::reconstruct(&(this->m_req_parser.mut_headers()));
-        ::rocket::reconstruct(&(this->m_req_parser.mut_body()));
-        this->m_upgrade_done = true;
-
+        this->m_req_parser.reset();
         return this->do_on_http_upgraded_stream(data, eof);
       }
 
       // If something has gone wrong, ignore further incoming data.
-      if(this->m_req_parser.error()) {
+      if(this->m_req_parser->error()) {
         data.clear();
         return;
       }
 
-      if(!this->m_req_parser.headers_complete()) {
-        this->m_req_parser.parse_headers_from_stream(data, eof);
+      if(!this->m_req_parser->headers_complete()) {
+        this->m_req_parser->parse_headers_from_stream(data, eof);
 
-        if(this->m_req_parser.error()) {
+        if(this->m_req_parser->error()) {
           data.clear();
-          this->do_on_http_request_error(this->m_req_parser.http_status_from_error());
+          this->do_on_http_request_error(this->m_req_parser->http_status_from_error());
           return;
         }
 
-        if(!this->m_req_parser.headers_complete())
+        if(!this->m_req_parser->headers_complete())
           return;
 
         // Check request headers.
-        auto body_type = this->do_on_http_request_headers(this->m_req_parser.mut_headers());
+        auto body_type = this->do_on_http_request_headers(this->m_req_parser->mut_headers());
         switch(body_type) {
           case http_message_body_normal:
           case http_message_body_empty:
@@ -75,27 +69,27 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
         }
       }
 
-      if(!this->m_req_parser.body_complete()) {
-        this->m_req_parser.parse_body_from_stream(data, eof);
+      if(!this->m_req_parser->body_complete()) {
+        this->m_req_parser->parse_body_from_stream(data, eof);
 
-        if(this->m_req_parser.error()) {
+        if(this->m_req_parser->error()) {
           data.clear();
-          this->do_on_http_request_error(this->m_req_parser.http_status_from_error());
+          this->do_on_http_request_error(this->m_req_parser->http_status_from_error());
           return;
         }
 
-        this->do_on_http_request_body_stream(this->m_req_parser.mut_body());
+        this->do_on_http_request_body_stream(this->m_req_parser->mut_body());
 
-        if(!this->m_req_parser.body_complete())
+        if(!this->m_req_parser->body_complete())
           return;
 
         // Check request headers and the body.
-        this->do_on_http_request_finish(::std::move(this->m_req_parser.mut_headers()),
-                ::std::move(this->m_req_parser.mut_body()),
-                this->m_req_parser.should_close_after_body());
+        this->do_on_http_request_finish(::std::move(this->m_req_parser->mut_headers()),
+                ::std::move(this->m_req_parser->mut_body()),
+                this->m_req_parser->should_close_after_body());
       }
 
-      this->m_req_parser.next_message();
+      this->m_req_parser->next_message();
       POSEIDON_LOG_TRACE(("HTTP parser done: data.size `$1`, eof `$2`"), data.size(), eof);
     }
   }

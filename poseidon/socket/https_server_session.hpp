@@ -16,8 +16,7 @@ class HTTPS_Server_Session
   private:
     friend class Network_Driver;
 
-    HTTP_Request_Parser m_req_parser;
-    bool m_upgrade_done = false;
+    optional<HTTP_Request_Parser> m_req_parser;
     atomic_relaxed<bool> m_upgrade_ack;
 
   public:
