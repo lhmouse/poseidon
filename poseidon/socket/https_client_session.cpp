@@ -28,7 +28,6 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
     for(;;) {
       // Check whether the connection has switched to another protocol.
       if(this->m_upgrade_ack.load()) {
-  do_upgrade:
         this->m_resp_parser.reset();
         return this->do_on_https_upgraded_stream(data, eof);
       }
@@ -62,8 +61,9 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
             break;
 
           case http_message_body_connect:
+            this->m_resp_parser.reset();
             this->m_upgrade_ack.store(true);
-            goto do_upgrade;
+            return this->do_on_https_upgraded_stream(data, eof);
 
           default:
             POSEIDON_THROW((
