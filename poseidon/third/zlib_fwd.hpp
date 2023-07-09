@@ -14,6 +14,9 @@ inline
 int
 zlib_make_level(int level)
   {
+    if(level == -1)
+      return Z_DEFAULT_COMPRESSION;
+
     if((level < 0) || (level > 9))
       ::rocket::sprintf_and_throw<::std::invalid_argument>(
           "zlib error: compression level `%d` not valid",

@@ -45,14 +45,14 @@ class Easy_Inflator
     void
     output_clear() noexcept;
 
-    // Decompresses some data and returns the number of bytes that
-    // have been consumed.
+    // Decompresses some data and returns the number of bytes that have been
+    // consumed.
     size_t
     inflate(const char* data, size_t size);
 
-    // Completes the current stream. No data shall be written any
-    // further. Ifno end-of-stream marker has been found in the
-    // current stream, `false` is returned.
+    // Completes the current stream. No data shall be written any further. If
+    // no end-of-stream marker has been found in the current stream, `false` is
+    // returned.
     bool
     finish();
   };

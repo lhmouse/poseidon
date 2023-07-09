@@ -16,10 +16,11 @@ class Deflator
   public:
     // Constructs a data compressor. `format` shall be `zlib_format_raw`,
     // `zlib_format_deflate` or `zlib_format_gzip`. `level` shall be an integer
-    // between 0 (no compression) and 9 (best compression). `wbits` shall be an
-    // integer between 9 and 15, inclusively.
+    // between `0` (no compression) and `9` (best compression), or `-1` to select
+    // the default value. `wbits` shall be an integer between `9` and `15`,
+    // inclusively.
     explicit
-    Deflator(zlib_Format format, int level = 8, int wbits = 15);
+    Deflator(zlib_Format format, int level = -1, int wbits = 15);
 
   private:
     void
