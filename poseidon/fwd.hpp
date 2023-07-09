@@ -161,10 +161,13 @@ template<typename T> using wkptrR = const wkptr<T>&;
 template<typename T> using ptr = T*;
 template<typename... T> using vfptr = void (*)(T...);
 
+template<size_t N> using char_array = array<char, N>;
+template<size_t N> using uchar_array = array<unsigned char, N>;
+
 class cacheline_barrier
   {
   private:
-    alignas(max_align_t) array<char, 64U - alignof(max_align_t)> bytes;
+    alignas(max_align_t) uchar_array<64U - alignof(max_align_t)> bytes;
 
   public:
     cacheline_barrier() noexcept = default;
