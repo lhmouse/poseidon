@@ -15,13 +15,12 @@ namespace poseidon {
 namespace {
 
 void
-do_make_websocket_key(uchar_array<16>& ws_key, const volatile WebSocket_Parser* self)
+do_make_websocket_key(uchar_array<16>& ws_key, const void* self)
   {
     ::MD5_CTX ctx[1];
     ::MD5_Init(ctx);
-    intptr_t value;
-    ::MD5_Update(ctx, &(value = ::getpid()), sizeof(value));
-    ::MD5_Update(ctx, &(value = (intptr_t) self), sizeof(value));
+    int64_t source_data[7] = { -7, -6, -5, -4, -3, ::getpid(), (intptr_t) self };
+    ::MD5_Update(ctx, source_data, 56);
     ::MD5_Final(ws_key.data(), ctx);
   }
 
