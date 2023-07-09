@@ -2,7 +2,7 @@
 // Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
 
 #include "../precompiled.ipp"
-#include "websocket_parser.hpp"
+#include "websocket_compositor.hpp"
 #include "http_request_headers.hpp"
 #include "http_response_headers.hpp"
 #include "http_header_parser.hpp"
@@ -36,13 +36,13 @@ do_make_websocket_accept(uchar_array<20>& ws_accept, const uchar_array<25>& ws_k
 
 }  // namespace
 
-WebSocket_Parser::
-~WebSocket_Parser()
+WebSocket_Compositor::
+~WebSocket_Compositor()
   {
   }
 
 void
-WebSocket_Parser::
+WebSocket_Compositor::
 create_handshake_request(HTTP_Request_Headers& req) const
   {
     req.method = sref("GET");
@@ -61,7 +61,7 @@ create_handshake_request(HTTP_Request_Headers& req) const
   }
 
 void
-WebSocket_Parser::
+WebSocket_Compositor::
 accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers& req)
   {
     resp.status = 400;
@@ -140,7 +140,7 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
   }
 
 void
-WebSocket_Parser::
+WebSocket_Compositor::
 accept_handshake_response(const HTTP_Response_Headers& resp)
   {
     this->m_data_opcode = error_opcode;

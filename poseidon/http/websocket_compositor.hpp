@@ -1,14 +1,14 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
 
-#ifndef POSEIDON_HTTP_WEBSOCKET_PARSER_
-#define POSEIDON_HTTP_WEBSOCKET_PARSER_
+#ifndef POSEIDON_HTTP_WEBSOCKET_COMPOSITOR_
+#define POSEIDON_HTTP_WEBSOCKET_COMPOSITOR_
 
 #include "../fwd.hpp"
 #include "websocket_frame_header.hpp"
 namespace poseidon {
 
-class WebSocket_Parser
+class WebSocket_Compositor
   {
   private:
     WebSocket_Frame_Header m_header;
@@ -19,13 +19,13 @@ class WebSocket_Parser
 
   public:
     // Constructs a parser for incoming frames.
-    WebSocket_Parser() noexcept
+    WebSocket_Compositor() noexcept
       {
         this->clear();
       }
 
   public:
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(WebSocket_Parser);
+    ASTERIA_NONCOPYABLE_DESTRUCTOR(WebSocket_Compositor);
 
     // Has an error occurred?
     bool

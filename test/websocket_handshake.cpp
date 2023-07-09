@@ -4,7 +4,7 @@
 #include "utils.hpp"
 #include "../poseidon/http/http_request_headers.hpp"
 #include "../poseidon/http/http_response_headers.hpp"
-#include "../poseidon/http/websocket_parser.hpp"
+#include "../poseidon/http/websocket_compositor.hpp"
 using namespace ::poseidon;
 
 int
@@ -22,7 +22,7 @@ main()
     req.headers.emplace_back(sref("Sec-WebSocket-Protocol"), sref("chat, superchat"));
     req.headers.emplace_back(sref("Sec-WebSocket-Version"), 13);
 
-    WebSocket_Parser parser;
+    WebSocket_Compositor parser;
     HTTP_Response_Headers resp;
     parser.accept_handshake_request(resp, req);
     POSEIDON_TEST_CHECK(!parser.error());
