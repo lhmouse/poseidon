@@ -11,11 +11,18 @@ namespace poseidon {
 class WebSocket_Compositor
   {
   private:
-    WebSocket_Frame_Header m_header;
-    static constexpr uint8_t error_opcode = 0xFF;
+    enum WSC_Mode : uint8_t
+      {
+        wsc_pending     = 0,
+        wsc_error       = 1,
+        wsc_c_req_sent  = 2,
+        wsc_c_accepted  = 3,
+        wsc_s_accepted  = 4,
+      };
+
+    WSC_Mode m_wsc;
     uint8_t m_data_opcode;
-    linear_buffer m_data;
-    linear_buffer m_control;
+    WebSocket_Frame_Header m_header;
 
   public:
     // Constructs a parser for incoming frames.
@@ -30,24 +37,32 @@ class WebSocket_Compositor
     // Has an error occurred?
     bool
     error() const noexcept
-      { return this->m_data_opcode == error_opcode;  }
+      { return this->m_wsc == wsc_error;  }
+
+    // Gets the operating mode.
+    bool
+    is_client_mode() const noexcept
+      { return this->m_wsc == wsc_c_accepted;  }
+
+    bool
+    is_server_mode() const noexcept
+      { return this->m_wsc == wsc_s_accepted;  }
 
     // Clears all fields. This function shall not be called unless the parser is
     // to be reused for another stream.
     void
     clear() noexcept
       {
-        this->m_header.clear();
+        this->m_wsc = wsc_pending;
         this->m_data_opcode = 0;
-        this->m_data.clear();
-        this->m_control.clear();
+        this->m_header.clear();
       }
 
     // Creates a WebSocket handshake request from a client. The user may modify
     // the request URI or append new headers after this function returns. The
     // request headers shall be sent to a WebSocket server without a request body.
     void
-    create_handshake_request(HTTP_Request_Headers& req) const;
+    create_handshake_request(HTTP_Request_Headers& req);
 
     // Accepts a WebSocket handshake request from a client, and composes a
     // corresponding response from the server. If the client has requested

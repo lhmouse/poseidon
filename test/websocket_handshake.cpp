@@ -26,6 +26,7 @@ main()
     HTTP_Response_Headers resp;
     parser.accept_handshake_request(resp, req);
     POSEIDON_TEST_CHECK(!parser.error());
+    POSEIDON_TEST_CHECK(parser.is_server_mode());
     POSEIDON_TEST_CHECK(resp.status == 101);
 
     for(const auto& hr : resp.headers)
@@ -38,14 +39,18 @@ main()
 
     // self
     req.clear();
+    parser.clear();
     parser.create_handshake_request(req);
     POSEIDON_TEST_CHECK(!parser.error());
 
     resp.clear();
-    parser.accept_handshake_request(resp, req);
-    POSEIDON_TEST_CHECK(!parser.error());
+    WebSocket_Compositor parser2;
+    parser2.accept_handshake_request(resp, req);
+    POSEIDON_TEST_CHECK(!parser2.error());
+    POSEIDON_TEST_CHECK(parser2.is_server_mode());
     POSEIDON_TEST_CHECK(resp.status == 101);
 
     parser.accept_handshake_response(resp);
     POSEIDON_TEST_CHECK(!parser.error());
+    POSEIDON_TEST_CHECK(parser.is_client_mode());
   }

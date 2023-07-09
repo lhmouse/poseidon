@@ -43,8 +43,14 @@ WebSocket_Compositor::
 
 void
 WebSocket_Compositor::
-create_handshake_request(HTTP_Request_Headers& req) const
+create_handshake_request(HTTP_Request_Headers& req)
   {
+    if(this->m_wsc != wsc_pending)
+      POSEIDON_THROW((
+          "`create_handshake_request()` must be called as the first function (state `$1` not valid)"),
+          this->m_wsc);
+
+    // Compose the handshake request.
     req.method = sref("GET");
     req.uri = sref("/");
     req.headers.clear();
@@ -58,17 +64,30 @@ create_handshake_request(HTTP_Request_Headers& req) const
     uchar_array<25> ws_key_str;
     ::EVP_EncodeBlock(ws_key_str.data(), ws_key.data(), 16);
     req.headers.emplace_back(sref("Sec-WebSocket-Key"), cow_string((const char*) ws_key_str.data(), 24));
+
+    req.headers.emplace_back(sref("Sec-WebSocket-Extensions"), sref("permessage-deflate; client_max_window_bits"));
+
+    // Await the response.
+    this->m_wsc = wsc_c_req_sent;
   }
 
 void
 WebSocket_Compositor::
 accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers& req)
   {
+    if(this->m_wsc != wsc_pending)
+      POSEIDON_THROW((
+          "`accept_handshake_request()` must be called as the first function (state `$1` not valid)"),
+          this->m_wsc);
+
+    // Compose a default response, so in case of errors, we return immediately.
     resp.status = 400;
     resp.reason.clear();
     resp.headers.clear();
     resp.headers.reserve(8);
     resp.headers.emplace_back(sref("Connection"), sref("Close"));
+
+    this->m_wsc = wsc_error;
 
     // Parse request headers from the client.
     bool connection_ok = false;
@@ -137,17 +156,22 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
     uchar_array<29> ws_accept_str;
     ::EVP_EncodeBlock(ws_accept_str.data(), ws_accept.data(), 20);
     resp.headers.emplace_back(sref("Sec-WebSocket-Accept"), cow_string((const char *) ws_accept_str.data(), 28));
+
+    // For the server, this connection has now been established.
+    this->m_wsc = wsc_s_accepted;
   }
 
 void
 WebSocket_Compositor::
 accept_handshake_response(const HTTP_Response_Headers& resp)
   {
-    this->m_data_opcode = error_opcode;
+    if(this->m_wsc != wsc_c_req_sent)
+      POSEIDON_THROW((
+          "`accept_handshake_response()` must be called after `create_handshake_request()` (state `$1` not valid)"),
+          this->m_wsc);
 
-    // The response must be `101 Switching Protocol`.
-    if(resp.status != 101)
-      return;
+    // Set a default state, so in case of errors, we return immediately.
+    this->m_wsc = wsc_error;
 
     // Parse request headers from the server.
     bool connection_ok = false;
@@ -204,8 +228,8 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
     else if(::memcmp(ws_accept.data(), ws_accept_from_server.data(), 20) != 0)
       return;
 
-    // Clear the error status to enable the parser.
-    this->m_data_opcode = 0;
+    // For the server, this connection has now been established.
+    this->m_wsc = wsc_c_accepted;
   }
 
 }  // namespace
