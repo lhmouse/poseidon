@@ -14,25 +14,42 @@
 namespace poseidon {
 namespace {
 
-void
-do_make_websocket_key(uchar_array<16>& ws_key, const void* self)
+struct Sec_WebSocket
   {
-    ::MD5_CTX ctx[1];
-    ::MD5_Init(ctx);
-    int64_t source_data[7] = { -7, -6, -5, -4, -3, ::getpid(), (intptr_t) self };
-    ::MD5_Update(ctx, source_data, 56);
-    ::MD5_Final(ws_key.data(), ctx);
-  }
+    unsigned char key[16];
+    char key_str[25];
 
-void
-do_make_websocket_accept(uchar_array<20>& ws_accept, const uchar_array<25>& ws_key_str)
-  {
-    ::SHA_CTX ctx[1];
-    ::SHA1_Init(ctx);
-    ::SHA1_Update(ctx, ws_key_str.data(), 24);
-    ::SHA1_Update(ctx, "258EAFA5-E914-47DA-95CA-C5AB0DC85B11", 36);
-    ::SHA1_Final(ws_accept.data(), ctx);
-  }
+    unsigned char accept[20];
+    char accept_str[29];
+
+    Sec_WebSocket() noexcept
+      {
+        this->key_str[0] = 0;
+        this->accept_str[0] = 0;
+      }
+
+    void
+    make_key_str(const void* self)
+      {
+        ::MD5_CTX ctx;
+        ::MD5_Init(&ctx);
+        int64_t source_data[7] = { -7, -6, -5, -4, -3, ::getpid(), (intptr_t) self };
+        ::MD5_Update(&ctx, source_data, 56);
+        ::MD5_Final(this->key, &ctx);
+        ::EVP_EncodeBlock((unsigned char*) this->key_str, this->key, 16);
+      }
+
+    void
+    make_accept_str()
+      {
+        ::SHA_CTX ctx;
+        ::SHA1_Init(&ctx);
+        ::SHA1_Update(&ctx, this->key_str, 24);
+        ::SHA1_Update(&ctx, "258EAFA5-E914-47DA-95CA-C5AB0DC85B11", 36);
+        ::SHA1_Final(this->accept, &ctx);
+        ::EVP_EncodeBlock((unsigned char*) this->accept_str, this->accept, 20);
+      }
+  };
 
 }  // namespace
 
@@ -59,11 +76,9 @@ create_handshake_request(HTTP_Request_Headers& req)
     req.headers.emplace_back(sref("Upgrade"), sref("websocket"));
     req.headers.emplace_back(sref("Sec-WebSocket-Version"), 13);
 
-    uchar_array<16> ws_key;
-    do_make_websocket_key(ws_key, this);
-    uchar_array<25> ws_key_str;
-    ::EVP_EncodeBlock(ws_key_str.data(), ws_key.data(), 16);
-    req.headers.emplace_back(sref("Sec-WebSocket-Key"), cow_string((const char*) ws_key_str.data(), 24));
+    Sec_WebSocket sec_ws;
+    sec_ws.make_key_str(this);
+    req.headers.emplace_back(sref("Sec-WebSocket-Key"), cow_string(sec_ws.key_str, 24));
 
     req.headers.emplace_back(sref("Sec-WebSocket-Extensions"), sref("permessage-deflate; client_max_window_bits"));
 
@@ -95,7 +110,7 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
     bool connection_ok = false;
     bool upgrade_ok = false;
     bool ws_version_ok = false;
-    uchar_array<25> ws_key_str = { };
+    Sec_WebSocket sec_ws;
 
     for(const auto& hpair : req.headers)
       if(ascii_ci_equal(hpair.first, sref("Connection"))) {
@@ -132,10 +147,10 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
 
         // Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
         if(hpair.second.as_string().length() == 24)
-          ::memcpy(ws_key_str.data(), hpair.second.as_string().c_str(), 25);
+          ::memcpy(sec_ws.key_str, hpair.second.as_c_str(), 25);
       }
 
-    if(!connection_ok || !upgrade_ok || !ws_version_ok || !ws_key_str[0]) {
+    if(!connection_ok || !upgrade_ok || !ws_version_ok || !sec_ws.key_str[0]) {
       // Respond with `426 Upgrade Required`.
       // Reference: https://datatracker.ietf.org/doc/html/rfc6455#section-4.2.2
       resp.status = 426;
@@ -151,11 +166,8 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
     resp.headers.emplace_back(sref("Connection"), sref("Upgrade"));
     resp.headers.emplace_back(sref("Upgrade"), sref("websocket"));
 
-    uchar_array<20> ws_accept;
-    do_make_websocket_accept(ws_accept, ws_key_str);
-    uchar_array<29> ws_accept_str;
-    ::EVP_EncodeBlock(ws_accept_str.data(), ws_accept.data(), 20);
-    resp.headers.emplace_back(sref("Sec-WebSocket-Accept"), cow_string((const char *) ws_accept_str.data(), 28));
+    sec_ws.make_accept_str();
+    resp.headers.emplace_back(sref("Sec-WebSocket-Accept"), cow_string(sec_ws.accept_str, 28));
 
     // For the server, this connection has now been established.
     this->m_wsc = wsc_s_accepted;
@@ -178,7 +190,7 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
 
     bool connection_ok = false;
     bool upgrade_ok = false;
-    uchar_array<29> ws_accept_str = { };
+    char sec_ws_accept_resp[29] = "";
 
     for(const auto& hpair : resp.headers)
       if(ascii_ci_equal(hpair.first, sref("Connection"))) {
@@ -207,29 +219,23 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
 
         // Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
         if(hpair.second.as_string().length() == 28)
-          ::memcpy(ws_accept_str.data(), hpair.second.as_string().c_str(), 29);
+          ::memcpy(sec_ws_accept_resp, hpair.second.as_c_str(), 29);
       }
 
-    if(!connection_ok || !upgrade_ok || !ws_accept_str[0]) {
+    if(!connection_ok || !upgrade_ok || !sec_ws_accept_resp[0]) {
       // Don't send a closure notification.
       POSEIDON_LOG_ERROR(("WebSocket handshake response not valid; failing"));
       return;
     }
 
-    // Validate the key response.
-    uchar_array<16> ws_key;
-    do_make_websocket_key(ws_key, this);
-    uchar_array<25> ws_key_str;
-    ::EVP_EncodeBlock(ws_key_str.data(), ws_key.data(), 16);
-    uchar_array<20> ws_accept;
-    do_make_websocket_accept(ws_accept, ws_key_str);
+    // Rebuild the handshake response and compare it.
+    Sec_WebSocket sec_ws;
+    sec_ws.make_key_str(this);
+    sec_ws.make_accept_str();
 
-    // The size of output of `EVP_DecodeBlock()` is always a multiple of three
-    // due to padding. The extra zero byte will be ignored.
-    uchar_array<21> ws_accept_from_server;
-    if(::EVP_DecodeBlock(ws_accept_from_server.data(), ws_accept_str.data(), 28) != 21)
-      return;
-    else if(::memcmp(ws_accept.data(), ws_accept_from_server.data(), 20) != 0)
+    // In theory, the final base64-block of the key response contains two padding
+    // bits which shouldn't be examined, should they?
+    if(::memcmp(sec_ws.accept_str, sec_ws_accept_resp, 28) != 0)
       return;
 
     // For the server, this connection has now been established.
