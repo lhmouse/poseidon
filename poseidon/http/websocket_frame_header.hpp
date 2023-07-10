@@ -16,13 +16,14 @@ struct WebSocket_Frame_Header
         // The payload length is always stored as an `uint64_t`. The `encode()`
         // function will deduce the correct field basing on its value.
         // Reference: https://datatracker.ietf.org/doc/html/rfc6455
-        uint32_t fin : 1;
-        uint32_t rsv1 : 1;
-        uint32_t rsv2 : 1;
-        uint32_t rsv3 : 1;
         uint32_t opcode : 4;
+        uint32_t rsv3 : 1;
+        uint32_t rsv2 : 1;
+        uint32_t rsv1 : 1;
+        uint32_t fin : 1;
+        uint32_t reserved_1 : 7;
         uint32_t mask : 1;
-        uint32_t reserved_1 : 23;
+        uint32_t reserved_2 : 16;
         union {
           char mask_key[4];
           uint32_t mask_key_u32;

@@ -32,11 +32,11 @@ class WebSocket_Parser
 
     bool m_frm_header_complete;
     bool m_frm_payload_complete;
-    uint8_t m_msg_fin : 1;
-    uint8_t m_msg_rsv1 : 1;
-    uint8_t m_msg_rsv2 : 1;
-    uint8_t m_msg_rsv3 : 1;
     uint8_t m_msg_opcode : 4;
+    uint8_t m_msg_rsv3 : 1;
+    uint8_t m_msg_rsv2 : 1;
+    uint8_t m_msg_rsv1 : 1;
+    uint8_t m_msg_fin : 1;
     char m_reserved_2;
 
   public:
