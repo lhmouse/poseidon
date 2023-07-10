@@ -192,7 +192,7 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
     for(const auto& hpair : req.headers)
       if(ascii_ci_equal(hpair.first, sref("Connection"))) {
         if(!hpair.second.is_string())
-          continue;
+          return;
 
         // Connection: Upgrade
         hparser.reload(hpair.second.as_string());
@@ -202,7 +202,7 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
       }
       else if(ascii_ci_equal(hpair.first, sref("Upgrade"))) {
         if(!hpair.second.is_string())
-          continue;
+          return;
 
         // Upgrade: websocket
         if(ascii_ci_equal(hpair.second.as_string(), sref("websocket")))
@@ -210,7 +210,7 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
       }
       else if(ascii_ci_equal(hpair.first, sref("Sec-WebSocket-Version"))) {
         if(!hpair.second.is_number())
-          continue;
+          return;
 
         // Sec-WebSocket-Version: 13
         if(hpair.second.as_number() == 13)
@@ -218,7 +218,7 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
       }
       else if(ascii_ci_equal(hpair.first, sref("Sec-WebSocket-Key"))) {
         if(!hpair.second.is_string())
-          continue;
+          return;
 
         // Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
         if(hpair.second.as_string().length() == 24)
@@ -226,7 +226,7 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
       }
       else if(ascii_ci_equal(hpair.first, sref("Sec-WebSocket-Extensions"))) {
         if(!hpair.second.is_string())
-          continue;
+          return;
 
         // Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits
         hparser.reload(hpair.second.as_string());
@@ -310,7 +310,7 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
     for(const auto& hpair : resp.headers)
       if(ascii_ci_equal(hpair.first, sref("Connection"))) {
         if(!hpair.second.is_string())
-          continue;
+          return;
 
         // Connection: Upgrade
         hparser.reload(hpair.second.as_string());
@@ -320,7 +320,7 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
       }
       else if(ascii_ci_equal(hpair.first, sref("Upgrade"))) {
         if(!hpair.second.is_string())
-          continue;
+          return;
 
         // Upgrade: websocket
         if(ascii_ci_equal(hpair.second.as_string(), sref("websocket")))
@@ -328,7 +328,7 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
       }
       else if(ascii_ci_equal(hpair.first, sref("Sec-WebSocket-Accept"))) {
         if(!hpair.second.is_string())
-          continue;
+          return;
 
         // Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
         if(hpair.second.as_string().length() == 28)
@@ -336,7 +336,7 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
       }
       else if(ascii_ci_equal(hpair.first, sref("Sec-WebSocket-Extensions"))) {
         if(!hpair.second.is_string())
-          continue;
+          return;
 
         // Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits
         hparser.reload(hpair.second.as_string());
