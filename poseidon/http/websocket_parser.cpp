@@ -2,7 +2,7 @@
 // Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
 
 #include "../precompiled.ipp"
-#include "websocket_compositor.hpp"
+#include "websocket_parser.hpp"
 #include "http_request_headers.hpp"
 #include "http_response_headers.hpp"
 #include "http_header_parser.hpp"
@@ -49,11 +49,11 @@ struct Sec_WebSocket
 
 struct PerMessage_Deflate
   {
-    bool enabled = false;
-    bool server_no_context_takeover;
-    bool client_no_context_takeover;
     int server_max_window_bits;
     int client_max_window_bits;
+    bool server_no_context_takeover;
+    bool client_no_context_takeover;
+    bool enabled = false;
 
     void
     use_permessage_deflate(HTTP_Header_Parser& hparser)
@@ -62,33 +62,15 @@ struct PerMessage_Deflate
           return;
 
         // Set default parameters, so in case of errors, we return immediately.
-        this->server_no_context_takeover = false;
-        this->client_no_context_takeover = false;
         this->server_max_window_bits = 15;
         this->client_max_window_bits = 15;
+        this->server_no_context_takeover = false;
+        this->client_no_context_takeover = false;
 
         // PMCE is accepted only if all parameters are valid and accepted.
         // Reference: https://datatracker.ietf.org/doc/html/rfc7692
         while(hparser.next_attribute())
-          if(ascii_ci_equal(hparser.current_name(), sref("server_no_context_takeover"))) {
-            if(!hparser.current_value().is_null())
-              return;
-
-            // `server_no_context_takeover`:
-            // States that the server will not reuse a previous LZ77 sliding
-            // window when compressing a message. Ignored by clients.
-            this->server_no_context_takeover = true;
-          }
-          else if(ascii_ci_equal(hparser.current_name(), sref("client_no_context_takeover"))) {
-            if(!hparser.current_value().is_null())
-              return;
-
-            // `client_no_context_takeover`:
-            // States that the client will not reuse a previous LZ77 sliding
-            // window when compressing a message. Ignored by servers.
-            this->client_no_context_takeover = true;
-          }
-          else if(ascii_ci_equal(hparser.current_name(), sref("server_max_window_bits"))) {
+          if(ascii_ci_equal(hparser.current_name(), sref("server_max_window_bits"))) {
             if(hparser.current_value().is_null())
               continue;
             else if(!hparser.current_value().is_number())
@@ -118,6 +100,24 @@ struct PerMessage_Deflate
             // will use, in number of bits.
             this->client_max_window_bits = (int) value;
           }
+          else if(ascii_ci_equal(hparser.current_name(), sref("server_no_context_takeover"))) {
+            if(!hparser.current_value().is_null())
+              return;
+
+            // `server_no_context_takeover`:
+            // States that the server will not reuse a previous LZ77 sliding
+            // window when compressing a message. Ignored by clients.
+            this->server_no_context_takeover = true;
+          }
+          else if(ascii_ci_equal(hparser.current_name(), sref("client_no_context_takeover"))) {
+            if(!hparser.current_value().is_null())
+              return;
+
+            // `client_no_context_takeover`:
+            // States that the client will not reuse a previous LZ77 sliding
+            // window when compressing a message. Ignored by servers.
+            this->client_no_context_takeover = true;
+          }
           else
             return;
 
@@ -129,13 +129,13 @@ struct PerMessage_Deflate
 
 }  // namespace
 
-WebSocket_Compositor::
-~WebSocket_Compositor()
+WebSocket_Parser::
+~WebSocket_Parser()
   {
   }
 
 void
-WebSocket_Compositor::
+WebSocket_Parser::
 create_handshake_request(HTTP_Request_Headers& req)
   {
     if(this->m_wsc != wsc_pending)
@@ -163,7 +163,7 @@ create_handshake_request(HTTP_Request_Headers& req)
   }
 
 void
-WebSocket_Compositor::
+WebSocket_Parser::
 accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers& req)
   {
     if(this->m_wsc != wsc_pending)
@@ -179,6 +179,7 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
     resp.headers.emplace_back(sref("Connection"), sref("close"));
 
     this->m_wsc = wsc_error;
+    this->m_error_description = "handshake request invalid";
 
     // Parse request headers from the client.
     HTTP_Header_Parser hparser;
@@ -256,27 +257,38 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
     resp.headers.emplace_back(sref("Sec-WebSocket-Accept"), cow_string(sec_ws.accept_str, 28));
 
     if(pmce.enabled) {
-      // Append PMCE response parameters. `client_no_context_takeover` and
-      // `client_max_window_bits` are ignored and unnecessary to be sent back to
-      // the client.
+      // Accept PMCE parameters.
+      this->m_pmce_max_window_bits = (uint8_t) pmce.server_max_window_bits;
+      this->m_pmce_no_context_takeover = pmce.server_no_context_takeover;
+
+      // Append PMCE response parameters. If `client_no_context_takeover` and
+      // `client_max_window_bits` are specified, they are echoed back to the
+      // client. (Maybe this is not necessary, but we do it anyway.)
       tinyfmt_str pmce_resp_fmt;
       pmce_resp_fmt.set_string(sref("permessage-deflate"));
-
-      if(pmce.server_no_context_takeover)
-        pmce_resp_fmt << "; server_no_context_takeover";
 
       if(pmce.server_max_window_bits != 15)
         pmce_resp_fmt << "; server_max_window_bits=" << pmce.server_max_window_bits;
 
-      // Initialize data compressor and decompressor.
+      if(pmce.server_no_context_takeover)
+        pmce_resp_fmt << "; server_no_context_takeover";
+
+      if(pmce.client_max_window_bits != 15)
+        pmce_resp_fmt << "; client_max_window_bits=" << pmce.client_max_window_bits;
+
+      if(pmce.client_no_context_takeover)
+        pmce_resp_fmt << "; client_no_context_takeover";
+
+      resp.headers.emplace_back(sref("Sec-WebSocket-Extensions"), pmce_resp_fmt.extract_string());
     }
 
     // For the server, this connection has now been established.
     this->m_wsc = wsc_s_accepted;
+    this->m_error_description = "";
   }
 
 void
-WebSocket_Compositor::
+WebSocket_Parser::
 accept_handshake_response(const HTTP_Response_Headers& resp)
   {
     if(this->m_wsc != wsc_c_req_sent)
@@ -286,6 +298,7 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
 
     // Set a default state, so in case of errors, we return immediately.
     this->m_wsc = wsc_error;
+    this->m_error_description = "handshake response invalid";
 
     // Parse request headers from the server.
     HTTP_Header_Parser hparser;
@@ -351,11 +364,14 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
       return;
 
     if(pmce.enabled) {
-      // Initialize data compressor and decompressor.
+      // Accept PMCE parameters.
+      this->m_pmce_max_window_bits = (uint8_t) pmce.client_max_window_bits;
+      this->m_pmce_no_context_takeover = pmce.client_no_context_takeover;
     }
 
     // For the server, this connection has now been established.
     this->m_wsc = wsc_c_accepted;
+    this->m_error_description = "";
   }
 
 }  // namespace

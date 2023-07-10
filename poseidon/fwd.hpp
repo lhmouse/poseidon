@@ -263,7 +263,7 @@ class HTTP_Request_Parser;
 struct HTTP_Response_Headers;
 class HTTP_Response_Parser;
 struct WebSocket_Frame_Header;
-class WebSocket_Compositor;
+class WebSocket_Parser;
 
 // Easy types
 // Being 'easy' means all callbacks are invoked in fibers and can perform
