@@ -226,7 +226,7 @@ https_response(HTTP_Response_Headers&& resp, const char* data, size_t size)
 
     // Otherwise, a `Content-Length` is required; otherwise the response would
     // be interpreted as terminating by closure ofthe connection.
-    resp.headers.emplace_back(sref("Content-Length"), (int64_t) size);
+    resp.headers.emplace_back(sref("Content-Length"), (double)(int64_t) size);
 
     return this->do_https_raw_response(resp, data, size);
   }

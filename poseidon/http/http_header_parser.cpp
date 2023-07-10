@@ -47,7 +47,7 @@ do_next_attribute_from_separator()
     }
 
     hpos += tlen;
-    this->m_name = ::std::move(this->m_value.mut_string());
+    this->m_name.swap(this->m_value.mut_string());
     this->m_value = nullptr;
 
     // Skip bad whitespace.

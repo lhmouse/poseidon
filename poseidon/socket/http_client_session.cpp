@@ -187,7 +187,7 @@ http_request(HTTP_Request_Headers&& req, const char* data, size_t size)
     // By default, request messages do not have bodies. Hence the length is
     // only necessary if the body is non-empty.
     if(size != 0)
-      req.headers.emplace_back(sref("Content-Length"), (int64_t) size);
+      req.headers.emplace_back(sref("Content-Length"), (double)(int64_t) size);
 
     return this->do_http_raw_request(req, data, size);
   }

@@ -49,15 +49,17 @@ parse_quoted_string_partial(const char* str, size_t len)
     if((len <= 1) || (*str != '\"'))
       return 0;
 
+    this->m_str.clear();
+    this->m_index = index_string;
+
     // Get a quoted string. Zero shall be returned in case of any errors.
-    cow_string unescaped;
     size_t plain = 1;
     const char* bp = str + 1;
 
     while(!plain || (*bp != '\"')) {
       // A previous escape character exists if `plain` equals zero.
       if(!plain || (*bp != '\\'))
-        unescaped.push_back(*bp);
+        this->m_str.push_back(*bp);
       else
         plain = SIZE_MAX;
 
@@ -69,20 +71,16 @@ parse_quoted_string_partial(const char* str, size_t len)
         return 0;
     }
 
-    this->m_stor = ::std::move(unescaped);
-    return (size_t) (bp + 1 - str);
+    // Return the number of characters that have been parsed.
+    return static_cast<size_t>(bp + 1 - str);
   }
 
 size_t
 HTTP_Value::
 parse_datetime_partial(const char* str, size_t len)
   {
-    HTTP_DateTime tm;
-    size_t ac = tm.parse(str, len);
-    if(ac == 0)
-      return 0;
-
-    this->m_stor = tm;
+    size_t ac = this->m_dt.parse(str, len);
+    this->m_index = index_datetime;
     return ac;
   }
 
@@ -92,16 +90,13 @@ parse_number_partial(const char* str, size_t len)
   {
     ::rocket::ascii_numget numg;
     size_t ac = numg.parse_D(str, len);
-    if(ac == 0)
-      return 0;
 
-    // Make sure it's not part of a token.
+    // Reject partial matches.
     if((ac < len) && !do_is_ctl_or_sep(str[ac]))
       return 0;
 
-    double num;
-    numg.cast_D(num, -HUGE_VAL, +HUGE_VAL);
-    this->m_stor = num;
+    numg.cast_D(this->m_num, -HUGE_VAL, +HUGE_VAL);
+    this->m_index = index_number;
     return ac;
   }
 
@@ -110,11 +105,9 @@ HTTP_Value::
 parse_token_partial(const char* str, size_t len)
   {
     auto pos = ::std::find_if(str, str + len, do_is_ctl_or_sep);
-    if(pos == str)
-      return 0;
-
-    this->m_stor = cow_string(str, pos);
-    return (size_t) (pos - str);
+    this->m_str.assign(str, pos);
+    this->m_index = index_string;
+    return static_cast<size_t>(pos - str);
   }
 
 size_t
@@ -122,11 +115,9 @@ HTTP_Value::
 parse_unquoted_partial(const char* str, size_t len)
   {
     auto pos = ::std::find_if(str, str + len, do_is_ctl_or_unquoted_sep);
-    if(pos == str)
-      return 0;
-
-    this->m_stor = cow_string(str, pos);
-    return (size_t) (pos - str);
+    this->m_str.assign(str, pos);
+    this->m_index = index_string;
+    return static_cast<size_t>(pos - str);
   }
 
 size_t
@@ -177,47 +168,62 @@ tinyfmt&
 HTTP_Value::
 print(tinyfmt& fmt) const
   {
-    if(this->is_null())
-      return fmt;
+    switch(this->m_index) {
+      case index_null:
+        // Don't write anything.
+        return fmt;
 
-    if(this->is_string()) {
-      // Check whether the string has to be quoted.
-      const auto& str = this->m_stor.as<cow_string>();
-      auto pos = ::std::find_if(str.begin(), str.end(), do_is_ctl_or_sep);
-      if(pos != str.end()) {
-        fmt.putc('\"');
-
-        fmt.putn(str.data(), (size_t) (pos - str.begin()));
-        do {
-          if((*pos == '\\') || (*pos == '\"')) {
-            // Escape it.
-            char seq[2] = { '\\', *pos };
-            fmt.putn(seq, 2);
-            ++ pos;
+      case index_string: {
+        auto pos = ::std::find_if(this->m_str.begin(), this->m_str.end(), do_is_ctl_or_sep);
+        if(pos != this->m_str.end()) {
+          // Quote the string.
+          fmt.putc('\"');
+          fmt.putn(this->m_str.data(), (size_t) (pos - this->m_str.begin()));
+          do {
+            if((*pos == '\\') || (*pos == '\"')) {
+              // Escape it.
+              char seq[2] = { '\\', *pos };
+              fmt.putn(seq, 2);
+              ++ pos;
+            }
+            else if(do_is_ctl_or_ws(*pos)) {
+              // Replace this sequence of control and space characters
+              // with a single space.
+              fmt.putc(' ');
+              pos = ::std::find_if_not(pos + 1, this->m_str.end(), do_is_ctl_or_ws);
+            }
+            else {
+              // Write this sequence verbatim.
+              auto from = pos;
+              pos = ::std::find_if(pos + 1, this->m_str.end(), do_is_ctl_or_sep);
+              fmt.putn(&*from, (size_t) (pos - from));
+            }
           }
-          else if(do_is_ctl_or_ws(*pos)) {
-            // Replace this sequence of control and space characters
-            // with a single space.
-            fmt.putc(' ');
-            pos = ::std::find_if_not(pos + 1, str.end(), do_is_ctl_or_ws);
-          }
-          else {
-            // Write this sequence verbatim.
-            auto from = pos;
-            pos = ::std::find_if(pos + 1, str.end(), do_is_ctl_or_sep);
-            fmt.putn(&*from, (size_t) (pos - from));
-          }
+          while(pos != this->m_str.end());
+          fmt.putc('\"');
         }
-        while(pos != str.end());
-
-        fmt.putc('\"');
+        else {
+          // Write the string verbatim.
+          fmt << this->m_str;
+        }
         return fmt;
       }
-    }
 
-    // Write the value verbatim.
-    this->m_stor.visit([&](const auto& val) { fmt << val;  });
-    return fmt;
+      case index_number:
+        // Write the number verbatim.
+        fmt << this->m_num;
+        return fmt;
+
+      case index_datetime:
+        // Write the date/time verbatim.
+        fmt << this->m_dt;
+        return fmt;
+
+      default:
+        ASTERIA_TERMINATE((
+            "Invalid HTTP value type `$1`"),
+            this->m_index);
+    }
   }
 
 cow_string
