@@ -90,11 +90,12 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
     this->m_wsc = wsc_error;
 
     // Parse request headers from the client.
+    HTTP_Header_Parser hparser;
+
     bool connection_ok = false;
     bool upgrade_ok = false;
     bool ws_version_ok = false;
     uchar_array<25> ws_key_str = { };
-    HTTP_Header_Parser hparser;
 
     for(const auto& hpair : req.headers)
       if(ascii_ci_equal(hpair.first, sref("Connection"))) {
@@ -174,10 +175,11 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
     this->m_wsc = wsc_error;
 
     // Parse request headers from the server.
+    HTTP_Header_Parser hparser;
+
     bool connection_ok = false;
     bool upgrade_ok = false;
     uchar_array<29> ws_accept_str = { };
-    HTTP_Header_Parser hparser;
 
     for(const auto& hpair : resp.headers)
       if(ascii_ci_equal(hpair.first, sref("Connection"))) {
