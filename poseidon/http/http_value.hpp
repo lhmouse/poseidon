@@ -147,10 +147,31 @@ class HTTP_Value
         return this->m_str;
       }
 
+    const char*
+    as_c_str() const
+      {
+        this->do_check_index(index_string, "a string");
+        return this->m_str.c_str();
+      }
+
+    char*
+    mut_c_str()
+      {
+        this->do_check_index(index_string, "a string");
+        return this->m_str.mut_data();
+      }
+
     void
     set_string(cow_stringR str) noexcept
       {
         this->m_str = str;
+        this->m_index = index_string;
+      }
+
+    void
+    set_string(const char* str, size_t len) noexcept
+      {
+        this->m_str.assign(str, len);
         this->m_index = index_string;
       }
 
