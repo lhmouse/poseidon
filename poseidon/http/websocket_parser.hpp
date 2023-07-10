@@ -23,7 +23,6 @@ class WebSocket_Parser
     WebSocket_Frame_Header m_frm_header;
     linear_buffer m_frm_payload;
     linear_buffer m_msg;
-    const char* m_error_description;
 
     WSC_Mode m_wsc;
     char m_reserved_1;
@@ -38,6 +37,9 @@ class WebSocket_Parser
     uint8_t m_msg_rsv1 : 1;
     uint8_t m_msg_fin : 1;
     char m_reserved_2;
+
+    const char* m_error_description;
+    uint64_t m_frm_payload_remaining;
 
   public:
     // Constructs a parser for incoming frames.
@@ -85,7 +87,6 @@ class WebSocket_Parser
         this->m_frm_header.clear();
         this->m_frm_payload.clear();
         this->m_msg.clear();
-        this->m_error_description = "";
 
         this->m_wsc = wsc_pending;
         this->m_reserved_1 = 0;
@@ -100,6 +101,9 @@ class WebSocket_Parser
         this->m_msg_rsv3 = 0;
         this->m_msg_opcode = 0;
         this->m_reserved_2 = 0;
+
+        this->m_error_description = "";
+        this->m_frm_payload_remaining = 0;
       }
 
     // Creates a WebSocket handshake request from a client. The user may modify
@@ -133,7 +137,7 @@ class WebSocket_Parser
     // and must be preserved between calls. If `frame_header_complete()` returns
     // `true` before the call, this function does nothing.
     void
-    parse_frame_header_from_stream(linear_buffer& data, bool eof);
+    parse_frame_header_from_stream(linear_buffer& data);
 
     // Get the parsed frame header.
     bool
@@ -152,7 +156,7 @@ class WebSocket_Parser
     // be preserved between calls. If `frame_payload_complete()` returns `true`
     // before the call, this function does nothing.
     void
-    parse_frame_payload_from_stream(linear_buffer& data, bool eof);
+    parse_frame_payload_from_stream(linear_buffer& data);
 
     // Get the parsed frame payload. If the frame is a masked frame, this buffer
     // contains unmasked data. Users should only call this function to fetch the

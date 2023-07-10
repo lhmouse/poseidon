@@ -374,4 +374,184 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
     this->m_error_description = "";
   }
 
+void
+WebSocket_Parser::
+parse_frame_header_from_stream(linear_buffer& data)
+  {
+    if((this->m_wsc != wsc_s_accepted) && (this->m_wsc != wsc_c_accepted))
+      POSEIDON_THROW((
+          "WebSocket connection not established or closed (state `$1` not valid)"),
+          this->m_wsc);
+
+    if(this->m_frm_header_complete)
+      return;
+
+    if(this->m_msg_fin) {
+      // Control frames may be nested into fragmented data messages, so only
+      // clear a previous message if the FIN bit has been seen.
+      this->m_msg.clear();
+      this->m_msg_fin = 0;
+      this->m_msg_rsv1 = 0;
+      this->m_msg_rsv2 = 0;
+      this->m_msg_rsv3 = 0;
+      this->m_msg_opcode = 0;
+    }
+
+    // Calculate the length of this header.
+    const uint8_t* bptr = (const uint8_t*) data.data();
+    size_t ntotal = 2;
+    if(data.size() < ntotal)
+      return;
+
+    // Parse the first two bytes, which contain information about other fields.
+    // This has to be done in an awkward way to prevent compilers from doing
+    // nonsense. Sorry.
+    int word = bptr[0] | bptr[1] << 8;
+
+    this->m_frm_header.fin = (word >> 7) & 1;
+    this->m_frm_header.rsv1 = (word >> 6) & 1;
+    this->m_frm_header.rsv2 = (word >> 5) & 1;
+    this->m_frm_header.rsv3 = (word >> 4) & 1;
+    this->m_frm_header.opcode = word & 15;
+    this->m_frm_header.mask = (word >> 15) & 1;
+    this->m_frm_header.reserved_1 = (word >> 8) & 127;
+
+    if((this->m_wsc == wsc_s_accepted) && (this->m_frm_header.mask == 0)) {
+      // RFC 6455 says clients must mask all frames.
+      this->m_wsc = wsc_error;
+      this->m_error_description = "clients must mask frames to servers";
+      return;
+    }
+    else if((this->m_wsc == wsc_c_accepted) && (this->m_frm_header.mask != 0)) {
+      // RFC 6455 says servers must not mask any frames. Obey that, period.
+      this->m_wsc = wsc_error;
+      this->m_error_description = "servers must not mask frames to clients";
+      return;
+    }
+
+    switch(this->m_frm_header.opcode) {
+      case 0:
+        // continuation
+        if(this->m_msg_opcode == 0) {
+          this->m_wsc = wsc_error;
+          this->m_error_description = "dangling continuation frame";
+          return;
+        }
+        else if(m_frm_header.rsv1 || m_frm_header.rsv2 || m_frm_header.rsv3) {
+          this->m_wsc = wsc_error;
+          this->m_error_description = "reserved bit set in continuation frame";
+          return;
+        }
+        break;
+
+      case 8:
+      case 9:
+      case 10:
+        // control
+        if(m_frm_header.fin == 0) {
+          this->m_wsc = wsc_error;
+          this->m_error_description = "control frame not fragmentable";
+          return;
+        }
+        else if(this->m_frm_header.reserved_1 > 125) {
+          this->m_wsc = wsc_error;
+          this->m_error_description = "control frame too large";
+          return;
+        }
+        else if(m_frm_header.rsv1 || m_frm_header.rsv2 || m_frm_header.rsv3) {
+          this->m_wsc = wsc_error;
+          this->m_error_description = "reserved bit set in control frame";
+          return;
+        }
+        break;
+
+      case 1:
+      case 2:
+        // data (text or binary)
+        this->m_msg_fin = this->m_frm_header.fin;
+        this->m_msg_rsv1 = this->m_frm_header.rsv1;
+        this->m_msg_rsv2 = this->m_frm_header.rsv2;
+        this->m_msg_rsv3 = this->m_frm_header.rsv3;
+        this->m_msg_opcode = this->m_frm_header.opcode;
+        break;
+
+      default:
+        this->m_wsc = wsc_error;
+        this->m_error_description = "unknown opcode";
+        return;
+    }
+
+    if(this->m_frm_header.reserved_1 <= 125) {
+      // one-byte length
+      this->m_frm_header.payload_len = m_frm_header.reserved_1;
+    }
+    else if(this->m_frm_header.reserved_1 == 126) {
+      // two-byte length
+      ntotal += 2;
+      if(data.size() < ntotal)
+        return;
+
+      uint16_t belen;
+      ::memcpy(&belen, bptr + ntotal - 2, 2);
+      this->m_frm_header.payload_len = be16toh(belen);
+    }
+    else {
+      // eight-byte length
+      ntotal += 8;
+      if(data.size() < ntotal)
+        return;
+
+      uint64_t belen;
+      ::memcpy(&belen, bptr + ntotal - 8, 8);
+      this->m_frm_header.payload_len = be64toh(belen);
+    }
+
+    if(this->m_frm_header.mask) {
+      // Get the masking key as four bytes; not as an integer.
+      ntotal += 4;
+      if(data.size() < ntotal)
+        return;
+
+      ::memcpy(this->m_frm_header.mask_key, bptr + ntotal - 4, 4);
+    }
+
+    data.discard(ntotal);
+    this->m_frm_payload_remaining = this->m_frm_header.payload_len;
+
+    // Accept the frame header.
+    this->m_frm_header_complete = true;
+  }
+
+void
+WebSocket_Parser::
+parse_frame_payload_from_stream(linear_buffer& data)
+  {
+    if((this->m_wsc != wsc_s_accepted) && (this->m_wsc != wsc_c_accepted))
+      POSEIDON_THROW((
+          "WebSocket connection not established or closed (state `$1` not valid)"),
+          this->m_wsc);
+
+    if(this->m_frm_payload_complete)
+      return;
+
+    // Unmask the payload and append it to `m_frm_payload`. If this is a data
+    // frame, also append the payload to `m_msg`.
+    size_t navail = (size_t) min(data.size(), this->m_frm_payload_remaining);
+    this->m_frm_header.mask_payload(data.mut_data(), navail);
+    this->m_frm_payload.putn(data.data(), navail);
+
+    if(this->m_frm_header.opcode < 8)
+      this->m_msg.putn(data.data(), navail);
+
+    data.discard(navail);
+    this->m_frm_payload_remaining -= navail;
+
+    // Wait until all data of this frame have been received.
+    if(this->m_frm_payload_remaining != 0)
+      return;
+
+    // Accept the frame payload.
+    this->m_frm_payload_complete = true;
+  }
+
 }  // namespace
