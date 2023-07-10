@@ -99,10 +99,10 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
 
     for(const auto& hpair : req.headers)
       if(ascii_ci_equal(hpair.first, sref("Connection"))) {
-        // Connection: Upgrade
         if(!hpair.second.is_string())
           continue;
 
+        // Connection: Upgrade
         hparser.reload(hpair.second.as_string());
         while(hparser.next_element())
           if(ascii_ci_equal(hparser.current_name(), sref("Close")))
@@ -111,40 +111,39 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
             connection_ok = true;
       }
       else if(ascii_ci_equal(hpair.first, sref("Upgrade"))) {
-        // Upgrade: websocket
         if(!hpair.second.is_string())
           continue;
 
+        // Upgrade: websocket
         if(ascii_ci_equal(hpair.second.as_string(), sref("websocket")))
           upgrade_ok = true;
       }
       else if(ascii_ci_equal(hpair.first, sref("Sec-WebSocket-Version"))) {
-        // Sec-WebSocket-Version: 13
         if(!hpair.second.is_number())
           continue;
 
-        if(hpair.second.as_number() != 13) {
-          // Respond with `426 Upgrade Required` if `Sec-WebSocket-Version` does
-          // not match the version we use.
-          // Reference: https://datatracker.ietf.org/doc/html/rfc6455#section-4.2.2
-          resp.status = 426;
-          resp.headers.emplace_back(sref("Sec-WebSocket-Version"), 13);
-          return;
-        }
-        else
+        // Sec-WebSocket-Version: 13
+        if(hpair.second.as_number() == 13)
           ws_version_ok = true;
       }
       else if(ascii_ci_equal(hpair.first, sref("Sec-WebSocket-Key"))) {
-        // Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
         if(!hpair.second.is_string())
           continue;
 
+        // Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
         if(hpair.second.as_string().length() == 24)
           ::memcpy(ws_key_str.data(), hpair.second.as_string().c_str(), 25);
       }
 
-    if(!connection_ok || !upgrade_ok || !ws_version_ok || !ws_key_str[0])
+    if(!connection_ok || !upgrade_ok || !ws_version_ok || !ws_key_str[0]) {
+      // Respond with `426 Upgrade Required`.
+      // Reference: https://datatracker.ietf.org/doc/html/rfc6455#section-4.2.2
+      resp.status = 426;
+      resp.headers.emplace_back(sref("Upgrade"), sref("websocket"));
+      resp.headers.emplace_back(sref("Sec-WebSocket-Version"), 13);
+      POSEIDON_LOG_ERROR(("WebSocket handshake request not valid; failing"));
       return;
+    }
 
     // Compose the response.
     resp.status = 101;
@@ -183,10 +182,10 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
 
     for(const auto& hpair : resp.headers)
       if(ascii_ci_equal(hpair.first, sref("Connection"))) {
-        // Connection: Upgrade
         if(!hpair.second.is_string())
           continue;
 
+        // Connection: Upgrade
         hparser.reload(hpair.second.as_string());
         while(hparser.next_element())
           if(ascii_ci_equal(hparser.current_name(), sref("Close")))
@@ -195,24 +194,27 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
             connection_ok = true;
       }
       else if(ascii_ci_equal(hpair.first, sref("Upgrade"))) {
-        // Upgrade: websocket
         if(!hpair.second.is_string())
           continue;
 
+        // Upgrade: websocket
         if(ascii_ci_equal(hpair.second.as_string(), sref("websocket")))
           upgrade_ok = true;
       }
       else if(ascii_ci_equal(hpair.first, sref("Sec-WebSocket-Accept"))) {
-        // Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
         if(!hpair.second.is_string())
           continue;
 
+        // Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
         if(hpair.second.as_string().length() == 28)
           ::memcpy(ws_accept_str.data(), hpair.second.as_string().c_str(), 29);
       }
 
-    if(!connection_ok || !upgrade_ok || !ws_accept_str[0])
+    if(!connection_ok || !upgrade_ok || !ws_accept_str[0]) {
+      // Don't send a closure notification.
+      POSEIDON_LOG_ERROR(("WebSocket handshake response not valid; failing"));
       return;
+    }
 
     // Validate the key response.
     uchar_array<16> ws_key;
