@@ -72,7 +72,7 @@ create_handshake_request(HTTP_Request_Headers& req)
     req.uri = sref("/");
     req.headers.clear();
     req.headers.reserve(8);
-    req.headers.emplace_back(sref("Connection"), sref("Upgrade"));
+    req.headers.emplace_back(sref("Connection"), sref("upgrade"));
     req.headers.emplace_back(sref("Upgrade"), sref("websocket"));
     req.headers.emplace_back(sref("Sec-WebSocket-Version"), 13);
 
@@ -100,14 +100,13 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
     resp.reason.clear();
     resp.headers.clear();
     resp.headers.reserve(8);
-    resp.headers.emplace_back(sref("Connection"), sref("Close"));
+    resp.headers.emplace_back(sref("Connection"), sref("close"));
 
     this->m_wsc = wsc_error;
 
     // Parse request headers from the client.
     HTTP_Header_Parser hparser;
 
-    bool connection_ok = false;
     bool upgrade_ok = false;
     bool ws_version_ok = false;
     Sec_WebSocket sec_ws;
@@ -120,10 +119,8 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
         // Connection: Upgrade
         hparser.reload(hpair.second.as_string());
         while(hparser.next_element())
-          if(ascii_ci_equal(hparser.current_name(), sref("Close")))
+          if(ascii_ci_equal(hparser.current_name(), sref("close")))
             return;
-          else if(ascii_ci_equal(hparser.current_name(), sref("Upgrade")))
-            connection_ok = true;
       }
       else if(ascii_ci_equal(hpair.first, sref("Upgrade"))) {
         if(!hpair.second.is_string())
@@ -150,7 +147,7 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
           ::memcpy(sec_ws.key_str, hpair.second.as_c_str(), 25);
       }
 
-    if(!connection_ok || !upgrade_ok || !ws_version_ok || !sec_ws.key_str[0]) {
+    if(!upgrade_ok || !ws_version_ok || !sec_ws.key_str[0]) {
       // Respond with `426 Upgrade Required`.
       // Reference: https://datatracker.ietf.org/doc/html/rfc6455#section-4.2.2
       resp.status = 426;
@@ -163,7 +160,7 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
     // Compose the response.
     resp.status = 101;
     resp.headers.clear();
-    resp.headers.emplace_back(sref("Connection"), sref("Upgrade"));
+    resp.headers.emplace_back(sref("Connection"), sref("upgrade"));
     resp.headers.emplace_back(sref("Upgrade"), sref("websocket"));
 
     sec_ws.make_accept_str();
@@ -188,7 +185,6 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
     // Parse request headers from the server.
     HTTP_Header_Parser hparser;
 
-    bool connection_ok = false;
     bool upgrade_ok = false;
     char sec_ws_accept_resp[29] = "";
 
@@ -200,10 +196,8 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
         // Connection: Upgrade
         hparser.reload(hpair.second.as_string());
         while(hparser.next_element())
-          if(ascii_ci_equal(hparser.current_name(), sref("Close")))
+          if(ascii_ci_equal(hparser.current_name(), sref("close")))
             return;
-          else if(ascii_ci_equal(hparser.current_name(), sref("Upgrade")))
-            connection_ok = true;
       }
       else if(ascii_ci_equal(hpair.first, sref("Upgrade"))) {
         if(!hpair.second.is_string())
@@ -222,7 +216,7 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
           ::memcpy(sec_ws_accept_resp, hpair.second.as_c_str(), 29);
       }
 
-    if(!connection_ok || !upgrade_ok || !sec_ws_accept_resp[0]) {
+    if(!upgrade_ok || !sec_ws_accept_resp[0]) {
       // Don't send a closure notification.
       POSEIDON_LOG_ERROR(("WebSocket handshake response not valid; failing"));
       return;
