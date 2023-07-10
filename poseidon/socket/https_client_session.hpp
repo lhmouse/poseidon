@@ -14,8 +14,6 @@ class HTTPS_Client_Session
   : public SSL_Socket
   {
   private:
-    friend class Network_Driver;
-
     optional<HTTP_Response_Parser> m_resp_parser;
     atomic_relaxed<bool> m_upgrade_ack;
 

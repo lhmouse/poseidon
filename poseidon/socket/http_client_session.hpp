@@ -14,8 +14,6 @@ class HTTP_Client_Session
   : public TCP_Socket
   {
   private:
-    friend class Network_Driver;
-
     optional<HTTP_Response_Parser> m_resp_parser;
     atomic_relaxed<bool> m_upgrade_ack;
 
