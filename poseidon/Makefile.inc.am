@@ -35,6 +35,10 @@ nobase_include_HEADERS +=  \
   %reldir%/socket/http_client_session.hpp  \
   %reldir%/socket/https_server_session.hpp  \
   %reldir%/socket/https_client_session.hpp  \
+  %reldir%/socket/ws_server_session.hpp  \
+  %reldir%/socket/ws_client_session.hpp  \
+  %reldir%/socket/wss_server_session.hpp  \
+  %reldir%/socket/wss_client_session.hpp  \
   %reldir%/http/http_datetime.hpp  \
   %reldir%/http/http_value.hpp  \
   %reldir%/http/http_header_parser.hpp  \
@@ -57,6 +61,10 @@ nobase_include_HEADERS +=  \
   %reldir%/easy/easy_http_client.hpp  \
   %reldir%/easy/easy_https_server.hpp  \
   %reldir%/easy/easy_https_client.hpp  \
+  %reldir%/easy/easy_ws_server.hpp  \
+  %reldir%/easy/easy_ws_client.hpp  \
+  %reldir%/easy/easy_wss_server.hpp  \
+  %reldir%/easy/easy_wss_client.hpp  \
   ${END}
 
 lib_libposeidon_la_SOURCES =  \
@@ -91,6 +99,10 @@ lib_libposeidon_la_SOURCES =  \
   %reldir%/socket/http_client_session.cpp  \
   %reldir%/socket/https_server_session.cpp  \
   %reldir%/socket/https_client_session.cpp  \
+  %reldir%/socket/ws_server_session.cpp  \
+  %reldir%/socket/ws_client_session.cpp  \
+  %reldir%/socket/wss_server_session.cpp  \
+  %reldir%/socket/wss_client_session.cpp  \
   %reldir%/http/http_datetime.cpp  \
   %reldir%/http/http_value.cpp  \
   %reldir%/http/http_header_parser.cpp  \
@@ -113,6 +125,10 @@ lib_libposeidon_la_SOURCES =  \
   %reldir%/easy/easy_http_client.cpp  \
   %reldir%/easy/easy_https_server.cpp  \
   %reldir%/easy/easy_https_client.cpp  \
+  %reldir%/easy/easy_ws_server.cpp  \
+  %reldir%/easy/easy_ws_client.cpp  \
+  %reldir%/easy/easy_wss_server.cpp  \
+  %reldir%/easy/easy_wss_client.cpp  \
   ${END}
 
 lib_libposeidon_la_CXXFLAGS = ${AM_CXXFLAGS}

@@ -253,6 +253,10 @@ class HTTP_Server_Session;
 class HTTP_Client_Session;
 class HTTPS_Server_Session;
 class HTTPS_Client_Session;
+class WS_Server_Session;
+class WS_Client_Session;
+class WSS_Server_Session;
+class WSS_Client_Session;
 
 // HTTP types
 class HTTP_DateTime;
@@ -281,6 +285,10 @@ class Easy_HTTP_Server;
 class Easy_HTTP_Client;
 class Easy_HTTPS_Server;
 class Easy_HTTPS_Client;
+class Easy_WS_Server;
+class Easy_WS_Client;
+class Easy_WSS_Server;
+class Easy_WSS_Client;
 
 // Singletons
 extern atomic_relaxed<int> exit_signal;

@@ -37,3 +37,23 @@ lib_LTLIBRARIES += lib/poseidon-example_https_client.la
 lib_poseidon_example_https_client_la_SOURCES = %reldir%/https_client.cpp
 lib_poseidon_example_https_client_la_LDFLAGS = -module
 lib_poseidon_example_https_client_la_LIBADD = lib/libposeidon.la
+
+lib_LTLIBRARIES += lib/poseidon-example_ws_server.la
+lib_poseidon_example_ws_server_la_SOURCES = %reldir%/ws_server.cpp
+lib_poseidon_example_ws_server_la_LDFLAGS = -module
+lib_poseidon_example_ws_server_la_LIBADD = lib/libposeidon.la
+
+lib_LTLIBRARIES += lib/poseidon-example_ws_client.la
+lib_poseidon_example_ws_client_la_SOURCES = %reldir%/ws_client.cpp
+lib_poseidon_example_ws_client_la_LDFLAGS = -module
+lib_poseidon_example_ws_client_la_LIBADD = lib/libposeidon.la
+
+lib_LTLIBRARIES += lib/poseidon-example_wss_server.la
+lib_poseidon_example_wss_server_la_SOURCES = %reldir%/wss_server.cpp
+lib_poseidon_example_wss_server_la_LDFLAGS = -module
+lib_poseidon_example_wss_server_la_LIBADD = lib/libposeidon.la
+
+lib_LTLIBRARIES += lib/poseidon-example_wss_client.la
+lib_poseidon_example_wss_client_la_SOURCES = %reldir%/wss_client.cpp
+lib_poseidon_example_wss_client_la_LDFLAGS = -module
+lib_poseidon_example_wss_client_la_LIBADD = lib/libposeidon.la
