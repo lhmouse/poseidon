@@ -76,6 +76,7 @@ do_on_http_request_error(uint32_t status)
     resp.status = status;
     resp.headers.emplace_back(sref("Connection"), sref("close"));
     this->http_response(::std::move(resp), "");
+
     this->quick_close();
   }
 
