@@ -42,11 +42,11 @@ HTTP_Response_Parser::s_settings[1] =
         if(this->m_headers.headers.empty())
           this->m_headers.headers.emplace_back();
 
-        if(this->m_body.size() != 0) {
-          // If `m_body` is not empty, a previous header is now complete.
-          const char* value_str = this->m_body.data() + 1;
+        if(this->m_payload.size() != 0) {
+          // If `m_payload` is not empty, a previous header is now complete.
+          const char* value_str = this->m_payload.data() + 1;
           ROCKET_ASSERT(value_str[-1] == '\n');  // magic character
-          size_t value_len = this->m_body.size() - 1;
+          size_t value_len = this->m_payload.size() - 1;
 
           auto& value = this->m_headers.headers.mut_back().second;
           if(value.parse(value_str, value_len) != value_len)
@@ -54,7 +54,7 @@ HTTP_Response_Parser::s_settings[1] =
 
           // Create the next header.
           this->m_headers.headers.emplace_back();
-          this->m_body.clear();
+          this->m_payload.clear();
         }
 
         // Append the header name to the last key, as this callback might be
@@ -67,35 +67,35 @@ HTTP_Response_Parser::s_settings[1] =
     +[](::http_parser* ps, const char* str, size_t len)
       {
         // Add a magic character to indicate that a part of the value has been
-        // received. This makes `m_body` non-empty.
-        if(this->m_body.empty())
-           this->m_body.putc('\n');
+        // received. This makes `m_payload` non-empty.
+        if(this->m_payload.empty())
+           this->m_payload.putc('\n');
 
-        // Abuse `m_body` to store the header value.
-        this->m_body.putn(str, len);
+        // Abuse `m_payload` to store the header value.
+        this->m_payload.putn(str, len);
         return 0;
       },
 
     // on_headers_complete
     +[](::http_parser* ps)
       {
-        if(this->m_body.size() != 0) {
-          // If `m_body` is not empty, a previous header is now complete.
-          const char* value_str = this->m_body.data() + 1;
+        if(this->m_payload.size() != 0) {
+          // If `m_payload` is not empty, a previous header is now complete.
+          const char* value_str = this->m_payload.data() + 1;
           ROCKET_ASSERT(value_str[-1] == '\n');  // magic character
-          size_t value_len = this->m_body.size() - 1;
+          size_t value_len = this->m_payload.size() - 1;
 
           auto& value = this->m_headers.headers.mut_back().second;
           if(value.parse(value_str, value_len) != value_len)
             value.set_string(cow_string(value_str, value_len));
 
-          // Finish abuse of `m_body`.
-          this->m_body.clear();
+          // Finish abuse of `m_payload`.
+          this->m_payload.clear();
         }
 
         // The headers are complete, so halt.
-        this->m_hresp = hresp_header_done;
-        this->m_close_after_body = ::http_should_keep_alive(ps) == 0;
+        this->m_hresp = hresp_headers_done;
+        this->m_close_after_payload = ::http_should_keep_alive(ps) == 0;
         ps->http_errno = HPE_PAUSED;
         return 0;
       },
@@ -103,7 +103,7 @@ HTTP_Response_Parser::s_settings[1] =
     // on_body
     +[](::http_parser* ps, const char* str, size_t len)
       {
-        this->m_body.putn(str, len);
+        this->m_payload.putn(str, len);
         return 0;
       },
 
@@ -111,7 +111,7 @@ HTTP_Response_Parser::s_settings[1] =
     +[](::http_parser* ps)
       {
         // The message is complete, so halt.
-        this->m_hresp = hresp_body_done;
+        this->m_hresp = hresp_payload_done;
         ps->http_errno = HPE_PAUSED;
         return 0;
       },
@@ -133,7 +133,7 @@ void
 HTTP_Response_Parser::
 parse_headers_from_stream(linear_buffer& data, bool eof)
   {
-    if(this->m_hresp >= hresp_header_done)
+    if(this->m_hresp >= hresp_headers_done)
       return;
 
     // Consume incoming data.
@@ -151,9 +151,9 @@ parse_headers_from_stream(linear_buffer& data, bool eof)
 
 void
 HTTP_Response_Parser::
-parse_body_from_stream(linear_buffer& data, bool eof)
+parse_payload_from_stream(linear_buffer& data, bool eof)
   {
-    if(this->m_hresp >= hresp_body_done)
+    if(this->m_hresp >= hresp_payload_done)
       return;
 
     // Consume incoming data.

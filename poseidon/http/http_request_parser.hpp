@@ -16,17 +16,17 @@ class HTTP_Request_Parser
 
     enum HREQ_State : uint8_t
       {
-        hreq_new          = 0,
-        hreq_header_done  = 1,
-        hreq_body_done    = 2,
+        hreq_new           = 0,
+        hreq_headers_done  = 1,
+        hreq_payload_done  = 2,
       };
 
     ::http_parser m_parser[1];
     HTTP_Request_Headers m_headers;
-    linear_buffer m_body;
+    linear_buffer m_payload;
 
     HREQ_State m_hreq;
-    bool m_close_after_body;
+    bool m_close_after_payload;
     char m_reserved_1;
     char m_reserved_2;
 
@@ -59,10 +59,10 @@ class HTTP_Request_Parser
         this->m_parser->data = this;
 
         this->m_headers.clear();
-        this->m_body.clear();
+        this->m_payload.clear();
 
         this->m_hreq = hreq_new;
-        this->m_close_after_body = false;
+        this->m_close_after_payload = false;
         this->m_reserved_1 = 0;
         this->m_reserved_2 = 0;
       }
@@ -76,12 +76,12 @@ class HTTP_Request_Parser
 
     // Get the parsed headers.
     bool
-    should_close_after_body() const noexcept
-      { return this->m_close_after_body;  }
+    should_close_after_payload() const noexcept
+      { return this->m_close_after_payload;  }
 
     bool
     headers_complete() const noexcept
-      { return this->m_hreq >= hreq_header_done;  }
+      { return this->m_hreq >= hreq_headers_done;  }
 
     const HTTP_Request_Headers&
     headers() const noexcept
@@ -91,35 +91,35 @@ class HTTP_Request_Parser
     mut_headers() noexcept
       { return this->m_headers;  }
 
-    // Parses the body of an HTTP request from a stream. `data` may be consumed
-    // partially, and must be preserved between calls. If `body_complete()`
+    // Parses the payload of an HTTP request from a stream. `data` may be consumed
+    // partially, and must be preserved between calls. If `payload_complete()`
     // returns `true` before the call, this function does nothing.
     void
-    parse_body_from_stream(linear_buffer& data, bool eof);
+    parse_payload_from_stream(linear_buffer& data, bool eof);
 
-    // Get the parsed body.
+    // Get the parsed payload.
     bool
-    body_complete() const noexcept
-      { return this->m_hreq >= hreq_body_done;  }
+    payload_complete() const noexcept
+      { return this->m_hreq >= hreq_payload_done;  }
 
     const linear_buffer&
-    body() const noexcept
-      { return this->m_body;  }
+    payload() const noexcept
+      { return this->m_payload;  }
 
     linear_buffer&
-    mut_body() noexcept
-      { return this->m_body;  }
+    mut_payload() noexcept
+      { return this->m_payload;  }
 
     // Clears the current complete message, so the parser can start the next one.
     void
     next_message() noexcept
       {
-        ROCKET_ASSERT(this->m_hreq >= hreq_body_done);
+        ROCKET_ASSERT(this->m_hreq >= hreq_payload_done);
 
         this->m_headers.clear();
-        this->m_body.clear();
+        this->m_payload.clear();
         this->m_hreq = hreq_new;
-        this->m_close_after_body = false;
+        this->m_close_after_payload = false;
       }
   };
 

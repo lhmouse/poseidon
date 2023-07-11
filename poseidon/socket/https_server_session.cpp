@@ -50,27 +50,27 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
           return;
 
         // Check request headers.
-        auto body_type = this->do_on_https_request_headers(this->m_req_parser->mut_headers());
-        switch(body_type) {
-          case http_message_body_normal:
-          case http_message_body_empty:
+        auto payload_type = this->do_on_https_request_headers(this->m_req_parser->mut_headers());
+        switch(payload_type) {
+          case http_payload_normal:
+          case http_payload_empty:
             break;
 
-          case http_message_body_connect:
+          case http_payload_connect:
             this->m_req_parser.reset();
             this->m_upgrade_ack.store(true);
             return this->do_on_https_upgraded_stream(data, eof);
 
           default:
             POSEIDON_THROW((
-                "Invalid body type `$3` returned from `do_http_parser_on_headers_complete()`",
+                "Invalid payload type `$3` returned from `do_http_parser_on_headers_complete()`",
                 "[HTTPS server session `$1` (class `$2`)]"),
-                this, typeid(*this), body_type);
+                this, typeid(*this), payload_type);
         }
       }
 
-      if(!this->m_req_parser->body_complete()) {
-        this->m_req_parser->parse_body_from_stream(data, eof);
+      if(!this->m_req_parser->payload_complete()) {
+        this->m_req_parser->parse_payload_from_stream(data, eof);
 
         if(this->m_req_parser->error()) {
           data.clear();
@@ -78,15 +78,15 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
           return;
         }
 
-        this->do_on_https_request_body_stream(this->m_req_parser->mut_body());
+        this->do_on_https_request_payload_stream(this->m_req_parser->mut_payload());
 
-        if(!this->m_req_parser->body_complete())
+        if(!this->m_req_parser->payload_complete())
           return;
 
-        // Check request headers and the body.
+        // Check request headers and the payload.
         this->do_on_https_request_finish(::std::move(this->m_req_parser->mut_headers()),
-                ::std::move(this->m_req_parser->mut_body()),
-                this->m_req_parser->should_close_after_body());
+                ::std::move(this->m_req_parser->mut_payload()),
+                this->m_req_parser->should_close_after_payload());
       }
 
       this->m_req_parser->next_message();
@@ -106,14 +106,14 @@ do_on_ssl_alpn_request(cow_vector<char256>&& protos)
     return "";
   }
 
-HTTP_Message_Body_Type
+HTTP_Payload_Type
 HTTPS_Server_Session::
 do_on_https_request_headers(HTTP_Request_Headers& req)
   {
     if((req.method == sref("CONNECT")) || !req.uri.starts_with(sref("/"))) {
       // Reject proxy requests.
       this->do_on_https_request_error(HTTP_STATUS_NOT_IMPLEMENTED);
-      return http_message_body_normal;
+      return http_payload_normal;
     }
 
     POSEIDON_LOG_INFO((
@@ -122,12 +122,12 @@ do_on_https_request_headers(HTTP_Request_Headers& req)
         this, typeid(*this), req.method, req.uri);
 
     // The default handler doesn't handle Upgrade requests.
-    return http_message_body_normal;
+    return http_payload_normal;
   }
 
 void
 HTTPS_Server_Session::
-do_on_https_request_body_stream(linear_buffer& data)
+do_on_https_request_payload_stream(linear_buffer& data)
   {
     // Leave `data` alone for consumption by `do_on_https_request_finish()`,
     // but perform some safety checks, so we won't be affected by compromized
@@ -152,7 +152,7 @@ do_on_https_request_body_stream(linear_buffer& data)
 
     if(data.size() > (uint64_t) max_request_content_length)
       POSEIDON_THROW((
-          "HTTP request body too large: `$3` > `$4`",
+          "HTTP request payload too large: `$3` > `$4`",
           "[HTTPS server session `$1` (class `$2`)]"),
           this, typeid(*this), data.size(), max_request_content_length);
   }
@@ -219,7 +219,7 @@ https_response(HTTP_Response_Headers&& resp, const char* data, size_t size)
          || ascii_ci_equal(resp.headers.at(hindex).first, sref("Transfer-Encoding")))
         resp.headers.erase(hindex --);
 
-    // Some responses are required to have no payload body and require no
+    // Some responses are required to have no payload payload and require no
     // `Content-Length` header.
     if((resp.status <= 199) || is_any_of(resp.status, { HTTP_STATUS_NO_CONTENT, HTTP_STATUS_NOT_MODIFIED }))
       return this->do_https_raw_response(resp, "", 0);
@@ -262,7 +262,7 @@ https_chunked_response_send(const char* data, size_t size)
           "[HTTPS server session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    // Ignore empty chunks, which would mark the end of the body.
+    // Ignore empty chunks, which would mark the end of the payload.
     if(size == 0)
       return this->socket_state() <= socket_state_established;
 
