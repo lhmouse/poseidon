@@ -55,7 +55,7 @@ class HTTPS_Server_Session
     // CONNECT methods.
     // The default implementation leaves all data alone for consumption by
     // `do_on_http_request_finish()`. For security reasons, the length of the
-    // payload payload is checked; an error is reported if it exceeds the
+    // payload body is checked; an error is reported if it exceeds the
     // `network.http.max_request_content_length` limit in 'main.conf'.
     virtual
     void
