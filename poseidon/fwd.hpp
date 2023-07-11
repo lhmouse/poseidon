@@ -342,8 +342,8 @@ struct char_sequence
     size_t n;
 
     constexpr
-    char_sequence() noexcept
-      : p(nullptr), n(0)
+    char_sequence(nullptr_t = nullptr) noexcept
+      : p(nullptr), n(0U)
       { }
 
     constexpr
