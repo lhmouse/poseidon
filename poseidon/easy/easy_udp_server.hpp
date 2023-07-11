@@ -57,6 +57,11 @@ class Easy_UDP_Server
     void
     stop() noexcept;
 
+    // Gets the socket  object.
+    shptrR<UDP_Socket>
+    socket_opt() const noexcept
+      { return this->m_socket;  }
+
     // Gets the bound address of this server for incoming packets. In case of
     // errors, `ipv6_invalid` is returned.
     ROCKET_PURE

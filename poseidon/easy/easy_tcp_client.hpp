@@ -69,6 +69,11 @@ class Easy_TCP_Client
     void
     close() noexcept;
 
+    // Gets the connection object.
+    shptrR<TCP_Socket>
+    socket_opt() const noexcept
+      { return this->m_socket;  }
+
     // Gets the local address of this client for outgoing data. In case of an
     // error, `ipv6_unspecified` is returned.
     ROCKET_PURE

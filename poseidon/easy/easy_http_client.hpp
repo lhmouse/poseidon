@@ -60,6 +60,11 @@ class Easy_HTTP_Client
     void
     close() noexcept;
 
+    // Gets the connection session object.
+    shptrR<HTTP_Client_Session>
+    session_opt() const noexcept
+      { return this->m_session;  }
+
     // Gets the local address of this HTTP client for incoming data. In case of
     // errors, `ipv6_unspecified` is returned.
     ROCKET_PURE
