@@ -118,7 +118,7 @@ HTTP_Server_Session::
 do_on_http_request_payload_stream(linear_buffer& data)
   {
     // Leave `data` alone for consumption by `do_on_http_request_finish()`,
-    // but perform some safety checks, so we won't be affected by compromized
+    // but perform some security checks, so we won't be affected by compromized
     // 3rd-party servers.
     const auto conf_file = main_config.copy();
     int64_t max_request_content_length = 1048576;
