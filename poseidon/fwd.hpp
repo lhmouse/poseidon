@@ -294,7 +294,7 @@ extern class Network_Driver& network_driver;
 
 // Thunks for invocable objects, for type erasure
 template<typename... ArgsT>
-class Thunk
+class thunk
   {
   public:
     using function_type = void (ArgsT...);
@@ -309,7 +309,7 @@ class Thunk
     template<typename RealT,
     ROCKET_ENABLE_IF(is_invocable<RealT>::value)>
     explicit
-    Thunk(const shptr<RealT>& obj) noexcept
+    thunk(const shptr<RealT>& obj) noexcept
       {
         this->m_func = +[](void* p, ArgsT&&... args) { (*(RealT*) p) (::std::forward<ArgsT>(args)...);  };
         this->m_obj = obj;
@@ -318,7 +318,7 @@ class Thunk
     // And this is an optimized overload if the target object is a plain
     // function pointer, which can be stored into `m_obj` directly.
     explicit
-    Thunk(function_type* fptr) noexcept
+    thunk(function_type* fptr) noexcept
       {
         this->m_func = nullptr;
         this->m_obj = shptr<void>(shptr<int>(), (void*)(intptr_t) fptr);

@@ -13,7 +13,7 @@ class Easy_HTTP_Server
   public:
     // This is also the prototype of callbacks for the constructor.
     using thunk_type =
-      Thunk<
+      thunk<
         shptrR<HTTP_Server_Session>,  // server data socket
         Abstract_Fiber&,              // fiber for current callback
         HTTP_Request_Headers&&,       // request method, URI, and headers
