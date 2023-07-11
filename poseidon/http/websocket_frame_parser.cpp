@@ -432,10 +432,20 @@ parse_frame_header_from_stream(linear_buffer& data)
       case 1:  // text data
       case 2:  // binary data
       {
+        if(this->m_msg_opcode != 0) {
+          // The previous message must have terminated.
+          this->m_wsf = wsf_error;
+          this->m_error_desc = "continuation frame expected";
+          return;
+        }
+
+        // Check for extension bits. At the moment only the per-message compression
+        // extension (PMCE) is supported, which uses the RSV1 bit to indicate a
+        // compressed message.
         int rsv_mask = 0b01110000;
 
         if(this->m_pmce_max_window_bits != 0)
-          rsv_mask &= 0b00110000;  // RSV1 := compressed
+          rsv_mask &= 0b00110000;
 
         if(frm_word & rsv_mask) {
           // Reject unknown RSV bits.
@@ -467,6 +477,9 @@ parse_frame_header_from_stream(linear_buffer& data)
           this->m_error_desc = "dangling continuation frame";
           return;
         }
+
+        // If this is a FIN frame, terminate the current message.
+        this->m_msg_fin = 1;
       }
       break;
 
