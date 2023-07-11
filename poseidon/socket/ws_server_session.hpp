@@ -24,7 +24,7 @@ class WS_Server_Session
 
   private:
     void
-    do_call_on_ws_close_once(uint16_t status, const char* reason);
+    do_call_on_ws_close_once(uint16_t status, char_sequence reason);
 
   protected:
     // This function implements `HTTP_Server_Session`.
@@ -39,6 +39,10 @@ class WS_Server_Session
     virtual
     void
     do_on_http_request_finish(HTTP_Request_Headers&& req, linear_buffer&& data, bool close_now) override;
+
+    virtual
+    void
+    do_on_http_request_error(uint32_t status) override;
 
     virtual
     void
@@ -84,7 +88,7 @@ class WS_Server_Session
     // The default implementation sends a normal CLOSE frame.
     virtual
     void
-    do_on_ws_close(uint16_t status, const char* reason);
+    do_on_ws_close(uint16_t status, char_sequence reason);
 
     // Sends a raw frame (not a message). No error checking is performed. This
     // function is provided for convenience only, and maybe isn't very useful
@@ -119,7 +123,7 @@ class WS_Server_Session
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    ws_close(uint16_t status = 1000, const char* reason_opt = nullptr);
+    ws_close(uint16_t status = 1000, char_sequence reason = "");
   };
 
 }  // namespace poseidon

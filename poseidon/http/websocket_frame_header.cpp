@@ -48,7 +48,7 @@ mask_payload(char* data, size_t size) noexcept
 
     char* cur = data;
     char* const esdata = data + size;
-    const __m128i exmask = _mm_set1_epi32((int32_t) be32toh(this->mask_key_u32));
+    const __m128i exmask = _mm_set1_epi32((int32_t) this->mask_key_u32);
 
     // This is the optimized implementation with SSE2.
     while(esdata - cur >= 16) {

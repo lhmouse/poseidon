@@ -225,6 +225,15 @@ enum HTTP_Payload_Type : uint8_t
     http_payload_connect  = 2,
   };
 
+enum WebSocket_Event : uint8_t
+  {
+    websocket_open    = 0,
+    websocket_text    = 1,
+    websocket_binary  = 2,
+    websocket_pong    = 3,
+    websocket_closed  = 4,
+  };
+
 // Base types
 class char256;
 class uuid;

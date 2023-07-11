@@ -21,7 +21,7 @@ WS_Server_Session::
 
 void
 WS_Server_Session::
-do_call_on_ws_close_once(uint16_t status, const char* reason)
+do_call_on_ws_close_once(uint16_t status, char_sequence reason)
   {
     if(this->m_closure_notified)
       return;
@@ -35,7 +35,7 @@ void
 WS_Server_Session::
 do_abstract_socket_on_closed()
   {
-    this->do_call_on_ws_close_once(1005, "");
+    this->do_call_on_ws_close_once(1005, "no CLOSE frame received");
   }
 
 void
@@ -60,16 +60,28 @@ for(size_t hindex = 0; hindex < resp.headers.size(); ++ hindex)
     resp.headers.erase(hindex --);
 // ^^^^ remove this
 
-    this->http_response(::std::move(resp), "", 0);
+    this->http_response(::std::move(resp), "");
 
     // If the response is a failure, close the connection.
     if((resp.status != 101) || close_now)
-      this->tcp_close();
+      this->quick_close();
   }
 
 void
 WS_Server_Session::
-do_on_http_upgraded_stream(linear_buffer& data, bool /*eof*/)
+do_on_http_request_error(uint32_t status)
+  {
+    // This error can be reported synchronously.
+    HTTP_Response_Headers resp;
+    resp.status = status;
+    resp.headers.emplace_back(sref("Connection"), sref("close"));
+    this->http_response(::std::move(resp), "");
+    this->quick_close();
+  }
+
+void
+WS_Server_Session::
+do_on_http_upgraded_stream(linear_buffer& data, bool eof)
   {
     for(;;) {
       // If something has gone wrong, ignore further incoming data.
@@ -142,34 +154,35 @@ do_on_http_upgraded_stream(linear_buffer& data, bool /*eof*/)
             break;
           }
 
-          case 8: {  // close
+          case 8: {  // CLOSE
             uint16_t bestatus = htobe16(1005);
-            const char* reason = "";
+            char_sequence reason = "";
 
-            if(payload.size() >= 2U) {
-              // Get the status code and description string that were sent from
-              // the client.
-              ::memcpy(&bestatus, payload.data(), 2U);
-              payload.discard(2U);
-              payload.putc(0);
-              reason = payload.data();
+            if(payload.size() >= 2) {
+              // Get the status and reason string from the payload.
+              ::memcpy(&bestatus, payload.data(), 2);
+              payload.discard(2);
+              reason = payload;
             }
 
             this->do_call_on_ws_close_once(be16toh(bestatus), reason);
             break;
           }
 
-          case 9:  // ping
+          case 9:  // PING
             POSEIDON_LOG_TRACE(("WebSocket PING from `$1`: $2"), this->remote_address(), payload);
-            this->do_ws_send_raw_frame(10, payload.data(), payload.size());
+            this->do_ws_send_raw_frame(10, payload);
             break;
 
-          case 10:  // pong
+          case 10:  // PONG
             POSEIDON_LOG_TRACE(("WebSocket PONG from `$1`: $2"), this->remote_address(), payload);
             this->do_on_ws_pong(::std::move(payload));
             break;
         }
       }
+
+      this->m_parser.next_frame();
+      POSEIDON_LOG_TRACE(("WebSocket parser done: data.size `$1`, eof `$2`"), data.size(), eof);
     }
   }
 
@@ -177,9 +190,8 @@ void
 WS_Server_Session::
 do_on_ws_text_stream(linear_buffer& data)
   {
-    // Leave `data` alone for consumption by `do_on_ws_binary_stream()`, but
-    // perform some security checks, so we won't be affected by compromized
-    // 3rd-party servers.
+    // Leave `data` alone for consumption by `do_on_ws_text()`, but perform some
+    // security checks, so we won't be affected by compromized 3rd-party servers.
     const auto conf_file = main_config.copy();
     int64_t max_websocket_text_message_length = 1048576;
 
@@ -209,9 +221,8 @@ void
 WS_Server_Session::
 do_on_ws_binary_stream(linear_buffer& data)
   {
-    // Leave `data` alone for consumption by `do_on_ws_binary_stream()`, but
-    // perform some security checks, so we won't be affected by compromized
-    // 3rd-party servers.
+    // Leave `data` alone for consumption by `do_on_ws_binary()`, but perform some
+    // security checks, so we won't be affected by compromized 3rd-party servers.
     const auto conf_file = main_config.copy();
     int64_t max_websocket_binary_message_length = 1048576;
 
@@ -246,34 +257,29 @@ do_on_ws_pong(linear_buffer&& data)
 
 void
 WS_Server_Session::
-do_on_ws_close(uint16_t status, const char* reason)
+do_on_ws_close(uint16_t status, char_sequence reason)
   {
-    // Send a CLOSE frame to the client. The connection will be closed after
-    // this function returns, so there is no need to close it here.
-    char data[128];
-    uint16_t bestatus = htobe16(status);
-    ::memcpy(data, &bestatus, 2U);
+    POSEIDON_LOG_DEBUG(("WebSocket CLOSE from `$1` (status $2): $3"), this->remote_address(), status, reason);
 
-    size_t size = 2U +  min(::strlen(reason), 123U);
-    ::memcpy(data + 2U, reason, size - 2U);
-
-    this->do_ws_send_raw_frame(8, data, size);
+    // Send a CLOSE frame with status 1000 to the client. There is no need to
+    // close the socket here.
+    this->do_ws_send_raw_frame(8, "\x03\xE8");
   }
 
 bool
 WS_Server_Session::
 do_ws_send_raw_frame(uint8_t opcode, char_sequence data)
   {
-    // Compose a single frame and send it. Server-to-client frames will not be
-    // masked.
+    // Compose a single frame and send it. Frames to clients will not be masked.
     WebSocket_Frame_Header header;
     header.fin = 1;
     header.opcode = opcode & 15;
+    header.payload_len = data.n;
 
     tinyfmt_ln fmt;
     header.encode(fmt);
     fmt.putn(data.p, data.n);
-    return this->tcp_send(fmt.data(), fmt.size());
+    return this->tcp_send(fmt);
   }
 
 bool
@@ -281,7 +287,7 @@ WS_Server_Session::
 ws_send_text(char_sequence data)
   {
     // TEXT := opcode 1
-    return this->do_ws_send_raw_frame(1, data, size);
+    return this->do_ws_send_raw_frame(1, data);
   }
 
 bool
@@ -289,37 +295,43 @@ WS_Server_Session::
 ws_send_binary(char_sequence data)
   {
     // BINARY := opcode 2
-    return this->do_ws_send_raw_frame(2, data, size);
+    return this->do_ws_send_raw_frame(2, data);
   }
 
 bool
 WS_Server_Session::
 ws_ping(char_sequence data)
   {
+    // The length of the payload of a control frame cannot exceed 125 bytes, so
+    // the data string has to be truncated if it's too long.
+    char_sequence ctl_data(data.p, min(data.n, 125));
+
     // PING := opcode 9
-    return this->do_ws_send_raw_frame(9, data, min(size, 125U));
+    return this->do_ws_send_raw_frame(9, ctl_data);
   }
 
 bool
 WS_Server_Session::
-ws_close(uint16_t status, const char* reason_opt)
+ws_close(uint16_t status, char_sequence reason)
   {
-    // Write the status code in big-endian order.
-    char data[128];
-    uint16_t bestatus = htobe16(status);
-    ::memcpy(data, &bestatus, 2U);
+    char bytes[128];
+    char_sequence ctl_data(bytes, 0);
 
-    size_t size = 2U;
-    if(reason_opt) {
-      // The total length of the payload of a control frame cannot exceed 125
-      // bytes, so the reason string has to be truncated silently if it's too
-      // long.
-      size += min(::strlen(reason_opt), 123U);
-      ::memcpy(data + 2U, reason_opt, size - 2U);
+    // Write the status code in big-endian order.
+    uint16_t bestatus = htobe16(status);
+    ::memcpy(bytes, &bestatus, 2);
+    ctl_data.n += 2;
+
+    if(reason.n != 0) {
+      // The length of the payload of a control frame cannot exceed 125 bytes, so
+      // the reason string has to be truncated if it's too long.
+      size_t rlen = min(reason.n, 123);
+      ::memcpy(bytes + 2, reason.p, rlen);
+      ctl_data.n += rlen;
     }
 
     // CLOSE := opcode 9
-    bool succ = this->do_ws_send_raw_frame(8, data, size);
+    bool succ = this->do_ws_send_raw_frame(8, ctl_data);
     succ |= this->tcp_close();
     return succ;
   }

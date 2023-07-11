@@ -576,13 +576,11 @@ parse_frame_payload_from_stream(linear_buffer& data)
     size_t navail = (size_t) min(data.size(), this->m_frm_payload_rem);
     if(navail != 0) {
       // Move the (maybe partial) payload from `data` into `m_frm_payload`. If the
-      // payload has been masked, unmask it.
+      // payload has been masked, unmask it first.
+      this->m_frm_header.mask_payload(data.mut_data(), navail);
       this->m_frm_payload.putn(data.data(), navail);
       data.discard(navail);
       this->m_frm_payload_rem -= navail;
-
-      if(this->m_frm_header.mask)
-        this->m_frm_header.mask_payload(data.mut_end() - navail, navail);
     }
 
     if(this->m_frm_payload_rem != 0)
