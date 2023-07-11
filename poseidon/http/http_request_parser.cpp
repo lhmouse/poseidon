@@ -83,8 +83,8 @@ HTTP_Request_Parser::s_settings[1] =
         }
 
         // The headers are complete, so halt.
+        this->m_hreq = hreq_header_done;
         this->m_close_after_body = ::http_should_keep_alive(ps) == 0;
-        this->m_headers_complete = true;
         ps->http_errno = HPE_PAUSED;
         return 0;
       },
@@ -103,7 +103,7 @@ HTTP_Request_Parser::s_settings[1] =
     +[](::http_parser* ps)
       {
         // The message is complete, so halt.
-        this->m_message_complete = true;
+        this->m_hreq = hreq_body_done;
         ps->http_errno = HPE_PAUSED;
         return 0;
       },
@@ -151,7 +151,7 @@ void
 HTTP_Request_Parser::
 parse_headers_from_stream(linear_buffer& data, bool eof)
   {
-    if(this->m_headers_complete)
+    if(this->m_hreq >= hreq_header_done)
       return;
 
     // Consume incoming data.
@@ -171,7 +171,7 @@ void
 HTTP_Request_Parser::
 parse_body_from_stream(linear_buffer& data, bool eof)
   {
-    if(this->m_message_complete)
+    if(this->m_hreq >= hreq_body_done)
       return;
 
     // Consume incoming data.

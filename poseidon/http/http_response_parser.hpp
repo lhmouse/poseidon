@@ -13,12 +13,22 @@ class HTTP_Response_Parser
   {
   private:
     static const ::http_parser_settings s_settings[1];
+
+    enum HRESP_State : uint8_t
+      {
+        hresp_pending      = 0,
+        hresp_header_done  = 1,
+        hresp_body_done    = 2,
+      };
+
     ::http_parser m_parser[1];
     HTTP_Response_Headers m_headers;
     linear_buffer m_body;
+
+    HRESP_State m_hresp;
     bool m_close_after_body;
-    bool m_headers_complete;
-    bool m_message_complete;
+    char m_reserved_1;
+    char m_reserved_2;
 
   public:
     // Constructs a parser for incoming responses.
@@ -46,9 +56,11 @@ class HTTP_Response_Parser
 
         this->m_headers.clear();
         this->m_body.clear();
+
+        this->m_hresp = hresp_pending;
         this->m_close_after_body = false;
-        this->m_headers_complete = false;
-        this->m_message_complete = false;
+        this->m_reserved_1 = 0;
+        this->m_reserved_2 = 0;
       }
 
     // Parses the response line and headers of an HTTP response from a stream.
@@ -63,7 +75,7 @@ class HTTP_Response_Parser
     void
     set_no_body() noexcept
       {
-        ROCKET_ASSERT(this->m_headers_complete);
+        ROCKET_ASSERT(this->m_hresp >= hresp_header_done);
         this->m_parser->flags |= F_SKIPBODY;
       }
 
@@ -74,7 +86,7 @@ class HTTP_Response_Parser
 
     bool
     headers_complete() const noexcept
-      { return this->m_headers_complete;  }
+      { return this->m_hresp >= hresp_header_done;  }
 
     const HTTP_Response_Headers&
     headers() const noexcept
@@ -93,7 +105,7 @@ class HTTP_Response_Parser
     // Get the parsed body.
     bool
     body_complete() const noexcept
-      { return this->m_message_complete;  }
+      { return this->m_hresp >= hresp_body_done;  }
 
     const linear_buffer&
     body() const noexcept
@@ -107,12 +119,12 @@ class HTTP_Response_Parser
     void
     next_message() noexcept
       {
-        ROCKET_ASSERT(this->m_message_complete);
+        ROCKET_ASSERT(this->m_hresp >= hresp_body_done);
+
         this->m_headers.clear();
         this->m_body.clear();
+        this->m_hresp = hresp_pending;
         this->m_close_after_body = false;
-        this->m_headers_complete = false;
-        this->m_message_complete = false;
       }
   };
 

@@ -13,12 +13,22 @@ class HTTP_Request_Parser
   {
   private:
     static const ::http_parser_settings s_settings[1];
+
+    enum HREQ_State : uint8_t
+      {
+        hreq_pending      = 0,
+        hreq_header_done  = 1,
+        hreq_body_done    = 2,
+      };
+
     ::http_parser m_parser[1];
     HTTP_Request_Headers m_headers;
     linear_buffer m_body;
+
+    HREQ_State m_hreq;
     bool m_close_after_body;
-    bool m_headers_complete;
-    bool m_message_complete;
+    char m_reserved_1;
+    char m_reserved_2;
 
   public:
     // Constructs a parser for incoming requests.
@@ -50,9 +60,11 @@ class HTTP_Request_Parser
 
         this->m_headers.clear();
         this->m_body.clear();
+
+        this->m_hreq = hreq_pending;
         this->m_close_after_body = false;
-        this->m_headers_complete = false;
-        this->m_message_complete = false;
+        this->m_reserved_1 = 0;
+        this->m_reserved_2 = 0;
       }
 
     // Parses the request line and headers of an HTTP request from a stream.
@@ -69,7 +81,7 @@ class HTTP_Request_Parser
 
     bool
     headers_complete() const noexcept
-      { return this->m_headers_complete;  }
+      { return this->m_hreq >= hreq_header_done;  }
 
     const HTTP_Request_Headers&
     headers() const noexcept
@@ -88,7 +100,7 @@ class HTTP_Request_Parser
     // Get the parsed body.
     bool
     body_complete() const noexcept
-      { return this->m_message_complete;  }
+      { return this->m_hreq >= hreq_body_done;  }
 
     const linear_buffer&
     body() const noexcept
@@ -102,12 +114,12 @@ class HTTP_Request_Parser
     void
     next_message() noexcept
       {
-        ROCKET_ASSERT(this->m_message_complete);
+        ROCKET_ASSERT(this->m_hreq >= hreq_body_done);
+
         this->m_headers.clear();
         this->m_body.clear();
+        this->m_hreq = hreq_pending;
         this->m_close_after_body = false;
-        this->m_headers_complete = false;
-        this->m_message_complete = false;
       }
   };
 
