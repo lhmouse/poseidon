@@ -16,7 +16,7 @@ class HTTP_Request_Parser
 
     enum HREQ_State : uint8_t
       {
-        hreq_pending      = 0,
+        hreq_new          = 0,
         hreq_header_done  = 1,
         hreq_body_done    = 2,
       };
@@ -61,7 +61,7 @@ class HTTP_Request_Parser
         this->m_headers.clear();
         this->m_body.clear();
 
-        this->m_hreq = hreq_pending;
+        this->m_hreq = hreq_new;
         this->m_close_after_body = false;
         this->m_reserved_1 = 0;
         this->m_reserved_2 = 0;
@@ -118,7 +118,7 @@ class HTTP_Request_Parser
 
         this->m_headers.clear();
         this->m_body.clear();
-        this->m_hreq = hreq_pending;
+        this->m_hreq = hreq_new;
         this->m_close_after_body = false;
       }
   };

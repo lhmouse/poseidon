@@ -16,7 +16,7 @@ class HTTP_Response_Parser
 
     enum HRESP_State : uint8_t
       {
-        hresp_pending      = 0,
+        hresp_new          = 0,
         hresp_header_done  = 1,
         hresp_body_done    = 2,
       };
@@ -57,7 +57,7 @@ class HTTP_Response_Parser
         this->m_headers.clear();
         this->m_body.clear();
 
-        this->m_hresp = hresp_pending;
+        this->m_hresp = hresp_new;
         this->m_close_after_body = false;
         this->m_reserved_1 = 0;
         this->m_reserved_2 = 0;
@@ -123,7 +123,7 @@ class HTTP_Response_Parser
 
         this->m_headers.clear();
         this->m_body.clear();
-        this->m_hresp = hresp_pending;
+        this->m_hresp = hresp_new;
         this->m_close_after_body = false;
       }
   };
