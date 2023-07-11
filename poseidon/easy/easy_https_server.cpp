@@ -138,8 +138,6 @@ struct Final_HTTPS_Server_Session final : HTTPS_Server_Session
     void
     do_abstract_socket_on_closed() override
       {
-        HTTPS_Server_Session::do_abstract_socket_on_closed();
-
         auto table = this->m_wtable.lock();
         if(!table)
           return;
