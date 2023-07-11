@@ -1,73 +1,75 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
 
-#ifndef POSEIDON_HTTP_WEBSOCKET_PARSER_
-#define POSEIDON_HTTP_WEBSOCKET_PARSER_
+#ifndef POSEIDON_HTTP_WEBSOCKET_FRAME_PARSER_
+#define POSEIDON_HTTP_WEBSOCKET_FRAME_PARSER_
 
 #include "../fwd.hpp"
 #include "websocket_frame_header.hpp"
 namespace poseidon {
 
-class WebSocket_Parser
+class WebSocket_Frame_Parser
   {
   private:
-    enum WSC_Mode : uint8_t
+    enum WSHS_State : uint8_t
       {
-        wsc_pending     = 0,
-        wsc_error       = 1,
-        wsc_c_req_sent  = 2,
-        wsc_c_accepted  = 3,
-        wsc_s_accepted  = 4,
+        wshs_pending     = 0,
+        wshs_c_req_sent  = 1,
+        wshs_s_accepted  = 2,
+        wshs_c_accepted  = 3,
+      };
+
+    enum WSF_State : uint8_t
+      {
+        wsf_new           = 0,
+        wsf_header_done   = 1,
+        wsf_payload_done  = 2,
+        wsf_error         = 3,
       };
 
     WebSocket_Frame_Header m_frm_header;
     linear_buffer m_frm_payload;
-    linear_buffer m_msg;
+    uint64_t m_frm_payload_rem;
+    const char* m_error_desc;
 
-    WSC_Mode m_wsc;
-    char m_reserved_1;
-    uint8_t m_pmce_max_window_bits;
-    bool m_pmce_no_context_takeover;
-
-    bool m_frm_header_complete;
-    bool m_frm_payload_complete;
+    WSHS_State m_wshs;
+    uint8_t m_pmce_max_window_bits : 4;
+    uint8_t m_pmce_no_context_takeover : 1;
+    uint8_t m_pmce_reserved : 3;
+    WSF_State m_wsf;
     uint8_t m_msg_opcode : 4;
     uint8_t m_msg_rsv3 : 1;
     uint8_t m_msg_rsv2 : 1;
     uint8_t m_msg_rsv1 : 1;
     uint8_t m_msg_fin : 1;
-    char m_reserved_2;
-
-    const char* m_error_description;
-    uint64_t m_frm_payload_remaining;
 
   public:
     // Constructs a parser for incoming frames.
-    WebSocket_Parser() noexcept
+    WebSocket_Frame_Parser() noexcept
       {
         this->clear();
       }
 
   public:
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(WebSocket_Parser);
+    ASTERIA_NONCOPYABLE_DESTRUCTOR(WebSocket_Frame_Parser);
 
     // Has an error occurred?
     bool
     error() const noexcept
-      { return this->m_wsc == wsc_error;  }
+      { return this->m_wsf == wsf_error;  }
 
     const char*
     error_description() const noexcept
-      { return this->m_error_description;  }
+      { return this->m_error_desc;  }
 
     // Get the operating mode.
     bool
     is_client_mode() const noexcept
-      { return this->m_wsc == wsc_c_accepted;  }
+      { return this->m_wshs == wshs_c_accepted;  }
 
     bool
     is_server_mode() const noexcept
-      { return this->m_wsc == wsc_s_accepted;  }
+      { return this->m_wshs == wshs_s_accepted;  }
 
     // Get parameters of the per-message compression extension (PMCE). If PMCE is
     // not active, these functions return zero.
@@ -86,24 +88,19 @@ class WebSocket_Parser
       {
         this->m_frm_header.clear();
         this->m_frm_payload.clear();
-        this->m_msg.clear();
+        this->m_frm_payload_rem = 0;
+        this->m_error_desc = "";
 
-        this->m_wsc = wsc_pending;
-        this->m_reserved_1 = 0;
+        this->m_wshs = wshs_pending;
         this->m_pmce_max_window_bits = 0;
-        this->m_pmce_no_context_takeover = false;
-
-        this->m_frm_header_complete = false;
-        this->m_frm_payload_complete = false;
+        this->m_pmce_no_context_takeover = 0;
+        this->m_pmce_reserved = 0;
+        this->m_wsf = wsf_new;
         this->m_msg_fin = 0;
         this->m_msg_rsv1 = 0;
         this->m_msg_rsv2 = 0;
         this->m_msg_rsv3 = 0;
         this->m_msg_opcode = 0;
-        this->m_reserved_2 = 0;
-
-        this->m_error_description = "";
-        this->m_frm_payload_remaining = 0;
       }
 
     // Creates a WebSocket handshake request from a client. The user may modify
@@ -142,7 +139,7 @@ class WebSocket_Parser
     // Get the parsed frame header.
     bool
     frame_header_complete() const noexcept
-      { return this->m_frm_header_complete;  }
+      { return this->m_wsf >= wsf_header_done;  }
 
     const WebSocket_Frame_Header&
     frame_header() const noexcept
@@ -158,13 +155,11 @@ class WebSocket_Parser
     void
     parse_frame_payload_from_stream(linear_buffer& data);
 
-    // Get the parsed frame payload. If the frame is a masked frame, this buffer
-    // contains unmasked data. Users should only call this function to fetch the
-    // payload of a control frame, as they can't be fragmented. See also the
-    // `combined_message()` function.
+    // Get the parsed frame payload. If the frame has been masked, this buffer
+    // contains unmasked data.
     bool
     frame_payload_complete() const noexcept
-      { return this->m_frm_payload_complete;  }
+      { return this->m_wsf >= wsf_payload_done;  }
 
     const linear_buffer&
     frame_payload() const noexcept
@@ -174,8 +169,11 @@ class WebSocket_Parser
     mut_frame_payload() noexcept
       { return this->m_frm_payload;  }
 
-    // Get the combined (maybe partial) data message. Control messages will not
-    // be combined into this buffer. See also the `frame_payload()` function.
+    // Get header bits of the current (maybe fragmented) data message, which can
+    // be `1` for a text message or `2` for a binary message. If this function is
+    // called after a non-FIN data frame or a control frame following a non-FIN
+    // data frame, the opcode of the data frame is returned; otherwise, zero is
+    // returned.
     bool
     message_fin() const noexcept
       { return this->m_msg_fin;  }
@@ -196,23 +194,16 @@ class WebSocket_Parser
     message_opcode() const noexcept
       { return this->m_msg_opcode;  }
 
-    const linear_buffer&
-    combined_message() const noexcept
-      { return this->m_msg;  }
-
-    linear_buffer&
-    mut_combined_message() noexcept
-      { return this->m_msg;  }
-
     // Clears the current complete frame, so the parser can start the next one.
     void
     next_frame() noexcept
       {
-        ROCKET_ASSERT(this->m_frm_payload_complete);
+        ROCKET_ASSERT(this->m_wsf >= wsf_header_done);
+
         this->m_frm_header.clear();
         this->m_frm_payload.clear();
-        this->m_frm_header_complete = false;
-        this->m_frm_payload_complete = false;
+        this->m_frm_payload_rem = 0;
+        this->m_wsf = wsf_new;
       }
   };
 
