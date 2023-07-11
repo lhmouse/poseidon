@@ -279,7 +279,7 @@ do_abstract_socket_on_writable()
       queue.discard(datalen);
     }
 
-    if(this->do_abstract_socket_change_state(socket_state_pending, socket_state_established)) {
+    if(this->do_abstract_socket_change_state(socket_pending, socket_established)) {
       // Set the ALPN response for outgoing sockets. For incoming sockets, it is
       // set in the ALPN callback.
       const uint8_t* alpn_str;
@@ -294,7 +294,7 @@ do_abstract_socket_on_writable()
       this->do_on_ssl_connected();
     }
 
-    if(queue.empty() && this->do_abstract_socket_change_state(socket_state_closing, socket_state_closed)) {
+    if(queue.empty() && this->do_abstract_socket_change_state(socket_closing, socket_closed)) {
       // If the socket has been marked closing and there are no more data, perform
       // complete shutdown.
       ::SSL_shutdown(this->ssl());
@@ -366,7 +366,7 @@ ssl_send(const char* data, size_t size)
           this, typeid(*this));
 
     // If this socket has been marked closed, fail immediately.
-    if(this->socket_state() >= socket_state_closing)
+    if(this->socket_state() >= socket_closing)
       return false;
 
     recursive_mutex::unique_lock io_lock;
@@ -439,11 +439,11 @@ ssl_close() noexcept
     // If there are data pending, mark this socket as being closed. If a full
     // connection has been established, wait until all pending data have been
     // sent. The connection should be closed thereafter.
-    if(!queue.empty() && this->do_abstract_socket_change_state(socket_state_established, socket_state_closing))
+    if(!queue.empty() && this->do_abstract_socket_change_state(socket_established, socket_closing))
       return true;
 
     // If there are no data pending, close it immediately.
-    this->do_abstract_socket_set_state(socket_state_closed);
+    this->do_abstract_socket_set_state(socket_closed);
     ::SSL_shutdown(this->ssl());
     return ::shutdown(this->do_get_fd(), SHUT_RDWR) == 0;
   }

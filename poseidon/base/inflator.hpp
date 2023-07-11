@@ -14,8 +14,8 @@ class Inflator
     zlib_Inflate_Stream m_strm;
 
   public:
-    // Constructs a data decompressor. `format` shall be `zlib_format_raw`,
-    // `zlib_format_inflate` or `zlib_format_gzip`. `wbits` shall be an integer
+    // Constructs a data decompressor. `format` shall be `zlib_raw`,
+    // `zlib_inflate` or `zlib_gzip`. `wbits` shall be an integer
     // between 9 and 15, inclusively.
     explicit
     Inflator(zlib_Format format, int wbits = 15);

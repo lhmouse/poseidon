@@ -75,19 +75,19 @@ thread_loop()
       // Update the next time point and insert the timer back.
       this->m_pq.back().next += this->m_pq.back().period;
       ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), timer_comparator);
-      next_state = async_state_suspended;
+      next_state = async_suspended;
     }
     else {
       // Delete the one-shot timer.
       this->m_pq.pop_back();
-      next_state = async_state_finished;
+      next_state = async_finished;
     }
     lock.unlock();
 
     // Execute it.
     // Exceptions are ignored.
     POSEIDON_LOG_TRACE(("Executing timer `$1` (class `$2`)"), timer, typeid(*timer));
-    timer->m_state.store(async_state_running);
+    timer->m_state.store(async_running);
 
     try {
       timer->do_abstract_timer_on_tick(next);
@@ -99,7 +99,7 @@ thread_loop()
           stdex, typeid(*timer));
     }
 
-    ROCKET_ASSERT(timer->m_state.load() == async_state_running);
+    ROCKET_ASSERT(timer->m_state.load() == async_running);
     timer->m_state.store(next_state);
   }
 

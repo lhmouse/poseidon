@@ -12,7 +12,7 @@ main()
     // compression test
     Easy_Deflator defl;
     POSEIDON_TEST_CHECK(defl.output_size() == 0);
-    defl.open(zlib_format_raw);
+    defl.open(zlib_raw);
     POSEIDON_TEST_CHECK(defl.deflate("He", 2) == 2);
     POSEIDON_TEST_CHECK(defl.deflate("llo", 3) == 3);
     POSEIDON_TEST_CHECK(defl.sync_flush() == true);
@@ -46,7 +46,7 @@ main()
     // reset
     defl.clear();
     POSEIDON_TEST_CHECK(defl.output_size() == 0);
-    defl.open(zlib_format_raw);
+    defl.open(zlib_raw);
     POSEIDON_TEST_CHECK(defl.deflate("He", 2) == 2);
     POSEIDON_TEST_CHECK(defl.deflate("llo", 3) == 3);
     POSEIDON_TEST_CHECK(defl.sync_flush() == true);
@@ -57,7 +57,7 @@ main()
     // uncompressed data test
     defl.clear();
     POSEIDON_TEST_CHECK(defl.output_size() == 0);
-    defl.open(zlib_format_raw, 0);
+    defl.open(zlib_raw, 0);
     POSEIDON_TEST_CHECK(defl.deflate("He", 2) == 2);
     POSEIDON_TEST_CHECK(defl.deflate("llo", 3) == 3);
     POSEIDON_TEST_CHECK(defl.sync_flush() == true);

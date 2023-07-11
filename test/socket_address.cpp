@@ -82,20 +82,20 @@ main()
 
     // classification
     POSEIDON_TEST_CHECK(addr.parse("0.0.0.0:42", 10) == 10);
-    POSEIDON_TEST_CHECK(addr.classify() == ip_address_class_unspecified);
+    POSEIDON_TEST_CHECK(addr.classify() == ip_address_unspecified);
 
     POSEIDON_TEST_CHECK(addr.parse("10.6.123.84:80", 14) == 14);
-    POSEIDON_TEST_CHECK(addr.classify() == ip_address_class_private);
+    POSEIDON_TEST_CHECK(addr.classify() == ip_address_private);
 
     POSEIDON_TEST_CHECK(addr.parse("127.0.0.1:443", 13) == 13);
-    POSEIDON_TEST_CHECK(addr.classify() == ip_address_class_loopback);
+    POSEIDON_TEST_CHECK(addr.classify() == ip_address_loopback);
 
     POSEIDON_TEST_CHECK(addr.parse("127.0.0.5:445", 13) == 13);
-    POSEIDON_TEST_CHECK(addr.classify() == ip_address_class_loopback);
+    POSEIDON_TEST_CHECK(addr.classify() == ip_address_loopback);
 
     POSEIDON_TEST_CHECK(addr.parse("192.168.60.1:1023", 17) == 17);
-    POSEIDON_TEST_CHECK(addr.classify() == ip_address_class_private);
+    POSEIDON_TEST_CHECK(addr.classify() == ip_address_private);
 
     POSEIDON_TEST_CHECK(addr.parse("225.13.0.9:335", 14) == 14);
-    POSEIDON_TEST_CHECK(addr.classify() == ip_address_class_multicast);
+    POSEIDON_TEST_CHECK(addr.classify() == ip_address_multicast);
   }

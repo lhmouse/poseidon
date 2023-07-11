@@ -368,7 +368,7 @@ thread_loop()
     if(event.events & (EPOLLHUP | EPOLLERR)) {
       POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLHUP | EPOLLERR"), socket, typeid(*socket));
 
-      socket->m_state.store(socket_state_closed);
+      socket->m_state.store(socket_closed);
 
       try {
         // Pass the socket error code via `errno`... Is this good?

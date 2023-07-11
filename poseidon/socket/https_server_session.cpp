@@ -264,7 +264,7 @@ https_chunked_response_send(const char* data, size_t size)
 
     // Ignore empty chunks, which would mark the end of the payload.
     if(size == 0)
-      return this->socket_state() <= socket_state_established;
+      return this->socket_state() <= socket_established;
 
     // Compose a chunk and send it as a whole. The length of this chunk is
     // written as a hexadecimal integer without the `0x` prefix.

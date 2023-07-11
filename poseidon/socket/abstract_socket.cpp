@@ -106,7 +106,7 @@ bool
 Abstract_Socket::
 quick_close() noexcept
   {
-    this->m_state.store(socket_state_closed);
+    this->m_state.store(socket_closed);
 
     ::linger lng;
     lng.l_onoff = 1;

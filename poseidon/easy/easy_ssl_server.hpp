@@ -32,14 +32,14 @@ class Easy_SSL_Server
     // `(shptrR<SSL_Socket> socket, Abstract_Fiber& fiber, Connection_Event
     // event, linear_buffer& data, int code)`, where `socket` is a pointer to
     // a client socket object, and if `event` is
-    //  1) `connection_event_open`, then `data` is empty; or
-    //  2) `connection_event_stream`, then `data` contains all data that have
-    //     been received and have not been removed so far (this callback shall
+    //  1) `connection_open`, then `data` is empty; or
+    //  2) `connection_stream`, then `data` contains all data that have been
+    //     received and have not been removed so far (this callback shall
     //     `.discard()` processed data from `data`, otherwise they will remain
     //     there for the next call); `code` is non-zero if the remote peer has
     //     closed the connection; or
-    //  3) `connection_event_closed`, then `data` is the error description and
-    //     `code` is the system error number.
+    //  3) `connection_closed`, then `data` is the error description and `code`
+    //     is the system error number.
     // The server object owns all client socket objects. As a recommendation,
     // applications should store only `wkptr`s to client sockets, and call
     // `.lock()` as needed. This server object stores a copy of the callback,

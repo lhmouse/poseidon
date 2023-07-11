@@ -123,7 +123,7 @@ void
 UDP_Socket::
 do_abstract_socket_on_writable()
   {
-    this->do_abstract_socket_change_state(socket_state_pending, socket_state_established);
+    this->do_abstract_socket_change_state(socket_pending, socket_established);
   }
 
 void
@@ -282,7 +282,7 @@ udp_send(const Socket_Address& addr, const char* data, size_t size)
           this, typeid(*this), size);
 
     // If this socket has been marked closed, fail immediately.
-    if(this->socket_state() == socket_state_closed)
+    if(this->socket_state() == socket_closed)
       return false;
 
     // Try sending the packet immediately.

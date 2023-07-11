@@ -84,7 +84,7 @@ struct Final_Fiber final : Abstract_Fiber
           auto event = ::std::move(queue->events.front());
           queue->events.pop_front();
 
-          if(ROCKET_UNEXPECT(event.type == connection_event_closed)) {
+          if(ROCKET_UNEXPECT(event.type == connection_closed)) {
             // This will be the last event on this socket.
             queue = nullptr;
             table->client_map.erase(client_iter);
@@ -93,8 +93,8 @@ struct Final_Fiber final : Abstract_Fiber
           lock.unlock();
 
           try {
-            if(event.type == connection_event_stream) {
-              // `connection_event_stream` is special. We append new data to
+            if(event.type == connection_stream) {
+              // `connection_stream` is special. We append new data to
               // `data_stream` which is then passed to the callback instead of
               // `event.data`. `data_stream` may be consumed partially by user
               // code, and shall be preserved across callbacks.
@@ -161,14 +161,14 @@ struct Final_SSL_Socket final : SSL_Socket
     do_on_ssl_connected() override
       {
         linear_buffer data;
-        this->do_push_event_common(connection_event_open, ::std::move(data), 0);
+        this->do_push_event_common(connection_open, ::std::move(data), 0);
       }
 
     virtual
     void
     do_on_ssl_stream(linear_buffer& data, bool eof) override
       {
-        this->do_push_event_common(connection_event_stream, ::std::move(data), eof);
+        this->do_push_event_common(connection_stream, ::std::move(data), eof);
         data.clear();
       }
 
@@ -180,7 +180,7 @@ struct Final_SSL_Socket final : SSL_Socket
         linear_buffer data;
         char sbuf[1024];
         data.puts(::strerror_r(sys_errno, sbuf, sizeof(sbuf)));
-        this->do_push_event_common(connection_event_closed, ::std::move(data), sys_errno);
+        this->do_push_event_common(connection_closed, ::std::move(data), sys_errno);
       }
   };
 

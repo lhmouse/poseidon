@@ -24,46 +24,46 @@ do_classify_ipv4_generic(const char* addr) noexcept
   {
     // 0.0.0.0/32: Unspecified
     if(do_match_subnet(addr, "\x00\x00\x00\x00", 32))
-      return ip_address_class_unspecified;
+      return ip_address_unspecified;
 
     // 0.0.0.0/8: Local Identification
     if(do_match_subnet(addr, "\x00", 8))
-      return ip_address_class_reserved;
+      return ip_address_reserved;
 
     // 10.0.0.0/8: Class A Private-Use
     if(do_match_subnet(addr, "\x0A", 8))
-      return ip_address_class_private;
+      return ip_address_private;
 
     // 127.0.0.0/8: Loopback
     if(do_match_subnet(addr, "\x7F", 8))
-      return ip_address_class_loopback;
+      return ip_address_loopback;
 
     // 172.16.0.0/12: Class B Private-Use
     if(do_match_subnet(addr, "\xAC\x10", 12))
-      return ip_address_class_private;
+      return ip_address_private;
 
     // 169.254.0.0/16: Link Local
     if(do_match_subnet(addr, "\xA9\xFE", 16))
-      return ip_address_class_link_local;
+      return ip_address_link_local;
 
     // 192.168.0.0/16: Class C Private-Use
     if(do_match_subnet(addr, "\xC0\xA8", 16))
-      return ip_address_class_private;
+      return ip_address_private;
 
     // 224.0.0.0/4: Class D Multicast
     if(do_match_subnet(addr, "\xE0", 4))
-      return ip_address_class_multicast;
+      return ip_address_multicast;
 
     // 240.0.0.0/4: Class E
     if(do_match_subnet(addr, "\xF0", 4))
-      return ip_address_class_reserved;
+      return ip_address_reserved;
 
     // 255.255.255.255/32: Broadcast
     if(do_match_subnet(addr, "\xFF\xFF\xFF\xFF", 32))
-      return ip_address_class_broadcast;
+      return ip_address_broadcast;
 
     // Default
-    return ip_address_class_public;
+    return ip_address_public;
   }
 
 inline
@@ -76,11 +76,11 @@ do_classify_ipv6_generic(const char* addr) noexcept
 
     // ::/128: Unspecified
     if(do_match_subnet(addr, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 128))
-      return ip_address_class_unspecified;
+      return ip_address_unspecified;
 
     // ::1/128: Loopback
     if(do_match_subnet(addr, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01", 128))
-      return ip_address_class_loopback;
+      return ip_address_loopback;
 
     // 64:ff9b::/96: IPv4 to IPv6
     if(do_match_subnet(addr, "\x00\x64\xFF\x9B\x00\x00\x00\x00\x00\x00\x00\x00", 96))
@@ -92,11 +92,11 @@ do_classify_ipv6_generic(const char* addr) noexcept
 
     // 100::/64: Discard-Only
     if(do_match_subnet(addr, "\x01\x00\x00\x00\x00\x00\x00\x00", 64))
-      return ip_address_class_reserved;
+      return ip_address_reserved;
 
     // 2001:db8::/32: Documentation
     if(do_match_subnet(addr, "\x20\x01\x0D\xB8", 32))
-      return ip_address_class_reserved;
+      return ip_address_reserved;
 
     // 2002::/16: 6to4
     if(do_match_subnet(addr, "\x20\x02", 16))
@@ -104,18 +104,18 @@ do_classify_ipv6_generic(const char* addr) noexcept
 
     // fc00::/7: Unique Local Unicast
     if(do_match_subnet(addr, "\xFC\x00", 7))
-      return ip_address_class_private;
+      return ip_address_private;
 
     // fe80::/10: Link-Scoped Unicast
     if(do_match_subnet(addr, "\xFE\x80", 10))
-      return ip_address_class_link_local;
+      return ip_address_link_local;
 
     // ff00::/8: Multicast
     if(do_match_subnet(addr, "\xFF\x00", 8))
-      return ip_address_class_multicast;
+      return ip_address_multicast;
 
     // Default
-    return ip_address_class_public;
+    return ip_address_public;
   }
 
 }  // namespace

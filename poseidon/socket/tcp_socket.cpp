@@ -139,13 +139,13 @@ do_abstract_socket_on_writable()
       queue.discard((size_t) io_result);
     }
 
-    if(this->do_abstract_socket_change_state(socket_state_pending, socket_state_established)) {
+    if(this->do_abstract_socket_change_state(socket_pending, socket_established)) {
       // Deliver the establishment notification.
       POSEIDON_LOG_DEBUG(("TCP connection established: remote = $1"), this->remote_address());
       this->do_on_tcp_connected();
     }
 
-    if(queue.empty() && this->do_abstract_socket_change_state(socket_state_closing, socket_state_closed)) {
+    if(queue.empty() && this->do_abstract_socket_change_state(socket_closing, socket_closed)) {
       // If the socket has been marked closing and there are no more data, perform
       // complete shutdown.
       ::shutdown(this->do_get_fd(), SHUT_RDWR);
@@ -216,7 +216,7 @@ tcp_send(const char* data, size_t size)
           this, typeid(*this));
 
     // If this socket has been marked closed, fail immediately.
-    if(this->socket_state() >= socket_state_closing)
+    if(this->socket_state() >= socket_closing)
       return false;
 
     recursive_mutex::unique_lock io_lock;
@@ -284,11 +284,11 @@ tcp_close() noexcept
     // If there are data pending, mark this socket as being closed. If a full
     // connection has been established, wait until all pending data have been
     // sent. The connection should be closed thereafter.
-    if(!queue.empty() && this->do_abstract_socket_change_state(socket_state_established, socket_state_closing))
+    if(!queue.empty() && this->do_abstract_socket_change_state(socket_established, socket_closing))
       return true;
 
     // If there are no data pending, close it immediately.
-    this->do_abstract_socket_set_state(socket_state_closed);
+    this->do_abstract_socket_set_state(socket_closed);
     return ::shutdown(this->do_get_fd(), SHUT_RDWR) == 0;
   }
 

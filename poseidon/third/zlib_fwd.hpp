@@ -35,13 +35,13 @@ zlib_make_windowBits(int wbits, zlib_Format format)
           wbits);
 
     switch(format) {
-      case zlib_format_deflate:
+      case zlib_deflate:
         return wbits;
 
-      case zlib_format_raw:
+      case zlib_raw:
         return - wbits;
 
-      case zlib_format_gzip:
+      case zlib_gzip:
         return 16 + wbits;
 
       default:

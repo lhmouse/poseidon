@@ -13,17 +13,17 @@ void
 event_callback(shptrR<SSL_Socket> socket, Abstract_Fiber& /*fiber*/, Connection_Event event, linear_buffer& data, int code)
   {
     switch(event) {
-      case connection_event_open:
+      case connection_open:
         POSEIDON_LOG_WARN(("example SSL server accepted connection: $1"), socket->remote_address());
         break;
 
-      case connection_event_stream:
+      case connection_stream:
         POSEIDON_LOG_WARN(("example SSL server received data (eof = $1): $2"), code, data);
         socket->ssl_send(data.data(), data.size());
         data.clear();
         break;
 
-      case connection_event_closed:
+      case connection_closed:
         POSEIDON_LOG_WARN(("example SSL server shut down connection: (errno = $1) $2"), code, data);
         break;
     }

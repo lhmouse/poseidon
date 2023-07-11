@@ -178,44 +178,44 @@ class cacheline_barrier
 // Enumerations
 enum zlib_Format : uint8_t
   {
-    zlib_format_deflate  = 0,
-    zlib_format_raw      = 1,
-    zlib_format_gzip     = 2,
+    zlib_deflate  = 0,
+    zlib_raw      = 1,
+    zlib_gzip     = 2,
   };
 
 enum Async_State : uint8_t
   {
-    async_state_pending    = 0,
-    async_state_suspended  = 1,
-    async_state_running    = 2,
-    async_state_finished   = 3,
+    async_pending    = 0,
+    async_suspended  = 1,
+    async_running    = 2,
+    async_finished   = 3,
   };
 
 enum IP_Address_Class : uint8_t
   {
-    ip_address_class_unspecified  = 0,  // all zeroes
-    ip_address_class_reserved     = 1,
-    ip_address_class_public       = 2,
-    ip_address_class_loopback     = 3,
-    ip_address_class_private      = 4,
-    ip_address_class_link_local   = 5,
-    ip_address_class_multicast    = 6,
-    ip_address_class_broadcast    = 7,  // IPv4 only
+    ip_address_unspecified  = 0,  // all zeroes
+    ip_address_reserved     = 1,
+    ip_address_public       = 2,
+    ip_address_loopback     = 3,
+    ip_address_private      = 4,
+    ip_address_link_local   = 5,
+    ip_address_multicast    = 6,
+    ip_address_broadcast    = 7,  // IPv4 only
   };
 
 enum Socket_State : uint8_t
   {
-    socket_state_pending      = 0,
-    socket_state_established  = 1,
-    socket_state_closing      = 2,
-    socket_state_closed       = 3,
+    socket_pending      = 0,
+    socket_established  = 1,
+    socket_closing      = 2,
+    socket_closed       = 3,
   };
 
 enum Connection_Event : uint8_t
   {
-    connection_event_open    = 0,
-    connection_event_stream  = 1,
-    connection_event_closed  = 2,
+    connection_open    = 0,
+    connection_stream  = 1,
+    connection_closed  = 2,
   };
 
 enum HTTP_Payload_Type : uint8_t

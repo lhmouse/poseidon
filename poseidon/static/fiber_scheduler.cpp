@@ -133,8 +133,8 @@ do_fiber_function() noexcept
 
     // Change the fiber state from PENDING to RUNNING.
     elem->fiber->do_abstract_fiber_on_resumed();
-    ROCKET_ASSERT(elem->fiber->m_state.load() == async_state_pending);
-    elem->fiber->m_state.store(async_state_running);
+    ROCKET_ASSERT(elem->fiber->m_state.load() == async_pending);
+    elem->fiber->m_state.store(async_running);
     POSEIDON_LOG_TRACE(("Starting fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
 
     try {
@@ -148,8 +148,8 @@ do_fiber_function() noexcept
     }
 
     // Change the fiber state from RUNNING to FINISHED.
-    ROCKET_ASSERT(elem->fiber->m_state.load() == async_state_running);
-    elem->fiber->m_state.store(async_state_finished);
+    ROCKET_ASSERT(elem->fiber->m_state.load() == async_running);
+    elem->fiber->m_state.store(async_finished);
     POSEIDON_LOG_TRACE(("Terminating fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
     elem->fiber->do_abstract_fiber_on_suspended();
 
@@ -199,8 +199,8 @@ do_yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override)
     // Suspend the current fiber...
     elem->fiber->do_abstract_fiber_on_suspended();
     elem->wfutr = futr_opt;
-    ROCKET_ASSERT(elem->fiber->m_state.load() == async_state_running);
-    elem->fiber->m_state.store(async_state_suspended);
+    ROCKET_ASSERT(elem->fiber->m_state.load() == async_running);
+    elem->fiber->m_state.store(async_suspended);
     POSEIDON_LOG_TRACE(("Suspending fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
 
     asan_fiber_switch_start(this->m_sched_asan_save, this->m_sched_outer);
@@ -209,8 +209,8 @@ do_yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override)
 
     // ... and return here.
     POSEIDON_LOG_TRACE(("Resumed fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
-    ROCKET_ASSERT(elem->fiber->m_state.load() == async_state_suspended);
-    elem->fiber->m_state.store(async_state_running);
+    ROCKET_ASSERT(elem->fiber->m_state.load() == async_suspended);
+    elem->fiber->m_state.store(async_running);
     elem->wfutr.reset();
     elem->fiber->do_abstract_fiber_on_resumed();
   }
@@ -341,7 +341,7 @@ thread_loop()
 
     ::std::pop_heap(this->m_pq.begin(), this->m_pq.end(), fiber_comparator);
     auto elem = this->m_pq.back();
-    if(elem->fiber->m_state.load() == async_state_finished) {
+    if(elem->fiber->m_state.load() == async_finished) {
       this->m_pq.pop_back();
       lock.unlock();
 
