@@ -158,13 +158,13 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
 bool
 HTTP_Server_Session::
-do_http_raw_response(const HTTP_Response_Headers& resp, const char* data, size_t size)
+do_http_raw_response(const HTTP_Response_Headers& resp, char_sequence data)
   {
     // Compose the message and send it as a whole.
     tinyfmt_ln fmt;
     resp.encode(fmt);
-    fmt.putn(data, size);
-    bool sent = this->tcp_send(fmt.data(), fmt.size());
+    fmt.putn(data.p, data.n);
+    bool sent = this->tcp_send(fmt);
 
     if(resp.status == HTTP_STATUS_SWITCHING_PROTOCOLS) {
       // For server sessions, this indicates that the server has switched to
@@ -188,12 +188,12 @@ http_response_headers_only(HTTP_Response_Headers&& resp)
           "[HTTP server session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    return this->do_http_raw_response(resp, "", 0);
+    return this->do_http_raw_response(resp, "");
   }
 
 bool
 HTTP_Server_Session::
-http_response(HTTP_Response_Headers&& resp, const char* data, size_t size)
+http_response(HTTP_Response_Headers&& resp, char_sequence data)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -210,13 +210,13 @@ http_response(HTTP_Response_Headers&& resp, const char* data, size_t size)
     // Some responses are required to have no payload payload and require no
     // `Content-Length` header.
     if((resp.status <= 199) || is_any_of(resp.status, { HTTP_STATUS_NO_CONTENT, HTTP_STATUS_NOT_MODIFIED }))
-      return this->do_http_raw_response(resp, "", 0);
+      return this->do_http_raw_response(resp, "");
 
     // Otherwise, a `Content-Length` is required; otherwise the response would
     // be interpreted as terminating by closure ofthe connection.
-    resp.headers.emplace_back(sref("Content-Length"), (double)(int64_t) size);
+    resp.headers.emplace_back(sref("Content-Length"), (double)(int64_t) data.n);
 
-    return this->do_http_raw_response(resp, data, size);
+    return this->do_http_raw_response(resp, data);
   }
 
 bool
@@ -237,12 +237,12 @@ http_chunked_response_start(HTTP_Response_Headers&& resp)
     // Write a chunked header.
     resp.headers.emplace_back(sref("Transfer-Encoding"), sref("chunked"));
 
-    return this->do_http_raw_response(resp, "", 0);
+    return this->do_http_raw_response(resp, "");
   }
 
 bool
 HTTP_Server_Session::
-http_chunked_response_send(const char* data, size_t size)
+http_chunked_response_send(char_sequence data)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -251,19 +251,19 @@ http_chunked_response_send(const char* data, size_t size)
           this, typeid(*this));
 
     // Ignore empty chunks, which would mark the end of the payload.
-    if(size == 0)
+    if(data.n == 0)
       return this->socket_state() <= socket_established;
 
     // Compose a chunk and send it as a whole. The length of this chunk is
     // written as a hexadecimal integer without the `0x` prefix.
     tinyfmt_ln fmt;
     ::rocket::ascii_numput nump;
-    nump.put_XU(size);
+    nump.put_XU(data.n);
     fmt.putn(nump.data() + 2, nump.size() - 2);
     fmt << "\r\n";
-    fmt.putn(data, size);
+    fmt.putn(data.p, data.n);
     fmt << "\r\n";
-    return this->tcp_send(fmt.data(), fmt.size());
+    return this->tcp_send(fmt);
   }
 
 bool
@@ -276,7 +276,7 @@ http_chunked_respnse_finish()
           "[HTTP server session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    return this->tcp_send("0\r\n\r\n", 5);
+    return this->tcp_send("0\r\n\r\n");
   }
 
 }  // namespace poseidon

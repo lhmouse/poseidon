@@ -214,12 +214,12 @@ remote_address() const noexcept
 
 bool
 Easy_SSL_Client::
-ssl_send(const char* data, size_t size)
+ssl_send(char_sequence data)
   {
     if(!this->m_socket)
       return false;
 
-    return this->m_socket->ssl_send(data, size);
+    return this->m_socket->ssl_send(data);
   }
 
 bool

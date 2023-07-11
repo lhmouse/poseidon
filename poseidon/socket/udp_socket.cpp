@@ -266,20 +266,20 @@ leave_multicast_group(const Socket_Address& maddr, const char* ifname_opt)
 
 bool
 UDP_Socket::
-udp_send(const Socket_Address& addr, const char* data, size_t size)
+udp_send(const Socket_Address& addr, char_sequence data)
   {
-    if((data == nullptr) && (size != 0))
+    if((data.p == nullptr) && (data.n != 0))
       POSEIDON_THROW((
           "Null data pointer",
           "[UDP socket `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    uint16_t datalen = (uint16_t) size;
-    if(datalen != size)
+    uint16_t datalen = (uint16_t) data.n;
+    if(datalen != data.n)
       POSEIDON_THROW((
           "`$3` bytes is too large for a UDP packet",
           "[UDP socket `$1` (class `$2`)]"),
-          this, typeid(*this), size);
+          this, typeid(*this), data.n);
 
     // If this socket has been marked closed, fail immediately.
     if(this->socket_state() == socket_closed)
@@ -293,7 +293,7 @@ udp_send(const Socket_Address& addr, const char* data, size_t size)
     sa.sin6_flowinfo = 0;
     sa.sin6_addr = addr.addr();
     sa.sin6_scope_id = 0;
-    ::ssize_t io_result = ::sendto(this->do_get_fd(), data, size, 0, (const ::sockaddr*) &sa, sizeof(sa));
+    ::ssize_t io_result = ::sendto(this->do_get_fd(), data.p, data.n, 0, (const ::sockaddr*) &sa, sizeof(sa));
     return io_result >= 0;
   }
 

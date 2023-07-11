@@ -38,7 +38,7 @@ start_client()
     req.uri = sref("/");
     req.headers.clear();
     req.headers.emplace_back(sref("Host"), sref("www.example.org"));
-    my_client.http_POST(::std::move(req), "testdata", 8);
+    my_client.http_POST(::std::move(req), "testdata");
 
     req.uri = sref("/");
     req.headers.emplace_back(sref("Host"), sref("www.example.org"));

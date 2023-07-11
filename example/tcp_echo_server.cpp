@@ -19,7 +19,7 @@ event_callback(shptrR<TCP_Socket> socket, Abstract_Fiber& /*fiber*/, Connection_
 
       case connection_stream:
         POSEIDON_LOG_ERROR(("example SSL server received data (eof = $1): $2"), code, data);
-        socket->tcp_send(data.data(), data.size());
+        socket->tcp_send(data);
         data.clear();
         break;
 

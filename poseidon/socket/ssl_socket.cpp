@@ -357,9 +357,9 @@ remote_address() const noexcept
 
 bool
 SSL_Socket::
-ssl_send(const char* data, size_t size)
+ssl_send(char_sequence data)
   {
-    if((data == nullptr) && (size != 0))
+    if((data.p == nullptr) && (data.n != 0))
       POSEIDON_THROW((
           "Null data pointer",
           "[SSL socket `$1` (class `$2`)]"),
@@ -375,24 +375,24 @@ ssl_send(const char* data, size_t size)
 
     // Reserve backup space in case of partial writes.
     size_t nskip = 0;
-    queue.reserve_after_end(size);
+    queue.reserve_after_end(data.n);
 
     if(queue.size() != 0) {
       // If there have been data pending, append new data to the end.
-      ::memcpy(queue.mut_end(), data, size);
-      queue.accept(size);
+      ::memcpy(queue.mut_end(), data.p, data.n);
+      queue.accept(data.n);
       return true;
     }
 
     for(;;) {
       // Try writing until the operation would block. This is essential for the
       // edge-triggered epoll to work reliably.
-      if(nskip == size)
+      if(nskip == data.n)
         break;
 
       ssl_err = 0;
       size_t datalen;
-      int ret = ::SSL_write_ex(this->ssl(), data + nskip, size - nskip, &datalen);
+      int ret = ::SSL_write_ex(this->ssl(), data.p + nskip, data.n - nskip, &datalen);
 
       if(ret == 0) {
         ssl_err = ::SSL_get_error(this->ssl(), ret);
@@ -417,8 +417,8 @@ ssl_send(const char* data, size_t size)
 
     // If the operation has completed only partially, buffer remaining data.
     // Space has already been reserved so this will not throw exceptions.
-    ::memcpy(queue.mut_end(), data + nskip, size - nskip);
-    queue.accept(size - nskip);
+    ::memcpy(queue.mut_end(), data.p + nskip, data.n - nskip);
+    queue.accept(data.n - nskip);
     return true;
   }
 

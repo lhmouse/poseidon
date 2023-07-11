@@ -95,12 +95,12 @@ output_clear() noexcept
 
 size_t
 Easy_Deflator::
-deflate(const char* data, size_t size)
+deflate(char_sequence data)
   {
     if(!this->m_defl)
       return 0;
 
-    return this->m_defl->deflate(data, size);
+    return this->m_defl->deflate(data);
   }
 
 bool

@@ -88,7 +88,7 @@ class Easy_SSL_Client
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    ssl_send(const char* data, size_t size);
+    ssl_send(char_sequence data);
 
     // Shuts the socket down gracefully. Errors during the shutdown operation
     // are ignored.

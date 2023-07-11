@@ -77,7 +77,7 @@ class HTTP_Client_Session
     // performed. This function is provided for convenience only, and maybe
     // isn't very useful unless for some low-level hacks.
     bool
-    do_http_raw_request(const HTTP_Request_Headers& req, const char* data, size_t size);
+    do_http_raw_request(const HTTP_Request_Headers& req, char_sequence data);
 
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(HTTP_Client_Session);
@@ -88,7 +88,7 @@ class HTTP_Client_Session
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    http_request(HTTP_Request_Headers&& req, const char* data, size_t size);
+    http_request(HTTP_Request_Headers&& req, char_sequence data);
 
     // Send a request with a chunked payload, which may contain multiple chunks.
     // Callers should not supply `Transfer-Encoding` headers, as they will be
@@ -103,7 +103,7 @@ class HTTP_Client_Session
     http_chunked_request_start(HTTP_Request_Headers&& req);
 
     bool
-    http_chunked_request_send(const char* data, size_t size);
+    http_chunked_request_send(char_sequence data);
 
     bool
     http_chunked_request_finish();

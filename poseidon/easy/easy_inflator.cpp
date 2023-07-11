@@ -95,12 +95,12 @@ output_clear() noexcept
 
 size_t
 Easy_Inflator::
-inflate(const char* data, size_t size)
+inflate(char_sequence data)
   {
     if(!this->m_infl)
       return 0;
 
-    return this->m_infl->inflate(data, size);
+    return this->m_infl->inflate(data);
   }
 
 bool

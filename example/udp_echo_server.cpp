@@ -13,7 +13,7 @@ void
 data_callback(shptrR<UDP_Socket> socket, Abstract_Fiber& /*fiber*/, Socket_Address&& addr, linear_buffer&& data)
   {
     POSEIDON_LOG_FATAL(("example UDP server received data from `$1`: $2"), addr, data);
-    socket->udp_send(addr, data.data(), data.size());
+    socket->udp_send(addr, data);
     data.clear();
   }
 

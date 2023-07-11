@@ -49,7 +49,7 @@ class Easy_Deflator
     // Compresses some data and returns the number of bytes that have been
     // consumed.
     size_t
-    deflate(const char* data, size_t size);
+    deflate(char_sequence data);
 
     // Completes the current deflate block.
     bool

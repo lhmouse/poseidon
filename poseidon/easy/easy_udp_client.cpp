@@ -186,12 +186,12 @@ leave_multicast_group(const Socket_Address& maddr, const char* ifname_opt)
 
 bool
 Easy_UDP_Client::
-udp_send(const Socket_Address& addr, const char* data, size_t size)
+udp_send(const Socket_Address& addr, char_sequence data)
   {
     if(!this->m_socket)
       return false;
 
-    return this->m_socket->udp_send(addr, data, size);
+    return this->m_socket->udp_send(addr, data);
   }
 
 }  // namespace poseidon

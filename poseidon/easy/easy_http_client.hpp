@@ -94,7 +94,7 @@ class Easy_HTTP_Client
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    http_POST(HTTP_Request_Headers&& req, const char* data, size_t size);
+    http_POST(HTTP_Request_Headers&& req, char_sequence data);
 
     // Sends a PUT request. The request must contain a payload body. The
     // caller should neither set `req.method` nor supply `Content-Length` or
@@ -106,7 +106,7 @@ class Easy_HTTP_Client
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    http_PUT(HTTP_Request_Headers&& req, const char* data, size_t size);
+    http_PUT(HTTP_Request_Headers&& req, char_sequence data);
 
     // Sends a DELETE request. The request cannot contain a payload body. The
     // caller should neither set `req.method` nor supply `Content-Length` or

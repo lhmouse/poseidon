@@ -13,8 +13,8 @@ main()
     Easy_Deflator defl;
     POSEIDON_TEST_CHECK(defl.output_size() == 0);
     defl.open(zlib_raw);
-    POSEIDON_TEST_CHECK(defl.deflate("He", 2) == 2);
-    POSEIDON_TEST_CHECK(defl.deflate("llo", 3) == 3);
+    POSEIDON_TEST_CHECK(defl.deflate("He") == 2);
+    POSEIDON_TEST_CHECK(defl.deflate("llo") == 3);
     POSEIDON_TEST_CHECK(defl.sync_flush() == true);
     POSEIDON_TEST_CHECK(defl.output_size() == 11);
     POSEIDON_TEST_CHECK(::memcmp(defl.output_data(),
@@ -22,7 +22,7 @@ main()
 
     // context takeover
     defl.output_clear();
-    POSEIDON_TEST_CHECK(defl.deflate("Hello", 5) == 5);
+    POSEIDON_TEST_CHECK(defl.deflate("Hello") == 5);
     POSEIDON_TEST_CHECK(defl.sync_flush() == true);
     POSEIDON_TEST_CHECK(defl.output_size() == 9);
     POSEIDON_TEST_CHECK(::memcmp(defl.output_data(),
@@ -30,14 +30,14 @@ main()
 
     // end of stream
     defl.output_clear();
-    POSEIDON_TEST_CHECK(defl.deflate("Hello", 5) == 5);
+    POSEIDON_TEST_CHECK(defl.deflate("Hello") == 5);
     POSEIDON_TEST_CHECK(defl.finish() == true);
     POSEIDON_TEST_CHECK(defl.output_size() == 3);
     POSEIDON_TEST_CHECK(::memcmp(defl.output_data(),
         "\x03\x13\x00", 3) == 0);
 
     defl.output_clear();
-    POSEIDON_TEST_CHECK(defl.deflate("Hello", 5) == 0);
+    POSEIDON_TEST_CHECK(defl.deflate("Hello") == 0);
     POSEIDON_TEST_CHECK(defl.finish() == true);
     POSEIDON_TEST_CHECK(defl.output_size() == 0);
     POSEIDON_TEST_CHECK(defl.sync_flush() == true);
@@ -47,8 +47,8 @@ main()
     defl.clear();
     POSEIDON_TEST_CHECK(defl.output_size() == 0);
     defl.open(zlib_raw);
-    POSEIDON_TEST_CHECK(defl.deflate("He", 2) == 2);
-    POSEIDON_TEST_CHECK(defl.deflate("llo", 3) == 3);
+    POSEIDON_TEST_CHECK(defl.deflate("He") == 2);
+    POSEIDON_TEST_CHECK(defl.deflate("llo") == 3);
     POSEIDON_TEST_CHECK(defl.sync_flush() == true);
     POSEIDON_TEST_CHECK(defl.output_size() == 11);
     POSEIDON_TEST_CHECK(::memcmp(defl.output_data(),
@@ -58,8 +58,8 @@ main()
     defl.clear();
     POSEIDON_TEST_CHECK(defl.output_size() == 0);
     defl.open(zlib_raw, 0);
-    POSEIDON_TEST_CHECK(defl.deflate("He", 2) == 2);
-    POSEIDON_TEST_CHECK(defl.deflate("llo", 3) == 3);
+    POSEIDON_TEST_CHECK(defl.deflate("He") == 2);
+    POSEIDON_TEST_CHECK(defl.deflate("llo") == 3);
     POSEIDON_TEST_CHECK(defl.sync_flush() == true);
     POSEIDON_TEST_CHECK(defl.output_size() == 15);
     POSEIDON_TEST_CHECK(::memcmp(defl.output_data(),

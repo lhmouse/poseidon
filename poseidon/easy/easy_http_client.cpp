@@ -184,29 +184,29 @@ http_GET(HTTP_Request_Headers&& req)
       return false;
 
     req.method = sref("GET");
-    return this->m_session->http_request(::std::move(req), "", 0);
+    return this->m_session->http_request(::std::move(req), "");
   }
 
 bool
 Easy_HTTP_Client::
-http_POST(HTTP_Request_Headers&& req, const char* data, size_t size)
+http_POST(HTTP_Request_Headers&& req, char_sequence data)
   {
     if(!this->m_session)
       return false;
 
     req.method = sref("POST");
-    return this->m_session->http_request(::std::move(req), data, size);
+    return this->m_session->http_request(::std::move(req), data);
   }
 
 bool
 Easy_HTTP_Client::
-http_PUT(HTTP_Request_Headers&& req, const char* data, size_t size)
+http_PUT(HTTP_Request_Headers&& req, char_sequence data)
   {
     if(!this->m_session)
       return false;
 
     req.method = sref("PUT");
-    return this->m_session->http_request(::std::move(req), data, size);
+    return this->m_session->http_request(::std::move(req), data);
   }
 
 bool
@@ -217,7 +217,7 @@ http_DELETE(HTTP_Request_Headers&& req)
       return false;
 
     req.method = sref("DELETE");
-    return this->m_session->http_request(::std::move(req), "", 0);
+    return this->m_session->http_request(::std::move(req), "");
   }
 
 }  // namespace poseidon

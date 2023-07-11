@@ -79,7 +79,7 @@ class UDP_Socket
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    udp_send(const Socket_Address& addr, const char* data, size_t size);
+    udp_send(const Socket_Address& addr, char_sequence data);
   };
 
 }  // namespace poseidon

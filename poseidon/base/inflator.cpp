@@ -67,14 +67,14 @@ clear() noexcept
 
 size_t
 Inflator::
-inflate(const char* data, size_t size)
+inflate(char_sequence data)
   {
     // Set up the output and input buffers.
     this->m_strm->next_out = nullptr;
     this->m_strm->avail_out = 0;
-    this->m_strm->next_in = (const ::Bytef*) data;
+    this->m_strm->next_in = (const ::Bytef*) data.p;
 
-    const ::Bytef* const end_in = (const ::Bytef*) data + size;
+    const ::Bytef* const end_in = (const ::Bytef*) data.p + data.n;
     while(this->m_strm->next_in < end_in) {
       this->m_strm->avail_in = clamp_cast<::uInt>(end_in - this->m_strm->next_in, 0, INT_MAX);
 
@@ -91,7 +91,7 @@ inflate(const char* data, size_t size)
     this->do_clear_pointers();
 
     // Return the number of bytes that have been processed.
-    return size - nremaining;
+    return data.n - nremaining;
   }
 
 bool

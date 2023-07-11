@@ -207,9 +207,9 @@ remote_address() const noexcept
 
 bool
 TCP_Socket::
-tcp_send(const char* data, size_t size)
+tcp_send(char_sequence data)
   {
-    if((data == nullptr) && (size != 0))
+    if((data.p == nullptr) && (data.n != 0))
       POSEIDON_THROW((
           "Null data pointer",
           "[TCP socket `$1` (class `$2`)]"),
@@ -225,22 +225,22 @@ tcp_send(const char* data, size_t size)
 
     // Reserve backup space in case of partial writes.
     size_t nskip = 0;
-    queue.reserve_after_end(size);
+    queue.reserve_after_end(data.n);
 
     if(queue.size() != 0) {
       // If there have been data pending, append new data to the end.
-      ::memcpy(queue.mut_end(), data, size);
-      queue.accept(size);
+      ::memcpy(queue.mut_end(), data.p, data.n);
+      queue.accept(data.n);
       return true;
     }
 
     for(;;) {
       // Try writing until the operation would block. This is essential for the
       // edge-triggered epoll to work reliably.
-      if(nskip == size)
+      if(nskip == data.n)
         break;
 
-      io_result = ::send(this->do_get_fd(), data + nskip, size - nskip, 0);
+      io_result = ::send(this->do_get_fd(), data.p + nskip, data.n - nskip, 0);
 
       if(io_result < 0) {
         if((errno == EAGAIN) || (errno == EWOULDBLOCK))
@@ -262,8 +262,8 @@ tcp_send(const char* data, size_t size)
 
     // If the operation has completed only partially, buffer remaining data.
     // Space has already been reserved so this will not throw exceptions.
-    ::memcpy(queue.mut_end(), data + nskip, size - nskip);
-    queue.accept(size - nskip);
+    ::memcpy(queue.mut_end(), data.p + nskip, data.n - nskip);
+    queue.accept(data.n - nskip);
     return true;
   }
 

@@ -213,12 +213,12 @@ remote_address() const noexcept
 
 bool
 Easy_TCP_Client::
-tcp_send(const char* data, size_t size)
+tcp_send(char_sequence data)
   {
     if(!this->m_socket)
       return false;
 
-    return this->m_socket->tcp_send(data, size);
+    return this->m_socket->tcp_send(data);
   }
 
 bool

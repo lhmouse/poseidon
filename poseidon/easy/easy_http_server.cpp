@@ -99,7 +99,7 @@ struct Final_Fiber final : Abstract_Fiber
               HTTP_Response_Headers resp;
               resp.status = event.has_status;
               resp.headers.emplace_back(sref("Connection"), sref("close"));
-              session->http_response(::std::move(resp), "", 0);
+              session->http_response(::std::move(resp), "");
             }
 
             if(event.close_now)
@@ -111,7 +111,7 @@ struct Final_Fiber final : Abstract_Fiber
             HTTP_Response_Headers resp;
             resp.status = HTTP_STATUS_INTERNAL_SERVER_ERROR;
             resp.headers.emplace_back(sref("Connection"), sref("close"));
-            session->http_response(::std::move(resp), "", 0);
+            session->http_response(::std::move(resp), "");
 
             session->tcp_close();
 
