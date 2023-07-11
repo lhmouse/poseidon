@@ -76,7 +76,7 @@ clear() noexcept
 
 size_t
 Deflator::
-deflate(char_sequence data)
+deflate(chars_proxy data)
   {
     // Set up the output and input buffers.
     this->m_strm->next_out = nullptr;

@@ -95,7 +95,7 @@ output_clear() noexcept
 
 size_t
 Easy_Deflator::
-deflate(char_sequence data)
+deflate(chars_proxy data)
   {
     if(!this->m_defl)
       return 0;

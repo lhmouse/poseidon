@@ -190,7 +190,7 @@ https_GET(HTTP_Request_Headers&& req)
 
 bool
 Easy_HTTPS_Client::
-https_POST(HTTP_Request_Headers&& req, char_sequence data)
+https_POST(HTTP_Request_Headers&& req, chars_proxy data)
   {
     if(!this->m_session)
       return false;
@@ -201,7 +201,7 @@ https_POST(HTTP_Request_Headers&& req, char_sequence data)
 
 bool
 Easy_HTTPS_Client::
-https_PUT(HTTP_Request_Headers&& req, char_sequence data)
+https_PUT(HTTP_Request_Headers&& req, chars_proxy data)
   {
     if(!this->m_session)
       return false;

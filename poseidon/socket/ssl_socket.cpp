@@ -357,7 +357,7 @@ remote_address() const noexcept
 
 bool
 SSL_Socket::
-ssl_send(char_sequence data)
+ssl_send(chars_proxy data)
   {
     if((data.p == nullptr) && (data.n != 0))
       POSEIDON_THROW((

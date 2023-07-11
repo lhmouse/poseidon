@@ -214,7 +214,7 @@ remote_address() const noexcept
 
 bool
 Easy_SSL_Client::
-ssl_send(char_sequence data)
+ssl_send(chars_proxy data)
   {
     if(!this->m_socket)
       return false;

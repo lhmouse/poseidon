@@ -24,7 +24,7 @@ class WS_Server_Session
 
   private:
     void
-    do_call_on_ws_close_once(uint16_t status, char_sequence reason);
+    do_call_on_ws_close_once(uint16_t status, chars_proxy reason);
 
   protected:
     // This function implements `HTTP_Server_Session`.
@@ -88,13 +88,13 @@ class WS_Server_Session
     // The default implementation sends a normal CLOSE frame.
     virtual
     void
-    do_on_ws_close(uint16_t status, char_sequence reason);
+    do_on_ws_close(uint16_t status, chars_proxy reason);
 
     // Sends a raw frame (not a message). No error checking is performed. This
     // function is provided for convenience only, and maybe isn't very useful
     // unless for some low-level hacks.
     bool
-    do_ws_send_raw_frame(uint8_t opcode, char_sequence data);
+    do_ws_send_raw_frame(uint8_t opcode, chars_proxy data);
 
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(WS_Server_Session);
@@ -104,18 +104,18 @@ class WS_Server_Session
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    ws_send_text(char_sequence data);
+    ws_send_text(chars_proxy data);
 
     // Sends a binary message to the other peer.
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    ws_send_binary(char_sequence data);
+    ws_send_binary(chars_proxy data);
 
     // Sends a PING frame. The payload string will be truncated to 125 bytes if
     // it's too long.
     bool
-    ws_ping(char_sequence data);
+    ws_ping(chars_proxy data);
 
     // Sends a CLOSE frame with an optional error message, then shuts down the
     // connection. The reason string will be truncated to 123 bytes if it's too
@@ -123,7 +123,7 @@ class WS_Server_Session
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    ws_close(uint16_t status = 1000, char_sequence reason = "");
+    ws_close(uint16_t status = 1000, chars_proxy reason = "");
   };
 
 }  // namespace poseidon

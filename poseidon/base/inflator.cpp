@@ -67,7 +67,7 @@ clear() noexcept
 
 size_t
 Inflator::
-inflate(char_sequence data)
+inflate(chars_proxy data)
   {
     // Set up the output and input buffers.
     this->m_strm->next_out = nullptr;

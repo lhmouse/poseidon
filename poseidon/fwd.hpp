@@ -353,97 +353,97 @@ class thunk
   };
 
 // General character sequence (not null-terminated)
-struct char_sequence
+struct chars_proxy
   {
     const char* p;
     size_t n;
 
     constexpr
-    char_sequence(nullptr_t = nullptr) noexcept
+    chars_proxy(nullptr_t = nullptr) noexcept
       : p(nullptr), n(0U)
       { }
 
     constexpr
-    char_sequence(const char* xp, size_t xn) noexcept
+    chars_proxy(const char* xp, size_t xn) noexcept
       : p(xp), n(xn)
       { }
 
     constexpr
-    char_sequence(const char* xs) noexcept
+    chars_proxy(const char* xs) noexcept
       : p(xs), n(xs ? xstrlen(xs) : 0U)
       { }
 
     template<typename traitsT, typename allocT>
     constexpr
-    char_sequence(const ::std::basic_string<char, traitsT, allocT>& rs) noexcept
+    chars_proxy(const ::std::basic_string<char, traitsT, allocT>& rs) noexcept
       : p(rs.data()), n(rs.size())
       { }
 
     template<typename allocT>
     constexpr
-    char_sequence(const ::std::vector<char, allocT>& rs) noexcept
+    chars_proxy(const ::std::vector<char, allocT>& rs) noexcept
       : p(rs.data()), n(rs.size())
       { }
 
 #ifdef __cpp_lib_string_view
     template<typename traitsT>
     constexpr
-    char_sequence(const ::std::basic_string_view<char, traitsT>& rs) noexcept
+    chars_proxy(const ::std::basic_string_view<char, traitsT>& rs) noexcept
       : p(rs.data()), n(rs.size())
       { }
 #endif  // __cpp_lib_string_view
 
     constexpr
-    char_sequence(const ::rocket::shallow_string rs) noexcept
+    chars_proxy(const ::rocket::shallow_string rs) noexcept
       : p(rs.data()), n(rs.size())
       { }
 
     template<typename allocT>
     constexpr
-    char_sequence(const ::rocket::basic_cow_string<char, allocT>& rs) noexcept
+    chars_proxy(const ::rocket::basic_cow_string<char, allocT>& rs) noexcept
       : p(rs.data()), n(rs.size())
       { }
 
     template<typename allocT>
     constexpr
-    char_sequence(const ::rocket::basic_tinybuf_str<char, allocT>& rs) noexcept
+    chars_proxy(const ::rocket::basic_tinybuf_str<char, allocT>& rs) noexcept
       : p(rs.data()), n(rs.size())
       { }
 
     template<typename allocT>
     constexpr
-    char_sequence(const ::rocket::basic_tinyfmt_str<char, allocT>& rs) noexcept
+    chars_proxy(const ::rocket::basic_tinyfmt_str<char, allocT>& rs) noexcept
       : p(rs.data()), n(rs.size())
       { }
 
     template<typename allocT>
     constexpr
-    char_sequence(const ::rocket::basic_linear_buffer<char, allocT>& rs) noexcept
+    chars_proxy(const ::rocket::basic_linear_buffer<char, allocT>& rs) noexcept
       : p(rs.data()), n(rs.size())
       { }
 
     template<typename allocT>
     constexpr
-    char_sequence(const ::rocket::basic_tinybuf_ln<char, allocT>& rs) noexcept
+    chars_proxy(const ::rocket::basic_tinybuf_ln<char, allocT>& rs) noexcept
       : p(rs.data()), n(rs.size())
       { }
 
     template<typename allocT>
     constexpr
-    char_sequence(const ::rocket::basic_tinyfmt_ln<char, allocT>& rs) noexcept
+    chars_proxy(const ::rocket::basic_tinyfmt_ln<char, allocT>& rs) noexcept
       : p(rs.data()), n(rs.size())
       { }
 
     template<typename allocT>
     constexpr
-    char_sequence(const ::rocket::cow_vector<char, allocT>& rs) noexcept
+    chars_proxy(const ::rocket::cow_vector<char, allocT>& rs) noexcept
       : p(rs.data()), n(rs.size())
       { }
   };
 
 inline
 tinyfmt&
-operator<<(tinyfmt& fmt, char_sequence data)
+operator<<(tinyfmt& fmt, chars_proxy data)
   {
     return fmt.putn(data.p, data.n);
   }

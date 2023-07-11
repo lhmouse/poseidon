@@ -95,7 +95,7 @@ output_clear() noexcept
 
 size_t
 Easy_Inflator::
-inflate(char_sequence data)
+inflate(chars_proxy data)
   {
     if(!this->m_infl)
       return 0;

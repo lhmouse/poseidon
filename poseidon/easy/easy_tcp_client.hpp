@@ -93,7 +93,7 @@ class Easy_TCP_Client
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    tcp_send(char_sequence data);
+    tcp_send(chars_proxy data);
 
     // Shuts the socket down gracefully. Errors during the shutdown operation
     // are ignored.

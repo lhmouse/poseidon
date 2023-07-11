@@ -65,7 +65,7 @@ class Inflator
     // consumed. This function may return a value that is less than `size` if
     // an end-of-stream marker has been encountered in the current stream.
     size_t
-    inflate(char_sequence data);
+    inflate(chars_proxy data);
 
     // Completes the current stream. No data shall be written any further. If
     // no end-of-stream marker has been found in the current stream, `false`

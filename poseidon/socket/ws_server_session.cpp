@@ -21,7 +21,7 @@ WS_Server_Session::
 
 void
 WS_Server_Session::
-do_call_on_ws_close_once(uint16_t status, char_sequence reason)
+do_call_on_ws_close_once(uint16_t status, chars_proxy reason)
   {
     if(this->m_closure_notified)
       return;
@@ -157,7 +157,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
           case 8: {  // CLOSE
             uint16_t bestatus = htobe16(1005);
-            char_sequence reason = "";
+            chars_proxy reason = "";
 
             if(payload.size() >= 2) {
               // Get the status and reason string from the payload.
@@ -258,7 +258,7 @@ do_on_ws_pong(linear_buffer&& data)
 
 void
 WS_Server_Session::
-do_on_ws_close(uint16_t status, char_sequence reason)
+do_on_ws_close(uint16_t status, chars_proxy reason)
   {
     POSEIDON_LOG_DEBUG(("WebSocket CLOSE from `$1` (status $2): $3"), this->remote_address(), status, reason);
 
@@ -269,7 +269,7 @@ do_on_ws_close(uint16_t status, char_sequence reason)
 
 bool
 WS_Server_Session::
-do_ws_send_raw_frame(uint8_t opcode, char_sequence data)
+do_ws_send_raw_frame(uint8_t opcode, chars_proxy data)
   {
     // Compose a single frame and send it. Frames to clients will not be masked.
     WebSocket_Frame_Header header;
@@ -285,7 +285,7 @@ do_ws_send_raw_frame(uint8_t opcode, char_sequence data)
 
 bool
 WS_Server_Session::
-ws_send_text(char_sequence data)
+ws_send_text(chars_proxy data)
   {
     // TEXT := opcode 1
     return this->do_ws_send_raw_frame(1, data);
@@ -293,7 +293,7 @@ ws_send_text(char_sequence data)
 
 bool
 WS_Server_Session::
-ws_send_binary(char_sequence data)
+ws_send_binary(chars_proxy data)
   {
     // BINARY := opcode 2
     return this->do_ws_send_raw_frame(2, data);
@@ -301,11 +301,11 @@ ws_send_binary(char_sequence data)
 
 bool
 WS_Server_Session::
-ws_ping(char_sequence data)
+ws_ping(chars_proxy data)
   {
     // The length of the payload of a control frame cannot exceed 125 bytes, so
     // the data string has to be truncated if it's too long.
-    char_sequence ctl_data(data.p, min(data.n, 125));
+    chars_proxy ctl_data(data.p, min(data.n, 125));
 
     // PING := opcode 9
     return this->do_ws_send_raw_frame(9, ctl_data);
@@ -313,10 +313,10 @@ ws_ping(char_sequence data)
 
 bool
 WS_Server_Session::
-ws_close(uint16_t status, char_sequence reason)
+ws_close(uint16_t status, chars_proxy reason)
   {
     char bytes[128];
-    char_sequence ctl_data(bytes, 0);
+    chars_proxy ctl_data(bytes, 0);
 
     // Write the status code in big-endian order.
     uint16_t bestatus = htobe16(status);

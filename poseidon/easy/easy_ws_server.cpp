@@ -162,7 +162,7 @@ struct Final_WS_Server_Session final : WS_Server_Session
 
     virtual
     void
-    do_on_ws_close(uint16_t status, char_sequence reason) override
+    do_on_ws_close(uint16_t status, chars_proxy reason) override
       {
         tinyfmt_ln fmt;
         fmt << status << ": " << reason;

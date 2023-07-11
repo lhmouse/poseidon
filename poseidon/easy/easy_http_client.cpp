@@ -189,7 +189,7 @@ http_GET(HTTP_Request_Headers&& req)
 
 bool
 Easy_HTTP_Client::
-http_POST(HTTP_Request_Headers&& req, char_sequence data)
+http_POST(HTTP_Request_Headers&& req, chars_proxy data)
   {
     if(!this->m_session)
       return false;
@@ -200,7 +200,7 @@ http_POST(HTTP_Request_Headers&& req, char_sequence data)
 
 bool
 Easy_HTTP_Client::
-http_PUT(HTTP_Request_Headers&& req, char_sequence data)
+http_PUT(HTTP_Request_Headers&& req, chars_proxy data)
   {
     if(!this->m_session)
       return false;

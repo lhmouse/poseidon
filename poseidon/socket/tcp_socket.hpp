@@ -85,7 +85,7 @@ class TCP_Socket
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    tcp_send(char_sequence data);
+    tcp_send(chars_proxy data);
 
     // Sends an out-of-band byte. OOB bytes can be sent even when there are
     // pending normal data. This function never blocks. If the OOB byte cannot

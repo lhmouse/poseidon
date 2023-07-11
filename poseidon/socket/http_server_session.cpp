@@ -158,7 +158,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
 bool
 HTTP_Server_Session::
-do_http_raw_response(const HTTP_Response_Headers& resp, char_sequence data)
+do_http_raw_response(const HTTP_Response_Headers& resp, chars_proxy data)
   {
     // Compose the message and send it as a whole.
     tinyfmt_ln fmt;
@@ -193,7 +193,7 @@ http_response_headers_only(HTTP_Response_Headers&& resp)
 
 bool
 HTTP_Server_Session::
-http_response(HTTP_Response_Headers&& resp, char_sequence data)
+http_response(HTTP_Response_Headers&& resp, chars_proxy data)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -242,7 +242,7 @@ http_chunked_response_start(HTTP_Response_Headers&& resp)
 
 bool
 HTTP_Server_Session::
-http_chunked_response_send(char_sequence data)
+http_chunked_response_send(chars_proxy data)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((

@@ -170,7 +170,7 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
 
 bool
 HTTPS_Server_Session::
-do_https_raw_response(const HTTP_Response_Headers& resp, char_sequence data)
+do_https_raw_response(const HTTP_Response_Headers& resp, chars_proxy data)
   {
     // Compose the message and send it as a whole.
     tinyfmt_ln fmt;
@@ -205,7 +205,7 @@ https_response_headers_only(HTTP_Response_Headers&& resp)
 
 bool
 HTTPS_Server_Session::
-https_response(HTTP_Response_Headers&& resp, char_sequence data)
+https_response(HTTP_Response_Headers&& resp, chars_proxy data)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -254,7 +254,7 @@ https_chunked_response_start(HTTP_Response_Headers&& resp)
 
 bool
 HTTPS_Server_Session::
-https_chunked_response_send(char_sequence data)
+https_chunked_response_send(chars_proxy data)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
