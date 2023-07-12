@@ -34,28 +34,25 @@ throw_runtime_error_with_backtrace(const char* file, long line, const char* func
     data.append(nump.data(), nump.size());
     data += "']";
 
-    // Backtrace frames.
-    ::rocket::unique_ptr<char*, void (void*)> bt_syms(::free);
-    array<void*, 32> bt_frames;
+    // Get stack frames.
+    void* frames[16];
+    int nframes = ::backtrace(frames, size(frames));
+    if(nframes != 0) {
+      const ::rocket::unique_ptr<char*, void (void*)> symbols(::backtrace_symbols(frames, nframes), ::free);
 
-    uint32_t nframes = (uint32_t) ::backtrace(bt_frames.data(), (int) bt_frames.size());
-    if(nframes != 0)
-      bt_syms.reset(::backtrace_symbols(bt_frames.data(), (int) nframes));
-
-    if(bt_syms) {
       // Determine the width of the frame index field.
-      nump.put_DU(nframes);
+      nump.put_DU((uint32_t) nframes);
       static_vector<char, 24> sbuf(nump.size(), ' ');
       sbuf.emplace_back();
 
       // Append stack frames.
       data += "\n[backtrace frames:\n  ";
-      for(uint32_t k = 0;  k != nframes;  ++k) {
+      for(uint32_t k = 0;  k != (uint32_t) nframes;  ++k) {
         nump.put_DU(k + 1);
         ::std::reverse_copy(nump.begin(), nump.end(), sbuf.mut_rbegin() + 1);
         data += sbuf.data();
         data += ") ";
-        data += bt_syms[k];
+        data += symbols[k];
         data += "\n  ";
       }
       data += "-- end of backtrace frames]";
