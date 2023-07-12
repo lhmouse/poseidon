@@ -28,6 +28,11 @@ class HTTPS_Client_Session
     void
     do_on_ssl_stream(linear_buffer& data, bool eof) override;
 
+    // Checks whether the protocol has changed.
+    bool
+    do_has_upgraded() const noexcept
+      { return this->m_upgrade_ack.load();  }
+
     // This callback is invoked by the network thread after all headers of a
     // response have been received, just before the payload of it. Returning
     // `http_payload_normal` indicates that the response has a payload whose

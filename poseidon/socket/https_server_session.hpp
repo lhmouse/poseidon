@@ -32,6 +32,11 @@ class HTTPS_Server_Session
     char256
     do_on_ssl_alpn_request(cow_vector<char256>&& protos) override;
 
+    // Checks whether the protocol has changed.
+    bool
+    do_has_upgraded() const noexcept
+      { return this->m_upgrade_ack.load();  }
+
     // This callback is invoked by the network thread after all headers of a
     // request have been received, just before the payload of it. Returning
     // `http_payload_normal` indicates that the request has a payload whose length

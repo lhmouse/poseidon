@@ -295,7 +295,7 @@ bool
 WS_Server_Session::
 ws_send_text(chars_proxy data)
   {
-    if(!this->m_parser.is_server_mode())
+    if(!this->do_has_upgraded())
       POSEIDON_THROW((
           "WebSocket handshake not complete yet",
           "[WebSocket server session `$1` (class `$2`)]"),
@@ -309,7 +309,7 @@ bool
 WS_Server_Session::
 ws_send_binary(chars_proxy data)
   {
-    if(!this->m_parser.is_server_mode())
+    if(!this->do_has_upgraded())
       POSEIDON_THROW((
           "WebSocket handshake not complete yet",
           "[WebSocket server session `$1` (class `$2`)]"),
@@ -323,7 +323,7 @@ bool
 WS_Server_Session::
 ws_ping(chars_proxy data)
   {
-    if(!this->m_parser.is_server_mode())
+    if(!this->do_has_upgraded())
       POSEIDON_THROW((
           "WebSocket handshake not complete yet",
           "[WebSocket server session `$1` (class `$2`)]"),
@@ -341,7 +341,7 @@ bool
 WS_Server_Session::
 ws_close(uint16_t status, chars_proxy reason) noexcept
   {
-    if(!this->m_parser.is_server_mode())
+    if(!this->do_has_upgraded())
       return this->tcp_close();
 
     // Compose a CLOSE frame. The length of the payload of a control frame cannot
