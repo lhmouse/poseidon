@@ -171,7 +171,7 @@ Easy_TCP_Client::
 
 void
 Easy_TCP_Client::
-open(const Socket_Address& addr)
+connect(const Socket_Address& addr)
   {
     auto queue = new_sh<X_Event_Queue>();
     auto socket = new_sh<Final_TCP_Socket>(this->m_thunk, queue);

@@ -60,7 +60,7 @@ class Easy_SSL_Client
 
     // Initiates a new connection to the given address.
     void
-    open(const Socket_Address& addr);
+    connect(const Socket_Address& addr);
 
     // Destroys the current connection without graceful shutdown. This function
     // should only be called after all data from the server have been read and

@@ -137,7 +137,7 @@ Easy_HTTPS_Client::
 
 void
 Easy_HTTPS_Client::
-open(const Socket_Address& addr)
+connect(const Socket_Address& addr)
   {
     auto queue = new_sh<X_Event_Queue>();
     auto session = new_sh<Final_HTTPS_Client_Session>(this->m_thunk, queue);

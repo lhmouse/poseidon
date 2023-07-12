@@ -26,7 +26,7 @@ start_client()
   {
     Socket_Address addr("93.184.216.34:443");  // www.example.org
 
-    my_client.open(addr);
+    my_client.connect(addr);
     POSEIDON_LOG_FATAL(("example HTTPS client started: local = $1"), my_client.local_address());
 
     HTTP_Request_Headers req;
