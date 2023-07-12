@@ -411,13 +411,13 @@ parse_frame_header_from_stream(linear_buffer& data)
     // nonsense. Sorry.
     int frm_word = bptr[0] | bptr[1] << 8;
 
-    this->m_frm_header.fin = (frm_word >> 7) & 1;
-    this->m_frm_header.rsv1 = (frm_word >> 6) & 1;
-    this->m_frm_header.rsv2 = (frm_word >> 5) & 1;
-    this->m_frm_header.rsv3 = (frm_word >> 4) & 1;
+    this->m_frm_header.fin = frm_word >> 7 & 1;
+    this->m_frm_header.rsv1 = frm_word >> 6 & 1;
+    this->m_frm_header.rsv2 = frm_word >> 5 & 1;
+    this->m_frm_header.rsv3 = frm_word >> 4 & 1;
     this->m_frm_header.opcode = frm_word & 15;
-    this->m_frm_header.mask = (frm_word >> 15) & 1;
-    this->m_frm_header.reserved_1 = (frm_word >> 8) & 127;
+    this->m_frm_header.mask = frm_word >> 15 & 1;
+    this->m_frm_header.reserved_1 = frm_word >> 8 & 127;
 
     if((this->m_wshs == wshs_s_accepted) && (this->m_frm_header.mask == 0)) {
       // RFC 6455 states that clients must mask all frames. It also requires that
@@ -455,10 +455,10 @@ parse_frame_header_from_stream(linear_buffer& data)
         }
 
         // Copy message header fields for later use.
-        this->m_msg_fin = (frm_word >> 7) & 1;
-        this->m_msg_rsv1 = (frm_word >> 6) & 1;
-        this->m_msg_rsv2 = (frm_word >> 5) & 1;
-        this->m_msg_rsv3 = (frm_word >> 4) & 1;
+        this->m_msg_fin = frm_word >> 7 & 1;
+        this->m_msg_rsv1 = frm_word >> 6 & 1;
+        this->m_msg_rsv2 = frm_word >> 5 & 1;
+        this->m_msg_rsv3 = frm_word >> 4 & 1;
         this->m_msg_opcode = frm_word & 15;
       }
       break;
@@ -479,7 +479,7 @@ parse_frame_header_from_stream(linear_buffer& data)
         }
 
         // If this is a FIN frame, terminate the current message.
-        this->m_msg_fin = 1;
+        this->m_msg_fin |= (bool) (frm_word >> 7 & 1);
       }
       break;
 

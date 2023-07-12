@@ -227,7 +227,7 @@ parse_rfc850_partial(const char* str)
     do_match(rptr, tm.tm_mon, s_month, 3);
     do_match(rptr, "-", 1);
     do_match(rptr, tm.tm_year, s_2digit, 2);
-    tm.tm_year += ((tm.tm_year - 70) >> 15) & 100;
+    tm.tm_year += (tm.tm_year - 70) >> 15 & 100;
     do_match(rptr, " ", 1);
     do_match(rptr, tm.tm_hour, s_2digit, 2);
     do_match(rptr, ":", 1);
