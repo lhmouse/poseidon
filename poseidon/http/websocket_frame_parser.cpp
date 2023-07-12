@@ -479,7 +479,8 @@ parse_frame_header_from_stream(linear_buffer& data)
         }
 
         // If this is a FIN frame, terminate the current message.
-        this->m_msg_fin |= (bool) (frm_word >> 7 & 1);
+        if(frm_word & 0b10000000)
+          this->m_msg_fin = 1;
       }
       break;
 

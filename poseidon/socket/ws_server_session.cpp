@@ -173,8 +173,9 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
             if(payload.size() >= 2) {
               // Get the status and reason string from the payload.
-              status = (uint16_t) (payload.getc() << 8);
-              status |= (uint16_t) payload.getc();
+              int ch = payload.getc();
+              ch = ch << 8 | payload.getc();
+              status = (uint16_t) ch;
               reason = payload;
             }
 
