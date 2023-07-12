@@ -64,7 +64,7 @@ for(size_t hindex = 0; hindex < resp.headers.size(); ++ hindex)
 
     // If the response is a failure, close the connection.
     if((resp.status != 101) || close_now)
-      this->quick_close();
+      this->do_call_on_ws_close_once(1002, "handshake failed");
   }
 
 void
@@ -77,7 +77,8 @@ do_on_http_request_error(uint32_t status)
     resp.headers.emplace_back(sref("Connection"), sref("close"));
     this->http_response(::std::move(resp), "");
 
-    this->quick_close();
+    // Close the connection.
+    this->do_call_on_ws_close_once(1002, "handshake failed");
   }
 
 void
