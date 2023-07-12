@@ -109,6 +109,17 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
             // If this is a data frame, it starts a new message.
             this->m_msg.clear();
             break;
+
+          case 0:  // CONTINUATION
+          case 8:  // CLOSE
+          case 9:  // PING
+          case 10:  // PONG
+            break;
+
+          default:
+            data.clear();
+            this->do_call_on_ws_close_once(1002, "invalid opcode");
+            return;
         }
       }
 
@@ -138,18 +149,18 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
             else
               this->m_msg.putn(payload.data(), payload.size());
 
-            if(this->m_parser.message_opcode() == 1) {
-              // TEXT
+            if(this->m_parser.message_opcode() == 1)
               this->do_on_ws_text_stream(this->m_msg);
-
-              if(this->m_parser.message_fin())
-                this->do_on_ws_text(::std::move(this->m_msg));
-            }
-            else {
-              // BINARY
+            else
               this->do_on_ws_binary_stream(this->m_msg);
 
-              if(this->m_parser.message_fin())
+            if(this->m_parser.message_fin()) {
+              // This is the final frame of the data message, so commit it. When
+              // PMCE is enabled, the payload of a deflated message does not
+              // include the final `00 00 FF FF` part, which we must add back.
+              if(this->m_parser.message_opcode() == 1)
+                this->do_on_ws_text(::std::move(this->m_msg));
+              else
                 this->do_on_ws_binary(::std::move(this->m_msg));
             }
             break;
