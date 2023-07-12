@@ -3,65 +3,65 @@
 
 #include "precompiled.ipp"
 #include "utils.hpp"
-#include <execinfo.h>  // backtrace()
+#include <libunwind.h>
 namespace poseidon {
 
 void
 throw_runtime_error_with_backtrace(const char* file, long line, const char* func, cow_string&& msg)
   {
-    // Compose the string to throw.
-    cow_string data;
-    data.reserve(2047);
+    // Remove trailing space characters from the message.
+    size_t pos = msg.rfind_not_of(" \f\n\r\t\v");
+    msg.erase(pos + 1);
 
-    // Append the function name.
-    data += func;
-    data += ": ";
+    // Calculate the number of stack frames.
+    size_t nframes = 0;
+    ::unw_context_t unw_ctx[1];
+    ::unw_cursor_t unw_cur[1];
+    char unw_name[1024];
+    ::unw_word_t unw_offset;
 
-    // Append the user-provided exception message.
-    data.append(msg.begin(), msg.end());
+    if((::unw_getcontext(unw_ctx) == 0) && (::unw_init_local(unw_cur, unw_ctx) == 0))
+      while(::unw_step(unw_cur) > 0)
+        ++ nframes;
 
-    // Remove trailing space characters.
-    size_t pos = data.rfind_not_of(" \f\n\r\t\v");
-    data.erase(pos + 1);
-    data += "\n";
-
-    // Append the source location.
-    data += "[thrown from '";
-    data += file;
-    data += ':';
+    // Determine the width of the frame index field.
     ::rocket::ascii_numput nump;
-    nump.put_DU((unsigned long) line);
-    data.append(nump.data(), nump.size());
-    data += "']";
+    nump.put_DU(nframes);
+    static_vector<char, 8> numfield(nump.size(), ' ');
+    numfield.emplace_back();
 
-    // Get stack frames.
-    void* frames[16];
-    int nframes = ::backtrace(frames, size(frames));
+    // Compose the string to throw.
+    tinyfmt_ln fmt;
+    fmt << func << ": " << msg;
+    fmt << "\n[thrown from '" << file << ':' << line << "']";
+
     if(nframes != 0) {
-      const ::rocket::unique_ptr<char*, void (void*)> symbols(::backtrace_symbols(frames, nframes), ::free);
+      fmt << "\n[stack backtrace:";
+      nframes = 0;
 
-      // Determine the width of the frame index field.
-      nump.put_DU((uint32_t) nframes);
-      static_vector<char, 24> sbuf(nump.size(), ' ');
-      sbuf.emplace_back();
+      if(::unw_init_local(unw_cur, unw_ctx) == 0)
+        while(::unw_step(unw_cur) > 0) {
+          // * frame index
+          nump.put_DU(++ nframes);
+          ::std::reverse_copy(nump.begin(), nump.end(), numfield.mut_rbegin() + 1);
+          fmt << "\n  " << numfield.data() << ") ";
 
-      // Append stack frames.
-      data += "\n[backtrace frames:\n  ";
-      for(uint32_t k = 0;  k != (uint32_t) nframes;  ++k) {
-        nump.put_DU(k + 1);
-        ::std::reverse_copy(nump.begin(), nump.end(), sbuf.mut_rbegin() + 1);
-        data += sbuf.data();
-        data += ") ";
-        data += symbols[k];
-        data += "\n  ";
-      }
-      data += "-- end of backtrace frames]";
+          // * function name and offset
+          if(::unw_get_proc_name(unw_cur, unw_name, sizeof(unw_name), &unw_offset) == 0) {
+            nump.put_XU(unw_offset);
+            fmt << unw_name << " +" << nump;
+          } else
+            fmt << "??";
+        }
+
+      fmt << "\n  -- end of stack backtrace]";
     }
     else
-      data += "\n[no backtrace available]";
+      fmt << "\n[no stack backtrace available]";
 
     // Throw it.
-    throw ::std::runtime_error(data.c_str());
+    fmt << '\0';
+    throw ::std::runtime_error(fmt.data());
   }
 
 cow_string
