@@ -262,9 +262,10 @@ do_on_ws_close(uint16_t status, chars_proxy reason)
   {
     POSEIDON_LOG_DEBUG(("WebSocket CLOSE from `$1` (status $2): $3"), this->remote_address(), status, reason);
 
-    // Send a CLOSE frame with status 1000 to the client. There is no need to
-    // close the socket here.
-    this->do_ws_send_raw_frame(8, "\x03\xE8");
+    // If a WebSocket connection has been established, notify the client with a
+    // CLOSE frame of status 1000. There is no need to close the socket here.
+    if(this->m_parser.is_server_mode())
+      this->do_ws_send_raw_frame(8, "\x03\xE8");
   }
 
 bool
