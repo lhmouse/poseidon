@@ -326,7 +326,7 @@ ws_ping(chars_proxy data)
 
 bool
 WS_Client_Session::
-ws_close(uint16_t status, chars_proxy reason)
+ws_close(uint16_t status, chars_proxy reason) noexcept
   {
     // Compose a CLOSE frame. The length of the payload of a control frame cannot
     // exceed 125 bytes, so the reason string has to be truncated if it's too long.
@@ -335,8 +335,16 @@ ws_close(uint16_t status, chars_proxy reason)
     ctl_data.push_back(static_cast<char>(status));
     ctl_data.append(reason.p, reason.p + min(reason.n, 123));
 
-    // CLOSE := opcode 9
-    bool succ = this->do_ws_send_raw_frame(8, ctl_data);
+    bool succ = false;
+    try {
+      // CLOSE := opcode 9
+      succ = this->do_ws_send_raw_frame(8, ctl_data);
+    }
+    catch(exception& stdex) {
+      POSEIDON_LOG_ERROR((
+          "Failed to send WebSocket CLOSE notification: $1"),
+          stdex);
+    }
     succ |= this->tcp_close();
     return succ;
   }

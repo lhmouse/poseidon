@@ -99,8 +99,7 @@ class WS_Server_Session
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(WS_Server_Session);
 
-    // Sends a text message to the other peer. The argument shall be a valid UTF-8
-    // string; otherwise an exception is thrown.
+    // Sends a text message to the other peer.
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
@@ -120,10 +119,9 @@ class WS_Server_Session
     // Sends a CLOSE frame with an optional error message, then shuts down the
     // connection. The reason string will be truncated to 123 bytes if it's too
     // long.
-    // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    ws_close(uint16_t status = 1000, chars_proxy reason = "");
+    ws_close(uint16_t status = 1000, chars_proxy reason = "") noexcept;
   };
 
 }  // namespace poseidon
