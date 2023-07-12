@@ -35,7 +35,7 @@ void
 WS_Server_Session::
 do_abstract_socket_on_closed()
   {
-    this->do_call_on_ws_close_once(1005, "no CLOSE frame received");
+    this->do_call_on_ws_close_once(1006, "no CLOSE frame received");
   }
 
 void
@@ -168,7 +168,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
           case 8: {  // CLOSE
             uint16_t bestatus = htobe16(1005);
-            chars_proxy reason = "";
+            chars_proxy reason = "no status code received";
 
             if(payload.size() >= 2) {
               // Get the status and reason string from the payload.
@@ -327,21 +327,12 @@ bool
 WS_Server_Session::
 ws_close(uint16_t status, chars_proxy reason)
   {
-    char bytes[128];
-    chars_proxy ctl_data(bytes, 0);
-
-    // Write the status code in big-endian order.
-    uint16_t bestatus = htobe16(status);
-    ::memcpy(bytes, &bestatus, 2);
-    ctl_data.n += 2;
-
-    if(reason.n != 0) {
-      // The length of the payload of a control frame cannot exceed 125 bytes, so
-      // the reason string has to be truncated if it's too long.
-      size_t rlen = min(reason.n, 123);
-      ::memcpy(bytes + 2, reason.p, rlen);
-      ctl_data.n += rlen;
-    }
+    // Compose a CLOSE frame. The length of the payload of a control frame cannot
+    // exceed 125 bytes, so the reason string has to be truncated if it's too long.
+    static_vector<char, 125> ctl_data;
+    ctl_data.push_back(static_cast<char>(status >> 16));
+    ctl_data.push_back(static_cast<char>(status));
+    ctl_data.append(reason.p, reason.p + min(reason.n, 123));
 
     // CLOSE := opcode 9
     bool succ = this->do_ws_send_raw_frame(8, ctl_data);
