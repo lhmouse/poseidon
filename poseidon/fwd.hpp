@@ -439,6 +439,12 @@ struct chars_proxy
     chars_proxy(const ::rocket::cow_vector<char, allocT>& rs) noexcept
       : p(rs.data()), n(rs.size())
       { }
+
+    template<size_t N, typename allocT>
+    constexpr
+    chars_proxy(const ::rocket::static_vector<char, N, allocT>& rs) noexcept
+      : p(rs.data()), n(rs.size())
+      { }
   };
 
 inline
