@@ -85,7 +85,7 @@ class WS_Client_Session
     // This callback is invoked by the network thread when an error occurs, or
     // after a CLOSE frame has been received. The connection will be closed after
     // this function returns.
-    // The default implementation sends a normal CLOSE frame.
+    // The default implementation does nothing.
     virtual
     void
     do_on_ws_close(uint16_t status, chars_proxy reason);

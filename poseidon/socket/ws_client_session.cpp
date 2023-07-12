@@ -28,7 +28,7 @@ do_call_on_ws_close_once(uint16_t status, chars_proxy reason)
 
     this->m_closure_notified = true;
     this->do_on_ws_close(status, reason);
-    this->quick_close();
+    this->ws_close(1000, "");
   }
 
 void
@@ -45,13 +45,6 @@ do_on_tcp_connected()
     // Send a handshake request.
     HTTP_Request_Headers req;
     this->m_parser.create_handshake_request(req);
-
-// TODO remove this
-for(size_t hindex = 0; hindex < req.headers.size(); ++ hindex)
-  if(req.headers.at(hindex).first == "Sec-WebSocket-Extensions")
-    req.headers.erase(hindex --);
-// ^^^^ remove this
-
     this->http_request(::std::move(req), "");
   }
 
@@ -67,18 +60,12 @@ void
 WS_Client_Session::
 do_on_http_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& /*data*/, bool close_now)
   {
-// TODO remove this
-for(size_t hindex = 0; hindex < resp.headers.size(); ++ hindex)
-  if(resp.headers.at(hindex).first == "Sec-WebSocket-Extensions")
-    resp.headers.erase(hindex --);
-// ^^^^ remove this
-
     // Accept the handshake response.
     this->m_parser.accept_handshake_response(resp);
 
     // If the response is a failure, close the connection.
-    if((resp.status != 101) || close_now)
-      this->do_call_on_ws_close_once(1002, "handshake failed");
+    if(this->m_parser.error() || close_now)
+      this->do_call_on_ws_close_once(1002, this->m_parser.error_description());
   }
 
 void
@@ -168,17 +155,17 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
           }
 
           case 8: {  // CLOSE
-            uint16_t bestatus = htobe16(1005);
+            uint16_t status = 1005;
             chars_proxy reason = "no status code received";
 
             if(payload.size() >= 2) {
               // Get the status and reason string from the payload.
-              ::memcpy(&bestatus, payload.data(), 2);
-              payload.discard(2);
+              status = (uint16_t) (payload.getc() << 8);
+              status |= (uint16_t) payload.getc();
               reason = payload;
             }
 
-            this->do_call_on_ws_close_once(be16toh(bestatus), reason);
+            this->do_call_on_ws_close_once(status, reason);
             break;
           }
 
@@ -226,7 +213,7 @@ do_on_ws_text_stream(linear_buffer& data)
     if(data.size() > (uint64_t) max_websocket_text_message_length)
       POSEIDON_THROW((
           "WebSocket text data message too large: `$3` > `$4`",
-          "[WebSocket server session `$1` (class `$2`)]"),
+          "[WebSocket client session `$1` (class `$2`)]"),
           this, typeid(*this), data.size(), max_websocket_text_message_length);
   }
 
@@ -257,7 +244,7 @@ do_on_ws_binary_stream(linear_buffer& data)
     if(data.size() > (uint64_t) max_websocket_binary_message_length)
       POSEIDON_THROW((
           "WebSocket binary data message too large: `$3` > `$4`",
-          "[WebSocket server session `$1` (class `$2`)]"),
+          "[WebSocket client session `$1` (class `$2`)]"),
           this, typeid(*this), data.size(), max_websocket_binary_message_length);
   }
 
@@ -273,33 +260,39 @@ WS_Client_Session::
 do_on_ws_close(uint16_t status, chars_proxy reason)
   {
     POSEIDON_LOG_DEBUG(("WebSocket CLOSE from `$1` (status $2): $3"), this->remote_address(), status, reason);
-
-    // If a WebSocket connection has been established, notify the client with a
-    // CLOSE frame of status 1000. There is no need to close the socket here.
-    if(this->m_parser.is_server_mode())
-      this->do_ws_send_raw_frame(8, "\x03\xE8");
   }
 
 bool
 WS_Client_Session::
 do_ws_send_raw_frame(uint8_t opcode, chars_proxy data)
   {
-    // Compose a single frame and send it. Frames to clients will not be masked.
+    // Compose a single frame and send it. Frames to servers must be masked.
     WebSocket_Frame_Header header;
     header.fin = 1;
     header.opcode = opcode & 15;
+    header.mask = 1;
+    header.mask_key_u32 = (uint32_t) generate_random_seed();
+    header.mask_key[0] |= '\x80';
     header.payload_len = data.n;
 
     tinyfmt_ln fmt;
     header.encode(fmt);
     fmt.putn(data.p, data.n);
-    return this->tcp_send(fmt);
+    auto buf = fmt.extract_buffer();
+    header.mask_payload(buf.mut_end() - data.n, data.n);
+    return this->tcp_send(buf);
   }
 
 bool
 WS_Client_Session::
 ws_send_text(chars_proxy data)
   {
+    if(!this->m_parser.is_client_mode())
+      POSEIDON_THROW((
+          "WebSocket handshake not complete yet",
+          "[WebSocket client session `$1` (class `$2`)]"),
+          this, typeid(*this));
+
     // TEXT := opcode 1
     return this->do_ws_send_raw_frame(1, data);
   }
@@ -308,6 +301,12 @@ bool
 WS_Client_Session::
 ws_send_binary(chars_proxy data)
   {
+    if(!this->m_parser.is_client_mode())
+      POSEIDON_THROW((
+          "WebSocket handshake not complete yet",
+          "[WebSocket client session `$1` (class `$2`)]"),
+          this, typeid(*this));
+
     // BINARY := opcode 2
     return this->do_ws_send_raw_frame(2, data);
   }
@@ -316,6 +315,12 @@ bool
 WS_Client_Session::
 ws_ping(chars_proxy data)
   {
+    if(!this->m_parser.is_client_mode())
+      POSEIDON_THROW((
+          "WebSocket handshake not complete yet",
+          "[WebSocket client session `$1` (class `$2`)]"),
+          this, typeid(*this));
+
     // The length of the payload of a control frame cannot exceed 125 bytes, so
     // the data string has to be truncated if it's too long.
     chars_proxy ctl_data(data.p, min(data.n, 125));
@@ -328,10 +333,13 @@ bool
 WS_Client_Session::
 ws_close(uint16_t status, chars_proxy reason) noexcept
   {
+    if(!this->m_parser.is_client_mode())
+      return this->tcp_close();
+
     // Compose a CLOSE frame. The length of the payload of a control frame cannot
     // exceed 125 bytes, so the reason string has to be truncated if it's too long.
     static_vector<char, 125> ctl_data;
-    ctl_data.push_back(static_cast<char>(status >> 16));
+    ctl_data.push_back(static_cast<char>(status >> 8));
     ctl_data.push_back(static_cast<char>(status));
     ctl_data.append(reason.p, reason.p + min(reason.n, 123));
 
@@ -342,7 +350,8 @@ ws_close(uint16_t status, chars_proxy reason) noexcept
     }
     catch(exception& stdex) {
       POSEIDON_LOG_ERROR((
-          "Failed to send WebSocket CLOSE notification: $1"),
+          "Failed to send WebSocket CLOSE notification: $1",
+          "[WebSocket client session `$1` (class `$2`)]"),
           stdex);
     }
     succ |= this->tcp_close();

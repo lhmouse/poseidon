@@ -88,9 +88,14 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
           return;
 
         // Check response headers and the payload.
+        uint32_t status = this->m_resp_parser->headers().status;
+
         this->do_on_https_response_finish(::std::move(this->m_resp_parser->mut_headers()),
                 ::std::move(this->m_resp_parser->mut_payload()),
                 this->m_resp_parser->should_close_after_payload());
+
+        if(status == HTTP_STATUS_SWITCHING_PROTOCOLS)
+          this->m_upgrade_ack.store(true);
       }
 
       this->m_resp_parser->next_message();
