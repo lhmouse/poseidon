@@ -47,7 +47,7 @@ class HTTPS_Client_Session
     // and returns `http_payload_normal`.
     virtual
     HTTP_Payload_Type
-    do_on_HTTP_Response_Headers(HTTP_Response_Headers& resp);
+    do_on_http_response_headers(HTTP_Response_Headers& resp);
 
     // This callback is invoked by the network thread for each fragment of the
     // response payload that has been received. As with `SSL_Connection::

@@ -49,7 +49,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
           return;
 
         // Check request headers.
-        auto payload_type = this->do_on_HTTP_Request_Headers(this->m_req_parser->mut_headers());
+        auto payload_type = this->do_on_http_request_headers(this->m_req_parser->mut_headers());
         switch(payload_type) {
           case http_payload_normal:
           case http_payload_empty:
@@ -107,7 +107,7 @@ do_on_ssl_alpn_request(cow_vector<char256>&& protos)
 
 HTTP_Payload_Type
 HTTPS_Server_Session::
-do_on_HTTP_Request_Headers(HTTP_Request_Headers& req)
+do_on_http_request_headers(HTTP_Request_Headers& req)
   {
     if((req.method == sref("CONNECT")) || !req.uri.starts_with(sref("/"))) {
       // Reject proxy requests.

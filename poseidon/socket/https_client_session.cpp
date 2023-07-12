@@ -50,7 +50,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
           return;
 
         // Check response headers.
-        auto payload_type = this->do_on_HTTP_Response_Headers(this->m_resp_parser->mut_headers());
+        auto payload_type = this->do_on_http_response_headers(this->m_resp_parser->mut_headers());
         switch(payload_type) {
           case http_payload_normal:
             break;
@@ -104,7 +104,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
 
 HTTP_Payload_Type
 HTTPS_Client_Session::
-do_on_HTTP_Response_Headers(HTTP_Response_Headers& resp)
+do_on_http_response_headers(HTTP_Response_Headers& resp)
   {
     POSEIDON_LOG_DEBUG((
         "HTTPS client received response: $3 $4",
