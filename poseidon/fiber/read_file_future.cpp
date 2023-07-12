@@ -9,8 +9,10 @@ namespace poseidon {
 
 Read_File_Future::
 Read_File_Future(cow_stringR path, int64_t offset, size_t limit)
-  : m_path(path), m_offset(offset), m_limit(limit)
   {
+    this->m_path = path;
+    this->m_offset = offset;
+    this->m_limit = limit;
   }
 
 Read_File_Future::
@@ -83,7 +85,10 @@ do_abstract_task_on_execute()
 
     // Set `m_result`. This requires locking `*this` so do it in
     // `do_on_future_ready()`.
-    POSEIDON_LOG_DEBUG(("File read success: path = $1, offset = $2, data.size() = $3"), this->m_path, this->m_offset, res.data.size());
+    POSEIDON_LOG_DEBUG((
+        "File read success: path = $1, offset = $2, data.size() = $3"),
+        this->m_path, this->m_offset, res.data.size());
+
     this->do_try_set_ready(&res);
   }
   catch(exception& stdex) {

@@ -10,8 +10,8 @@ namespace poseidon {
 
 DNS_Future::
 DNS_Future(cow_stringR host)
-  : m_host(host)
   {
+    this->m_host = host;
   }
 
 DNS_Future::
