@@ -43,7 +43,7 @@ timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/, stea
     static uint32_t state;
     switch(++ state) {
       case 1: {
-        Socket_Address addr("[::1]:3806");
+        Socket_Address addr("127.0.0.1:3806");
         my_client.connect(addr);
         POSEIDON_LOG_INFO(("example WS client connecting: addr = $1"), addr);
         return;
