@@ -41,36 +41,42 @@ void
 timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/, steady_time /*now*/)
   {
     static uint32_t state;
-    switch(++ state) {
-      case 1: {
+
+    if(my_client.session_opt() == nullptr)
+      state = 0;
+    else
+      state ++;
+
+    switch(state) {
+      case 0: {
         Socket_Address addr("127.0.0.1:3807");
         my_client.connect(addr);
         POSEIDON_LOG_INFO(("example WSS client connecting: addr = $1"), addr);
-        return;
+        break;
       }
 
-      case 2: {
+      case 1: {
         const char data[] = "some text data";
         my_client.wss_send_text(data);
         POSEIDON_LOG_INFO(("example WSS client sent TEXT frame: $1"), data);
-        return;
+        break;
       }
 
-      case 3: {
+      case 2: {
         const char data[] = "some binary data";
         my_client.wss_send_binary(data);
         POSEIDON_LOG_INFO(("example WSS client sent BINARY frame: $1"), data);
-        return;
+        break;
       }
 
-      case 4: {
+      case 3: {
         const char data[] = "some ping data";
         my_client.wss_ping(data);
         POSEIDON_LOG_INFO(("example WSS client sent PING frame: $1"), data);
-        return;
+        break;
       }
 
-      case 5: {
+      case 4: {
         // HACKS; DO NOT PLAY WITH THESE AT HOME.
         WebSocket_Frame_Header header;
         header.mask = 1;
@@ -123,10 +129,10 @@ timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/, stea
         header.mask_payload(data3, sizeof(data3) - 1);
         fmt.putn(data3, sizeof(data3) - 1);
         my_client.session_opt()->ssl_send(fmt);
-        return;
+        break;
       }
 
-      case 6: {
+      case 5: {
         // HACKS; DO NOT PLAY WITH THESE AT HOME.
         WebSocket_Frame_Header header;
         header.mask = 1;
@@ -179,10 +185,10 @@ timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/, stea
         header.mask_payload(data3, sizeof(data3) - 1);
         fmt.putn(data3, sizeof(data3) - 1);
         my_client.session_opt()->ssl_send(fmt);
-        return;
+        break;
       }
 
-      case 7: {
+      case 6: {
         // HACKS; DO NOT PLAY WITH THESE AT HOME.
         WebSocket_Frame_Header header;
         header.mask = 1;
@@ -223,13 +229,13 @@ timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/, stea
         header.mask_payload(data2, sizeof(data2) - 1);
         fmt.putn(data2, sizeof(data2) - 1);
         my_client.session_opt()->ssl_send(fmt);
-        return;
+        break;
       }
 
       default:
         POSEIDON_LOG_INFO(("example WSS client shutting down"));
         my_client.wss_close(3456, "bye");
-        state = 0;
+        break;
     }
   }
 
