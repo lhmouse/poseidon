@@ -9,8 +9,7 @@
 namespace poseidon {
 
 WS_Server_Session::
-WS_Server_Session(unique_posix_fd&& fd)
-  : HTTP_Server_Session(::std::move(fd))  // server constructor
+WS_Server_Session()
   {
   }
 

@@ -10,7 +10,6 @@ namespace poseidon {
 
 HTTP_Client_Session::
 HTTP_Client_Session()
-  : TCP_Socket()  // client constructor
   {
     this->m_resp_parser.emplace();
   }

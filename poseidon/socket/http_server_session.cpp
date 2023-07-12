@@ -9,8 +9,7 @@
 namespace poseidon {
 
 HTTP_Server_Session::
-HTTP_Server_Session(unique_posix_fd&& fd)
-  : TCP_Socket(::std::move(fd))  // server constructor
+HTTP_Server_Session()
   {
     this->m_req_parser.emplace();
   }
@@ -104,7 +103,7 @@ do_on_http_request_headers(HTTP_Request_Headers& req)
       return http_payload_normal;
     }
 
-    POSEIDON_LOG_INFO((
+    POSEIDON_LOG_DEBUG((
         "HTTP server received request: $3 $4",
         "[HTTP server session `$1` (class `$2`)]"),
         this, typeid(*this), req.method, req.uri);

@@ -9,8 +9,7 @@
 namespace poseidon {
 
 HTTPS_Client_Session::
-HTTPS_Client_Session(const SSL_CTX_ptr& ssl_ctx)
-  : SSL_Socket(ssl_ctx)  // client constructor
+HTTPS_Client_Session()
   {
     this->do_ssl_alpn_request("http/1.1");
     this->m_resp_parser.emplace();
@@ -51,7 +50,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
           return;
 
         // Check response headers.
-        auto payload_type = this->do_on_https_response_headers(this->m_resp_parser->mut_headers());
+        auto payload_type = this->do_on_HTTP_Response_Headers(this->m_resp_parser->mut_headers());
         switch(payload_type) {
           case http_payload_normal:
             break;
@@ -105,9 +104,9 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
 
 HTTP_Payload_Type
 HTTPS_Client_Session::
-do_on_https_response_headers(HTTP_Response_Headers& resp)
+do_on_HTTP_Response_Headers(HTTP_Response_Headers& resp)
   {
-    POSEIDON_LOG_INFO((
+    POSEIDON_LOG_DEBUG((
         "HTTPS client received response: $3 $4",
         "[HTTPS client session `$1` (class `$2`)]"),
         this, typeid(*this), resp.status, resp.reason);

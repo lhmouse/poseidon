@@ -109,8 +109,10 @@ struct Final_WS_Server_Session final : WS_Server_Session
     wkptr<Client_Table> m_wtable;
 
     explicit
-    Final_WS_Server_Session(unique_posix_fd&& fd, const Easy_WS_Server::thunk_type& thunk, const shptr<Client_Table>& table)
-      : WS_Server_Session(::std::move(fd)), m_thunk(thunk), m_wtable(table)
+    Final_WS_Server_Session(unique_posix_fd&& fd,
+          const Easy_WS_Server::thunk_type& thunk, const shptr<Client_Table>& table)
+      : TCP_Socket(::std::move(fd)),
+        m_thunk(thunk), m_wtable(table)
       { }
 
     void
@@ -176,8 +178,10 @@ struct Final_Listen_Socket final : Listen_Socket
     wkptr<Client_Table> m_wtable;
 
     explicit
-    Final_Listen_Socket(const Socket_Address& addr, const Easy_WS_Server::thunk_type& thunk, const shptr<Client_Table>& table)
-      : Listen_Socket(addr), m_thunk(thunk), m_wtable(table)
+    Final_Listen_Socket(const Socket_Address& addr,
+          const Easy_WS_Server::thunk_type& thunk, const shptr<Client_Table>& table)
+      : Listen_Socket(addr),
+        m_thunk(thunk), m_wtable(table)
       { }
 
     virtual

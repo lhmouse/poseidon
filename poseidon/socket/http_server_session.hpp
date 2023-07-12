@@ -11,7 +11,7 @@
 namespace poseidon {
 
 class HTTP_Server_Session
-  : public TCP_Socket
+  : public virtual TCP_Socket
   {
   private:
     optional<HTTP_Request_Parser> m_req_parser;
@@ -20,7 +20,7 @@ class HTTP_Server_Session
   public:
     // Constructs a socket for incoming connections.
     explicit
-    HTTP_Server_Session(unique_posix_fd&& fd);
+    HTTP_Server_Session();
 
   protected:
     // This function implements `TCP_Socket`.

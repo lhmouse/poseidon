@@ -9,8 +9,7 @@
 namespace poseidon {
 
 HTTPS_Server_Session::
-HTTPS_Server_Session(unique_posix_fd&& fd, const SSL_CTX_ptr& ssl_ctx)
-  : SSL_Socket(::std::move(fd), ssl_ctx)  // server constructor
+HTTPS_Server_Session()
   {
     this->m_req_parser.emplace();
   }
@@ -50,7 +49,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
           return;
 
         // Check request headers.
-        auto payload_type = this->do_on_https_request_headers(this->m_req_parser->mut_headers());
+        auto payload_type = this->do_on_HTTP_Request_Headers(this->m_req_parser->mut_headers());
         switch(payload_type) {
           case http_payload_normal:
           case http_payload_empty:
@@ -108,7 +107,7 @@ do_on_ssl_alpn_request(cow_vector<char256>&& protos)
 
 HTTP_Payload_Type
 HTTPS_Server_Session::
-do_on_https_request_headers(HTTP_Request_Headers& req)
+do_on_HTTP_Request_Headers(HTTP_Request_Headers& req)
   {
     if((req.method == sref("CONNECT")) || !req.uri.starts_with(sref("/"))) {
       // Reject proxy requests.
@@ -116,7 +115,7 @@ do_on_https_request_headers(HTTP_Request_Headers& req)
       return http_payload_normal;
     }
 
-    POSEIDON_LOG_INFO((
+    POSEIDON_LOG_DEBUG((
         "HTTPS server received request: $3 $4",
         "[HTTPS server session `$1` (class `$2`)]"),
         this, typeid(*this), req.method, req.uri);

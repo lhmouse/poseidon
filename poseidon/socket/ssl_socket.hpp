@@ -23,12 +23,11 @@ class SSL_Socket
     mutable Socket_Address m_peername;
 
   protected:
-    // Server-side constructor:
-    // Takes ownership of an accepted socket.
+    // Takes ownership of an accepted socket. [server-side constructor]
     explicit
     SSL_Socket(unique_posix_fd&& fd, const SSL_CTX_ptr& ssl_ctx);
 
-    // Client-side constructor:
+    // Creates a socket for outgoing connections. [client-side constructor]
     explicit
     SSL_Socket(const SSL_CTX_ptr& ssl_ctx);
 

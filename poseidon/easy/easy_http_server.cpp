@@ -43,7 +43,8 @@ struct Final_Fiber final : Abstract_Fiber
     const volatile HTTP_Server_Session* m_refptr;
 
     explicit
-    Final_Fiber(const Easy_HTTP_Server::thunk_type& thunk, const shptr<Client_Table>& table, const volatile HTTP_Server_Session* refptr)
+    Final_Fiber(const Easy_HTTP_Server::thunk_type& thunk,
+          const shptr<Client_Table>& table, const volatile HTTP_Server_Session* refptr)
       : m_thunk(thunk), m_wtable(table), m_refptr(refptr)
       { }
 
@@ -129,8 +130,10 @@ struct Final_HTTP_Server_Session final : HTTP_Server_Session
     wkptr<Client_Table> m_wtable;
 
     explicit
-    Final_HTTP_Server_Session(unique_posix_fd&& fd, const Easy_HTTP_Server::thunk_type& thunk, const shptr<Client_Table>& table)
-      : HTTP_Server_Session(::std::move(fd)), m_thunk(thunk), m_wtable(table)
+    Final_HTTP_Server_Session(unique_posix_fd&& fd,
+          const Easy_HTTP_Server::thunk_type& thunk, const shptr<Client_Table>& table)
+      : TCP_Socket(::std::move(fd)),
+        m_thunk(thunk), m_wtable(table)
       { }
 
     virtual
@@ -209,8 +212,10 @@ struct Final_Listen_Socket final : Listen_Socket
     wkptr<Client_Table> m_wtable;
 
     explicit
-    Final_Listen_Socket(const Socket_Address& addr, const Easy_HTTP_Server::thunk_type& thunk, const shptr<Client_Table>& table)
-      : Listen_Socket(addr), m_thunk(thunk), m_wtable(table)
+    Final_Listen_Socket(const Socket_Address& addr,
+          const Easy_HTTP_Server::thunk_type& thunk, const shptr<Client_Table>& table)
+      : Listen_Socket(addr),
+        m_thunk(thunk), m_wtable(table)
       { }
 
     virtual

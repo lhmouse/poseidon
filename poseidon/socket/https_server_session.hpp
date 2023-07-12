@@ -11,7 +11,7 @@
 namespace poseidon {
 
 class HTTPS_Server_Session
-  : public SSL_Socket
+  : public virtual SSL_Socket
   {
   private:
     optional<HTTP_Request_Parser> m_req_parser;
@@ -20,7 +20,7 @@ class HTTPS_Server_Session
   public:
     // Constructs a socket for incoming connections.
     explicit
-    HTTPS_Server_Session(unique_posix_fd&& fd, const SSL_CTX_ptr& ssl_ctx);
+    HTTPS_Server_Session();
 
   protected:
     // These function implement `SSL_Socket`.
@@ -45,7 +45,7 @@ class HTTPS_Server_Session
     // `http_payload_normal`.
     virtual
     HTTP_Payload_Type
-    do_on_https_request_headers(HTTP_Request_Headers& req);
+    do_on_HTTP_Request_Headers(HTTP_Request_Headers& req);
 
     // This callback is invoked by the network thread for each fragment of the
     // request payload that has been received. As with `SSL_Connection::

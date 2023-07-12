@@ -17,12 +17,11 @@ class UDP_Socket
     Socket_Address m_taddr;
 
   protected:
-    // Server-side constructor:
-    // Creates a socket that is bound onto the given address.
+    // Creates a socket that is bound onto `addr`. [server-side constructor]
     explicit
     UDP_Socket(const Socket_Address& addr);
 
-    // Client-side constructor:
+    // Creates an unbound socket. [client-side constructor]
     explicit
     UDP_Socket();
 

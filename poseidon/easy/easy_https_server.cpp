@@ -129,8 +129,9 @@ struct Final_HTTPS_Server_Session final : HTTPS_Server_Session
     wkptr<Client_Table> m_wtable;
 
     explicit
-    Final_HTTPS_Server_Session(unique_posix_fd&& fd, const Easy_HTTPS_Server::thunk_type& thunk, const shptr<Client_Table>& table)
-      : HTTPS_Server_Session(::std::move(fd), network_driver.default_server_ssl_ctx()),
+    Final_HTTPS_Server_Session(unique_posix_fd&& fd,
+          const Easy_HTTPS_Server::thunk_type& thunk, const shptr<Client_Table>& table)
+      : SSL_Socket(::std::move(fd), network_driver.default_server_ssl_ctx()),
         m_thunk(thunk), m_wtable(table)
       { }
 
@@ -210,8 +211,10 @@ struct Final_Listen_Socket final : Listen_Socket
     wkptr<Client_Table> m_wtable;
 
     explicit
-    Final_Listen_Socket(const Socket_Address& addr, const Easy_HTTPS_Server::thunk_type& thunk, const shptr<Client_Table>& table)
-      : Listen_Socket(addr), m_thunk(thunk), m_wtable(table)
+    Final_Listen_Socket(const Socket_Address& addr,
+          const Easy_HTTPS_Server::thunk_type& thunk, const shptr<Client_Table>& table)
+      : Listen_Socket(addr),
+        m_thunk(thunk), m_wtable(table)
       { }
 
     virtual

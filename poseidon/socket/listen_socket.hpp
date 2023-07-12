@@ -17,8 +17,8 @@ class Listen_Socket
     Socket_Address m_taddr;
 
   protected:
-    // Server-side constructor:
-    // Creates a socket that is bound onto the given address.
+    // Creates a TCP socket that is bound onto the given address, that accepts
+    // either TCP or SSL connections. [server-side constructor]
     explicit
     Listen_Socket(const Socket_Address& addr);
 
