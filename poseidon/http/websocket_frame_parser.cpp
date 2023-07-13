@@ -16,11 +16,11 @@ namespace {
 
 struct Sec_WebSocket
   {
-    unsigned char key[16];  // MD5_DIGEST_LENGTH
+    unsigned char key[16] = "";  // MD5_DIGEST_LENGTH
     char key_str[25] = "";  // ceil(sizeof(key) / 3) * 4 + 1
     char key_padding[3];  // 44
 
-    unsigned char accept[20];  // SHA_DIGEST_LENGTH
+    unsigned char accept[20] = "";  // SHA_DIGEST_LENGTH
     char accept_str[29] = "";  // ceil(sizeof(accept) / 3) * 4 + 1
     char accept_padding[3];  // 52
 
@@ -49,10 +49,10 @@ struct Sec_WebSocket
 
 struct PerMessage_Deflate
   {
-    int server_max_window_bits;
-    int client_max_window_bits;
-    bool server_no_context_takeover;
-    bool client_no_context_takeover;
+    int server_max_window_bits = 15;
+    int client_max_window_bits = 15;
+    bool server_no_context_takeover = false;
+    bool client_no_context_takeover = false;
     bool enabled = false;
 
     void
