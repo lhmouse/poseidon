@@ -11,7 +11,7 @@ namespace poseidon {
 class Deflator
   {
   private:
-    zlib_Deflate_Stream m_strm;
+    deflate_Stream m_strm;
 
   public:
     // Constructs a data compressor. `format` shall be `zlib_raw`, `zlib_deflate`

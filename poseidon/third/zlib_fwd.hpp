@@ -51,32 +51,31 @@ zlib_make_windowBits(int wbits, zlib_Format format)
     }
   }
 
-template<int cleanupT(::z_stream*)>
+template<int xEndT(::z_stream*)>
 class zlib_Stream
   {
   private:
     ::z_stream m_strm[1];
 
   public:
-    // Initializes a stream with `initializer`, which will be destroyed with
-    // `cleanupT`. If `initializer` and `cleanupT()` do not match, the behavior
-    // is undefined.
-    template<typename InitializerT, typename... ParamsT>
-    zlib_Stream(const char* func, InitializerT&& initializer, ParamsT&&... params)
+    // Initializes a stream with `xInit`, which will be destroyed with `xEndT`.
+    // If `xInit` and `xEndT` do not match, the behavior is undefined.
+    template<typename xInitT, typename... xArgsT>
+    zlib_Stream(const char* func, xInitT&& xInit, xArgsT&&... xargs)
       {
         this->m_strm->zalloc = nullptr;
         this->m_strm->zfree = nullptr;
         this->m_strm->opaque = nullptr;
         this->m_strm->msg = nullptr;
 
-        int err = initializer(this->m_strm, ::std::forward<ParamsT>(params)...);
+        int err = xInit(this->m_strm, ::std::forward<xArgsT>(xargs)...);
         if(err != Z_OK)
           this->throw_exception(func, err);
       }
 
     ASTERIA_NONCOPYABLE_DESTRUCTOR(zlib_Stream)
       {
-        cleanupT(this->m_strm);
+        xEndT(this->m_strm);
       }
 
   public:
@@ -130,8 +129,8 @@ class zlib_Stream
       { return this->m_strm;  }
   };
 
-using zlib_Deflate_Stream = zlib_Stream<::deflateEnd>;
-using zlib_Inflate_Stream = zlib_Stream<::inflateEnd>;
+using deflate_Stream = zlib_Stream<::deflateEnd>;
+using inflate_Stream = zlib_Stream<::inflateEnd>;
 
 } // namespace poseidon
 #endif

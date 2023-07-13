@@ -11,7 +11,7 @@ namespace poseidon {
 class Inflator
   {
   private:
-    zlib_Inflate_Stream m_strm;
+    inflate_Stream m_strm;
 
   public:
     // Constructs a data decompressor. `format` shall be `zlib_raw`,
