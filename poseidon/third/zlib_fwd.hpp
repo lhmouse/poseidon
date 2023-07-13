@@ -66,7 +66,10 @@ class zlib_Stream
         this->m_strm->zalloc = nullptr;
         this->m_strm->zfree = nullptr;
         this->m_strm->opaque = nullptr;
+
         this->m_strm->msg = nullptr;
+        this->m_strm->next_in = (const ::Bytef*) "";
+        this->m_strm->avail_in = 0;
 
         int err = xInit(this->m_strm, ::std::forward<xArgsT>(xargs)...);
         if(err != Z_OK)
