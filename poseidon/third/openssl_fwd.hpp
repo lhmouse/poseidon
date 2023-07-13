@@ -36,14 +36,13 @@ namespace poseidon {
   \
       OBJ##_ptr(OBJ##_ptr&& other) noexcept  \
         {  \
-          this->m_ptr = other.m_ptr;  \
-          other.m_ptr = nullptr;  \
+          this->m_ptr = other.release();  \
         }  \
   \
       OBJ##_ptr&  \
       operator=(nullptr_t) & noexcept  \
         {  \
-          this->reset();  \
+          this->reset(nullptr);  \
           return *this;  \
         }  \
   \
@@ -51,15 +50,14 @@ namespace poseidon {
       operator=(const OBJ##_ptr& other) & noexcept  \
         {  \
           if(other.m_ptr) OBJ##_up_ref(other.m_ptr);  \
-          if(this->m_ptr) OBJ##_free(this->m_ptr);  \
-          this->m_ptr = other.m_ptr;  \
+          this->reset(other.m_ptr);  \
           return *this;  \
         }  \
   \
       OBJ##_ptr&  \
       operator=(OBJ##_ptr&& other) & noexcept  \
         {  \
-          ::std::swap(this->m_ptr, other.m_ptr);  \
+          this->reset(other.release());  \
           return *this;  \
         }  \
   \
@@ -93,7 +91,6 @@ namespace poseidon {
       OBJ##_ptr&  \
       reset(::OBJ* ptr = nullptr) noexcept  \
         {  \
-          ROCKET_ASSERT(!ptr || (this->m_ptr != ptr));  \
           if(this->m_ptr) OBJ##_free(this->m_ptr);  \
           this->m_ptr = ptr;  \
           return *this;  \
@@ -102,9 +99,9 @@ namespace poseidon {
       ::OBJ*  \
       release() noexcept  \
         {  \
-          ::OBJ* ptr = this->m_ptr;  \
+          ::OBJ* old_ptr = this->m_ptr;  \
           this->m_ptr = nullptr;  \
-          return ptr;  \
+          return old_ptr;  \
         }  \
     };  \
   \
