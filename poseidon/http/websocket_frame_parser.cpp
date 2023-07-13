@@ -49,11 +49,11 @@ struct Sec_WebSocket
 
 struct PerMessage_Deflate
   {
-    int server_max_window_bits = 15;
-    int client_max_window_bits = 15;
+    bool enabled = false;
     bool server_no_context_takeover = false;
     bool client_no_context_takeover = false;
-    bool enabled = false;
+    int server_max_window_bits = 15;
+    int client_max_window_bits = 15;
 
     void
     use_permessage_deflate(HTTP_Header_Parser& hparser)
@@ -70,7 +70,25 @@ struct PerMessage_Deflate
         // PMCE is accepted only if all parameters are valid and accepted.
         // Reference: https://datatracker.ietf.org/doc/html/rfc7692
         while(hparser.next_attribute())
-          if(ascii_ci_equal(hparser.current_name(), sref("server_max_window_bits"))) {
+          if(ascii_ci_equal(hparser.current_name(), sref("server_no_context_takeover"))) {
+            if(!hparser.current_value().is_null())
+              return;
+
+            // `server_no_context_takeover`:
+            // States that the server will not reuse a previous LZ77 sliding
+            // window when compressing a message. Ignored by clients.
+            this->server_no_context_takeover = true;
+          }
+          else if(ascii_ci_equal(hparser.current_name(), sref("client_no_context_takeover"))) {
+            if(!hparser.current_value().is_null())
+              return;
+
+            // `client_no_context_takeover`:
+            // States that the client will not reuse a previous LZ77 sliding
+            // window when compressing a message. Ignored by servers.
+            this->client_no_context_takeover = true;
+          }
+          else if(ascii_ci_equal(hparser.current_name(), sref("server_max_window_bits"))) {
             if(hparser.current_value().is_null())
               continue;
             else if(!hparser.current_value().is_number())
@@ -99,24 +117,6 @@ struct PerMessage_Deflate
             // States the maximum size of the LZ77 sliding window that the client
             // will use, in number of bits.
             this->client_max_window_bits = (int) value;
-          }
-          else if(ascii_ci_equal(hparser.current_name(), sref("server_no_context_takeover"))) {
-            if(!hparser.current_value().is_null())
-              return;
-
-            // `server_no_context_takeover`:
-            // States that the server will not reuse a previous LZ77 sliding
-            // window when compressing a message. Ignored by clients.
-            this->server_no_context_takeover = true;
-          }
-          else if(ascii_ci_equal(hparser.current_name(), sref("client_no_context_takeover"))) {
-            if(!hparser.current_value().is_null())
-              return;
-
-            // `client_no_context_takeover`:
-            // States that the client will not reuse a previous LZ77 sliding
-            // window when compressing a message. Ignored by servers.
-            this->client_no_context_takeover = true;
           }
           else
             return;
@@ -278,9 +278,10 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
       resp.headers.emplace_back(sref("Sec-WebSocket-Extensions"), pmce_resp_fmt.extract_string());
 
       // Accept PMCE parameters.
-      this->m_pmce_max_window_bits = pmce.server_max_window_bits & 15;
-      this->m_pmce_no_context_takeover = pmce.server_no_context_takeover;
       this->m_pmce_reserved = 0;
+      this->m_pmce_send_no_context_takeover = pmce.server_no_context_takeover;
+      this->m_pmce_send_max_window_bits = pmce.server_max_window_bits & 15;
+      this->m_pmce_recv_max_window_bits = pmce.client_max_window_bits & 15;
     }
 
     // For the server, this connection has now been established.
@@ -367,9 +368,10 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
 
     if(pmce.enabled) {
       // Accept PMCE parameters.
-      this->m_pmce_max_window_bits = pmce.client_max_window_bits & 15;
-      this->m_pmce_no_context_takeover = pmce.client_no_context_takeover;
       this->m_pmce_reserved = 0;
+      this->m_pmce_send_no_context_takeover = pmce.client_no_context_takeover;
+      this->m_pmce_send_max_window_bits = pmce.client_max_window_bits & 15;
+      this->m_pmce_recv_max_window_bits = pmce.server_max_window_bits & 15;
     }
 
     // For the client, this connection has now been established.
@@ -444,7 +446,7 @@ parse_frame_header_from_stream(linear_buffer& data)
         // compressed message.
         int rsv_mask = 0b01110000;
 
-        if(this->m_pmce_max_window_bits != 0)
+        if(this->m_pmce_send_max_window_bits != 0)
           rsv_mask &= 0b00110000;
 
         if(frm_word & rsv_mask) {
