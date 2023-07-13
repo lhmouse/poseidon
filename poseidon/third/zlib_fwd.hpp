@@ -74,13 +74,10 @@ class zlib_Stream
           this->throw_exception(func, err);
       }
 
-    ~zlib_Stream()
+    ASTERIA_NONCOPYABLE_DESTRUCTOR(zlib_Stream)
       {
         cleanupT(this->m_strm);
       }
-
-    zlib_Stream(const zlib_Stream&) = delete;
-    zlib_Stream& operator=(const zlib_Stream&) = delete;
 
   public:
     // Converts zlib error codes.
@@ -96,7 +93,7 @@ class zlib_Stream
         if(err == Z_MEM_ERROR)
           return "memory allocation failure";
 
-        return "no error message available";
+        return "no error message";
       }
 
     [[noreturn]]
@@ -104,8 +101,8 @@ class zlib_Stream
     throw_exception(const char* func, int err) const
       {
         ::rocket::sprintf_and_throw<::std::runtime_error>(
-            "zlib error: `%s()` returned `%d`: %s",
-            func, err, this->message(err));
+            "zlib error: %s\n[`%s()` returned `%d`]",
+            this->message(err), func, err);
       }
 
     operator
