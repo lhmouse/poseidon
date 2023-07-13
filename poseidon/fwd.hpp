@@ -164,23 +164,33 @@ template<typename... T> using vfptr = void (*)(T...);
 template<size_t Nc> using char_array = array<char, Nc>;
 template<size_t Nc> using uchar_array = array<unsigned char, Nc>;
 
-class cacheline_barrier
+struct cacheline_barrier
   {
-  private:
     __m128i m_spare_bytes[3];  // `cacheline_size / sizeof(__m128i) - 1`
 
-  public:
     cacheline_barrier() noexcept = default;
     cacheline_barrier(const cacheline_barrier&) = delete;
     cacheline_barrier& operator=(cacheline_barrier&) = delete;
   };
 
-// Enumerations
 enum zlib_Format : uint8_t
   {
     zlib_deflate  = 0,
     zlib_raw      = 1,
     zlib_gzip     = 2,
+  };
+
+struct zlib_Options
+  {
+    zlib_Format format;
+    int8_t windowBits = 15;  // `9` (smallest) to `15` (largest)
+    int8_t level = -1;  // `-1` (default), or `0` (none) to `9` (best)
+    char reserved = 0;
+
+    constexpr
+    zlib_Options(zlib_Format xfmt) noexcept
+      : format(xfmt)
+      { }
   };
 
 enum Async_State : uint8_t

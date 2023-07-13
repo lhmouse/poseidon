@@ -13,8 +13,8 @@ struct Final_Deflator final : Deflator
     linear_buffer m_out;
 
     explicit
-    Final_Deflator(zlib_Format format, int level)
-      : Deflator(format, level)
+    Final_Deflator(zlib_Options opts)
+      : Deflator(opts)
       { }
 
     virtual
@@ -45,9 +45,9 @@ Easy_Deflator::
 
 void
 Easy_Deflator::
-open(zlib_Format format, int level)
+open(zlib_Options opts)
   {
-    auto defl = new_sh<Final_Deflator>(format, level);
+    auto defl = new_sh<Final_Deflator>(opts);
     this->m_defl = defl;
     this->m_out = shptr<linear_buffer>(defl, &(defl->m_out));
   }

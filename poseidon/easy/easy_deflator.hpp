@@ -23,10 +23,9 @@ class Easy_Deflator
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_Deflator);
 
-    // Starts a stream. `level` shall be an integer between `0` (no compression)
-    // and `9` (best compression), or `-1` to select the default value.
+    // Starts a stream.
     void
-    open(zlib_Format format, int level = -1);
+    open(zlib_Options opts = zlib_deflate);
 
     // Clears the current stream. Pending data are discarded.
     void

@@ -13,8 +13,8 @@ struct Final_Inflator final : Inflator
     linear_buffer m_out;
 
     explicit
-    Final_Inflator(zlib_Format format)
-      : Inflator(format)
+    Final_Inflator(zlib_Options opts)
+      : Inflator(opts)
       { }
 
     virtual
@@ -45,9 +45,9 @@ Easy_Inflator::
 
 void
 Easy_Inflator::
-open(zlib_Format format)
+open(zlib_Options opts)
   {
-    auto infl = new_sh<Final_Inflator>(format);
+    auto infl = new_sh<Final_Inflator>(opts);
     this->m_infl = infl;
     this->m_out = shptr<linear_buffer>(infl, &(infl->m_out));
   }

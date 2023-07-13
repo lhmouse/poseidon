@@ -14,18 +14,9 @@ class Inflator
     inflate_Stream m_strm;
 
   public:
-    // Constructs a data decompressor. `format` shall be `zlib_raw`,
-    // `zlib_inflate` or `zlib_gzip`. `wbits` shall be an integer
-    // between 9 and 15, inclusively.
+    // Constructs a data decompressor. The `level` field is ignored.
     explicit
-    Inflator(zlib_Format format, int wbits = 15);
-
-  private:
-    void
-    do_check_output_buffer();
-
-    void
-    do_clear_pointers();
+    Inflator(zlib_Options opts);
 
   protected:
     // This callback is invoked to request an output buffer if none has been
@@ -51,11 +42,6 @@ class Inflator
 
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Inflator);
-
-    // Gets the inflate stream.
-    ::z_stream*
-    z_stream() noexcept
-      { return this->m_strm;  }
 
     // Clears internal states. Pending data are discarded.
     void

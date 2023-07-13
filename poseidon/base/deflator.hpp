@@ -14,19 +14,9 @@ class Deflator
     deflate_Stream m_strm;
 
   public:
-    // Constructs a data compressor. `format` shall be `zlib_raw`, `zlib_deflate`
-    // or `zlib_gzip`. `level` shall be an integer between `0` (no compression)
-    // and `9` (best compression), or `-1` to select the default value. `wbits`
-    // shall be an integer between `9` and `15`, inclusively.
+    // Constructs a data compressor.
     explicit
-    Deflator(zlib_Format format, int level = -1, int wbits = 15);
-
-  private:
-    void
-    do_check_output_buffer();
-
-    void
-    do_clear_pointers();
+    Deflator(zlib_Options opts);
 
   protected:
     // This callback is invoked to request an output buffer if none has been
@@ -52,11 +42,6 @@ class Deflator
 
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Deflator);
-
-    // Gets the deflate stream.
-    ::z_stream*
-    z_stream() noexcept
-      { return this->m_strm;  }
 
     // Clears internal states. Pending data are discarded.
     void

@@ -10,130 +10,179 @@
 #include <zlib.h>
 namespace poseidon {
 
-inline
-int
-zlib_make_level(int level)
-  {
-    if(level == -1)
-      return Z_DEFAULT_COMPRESSION;
-
-    if((level < 0) || (level > 9))
-      ::rocket::sprintf_and_throw<::std::invalid_argument>(
-          "zlib error: compression level `%d` not valid",
-          level);
-
-    return level;
-  }
-
-inline
-int
-zlib_make_windowBits(int wbits, zlib_Format format)
-  {
-    if((wbits < 9) || (wbits > 15))
-      ::rocket::sprintf_and_throw<::std::invalid_argument>(
-          "zlib error: window bits `%d` not valid",
-          wbits);
-
-    switch(format) {
-      case zlib_deflate:
-        return wbits;
-
-      case zlib_raw:
-        return - wbits;
-
-      case zlib_gzip:
-        return 16 + wbits;
-
-      default:
-        ::rocket::sprintf_and_throw<::std::invalid_argument>(
-            "zlib error: format `%d` not valid",
-            format);
-    }
-  }
-
-template<int xEndT(::z_stream*)>
-class zlib_Stream
+class deflate_Stream
   {
   private:
-    ::z_stream m_strm[1];
+    ::z_stream m_zstrm[1];
 
   public:
-    // Initializes a stream with `xInit`, which will be destroyed with `xEndT`.
-    // If `xInit` and `xEndT` do not match, the behavior is undefined.
-    template<typename xInitT, typename... xArgsT>
-    zlib_Stream(const char* func, xInitT&& xInit, xArgsT&&... xargs)
+    explicit
+    deflate_Stream(zlib_Options opts)
       {
-        this->m_strm->zalloc = nullptr;
-        this->m_strm->zfree = nullptr;
-        this->m_strm->opaque = nullptr;
+        this->m_zstrm->zalloc = nullptr;
+        this->m_zstrm->zfree = nullptr;
+        this->m_zstrm->opaque = nullptr;
+        this->m_zstrm->next_in = (const ::Bytef*) "";
+        this->m_zstrm->avail_in = 0;
 
-        this->m_strm->msg = nullptr;
-        this->m_strm->next_in = (const ::Bytef*) "";
-        this->m_strm->avail_in = 0;
+        // Validate arguments.
+        int wbits = opts.windowBits;
+        int level = opts.level;
 
-        int err = xInit(this->m_strm, ::std::forward<xArgsT>(xargs)...);
+        if((wbits < 9) || (wbits > 15))
+          ::rocket::sprintf_and_throw<::std::invalid_argument>(
+                "deflate_Stream: window bits `%d` not valid",
+                opts.windowBits);
+
+        if(opts.format == zlib_gzip)
+          wbits += 16;
+        else if(opts.format == zlib_raw)
+          wbits *= -1;
+        else if(opts.format != zlib_deflate)
+          ::rocket::sprintf_and_throw<::std::invalid_argument>(
+                "deflate_Stream: window bits `%d` not valid",
+                opts.windowBits);
+
+        if((level < -1) || (level > 9))
+          ::rocket::sprintf_and_throw<::std::invalid_argument>(
+                "deflate_Stream: compression level `%d` not valid",
+                opts.level);
+
+        int err = ::deflateInit2(this->m_zstrm, level, Z_DEFLATED, wbits, 9, Z_DEFAULT_STRATEGY);
         if(err != Z_OK)
-          this->throw_exception(func, err);
+          this->throw_exception(err, "deflateInit2");
       }
 
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(zlib_Stream)
+    ASTERIA_NONCOPYABLE_DESTRUCTOR(deflate_Stream)
       {
-        xEndT(this->m_strm);
-      }
-
-  public:
-    // Converts zlib error codes.
-    const char*
-    message(int err) const
-      {
-        if(m_strm->msg)
-          return m_strm->msg;
-
-        if(err == Z_VERSION_ERROR)
-          return "zlib library version mismatch";
-
-        if(err == Z_MEM_ERROR)
-          return "memory allocation failure";
-
-        return "no error message";
+        ::deflateEnd(this->m_zstrm);
       }
 
     [[noreturn]]
     void
-    throw_exception(const char* func, int err) const
+    throw_exception(int err, const char* func) const
       {
-        ::rocket::sprintf_and_throw<::std::runtime_error>(
-            "zlib error: %s\n[`%s()` returned `%d`]",
-            this->message(err), func, err);
+        const char* msg;
+
+        if(this->m_zstrm->msg)
+          msg = this->m_zstrm->msg;
+        else if(err == Z_MEM_ERROR)
+          msg = "memory allocation failure";
+        else if(err == Z_VERSION_ERROR)
+          msg = "zlib library version mismatch";
+        else
+          msg = "no error message";
+
+        ::rocket::sprintf_and_throw<::std::invalid_argument>(
+              "deflate_Stream: zlib error: %s\n[`%s()` returned `%d`]",
+              msg, func, err);
       }
 
-    operator
-    const ::z_stream*() const noexcept
-      { return this->m_strm;  }
+    void
+    reset() noexcept
+      {
+        ::deflateReset(this->m_zstrm);
+      }
 
-    operator
-    ::z_stream*() noexcept
-      { return this->m_strm;  }
+    int
+    deflate(char*& out_p, char* out_end, const char*& in_p, const char* in_end, int flush) noexcept
+      {
+        this->m_zstrm->next_out = (::Bytef*) out_p;
+        this->m_zstrm->avail_out = (::uInt) ::rocket::min(out_end - out_p, INT_MAX);
+        this->m_zstrm->next_in = (const ::Bytef*) in_p;
+        this->m_zstrm->avail_in = (::uInt) ::rocket::min(in_end - in_p, INT_MAX);
 
-    const ::z_stream&
-    operator*() const noexcept
-      { return *(this->m_strm);  }
+        int err = ::deflate(this->m_zstrm, flush);
 
-    ::z_stream&
-    operator*() noexcept
-      { return *(this->m_strm);  }
-
-    const ::z_stream*
-    operator->() const noexcept
-      { return this->m_strm;  }
-
-    ::z_stream*
-    operator->() noexcept
-      { return this->m_strm;  }
+        out_p = (char*) this->m_zstrm->next_out;
+        in_p = (const char*) this->m_zstrm->next_in;
+        return err;
+      }
   };
 
-using deflate_Stream = zlib_Stream<::deflateEnd>;
-using inflate_Stream = zlib_Stream<::inflateEnd>;
+class inflate_Stream
+  {
+  private:
+    ::z_stream m_zstrm[1];
+
+  public:
+    explicit
+    inflate_Stream(zlib_Options opts)
+      {
+        this->m_zstrm->zalloc = nullptr;
+        this->m_zstrm->zfree = nullptr;
+        this->m_zstrm->opaque = nullptr;
+        this->m_zstrm->next_in = (const ::Bytef*) "";
+        this->m_zstrm->avail_in = 0;
+
+        // Validate arguments.
+        int wbits = opts.windowBits;
+
+        if((wbits < 9) || (wbits > 15))
+          ::rocket::sprintf_and_throw<::std::invalid_argument>(
+                "inflate_Stream: window bits `%d` not valid",
+                opts.windowBits);
+
+        if(opts.format == zlib_gzip)
+          wbits += 16;
+        else if(opts.format == zlib_raw)
+          wbits *= -1;
+        else if(opts.format != zlib_deflate)
+          ::rocket::sprintf_and_throw<::std::invalid_argument>(
+                "inflate_Stream: window bits `%d` not valid",
+                opts.windowBits);
+
+        int err = ::inflateInit2(this->m_zstrm, wbits);
+        if(err != Z_OK)
+          this->throw_exception(err, "inflateInit2");
+      }
+
+    ASTERIA_NONCOPYABLE_DESTRUCTOR(inflate_Stream)
+      {
+        ::inflateEnd(this->m_zstrm);
+      }
+
+    [[noreturn]]
+    void
+    throw_exception(int err, const char* func) const
+      {
+        const char* msg;
+
+        if(this->m_zstrm->msg)
+          msg = this->m_zstrm->msg;
+        else if(err == Z_MEM_ERROR)
+          msg = "memory allocation failure";
+        else if(err == Z_VERSION_ERROR)
+          msg = "zlib library version mismatch";
+        else
+          msg = "no error message";
+
+        ::rocket::sprintf_and_throw<::std::invalid_argument>(
+              "inflate_Stream: zlib error: %s\n[`%s()` returned `%d`]",
+              msg, func, err);
+      }
+
+    void
+    reset() noexcept
+      {
+        ::inflateReset(this->m_zstrm);
+      }
+
+    int
+    inflate(char*& out_p, char* out_end, const char*& in_p, const char* in_end) noexcept
+      {
+        this->m_zstrm->next_out = (::Bytef*) out_p;
+        this->m_zstrm->avail_out = (::uInt) ::rocket::min(out_end - out_p, INT_MAX);
+        this->m_zstrm->next_in = (const ::Bytef*) in_p;
+        this->m_zstrm->avail_in = (::uInt) ::rocket::min(in_end - in_p, INT_MAX);
+
+        int err = ::inflate(this->m_zstrm, Z_SYNC_FLUSH);
+
+        out_p = (char*) this->m_zstrm->next_out;
+        in_p = (const char*) this->m_zstrm->next_in;
+        return err;
+      }
+  };
 
 } // namespace poseidon
 #endif
