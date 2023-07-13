@@ -28,7 +28,7 @@ do_call_on_ws_close_once(uint16_t status, chars_proxy reason)
 
     this->m_closure_notified = true;
     this->do_on_ws_close(status, reason);
-    this->ws_close(1000, "");
+    this->ws_shut_down(1000, "");
   }
 
 void
@@ -332,10 +332,10 @@ ws_ping(chars_proxy data)
 
 bool
 WS_Client_Session::
-ws_close(uint16_t status, chars_proxy reason) noexcept
+ws_shut_down(uint16_t status, chars_proxy reason) noexcept
   {
     if(!this->do_has_upgraded())
-      return this->tcp_close();
+      return this->tcp_shut_down();
 
     // Compose a CLOSE frame. The length of the payload of a control frame cannot
     // exceed 125 bytes, so the reason string has to be truncated if it's too long.
@@ -355,7 +355,7 @@ ws_close(uint16_t status, chars_proxy reason) noexcept
           "[WebSocket client session `$1` (class `$2`)]"),
           stdex);
     }
-    succ |= this->tcp_close();
+    succ |= this->tcp_shut_down();
     return succ;
   }
 

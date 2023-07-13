@@ -60,7 +60,7 @@ class Easy_WS_Client
 
     // Destroys the current connection without graceful shutdown. This function
     // should only be called after all data from the server have been read and
-    // processed properly. If graceful shutdown is desired, `ws_close()`
+    // processed properly. If graceful shutdown is desired, `ws_shut_down()`
     // shall be called first.
     void
     close() noexcept;
@@ -104,7 +104,7 @@ class Easy_WS_Client
     // long.
     // This function is thread-safe.
     bool
-    ws_close(uint16_t status = 1000, chars_proxy reason = "") noexcept;
+    ws_shut_down(uint16_t status = 1000, chars_proxy reason = "") noexcept;
   };
 
 }  // namespace poseidon

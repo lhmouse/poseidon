@@ -431,7 +431,7 @@ ssl_send_oob(char data) noexcept
 
 bool
 SSL_Socket::
-ssl_close() noexcept
+ssl_shut_down() noexcept
   {
     recursive_mutex::unique_lock io_lock;
     auto& queue = this->do_abstract_socket_lock_write_queue(io_lock);

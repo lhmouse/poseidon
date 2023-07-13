@@ -138,7 +138,7 @@ class SSL_Socket
     // are ignored.
     // This function is thread-safe.
     bool
-    ssl_close() noexcept;
+    ssl_shut_down() noexcept;
   };
 
 }  // namespace poseidon

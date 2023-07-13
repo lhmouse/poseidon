@@ -223,12 +223,12 @@ tcp_send(chars_proxy data)
 
 bool
 Easy_TCP_Client::
-tcp_close() noexcept
+tcp_shut_down() noexcept
   {
     if(!this->m_socket)
       return false;
 
-    return this->m_socket->tcp_close();
+    return this->m_socket->tcp_shut_down();
   }
 
 }  // namespace poseidon

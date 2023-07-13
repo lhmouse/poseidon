@@ -93,7 +93,7 @@ struct Final_Fiber final : Abstract_Fiber
           }
           catch(exception& stdex) {
             // Shut the connection down with a message.
-            session->ws_close(1015);
+            session->ws_shut_down(1015);
 
             POSEIDON_LOG_ERROR((
                 "Unhandled exception thrown from easy WS server: $1"),

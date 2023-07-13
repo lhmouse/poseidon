@@ -74,7 +74,7 @@ struct Final_Fiber final : Abstract_Fiber
             this->m_thunk(session, *this, ::std::move(event.resp), ::std::move(event.data));
 
             if(event.close_now)
-              session->tcp_close();
+              session->tcp_shut_down();
           }
           catch(exception& stdex) {
             // Shut the connection down asynchronously. Pending output data

@@ -64,7 +64,7 @@ class Easy_SSL_Client
 
     // Destroys the current connection without graceful shutdown. This function
     // should only be called after all data from the server have been read and
-    // processed properly. If graceful shutdown is desired, `ssl_close()`
+    // processed properly. If graceful shutdown is desired, `ssl_shut_down()`
     // shall be called first.
     void
     close() noexcept;
@@ -99,7 +99,7 @@ class Easy_SSL_Client
     // are ignored.
     // This function is thread-safe.
     bool
-    ssl_close() noexcept;
+    ssl_shut_down() noexcept;
   };
 
 }  // namespace poseidon

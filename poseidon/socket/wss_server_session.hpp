@@ -121,7 +121,7 @@ class WSS_Server_Session
     // long.
     // This function is thread-safe.
     bool
-    wss_close(uint16_t status = 1000, chars_proxy reason = "") noexcept;
+    wss_shut_down(uint16_t status = 1000, chars_proxy reason = "") noexcept;
   };
 
 }  // namespace poseidon

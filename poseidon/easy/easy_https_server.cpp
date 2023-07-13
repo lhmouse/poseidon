@@ -103,7 +103,7 @@ struct Final_Fiber final : Abstract_Fiber
             }
 
             if(event.close_now)
-              session->ssl_close();
+              session->ssl_shut_down();
           }
           catch(exception& stdex) {
             // Shut the connection down with a message.
@@ -113,7 +113,7 @@ struct Final_Fiber final : Abstract_Fiber
             resp.headers.emplace_back(sref("Connection"), sref("close"));
             session->https_response(::std::move(resp), "");
 
-            session->ssl_close();
+            session->ssl_shut_down();
 
             POSEIDON_LOG_ERROR((
                 "Unhandled exception thrown from easy HTTP client: $1"),

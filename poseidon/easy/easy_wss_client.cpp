@@ -78,7 +78,7 @@ struct Final_Fiber final : Abstract_Fiber
           }
           catch(exception& stdex) {
             // Shut the connection down with a message.
-            session->wss_close(1015);
+            session->wss_shut_down(1015);
 
             POSEIDON_LOG_ERROR((
                 "Unhandled exception thrown from easy SSL client: $1"),
@@ -236,12 +236,12 @@ wss_ping(chars_proxy data)
 
 bool
 Easy_WSS_Client::
-wss_close(uint16_t status, chars_proxy reason) noexcept
+wss_shut_down(uint16_t status, chars_proxy reason) noexcept
   {
     if(!this->m_session)
       return false;
 
-    return this->m_session->wss_close(status, reason);
+    return this->m_session->wss_shut_down(status, reason);
   }
 
 }  // namespace poseidon

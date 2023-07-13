@@ -97,7 +97,7 @@ class TCP_Socket
     // are ignored.
     // This function is thread-safe.
     bool
-    tcp_close() noexcept;
+    tcp_shut_down() noexcept;
   };
 
 }  // namespace poseidon

@@ -224,12 +224,12 @@ ssl_send(chars_proxy data)
 
 bool
 Easy_SSL_Client::
-ssl_close() noexcept
+ssl_shut_down() noexcept
   {
     if(!this->m_socket)
       return false;
 
-    return this->m_socket->ssl_close();
+    return this->m_socket->ssl_shut_down();
   }
 
 }  // namespace poseidon

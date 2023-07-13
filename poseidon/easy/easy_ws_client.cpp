@@ -78,7 +78,7 @@ struct Final_Fiber final : Abstract_Fiber
           }
           catch(exception& stdex) {
             // Shut the connection down with a message.
-            session->ws_close(1015);
+            session->ws_shut_down(1015);
 
             POSEIDON_LOG_ERROR((
                 "Unhandled exception thrown from easy TCP client: $1"),
@@ -234,12 +234,12 @@ ws_ping(chars_proxy data)
 
 bool
 Easy_WS_Client::
-ws_close(uint16_t status, chars_proxy reason) noexcept
+ws_shut_down(uint16_t status, chars_proxy reason) noexcept
   {
     if(!this->m_session)
       return false;
 
-    return this->m_session->ws_close(status, reason);
+    return this->m_session->ws_shut_down(status, reason);
   }
 
 }  // namespace poseidon

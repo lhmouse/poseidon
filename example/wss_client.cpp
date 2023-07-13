@@ -188,53 +188,10 @@ timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/, stea
         break;
       }
 
-      case 6: {
-        // HACKS; DO NOT PLAY WITH THESE AT HOME.
-        WebSocket_Frame_Header header;
-        header.mask = 1;
-        header.mask_key_u32 = 0x87654321;
-
-        // fragment 1
-        header.fin = 0;
-        header.opcode = 1;
-        char data1[] = "should never";
-        header.payload_len = sizeof(data1) - 1;
-
-        tinyfmt_ln fmt;
-        header.encode(fmt);
-        header.mask_payload(data1, sizeof(data1) - 1);
-        fmt.putn(data1, sizeof(data1) - 1);
-        my_client.session_opt()->ssl_send(fmt);
-
-        // nested CLOSE
-        header.fin = 1;
-        header.opcode = 8;
-        char reason1[] = "\x03\xE8""CLOSE";
-        header.payload_len = sizeof(reason1) - 1;
-
-        fmt.clear_buffer();
-        header.encode(fmt);
-        header.mask_payload(reason1, sizeof(reason1) - 1);
-        fmt.putn(reason1, sizeof(reason1) - 1);
-        my_client.session_opt()->ssl_send(fmt);
-
-        // fragment 2
-        header.fin = 1;
-        header.opcode = 0;
-        char data2[] = " see this";
-        header.payload_len = sizeof(data2) - 1;
-
-        fmt.clear_buffer();
-        header.encode(fmt);
-        header.mask_payload(data2, sizeof(data2) - 1);
-        fmt.putn(data2, sizeof(data2) - 1);
-        my_client.session_opt()->ssl_send(fmt);
-        break;
-      }
-
       default:
         POSEIDON_LOG_INFO(("example WSS client shutting down"));
-        my_client.wss_close(3456, "bye");
+        my_client.wss_shut_down(3456, "bye");
+        my_client.close();
         break;
     }
   }
