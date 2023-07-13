@@ -15,7 +15,7 @@ namespace poseidon {
   class OBJ##_ptr  \
     {  \
     private:  \
-      OBJ* m_ptr;  \
+      ::OBJ* m_ptr;  \
   \
     public:  \
       constexpr  \
@@ -24,7 +24,7 @@ namespace poseidon {
         { }  \
   \
       explicit constexpr  \
-      OBJ##_ptr(OBJ* ptr) noexcept  \
+      OBJ##_ptr(::OBJ* ptr) noexcept  \
         : m_ptr(ptr)  \
         { }  \
   \
@@ -73,7 +73,7 @@ namespace poseidon {
       ~OBJ##_ptr()  \
         {  \
           if(this->m_ptr) OBJ##_free(this->m_ptr);  \
-          this->m_ptr = (OBJ*) -0xDEADBEEF;  \
+          this->m_ptr = (::OBJ*) -0xDEADBEEF;  \
         }  \
   \
     public:  \
@@ -82,16 +82,16 @@ namespace poseidon {
         { return this->m_ptr != nullptr;  }  \
   \
       constexpr operator  \
-      OBJ*() const noexcept  \
+      ::OBJ*() const noexcept  \
         { return this->m_ptr;  }  \
   \
       constexpr  \
-      OBJ*  \
+      ::OBJ*  \
       get() const noexcept  \
         { return this->m_ptr;  }  \
   \
       OBJ##_ptr&  \
-      reset(OBJ* ptr = nullptr) noexcept  \
+      reset(::OBJ* ptr = nullptr) noexcept  \
         {  \
           ROCKET_ASSERT(!ptr || (this->m_ptr != ptr));  \
           if(this->m_ptr) OBJ##_free(this->m_ptr);  \
@@ -99,10 +99,10 @@ namespace poseidon {
           return *this;  \
         }  \
   \
-      OBJ*  \
+      ::OBJ*  \
       release() noexcept  \
         {  \
-          OBJ* ptr = this->m_ptr;  \
+          ::OBJ* ptr = this->m_ptr;  \
           this->m_ptr = nullptr;  \
           return ptr;  \
         }  \
