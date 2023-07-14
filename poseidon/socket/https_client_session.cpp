@@ -93,6 +93,9 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
                 ::std::move(this->m_resp_parser->mut_payload()),
                 this->m_resp_parser->should_close_after_payload());
 
+        // For WebSocket and HTTP 2.0, this indiciates the server has switched to
+        // another protocol. CONNECT responses are handled differently after the
+        // headers; see above.
         if(status == HTTP_STATUS_SWITCHING_PROTOCOLS)
           this->m_upgrade_ack.store(true);
       }
