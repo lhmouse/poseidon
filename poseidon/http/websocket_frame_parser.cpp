@@ -6,6 +6,8 @@
 #include "http_request_headers.hpp"
 #include "http_response_headers.hpp"
 #include "http_header_parser.hpp"
+#include "../base/config_file.hpp"
+#include "../static/main_config.hpp"
 #include "../utils.hpp"
 #define OPENSSL_API_COMPAT  0x10100000L
 #include <openssl/md5.h>
@@ -59,6 +61,29 @@ struct PerMessage_Deflate
     use_permessage_deflate(HTTP_Header_Parser& hparser)
       {
         if(this->enabled)
+          return;
+
+        // Check whether compression has been disabled globally.
+        const auto conf_file = main_config.copy();
+        int64_t default_compression_level = 6;
+
+        auto value = conf_file.query("general", "default_compression_level");
+        if(value.is_integer())
+          default_compression_level = value.as_integer();
+        else if(!value.is_null())
+          POSEIDON_LOG_WARN((
+              "Ignoring `general.default_compression_level`: expecting an `integer`, got `$1`",
+              "[in configuration file '$2']"),
+              value, conf_file.path());
+
+        if((default_compression_level < 0) || (default_compression_level > 9))
+          POSEIDON_THROW((
+              "`general.default_compression_level` value `$1` out of range",
+              "[in configuration file '$2']"),
+              default_compression_level, conf_file.path());
+
+        // If compression has been disabled, do not accept PMCE.
+        if(default_compression_level == 0)
           return;
 
         // Set default parameters, so in case of errors, we return immediately.
