@@ -18,11 +18,11 @@ namespace {
 
 struct Sec_WebSocket
   {
-    unsigned char key[16] = "";  // MD5_DIGEST_LENGTH
+    unsigned char key[16];  // MD5_DIGEST_LENGTH
     char key_str[25] = "";  // ceil(sizeof(key) / 3) * 4 + 1
     char key_padding[3];  // 44
 
-    unsigned char accept[20] = "";  // SHA_DIGEST_LENGTH
+    unsigned char accept[20];  // SHA_DIGEST_LENGTH
     char accept_str[29] = "";  // ceil(sizeof(accept) / 3) * 4 + 1
     char accept_padding[3];  // 52
 
@@ -51,16 +51,17 @@ struct Sec_WebSocket
 
 struct PerMessage_Deflate
   {
-    bool enabled = false;
+    uint8_t compression_level = 0;
     bool server_no_context_takeover = false;
     bool client_no_context_takeover = false;
+    char reserved;
     int server_max_window_bits = 15;
     int client_max_window_bits = 15;
 
     void
     use_permessage_deflate(HTTP_Header_Parser& hparser)
       {
-        if(this->enabled)
+        if(this->compression_level != 0)
           return;
 
         // Check whether compression has been disabled globally.
@@ -87,10 +88,10 @@ struct PerMessage_Deflate
           return;
 
         // Set default parameters, so in case of errors, we return immediately.
-        this->server_max_window_bits = 15;
-        this->client_max_window_bits = 15;
         this->server_no_context_takeover = false;
         this->client_no_context_takeover = false;
+        this->server_max_window_bits = 15;
+        this->client_max_window_bits = 15;
 
         // PMCE is accepted only if all parameters are valid and accepted.
         // Reference: https://datatracker.ietf.org/doc/html/rfc7692
@@ -147,8 +148,7 @@ struct PerMessage_Deflate
             return;
 
         // If all parameters have been acepted, accept this PMCE specification.
-        // The caller shall initialize a deflator and inflator accordingly.
-        this->enabled = true;
+        this->compression_level = (uint8_t) default_compression_level;
       }
   };
 
@@ -281,7 +281,7 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
     sec_ws.make_accept_str();
     resp.headers.emplace_back(sref("Sec-WebSocket-Accept"), cow_string(sec_ws.accept_str, 28));
 
-    if(pmce.enabled) {
+    if(pmce.compression_level != 0) {
       // Append PMCE response parameters. If `client_no_context_takeover` and
       // `client_max_window_bits` are specified, they are echoed back to the
       // client. (Maybe this is not necessary, but we do it anyway.)
@@ -304,6 +304,7 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
 
       // Accept PMCE parameters.
       this->m_pmce_reserved = 0;
+      this->m_pmce_send_compression_level_m2 = clamp(pmce.compression_level - 2, 1, 7) & 7;
       this->m_pmce_send_no_context_takeover = pmce.server_no_context_takeover;
       this->m_pmce_send_max_window_bits = pmce.server_max_window_bits & 15;
       this->m_pmce_recv_max_window_bits = pmce.client_max_window_bits & 15;
@@ -391,9 +392,10 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
     if(::memcmp(sec_ws.accept_str, sec_ws_accept_resp, 28) != 0)
       return;
 
-    if(pmce.enabled) {
+    if(pmce.compression_level != 0) {
       // Accept PMCE parameters.
       this->m_pmce_reserved = 0;
+      this->m_pmce_send_compression_level_m2 = clamp(pmce.compression_level - 2, 1, 7) & 7;
       this->m_pmce_send_no_context_takeover = pmce.client_no_context_takeover;
       this->m_pmce_send_max_window_bits = pmce.client_max_window_bits & 15;
       this->m_pmce_recv_max_window_bits = pmce.server_max_window_bits & 15;

@@ -33,7 +33,8 @@ class WebSocket_Frame_Parser
     const char* m_error_desc;
 
     WSHS_State m_wshs : 2;
-    uint8_t m_pmce_reserved : 5;
+    uint8_t m_pmce_reserved : 2;
+    uint8_t m_pmce_send_compression_level_m2 : 3;
     uint8_t m_pmce_send_no_context_takeover : 1;
     uint8_t m_pmce_send_max_window_bits : 4;
     uint8_t m_pmce_recv_max_window_bits : 4;
@@ -74,6 +75,10 @@ class WebSocket_Frame_Parser
 
     // Get parameters of the per-message compression extension (PMCE). If PMCE is
     // not active, these functions return zero.
+    int
+    pmce_send_compression_level() const noexcept
+      { return this->m_pmce_send_compression_level_m2 + 2;  }
+
     bool
     pmce_send_no_context_takeover() const noexcept
       { return this->m_pmce_send_no_context_takeover;  }
@@ -98,6 +103,7 @@ class WebSocket_Frame_Parser
 
         this->m_wshs = wshs_pending;
         this->m_pmce_reserved = 0;
+        this->m_pmce_send_compression_level_m2 = 0;
         this->m_pmce_send_no_context_takeover = 0;
         this->m_pmce_send_max_window_bits = 0;
         this->m_pmce_recv_max_window_bits = 0;
