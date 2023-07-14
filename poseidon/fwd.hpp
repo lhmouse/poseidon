@@ -183,13 +183,14 @@ enum zlib_Format : uint8_t
 struct zlib_Options
   {
     zlib_Format format;
-    int8_t windowBits = 15;  // `9` (smallest) to `15` (largest)
-    int8_t level = -1;  // `-1` (default), or `0` (none) to `9` (best)
-    char reserved = 0;
+    int8_t level;  // `-1` (default), or `0` (none) to `9` (best)
+    int8_t windowBits;  // `9` (smallest) to `15` (largest)
+    char reserved_3;
 
     constexpr
-    zlib_Options(zlib_Format xfmt) noexcept
-      : format(xfmt)
+    zlib_Options(zlib_Format xfmt, int8_t xlevel = -1, int8_t xwbits = 15) noexcept
+      : format(xfmt), level(xlevel), windowBits(xwbits),
+        reserved_3()
       { }
   };
 
