@@ -46,7 +46,7 @@ class Fiber_Scheduler
     // If this function fails, an exception is thrown, and there is no effect.
     // This function is thread-safe.
     void
-    reload(const Config_File& file);
+    reload(const Config_File& conf_file);
 
     // Schedules fibers.
     // This function should be called by the fiber thread repeatedly.

@@ -122,14 +122,14 @@ do_on_http_request_payload_stream(linear_buffer& data)
     const auto conf_file = main_config.copy();
     int64_t max_request_content_length = 1048576;
 
-    auto value = conf_file.query("network", "http", "max_request_content_length");
-    if(value.is_integer())
-      max_request_content_length = value.as_integer();
-    else if(!value.is_null())
+    auto conf_value = conf_file.query("network", "http", "max_request_content_length");
+    if(conf_value.is_integer())
+      max_request_content_length = conf_value.as_integer();
+    else if(!conf_value.is_null())
       POSEIDON_LOG_WARN((
           "Ignoring `network.http.max_request_content_length`: expecting an `integer`, got `$1`",
           "[in configuration file '$2']"),
-          value, conf_file.path());
+          conf_value, conf_file.path());
 
     if(max_request_content_length < 0)
       POSEIDON_THROW((

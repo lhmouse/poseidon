@@ -196,14 +196,14 @@ do_on_wss_text_stream(linear_buffer& data)
     const auto conf_file = main_config.copy();
     int64_t max_websocket_text_message_length = 1048576;
 
-    auto value = conf_file.query("network", "http", "max_websocket_text_message_length");
-    if(value.is_integer())
-      max_websocket_text_message_length = value.as_integer();
-    else if(!value.is_null())
+    auto conf_value = conf_file.query("network", "http", "max_websocket_text_message_length");
+    if(conf_value.is_integer())
+      max_websocket_text_message_length = conf_value.as_integer();
+    else if(!conf_value.is_null())
       POSEIDON_LOG_WARN((
           "Ignoring `network.http.max_websocket_text_message_length`: expecting an `integer`, got `$1`",
           "[in configuration file '$2']"),
-          value, conf_file.path());
+          conf_value, conf_file.path());
 
     if(max_websocket_text_message_length < 0)
       POSEIDON_THROW((
@@ -227,14 +227,14 @@ do_on_wss_binary_stream(linear_buffer& data)
     const auto conf_file = main_config.copy();
     int64_t max_websocket_binary_message_length = 1048576;
 
-    auto value = conf_file.query("network", "http", "max_websocket_binary_message_length");
-    if(value.is_integer())
-      max_websocket_binary_message_length = value.as_integer();
-    else if(!value.is_null())
+    auto conf_value = conf_file.query("network", "http", "max_websocket_binary_message_length");
+    if(conf_value.is_integer())
+      max_websocket_binary_message_length = conf_value.as_integer();
+    else if(!conf_value.is_null())
       POSEIDON_LOG_WARN((
           "Ignoring `network.http.max_websocket_binary_message_length`: expecting an `integer`, got `$1`",
           "[in configuration file '$2']"),
-          value, conf_file.path());
+          conf_value, conf_file.path());
 
     if(max_websocket_binary_message_length < 0)
       POSEIDON_THROW((

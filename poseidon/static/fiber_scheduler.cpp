@@ -217,7 +217,7 @@ do_yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override)
 
 void
 Fiber_Scheduler::
-reload(const Config_File& file)
+reload(const Config_File& conf_file)
   {
     // Parse new configuration. Default ones are defined here.
     int64_t stack_vm_size = 0;
@@ -225,14 +225,14 @@ reload(const Config_File& file)
     int64_t fail_timeout = 300;
 
     // Read the stack size from configuration.
-    auto value = file.query("fiber", "stack_vm_size");
-    if(value.is_integer())
-      stack_vm_size = value.as_integer();
-    else if(!value.is_null())
+    auto conf_value = conf_file.query("fiber", "stack_vm_size");
+    if(conf_value.is_integer())
+      stack_vm_size = conf_value.as_integer();
+    else if(!conf_value.is_null())
       POSEIDON_LOG_WARN((
           "Ignoring `fiber.stack_vm_size`: expecting an `integer`, got `$1`",
           "[in configuration file '$2']"),
-          value, file.path());
+          conf_value, conf_file.path());
 
     if(stack_vm_size == 0) {
       // If no value or zero is specified, use the system's stack size.
@@ -250,44 +250,44 @@ reload(const Config_File& file)
       POSEIDON_THROW((
           "`fiber.stack_vm_size` value `$1` out of range",
           "[in configuration file '$2']"),
-          stack_vm_size, file.path());
+          stack_vm_size, conf_file.path());
 
     if(stack_vm_size & 0xFFFF)
       POSEIDON_THROW((
           "`fiber.stack_vm_size` value `$1` not a multiple of 64KiB",
           "[in configuration file '$2']"),
-          stack_vm_size, file.path());
+          stack_vm_size, conf_file.path());
 
     // Read scheduler timeouts inseconds.
-    value = file.query("fiber", "warn_timeout");
-    if(value.is_integer())
-      warn_timeout = value.as_integer();
-    else if(!value.is_null())
+    conf_value = conf_file.query("fiber", "warn_timeout");
+    if(conf_value.is_integer())
+      warn_timeout = conf_value.as_integer();
+    else if(!conf_value.is_null())
       POSEIDON_LOG_WARN((
           "Ignoring `fiber.warn_timeout`: expecting an `integer`, got `$1`",
           "[in configuration file '$2']"),
-          value, file.path());
+          conf_value, conf_file.path());
 
     if((warn_timeout < 0) || (warn_timeout > 86400))
       POSEIDON_THROW((
           "`fiber.warn_timeout` value `$1` out of range",
           "[in configuration file '$2']"),
-          warn_timeout, file.path());
+          warn_timeout, conf_file.path());
 
-    value = file.query("fiber", "fail_timeout");
-    if(value.is_integer())
-      fail_timeout = value.as_integer();
-    else if(!value.is_null())
+    conf_value = conf_file.query("fiber", "fail_timeout");
+    if(conf_value.is_integer())
+      fail_timeout = conf_value.as_integer();
+    else if(!conf_value.is_null())
       POSEIDON_LOG_WARN((
           "Ignoring `fiber.fail_timeout`: expecting an `integer`, got `$1`",
           "[in configuration file '$2']"),
-          value, file.path());
+          conf_value, conf_file.path());
 
     if((fail_timeout < 0) || (fail_timeout > 86400))
       POSEIDON_THROW((
           "`fiber.fail_timeout` value `$1` out of range",
           "[in configuration file '$2']"),
-          fail_timeout, file.path());
+          fail_timeout, conf_file.path());
 
     // Set up new data.
     plain_mutex::unique_lock lock(this->m_conf_mutex);

@@ -66,7 +66,7 @@ constexpr char s_escapes[][5] =
   };
 
 void
-do_load_level_config(Level_Config& lconf, const Config_File& file, const char* name)
+do_load_level_config(Level_Config& lconf, const Config_File& conf_file, const char* name)
   {
     // Set the tag. Three characters shall be reserved for the pair of brackets
     // and the null terminator.
@@ -76,25 +76,25 @@ do_load_level_config(Level_Config& lconf, const Config_File& file, const char* n
     xstrrpcpy(tag_wp, "]");
 
     // Read the color code sequence of the level.
-    auto value = file.query("logger", name, "color");
-    if(value.is_string())
-      lconf.color = value.as_string();
-    else if(!value.is_null())
+    auto conf_value = conf_file.query("logger", name, "color");
+    if(conf_value.is_string())
+      lconf.color = conf_value.as_string();
+    else if(!conf_value.is_null())
       POSEIDON_LOG_WARN((
           "Ignoring `logger.$1.color`: expecting a `string`, got `$2`",
           "[in configuration file '$3']"),
-          name, value, file.path());
+          name, conf_value, conf_file.path());
 
     // Read the output standard stream.
     cow_string str;
-    value = file.query("logger", name, "stdio");
-    if(value.is_string())
-      str = value.as_string();
-    else if(!value.is_null())
+    conf_value = conf_file.query("logger", name, "stdio");
+    if(conf_value.is_string())
+      str = conf_value.as_string();
+    else if(!conf_value.is_null())
       POSEIDON_LOG_WARN((
           "Ignoring `logger.$1.stdio`: expecting a `string`, got `$2`",
           "[in configuration file '$3']"),
-          name, value, file.path());
+          name, conf_value, conf_file.path());
 
     if(str == "")
       lconf.stdio = -1;
@@ -106,27 +106,27 @@ do_load_level_config(Level_Config& lconf, const Config_File& file, const char* n
       POSEIDON_LOG_WARN((
           "Ignoring `logger.$1.stdio`: invalid standard stream name `$2`",
           "[in configuration file '$3']"),
-          name, str, file.path());
+          name, str, conf_file.path());
 
     // Read the output file path.
-    value = file.query("logger", name, "file");
-    if(value.is_string())
-      lconf.file = value.as_string();
-    else if(!value.is_null())
+    conf_value = conf_file.query("logger", name, "file");
+    if(conf_value.is_string())
+      lconf.file = conf_value.as_string();
+    else if(!conf_value.is_null())
       POSEIDON_LOG_WARN((
           "Ignoring `logger.$1.file`: expecting a `string`, got `$2`",
           "[in configuration file '$3']"),
-          name, value, file.path());
+          name, conf_value, conf_file.path());
 
     // Read verbosity settings.
-    value = file.query("logger", name, "trivial");
-    if(value.is_boolean())
-      lconf.trivial = value.as_boolean();
-    else if(!value.is_null())
+    conf_value = conf_file.query("logger", name, "trivial");
+    if(conf_value.is_boolean())
+      lconf.trivial = conf_value.as_boolean();
+    else if(!conf_value.is_null())
       POSEIDON_LOG_WARN((
           "Ignoring `logger.$1.trivial`: expecting a `boolean`, got `$2`",
           "[in configuration file '$3']"),
-          name, value, file.path());
+          name, conf_value, conf_file.path());
   }
 
 inline
@@ -284,18 +284,18 @@ Async_Logger::
 
 void
 Async_Logger::
-reload(const Config_File& file)
+reload(const Config_File& conf_file)
   {
     // Parse new configuration.
     cow_vector<X_Level_Config> levels(6);
     uint32_t level_bits = 0;
 
-    do_load_level_config(levels.mut(log_level_trace), file, "trace");
-    do_load_level_config(levels.mut(log_level_debug), file, "debug");
-    do_load_level_config(levels.mut(log_level_info ), file, "info" );
-    do_load_level_config(levels.mut(log_level_warn ), file, "warn" );
-    do_load_level_config(levels.mut(log_level_error), file, "error");
-    do_load_level_config(levels.mut(log_level_fatal), file, "fatal");
+    do_load_level_config(levels.mut(log_level_trace), conf_file, "trace");
+    do_load_level_config(levels.mut(log_level_debug), conf_file, "debug");
+    do_load_level_config(levels.mut(log_level_info ), conf_file, "info" );
+    do_load_level_config(levels.mut(log_level_warn ), conf_file, "warn" );
+    do_load_level_config(levels.mut(log_level_error), conf_file, "error");
+    do_load_level_config(levels.mut(log_level_fatal), conf_file, "fatal");
 
     for(size_t k = 0;  k != levels.size();  ++k)
       if((levels[k].stdio != -1) || (levels[k].file != ""))

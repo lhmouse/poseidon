@@ -67,14 +67,14 @@ struct PerMessage_Deflate
         const auto conf_file = main_config.copy();
         int64_t default_compression_level = 6;
 
-        auto value = conf_file.query("general", "default_compression_level");
-        if(value.is_integer())
-          default_compression_level = value.as_integer();
-        else if(!value.is_null())
+        auto conf_value = conf_file.query("general", "default_compression_level");
+        if(conf_value.is_integer())
+          default_compression_level = conf_value.as_integer();
+        else if(!conf_value.is_null())
           POSEIDON_LOG_WARN((
               "Ignoring `general.default_compression_level`: expecting an `integer`, got `$1`",
               "[in configuration file '$2']"),
-              value, conf_file.path());
+              conf_value, conf_file.path());
 
         if((default_compression_level < 0) || (default_compression_level > 9))
           POSEIDON_THROW((

@@ -140,7 +140,7 @@ default_client_ssl_ctx() const
 
 void
 Network_Driver::
-reload(const Config_File& file)
+reload(const Config_File& conf_file)
   {
     // Parse new configuration. Default ones are defined here.
     int64_t event_buffer_size = 1024;
@@ -149,68 +149,68 @@ reload(const Config_File& file)
     SSL_CTX_ptr server_ssl_ctx, client_ssl_ctx;
 
     // Read the event buffer size from configuration.
-    auto value = file.query("network", "poll", "event_buffer_size");
-    if(value.is_integer())
-      event_buffer_size = value.as_integer();
-    else if(!value.is_null())
+    auto conf_value = conf_file.query("network", "poll", "event_buffer_size");
+    if(conf_value.is_integer())
+      event_buffer_size = conf_value.as_integer();
+    else if(!conf_value.is_null())
       POSEIDON_LOG_WARN((
           "Ignoring `network.poll.event_buffer_size`: expecting an `integer`, got `$1`",
           "[in configuration file '$2']"),
-          value, file.path());
+          conf_value, conf_file.path());
 
     if((event_buffer_size < 0x10) || (event_buffer_size > 0x7FFFF0))
       POSEIDON_THROW((
           "`network.poll.event_buffer_size` value `$1` out of range",
           "[in configuration file '$2']"),
-          event_buffer_size, file.path());
+          event_buffer_size, conf_file.path());
 
     // Read the throttle size from configuration.
-    value = file.query("network", "poll", "throttle_size");
-    if(value.is_integer())
-      throttle_size = value.as_integer();
-    else if(!value.is_null())
+    conf_value = conf_file.query("network", "poll", "throttle_size");
+    if(conf_value.is_integer())
+      throttle_size = conf_value.as_integer();
+    else if(!conf_value.is_null())
       POSEIDON_LOG_WARN((
           "Ignoring `network.poll.throttle_size`: expecting an `integer`, got `$1`",
           "[in configuration file '$2']"),
-          value, file.path());
+          conf_value, conf_file.path());
 
     if((throttle_size < 0x100) || (throttle_size > 0x7FFFFFF0))
       POSEIDON_THROW((
           "`network.poll.throttle_size` value `$1` out of range",
           "[in configuration file '$2']"),
-          throttle_size, file.path());
+          throttle_size, conf_file.path());
 
     // Get the path to the default server certificate and private key.
-    value = file.query("network", "ssl", "default_certificate");
-    if(value.is_string())
-      default_certificate = value.as_string();
-    else if(!value.is_null())
+    conf_value = conf_file.query("network", "ssl", "default_certificate");
+    if(conf_value.is_string())
+      default_certificate = conf_value.as_string();
+    else if(!conf_value.is_null())
       POSEIDON_LOG_WARN((
           "Ignoring `network.ssl.default_certificate`: expecting a `string`, got `$1`",
           "[in configuration file '$2']"),
-          value, file.path());
+          conf_value, conf_file.path());
 
-    value = file.query("network", "ssl", "default_private_key");
-    if(value.is_string())
-      default_private_key = value.as_string();
-    else if(!value.is_null())
+    conf_value = conf_file.query("network", "ssl", "default_private_key");
+    if(conf_value.is_string())
+      default_private_key = conf_value.as_string();
+    else if(!conf_value.is_null())
       POSEIDON_LOG_WARN((
           "Ignoring `network.ssl.default_private_key`: expecting a `string`, got `$1`",
           "[in configuration file '$2']"),
-          value, file.path());
+          conf_value, conf_file.path());
 
     // Check for configuration errors.
     if(!default_certificate.empty() && default_private_key.empty())
       POSEIDON_THROW((
           "`network.ssl.default_private_key` missing",
           "[in configuration file '$1']"),
-          file.path());
+          conf_file.path());
 
     if(default_certificate.empty() && !default_private_key.empty())
       POSEIDON_THROW((
           "`network.ssl.default_private_key` missing",
           "[in configuration file '$1']"),
-          file.path());
+          conf_file.path());
 
     if(!default_certificate.empty() && !default_private_key.empty()) {
       // Create the server context.
@@ -229,21 +229,21 @@ reload(const Config_File& file)
             "Could not load default server SSL certificate file '$3'",
             "[`SSL_CTX_use_certificate_chain_file()` failed: $1]",
             "[in configuration file '$2']"),
-            ::ERR_reason_error_string(::ERR_peek_error()), file.path(), default_certificate);
+            ::ERR_reason_error_string(::ERR_peek_error()), conf_file.path(), default_certificate);
 
       if(!::SSL_CTX_use_PrivateKey_file(server_ssl_ctx, default_private_key.safe_c_str(), SSL_FILETYPE_PEM))
         POSEIDON_THROW((
             "Could not load default server SSL private key file '$3'",
             "[`SSL_CTX_use_PrivateKey_file()` failed: $1]",
             "[in configuration file '$2']"),
-            ::ERR_reason_error_string(::ERR_peek_error()), file.path(), default_private_key);
+            ::ERR_reason_error_string(::ERR_peek_error()), conf_file.path(), default_private_key);
 
       if(!::SSL_CTX_check_private_key(server_ssl_ctx))
         POSEIDON_THROW((
             "Error validating default server SSL certificate '$3' and SSL private key '$4'",
             "[`SSL_CTX_check_private_key()` failed: $1]",
             "[in configuration file '$2']"),
-            ::ERR_reason_error_string(::ERR_peek_error()), file.path(), default_certificate, default_private_key);
+            ::ERR_reason_error_string(::ERR_peek_error()), conf_file.path(), default_certificate, default_private_key);
 
       // The session context ID is composed from the DNS name of the running
       // machine. This determines which SSL sessions can be reused to improve
@@ -256,7 +256,7 @@ reload(const Config_File& file)
             "Could not set SSL session ID context",
             "[`SSL_set_session_id_context()` failed: $1]",
             "[in configuration file '$2']"),
-            ::ERR_reason_error_string(::ERR_peek_error()), file.path());
+            ::ERR_reason_error_string(::ERR_peek_error()), conf_file.path());
 
       ::SSL_CTX_set_verify(server_ssl_ctx, SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE, nullptr);
     }
@@ -272,14 +272,14 @@ reload(const Config_File& file)
     ::SSL_CTX_set_mode(client_ssl_ctx, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
 
     // Get the path to trusted CA certificates.
-    value = file.query("network", "ssl", "trusted_ca_path");
-    if(value.is_string())
-      trusted_ca_path = value.as_string();
-    else if(!value.is_null())
+    conf_value = conf_file.query("network", "ssl", "trusted_ca_path");
+    if(conf_value.is_string())
+      trusted_ca_path = conf_value.as_string();
+    else if(!conf_value.is_null())
       POSEIDON_LOG_WARN((
           "Ignoring `network.ssl.trusted_ca_path`: expecting a `string`, got `$1`",
           "[in configuration file '$2']"),
-          value, file.path());
+          conf_value, conf_file.path());
 
     if(!trusted_ca_path.empty()) {
       // Load trusted CA certificates from the given directory.
@@ -288,7 +288,7 @@ reload(const Config_File& file)
             "Could not set path to trusted CA certificates",
             "[`SSL_CTX_load_verify_locations()` failed: $1]",
             "[in configuration file '$2']"),
-            ::ERR_reason_error_string(::ERR_peek_error()), file.path());
+            ::ERR_reason_error_string(::ERR_peek_error()), conf_file.path());
 
       ::SSL_CTX_set_verify(client_ssl_ctx, SSL_VERIFY_PEER, nullptr);
     }
@@ -298,7 +298,7 @@ reload(const Config_File& file)
           "CA certificate validation has been disabled. This configuration is not "
           "recommended for production use. Set `network.ssl.trusted_ca_path` in '$1' "
           "to enable it."),
-          file.path());
+          conf_file.path());
 
       ::SSL_CTX_set_verify(client_ssl_ctx, SSL_VERIFY_NONE, nullptr);
     }

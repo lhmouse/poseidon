@@ -405,14 +405,14 @@ do_check_euid()
     bool permit_root_startup = false;
     const auto conf = main_config.copy();
 
-    auto value = conf.query("general", "permit_root_startup");
-    if(value.is_boolean())
-      permit_root_startup = value.as_boolean();
-    else if(!value.is_null())
+    auto conf_value = conf.query("general", "permit_root_startup");
+    if(conf_value.is_boolean())
+      permit_root_startup = conf_value.as_boolean();
+    else if(!conf_value.is_null())
       POSEIDON_LOG_WARN((
           "Ignoring `general.permit_root_startup`: expecting a `boolean`, got `$1`",
           "[in configuration file '$2']"),
-          value, conf.path());
+          conf_value, conf.path());
 
     if(!permit_root_startup && (::geteuid() == 0))
       do_exit_printf(exit_invalid_argument,
@@ -452,14 +452,14 @@ do_write_pid_file()
     cow_string pid_file_path;
     const auto conf = main_config.copy();
 
-    auto value = conf.query("general", "pid_file_path");
-    if(value.is_string())
-      pid_file_path = value.as_string();
-    else if(!value.is_null())
+    auto conf_value = conf.query("general", "pid_file_path");
+    if(conf_value.is_string())
+      pid_file_path = conf_value.as_string();
+    else if(!conf_value.is_null())
       POSEIDON_LOG_WARN((
           "Ignoring `general.permit_root_startup`: expecting a `string`, got `$1`",
           "[in configuration file '$2']"),
-          value, conf.path());
+          conf_value, conf.path());
 
     if(pid_file_path.empty())
       return;
@@ -511,14 +511,14 @@ do_load_addons()
     size_t count = 0;
     const auto conf = main_config.copy();
 
-    auto value = conf.query("addons");
-    if(value.is_array())
-      addons = value.as_array();
-    else if(!value.is_null())
+    auto conf_value = conf.query("addons");
+    if(conf_value.is_array())
+      addons = conf_value.as_array();
+    else if(!conf_value.is_null())
       POSEIDON_LOG_WARN((
           "Ignoring `addons`: expecting an `array`, got `$1`",
           "[in configuration file '$2']"),
-          value, conf.path());
+          conf_value, conf.path());
 
     for(const auto& addon : addons) {
       cow_string path;
