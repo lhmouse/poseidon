@@ -185,11 +185,11 @@ struct zlib_Options
   {
     zlib_Format format;
     int8_t level;  // `-1` (default), or `0` (none) to `9` (best)
-    int8_t windowBits;  // `9` (smallest) to `15` (largest)
-    char reserved_3;
+    uint8_t windowBits;  // `9` (smallest) to `15` (largest)
+    uint8_t reserved_3;
 
     constexpr
-    zlib_Options(zlib_Format xfmt, int8_t xlevel = -1, int8_t xwBits = 15) noexcept
+    zlib_Options(zlib_Format xfmt, int8_t xlevel = -1, uint8_t xwBits = 15) noexcept
       : format(xfmt), level(xlevel), windowBits(xwBits),
         reserved_3()
       { }
