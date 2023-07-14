@@ -11,7 +11,7 @@ extern "C" {
 void __sanitizer_start_switch_fiber(void**, const void*, size_t) __attribute__((__nothrow__));
 void __sanitizer_finish_switch_fiber(void*, const void**, size_t*) __attribute__((__nothrow__));
 }  // extern "C"
-#endif  // POSEIDON_ENABLE_ADDRESS_SANITIZER
+#endif
 namespace poseidon {
 
 ROCKET_ALWAYS_INLINE
