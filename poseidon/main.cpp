@@ -390,11 +390,11 @@ do_create_threads()
   {
     do_create_resident_thread(async_logger, "logger");
     do_create_resident_thread(timer_driver, "timer");
-    do_create_resident_thread(async_task_executor, "task0");
-    do_create_resident_thread(async_task_executor, "task1");
-    do_create_resident_thread(async_task_executor, "task2");
-    do_create_resident_thread(async_task_executor, "task3");
-    do_create_resident_thread(async_task_executor, "task4");
+    do_create_resident_thread(async_task_executor, "task_0");
+    do_create_resident_thread(async_task_executor, "task_1");
+    do_create_resident_thread(async_task_executor, "task_2");
+    do_create_resident_thread(async_task_executor, "task_3");
+    do_create_resident_thread(async_task_executor, "task_4");
     do_create_resident_thread(network_driver, "network");
   }
 
