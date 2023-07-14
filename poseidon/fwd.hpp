@@ -188,8 +188,8 @@ struct zlib_Options
     char reserved_3;
 
     constexpr
-    zlib_Options(zlib_Format xfmt, int8_t xlevel = -1, int8_t xwbits = 15) noexcept
-      : format(xfmt), level(xlevel), windowBits(xwbits),
+    zlib_Options(zlib_Format xfmt, int8_t xlevel = -1, int8_t xwBits = 15) noexcept
+      : format(xfmt), level(xlevel), windowBits(xwBits),
         reserved_3()
       { }
   };
