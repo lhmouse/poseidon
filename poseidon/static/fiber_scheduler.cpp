@@ -382,8 +382,9 @@ thread_loop()
     if((now < elem->fail_time) && (signal == 0) && futr && !futr->ready())
       return;
 
-    if(elem->sched_inner->uc_stack.ss_sp == nullptr) {
+    if(elem->fiber->m_state.load() == async_pending) {
       POSEIDON_LOG_DEBUG(("Initializing fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
+      ROCKET_ASSERT(elem->sched_inner->uc_stack.ss_sp == nullptr);
 
       elem->fiber->m_yield =
           +[](Fiber_Scheduler* xthis, shptrR<Abstract_Future> xfutr, milliseconds xtimeout)
