@@ -165,12 +165,11 @@ do_http_raw_response(const HTTP_Response_Headers& resp, chars_proxy data)
     fmt.putn(data.p, data.n);
     bool sent = this->tcp_send(fmt);
 
-    if(resp.status == HTTP_STATUS_SWITCHING_PROTOCOLS) {
-      // For server sessions, this indicates that the server has switched to
-      // another protocol. The client might have sent more data before this,
-      // which would violate RFC 6455 anyway, so we don't care.
+    // For server sessions, a status of 101 indicates that the server will switch
+    // to another protocol after this message. The client might have sent more
+    // data before this, which would violate RFC 6455 anyway, so we don't care.
+    if(resp.status == HTTP_STATUS_SWITCHING_PROTOCOLS)
       this->m_upgrade_ack.store(true);
-    }
 
     // The return value indicates whether no error has occurred. There is no
     // guarantee that data will eventually arrive, due to network flapping.
