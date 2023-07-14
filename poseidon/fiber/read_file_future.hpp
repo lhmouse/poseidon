@@ -14,24 +14,22 @@ class Read_File_Future
     public Abstract_Async_Task
   {
   public:
-    struct result_type
+  public:
+    // This is actually an input/output type.
+    struct Result
       {
-        int64_t file_size;  // number of bytes in total
+        cow_string path;
+        int64_t offset;
+        size_t limit;
+
         system_time accessed_on;  // time of last access
         system_time modified_on;  // time of last modification
-        int64_t offset;  // data offset
-        cow_string data;
+        int64_t file_size;  // number of bytes in total
+        linear_buffer data;
       };
 
   private:
-    // read-only
-    cow_string m_path;
-    int64_t m_offset;
-    size_t m_limit;
-
-    // result
-    result_type m_result;
-    exception_ptr m_except;
+    Result m_result;
 
   public:
     // Constructs a result future for reading a file. The file which `path` denotes
@@ -47,25 +45,20 @@ class Read_File_Future
     void
     do_abstract_task_on_execute() override;
 
-    // Sets the result.
-    virtual
-    void
-    do_on_future_ready(void* param) override;
-
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Read_File_Future);
 
-    // Gets the result.
-    const result_type&
+    const Result&
     result() const
       {
-        if(!this->ready())
-          ::rocket::sprintf_and_throw<::std::runtime_error>(
-              "Read_File_Future: File operation in progress");
+        this->check_ready();
+        return this->m_result;
+      }
 
-        if(this->m_except)
-          ::std::rethrow_exception(this->m_except);
-
+    Result&
+    mut_result()
+      {
+        this->check_ready();
         return this->m_result;
       }
   };

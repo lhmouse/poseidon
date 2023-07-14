@@ -179,7 +179,7 @@ do_yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override)
     if(futr_opt) {
       // Associate the future. If the future is already in the READY state,
       // don't block at all.
-      lock.lock(futr_opt->m_init_mutex);
+      lock.lock(futr_opt->m_waiters_mutex);
       if(futr_opt->ready())
         return;
 

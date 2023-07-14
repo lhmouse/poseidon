@@ -16,32 +16,44 @@ Abstract_Future::
   {
   }
 
-bool
+void
 Abstract_Future::
-do_try_set_ready(void* param)
+do_set_ready(exception_ptr&& except_opt) noexcept
   {
-    plain_mutex::unique_lock lock(this->m_init_mutex);
+    this->m_once.call(
+      [&] {
+        // Set the exception pointer to indicate success or failure.
+        this->m_except_opt = ::std::move(except_opt);
 
-    if(this->m_ready.load())
-      return false;
+        // Notify all waiters.
+        steady_time now = steady_clock::now();
+        plain_mutex::unique_lock lock(this->m_waiters_mutex);
 
-    // Initialize the value of this future.
-    this->do_on_future_ready(param);
-    ::std::atomic_thread_fence(::std::memory_order_release);
-    this->m_ready.store(true);
+        while(!this->m_waiters.empty()) {
+          auto timep = this->m_waiters.back().lock();
+          if(timep)
+            timep->store(now);
 
-    if(!this->m_waiters.empty()) {
-      // Notify waiters.
-      const steady_time now = steady_clock::now();
-      do {
-        auto timep = this->m_waiters.back().lock();
-        if(timep)
-          timep->store(now);
-        this->m_waiters.pop_back();
-      }
-      while(!this->m_waiters.empty());
-    }
-    return true;
+          now += (nanoseconds) 1;
+          this->m_waiters.pop_back();
+        }
+
+        POSEIDON_LOG_DEBUG(("Future `$1` ready (class `$2`)"), this, typeid(*this));
+      });
+  }
+
+void
+Abstract_Future::
+check_ready() const
+  {
+    this->m_once.call(
+      [&] {
+        // Throw an exception if initialization has not taken place.
+        if(this->m_except_opt)
+          ::std::rethrow_exception(this->m_except_opt);
+
+        POSEIDON_THROW(("Future `$1` not ready (class `$2`)"), this, typeid(*this));
+      });
   }
 
 }  // namespace poseidon

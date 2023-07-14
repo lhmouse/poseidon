@@ -10,9 +10,9 @@ namespace poseidon {
 Read_File_Future::
 Read_File_Future(cow_stringR path, int64_t offset, size_t limit)
   {
-    this->m_path = path;
-    this->m_offset = offset;
-    this->m_limit = limit;
+    this->m_result.path = path;
+    this->m_result.offset = offset;
+    this->m_result.limit = limit;
   }
 
 Read_File_Future::
@@ -24,92 +24,68 @@ void
 Read_File_Future::
 do_abstract_task_on_execute()
   try {
-    // Warning: This is in the worker thread. Any operation that changes data
-    // members of `*this` shall be put into `do_on_future_ready()`, where `*this`
-    // will have been locked.
-    unique_posix_fd fd(::open(this->m_path.safe_c_str(), O_RDONLY | O_NOCTTY, 0));
+    // Open the file and get basic information.
+    unique_posix_fd fd(::open(this->m_result.path.safe_c_str(), O_RDONLY | O_NOCTTY, 0));
     if(!fd)
       POSEIDON_THROW((
           "Could not open file `$1` for reading",
           "[`open()` failed: ${errno:full}]"),
-          this->m_path);
+          this->m_result.path);
 
     struct ::stat64 st;
     if(::fstat64(fd, &st) != 0)
       POSEIDON_THROW((
           "Could not get information about file `$1`",
           "[`fstat64()` failed: ${errno:full}]"),
-          this->m_path);
+          this->m_result.path);
 
-    if(!S_ISREG(st.st_mode))
+    if(S_ISREG(st.st_mode) == false)
       POSEIDON_THROW((
-          "Non-regular file `$1` not allowed"),
-          this->m_path);
+          "Reading non-regular file `$1` not allowed"),
+          this->m_result.path);
 
-    result_type res;
-    res.file_size = st.st_size;
-    res.accessed_on = (system_time)(seconds) st.st_atim.tv_sec + (nanoseconds) st.st_atim.tv_nsec;
-    res.modified_on = (system_time)(seconds) st.st_mtim.tv_sec + (nanoseconds) st.st_mtim.tv_nsec;
-    res.offset = 0;
+    this->m_result.accessed_on = (system_time)(seconds) st.st_atim.tv_sec + (nanoseconds) st.st_atim.tv_nsec;
+    this->m_result.modified_on = (system_time)(seconds) st.st_mtim.tv_sec + (nanoseconds) st.st_mtim.tv_nsec;
+    this->m_result.file_size = st.st_size;
 
-    if(this->m_offset != 0) {
-      // If the offset is non-zero, seek there.
-      ::off_t roff = ::lseek64(fd, this->m_offset, SEEK_SET);
-      if(roff == (::off_t) -1)
+    if(this->m_result.offset != 0) {
+      // Seek to the given offset. Negative values denote offsets from the end.
+      ::off_t abs_off = ::lseek64(fd, this->m_result.offset, (this->m_result.offset >= 0) ? SEEK_SET : SEEK_END);
+      if(abs_off == -1)
         POSEIDON_THROW((
             "Could not reposition file `$1`",
             "[`lseek64()` failed: ${errno:full}]"),
-            this->m_path);
+            this->m_result.path);
 
-      // This is the real offset from the beginning of the file.
-      res.offset = (int64_t) roff;
+      // Update `m_result.offset` to the absolute value.
+      this->m_result.offset = abs_off;
     }
 
-    for(;;) {
-      uint32_t size_add = (uint32_t) min(this->m_limit - res.data.size(), 1048576U);
-      if(size_add == 0)
+    while(this->m_result.data.size() < this->m_result.limit) {
+      // Read bytes and append them to `m_result.data`.
+      uint32_t step_limit = (uint32_t) ::std::min<size_t>(this->m_result.limit - this->m_result.data.size(), INT_MAX);
+      this->m_result.data.reserve_after_end(step_limit);
+      ::ssize_t step_size = POSEIDON_SYSCALL_LOOP(::read(fd, this->m_result.data.mut_end(), step_limit));
+      if(step_size == 0)
         break;
-
-      auto bufp = res.data.insert(res.data.end(), size_add, '*');
-      ::ssize_t nread = POSEIDON_SYSCALL_LOOP(::read(fd, &*bufp, size_add));
-      if(nread < 0)
+      else if(step_size < 0)
         POSEIDON_THROW((
             "Could not read file `$1`",
             "[`read()` failed: ${errno:full}]"),
-            this->m_path);
+            this->m_result.path);
 
-      res.data.erase(bufp + nread, res.data.end());
-      if(nread == 0)
-        break;
+      // Accept bytes that have been read.
+      this->m_result.data.accept((size_t) step_size);
     }
 
-    // Set `m_result`. This requires locking `*this` so do it in
-    // `do_on_future_ready()`.
-    POSEIDON_LOG_DEBUG((
-        "File read success: path = $1, offset = $2, data.size() = $3"),
-        this->m_path, this->m_offset, res.data.size());
-
-    this->do_try_set_ready(&res);
+    // Set the future as a success.
+    this->do_set_ready(nullptr);
   }
   catch(exception& stdex) {
-    // Ensure an exception is always set, even after the first call to
-    // `do_try_set_ready()` has failed.
-    POSEIDON_LOG_DEBUG(("File read error: path = $1, stdex = $2"), this->m_path, stdex);
-    this->do_try_set_ready(nullptr);
-  }
+    POSEIDON_LOG_WARN(("Could not read file `$1`: $2"), this->m_result.path, stdex);
 
-void
-Read_File_Future::
-do_on_future_ready(void* param)
-  {
-    if(!param) {
-      // Set an exception.
-      this->m_except = ::std::current_exception();
-      return;
-    }
-
-    this->m_result = ::std::move(*(result_type*) param);
-    this->m_except = nullptr;
+    // Set the future as a failure.
+    this->do_set_ready(::std::current_exception());
   }
 
 }  // namespace poseidon

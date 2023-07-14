@@ -15,15 +15,15 @@ class DNS_Future
     public Abstract_Async_Task
   {
   public:
-    using result_type = cow_vector<Socket_Address>;
+    // This is actually an input/output type.
+    struct Result
+      {
+        cow_string host;
+        cow_vector<Socket_Address> addrs;
+      };
 
   private:
-    // read-only
-    cow_string m_host;
-
-    // result
-    result_type m_result;
-    exception_ptr m_except;
+    Result m_result;
 
   public:
     // Constructs a DNS result future. This object also functions as an
@@ -38,30 +38,20 @@ class DNS_Future
     void
     do_abstract_task_on_execute() override;
 
-    // Sets the result.
-    virtual
-    void
-    do_on_future_ready(void* param) override;
-
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(DNS_Future);
 
-    // Gets the argument.
-    const cow_string&
-    host() const noexcept
-      { return this->m_host;  }
-
-    // Gets the result.
-    const result_type&
+    const Result&
     result() const
       {
-        if(!this->ready())
-          ::rocket::sprintf_and_throw<::std::runtime_error>(
-              "DNS_Future: DNS query in progress");
+        this->check_ready();
+        return this->m_result;
+      }
 
-        if(this->m_except)
-          ::std::rethrow_exception(this->m_except);
-
+    Result&
+    mut_result()
+      {
+        this->check_ready();
         return this->m_result;
       }
   };
