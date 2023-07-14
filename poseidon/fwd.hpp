@@ -35,7 +35,8 @@ namespace noadl = poseidon;
     {  \
       using S::S;  \
       using S::operator=;  \
-    }  // no semicolon
+    }  \
+    // no semicolon
 
 #define POSEIDON_VISIBILITY_HIDDEN   \
   __attribute__((__visibility__("hidden"))) inline
