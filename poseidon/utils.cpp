@@ -46,10 +46,15 @@ throw_runtime_error_with_backtrace(const char* file, long line, const char* func
           ::std::reverse_copy(nump.begin(), nump.end(), numfield.mut_rbegin() + 1);
           fmt << "\n  " << numfield.data() << ") ";
 
+          // * instruction pointer
+          ::unw_get_reg(unw_cur, UNW_REG_IP, &unw_offset);
+          nump.put_XU(unw_offset);
+          fmt << nump << " ";
+
           // * function name and offset
           if(::unw_get_proc_name(unw_cur, unw_name, sizeof(unw_name), &unw_offset) == 0) {
             nump.put_XU(unw_offset);
-            fmt << unw_name << " +" << nump;
+            fmt << "`" << unw_name << "` +" << nump;
           } else
             fmt << "??";
         }
