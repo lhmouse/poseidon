@@ -27,9 +27,13 @@ class Easy_Inflator
     void
     open(zlib_Format format);
 
-    // Clears the current stream. Pending data are discarded.
+    // Destroys the stream, freeing all allocated storage.
     void
-    clear() noexcept;
+    close() noexcept;
+
+    // Resets the current stream. Pending data are discarded.
+    void
+    reset() noexcept;
 
     // Gets a pointer to compressed data.
     ROCKET_PURE

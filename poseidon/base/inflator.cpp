@@ -19,7 +19,7 @@ Inflator::
 
 void
 Inflator::
-clear() noexcept
+reset() noexcept
   {
     this->m_strm.reset();
   }
@@ -65,7 +65,7 @@ finish()
 
     while(err == Z_OK) {
       // Allocate an output buffer and write compressed data there.
-      constexpr size_t out_request = 128;
+      constexpr size_t out_request = 16;
       size_t out_size = out_request;
       char* out_ptr = this->do_on_inflate_get_output_buffer(out_size);
       if(out_size < out_request)

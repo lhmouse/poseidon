@@ -52,12 +52,20 @@ open(zlib_Format format)
 
 void
 Easy_Inflator::
-clear() noexcept
+close() noexcept
+  {
+    this->m_infl = nullptr;
+    this->m_out = nullptr;
+  }
+
+void
+Easy_Inflator::
+reset() noexcept
   {
     if(!this->m_infl)
       return;
 
-    this->m_infl->clear();
+    this->m_infl->reset();
     this->m_out->clear();
   }
 

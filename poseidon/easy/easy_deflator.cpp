@@ -52,12 +52,20 @@ open(zlib_Format format, int level)
 
 void
 Easy_Deflator::
-clear() noexcept
+close() noexcept
+  {
+    this->m_defl = nullptr;
+    this->m_out = nullptr;
+  }
+
+void
+Easy_Deflator::
+reset() noexcept
   {
     if(!this->m_defl)
       return;
 
-    this->m_defl->clear();
+    this->m_defl->reset();
     this->m_out->clear();
   }
 
@@ -109,6 +117,16 @@ sync_flush()
       return false;
 
     return this->m_defl->sync_flush();
+  }
+
+bool
+Easy_Deflator::
+full_flush()
+  {
+    if(!this->m_defl)
+      return false;
+
+    return this->m_defl->full_flush();
   }
 
 bool

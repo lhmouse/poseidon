@@ -43,9 +43,9 @@ class Inflator
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Inflator);
 
-    // Clears internal states. Pending data are discarded.
+    // Resets internal states. Pending data are discarded.
     void
-    clear() noexcept;
+    reset() noexcept;
 
     // Decompresses some data and returns the number of bytes that have been
     // consumed. This function may return a value that is less than `size` if

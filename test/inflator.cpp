@@ -37,7 +37,7 @@ main()
     POSEIDON_TEST_CHECK(infl.output_size() == 0);
 
     // reset
-    infl.clear();
+    infl.reset();
     POSEIDON_TEST_CHECK(infl.output_size() == 0);
     infl.open(zlib_raw);
     POSEIDON_TEST_CHECK(infl.inflate({"\xf3\x48\xcd\xc9\xc9\x07\x00\x42", 8}) == 7);
@@ -45,7 +45,7 @@ main()
     POSEIDON_TEST_CHECK(::memcmp(infl.output_data(), "Hello", 5) == 0);
 
     // uncompressed data test
-    infl.clear();
+    infl.reset();
     POSEIDON_TEST_CHECK(infl.output_size() == 0);
     infl.open(zlib_raw);
     POSEIDON_TEST_CHECK(infl.inflate({"\x00\x05\x00\xfa\xff\x48\x65\x6c\x6c", 9}) == 9);
@@ -54,7 +54,7 @@ main()
     POSEIDON_TEST_CHECK(::memcmp(infl.output_data(), "Hello", 5) == 0);
 
     // invalid data test
-    infl.clear();
+    infl.reset();
     POSEIDON_TEST_CHECK(infl.output_size() == 0);
     infl.open(zlib_raw);
     POSEIDON_TEST_CHECK_CATCH(infl.inflate({"invalid data", 9}));

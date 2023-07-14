@@ -19,7 +19,7 @@ Deflator::
 
 void
 Deflator::
-clear() noexcept
+reset() noexcept
   {
     this->m_strm.reset();
   }
@@ -64,26 +64,28 @@ sync_flush()
     const char* in_end = nullptr;
     int err = Z_OK;
 
-    // Allocate an output buffer and write compressed data there.
-    constexpr size_t out_request = 12;
-    size_t out_size = out_request;
-    char* out_ptr = this->do_on_deflate_get_output_buffer(out_size);
-    if(out_size < out_request)
-      POSEIDON_THROW((
-          "`do_on_deflate_get_output_buffer()` shall not return smaller buffers (`$1` < `$2`)"),
-          out_size, out_request);
+    while(err == Z_OK) {
+      // Allocate an output buffer and write compressed data there.
+      constexpr size_t out_request = 16;
+      size_t out_size = out_request;
+      char* out_ptr = this->do_on_deflate_get_output_buffer(out_size);
+      if(out_size < out_request)
+        POSEIDON_THROW((
+            "`do_on_deflate_get_output_buffer()` shall not return smaller buffers (`$1` < `$2`)"),
+            out_size, out_request);
 
-    char* out_end = out_ptr + out_size;
-    err = this->m_strm.deflate(out_ptr, out_end, in_ptr, in_end, Z_SYNC_FLUSH);
+      char* out_end = out_ptr + out_size;
+      err = this->m_strm.deflate(out_ptr, out_end, in_ptr, in_end, Z_SYNC_FLUSH);
 
-    if(out_ptr != out_end)
-      this->do_on_deflate_truncate_output_buffer((size_t) (out_end - out_ptr));
+      if(out_ptr != out_end)
+        this->do_on_deflate_truncate_output_buffer((size_t) (out_end - out_ptr));
 
-    if(is_none_of(err, { Z_OK, Z_BUF_ERROR, Z_STREAM_ERROR }))
-      this->m_strm.throw_exception(err, "deflate");
+      if(is_none_of(err, { Z_OK, Z_BUF_ERROR, Z_STREAM_ERROR }))
+        this->m_strm.throw_exception(err, "deflate");
+    }
 
     // Return whether the operation has succeeded.
-    return err == Z_OK;
+    return err == Z_BUF_ERROR;
   }
 
 bool
@@ -94,26 +96,28 @@ full_flush()
     const char* in_end = nullptr;
     int err = Z_OK;
 
-    // Allocate an output buffer and write compressed data there.
-    constexpr size_t out_request = 12;
-    size_t out_size = out_request;
-    char* out_ptr = this->do_on_deflate_get_output_buffer(out_size);
-    if(out_size < out_request)
-      POSEIDON_THROW((
-          "`do_on_deflate_get_output_buffer()` shall not return smaller buffers (`$1` < `$2`)"),
-          out_size, out_request);
+    while(err == Z_OK) {
+      // Allocate an output buffer and write compressed data there.
+      constexpr size_t out_request = 16;
+      size_t out_size = out_request;
+      char* out_ptr = this->do_on_deflate_get_output_buffer(out_size);
+      if(out_size < out_request)
+        POSEIDON_THROW((
+            "`do_on_deflate_get_output_buffer()` shall not return smaller buffers (`$1` < `$2`)"),
+            out_size, out_request);
 
-    char* out_end = out_ptr + out_size;
-    err = this->m_strm.deflate(out_ptr, out_end, in_ptr, in_end, Z_FULL_FLUSH);
+      char* out_end = out_ptr + out_size;
+      err = this->m_strm.deflate(out_ptr, out_end, in_ptr, in_end, Z_FULL_FLUSH);
 
-    if(out_ptr != out_end)
-      this->do_on_deflate_truncate_output_buffer((size_t) (out_end - out_ptr));
+      if(out_ptr != out_end)
+        this->do_on_deflate_truncate_output_buffer((size_t) (out_end - out_ptr));
 
-    if(is_none_of(err, { Z_OK, Z_BUF_ERROR, Z_STREAM_ERROR }))
-      this->m_strm.throw_exception(err, "deflate");
+      if(is_none_of(err, { Z_OK, Z_BUF_ERROR, Z_STREAM_ERROR }))
+        this->m_strm.throw_exception(err, "deflate");
+    }
 
     // Return whether the operation has succeeded.
-    return err == Z_OK;
+    return err == Z_BUF_ERROR;
   }
 
 bool
@@ -126,7 +130,7 @@ finish()
 
     while(err != Z_STREAM_END) {
       // Allocate an output buffer and write compressed data there.
-      constexpr size_t out_request = 12;
+      constexpr size_t out_request = 16;
       size_t out_size = out_request;
       char* out_ptr = this->do_on_deflate_get_output_buffer(out_size);
       if(out_size < out_request)

@@ -43,9 +43,9 @@ class Deflator
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Deflator);
 
-    // Clears internal states. Pending data are discarded.
+    // Resets internal states. Pending data are discarded.
     void
-    clear() noexcept;
+    reset() noexcept;
 
     // Compresses some data and returns the number of bytes that have been
     // consumed. This function returns zero if `finish()` has been called to

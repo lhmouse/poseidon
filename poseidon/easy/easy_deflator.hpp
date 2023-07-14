@@ -27,9 +27,13 @@ class Easy_Deflator
     void
     open(zlib_Format format, int level = -1);
 
-    // Clears the current stream. Pending data are discarded.
+    // Destroys the stream, freeing all allocated storage.
     void
-    clear() noexcept;
+    close() noexcept;
+
+    // Resets the current stream. Pending data are discarded.
+    void
+    reset() noexcept;
 
     // Gets a pointer to compressed data.
     ROCKET_PURE
@@ -53,6 +57,10 @@ class Easy_Deflator
     // Completes the current deflate block.
     bool
     sync_flush();
+
+    // Completes the current deflate block and clears state.
+    bool
+    full_flush();
 
     // Completes the current stream.
     bool
