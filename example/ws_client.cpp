@@ -16,23 +16,23 @@ event_callback(shptrR<WS_Client_Session> session, Abstract_Fiber& /*fiber*/, Web
   {
     switch(event) {
       case websocket_open:
-        POSEIDON_LOG_WARN(("example WS client connected to server: $1"), session->remote_address());
+        POSEIDON_LOG_ERROR(("example WS client connected to server: $1"), session->remote_address());
         break;
 
       case websocket_text:
-        POSEIDON_LOG_WARN(("example WS client received TEXT data: $1"), data);
+        POSEIDON_LOG_ERROR(("example WS client received TEXT data: $1"), data);
         break;
 
       case websocket_binary:
-        POSEIDON_LOG_WARN(("example WS client received BINARY data: $1"), data);
+        POSEIDON_LOG_ERROR(("example WS client received BINARY data: $1"), data);
         break;
 
       case websocket_pong:
-        POSEIDON_LOG_WARN(("example WS client received PONG data: $1"), data);
+        POSEIDON_LOG_ERROR(("example WS client received PONG data: $1"), data);
         break;
 
       case websocket_closed:
-        POSEIDON_LOG_WARN(("example WS client shut down connection: $1"), data);
+        POSEIDON_LOG_ERROR(("example WS client shut down connection: $1"), data);
         break;
     }
   }

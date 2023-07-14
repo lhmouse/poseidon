@@ -14,25 +14,25 @@ event_callback(shptrR<WSS_Server_Session> session, Abstract_Fiber& /*fiber*/, We
   {
     switch(event) {
       case websocket_open:
-        POSEIDON_LOG_ERROR(("example WSS server accepted connection: $1"), session->remote_address());
+        POSEIDON_LOG_WARN(("example WSS server accepted connection: $1"), session->remote_address());
         break;
 
       case websocket_text:
-        POSEIDON_LOG_ERROR(("example WSS server received TEXT data: $1"), data);
+        POSEIDON_LOG_WARN(("example WSS server received TEXT data: $1"), data);
         session->wss_send_text(data);
         break;
 
       case websocket_binary:
-        POSEIDON_LOG_ERROR(("example WSS server received BINARY data: $1"), data);
+        POSEIDON_LOG_WARN(("example WSS server received BINARY data: $1"), data);
         session->wss_send_binary(data);
         break;
 
       case websocket_pong:
-        POSEIDON_LOG_ERROR(("example WSS server received PONG data: $1"), data);
+        POSEIDON_LOG_WARN(("example WSS server received PONG data: $1"), data);
         break;
 
       case websocket_closed:
-        POSEIDON_LOG_ERROR(("example WSS server shut down connection: $1"), data);
+        POSEIDON_LOG_WARN(("example WSS server shut down connection: $1"), data);
         break;
     }
   }
@@ -42,7 +42,7 @@ start_server()
   {
     Socket_Address addr("[::]:3807");
     my_server.start(addr);
-    POSEIDON_LOG_ERROR(("example WSS server started: bind = $1"), my_server.local_address());
+    POSEIDON_LOG_WARN(("example WSS server started: bind = $1"), my_server.local_address());
     return 0;
   }
 
