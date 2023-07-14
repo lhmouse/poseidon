@@ -17,7 +17,7 @@ class deflate_Stream
 
   public:
     explicit
-    deflate_Stream(zlib_Options opts)
+    deflate_Stream(zlib_Format format, int level, uint8_t wbits)
       {
         this->m_zstrm->zalloc = nullptr;
         this->m_zstrm->zfree = nullptr;
@@ -25,30 +25,29 @@ class deflate_Stream
         this->m_zstrm->next_in = (const ::Bytef*) "";
         this->m_zstrm->avail_in = 0;
 
-        // Validate arguments.
-        int wbits = opts.windowBits;
-        int level = opts.level;
+        if((level < -1) || (level > 9))
+          ::rocket::sprintf_and_throw<::std::invalid_argument>(
+              "deflate_Stream: compression level `%d` not valid",
+              level);
 
         if((wbits < 9) || (wbits > 15))
           ::rocket::sprintf_and_throw<::std::invalid_argument>(
               "deflate_Stream: window bits `%d` not valid",
-              opts.windowBits);
+              wbits);
 
-        if(opts.format == zlib_gzip)
-          wbits += 16;
-        else if(opts.format == zlib_raw)
-          wbits *= -1;
-        else if(opts.format != zlib_deflate)
+        int fwbits;
+        if(format == zlib_deflate)
+          fwbits = wbits;
+        else if(format == zlib_gzip)
+          fwbits = wbits + 16;
+        else if(format == zlib_raw)
+          fwbits = -wbits;
+        else
           ::rocket::sprintf_and_throw<::std::invalid_argument>(
-              "deflate_Stream: window bits `%d` not valid",
-              opts.windowBits);
+              "deflate_Stream: format `%d` not valid",
+              format);
 
-        if((level < -1) || (level > 9))
-          ::rocket::sprintf_and_throw<::std::invalid_argument>(
-              "deflate_Stream: compression level `%d` not valid",
-              opts.level);
-
-        int err = ::deflateInit2(this->m_zstrm, level, Z_DEFLATED, wbits, 9, Z_DEFAULT_STRATEGY);
+        int err = ::deflateInit2(this->m_zstrm, level, Z_DEFLATED, fwbits, 9, Z_DEFAULT_STRATEGY);
         if(err != Z_OK)
           this->throw_exception(err, "deflateInit2");
       }
@@ -107,7 +106,7 @@ class inflate_Stream
 
   public:
     explicit
-    inflate_Stream(zlib_Options opts)
+    inflate_Stream(zlib_Format format, uint8_t wbits)
       {
         this->m_zstrm->zalloc = nullptr;
         this->m_zstrm->zfree = nullptr;
@@ -115,24 +114,24 @@ class inflate_Stream
         this->m_zstrm->next_in = (const ::Bytef*) "";
         this->m_zstrm->avail_in = 0;
 
-        // Validate arguments.
-        int wbits = opts.windowBits;
-
         if((wbits < 9) || (wbits > 15))
           ::rocket::sprintf_and_throw<::std::invalid_argument>(
               "inflate_Stream: window bits `%d` not valid",
-              opts.windowBits);
+              wbits);
 
-        if(opts.format == zlib_gzip)
-          wbits += 16;
-        else if(opts.format == zlib_raw)
-          wbits *= -1;
-        else if(opts.format != zlib_deflate)
+        int fwbits;
+        if(format == zlib_deflate)
+          fwbits = wbits;
+        else if(format == zlib_gzip)
+          fwbits = wbits + 16;
+        else if(format == zlib_raw)
+          fwbits = -wbits;
+        else
           ::rocket::sprintf_and_throw<::std::invalid_argument>(
-              "inflate_Stream: window bits `%d` not valid",
-              opts.windowBits);
+              "inflate_Stream: format `%d` not valid",
+              format);
 
-        int err = ::inflateInit2(this->m_zstrm, wbits);
+        int err = ::inflateInit2(this->m_zstrm, fwbits);
         if(err != Z_OK)
           this->throw_exception(err, "inflateInit2");
       }

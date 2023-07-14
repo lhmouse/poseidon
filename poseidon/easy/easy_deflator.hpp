@@ -25,7 +25,7 @@ class Easy_Deflator
 
     // Starts a stream.
     void
-    open(zlib_Options opts = zlib_deflate);
+    open(zlib_Format format, int level = -1);
 
     // Clears the current stream. Pending data are discarded.
     void

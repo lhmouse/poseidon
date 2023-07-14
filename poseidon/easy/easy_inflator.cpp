@@ -13,26 +13,24 @@ struct Final_Inflator final : Inflator
     linear_buffer m_out;
 
     explicit
-    Final_Inflator(zlib_Options opts)
-      : Inflator(opts)
+    Final_Inflator(zlib_Format format)
+      : Inflator(format)
       { }
 
     virtual
-    pair<char*, size_t>
-    do_on_inflate_get_output_buffer() override
+    char*
+    do_on_inflate_get_output_buffer(size_t& size) override
       {
-        pair<char*, size_t> r;
-        r.second = this->m_out.reserve_after_end(1024);
-        r.first = this->m_out.mut_end();
-        this->m_out.accept(r.second);  // uninitialized
-        return r;
+        size = this->m_out.reserve_after_end(size);
+        this->m_out.accept(size);
+        return this->m_out.mut_end() - size;
       }
 
     virtual
     void
-    do_on_inflate_truncate_output_buffer(size_t nbackup) override
+    do_on_inflate_truncate_output_buffer(size_t backup) override
       {
-        this->m_out.unaccept(nbackup);
+        this->m_out.unaccept(backup);
       }
   };
 
@@ -45,9 +43,9 @@ Easy_Inflator::
 
 void
 Easy_Inflator::
-open(zlib_Options opts)
+open(zlib_Format format)
   {
-    auto infl = new_sh<Final_Inflator>(opts);
+    auto infl = new_sh<Final_Inflator>(format);
     this->m_infl = infl;
     this->m_out = shptr<linear_buffer>(infl, &(infl->m_out));
   }

@@ -23,9 +23,9 @@ class Easy_Inflator
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_Inflator);
 
-    // Starts a stream. The `level` field is ignored.
+    // Starts a stream.
     void
-    open(zlib_Options opts = zlib_deflate);
+    open(zlib_Format format);
 
     // Clears the current stream. Pending data are discarded.
     void

@@ -14,31 +14,31 @@ class Inflator
     inflate_Stream m_strm;
 
   public:
-    // Constructs a data decompressor. The `level` field is ignored.
+    // Constructs a data decompressor.
     explicit
-    Inflator(zlib_Options opts);
+    Inflator(zlib_Format format);
 
   protected:
     // This callback is invoked to request an output buffer if none has been
     // requested, or when the previous output buffer is full. Derived classes
-    // shall return a temporary memory region where decompressed data will be
-    // written, or throw an exception if the request cannot be honored. Note
-    // that if this function returns a buffer that is too small (for example
-    // 3 or 4 bytes) then `finish()` will fail.
+    // shall return a buffer of at least `size` bytes where decompressed data
+    // will be written, or throw an exception if the request cannot be honored.
+    // `size` may be updated to reflect the real size of the output buffer, but
+    // its value shall not be decreased.
     // If an exception is thrown, the state of this stream is unspecified.
     virtual
-    pair<char*, size_t>
-    do_on_inflate_get_output_buffer() = 0;
+    char*
+    do_on_inflate_get_output_buffer(size_t& size) = 0;
 
     // This callback is invoked to inform derived classes that all input data
-    // have been decompressed but the output buffer is not full. `nbackup` is
+    // have been decompressed but the output buffer is not full. `backup` is
     // the number of uninitialized bytes in the end of the previous buffer. All
     // the output buffers, other than these uninitialized bytes, have been
     // filled with decompressed data.
     // If an exception is thrown, the state of this stream is unspecified.
     virtual
     void
-    do_on_inflate_truncate_output_buffer(size_t nbackup) = 0;
+    do_on_inflate_truncate_output_buffer(size_t backup) = 0;
 
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Inflator);

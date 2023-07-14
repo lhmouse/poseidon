@@ -57,9 +57,7 @@ main()
     // uncompressed data test
     defl.clear();
     POSEIDON_TEST_CHECK(defl.output_size() == 0);
-    zlib_Options opts = zlib_raw;
-    opts.level = 0;
-    defl.open(opts);
+    defl.open(zlib_raw, 0);
     POSEIDON_TEST_CHECK(defl.deflate("He") == 2);
     POSEIDON_TEST_CHECK(defl.deflate("llo") == 3);
     POSEIDON_TEST_CHECK(defl.sync_flush() == true);
