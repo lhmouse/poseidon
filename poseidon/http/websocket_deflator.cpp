@@ -9,8 +9,7 @@ namespace poseidon {
 
 WebSocket_Deflator::
 WebSocket_Deflator(const WebSocket_Frame_Parser& parser)
-  : m_def_no_ctxto(parser.pmce_send_no_context_takeover()),
-    m_def_strm(zlib_raw, parser.pmce_send_max_window_bits(),  parser.pmce_send_compression_level()),
+  : m_def_strm(zlib_raw, parser.pmce_send_max_window_bits(),  parser.pmce_send_compression_level()),
     m_inf_strm(zlib_raw, parser.pmce_recv_max_window_bits())
   {
   }
@@ -18,20 +17,6 @@ WebSocket_Deflator(const WebSocket_Frame_Parser& parser)
 WebSocket_Deflator::
 ~WebSocket_Deflator()
   {
-  }
-
-void
-WebSocket_Deflator::
-deflate_message_start(plain_mutex::unique_lock& lock)
-  {
-    lock.lock(this->m_def_mtx);
-
-    // `*_no_context_takeover` specifies that the previous LZ77 sliding window
-    // shall not be reused.
-    if(ROCKET_UNEXPECT(this->m_def_no_ctxto))
-      this->m_def_strm.reset();
-
-    this->m_def_buf.clear();
   }
 
 void
@@ -86,15 +71,6 @@ deflate_message_finish(plain_mutex::unique_lock& lock)
 
     if((this->m_def_buf.size() >= 4) && xmemeq(this->m_def_buf.end() - 4, "\x00\x00\xFF\xFF", 4))
       this->m_def_buf.unaccept(4);
-  }
-
-void
-WebSocket_Deflator::
-inflate_message_start(plain_mutex::unique_lock& lock)
-  {
-    lock.lock(this->m_inf_mtx);
-
-    this->m_inf_buf.clear();
   }
 
 void

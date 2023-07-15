@@ -13,7 +13,6 @@ class WebSocket_Deflator
   private:
     // deflator (send)
     mutable plain_mutex m_def_mtx;
-    bool m_def_no_ctxto;
     deflate_Stream m_def_strm;
     linear_buffer m_def_buf;
     cacheline_barrier m_xcb_1;
@@ -40,10 +39,14 @@ class WebSocket_Deflator
         return this->m_def_buf;
       }
 
-    // Starts a new frame. This functon locks `m_def_mtx` with `lock` and clears
-    // existent data.
+    // Resets the deflator state. This is used when `no_context_takeover` is in
+    // effect.
     void
-    deflate_message_start(plain_mutex::unique_lock& lock);
+    deflate_reset(plain_mutex::unique_lock& lock)
+      {
+        lock.lock(this->m_def_mtx);
+        this->m_def_strm.reset();
+      }
 
     // Compresses a part of the frame payload.
     void
@@ -61,11 +64,6 @@ class WebSocket_Deflator
         lock.lock(this->m_inf_mtx);
         return this->m_inf_buf;
       }
-
-    // Starts a new frame. This functon locks `m_inf_mtx` with `lock` and clears
-    // existent data.
-    void
-    inflate_message_start(plain_mutex::unique_lock& lock);
 
     // Decompresses a part of the frame payload.
     void

@@ -127,7 +127,8 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
             // If this is a data frame, it starts a new message.
             if(this->m_pmce_opt) {
               plain_mutex::unique_lock lock;
-              this->m_pmce_opt->inflate_message_start(lock);
+              auto& out_buf = this->m_pmce_opt->inflate_output_buffer(lock);
+              out_buf.clear();
             }
 
             this->m_msg.clear();
@@ -145,7 +146,6 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
 
               plain_mutex::unique_lock lock;
               this->m_pmce_opt->inflate_message_stream(lock, payload);
-
               if(this->m_parser.message_fin())
                 this->m_pmce_opt->inflate_message_finish(lock);
 
@@ -326,10 +326,14 @@ do_wss_send_raw_data_frame(uint8_t opcode, chars_proxy data)
       // compressed frames have dependency on each other, so the mutex must not
       // be unlocked before the message is sent completely.
       plain_mutex::unique_lock lock;
-      this->m_pmce_opt->deflate_message_start(lock);
+      auto& out_buf = this->m_pmce_opt->deflate_output_buffer(lock);
+      out_buf.clear();
+
+      if(this->m_parser.pmce_send_no_context_takeover())
+        this->m_pmce_opt->deflate_reset(lock);
+
       this->m_pmce_opt->deflate_message_stream(lock, data);
       this->m_pmce_opt->deflate_message_finish(lock);
-      auto& out_buf = this->m_pmce_opt->deflate_output_buffer(lock);
 
       WebSocket_Frame_Header header;
       header.fin = 1;
