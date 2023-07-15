@@ -104,6 +104,13 @@ class WSS_Server_Session
     bool
     do_wss_send_raw_frame(uint8_t opcode, chars_proxy data);
 
+    // Sends a raw data frame (not a message). No error checking is performed.
+    // The payload of a data frame may be (but is not always) compressed. This
+    // function is provided for convenience only, and maybe isn't very useful
+    // unless for some low-level hacks.
+    bool
+    do_wss_send_raw_data_frame(uint8_t opcode, chars_proxy data);
+
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(WSS_Server_Session);
 

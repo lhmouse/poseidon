@@ -55,7 +55,7 @@ deflate_message_stream(plain_mutex::unique_lock& lock, chars_proxy data)
       err = this->m_def_strm.deflate(out_ptr, out_ptr + out_size, in_ptr, in_end, Z_NO_FLUSH);
       this->m_def_buf.accept((size_t) (out_ptr - this->m_def_buf.mut_end()));
 
-      if(is_none_of(err, { Z_OK, Z_BUF_ERROR, Z_STREAM_ERROR }))
+      if(is_none_of(err, { Z_OK, Z_BUF_ERROR }))
         this->m_def_strm.throw_exception(err, "deflate");
     }
     while((in_ptr != in_end) && (err == Z_OK));
@@ -79,7 +79,7 @@ deflate_message_finish(plain_mutex::unique_lock& lock)
       err = this->m_def_strm.deflate(out_ptr, out_ptr + out_size, in_ptr, in_end, Z_SYNC_FLUSH);
       this->m_def_buf.accept((size_t) (out_ptr - this->m_def_buf.mut_end()));
 
-      if(is_none_of(err, { Z_OK, Z_BUF_ERROR, Z_STREAM_ERROR }))
+      if(is_none_of(err, { Z_OK, Z_BUF_ERROR }))
         this->m_def_strm.throw_exception(err, "deflate");
     }
     while(err == Z_OK);
@@ -118,7 +118,7 @@ inflate_message_stream(plain_mutex::unique_lock& lock, chars_proxy data)
       err = this->m_inf_strm.inflate(out_ptr, out_ptr + out_size, in_ptr, in_end);
       this->m_inf_buf.accept((size_t) (out_ptr - this->m_inf_buf.mut_end()));
 
-      if(is_none_of(err, { Z_OK, Z_BUF_ERROR, Z_STREAM_ERROR }))
+      if(is_none_of(err, { Z_OK, Z_BUF_ERROR }))
         this->m_inf_strm.throw_exception(err, "inflate");
     }
     while((in_ptr != in_end) && (err == Z_OK));
@@ -142,7 +142,7 @@ inflate_message_finish(plain_mutex::unique_lock& lock)
       err = this->m_inf_strm.inflate(out_ptr, out_ptr + out_size, in_ptr, in_end);
       this->m_inf_buf.accept((size_t) (out_ptr - this->m_inf_buf.mut_end()));
 
-      if(is_none_of(err, { Z_OK, Z_BUF_ERROR, Z_STREAM_ERROR }))
+      if(is_none_of(err, { Z_OK, Z_BUF_ERROR }))
         this->m_inf_strm.throw_exception(err, "inflate");
     }
     while(err == Z_OK);

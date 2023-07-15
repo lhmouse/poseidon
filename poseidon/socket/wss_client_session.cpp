@@ -3,6 +3,7 @@
 
 #include "../precompiled.ipp"
 #include "wss_client_session.hpp"
+#include "../http/websocket_deflator.hpp"
 #include "../base/config_file.hpp"
 #include "../static/main_config.hpp"
 #include "../utils.hpp"
@@ -64,10 +65,17 @@ do_on_https_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& /*data
     // Accept the handshake response.
     this->m_parser.accept_handshake_response(resp);
 
-    if(this->m_parser.is_client_mode() && !close_now)
-      this->do_on_wss_connected(::std::move(this->m_uri));
-    else
-      this->do_call_on_wss_close_once(1002, this->m_parser.error_description());
+    if(close_now || !this->m_parser.is_client_mode()) {
+      const char* err_desc = close_now ? "connection closing" : this->m_parser.error_description();
+      this->do_call_on_wss_close_once(1002, err_desc);
+      return;
+    }
+
+    // Initialize extensions.
+    if(this->m_parser.pmce_send_max_window_bits() != 0)
+      this->m_pmce_opt = new_sh<WebSocket_Deflator>(this->m_parser);
+
+    this->do_on_wss_connected(::std::move(this->m_uri));
   }
 
 void
@@ -92,25 +100,6 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
 
         if(!this->m_parser.frame_header_complete())
           return;
-
-        switch(this->m_parser.frame_header().opcode) {
-          case 1:  // TEXT
-          case 2:  // BINARY
-            // If this is a data frame, it starts a new message.
-            this->m_msg.clear();
-            break;
-
-          case 0:  // CONTINUATION
-          case 8:  // CLOSE
-          case 9:  // PING
-          case 10:  // PONG
-            break;
-
-          default:
-            data.clear();
-            this->do_call_on_wss_close_once(1002, "invalid opcode");
-            return;
-        }
       }
 
       if(!this->m_parser.frame_payload_complete()) {
@@ -129,9 +118,38 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
         auto& payload = this->m_parser.mut_frame_payload();
 
         switch(this->m_parser.frame_header().opcode) {
-          case 0:  // CONTINUATION
           case 1:  // TEXT
           case 2: {  // BINARY
+            // If this is a data frame, it starts a new message.
+            if(this->m_pmce_opt) {
+              plain_mutex::unique_lock lock;
+              this->m_pmce_opt->inflate_message_start(lock);
+            }
+
+            this->m_msg.clear();
+            // fallthrough
+
+          case 0:  // CONTINUATION
+            if(this->m_parser.message_rsv1()) {
+              // The RSV1 bit indicates that the payload is part of a compressed
+              // message, so decompress it.
+              if(!this->m_pmce_opt) {
+                data.clear();
+                this->do_call_on_wss_close_once(1007, "permessage-deflate not initialized properly");
+                return;
+              }
+
+              plain_mutex::unique_lock lock;
+              this->m_pmce_opt->inflate_message_stream(lock, payload);
+
+              if(this->m_parser.message_fin())
+                this->m_pmce_opt->inflate_message_finish(lock);
+
+              // Replace the payload... nasty.
+              auto& out_buf = this->m_pmce_opt->inflate_output_buffer(lock);
+              payload.swap(out_buf);
+            }
+
             // If this is a data frame or continuation, its payload is part of a
             // (potentially fragmented) data message, so combine it.
             if(this->m_msg.empty())
@@ -139,18 +157,16 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
             else
               this->m_msg.putn(payload.data(), payload.size());
 
-            if(this->m_parser.message_opcode() == 1)
+            if(this->m_parser.message_opcode() == 1) {
+              // TEXT
               this->do_on_wss_text_stream(this->m_msg);
-            else
-              this->do_on_wss_binary_stream(this->m_msg);
-
-            if(this->m_parser.message_fin()) {
-              // This is the final frame of the data message, so commit it. When
-              // PMCE is enabled, the payload of a deflated message does not
-              // include the final `00 00 FF FF` part, which we must add back.
-              if(this->m_parser.message_opcode() == 1)
+              if(this->m_parser.message_fin())
                 this->do_on_wss_text(::std::move(this->m_msg));
-              else
+            }
+            else {
+              // BINARY
+              this->do_on_wss_binary_stream(this->m_msg);
+              if(this->m_parser.message_fin())
                 this->do_on_wss_binary(::std::move(this->m_msg));
             }
             break;
@@ -295,6 +311,47 @@ do_wss_send_raw_frame(uint8_t opcode, chars_proxy data)
 
 bool
 WSS_Client_Session::
+do_wss_send_raw_data_frame(uint8_t opcode, chars_proxy data)
+  {
+    // When PMCE is not active, send the frame as is.
+    if(!this->m_pmce_opt)
+      return this->do_wss_send_raw_frame(opcode, data);
+
+    // Small frames are never compressed.
+    uint32_t pmce_threshold = this->m_parser.pmce_send_no_context_takeover() ? 1024U : 16U;
+    if(data.n < pmce_threshold)
+      return this->do_wss_send_raw_frame(opcode, data);
+
+    try {
+      // Compress the payload and send it. When context takeover is in effect,
+      // compressed frames have dependency on each other, so the mutex must not
+      // be unlocked before the message is sent completely.
+      plain_mutex::unique_lock lock;
+      this->m_pmce_opt->deflate_message_start(lock);
+      this->m_pmce_opt->deflate_message_stream(lock, data);
+      this->m_pmce_opt->deflate_message_finish(lock);
+      auto& out_buf = this->m_pmce_opt->deflate_output_buffer(lock);
+
+      WebSocket_Frame_Header header;
+      header.fin = 1;
+      header.rsv1 = 1;
+      header.opcode = opcode & 15;
+      header.payload_len = out_buf.size();
+
+      tinyfmt_ln fmt;
+      header.encode(fmt);
+      fmt.putn(out_buf.data(), out_buf.size());
+      return this->ssl_send(fmt);
+    }
+    catch(exception& stdex) {
+      POSEIDON_LOG_ERROR(("Could not compress message: $1"), stdex);
+      this->quick_close();
+      return false;
+    }
+  }
+
+bool
+WSS_Client_Session::
 wss_send_text(chars_proxy data)
   {
     if(!this->do_has_upgraded())
@@ -304,7 +361,7 @@ wss_send_text(chars_proxy data)
           this, typeid(*this));
 
     // TEXT := opcode 1
-    return this->do_wss_send_raw_frame(1, data);
+    return this->do_wss_send_raw_data_frame(1, data);
   }
 
 bool
@@ -318,7 +375,7 @@ wss_send_binary(chars_proxy data)
           this, typeid(*this));
 
     // BINARY := opcode 2
-    return this->do_wss_send_raw_frame(2, data);
+    return this->do_wss_send_raw_data_frame(2, data);
   }
 
 bool
