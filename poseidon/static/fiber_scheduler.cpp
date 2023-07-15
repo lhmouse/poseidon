@@ -333,7 +333,7 @@ thread_loop()
         lock.unlock();
 
         ROCKET_ASSERT(this->m_pq_wait.tv_sec == 0);
-        POSEIDON_LOG_TRACE(("Sleeping for $1 nanoseconds..."), this->m_pq_wait.tv_nsec);
+        //POSEIDON_LOG_TRACE(("Sleeping for $1 nanoseconds..."), this->m_pq_wait.tv_nsec);
         ::nanosleep(&(this->m_pq_wait), nullptr);
         return;
       }
