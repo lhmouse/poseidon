@@ -336,10 +336,14 @@ do_wss_send_raw_data_frame(uint8_t opcode, chars_proxy data)
       header.fin = 1;
       header.rsv1 = 1;
       header.opcode = opcode & 15;
+      header.mask = 1;
+      header.mask_key_u32 = (uint32_t) generate_random_seed();
+      header.mask_key[0] |= '\x80';
       header.payload_len = out_buf.size();
 
       tinyfmt_ln fmt;
       header.encode(fmt);
+      header.mask_payload(out_buf.mut_data(), out_buf.size());
       fmt.putn(out_buf.data(), out_buf.size());
       return this->ssl_send(fmt);
     }
