@@ -18,9 +18,14 @@
 
 ```sh
 # For Ubuntu Focal
-sudo aptitude install zlib1g-dev lib{edit,pcre2,ssl,magic,mysqlclient,mongoc,http-parser,unwind}-dev
+sudo aptitude install zlib1g-dev  \
+   lib{edit,pcre2,ssl,magic,mongoc,http-parser,sparsehash,unwind}-dev  \
+   libmysqlclient-dev
+
 # For Debian Buster
-sudo aptitude install zlib1g-dev libmariadb-dev-compat lib{edit,pcre2,ssl,magic,mongoc,http-parser,unwind}-dev
+sudo aptitude install zlib1g-dev  \
+   lib{edit,pcre2,ssl,magic,mongoc,http-parser,sparsehash,unwind}-dev  \
+   libmariadb-dev-compat
 ```
 
 #### Build and install Asteria
@@ -34,6 +39,7 @@ autoreconf -i
 ./configure --disable-static
 make -j$(nproc)
 ./makedeb.sh
+sudo dpkg -i asteria_*.deb
 cd ..
 ```
 
