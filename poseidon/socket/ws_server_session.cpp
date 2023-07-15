@@ -319,10 +319,7 @@ do_ws_send_raw_data_frame(uint8_t opcode, chars_proxy data)
     // Small frames are never compressed.
     uint32_t pmce_threshold = this->m_parser.pmce_send_no_context_takeover() ? 1024U : 16U;
     if(data.n < pmce_threshold)
-    {
-    POSEIDON_LOG_INFO(("not compressed: $1 < $2"), data.n , pmce_threshold);
       return this->do_ws_send_raw_frame(opcode, data);
-    }
 
     try {
       // Compress the payload and send it. When context takeover is in effect,
@@ -339,7 +336,6 @@ do_ws_send_raw_data_frame(uint8_t opcode, chars_proxy data)
       header.rsv1 = 1;
       header.opcode = opcode & 15;
       header.payload_len = out_buf.size();
-    POSEIDON_LOG_INFO(("compressed: $1 ==> $2"), data.n , header.payload_len);
 
       tinyfmt_ln fmt;
       header.encode(fmt);
