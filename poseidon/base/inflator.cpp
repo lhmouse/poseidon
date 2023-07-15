@@ -29,7 +29,7 @@ Inflator::
 inflate(chars_proxy data)
   {
     const char* in_ptr = data.p;
-    const char* in_end = data.p + data.n;
+    const char* in_end = in_ptr + data.n;
     int err = Z_OK;
 
     while((in_ptr != in_end) && (err == Z_OK)) {
