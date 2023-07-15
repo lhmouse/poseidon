@@ -30,9 +30,9 @@ inflate(chars_proxy data)
   {
     const char* in_ptr = data.p;
     const char* in_end = in_ptr + data.n;
-    int err = Z_OK;
+    int err;
 
-    while((in_ptr != in_end) && (err == Z_OK)) {
+    do {
       constexpr size_t out_request = 128;
       size_t out_size = out_request;
       char* out_ptr = this->do_on_inflate_get_output_buffer(out_size);
@@ -50,6 +50,7 @@ inflate(chars_proxy data)
       if(is_none_of(err, { Z_OK, Z_BUF_ERROR, Z_STREAM_END }))
         this->m_strm.throw_exception(err, "inflate");
     }
+    while((in_ptr != in_end) && (err == Z_OK));
 
     // Return the number of characters that have been consumed.
     return (size_t) (in_ptr - data.p);
@@ -59,11 +60,11 @@ bool
 Inflator::
 finish()
   {
-    const char* in_ptr = nullptr;
-    const char* in_end = nullptr;
-    int err = Z_OK;
+    const char* in_ptr = "";
+    const char* in_end = in_ptr;
+    int err;
 
-    while(err == Z_OK) {
+    do {
       // Allocate an output buffer and write compressed data there.
       constexpr size_t out_request = 16;
       size_t out_size = out_request;
@@ -82,6 +83,7 @@ finish()
       if(is_none_of(err, { Z_OK, Z_BUF_ERROR, Z_STREAM_END }))
         this->m_strm.throw_exception(err, "inflate");
     }
+    while(err == Z_OK);
 
     // Return whether the operation has succeeded.
     return err == Z_STREAM_END;
