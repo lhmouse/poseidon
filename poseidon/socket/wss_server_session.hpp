@@ -48,6 +48,13 @@ class WSS_Server_Session
     void
     do_on_https_upgraded_stream(linear_buffer& data, bool eof) override;
 
+    // This callback is invoked by the network thread when a WebSocket connection
+    // has been accepted. The argument is the request URI of the client.
+    // The default implementation does nothing.
+    virtual
+    void
+    do_on_wss_accepted(cow_string&& uri);
+
     // These callbacks are invoked by the network thread for each fragment of a
     // data message. As with `SSL_Connection::do_on_ssl_stream()`, the argument
     // buffer contains all data that have been accumulated so far and callees are

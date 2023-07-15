@@ -94,8 +94,9 @@ struct Final_WS_Client_Session final : WS_Client_Session
     wkptr<Event_Queue> m_wqueue;
 
     explicit
-    Final_WS_Client_Session(const Easy_WS_Client::thunk_type& thunk, const shptr<Event_Queue>& queue)
-      : WS_Client_Session(), m_thunk(thunk), m_wqueue(queue)
+    Final_WS_Client_Session(cow_stringR uri,
+          const Easy_WS_Client::thunk_type& thunk, const shptr<Event_Queue>& queue)
+      : WS_Client_Session(uri), m_thunk(thunk), m_wqueue(queue)
       { }
 
     void
@@ -118,6 +119,15 @@ struct Final_WS_Client_Session final : WS_Client_Session
         auto& event = queue->events.emplace_back();
         event.type = type;
         event.data = ::std::move(data);
+      }
+
+    virtual
+    void
+    do_on_ws_connected(cow_string&& uri) override
+      {
+        linear_buffer data;
+        data.putn(uri.data(), uri.size());
+        this->do_push_event_common(websocket_open, ::std::move(data));
       }
 
     virtual
@@ -162,10 +172,10 @@ Easy_WS_Client::
 
 void
 Easy_WS_Client::
-connect(const Socket_Address& addr)
+connect(const Socket_Address& addr, cow_stringR uri)
   {
     auto queue = new_sh<X_Event_Queue>();
-    auto session = new_sh<Final_WS_Client_Session>(this->m_thunk, queue);
+    auto session = new_sh<Final_WS_Client_Session>(uri, this->m_thunk, queue);
     queue->wsession = session;
     session->connect(addr);
 

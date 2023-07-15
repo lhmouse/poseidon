@@ -13,6 +13,7 @@ class WS_Client_Session
   : public HTTP_Client_Session
   {
   private:
+    cow_string m_uri;
     WebSocket_Frame_Parser m_parser;
     linear_buffer m_msg;
     bool m_closure_notified = false;
@@ -20,7 +21,7 @@ class WS_Client_Session
   public:
     // Constructs a socket for outgoing connections.
     explicit
-    WS_Client_Session();
+    WS_Client_Session(cow_stringR uri);
 
   private:
     void
@@ -47,6 +48,13 @@ class WS_Client_Session
     virtual
     void
     do_on_http_upgraded_stream(linear_buffer& data, bool eof) override;
+
+    // This callback is invoked by the network thread when a WebSocket connection
+    // has been established. The argument is the request URI of the client.
+    // The default implementation does nothing.
+    virtual
+    void
+    do_on_ws_connected(cow_string&& uri);
 
     // These callbacks are invoked by the network thread for each fragment of a
     // data message. As with `TCP_Connection::do_on_tcp_stream()`, the argument

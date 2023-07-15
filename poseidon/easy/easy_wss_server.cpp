@@ -112,7 +112,7 @@ struct Final_WSS_Server_Session final : WSS_Server_Session
     explicit
     Final_WSS_Server_Session(unique_posix_fd&& fd,
           const Easy_WSS_Server::thunk_type& thunk, const shptr<Client_Table>& table)
-      : SSL_Socket(::std::move(fd), network_driver.default_server_ssl_ctx()),
+      : SSL_Socket(::std::move(fd)),
         m_thunk(thunk), m_wtable(table)
       { }
 
@@ -140,6 +140,15 @@ struct Final_WSS_Server_Session final : WSS_Server_Session
         auto& event = client_iter->second.events.emplace_back();
         event.type = type;
         event.data = ::std::move(data);
+      }
+
+    virtual
+    void
+    do_on_wss_accepted(cow_string&& uri) override
+      {
+        linear_buffer data;
+        data.putn(uri.data(), uri.size());
+        this->do_push_event_common(websocket_open, ::std::move(data));
       }
 
     virtual
@@ -181,8 +190,7 @@ struct Final_Listen_Socket final : Listen_Socket
     explicit
     Final_Listen_Socket(const Socket_Address& addr,
           const Easy_WSS_Server::thunk_type& thunk, const shptr<Client_Table>& table)
-      : Listen_Socket(addr),
-        m_thunk(thunk), m_wtable(table)
+      : Listen_Socket(addr), m_thunk(thunk), m_wtable(table)
       { }
 
     virtual

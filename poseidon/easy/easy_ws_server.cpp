@@ -41,7 +41,8 @@ struct Final_Fiber final : Abstract_Fiber
     const volatile WS_Server_Session* m_refptr;
 
     explicit
-    Final_Fiber(const Easy_WS_Server::thunk_type& thunk, const shptr<Client_Table>& table, const volatile WS_Server_Session* refptr)
+    Final_Fiber(const Easy_WS_Server::thunk_type& thunk,
+          const shptr<Client_Table>& table, const volatile WS_Server_Session* refptr)
       : m_thunk(thunk), m_wtable(table), m_refptr(refptr)
       { }
 
@@ -111,8 +112,7 @@ struct Final_WS_Server_Session final : WS_Server_Session
     explicit
     Final_WS_Server_Session(unique_posix_fd&& fd,
           const Easy_WS_Server::thunk_type& thunk, const shptr<Client_Table>& table)
-      : TCP_Socket(::std::move(fd)),
-        m_thunk(thunk), m_wtable(table)
+      : TCP_Socket(::std::move(fd)), m_thunk(thunk), m_wtable(table)
       { }
 
     void
@@ -139,6 +139,15 @@ struct Final_WS_Server_Session final : WS_Server_Session
         auto& event = client_iter->second.events.emplace_back();
         event.type = type;
         event.data = ::std::move(data);
+      }
+
+    virtual
+    void
+    do_on_ws_accepted(cow_string&& uri) override
+      {
+        linear_buffer data;
+        data.putn(uri.data(), uri.size());
+        this->do_push_event_common(websocket_open, ::std::move(data));
       }
 
     virtual
@@ -180,8 +189,7 @@ struct Final_Listen_Socket final : Listen_Socket
     explicit
     Final_Listen_Socket(const Socket_Address& addr,
           const Easy_WS_Server::thunk_type& thunk, const shptr<Client_Table>& table)
-      : Listen_Socket(addr),
-        m_thunk(thunk), m_wtable(table)
+      : Listen_Socket(addr), m_thunk(thunk), m_wtable(table)
       { }
 
     virtual

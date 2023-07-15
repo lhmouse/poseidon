@@ -9,9 +9,9 @@
 namespace poseidon {
 
 WSS_Client_Session::
-WSS_Client_Session()
-  : HTTPS_Client_Session()  // client constructor
+WSS_Client_Session(cow_stringR uri)
   {
+    this->m_uri = uri;
   }
 
 WSS_Client_Session::
@@ -45,6 +45,7 @@ do_on_ssl_connected()
     // Send a handshake request.
     HTTP_Request_Headers req;
     this->m_parser.create_handshake_request(req);
+    req.uri = this->m_uri;
     this->https_request(::std::move(req), "");
   }
 
@@ -63,8 +64,9 @@ do_on_https_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& /*data
     // Accept the handshake response.
     this->m_parser.accept_handshake_response(resp);
 
-    // If the response is a failure, close the connection.
-    if(this->m_parser.error() || close_now)
+    if(this->m_parser.is_client_mode() && !close_now)
+      this->do_on_wss_connected(::std::move(this->m_uri));
+    else
       this->do_call_on_wss_close_once(1002, this->m_parser.error_description());
   }
 
@@ -185,6 +187,13 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
       this->m_parser.next_frame();
       POSEIDON_LOG_TRACE(("WebSocket parser done: data.size `$1`, eof `$2`"), data.size(), eof);
     }
+  }
+
+void
+WSS_Client_Session::
+do_on_wss_connected(cow_string&& uri)
+  {
+    POSEIDON_LOG_DEBUG(("Connected WebSocket to `$1`: $2"), this->remote_address(), uri);
   }
 
 void

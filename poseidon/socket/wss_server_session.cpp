@@ -61,8 +61,9 @@ for(size_t hindex = 0; hindex < req.headers.size(); ++ hindex)
     this->m_parser.accept_handshake_request(resp, req);
     this->https_response(::std::move(resp), "");
 
-    // If the response is a failure, close the connection.
-    if(this->m_parser.error() || close_now)
+    if(this->m_parser.is_server_mode() && !close_now)
+      this->do_on_wss_accepted(::std::move(req.uri));
+    else
       this->do_call_on_wss_close_once(1002, this->m_parser.error_description());
   }
 
@@ -197,6 +198,13 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
       this->m_parser.next_frame();
       POSEIDON_LOG_TRACE(("WebSocket parser done: data.size `$1`, eof `$2`"), data.size(), eof);
     }
+  }
+
+void
+WSS_Server_Session::
+do_on_wss_accepted(cow_string&& uri)
+  {
+    POSEIDON_LOG_DEBUG(("Accepted WebSocket from `$1`: $2"), this->remote_address(), uri);
   }
 
 void

@@ -31,7 +31,7 @@ class Easy_WSS_Server
     // `(shptrR<WSS_Server_Session> session, Abstract_Fiber& fiber,
     // WebSocket_Event event, linear_buffer&& data)`, where `session` is a
     // pointer to a client session object, and if `event` is
-    //  1) `websocket_open`, then `data` is empty; or
+    //  1) `websocket_open`, then `data` is the request URI; or
     //  2) `websocket_text`/`websocket_binary`/`websocket_pong`, then `data` is a
     //     complete text/binary/pong message that has been received; or
     //  3) `websocket_closed`, then `data` is a string about the reason, such as

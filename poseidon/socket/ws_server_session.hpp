@@ -48,6 +48,13 @@ class WS_Server_Session
     void
     do_on_http_upgraded_stream(linear_buffer& data, bool eof) override;
 
+    // This callback is invoked by the network thread when a WebSocket connection
+    // has been accepted. The argument is the request URI of the client.
+    // The default implementation does nothing.
+    virtual
+    void
+    do_on_ws_accepted(cow_string&& uri);
+
     // These callbacks are invoked by the network thread for each fragment of a
     // data message. As with `TCP_Connection::do_on_tcp_stream()`, the argument
     // buffer contains all data that have been accumulated so far and callees are
