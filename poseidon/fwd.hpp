@@ -167,11 +167,11 @@ template<size_t Nc> using uchar_array = array<unsigned char, Nc>;
 
 struct cacheline_barrier
   {
-    __m128i m_spare_bytes[3];  // `cacheline_size / sizeof(__m128i) - 1`
+    alignas(32) char x_spare_byte;
 
-    cacheline_barrier() noexcept = default;
-    cacheline_barrier(const cacheline_barrier&) = delete;
-    cacheline_barrier& operator=(cacheline_barrier&) = delete;
+    cacheline_barrier() noexcept { }
+    cacheline_barrier(const cacheline_barrier&) { }
+    cacheline_barrier& operator=(const cacheline_barrier&) { return *this;  }
   };
 
 enum zlib_Format : uint8_t
