@@ -14,7 +14,7 @@ event_callback(shptrR<WSS_Server_Session> session, Abstract_Fiber& /*fiber*/, We
   {
     switch(event) {
       case websocket_open:
-        POSEIDON_LOG_WARN(("example WSS server accepted connection: $1"), session->remote_address());
+        POSEIDON_LOG_WARN(("example WS server accepted connection from `$1`: $2"), session->remote_address(), data);
         break;
 
       case websocket_text:
