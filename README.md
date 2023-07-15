@@ -7,9 +7,10 @@
 1. Coroutines (fibers)
 2. Native **TCP**, **TLS over TCP** and **UDP** over either **IPv4** or **IPv6**
 3. I/O multiplexing basing on **epoll**
-4. Configurable add-ons
-5. Asynchronous **MySQL** access (optional, WIP)
-6. Asynchronous **MongoDB** access (optional, WIP)
+4. **HTTP** and **WebSocket** with **permessage-deflate**
+5. Configurable add-ons
+6. Asynchronous **MySQL** access (optional, WIP)
+7. Asynchronous **MongoDB** access (optional, WIP)
 
 # How to build
 
@@ -17,9 +18,9 @@
 
 ```sh
 # For Ubuntu Focal
-sudo aptitude install zlib1g-dev lib{edit,pcre2,ssl,magic,mysqlclient,mongoc,http-parser}-dev
+sudo aptitude install zlib1g-dev lib{edit,pcre2,ssl,magic,mysqlclient,mongoc,http-parser,unwind}-dev
 # For Debian Buster
-sudo aptitude install zlib1g-dev libmariadb-dev-compat lib{edit,pcre2,ssl,magic,mongoc,http-parser}-dev
+sudo aptitude install zlib1g-dev libmariadb-dev-compat lib{edit,pcre2,ssl,magic,mongoc,http-parser,unwind}-dev
 ```
 
 #### Build and install Asteria
