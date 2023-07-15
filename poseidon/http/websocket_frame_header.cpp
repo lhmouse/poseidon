@@ -39,30 +39,30 @@ encode(tinyfmt& fmt) const
       fmt.putn(this->mask_key, 4);
   }
 
-void
+size_t
 WebSocket_Frame_Header::
 mask_payload(char* data, size_t size) noexcept
   {
     if(!this->mask)
-      return;
+      return 0;
 
     char* cur = data;
     char* const esdata = data + size;
     const __m128i exmask = _mm_set1_epi32((int32_t) this->mask_key_u32);
 
-    // This is the optimized implementation with SSE2.
     while(esdata - cur >= 16) {
       __m128i* xcur = (__m128i*) cur;
       _mm_storeu_si128(xcur, _mm_loadu_si128(xcur) ^ exmask);
       cur += 16;
     }
 
-    // This is the generic byte-wise implementation.
     while(cur != esdata) {
       *cur ^= this->mask_key[0];
       ::rocket::rotate(this->mask_key, 0, 1, 4);
       cur ++;
     }
+
+    return size;
   }
 
 }  // namespace poseidon

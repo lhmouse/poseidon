@@ -83,11 +83,11 @@ class WebSocket_Frame_Parser
     pmce_send_no_context_takeover() const noexcept
       { return this->m_pmce_send_no_context_takeover;  }
 
-    int
+    uint8_t
     pmce_send_max_window_bits() const noexcept
       { return this->m_pmce_send_max_window_bits;  }
 
-    int
+    uint8_t
     pmce_recv_max_window_bits() const noexcept
       { return this->m_pmce_recv_max_window_bits;  }
 
