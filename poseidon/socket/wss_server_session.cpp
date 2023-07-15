@@ -321,17 +321,18 @@ do_wss_send_raw_data_frame(uint8_t opcode, chars_proxy data)
     if(data.n < pmce_threshold)
       return this->do_wss_send_raw_frame(opcode, data);
 
+    // Compress the payload and send it. When context takeover is in effect,
+    // compressed frames have dependency on each other, so the mutex must not be
+    // unlocked before the message is sent completely.
+    plain_mutex::unique_lock lock;
+    auto& out_buf = this->m_pmce_opt->deflate_output_buffer(lock);
+    out_buf.clear();
+
+    if(this->m_parser.pmce_send_no_context_takeover())
+      this->m_pmce_opt->deflate_reset(lock);
+
+    bool succ = false;
     try {
-      // Compress the payload and send it. When context takeover is in effect,
-      // compressed frames have dependency on each other, so the mutex must not
-      // be unlocked before the message is sent completely.
-      plain_mutex::unique_lock lock;
-      auto& out_buf = this->m_pmce_opt->deflate_output_buffer(lock);
-      out_buf.clear();
-
-      if(this->m_parser.pmce_send_no_context_takeover())
-        this->m_pmce_opt->deflate_reset(lock);
-
       this->m_pmce_opt->deflate_message_stream(lock, data);
       this->m_pmce_opt->deflate_message_finish(lock);
 
@@ -344,13 +345,13 @@ do_wss_send_raw_data_frame(uint8_t opcode, chars_proxy data)
       tinyfmt_ln fmt;
       header.encode(fmt);
       fmt.putn(out_buf.data(), out_buf.size());
-      return this->ssl_send(fmt);
+      succ = this->ssl_send(fmt);
     }
     catch(exception& stdex) {
       POSEIDON_LOG_ERROR(("Could not compress message: $1"), stdex);
       this->quick_close();
-      return false;
     }
+    return succ;
   }
 
 bool
