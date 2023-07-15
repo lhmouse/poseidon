@@ -106,11 +106,11 @@ do_abstract_socket_on_readable()
             "[UDP socket `$1` (class `$2`)]"),
             this, typeid(*this), stdex);
       }
-
-      POSEIDON_LOG_TRACE((
-          "UDP socket `$1` (class `$2`): `do_on_udp_packet()` done"),
-          this, typeid(*this));
     }
+
+    POSEIDON_LOG_TRACE((
+        "UDP socket `$1` (class `$2`): `do_abstract_socket_on_readable()` done"),
+        this, typeid(*this));
   }
 
 void

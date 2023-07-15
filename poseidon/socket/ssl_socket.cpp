@@ -191,10 +191,6 @@ do_abstract_socket_on_readable()
     // Process received data.
     this->do_on_ssl_stream(queue, ssl_err == SSL_ERROR_ZERO_RETURN);
 
-    POSEIDON_LOG_TRACE((
-        "SSL socket `$1` (class `$2`): `do_on_ssl_stream()` done"),
-        this, typeid(*this));
-
     if(ssl_err == SSL_ERROR_ZERO_RETURN) {
       // If the end of stream has been reached, shut the connection down anyway.
       // Half-open connections are not supported.
@@ -202,6 +198,10 @@ do_abstract_socket_on_readable()
       POSEIDON_LOG_INFO(("Closing SSL connection: remote = $1, alert = $2"), this->remote_address(), alert);
       ::shutdown(this->do_get_fd(), SHUT_RDWR);
     }
+
+    POSEIDON_LOG_TRACE((
+        "SSL socket `$1` (class `$2`): `do_abstract_socket_on_readable()` done"),
+        this, typeid(*this));
   }
 
 void
@@ -222,7 +222,7 @@ do_abstract_socket_on_oob_readable()
     this->do_on_ssl_oob_byte(data);
 
     POSEIDON_LOG_TRACE((
-        "SSL socket `$1` (class `$2`): `do_on_ssl_oob_byte()` done"),
+        "SSL socket `$1` (class `$2`): `do_abstract_socket_on_oob_readable()` done"),
         this, typeid(*this));
   }
 
@@ -300,6 +300,10 @@ do_abstract_socket_on_writable()
       ::SSL_shutdown(this->ssl());
       ::shutdown(this->do_get_fd(), SHUT_RDWR);
     }
+
+    POSEIDON_LOG_TRACE((
+        "SSL socket `$1` (class `$2`): `do_abstract_socket_on_writable()` done"),
+        this, typeid(*this));
   }
 
 void

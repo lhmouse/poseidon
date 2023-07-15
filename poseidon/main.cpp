@@ -210,12 +210,11 @@ do_set_working_directory()
 int
 do_await_child_process_and_exit(::pid_t cpid)
   {
-    ::fprintf(stderr,
-        "Awaiting child process %d...\n",
-        (int) cpid);
-
     for(;;) {
-      // Repeat waiting until the child process has terminated.
+      ::fprintf(stderr,
+          "Awaiting child process %d...\n",
+          (int) cpid);
+
       int wstat = 0;
       ::pid_t r = POSEIDON_SYSCALL_LOOP(::waitpid(cpid, &wstat, 0));
       if(r < 0)

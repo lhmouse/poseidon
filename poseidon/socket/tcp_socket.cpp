@@ -72,16 +72,16 @@ do_abstract_socket_on_readable()
     // Process received data.
     this->do_on_tcp_stream(queue, io_result == 0);
 
-    POSEIDON_LOG_TRACE((
-        "TCP socket `$1` (class `$2`): `do_on_tcp_stream()` done"),
-        this, typeid(*this));
-
     if(io_result == 0) {
       // If the end of stream has been reached, shut the connection down anyway.
       // Half-open connections are not supported.
       POSEIDON_LOG_INFO(("Closing TCP connection: remote = $1"), this->remote_address());
       ::shutdown(this->do_get_fd(), SHUT_RDWR);
     }
+
+    POSEIDON_LOG_TRACE((
+        "TCP socket `$1` (class `$2`): `do_abstract_socket_on_readable()` done"),
+        this, typeid(*this));
   }
 
 void
@@ -102,7 +102,7 @@ do_abstract_socket_on_oob_readable()
     this->do_on_tcp_oob_byte(data);
 
     POSEIDON_LOG_TRACE((
-        "TCP socket `$1` (class `$2`): `do_on_tcp_oob_byte()` done"),
+        "TCP socket `$1` (class `$2`): `do_abstract_socket_on_oob_readable()` done"),
         this, typeid(*this));
   }
 
@@ -150,6 +150,10 @@ do_abstract_socket_on_writable()
       // complete shutdown.
       ::shutdown(this->do_get_fd(), SHUT_RDWR);
     }
+
+    POSEIDON_LOG_TRACE((
+        "TCP socket `$1` (class `$2`): `do_abstract_socket_on_writable()` done"),
+        this, typeid(*this));
   }
 
 void

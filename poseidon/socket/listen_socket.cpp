@@ -115,11 +115,11 @@ do_abstract_socket_on_readable()
             "[TCP listen socket `$1` (class `$2`)]"),
             this, typeid(*this), stdex);
       }
-
-      POSEIDON_LOG_TRACE((
-          "TCP listen socket `$1` (class `$2`): `do_on_listen_new_client_opt()` done"),
-          this, typeid(*this));
     }
+
+    POSEIDON_LOG_TRACE((
+        "TCP listen socket `$1` (class `$2`): `do_abstract_socket_on_readable()` done"),
+        this, typeid(*this));
   }
 
 void
