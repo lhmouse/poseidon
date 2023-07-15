@@ -43,7 +43,8 @@ struct Final_Fiber final : Abstract_Fiber
     const volatile HTTPS_Server_Session* m_refptr;
 
     explicit
-    Final_Fiber(const Easy_HTTPS_Server::thunk_type& thunk, const shptr<Client_Table>& table, const volatile HTTPS_Server_Session* refptr)
+    Final_Fiber(const Easy_HTTPS_Server::thunk_type& thunk,
+          const shptr<Client_Table>& table, const volatile HTTPS_Server_Session* refptr)
       : m_thunk(thunk), m_wtable(table), m_refptr(refptr)
       { }
 
@@ -131,8 +132,7 @@ struct Final_HTTPS_Server_Session final : HTTPS_Server_Session
     explicit
     Final_HTTPS_Server_Session(unique_posix_fd&& fd,
           const Easy_HTTPS_Server::thunk_type& thunk, const shptr<Client_Table>& table)
-      : SSL_Socket(::std::move(fd), network_driver.default_server_ssl_ctx()),
-        m_thunk(thunk), m_wtable(table)
+      : SSL_Socket(::std::move(fd)), m_thunk(thunk), m_wtable(table)
       { }
 
     virtual
@@ -213,8 +213,7 @@ struct Final_Listen_Socket final : Listen_Socket
     explicit
     Final_Listen_Socket(const Socket_Address& addr,
           const Easy_HTTPS_Server::thunk_type& thunk, const shptr<Client_Table>& table)
-      : Listen_Socket(addr),
-        m_thunk(thunk), m_wtable(table)
+      : Listen_Socket(addr), m_thunk(thunk), m_wtable(table)
       { }
 
     virtual

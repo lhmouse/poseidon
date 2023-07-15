@@ -24,12 +24,14 @@ class SSL_Socket
 
   protected:
     // Takes ownership of an accepted socket. [server-side constructor]
+    // If `ctx_opt` is null, `network_driver.default_server_ssl_ctx()` is used.
     explicit
-    SSL_Socket(unique_posix_fd&& fd, const SSL_CTX_ptr& ssl_ctx);
+    SSL_Socket(unique_posix_fd&& fd, ::SSL_CTX* ctx_opt = nullptr);
 
     // Creates a socket for outgoing connections. [client-side constructor]
+    // If `ctx_opt` is null, `network_driver.default_client_ssl_ctx()` is used.
     explicit
-    SSL_Socket(const SSL_CTX_ptr& ssl_ctx);
+    SSL_Socket(::SSL_CTX* ctx_opt = nullptr);
 
   protected:
     // These callbacks implement `Abstract_Socket`.

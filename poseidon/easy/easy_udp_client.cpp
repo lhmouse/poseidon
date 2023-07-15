@@ -87,7 +87,7 @@ struct Final_UDP_Socket final : UDP_Socket
 
     explicit
     Final_UDP_Socket(const Easy_UDP_Client::thunk_type& thunk, const shptr<Packet_Queue>& queue)
-      : UDP_Socket(), m_thunk(thunk), m_wqueue(queue)
+      : m_thunk(thunk), m_wqueue(queue)
       { }
 
     virtual

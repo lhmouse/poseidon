@@ -106,8 +106,7 @@ struct Final_SSL_Socket final : SSL_Socket
 
     explicit
     Final_SSL_Socket(const Easy_SSL_Client::thunk_type& thunk, const shptr<Event_Queue>& queue)
-      : SSL_Socket(network_driver.default_client_ssl_ctx()),
-        m_thunk(thunk), m_wqueue(queue)
+      : m_thunk(thunk), m_wqueue(queue)
       { }
 
     void

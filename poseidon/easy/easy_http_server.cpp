@@ -132,8 +132,7 @@ struct Final_HTTP_Server_Session final : HTTP_Server_Session
     explicit
     Final_HTTP_Server_Session(unique_posix_fd&& fd,
           const Easy_HTTP_Server::thunk_type& thunk, const shptr<Client_Table>& table)
-      : TCP_Socket(::std::move(fd)),
-        m_thunk(thunk), m_wtable(table)
+      : TCP_Socket(::std::move(fd)), m_thunk(thunk), m_wtable(table)
       { }
 
     virtual
@@ -214,8 +213,7 @@ struct Final_Listen_Socket final : Listen_Socket
     explicit
     Final_Listen_Socket(const Socket_Address& addr,
           const Easy_HTTP_Server::thunk_type& thunk, const shptr<Client_Table>& table)
-      : Listen_Socket(addr),
-        m_thunk(thunk), m_wtable(table)
+      : Listen_Socket(addr), m_thunk(thunk), m_wtable(table)
       { }
 
     virtual

@@ -86,7 +86,8 @@ struct Final_UDP_Socket final : UDP_Socket
     wkptr<Packet_Queue> m_wqueue;
 
     explicit
-    Final_UDP_Socket(const Socket_Address& addr, const Easy_UDP_Server::thunk_type& thunk, const shptr<Packet_Queue>& queue)
+    Final_UDP_Socket(const Socket_Address& addr,
+          const Easy_UDP_Server::thunk_type& thunk, const shptr<Packet_Queue>& queue)
       : UDP_Socket(addr), m_thunk(thunk), m_wqueue(queue)
       { }
 

@@ -46,7 +46,8 @@ struct Final_Fiber final : Abstract_Fiber
     const volatile SSL_Socket* m_refptr;
 
     explicit
-    Final_Fiber(const Easy_SSL_Server::thunk_type& thunk, const shptr<Client_Table>& table, const volatile SSL_Socket* refptr)
+    Final_Fiber(const Easy_SSL_Server::thunk_type& thunk,
+          const shptr<Client_Table>& table, const volatile SSL_Socket* refptr)
       : m_thunk(thunk), m_wtable(table), m_refptr(refptr)
       { }
 
@@ -124,9 +125,9 @@ struct Final_SSL_Socket final : SSL_Socket
     wkptr<Client_Table> m_wtable;
 
     explicit
-    Final_SSL_Socket(unique_posix_fd&& fd, const Easy_SSL_Server::thunk_type& thunk, const shptr<Client_Table>& table)
-      : SSL_Socket(::std::move(fd), network_driver.default_server_ssl_ctx()),
-        m_thunk(thunk), m_wtable(table)
+    Final_SSL_Socket(unique_posix_fd&& fd,
+          const Easy_SSL_Server::thunk_type& thunk, const shptr<Client_Table>& table)
+      : SSL_Socket(::std::move(fd)), m_thunk(thunk), m_wtable(table)
       { }
 
     void

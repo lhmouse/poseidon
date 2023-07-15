@@ -97,7 +97,7 @@ struct Final_HTTP_Client_Session final : HTTP_Client_Session
 
     explicit
     Final_HTTP_Client_Session(const Easy_HTTP_Client::thunk_type& thunk, const shptr<Event_Queue>& queue)
-      : HTTP_Client_Session(), m_thunk(thunk), m_wqueue(queue)
+      : m_thunk(thunk), m_wqueue(queue)
       { }
 
     virtual
