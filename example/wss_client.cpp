@@ -51,28 +51,28 @@ timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/, stea
       case 0: {
         Socket_Address addr("127.0.0.1:3807");
         my_client.connect(addr, sref("/some/uri"));
-        POSEIDON_LOG_INFO(("example WSS client connecting: addr = $1"), addr);
+        POSEIDON_LOG_WARN(("example WSS client connecting: addr = $1"), addr);
         break;
       }
 
       case 1: {
         const char data[] = "some text data";
         my_client.wss_send_text(data);
-        POSEIDON_LOG_INFO(("example WSS client sent TEXT frame: $1"), data);
+        POSEIDON_LOG_DEBUG(("example WSS client sent TEXT frame: $1"), data);
         break;
       }
 
       case 2: {
         const char data[] = "some binary data";
         my_client.wss_send_binary(data);
-        POSEIDON_LOG_INFO(("example WSS client sent BINARY frame: $1"), data);
+        POSEIDON_LOG_DEBUG(("example WSS client sent BINARY frame: $1"), data);
         break;
       }
 
       case 3: {
         const char data[] = "some ping data";
         my_client.wss_ping(data);
-        POSEIDON_LOG_INFO(("example WSS client sent PING frame: $1"), data);
+        POSEIDON_LOG_DEBUG(("example WSS client sent PING frame: $1"), data);
         break;
       }
 
@@ -189,7 +189,7 @@ timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/, stea
       }
 
       default:
-        POSEIDON_LOG_INFO(("example WSS client shutting down"));
+        POSEIDON_LOG_DEBUG(("example WSS client shutting down"));
         my_client.wss_shut_down(3456, "bye");
         my_client.close();
         break;

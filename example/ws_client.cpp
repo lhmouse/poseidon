@@ -16,23 +16,23 @@ event_callback(shptrR<WS_Client_Session> session, Abstract_Fiber& /*fiber*/, Web
   {
     switch(event) {
       case websocket_open:
-        POSEIDON_LOG_ERROR(("example WS client connected to server: $1"), session->remote_address());
+        POSEIDON_LOG_WARN(("example WS client connected to server: $1"), session->remote_address());
         break;
 
       case websocket_text:
-        POSEIDON_LOG_ERROR(("example WS client received TEXT data: $1"), data);
+        POSEIDON_LOG_WARN(("example WS client received TEXT data: $1"), data);
         break;
 
       case websocket_binary:
-        POSEIDON_LOG_ERROR(("example WS client received BINARY data: $1"), data);
+        POSEIDON_LOG_WARN(("example WS client received BINARY data: $1"), data);
         break;
 
       case websocket_pong:
-        POSEIDON_LOG_ERROR(("example WS client received PONG data: $1"), data);
+        POSEIDON_LOG_WARN(("example WS client received PONG data: $1"), data);
         break;
 
       case websocket_closed:
-        POSEIDON_LOG_ERROR(("example WS client shut down connection: $1"), data);
+        POSEIDON_LOG_WARN(("example WS client shut down connection: $1"), data);
         break;
     }
   }
@@ -51,28 +51,28 @@ timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/, stea
       case 0: {
         Socket_Address addr("127.0.0.1:3806");
         my_client.connect(addr, sref("/some/uri"));
-        POSEIDON_LOG_INFO(("example WS client connecting: addr = $1"), addr);
+        POSEIDON_LOG_WARN(("example WS client connecting: addr = $1"), addr);
         break;
       }
 
       case 1: {
         const char data[] = "some text data";
         my_client.ws_send_text(data);
-        POSEIDON_LOG_INFO(("example WS client sent TEXT frame: $1"), data);
+        POSEIDON_LOG_DEBUG(("example WS client sent TEXT frame: $1"), data);
         break;
       }
 
       case 2: {
         const char data[] = "some binary data";
         my_client.ws_send_binary(data);
-        POSEIDON_LOG_INFO(("example WS client sent BINARY frame: $1"), data);
+        POSEIDON_LOG_DEBUG(("example WS client sent BINARY frame: $1"), data);
         break;
       }
 
       case 3: {
         const char data[] = "some ping data";
         my_client.ws_ping(data);
-        POSEIDON_LOG_INFO(("example WS client sent PING frame: $1"), data);
+        POSEIDON_LOG_DEBUG(("example WS client sent PING frame: $1"), data);
         break;
       }
 
@@ -189,7 +189,7 @@ timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/, stea
       }
 
       default:
-        POSEIDON_LOG_INFO(("example WS client shutting down"));
+        POSEIDON_LOG_DEBUG(("example WS client shutting down"));
         my_client.ws_shut_down(3456, "bye");
         my_client.close();
         break;
