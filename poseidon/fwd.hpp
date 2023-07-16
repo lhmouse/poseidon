@@ -539,5 +539,18 @@ async_logger_enqueue_generic(const Log_Context& ctx, const ParamsT&... params) n
 #define POSEIDON_LOG_DEBUG(...)   POSEIDON_LOG_G_(debug, __VA_ARGS__)
 #define POSEIDON_LOG_TRACE(...)   POSEIDON_LOG_G_(trace, __VA_ARGS__)
 
+// Evaluates an expression. If an exception is thrown, a message is printed but
+// the exception itself is caught and ignored.
+#define POSEIDON_CATCH_ALL(...)  \
+  ([&]() -> void  \
+    {  \
+      try {  \
+        (void) (__VA_ARGS__);  \
+      }  \
+      catch(::std::exception& zeew2aeY) {  \
+        POSEIDON_LOG_FATAL(("Ignoring exception: $1"), zeew2aeY);  \
+      }  \
+    }())
+
 }  // namespace poseidon
 #endif
