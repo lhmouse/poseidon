@@ -24,8 +24,8 @@ struct Client_Table
           {
             HTTP_Request_Headers req;
             linear_buffer data;
-            bool close_now;
-            uint32_t has_status;
+            bool close_now = false;
+            uint32_t has_status = 0;
           };
 
         deque<Event> events;
@@ -149,9 +149,8 @@ struct Final_HTTPS_Server_Session final : HTTPS_Server_Session
         table->client_map.erase(this);
       }
 
-    virtual
     void
-    do_on_https_request_finish(HTTP_Request_Headers&& req, linear_buffer&& data, bool close_now) override
+    do_push_event_common(Client_Table::Event_Queue::Event&& event) const
       {
         auto table = this->m_wtable.lock();
         if(!table)
@@ -171,37 +170,28 @@ struct Final_HTTPS_Server_Session final : HTTPS_Server_Session
           client_iter->second.fiber_active = true;
         }
 
-        auto& event = client_iter->second.events.emplace_back();
+        client_iter->second.events.push_back(::std::move(event));
+      }
+
+    virtual
+    void
+    do_on_https_request_finish(HTTP_Request_Headers&& req, linear_buffer&& data, bool close_now) override
+      {
+        Client_Table::Event_Queue::Event event;
         event.req = ::std::move(req);
         event.data = ::std::move(data);
         event.close_now = close_now;
+        this->do_push_event_common(::std::move(event));
       }
 
     virtual
     void
     do_on_https_request_error(uint32_t status) override
       {
-        auto table = this->m_wtable.lock();
-        if(!table)
-          return;
-
-        // We are in the network thread here.
-        plain_mutex::unique_lock lock(table->mutex);
-
-        auto client_iter = table->client_map.find(this);
-        if(client_iter == table->client_map.end())
-          return;
-
-        if(!client_iter->second.fiber_active) {
-          // Create a new fiber, if none is active. The fiber shall only reset
-          // `m_fiber_private_buffer` if no event is pending.
-          fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, table, this));
-          client_iter->second.fiber_active = true;
-        }
-
-        auto& event = client_iter->second.events.emplace_back();
+        Client_Table::Event_Queue::Event event;
         event.has_status = status;
         event.close_now = true;
+        this->do_push_event_common(::std::move(event));
       }
   };
 

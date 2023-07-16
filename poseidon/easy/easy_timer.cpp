@@ -108,8 +108,9 @@ struct Final_Timer final : Abstract_Timer
           queue->fiber_active = true;
         }
 
-        auto& event = queue->events.emplace_back();
+        Event_Queue::Event event;
         event.time = time;
+        queue->events.push_back(::std::move(event));
       }
   };
 

@@ -101,7 +101,7 @@ struct Final_WSS_Client_Session final : WSS_Client_Session
       { }
 
     void
-    do_push_event_common(WebSocket_Event type, linear_buffer&& data) const
+    do_push_event_common(Event_Queue::Event&& event) const
       {
         auto queue = this->m_wqueue.lock();
         if(!queue)
@@ -117,39 +117,47 @@ struct Final_WSS_Client_Session final : WSS_Client_Session
           queue->fiber_active = true;
         }
 
-        auto& event = queue->events.emplace_back();
-        event.type = type;
-        event.data = ::std::move(data);
+        queue->events.push_back(::std::move(event));
       }
 
     virtual
     void
     do_on_wss_connected(cow_string&& uri) override
       {
-        linear_buffer data;
-        data.putn(uri.data(), uri.size());
-        this->do_push_event_common(websocket_open, ::std::move(data));
+        Event_Queue::Event event;
+        event.type = websocket_open;
+        event.data.putn(uri.data(), uri.size());
+        this->do_push_event_common(::std::move(event));
       }
 
     virtual
     void
     do_on_wss_text(linear_buffer&& data) override
       {
-        this->do_push_event_common(websocket_text, ::std::move(data));
+        Event_Queue::Event event;
+        event.type = websocket_text;
+        event.data.swap(data);
+        this->do_push_event_common(::std::move(event));
       }
 
     virtual
     void
     do_on_wss_binary(linear_buffer&& data) override
       {
-        this->do_push_event_common(websocket_binary, ::std::move(data));
+        Event_Queue::Event event;
+        event.type = websocket_binary;
+        event.data.swap(data);
+        this->do_push_event_common(::std::move(event));
       }
 
     virtual
     void
     do_on_wss_pong(linear_buffer&& data) override
       {
-        this->do_push_event_common(websocket_pong, ::std::move(data));
+        Event_Queue::Event event;
+        event.type = websocket_pong;
+        event.data.swap(data);
+        this->do_push_event_common(::std::move(event));
       }
 
     virtual
@@ -158,7 +166,11 @@ struct Final_WSS_Client_Session final : WSS_Client_Session
       {
         tinyfmt_ln fmt;
         fmt << status << ": " << reason;
-        this->do_push_event_common(websocket_closed, fmt.extract_buffer());
+
+        Event_Queue::Event event;
+        event.type = websocket_closed;
+        event.data = fmt.extract_buffer();
+        this->do_push_event_common(::std::move(event));
       }
   };
 

@@ -21,7 +21,7 @@ struct Event_Queue
       {
         HTTP_Response_Headers resp;
         linear_buffer data;
-        bool close_now;
+        bool close_now = 0;
       };
 
     mutable plain_mutex mutex;
@@ -118,10 +118,11 @@ struct Final_HTTPS_Client_Session final : HTTPS_Client_Session
           queue->fiber_active = true;
         }
 
-        auto& event = queue->events.emplace_back();
+        Event_Queue::Event event;
         event.resp = ::std::move(resp);
         event.data = ::std::move(data);
         event.close_now = close_now;
+        queue->events.push_back(::std::move(event));
       }
   };
 

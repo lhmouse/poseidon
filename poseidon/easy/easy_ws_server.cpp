@@ -116,7 +116,7 @@ struct Final_WS_Server_Session final : WS_Server_Session
       { }
 
     void
-    do_push_event_common(WebSocket_Event type, linear_buffer&& data) const
+    do_push_event_common(Client_Table::Event_Queue::Event&& event) const
       {
         auto table = this->m_wtable.lock();
         if(!table)
@@ -136,39 +136,47 @@ struct Final_WS_Server_Session final : WS_Server_Session
           client_iter->second.fiber_active = true;
         }
 
-        auto& event = client_iter->second.events.emplace_back();
-        event.type = type;
-        event.data = ::std::move(data);
+        client_iter->second.events.push_back(::std::move(event));
       }
 
     virtual
     void
     do_on_ws_accepted(cow_string&& uri) override
       {
-        linear_buffer data;
-        data.putn(uri.data(), uri.size());
-        this->do_push_event_common(websocket_open, ::std::move(data));
+        Client_Table::Event_Queue::Event event;
+        event.type = websocket_open;
+        event.data.putn(uri.data(), uri.size());
+        this->do_push_event_common(::std::move(event));
       }
 
     virtual
     void
     do_on_ws_text(linear_buffer&& data) override
       {
-        this->do_push_event_common(websocket_text, ::std::move(data));
+        Client_Table::Event_Queue::Event event;
+        event.type = websocket_text;
+        event.data.swap(data);
+        this->do_push_event_common(::std::move(event));
       }
 
     virtual
     void
     do_on_ws_binary(linear_buffer&& data) override
       {
-        this->do_push_event_common(websocket_binary, ::std::move(data));
+        Client_Table::Event_Queue::Event event;
+        event.type = websocket_binary;
+        event.data.swap(data);
+        this->do_push_event_common(::std::move(event));
       }
 
     virtual
     void
     do_on_ws_pong(linear_buffer&& data) override
       {
-        this->do_push_event_common(websocket_pong, ::std::move(data));
+        Client_Table::Event_Queue::Event event;
+        event.type = websocket_pong;
+        event.data.swap(data);
+        this->do_push_event_common(::std::move(event));
       }
 
     virtual
@@ -177,7 +185,11 @@ struct Final_WS_Server_Session final : WS_Server_Session
       {
         tinyfmt_ln fmt;
         fmt << status << ": " << reason;
-        this->do_push_event_common(websocket_closed, fmt.extract_buffer());
+
+        Client_Table::Event_Queue::Event event;
+        event.type = websocket_closed;
+        event.data = fmt.extract_buffer();
+        this->do_push_event_common(::std::move(event));
       }
   };
 

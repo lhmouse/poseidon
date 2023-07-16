@@ -25,7 +25,7 @@ struct Event_Queue
       {
         Connection_Event type;
         linear_buffer data;
-        int code;
+        int code = 0;
       };
 
     mutable plain_mutex mutex;
@@ -110,7 +110,7 @@ struct Final_TCP_Socket final : TCP_Socket
       { }
 
     void
-    do_push_event_common(Connection_Event type, linear_buffer&& data, int code) const
+    do_push_event_common(Event_Queue::Event&& event) const
       {
         auto queue = this->m_wqueue.lock();
         if(!queue)
@@ -126,37 +126,42 @@ struct Final_TCP_Socket final : TCP_Socket
           queue->fiber_active = true;
         }
 
-        auto& event = queue->events.emplace_back();
-        event.type = type;
-        event.data = ::std::move(data);
-        event.code = code;
+        queue->events.push_back(::std::move(event));
       }
 
     virtual
     void
     do_on_tcp_connected() override
       {
-        linear_buffer data;
-        this->do_push_event_common(connection_open, ::std::move(data), 0);
+        Event_Queue::Event event;
+        event.type = connection_open;
+        this->do_push_event_common(::std::move(event));
       }
 
     virtual
     void
     do_on_tcp_stream(linear_buffer& data, bool eof) override
       {
-        this->do_push_event_common(connection_stream, ::std::move(data), eof);
-        data.clear();
+        Event_Queue::Event event;
+        event.type = connection_stream;
+        event.data.swap(data);
+        event.code = eof;
+        this->do_push_event_common(::std::move(event));
       }
 
     virtual
     void
     do_abstract_socket_on_closed() override
       {
-        int sys_errno = errno;
-        linear_buffer data;
         char sbuf[1024];
-        data.puts(::strerror_r(sys_errno, sbuf, sizeof(sbuf)));
-        this->do_push_event_common(connection_closed, ::std::move(data), sys_errno);
+        int err_code = errno;
+        const char* err_str = ::strerror_r(err_code, sbuf, sizeof(sbuf));
+
+        Event_Queue::Event event;
+        event.type = connection_closed;
+        event.data.puts(err_str);
+        event.code = err_code;
+        this->do_push_event_common(::std::move(event));
       }
   };
 
