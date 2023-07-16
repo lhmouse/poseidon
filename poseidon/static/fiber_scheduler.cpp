@@ -383,7 +383,7 @@ thread_loop()
       return;
 
     if(elem->fiber->m_state.load() == async_pending) {
-      POSEIDON_LOG_DEBUG(("Initializing fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
+      POSEIDON_LOG_TRACE(("Initializing fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
       ROCKET_ASSERT(elem->sched_inner->uc_stack.ss_sp == nullptr);
 
       elem->fiber->m_yield =
