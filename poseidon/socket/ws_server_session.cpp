@@ -349,7 +349,7 @@ do_ws_send_raw_data_frame(uint8_t opcode, chars_proxy data)
     }
     catch(exception& stdex) {
       POSEIDON_LOG_ERROR(("Could not compress message: $1"), stdex);
-      this->quick_close();
+      this->m_pmce_opt->deflate_reset(lock);
     }
     return succ;
   }
