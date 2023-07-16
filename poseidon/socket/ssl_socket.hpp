@@ -6,7 +6,6 @@
 
 #include "../fwd.hpp"
 #include "abstract_socket.hpp"
-#include "../base/char256.hpp"
 #include "../third/openssl_fwd.hpp"
 namespace poseidon {
 

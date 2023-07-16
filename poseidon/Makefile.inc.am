@@ -14,7 +14,6 @@ nobase_include_HEADERS +=  \
   %reldir%/static/fiber_scheduler.hpp  \
   %reldir%/static/async_task_executor.hpp  \
   %reldir%/static/network_driver.hpp  \
-  %reldir%/base/char256.hpp  \
   %reldir%/base/uuid.hpp  \
   %reldir%/base/config_file.hpp  \
   %reldir%/base/abstract_timer.hpp  \
@@ -79,7 +78,6 @@ lib_libposeidon_la_SOURCES =  \
   %reldir%/static/fiber_scheduler.cpp  \
   %reldir%/static/async_task_executor.cpp  \
   %reldir%/static/network_driver.cpp  \
-  %reldir%/base/char256.cpp  \
   %reldir%/base/uuid.cpp  \
   %reldir%/base/config_file.cpp  \
   %reldir%/base/abstract_timer.cpp  \

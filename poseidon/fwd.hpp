@@ -165,15 +165,6 @@ template<typename... T> using vfptr = void (*)(T...);
 template<size_t Nc> using char_array = array<char, Nc>;
 template<size_t Nc> using uchar_array = array<unsigned char, Nc>;
 
-struct cacheline_barrier
-  {
-    alignas(32) char x_spare_byte;
-
-    cacheline_barrier() noexcept { }
-    cacheline_barrier(const cacheline_barrier&) { }
-    cacheline_barrier& operator=(const cacheline_barrier&) { return *this;  }
-  };
-
 enum zlib_Format : uint8_t
   {
     zlib_deflate  = 0,
@@ -232,83 +223,15 @@ enum WebSocket_Event : uint8_t
     websocket_closed  = 4,
   };
 
-// Base types
-class char256;
-class uuid;
-using guid = uuid;
+struct cacheline_barrier
+  {
+    alignas(32) char x_spare_byte;
 
-class Config_File;
-class Abstract_Timer;
-class Abstract_Async_Task;
-class Deflator;
-class Inflator;
+    cacheline_barrier() noexcept { }
+    cacheline_barrier(const cacheline_barrier&) { }
+    cacheline_barrier& operator=(const cacheline_barrier&) { return *this;  }
+  };
 
-// Fiber types
-class Abstract_Future;
-class DNS_Future;
-class Read_File_Future;
-class Abstract_Fiber;
-
-// Socket types
-class Socket_Address;
-class Abstract_Socket;
-class Listen_Socket;
-class UDP_Socket;
-class TCP_Socket;
-class SSL_Socket;
-class HTTP_Server_Session;
-class HTTP_Client_Session;
-class HTTPS_Server_Session;
-class HTTPS_Client_Session;
-class WS_Server_Session;
-class WS_Client_Session;
-class WSS_Server_Session;
-class WSS_Client_Session;
-
-// HTTP types
-class HTTP_DateTime;
-class HTTP_Value;
-class HTTP_Header_Parser;
-struct HTTP_Request_Headers;
-class HTTP_Request_Parser;
-struct HTTP_Response_Headers;
-class HTTP_Response_Parser;
-struct WebSocket_Frame_Header;
-class WebSocket_Frame_Parser;
-class WebSocket_Deflator;
-
-// Easy types
-// Being 'easy' means all callbacks are invoked in fibers and can perform
-// async/await operations. These are suitable for agile development.
-class Easy_Deflator;
-class Easy_Inflator;
-class Easy_Timer;
-class Easy_UDP_Server;
-class Easy_UDP_Client;
-class Easy_TCP_Server;
-class Easy_TCP_Client;
-class Easy_SSL_Server;
-class Easy_SSL_Client;
-class Easy_HTTP_Server;
-class Easy_HTTP_Client;
-class Easy_HTTPS_Server;
-class Easy_HTTPS_Client;
-class Easy_WS_Server;
-class Easy_WS_Client;
-class Easy_WSS_Server;
-class Easy_WSS_Client;
-
-// Singletons
-extern atomic_relaxed<int> exit_signal;
-extern class Main_Config& main_config;
-extern class Fiber_Scheduler& fiber_scheduler;
-
-extern class Async_Logger& async_logger;
-extern class Timer_Driver& timer_driver;
-extern class Async_Task_Executor& async_task_executor;
-extern class Network_Driver& network_driver;
-
-// Thunks for invocable objects, for type erasure
 template<typename... ArgsT>
 class thunk
   {
@@ -351,7 +274,203 @@ class thunk
       }
   };
 
-// General character sequence (not null-terminated)
+class char256
+  {
+  private:
+    union {
+      char m_data[8];
+      ::std::aligned_storage<256>::type m_stor;
+    };
+
+  public:
+    // Constructs a null-terminated string of zero characters.
+    // This constructor is not explicit as it doesn't allocate memory.
+    constexpr
+    char256() noexcept
+      : m_data()
+      { }
+
+    // Constructs a null-terminated string.
+    // This constructor is not explicit as it doesn't allocate memory.
+    constexpr
+    char256(const char* str_opt)
+      : m_data()
+      {
+        const char* str = str_opt ? str_opt : "";
+        size_t len = ::rocket::xstrlen(str);
+        if(len >= 256)
+          ::rocket::sprintf_and_throw<::std::length_error>(
+              "char256: string `%s` (length `%lld`) too long",
+              str, (long long) len);
+
+        // XXX: This should be `xmempcpy()` but clang doesn't like it?
+        ::rocket::details_xstring::maybe_constexpr::ymempcpy(this->m_data, str, len + 1);
+      }
+
+    char256&
+    swap(char256& other) noexcept
+      {
+        ::std::swap(this->m_stor, other.m_stor);
+        return *this;
+      }
+
+  public:
+    // Returns a pointer to internal storage so a buffer can be passed as
+    // an argument for `char*`.
+    constexpr operator
+    const char*() const noexcept
+      { return this->m_data;  }
+
+    operator
+    char*() noexcept
+      { return this->m_data;  }
+
+    constexpr
+    const char*
+    c_str() const noexcept
+      { return this->m_data;  }
+  };
+
+inline
+void
+swap(char256& lhs, char256& rhs) noexcept
+  {
+    lhs.swap(rhs);
+  }
+
+inline
+tinyfmt&
+operator<<(tinyfmt& fmt, const char256& cbuf)
+  {
+    return fmt << cbuf.c_str();
+  }
+
+constexpr
+bool
+operator==(const char256& lhs, const char256& rhs) noexcept
+  {
+    return ::rocket::xstrcmp(lhs.c_str(), rhs.c_str()) == 0;
+  }
+
+constexpr
+bool
+operator==(const char* lhs, const char256& rhs) noexcept
+  {
+    return ::rocket::xstrcmp(lhs, rhs.c_str()) == 0;
+  }
+
+constexpr
+bool
+operator==(const char256& lhs, const char* rhs) noexcept
+  {
+    return ::rocket::xstrcmp(lhs.c_str(), rhs) == 0;
+  }
+
+constexpr
+bool
+operator!=(const char256& lhs, const char256& rhs) noexcept
+  {
+    return ::rocket::xstrcmp(lhs.c_str(), rhs.c_str()) != 0;
+  }
+
+constexpr
+bool
+operator!=(const char* lhs, const char256& rhs) noexcept
+  {
+    return ::rocket::xstrcmp(lhs, rhs.c_str()) != 0;
+  }
+
+constexpr
+bool
+operator!=(const char256& lhs, const char* rhs) noexcept
+  {
+    return ::rocket::xstrcmp(lhs.c_str(), rhs) != 0;
+  }
+
+constexpr
+bool
+operator<(const char256& lhs, const char256& rhs) noexcept
+  {
+    return ::rocket::xstrcmp(lhs.c_str(), rhs.c_str()) < 0;
+  }
+
+constexpr
+bool
+operator<(const char* lhs, const char256& rhs) noexcept
+  {
+    return ::rocket::xstrcmp(lhs, rhs.c_str()) < 0;
+  }
+
+constexpr
+bool
+operator<(const char256& lhs, const char* rhs) noexcept
+  {
+    return ::rocket::xstrcmp(lhs.c_str(), rhs) < 0;
+  }
+
+constexpr
+bool
+operator>(const char256& lhs, const char256& rhs) noexcept
+  {
+    return ::rocket::xstrcmp(lhs.c_str(), rhs.c_str()) > 0;
+  }
+
+constexpr
+bool
+operator>(const char* lhs, const char256& rhs) noexcept
+  {
+    return ::rocket::xstrcmp(lhs, rhs.c_str()) > 0;
+  }
+
+constexpr
+bool
+operator>(const char256& lhs, const char* rhs) noexcept
+  {
+    return ::rocket::xstrcmp(lhs.c_str(), rhs) > 0;
+  }
+
+constexpr
+bool
+operator<=(const char256& lhs, const char256& rhs) noexcept
+  {
+    return ::rocket::xstrcmp(lhs.c_str(), rhs.c_str()) <= 0;
+  }
+
+constexpr
+bool
+operator<=(const char* lhs, const char256& rhs) noexcept
+  {
+    return ::rocket::xstrcmp(lhs, rhs.c_str()) <= 0;
+  }
+
+constexpr
+bool
+operator<=(const char256& lhs, const char* rhs) noexcept
+  {
+    return ::rocket::xstrcmp(lhs.c_str(), rhs) <= 0;
+  }
+
+constexpr
+bool
+operator>=(const char256& lhs, const char256& rhs) noexcept
+  {
+    return ::rocket::xstrcmp(lhs.c_str(), rhs.c_str()) >= 0;
+  }
+
+constexpr
+bool
+operator>=(const char* lhs, const char256& rhs) noexcept
+  {
+    return ::rocket::xstrcmp(lhs, rhs.c_str()) >= 0;
+  }
+
+constexpr
+bool
+operator>=(const char256& lhs, const char* rhs) noexcept
+  {
+    return ::rocket::xstrcmp(lhs.c_str(), rhs) >= 0;
+  }
+
 struct chars_proxy
   {
     const char* p;
@@ -453,7 +572,6 @@ operator<<(tinyfmt& fmt, chars_proxy data)
     return fmt.putn(data.p, data.n);
   }
 
-// Smart pointers
 template<typename ValueT, typename... ArgsT>
 ROCKET_ALWAYS_INLINE
 uniptr<ValueT>
@@ -485,6 +603,81 @@ new_sh(ValueT&& value)
   {
     return ::std::make_shared<typename ::std::decay<ValueT>::type>(::std::forward<ValueT>(value));
   }
+
+// Base types
+class uuid;
+using guid = uuid;
+
+class Config_File;
+class Abstract_Timer;
+class Abstract_Async_Task;
+class Deflator;
+class Inflator;
+
+// Fiber types
+class Abstract_Future;
+class DNS_Future;
+class Read_File_Future;
+class Abstract_Fiber;
+
+// Socket types
+class Socket_Address;
+class Abstract_Socket;
+class Listen_Socket;
+class UDP_Socket;
+class TCP_Socket;
+class SSL_Socket;
+class HTTP_Server_Session;
+class HTTP_Client_Session;
+class HTTPS_Server_Session;
+class HTTPS_Client_Session;
+class WS_Server_Session;
+class WS_Client_Session;
+class WSS_Server_Session;
+class WSS_Client_Session;
+
+// HTTP types
+class HTTP_DateTime;
+class HTTP_Value;
+class HTTP_Header_Parser;
+struct HTTP_Request_Headers;
+class HTTP_Request_Parser;
+struct HTTP_Response_Headers;
+class HTTP_Response_Parser;
+struct WebSocket_Frame_Header;
+class WebSocket_Frame_Parser;
+class WebSocket_Deflator;
+
+// Easy types
+// Being 'easy' means all callbacks are invoked in fibers and can perform
+// async/await operations. These are suitable for agile development.
+class Easy_Deflator;
+class Easy_Inflator;
+class Easy_Timer;
+class Easy_UDP_Server;
+class Easy_UDP_Client;
+class Easy_TCP_Server;
+class Easy_TCP_Client;
+class Easy_SSL_Server;
+class Easy_SSL_Client;
+class Easy_HTTP_Server;
+class Easy_HTTP_Client;
+class Easy_HTTPS_Server;
+class Easy_HTTPS_Client;
+class Easy_WS_Server;
+class Easy_WS_Client;
+class Easy_WSS_Server;
+class Easy_WSS_Client;
+
+// Singletons
+extern atomic_relaxed<int> exit_signal;
+extern class Main_Config& main_config;
+extern class Fiber_Scheduler& fiber_scheduler;
+
+extern class Async_Logger& async_logger;
+extern class Timer_Driver& timer_driver;
+extern class Async_Task_Executor& async_task_executor;
+extern class Network_Driver& network_driver;
 
 // Logging with prettification
 enum Log_Level : uint8_t
