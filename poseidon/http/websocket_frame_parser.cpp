@@ -282,32 +282,33 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
     resp.headers.emplace_back(sref("Sec-WebSocket-Accept"), cow_string(sec_ws.accept_str, 28));
 
     if(pmce.compression_level != 0) {
-      // Append PMCE response parameters. If `client_no_context_takeover` and
-      // `client_max_window_bits` are specified, they are echoed back to the
-      // client. (Maybe this is not necessary, but we do it anyway.)
-      tinyfmt_str pmce_resp_fmt;
-      pmce_resp_fmt.set_string(sref("permessage-deflate"));
-
-      if(pmce.server_max_window_bits != 15)
-        pmce_resp_fmt << "; server_max_window_bits=" << pmce.server_max_window_bits;
-
-      if(pmce.server_no_context_takeover)
-        pmce_resp_fmt << "; server_no_context_takeover";
-
-      if(pmce.client_max_window_bits != 15)
-        pmce_resp_fmt << "; client_max_window_bits=" << pmce.client_max_window_bits;
-
-      if(pmce.client_no_context_takeover)
-        pmce_resp_fmt << "; client_no_context_takeover";
-
-      resp.headers.emplace_back(sref("Sec-WebSocket-Extensions"), pmce_resp_fmt.extract_string());
-
       // Accept PMCE parameters.
       this->m_pmce_reserved = 0;
       this->m_pmce_send_compression_level_m2 = clamp(pmce.compression_level - 2, 1, 7) & 7;
       this->m_pmce_send_no_context_takeover = pmce.server_no_context_takeover;
       this->m_pmce_send_max_window_bits = pmce.server_max_window_bits & 15;
       this->m_pmce_recv_max_window_bits = pmce.client_max_window_bits & 15;
+
+      // Compose the PMCE response header.
+      tinyfmt_str pmce_resp_fmt;
+      pmce_resp_fmt.set_string(sref("permessage-deflate"));
+
+      // If `client_no_context_takeover` is specified, it is echoed back to the
+      // client. (Maybe this is not necessary, but we do it anyway.)
+      if(pmce.client_no_context_takeover)
+        pmce_resp_fmt << "; client_no_context_takeover";
+
+      // If negotiation has selected a different window size, notify it. If the
+      // client did not send `server_max_window_bits`, then a default size of 15
+      // is used, which is not echoed back, as the client will not accept it.
+      if(pmce.server_max_window_bits != 15)
+        pmce_resp_fmt << "; server_max_window_bits=" << pmce.server_max_window_bits;
+
+      if(pmce.client_max_window_bits != 15)
+        pmce_resp_fmt << "; client_max_window_bits=" << pmce.client_max_window_bits;
+
+      // Append it.
+      resp.headers.emplace_back(sref("Sec-WebSocket-Extensions"), pmce_resp_fmt.extract_string());
     }
 
     // For the server, this connection has now been established.
