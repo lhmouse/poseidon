@@ -3,6 +3,7 @@
 
 #include "../precompiled.ipp"
 #include "https_server_session.hpp"
+#include "../http/http_header_parser.hpp"
 #include "../base/config_file.hpp"
 #include "../static/main_config.hpp"
 #include "../utils.hpp"
@@ -182,6 +183,19 @@ do_https_raw_response(const HTTP_Response_Headers& resp, chars_proxy data)
     // data before this, which would violate RFC 6455 anyway, so we don't care.
     if(resp.status == HTTP_STATUS_SWITCHING_PROTOCOLS)
       this->m_upgrade_ack.store(true);
+
+    // If `Connection:` contains `close`, the connection should be closed.
+    HTTP_Header_Parser hparser;
+    for(const auto& hpair : resp.headers)
+      if(ascii_ci_equal(hpair.first, sref("Connection"))) {
+        if(!hpair.second.is_string())
+          continue;
+
+        hparser.reload(hpair.second.as_string());
+        while(hparser.next_element())
+          if(ascii_ci_equal(hparser.current_name(), sref("close")))
+            this->ssl_shut_down();
+      }
 
     // The return value indicates whether no error has occurred. There is no
     // guarantee that data will eventually arrive, due to network flapping.
