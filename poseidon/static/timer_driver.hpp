@@ -14,7 +14,7 @@ class Timer_Driver
 
     mutable plain_mutex m_pq_mutex;
     condition_variable m_pq_avail;
-    uint64_t m_serial;
+    uint64_t m_serial = 0;
     vector<X_Queued_Timer> m_pq;
 
   public:
