@@ -194,7 +194,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
           case 9:  // PING
             POSEIDON_LOG_TRACE(("WebSocket PING from `$1`: $2"), this->remote_address(), payload);
-            this->do_ws_send_raw_frame(10, payload);
+            this->do_ws_send_raw_frame(0b10001010, payload);
             break;
 
           case 10:  // PONG
@@ -294,11 +294,15 @@ do_on_ws_close(uint16_t status, chars_proxy reason)
 
 bool
 WS_Server_Session::
-do_ws_send_raw_frame(uint8_t opcode, chars_proxy data)
+do_ws_send_raw_frame(int opcode, chars_proxy data)
   {
     // Compose a single frame and send it. Frames to clients will not be masked.
     WebSocket_Frame_Header header;
     header.fin = 1;
+    header.fin = opcode >> 7 & 1;
+    header.rsv1 = opcode >> 6 & 1;
+    header.rsv2 = opcode >> 5 & 1;
+    header.rsv3 = opcode >> 4 & 1;
     header.opcode = opcode & 15;
     header.payload_len = data.n;
 
@@ -310,7 +314,7 @@ do_ws_send_raw_frame(uint8_t opcode, chars_proxy data)
 
 bool
 WS_Server_Session::
-do_ws_send_raw_data_frame(uint8_t opcode, chars_proxy data)
+do_ws_send_raw_data_frame(int opcode, chars_proxy data)
   {
     // When PMCE is not active, send the frame as is.
     if(!this->m_pmce_opt)
@@ -336,16 +340,8 @@ do_ws_send_raw_data_frame(uint8_t opcode, chars_proxy data)
       this->m_pmce_opt->deflate_message_stream(lock, data);
       this->m_pmce_opt->deflate_message_finish(lock);
 
-      WebSocket_Frame_Header header;
-      header.fin = 1;
-      header.rsv1 = 1;
-      header.opcode = opcode & 15;
-      header.payload_len = out_buf.size();
-
-      tinyfmt_ln fmt;
-      header.encode(fmt);
-      fmt.putn(out_buf.data(), out_buf.size());
-      succ = this->tcp_send(fmt);
+      // RSV1 + opcode
+      this->do_ws_send_raw_frame(0b01000000 | opcode, out_buf);
     }
     catch(exception& stdex) {
       POSEIDON_LOG_ERROR(("Could not compress message: $1"), stdex);
@@ -364,8 +360,8 @@ ws_send_text(chars_proxy data)
           "[WebSocket server session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    // TEXT := opcode 1
-    return this->do_ws_send_raw_data_frame(1, data);
+    // FIN + TEXT
+    return this->do_ws_send_raw_data_frame(0b10000000 | 1, data);
   }
 
 bool
@@ -378,8 +374,8 @@ ws_send_binary(chars_proxy data)
           "[WebSocket server session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    // BINARY := opcode 2
-    return this->do_ws_send_raw_data_frame(2, data);
+    // FIN + BINARY
+    return this->do_ws_send_raw_data_frame(0b10000000 | 2, data);
   }
 
 bool
@@ -396,8 +392,8 @@ ws_ping(chars_proxy data)
     // the data string has to be truncated if it's too long.
     chars_proxy ctl_data(data.p, min(data.n, 125));
 
-    // PING := opcode 9
-    return this->do_ws_send_raw_frame(9, ctl_data);
+    // FIN + PING
+    return this->do_ws_send_raw_frame(0b10000000 | 9, ctl_data);
   }
 
 bool
@@ -416,8 +412,8 @@ ws_shut_down(uint16_t status, chars_proxy reason) noexcept
 
     bool succ = false;
     try {
-      // CLOSE := opcode 9
-      succ = this->do_ws_send_raw_frame(8, ctl_data);
+      // FIN + CLOSE
+      succ = this->do_ws_send_raw_frame(0b10000000 | 8, ctl_data);
     }
     catch(exception& stdex) {
       POSEIDON_LOG_ERROR((
