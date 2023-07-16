@@ -523,21 +523,21 @@ async_logger_enqueue_generic(const Log_Context& ctx, const ParamsT&... params) n
     return true;
   }
 
-// Define helper macros that compose log messages. The `TEMPLATE` argument
-// shall be a list of string literals in parentheses. Multiple strings are
-// joined with line separators.
-#define POSEIDON_LOG_GENERIC(LEVEL, TEMPLATE, ...)  \
+// Define helper macros that compose log messages. The `TEMPLATE` argument shall
+// be a list of string literals in parentheses. Multiple strings are joined with
+// line separators.
+#define POSEIDON_LOG_G_(LEVEL, TEMPLATE, ...)  \
   (::poseidon::async_logger_check_level(::poseidon::log_level_##LEVEL)  \
    && ::poseidon::async_logger_enqueue_generic(  \
           { __FILE__, __LINE__, ::poseidon::log_level_##LEVEL, __FUNCTION__ }, \
             (::asteria::make_string_template TEMPLATE), ##__VA_ARGS__))
 
-#define POSEIDON_LOG_FATAL(...)   POSEIDON_LOG_GENERIC(fatal, __VA_ARGS__)
-#define POSEIDON_LOG_ERROR(...)   POSEIDON_LOG_GENERIC(error, __VA_ARGS__)
-#define POSEIDON_LOG_WARN(...)    POSEIDON_LOG_GENERIC(warn,  __VA_ARGS__)
-#define POSEIDON_LOG_INFO(...)    POSEIDON_LOG_GENERIC(info,  __VA_ARGS__)
-#define POSEIDON_LOG_DEBUG(...)   POSEIDON_LOG_GENERIC(debug, __VA_ARGS__)
-#define POSEIDON_LOG_TRACE(...)   POSEIDON_LOG_GENERIC(trace, __VA_ARGS__)
+#define POSEIDON_LOG_FATAL(...)   POSEIDON_LOG_G_(fatal, __VA_ARGS__)
+#define POSEIDON_LOG_ERROR(...)   POSEIDON_LOG_G_(error, __VA_ARGS__)
+#define POSEIDON_LOG_WARN(...)    POSEIDON_LOG_G_(warn,  __VA_ARGS__)
+#define POSEIDON_LOG_INFO(...)    POSEIDON_LOG_G_(info,  __VA_ARGS__)
+#define POSEIDON_LOG_DEBUG(...)   POSEIDON_LOG_G_(debug, __VA_ARGS__)
+#define POSEIDON_LOG_TRACE(...)   POSEIDON_LOG_G_(trace, __VA_ARGS__)
 
 }  // namespace poseidon
 #endif
