@@ -307,13 +307,6 @@ class char256
         ::rocket::details_xstring::maybe_constexpr::ymempcpy(this->m_data, str, len + 1);
       }
 
-    char256&
-    swap(char256& other) noexcept
-      {
-        ::std::swap(this->m_stor, other.m_stor);
-        return *this;
-      }
-
   public:
     // Returns a pointer to internal storage so a buffer can be passed as
     // an argument for `char*`.
@@ -332,143 +325,10 @@ class char256
   };
 
 inline
-void
-swap(char256& lhs, char256& rhs) noexcept
-  {
-    lhs.swap(rhs);
-  }
-
-inline
 tinyfmt&
 operator<<(tinyfmt& fmt, const char256& cbuf)
   {
-    return fmt << cbuf.c_str();
-  }
-
-constexpr
-bool
-operator==(const char256& lhs, const char256& rhs) noexcept
-  {
-    return ::rocket::xstrcmp(lhs.c_str(), rhs.c_str()) == 0;
-  }
-
-constexpr
-bool
-operator==(const char* lhs, const char256& rhs) noexcept
-  {
-    return ::rocket::xstrcmp(lhs, rhs.c_str()) == 0;
-  }
-
-constexpr
-bool
-operator==(const char256& lhs, const char* rhs) noexcept
-  {
-    return ::rocket::xstrcmp(lhs.c_str(), rhs) == 0;
-  }
-
-constexpr
-bool
-operator!=(const char256& lhs, const char256& rhs) noexcept
-  {
-    return ::rocket::xstrcmp(lhs.c_str(), rhs.c_str()) != 0;
-  }
-
-constexpr
-bool
-operator!=(const char* lhs, const char256& rhs) noexcept
-  {
-    return ::rocket::xstrcmp(lhs, rhs.c_str()) != 0;
-  }
-
-constexpr
-bool
-operator!=(const char256& lhs, const char* rhs) noexcept
-  {
-    return ::rocket::xstrcmp(lhs.c_str(), rhs) != 0;
-  }
-
-constexpr
-bool
-operator<(const char256& lhs, const char256& rhs) noexcept
-  {
-    return ::rocket::xstrcmp(lhs.c_str(), rhs.c_str()) < 0;
-  }
-
-constexpr
-bool
-operator<(const char* lhs, const char256& rhs) noexcept
-  {
-    return ::rocket::xstrcmp(lhs, rhs.c_str()) < 0;
-  }
-
-constexpr
-bool
-operator<(const char256& lhs, const char* rhs) noexcept
-  {
-    return ::rocket::xstrcmp(lhs.c_str(), rhs) < 0;
-  }
-
-constexpr
-bool
-operator>(const char256& lhs, const char256& rhs) noexcept
-  {
-    return ::rocket::xstrcmp(lhs.c_str(), rhs.c_str()) > 0;
-  }
-
-constexpr
-bool
-operator>(const char* lhs, const char256& rhs) noexcept
-  {
-    return ::rocket::xstrcmp(lhs, rhs.c_str()) > 0;
-  }
-
-constexpr
-bool
-operator>(const char256& lhs, const char* rhs) noexcept
-  {
-    return ::rocket::xstrcmp(lhs.c_str(), rhs) > 0;
-  }
-
-constexpr
-bool
-operator<=(const char256& lhs, const char256& rhs) noexcept
-  {
-    return ::rocket::xstrcmp(lhs.c_str(), rhs.c_str()) <= 0;
-  }
-
-constexpr
-bool
-operator<=(const char* lhs, const char256& rhs) noexcept
-  {
-    return ::rocket::xstrcmp(lhs, rhs.c_str()) <= 0;
-  }
-
-constexpr
-bool
-operator<=(const char256& lhs, const char* rhs) noexcept
-  {
-    return ::rocket::xstrcmp(lhs.c_str(), rhs) <= 0;
-  }
-
-constexpr
-bool
-operator>=(const char256& lhs, const char256& rhs) noexcept
-  {
-    return ::rocket::xstrcmp(lhs.c_str(), rhs.c_str()) >= 0;
-  }
-
-constexpr
-bool
-operator>=(const char* lhs, const char256& rhs) noexcept
-  {
-    return ::rocket::xstrcmp(lhs, rhs.c_str()) >= 0;
-  }
-
-constexpr
-bool
-operator>=(const char256& lhs, const char* rhs) noexcept
-  {
-    return ::rocket::xstrcmp(lhs.c_str(), rhs) >= 0;
+    return fmt.putn(cbuf.c_str(), ::rocket::xstrlen(cbuf.c_str()));
   }
 
 struct chars_proxy
