@@ -501,7 +501,8 @@ parse_frame_header_from_stream(linear_buffer& data)
           this->m_error_desc = "invalid RSV bits in continuation frame";
           return;
         }
-        else if(this->m_msg_opcode == 0) {
+
+        if(this->m_msg_opcode == 0) {
           // A continuation frame must follow a data frame.
           this->m_wsf = wsf_error;
           this->m_error_desc = "dangling continuation frame";
@@ -524,22 +525,23 @@ parse_frame_header_from_stream(linear_buffer& data)
           this->m_error_desc = "invalid RSV bits in control frame";
           return;
         }
-        else if(this->m_frm_header.fin == 0) {
+
+        if(this->m_frm_header.payload_len > 125) {
           // RFC 6455
           // 5.5. Control Frames
           // All control frames MUST have a payload length of 125 bytes or less
-          // and MUST NOT be fragmented.
-          this->m_wsf = wsf_error;
-          this->m_error_desc = "control frame not fragmentable";
-          return;
-        }
-        else if(this->m_frm_header.payload_len >= 126) {
-          // RFC 6455
-          // 5.5. Control Frames
-          // All control frames MUST have a payload length of 125 bytes or less
-          // and MUST NOT be fragmented.
+          // and ...
           this->m_wsf = wsf_error;
           this->m_error_desc = "control frame length not valid";
+          return;
+        }
+
+        if(this->m_frm_header.fin == 0) {
+          // RFC 6455
+          // 5.5. Control Frames
+          // ... MUST NOT be fragmented.
+          this->m_wsf = wsf_error;
+          this->m_error_desc = "control frame not fragmentable";
           return;
         }
       }
