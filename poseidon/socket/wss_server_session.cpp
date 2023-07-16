@@ -294,15 +294,15 @@ do_on_wss_close(uint16_t status, chars_proxy reason)
 
 bool
 WSS_Server_Session::
-do_wss_send_raw_frame(int opcode, chars_proxy data)
+do_wss_send_raw_frame(int rsv_opcode, chars_proxy data)
   {
     // Compose a single frame and send it. Frames to clients will not be masked.
     WebSocket_Frame_Header header;
-    header.fin = opcode >> 7 & 1;
-    header.rsv1 = opcode >> 6 & 1;
-    header.rsv2 = opcode >> 5 & 1;
-    header.rsv3 = opcode >> 4 & 1;
-    header.opcode = opcode & 15;
+    header.fin = rsv_opcode >> 7 & 1;
+    header.rsv1 = rsv_opcode >> 6 & 1;
+    header.rsv2 = rsv_opcode >> 5 & 1;
+    header.rsv3 = rsv_opcode >> 4 & 1;
+    header.opcode = rsv_opcode & 15;
     header.payload_len = data.n;
 
     tinyfmt_ln fmt;
@@ -313,16 +313,16 @@ do_wss_send_raw_frame(int opcode, chars_proxy data)
 
 bool
 WSS_Server_Session::
-do_wss_send_raw_data_frame(int opcode, chars_proxy data)
+do_wss_send_raw_data_frame(int rsv_opcode, chars_proxy data)
   {
     // When PMCE is not active, send the frame as is.
     if(!this->m_pmce_opt)
-      return this->do_wss_send_raw_frame(opcode, data);
+      return this->do_wss_send_raw_frame(rsv_opcode, data);
 
     // Small frames are never compressed.
     uint32_t pmce_threshold = this->m_parser.pmce_send_no_context_takeover() ? 1024U : 16U;
     if(data.n < pmce_threshold)
-      return this->do_wss_send_raw_frame(opcode, data);
+      return this->do_wss_send_raw_frame(rsv_opcode, data);
 
     // Compress the payload and send it. When context takeover is in effect,
     // compressed frames have dependency on each other, so the mutex must not be
@@ -340,7 +340,7 @@ do_wss_send_raw_data_frame(int opcode, chars_proxy data)
       this->m_pmce_opt->deflate_message_finish(lock);
 
       // RSV1 + opcode
-      this->do_wss_send_raw_frame(0b01000000 | opcode, out_buf);
+      this->do_wss_send_raw_frame(0b01000000 | rsv_opcode, out_buf);
     }
     catch(exception& stdex) {
       POSEIDON_LOG_ERROR(("Could not compress message: $1"), stdex);

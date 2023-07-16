@@ -102,14 +102,14 @@ class WS_Server_Session
     // function is provided for convenience only, and maybe isn't very useful
     // unless for some low-level hacks.
     bool
-    do_ws_send_raw_frame(int opcode, chars_proxy data);
+    do_ws_send_raw_frame(int rsv_opcode, chars_proxy data);
 
     // Sends a raw data frame (not a message). No error checking is performed.
     // The payload of a data frame may be (but is not always) compressed. This
     // function is provided for convenience only, and maybe isn't very useful
     // unless for some low-level hacks.
     bool
-    do_ws_send_raw_data_frame(int opcode, chars_proxy data);
+    do_ws_send_raw_data_frame(int rsv_opcode, chars_proxy data);
 
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(WS_Server_Session);
