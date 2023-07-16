@@ -505,12 +505,12 @@ struct Log_Context
     const char* func;
   };
 
+void
+async_logger_enqueue(const Log_Context& ctx, vfptr<cow_string&, const void*> invoke, const void* compose) noexcept;
+
 ROCKET_CONST
 bool
 async_logger_check_level(Log_Level level) noexcept;
-
-void
-async_logger_enqueue(const Log_Context& ctx, vfptr<cow_string&, const void*> invoke, const void* compose) noexcept;
 
 template<typename... ParamsT>
 static ROCKET_ALWAYS_INLINE
