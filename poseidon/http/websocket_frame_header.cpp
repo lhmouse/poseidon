@@ -46,9 +46,9 @@ mask_payload(char* data, size_t size) noexcept
     if(!this->mask)
       return 0;
 
+    __m128i exmask = _mm_set1_epi32((int32_t) this->mask_key_u32);
     char* cur = data;
-    char* const esdata = data + size;
-    const __m128i exmask = _mm_set1_epi32((int32_t) this->mask_key_u32);
+    char* esdata = data + size;
 
     while(esdata - cur >= 16) {
       __m128i* xcur = (__m128i*) cur;
