@@ -24,8 +24,7 @@ struct Client_Table
           {
             HTTP_Request_Headers req;
             linear_buffer data;
-            bool close_now = false;
-            uint32_t has_status = 0;
+            uint32_t status = 0;  // for async error handling
           };
 
         deque<Event> events;
@@ -82,28 +81,23 @@ struct Final_Fiber final : Abstract_Fiber
           auto event = ::std::move(queue->events.front());
           queue->events.pop_front();
 
-          if(ROCKET_UNEXPECT(event.close_now)) {
-            // This will be the last event on this session.
-            queue = nullptr;
-            table->client_map.erase(client_iter);
-          }
           client_iter = table->client_map.end();
           lock.unlock();
 
           try {
-            if(event.has_status == 0) {
+            if(event.req.method != "") {
               // Process a request.
               this->m_thunk(session, *this, ::std::move(event.req), ::std::move(event.data));
             }
             else {
               // Send a bad request response.
               HTTP_Response_Headers resp;
-              resp.status = event.has_status;
+              resp.status = event.status;
               resp.headers.emplace_back(sref("Connection"), sref("close"));
               session->https_response(::std::move(resp), "");
             }
 
-            if(event.close_now)
+            if(event.status != 0)
               session->ssl_shut_down();
           }
           catch(exception& stdex) {
@@ -180,7 +174,7 @@ struct Final_HTTPS_Server_Session final : HTTPS_Server_Session
         Client_Table::Event_Queue::Event event;
         event.req = ::std::move(req);
         event.data = ::std::move(data);
-        event.close_now = close_now;
+        event.status = close_now;
         this->do_push_event_common(::std::move(event));
       }
 
@@ -189,8 +183,7 @@ struct Final_HTTPS_Server_Session final : HTTPS_Server_Session
     do_on_https_request_error(uint32_t status) override
       {
         Client_Table::Event_Queue::Event event;
-        event.has_status = status;
-        event.close_now = true;
+        event.status = status;
         this->do_push_event_common(::std::move(event));
       }
   };
