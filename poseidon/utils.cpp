@@ -6,28 +6,6 @@
 #include <libunwind.h>
 #include <openssl/rand.h>
 namespace poseidon {
-namespace {
-
-plain_mutex s_random_mtx;
-linear_buffer s_random_pool;
-
-template<typename DataT>
-void
-do_fill_random_bits(DataT& data)
-  {
-    static_assert(::std::is_trivially_copyable<DataT>::value);
-    const plain_mutex::unique_lock lock(s_random_mtx);
-
-    if(ROCKET_UNEXPECT(s_random_pool.size() < sizeof(data))) {
-      // Get more bytes.
-      size_t nbytes = s_random_pool.reserve_after_end(1024);
-      ::RAND_priv_bytes((unsigned char*) s_random_pool.mut_end(), (int) nbytes);
-      s_random_pool.accept(nbytes);
-    }
-    s_random_pool.getn((char*) &data, sizeof(data));
-  }
-
-}  // namespace
 
 void
 throw_runtime_error_with_backtrace(const char* file, long line, const char* func, cow_string&& msg)
@@ -215,7 +193,8 @@ uint32_t
 random_uint32() noexcept
   {
     uint32_t bits;
-    do_fill_random_bits(bits);
+    ::RAND_priv_bytes((unsigned char*) &bits, sizeof(bits));
+    bits ^= (uint32_t) __rdtsc();
     return bits;
   }
 
@@ -223,7 +202,8 @@ uint64_t
 random_uint64() noexcept
   {
     uint64_t bits;
-    do_fill_random_bits(bits);
+    ::RAND_priv_bytes((unsigned char*) &bits, sizeof(bits));
+    bits ^= __rdtsc();
     return bits;
   }
 
@@ -231,9 +211,9 @@ float
 random_float() noexcept
   {
     uint32_t bits;
-    do_fill_random_bits(bits);
+    ::RAND_priv_bytes((unsigned char*) &bits, sizeof(bits));
+    bits ^= (uint32_t) __rdtsc();
     bits = 0x7FU << 23 | bits >> 9;  // 1:8:23
-
     float valp1;
     ::memcpy(&valp1, &bits, sizeof(valp1));
     return valp1 - 1;
@@ -243,9 +223,9 @@ double
 random_double() noexcept
   {
     uint64_t bits;
-    do_fill_random_bits(bits);
+    ::RAND_priv_bytes((unsigned char*) &bits, sizeof(bits));
+    bits ^= __rdtsc();
     bits = 0x3FFULL << 52 | bits >> 12;  // 1:11:52
-
     double valp1;
     ::memcpy(&valp1, &bits, sizeof(valp1));
     return valp1 - 1;

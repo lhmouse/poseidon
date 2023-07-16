@@ -4,8 +4,6 @@
 #include "../precompiled.ipp"
 #include "uuid.hpp"
 #include "../utils.hpp"
-#include <openssl/rand.h>
-#include <openssl/err.h>
 namespace poseidon {
 
 const uuid uuid_nil = (uuid::fields) { 0x00000000,0x0000,0x0000,0x0000,0x000000000000 };
@@ -18,15 +16,10 @@ uuid(const random&)
     static atomic<uint64_t> s_count;
     ::timespec tv;
     ::clock_gettime(CLOCK_REALTIME, &tv);
+
     uint64_t time = (uint64_t) tv.tv_sec * 30518U + (uint32_t) tv.tv_nsec / 32768U + s_count.xadd(1U);
     uint32_t version_pid = (uint32_t) ::getpid();
-
-    uint64_t variant_random;
-    if(::RAND_priv_bytes((unsigned char*) &variant_random, sizeof(variant_random)) != 1)
-      POSEIDON_THROW((
-          "Could not generate random bytes",
-          "[`RAND_priv_bytes()` failed: $1]"),
-          ::ERR_reason_error_string(::ERR_peek_error()));
+    uint64_t variant_random = random_uint64();
 
     // Set the UUID version to `4` and the UUID variant to `6`.
     version_pid = 0x4000U | (version_pid & 0x0FFFU);
