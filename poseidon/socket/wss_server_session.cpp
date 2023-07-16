@@ -298,7 +298,6 @@ do_wss_send_raw_frame(int opcode, chars_proxy data)
   {
     // Compose a single frame and send it. Frames to clients will not be masked.
     WebSocket_Frame_Header header;
-    header.fin = 1;
     header.fin = opcode >> 7 & 1;
     header.rsv1 = opcode >> 6 & 1;
     header.rsv2 = opcode >> 5 & 1;
