@@ -40,7 +40,7 @@ POSEIDON_HIDDEN_X_STRUCT(Timer_Driver, Queued_Timer);
 Timer_Driver::
 Timer_Driver()
   {
-    this->m_serial = generate_random_seed();
+    this->m_serial = random_uint64();
   }
 
 Timer_Driver::

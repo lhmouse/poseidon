@@ -21,7 +21,6 @@ using ::rocket::none_of;
 using ::asteria::format;
 using ::asteria::format_string;
 using ::asteria::weaken_enum;
-using ::asteria::generate_random_seed;
 
 // Performs a syscall and retries upon interrupts.
 // Note the arguments may be evaluated more than once.
@@ -78,6 +77,22 @@ implode(cow_string& text, const cow_vector<cow_string>& segments, char delim = '
 // be written. A null terminator will always be appended.
 char*
 hex_encode_16_partial(char* str, const void* data) noexcept;
+
+// Generates a cryptographically secure random integer in [0,UINT32_MAX].
+uint32_t
+random_uint32() noexcept;
+
+// Generates a cryptographically secure random integer in [0,UINT64_MAX].
+uint64_t
+random_uint64() noexcept;
+
+// Generates a cryptographically secure random integer in [0,1).
+float
+random_float() noexcept;
+
+// Generates a cryptographically secure random integer in [0,1).
+double
+random_double() noexcept;
 
 }  // namespace poseidon
 #endif

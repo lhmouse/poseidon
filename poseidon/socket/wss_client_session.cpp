@@ -297,7 +297,7 @@ do_wss_send_raw_frame(uint8_t opcode, chars_proxy data)
     header.fin = 1;
     header.opcode = opcode & 15;
     header.mask = 1;
-    header.mask_key_u32 = (uint32_t) generate_random_seed();
+    header.mask_key_u32 = random_uint32();
     header.mask_key[0] |= '\x80';
     header.payload_len = data.n;
 
@@ -342,7 +342,7 @@ do_wss_send_raw_data_frame(uint8_t opcode, chars_proxy data)
       header.rsv1 = 1;
       header.opcode = opcode & 15;
       header.mask = 1;
-      header.mask_key_u32 = (uint32_t) generate_random_seed();
+      header.mask_key_u32 = random_uint32();
       header.mask_key[0] |= '\x80';
       header.payload_len = out_buf.size();
 
