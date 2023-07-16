@@ -97,7 +97,7 @@ timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/, stea
         // nested PING
         header.fin = 1;
         header.opcode = 9;
-        char ping1[] = "PING";
+        char ping1[] = "ping within fragmented text message";
         header.payload_len = sizeof(ping1) - 1;
 
         fmt.clear_buffer();
@@ -165,7 +165,7 @@ timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/, stea
         // nested PING
         header.fin = 1;
         header.opcode = 9;
-        char ping1[] = "PING";
+        char ping1[] = "ping within fragmented binary message";
         header.payload_len = sizeof(ping1) - 1;
 
         fmt.clear_buffer();
