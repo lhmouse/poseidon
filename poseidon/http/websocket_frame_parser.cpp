@@ -436,10 +436,10 @@ parse_frame_header_from_stream(linear_buffer& data)
       return;
 
     // Parse the first two bytes, which contain information about other fields.
-    // This has to be done in an awkward way to prevent compilers from doing
-    // nonsense. Sorry.
-    int mask_len_rsv_opcode = bptr[0] | bptr[1] << 8;
+    int mask_len_rsv_opcode = bptr[1] << 8 | bptr[0];
 
+    // Unpack fields. This has to be done in an awkward way to prevent compilers
+    // from doing nonsense. Sorry.
     this->m_frm_header.fin = mask_len_rsv_opcode >> 7 & 1;
     this->m_frm_header.rsv1 = mask_len_rsv_opcode >> 6 & 1;
     this->m_frm_header.rsv2 = mask_len_rsv_opcode >> 5 & 1;
