@@ -438,15 +438,15 @@ parse_frame_header_from_stream(linear_buffer& data)
     // Parse the first two bytes, which contain information about other fields.
     // This has to be done in an awkward way to prevent compilers from doing
     // nonsense. Sorry.
-    int frm_word = bptr[0] | bptr[1] << 8;
+    int mask_len_rsv_opcode = bptr[0] | bptr[1] << 8;
 
-    this->m_frm_header.fin = frm_word >> 7 & 1;
-    this->m_frm_header.rsv1 = frm_word >> 6 & 1;
-    this->m_frm_header.rsv2 = frm_word >> 5 & 1;
-    this->m_frm_header.rsv3 = frm_word >> 4 & 1;
-    this->m_frm_header.opcode = frm_word & 15;
-    this->m_frm_header.mask = frm_word >> 15 & 1;
-    this->m_frm_header.reserved_1 = frm_word >> 8 & 127;
+    this->m_frm_header.fin = mask_len_rsv_opcode >> 7 & 1;
+    this->m_frm_header.rsv1 = mask_len_rsv_opcode >> 6 & 1;
+    this->m_frm_header.rsv2 = mask_len_rsv_opcode >> 5 & 1;
+    this->m_frm_header.rsv3 = mask_len_rsv_opcode >> 4 & 1;
+    this->m_frm_header.opcode = mask_len_rsv_opcode & 15;
+    this->m_frm_header.mask = mask_len_rsv_opcode >> 15 & 1;
+    this->m_frm_header.reserved_1 = mask_len_rsv_opcode >> 8 & 127;
 
     if((this->m_wshs == wshs_s_accepted) && (this->m_frm_header.mask == 0)) {
       // RFC 6455 states that clients must mask all frames. It also requires that
@@ -476,7 +476,7 @@ parse_frame_header_from_stream(linear_buffer& data)
         if(this->m_pmce_send_max_window_bits != 0)
           rsv_mask &= 0b00110000;
 
-        if(frm_word & rsv_mask) {
+        if(mask_len_rsv_opcode & rsv_mask) {
           // Reject unknown RSV bits.
           this->m_wsf = wsf_error;
           this->m_error_desc = "invalid RSV bits in data frame";
@@ -484,17 +484,17 @@ parse_frame_header_from_stream(linear_buffer& data)
         }
 
         // Copy message header fields for later use.
-        this->m_msg_fin = frm_word >> 7 & 1;
-        this->m_msg_rsv1 = frm_word >> 6 & 1;
-        this->m_msg_rsv2 = frm_word >> 5 & 1;
-        this->m_msg_rsv3 = frm_word >> 4 & 1;
-        this->m_msg_opcode = frm_word & 15;
+        this->m_msg_fin = this->m_frm_header.fin;
+        this->m_msg_rsv1 = this->m_frm_header.rsv1;
+        this->m_msg_rsv2 = this->m_frm_header.rsv2;
+        this->m_msg_rsv3 = this->m_frm_header.rsv3;
+        this->m_msg_opcode = this->m_frm_header.opcode;
       }
       break;
 
       case 0:  // continuation
       {
-        if(frm_word & 0b01110000) {
+        if(mask_len_rsv_opcode & 0b01110000) {
           // RSV bits shall only be set in the first data frame.
           this->m_wsf = wsf_error;
           this->m_error_desc = "invalid RSV bits in continuation frame";
@@ -508,7 +508,7 @@ parse_frame_header_from_stream(linear_buffer& data)
         }
 
         // If this is a FIN frame, terminate the current message.
-        if(frm_word & 0b10000000)
+        if(mask_len_rsv_opcode & 0b10000000)
           this->m_msg_fin = 1;
       }
       break;
@@ -517,7 +517,7 @@ parse_frame_header_from_stream(linear_buffer& data)
       case 9:  // ping
       case 10:  // pong
       {
-        if(frm_word & 0b01110000) {
+        if(mask_len_rsv_opcode & 0b01110000) {
           // RSV bits shall only be set in a data frame.
           this->m_wsf = wsf_error;
           this->m_error_desc = "invalid RSV bits in control frame";
