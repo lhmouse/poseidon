@@ -69,12 +69,14 @@ class Config_File
     // null value is returned. If during path resolution, an attempt is made
     // to get a field of a non-object, an exception is thrown.
     const ::asteria::Value&
-    query(initializer_list<phsh_string> value_path) const;
+    query(initializer_list<phsh_string> path) const;
 
-    template<typename... SegmentsT>
+    template<typename... SegmentT>
     const ::asteria::Value&
-    query(const SegmentsT&... value_path) const
-      { return this->query({ ::rocket::sref(value_path)... });  }
+    query(const SegmentT&... segs) const
+      {
+        return this->query({ ::rocket::sref(segs)... });
+      }
   };
 
 inline

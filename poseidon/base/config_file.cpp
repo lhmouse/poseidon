@@ -42,11 +42,11 @@ reload(cow_stringR file_path)
 
 const ::asteria::Value&
 Config_File::
-query(initializer_list<phsh_string> value_path) const
+query(initializer_list<phsh_string> path) const
   {
     // We would like to return a `Value`, so the path shall not be empty.
-    auto pcur = value_path.begin();
-    if(pcur == value_path.end())
+    auto pcur = path.begin();
+    if(pcur == path.end())
       POSEIDON_THROW(("Empty value path not valid"));
 
     // Resolve the first segment.
@@ -54,14 +54,14 @@ query(initializer_list<phsh_string> value_path) const
     auto value = parent->ptr(*pcur);
 
     // Resolve all remaining segments.
-    while(value && (++pcur != value_path.end())) {
+    while(value && (++pcur != path.end())) {
       if(value->is_null())
         return ::asteria::null_value;
 
       if(!value->is_object()) {
         // Fail.
         cow_string vpstr;
-        auto pbak = value_path.begin();
+        auto pbak = path.begin();
         vpstr << pbak->rdstr();
         while(++pbak != pcur)
           vpstr << '.' << pbak->rdstr();
