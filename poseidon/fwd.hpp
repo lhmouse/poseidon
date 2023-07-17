@@ -225,7 +225,9 @@ enum WebSocket_Event : uint8_t
 
 struct cacheline_barrier
   {
-    alignas(32) char x_spare_byte;
+    static constexpr size_t align = alignof(max_align_t);
+    static constexpr size_t size = 64UL - alignof(max_align_t);
+    alignas(align) uchar_array<size> bytes;
 
     cacheline_barrier() noexcept { }
     cacheline_barrier(const cacheline_barrier&) { }
