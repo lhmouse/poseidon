@@ -299,6 +299,10 @@ void
 Async_Logger::
 reload(const Config_File& conf_file)
   {
+    // Hold the logging thread.
+    recursive_mutex::unique_lock io_sync_lock(this->m_io_mutex);
+    this->m_conf_level_bits.store(UINT32_MAX);
+
     // Parse new configuration.
     cow_vector<X_Level_Config> levels(6);
     uint32_t level_bits = 0;
