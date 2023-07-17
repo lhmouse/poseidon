@@ -506,7 +506,7 @@ ROCKET_NEVER_INLINE
 void
 do_load_addons()
   {
-    cow_vector<::asteria::Value> addons;
+    ::asteria::V_array addons;
     size_t count = 0;
     const auto conf = main_config.copy();
 

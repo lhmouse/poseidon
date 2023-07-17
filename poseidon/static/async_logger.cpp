@@ -12,11 +12,10 @@ namespace {
 
 struct Level_Config
   {
-    char tag[8] = "";
-    cow_string color;
-    int stdio = -1;
-    cow_string file;
+    char tag[15] = "";
     bool trivial = false;
+    cow_string color;
+    cow_vector<cow_string> files;
   };
 
 struct Log_Message
@@ -72,61 +71,82 @@ do_load_level_config(Level_Config& lconf, const Config_File& conf_file, const ch
     // and the null terminator.
     char* tag_wp = lconf.tag;
     xstrrpcpy(tag_wp, "[");
-    xmemrpcpy(tag_wp, name, clamp_cast<size_t>(xstrlen(name), 0U, sizeof(lconf.tag) - 3U));
+    xmemrpcpy(tag_wp, name, min(xstrlen(name), sizeof(lconf.tag) - 3));
     xstrrpcpy(tag_wp, "]");
 
     // Read the color code sequence of the level.
-    auto conf_value = conf_file.query("logger", name, "color");
+    auto conf_value = conf_file.query("logger", "colors", name);
     if(conf_value.is_string())
       lconf.color = conf_value.as_string();
     else if(!conf_value.is_null())
       POSEIDON_LOG_WARN((
-          "Ignoring `logger.$1.color`: expecting a `string`, got `$2`",
+          "Ignoring `logger.colors.$1`: expecting a `string`, got `$2`",
           "[in configuration file '$3']"),
           name, conf_value, conf_file.path());
 
-    // Read the output standard stream.
-    cow_string str;
-    conf_value = conf_file.query("logger", name, "stdio");
-    if(conf_value.is_string())
-      str = conf_value.as_string();
+    // Read level settings.
+    ::asteria::V_object files;
+    conf_value = conf_file.query("logger", "files");
+    if(conf_value.is_object())
+      files = conf_value.as_object();
     else if(!conf_value.is_null())
       POSEIDON_LOG_WARN((
-          "Ignoring `logger.$1.stdio`: expecting a `string`, got `$2`",
-          "[in configuration file '$3']"),
-          name, conf_value, conf_file.path());
+          "Ignoring `logger.files`: expecting an `object`, got `$1`",
+          "[in configuration file '$2']"),
+          conf_value, conf_file.path());
 
-    if(str == "")
-      lconf.stdio = -1;
-    else if(str == "stdout")
-      lconf.stdio = STDOUT_FILENO;
-    else if(str == "stderr")
-      lconf.stdio = STDERR_FILENO;
-    else
-      POSEIDON_LOG_WARN((
-          "Ignoring `logger.$1.stdio`: invalid standard stream name `$2`",
-          "[in configuration file '$3']"),
-          name, str, conf_file.path());
-
-    // Read the output file path.
-    conf_value = conf_file.query("logger", name, "file");
-    if(conf_value.is_string())
-      lconf.file = conf_value.as_string();
+    ::asteria::V_array settings;
+    conf_value = conf_file.query("logger", name);
+    if(conf_value.is_array())
+      settings = conf_value.as_array();
     else if(!conf_value.is_null())
       POSEIDON_LOG_WARN((
-          "Ignoring `logger.$1.file`: expecting a `string`, got `$2`",
+          "Ignoring `logger.$1`: expecting an `array`, got `$2`",
           "[in configuration file '$3']"),
           name, conf_value, conf_file.path());
 
-    // Read verbosity settings.
-    conf_value = conf_file.query("logger", name, "trivial");
-    if(conf_value.is_boolean())
-      lconf.trivial = conf_value.as_boolean();
-    else if(!conf_value.is_null())
-      POSEIDON_LOG_WARN((
-          "Ignoring `logger.$1.trivial`: expecting a `boolean`, got `$2`",
-          "[in configuration file '$3']"),
-          name, conf_value, conf_file.path());
+    for(size_t k = 0;  k < settings.size();  ++k) {
+      phsh_string setting;
+      if(settings.at(k).is_string())
+        setting = settings.at(k).as_string();
+      else if(!settings.at(k).is_null())
+        POSEIDON_LOG_WARN((
+            "Ignoring invalid element in `logger.$1`: expecting a `string`, got `$2`",
+            "[in configuration file '$3']"),
+            name, settings.at(k), conf_file.path());
+
+      if(setting.empty())
+        continue;
+
+      // Check for special values first.
+      if(setting == "STDERR") {
+        lconf.files.emplace_back(sref("/dev/stderr"));
+        continue;
+      }
+
+      if(setting == "STDOUT") {
+        lconf.files.emplace_back(sref("/dev/stdout"));
+        continue;
+      }
+
+      if(setting == "TRIVIAL") {
+        lconf.trivial = true;
+        continue;
+      }
+
+      // Not special; this shall be a path to a file in `logger.files`.
+      auto file_value = files.ptr(setting);
+      if(!file_value)
+        continue;
+
+      if(file_value->is_string())
+        lconf.files.emplace_back(file_value->as_string());
+      else if(!file_value->is_null())
+        POSEIDON_LOG_WARN((
+            "Ignoring `logger.files.$1`: expecting a `string`, got `$2`",
+            "[in configuration file '$3']"),
+            setting, *file_value, conf_file.path());
+    }
   }
 
 inline
@@ -141,16 +161,6 @@ do_color(linear_buffer& mtext, const Level_Config& lconf, const char* code)
     mtext.putc('[');
     mtext.puts(code);
     mtext.putc('m');
-  }
-
-inline
-unique_posix_fd
-do_open_log_file_opt(const Level_Config& lconf)
-  {
-    unique_posix_fd lfd(::close);
-    if(ROCKET_EXPECT(!lconf.file.empty()))
-      lfd.reset(::open(lconf.file.c_str(), O_WRONLY | O_APPEND | O_CREAT, 0644));
-    return lfd;
   }
 
 void
@@ -254,11 +264,14 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
     mtext.mut_end()[-1] = '\n';
 
     // Write it. Errors are ignored.
-    if(lconf.stdio != -1)
-      (void)! ::write(lconf.stdio, mtext.data(), mtext.size());
-
-    if(auto lfd = do_open_log_file_opt(lconf))
-      (void)! ::write(lfd, mtext.data(), mtext.size());
+    unique_posix_fd xfd;
+    for(const auto& file : lconf.files)
+      if(file == "/dev/stderr")
+        (void)! ::write(STDERR_FILENO, mtext.data(), mtext.size());
+      else if(file == "/dev/stdout")
+        (void)! ::write(STDOUT_FILENO, mtext.data(), mtext.size());
+      else if(xfd.reset(::open(file.c_str(), O_WRONLY | O_APPEND | O_CREAT, 0644)))
+        (void)! ::write(xfd, mtext.data(), mtext.size());
   }
   catch(exception& stdex) {
     ::fprintf(stderr,
@@ -298,7 +311,7 @@ reload(const Config_File& conf_file)
     do_load_level_config(levels.mut(log_level_fatal), conf_file, "fatal");
 
     for(size_t k = 0;  k != levels.size();  ++k)
-      if((levels[k].stdio != -1) || (levels[k].file != ""))
+      if(levels[k].files.size() != 0)
         level_bits |= 1U << k;
 
     if(level_bits == 0)
