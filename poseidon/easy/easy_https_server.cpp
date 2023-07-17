@@ -204,7 +204,9 @@ struct Final_Listen_Socket final : Listen_Socket
     Final_Listen_Socket(const Socket_Address& addr,
           const Easy_HTTPS_Server::thunk_type& thunk, const shptr<Client_Table>& table)
       : Listen_Socket(addr), m_thunk(thunk), m_wtable(table)
-      { }
+      {
+        this->defer_accept((seconds) 10);
+      }
 
     virtual
     shptr<Abstract_Socket>

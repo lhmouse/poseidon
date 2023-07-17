@@ -134,4 +134,17 @@ do_abstract_socket_on_writable()
   {
   }
 
+void
+Listen_Socket::
+defer_accept(seconds timeout)
+  {
+    int value = clamp_cast<int>(timeout.count(), 0, INT_MAX);
+    if(::setsockopt(this->do_get_fd(), IPPROTO_TCP, TCP_DEFER_ACCEPT, &value, sizeof(int)) != 0)
+      POSEIDON_THROW((
+          "Failed to set TCP accept timeout",
+          "[`setsockopt()` failed: ${errno:full}]",
+          "[TCP listen socket `$1` (class `$2`)]"),
+          this, typeid(*this));
+  }
+
 }  // namespace poseidon

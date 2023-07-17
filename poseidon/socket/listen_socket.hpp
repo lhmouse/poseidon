@@ -50,10 +50,11 @@ class Listen_Socket
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Listen_Socket);
 
-    // This class adds no public function.
+    // Defers connection establishment until the given timeout.
+    void
+    defer_accept(seconds timeout);
   };
 
 }  // namespace poseidon
-
 
 #endif
