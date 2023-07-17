@@ -287,8 +287,7 @@ class char256
     // This constructor is not explicit as it doesn't allocate memory.
     constexpr
     char256() noexcept
-      : m_data()
-      { }
+      : m_data()  { }
 
     // Constructs a null-terminated string.
     // This constructor is not explicit as it doesn't allocate memory.
@@ -338,91 +337,76 @@ struct chars_proxy
 
     constexpr
     chars_proxy(nullptr_t = nullptr) noexcept
-      : p(nullptr), n(0U)
-      { }
+      : p(nullptr), n(0U)  { }
 
     constexpr
     chars_proxy(const char* xp, size_t xn) noexcept
-      : p(xp), n(xn)
-      { }
+      : p(xp), n(xn)  { }
 
     constexpr
     chars_proxy(const char* xs) noexcept
-      : p(xs), n(xs ? xstrlen(xs) : 0U)
-      { }
+      : p(xs), n(xs ? xstrlen(xs) : 0U)  { }
 
     template<typename traitsT, typename allocT>
     constexpr
     chars_proxy(const ::std::basic_string<char, traitsT, allocT>& rs) noexcept
-      : p(rs.data()), n(rs.size())
-      { }
+      : p(rs.data()), n(rs.size())  { }
 
     template<typename allocT>
     constexpr
     chars_proxy(const ::std::vector<char, allocT>& rs) noexcept
-      : p(rs.data()), n(rs.size())
-      { }
+      : p(rs.data()), n(rs.size())  { }
 
 #ifdef __cpp_lib_string_view
     template<typename traitsT>
     constexpr
     chars_proxy(const ::std::basic_string_view<char, traitsT>& rs) noexcept
-      : p(rs.data()), n(rs.size())
-      { }
+      : p(rs.data()), n(rs.size())  { }
 #endif  // __cpp_lib_string_view
 
     constexpr
     chars_proxy(const ::rocket::shallow_string rs) noexcept
-      : p(rs.data()), n(rs.size())
-      { }
+      : p(rs.data()), n(rs.size())  { }
 
     template<typename allocT>
     constexpr
     chars_proxy(const ::rocket::basic_cow_string<char, allocT>& rs) noexcept
-      : p(rs.data()), n(rs.size())
-      { }
+      : p(rs.data()), n(rs.size())  { }
 
     template<typename allocT>
     constexpr
     chars_proxy(const ::rocket::basic_tinybuf_str<char, allocT>& rs) noexcept
-      : p(rs.data()), n(rs.size())
-      { }
+      : p(rs.data()), n(rs.size())  { }
 
     template<typename allocT>
     constexpr
     chars_proxy(const ::rocket::basic_tinyfmt_str<char, allocT>& rs) noexcept
-      : p(rs.data()), n(rs.size())
-      { }
+      : p(rs.data()), n(rs.size())  { }
 
     template<typename allocT>
     constexpr
     chars_proxy(const ::rocket::basic_linear_buffer<char, allocT>& rs) noexcept
-      : p(rs.data()), n(rs.size())
-      { }
+      : p(rs.data()), n(rs.size())  { }
 
     template<typename allocT>
     constexpr
     chars_proxy(const ::rocket::basic_tinybuf_ln<char, allocT>& rs) noexcept
-      : p(rs.data()), n(rs.size())
-      { }
+      : p(rs.data()), n(rs.size())  { }
 
     template<typename allocT>
     constexpr
     chars_proxy(const ::rocket::basic_tinyfmt_ln<char, allocT>& rs) noexcept
-      : p(rs.data()), n(rs.size())
-      { }
+      : p(rs.data()), n(rs.size())  { }
 
     template<typename allocT>
     constexpr
     chars_proxy(const ::rocket::cow_vector<char, allocT>& rs) noexcept
-      : p(rs.data()), n(rs.size())
-      { }
+      : p(rs.data()), n(rs.size())  { }
 
     template<size_t N, typename allocT>
     constexpr
     chars_proxy(const ::rocket::static_vector<char, N, allocT>& rs) noexcept
-      : p(rs.data()), n(rs.size())
-      { }
+      : p(rs.data()), n(rs.size())  { }
   };
 
 inline

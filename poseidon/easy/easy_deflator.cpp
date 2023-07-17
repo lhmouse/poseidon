@@ -14,8 +14,7 @@ struct Final_Deflator final : Deflator
 
     explicit
     Final_Deflator(zlib_Format format, int level)
-      : Deflator(format, level)
-      { }
+      : Deflator(format, level)  { }
 
     virtual
     char*

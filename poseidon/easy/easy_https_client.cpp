@@ -36,8 +36,7 @@ struct Final_Fiber final : Abstract_Fiber
 
     explicit
     Final_Fiber(const Easy_HTTPS_Client::thunk_type& thunk, const shptr<Event_Queue>& queue)
-      : m_thunk(thunk), m_wqueue(queue)
-      { }
+      : m_thunk(thunk), m_wqueue(queue)  { }
 
     virtual
     void
@@ -97,8 +96,7 @@ struct Final_HTTPS_Client_Session final : HTTPS_Client_Session
 
     explicit
     Final_HTTPS_Client_Session(const Easy_HTTPS_Client::thunk_type& thunk, const shptr<Event_Queue>& queue)
-      : m_thunk(thunk), m_wqueue(queue)
-      { }
+      : m_thunk(thunk), m_wqueue(queue)  { }
 
     virtual
     void

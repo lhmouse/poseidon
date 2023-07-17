@@ -43,8 +43,7 @@ struct Final_Fiber final : Abstract_Fiber
     explicit
     Final_Fiber(const Easy_WSS_Server::thunk_type& thunk,
           const shptr<Client_Table>& table, const volatile WSS_Server_Session* refptr)
-      : m_thunk(thunk), m_wtable(table), m_refptr(refptr)
-      { }
+      : m_thunk(thunk), m_wtable(table), m_refptr(refptr)  { }
 
     virtual
     void

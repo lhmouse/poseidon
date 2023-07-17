@@ -45,8 +45,7 @@ struct Final_Fiber final : Abstract_Fiber
     explicit
     Final_Fiber(const Easy_HTTP_Server::thunk_type& thunk,
           const shptr<Client_Table>& table, const volatile HTTP_Server_Session* refptr)
-      : m_thunk(thunk), m_wtable(table), m_refptr(refptr)
-      { }
+      : m_thunk(thunk), m_wtable(table), m_refptr(refptr)  { }
 
     virtual
     void
@@ -132,8 +131,7 @@ struct Final_HTTP_Server_Session final : HTTP_Server_Session
     explicit
     Final_HTTP_Server_Session(unique_posix_fd&& fd,
           const Easy_HTTP_Server::thunk_type& thunk, const shptr<Client_Table>& table)
-      : TCP_Socket(::std::move(fd)), m_thunk(thunk), m_wtable(table)
-      { }
+      : TCP_Socket(::std::move(fd)), m_thunk(thunk), m_wtable(table)  { }
 
     virtual
     void

@@ -35,8 +35,7 @@ struct WebSocket_Frame_Header
     // Define some helper functions.
     constexpr
     WebSocket_Frame_Header() noexcept
-      : m_stor()
-      { }
+      : m_stor()  { }
 
     WebSocket_Frame_Header&
     swap(WebSocket_Frame_Header& other) noexcept

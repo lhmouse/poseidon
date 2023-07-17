@@ -48,8 +48,7 @@ struct Final_Fiber final : Abstract_Fiber
     explicit
     Final_Fiber(const Easy_SSL_Server::thunk_type& thunk,
           const shptr<Client_Table>& table, const volatile SSL_Socket* refptr)
-      : m_thunk(thunk), m_wtable(table), m_refptr(refptr)
-      { }
+      : m_thunk(thunk), m_wtable(table), m_refptr(refptr)  { }
 
     virtual
     void
@@ -127,8 +126,7 @@ struct Final_SSL_Socket final : SSL_Socket
     explicit
     Final_SSL_Socket(unique_posix_fd&& fd,
           const Easy_SSL_Server::thunk_type& thunk, const shptr<Client_Table>& table)
-      : SSL_Socket(::std::move(fd)), m_thunk(thunk), m_wtable(table)
-      { }
+      : SSL_Socket(::std::move(fd)), m_thunk(thunk), m_wtable(table)  { }
 
     void
     do_push_event_common(Client_Table::Event_Queue::Event&& event) const
@@ -197,8 +195,7 @@ struct Final_Listen_Socket final : Listen_Socket
 
     explicit
     Final_Listen_Socket(const Socket_Address& addr, const Easy_SSL_Server::thunk_type& thunk, const shptr<Client_Table>& table)
-      : Listen_Socket(addr), m_thunk(thunk), m_wtable(table)
-      { }
+      : Listen_Socket(addr), m_thunk(thunk), m_wtable(table)  { }
 
     virtual
     shptr<Abstract_Socket>
