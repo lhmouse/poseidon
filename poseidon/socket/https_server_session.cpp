@@ -98,11 +98,11 @@ char256
 HTTPS_Server_Session::
 do_on_ssl_alpn_request(cow_vector<char256>&& protos)
   {
-    // Select HTTP/1.1.
     for(const auto& proto : protos)
-      if(proto == "http/1.1")
+      if(::strcmp(proto.c_str(), "http/1.1") == 0)
         return proto;
 
+    // Select no protocol.
     return "";
   }
 
