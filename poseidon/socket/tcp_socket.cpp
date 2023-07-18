@@ -219,7 +219,7 @@ tcp_send(chars_proxy data)
           "[TCP socket `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    // If this socket has been marked closed, fail immediately.
+    // If this socket has been marked closing, fail immediately.
     if(this->socket_state() >= socket_closing)
       return false;
 
@@ -282,6 +282,10 @@ bool
 TCP_Socket::
 tcp_shut_down() noexcept
   {
+    // If this socket has been marked closing, return immediately.
+    if(this->socket_state() >= socket_closing)
+      return true;
+
     recursive_mutex::unique_lock io_lock;
     auto& queue = this->do_abstract_socket_lock_write_queue(io_lock);
 
