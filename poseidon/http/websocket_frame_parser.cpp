@@ -606,6 +606,11 @@ parse_frame_payload_from_stream(linear_buffer& data)
     if(this->m_wsf >= wsf_payload_done)
       return;
 
+    if(this->m_wsf != wsf_header_done)
+      POSEIDON_THROW((
+          "WebSocket header not parsed yet (state `$1` not valid)"),
+          this->m_wshs);
+
     size_t navail = (size_t) min(data.size(), this->m_frm_payload_rem);
     if(navail != 0) {
       // Move the (maybe partial) payload from `data` into `m_frm_payload`. If the

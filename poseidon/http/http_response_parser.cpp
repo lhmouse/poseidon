@@ -156,6 +156,11 @@ parse_payload_from_stream(linear_buffer& data, bool eof)
     if(this->m_hresp >= hresp_payload_done)
       return;
 
+    if(this->m_hresp != hresp_headers_done)
+      POSEIDON_THROW((
+          "HTTP response header not parsed yet (state `$1` not valid)"),
+          this->m_hresp);
+
     // Consume incoming data.
     if(data.size() != 0)
       data.discard(::http_parser_execute(this->m_parser, s_settings, data.data(), data.size()));

@@ -174,6 +174,11 @@ parse_payload_from_stream(linear_buffer& data, bool eof)
     if(this->m_hreq >= hreq_payload_done)
       return;
 
+    if(this->m_hreq != hreq_headers_done)
+      POSEIDON_THROW((
+          "HTTP request header not parsed yet (state `$1` not valid)"),
+          this->m_hreq);
+
     // Consume incoming data.
     if(data.size() != 0)
       data.discard(::http_parser_execute(this->m_parser, s_settings, data.data(), data.size()));
