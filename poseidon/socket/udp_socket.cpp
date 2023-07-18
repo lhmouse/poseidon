@@ -274,8 +274,7 @@ udp_send(const Socket_Address& addr, chars_proxy data)
           "[UDP socket `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    uint16_t datalen = (uint16_t) data.n;
-    if(datalen != data.n)
+    if(data.n > UINT16_MAX)
       POSEIDON_THROW((
           "`$3` bytes is too large for a UDP packet",
           "[UDP socket `$1` (class `$2`)]"),
