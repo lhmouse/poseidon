@@ -116,7 +116,7 @@ struct Final_WSS_Server_Session final : WSS_Server_Session
       { }
 
     void
-    do_push_event_common(Client_Table::Event_Queue::Event&& event) const
+    do_push_event_common(Client_Table::Event_Queue::Event&& event)
       {
         auto table = this->m_wtable.lock();
         if(!table)
@@ -129,14 +129,24 @@ struct Final_WSS_Server_Session final : WSS_Server_Session
         if(client_iter == table->client_map.end())
           return;
 
-        if(!client_iter->second.fiber_active) {
-          // Create a new fiber, if none is active. The fiber shall only reset
-          // `m_fiber_private_buffer` if no event is pending.
-          fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, table, this));
-          client_iter->second.fiber_active = true;
-        }
+        try {
+          if(!client_iter->second.fiber_active) {
+            // Create a new fiber, if none is active. The fiber shall only reset
+            // `m_fiber_private_buffer` if no event is pending.
+            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, table, this));
+            client_iter->second.fiber_active = true;
+          }
 
-        client_iter->second.events.push_back(::std::move(event));
+          client_iter->second.events.push_back(::std::move(event));
+        }
+        catch(exception& stdex) {
+          POSEIDON_LOG_ERROR((
+            "Could not push network event: $1"),
+            stdex);
+
+          table->client_map.erase(client_iter);
+          this->quick_close();
+        }
       }
 
     virtual
