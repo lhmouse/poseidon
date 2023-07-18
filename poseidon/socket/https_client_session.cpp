@@ -28,7 +28,8 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
       // Check whether the connection has switched to another protocol.
       if(this->m_upgrade_ack.load()) {
         this->m_resp_parser.reset();
-        return this->do_on_https_upgraded_stream(data, eof);
+        this->do_on_https_upgraded_stream(data, eof);
+        return;
       }
 
       // If something has gone wrong, ignore further incoming data.
@@ -86,7 +87,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
         if(!this->m_resp_parser->payload_complete())
           return;
 
-        // Check response headers and the payload.
+        // The message is complete now.
         uint32_t status = this->m_resp_parser->headers().status;
 
         this->do_on_https_response_finish(::std::move(this->m_resp_parser->mut_headers()),

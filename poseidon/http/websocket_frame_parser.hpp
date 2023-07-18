@@ -24,7 +24,7 @@ class WebSocket_Frame_Parser
         wsf_new           = 0,
         wsf_header_done   = 1,
         wsf_payload_done  = 2,
-        wsf_error         = 3,
+        wsf_error         = 9,
       };
 
     WebSocket_Frame_Header m_frm_header;

@@ -139,6 +139,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
               plain_mutex::unique_lock lock;
               this->m_pmce_opt->inflate_message_stream(lock, payload);
+
               if(this->m_parser.message_fin())
                 this->m_pmce_opt->inflate_message_finish(lock);
 
