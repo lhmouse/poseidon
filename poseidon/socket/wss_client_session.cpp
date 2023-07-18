@@ -154,17 +154,18 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
             else
               this->m_msg.putn(payload.data(), payload.size());
 
-            if(this->m_parser.message_opcode() == 1) {
-              // TEXT
-              this->do_on_wss_text_stream(this->m_msg);
-              if(this->m_parser.message_fin())
-                this->do_on_wss_text(::std::move(this->m_msg));
-            }
-            else {
-              // BINARY
-              this->do_on_wss_binary_stream(this->m_msg);
-              if(this->m_parser.message_fin())
-                this->do_on_wss_binary(::std::move(this->m_msg));
+            // Take this part of the message.
+            switch(this->m_parser.message_opcode()) {
+              case 1:  // TEXT
+                this->do_on_wss_text_stream(this->m_msg);
+                break;
+
+              case 2:  // BINARY
+                this->do_on_wss_binary_stream(this->m_msg);
+                break;
+
+              default:
+                ROCKET_ASSERT(false);
             }
             break;
           }
@@ -198,6 +199,21 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
 
         if(!this->m_parser.frame_payload_complete())
           return;
+
+        // Has the final fragment been received?
+        if(this->m_parser.message_fin())
+          switch(this->m_parser.message_opcode()) {
+            case 1:  // TEXT
+              this->do_on_wss_text(::std::move(this->m_msg));
+              break;
+
+            case 2:  // BINARY
+              this->do_on_wss_binary(::std::move(this->m_msg));
+              break;
+
+            default:
+              ROCKET_ASSERT(false);
+          }
       }
 
       this->m_parser.next_frame();
