@@ -98,7 +98,7 @@ struct Final_WS_Client_Session final : WS_Client_Session
       : WS_Client_Session(uri), m_thunk(thunk), m_wqueue(queue)  { }
 
     void
-    do_push_event_common(Event_Queue::Event&& event) const
+    do_push_event_common(Event_Queue::Event&& event)
       {
         auto queue = this->m_wqueue.lock();
         if(!queue)
@@ -107,14 +107,23 @@ struct Final_WS_Client_Session final : WS_Client_Session
         // We are in the network thread here.
         plain_mutex::unique_lock lock(queue->mutex);
 
-        if(!queue->fiber_active) {
-          // Create a new fiber, if none is active. The fiber shall only reset
-          // `m_fiber_private_buffer` if no event is pending.
-          fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, queue));
-          queue->fiber_active = true;
-        }
+        try {
+          if(!queue->fiber_active) {
+            // Create a new fiber, if none is active. The fiber shall only reset
+            // `m_fiber_private_buffer` if no event is pending.
+            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, queue));
+            queue->fiber_active = true;
+          }
 
-        queue->events.push_back(::std::move(event));
+          queue->events.push_back(::std::move(event));
+        }
+        catch(exception& stdex) {
+          POSEIDON_LOG_ERROR((
+            "Could not push network event: $1"),
+            stdex);
+
+          this->quick_close();
+        }
       }
 
     virtual

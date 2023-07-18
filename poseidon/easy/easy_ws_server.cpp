@@ -139,8 +139,8 @@ struct Final_WS_Server_Session final : WS_Server_Session
         }
         catch(exception& stdex) {
           POSEIDON_LOG_ERROR((
-            "Could not push network event: $1"),
-            stdex);
+              "Could not push network event: $1"),
+              stdex);
 
           table->client_map.erase(client_iter);
           this->quick_close();
