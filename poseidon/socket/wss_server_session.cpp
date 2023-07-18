@@ -115,9 +115,6 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
           return;
         }
 
-        if(!this->m_parser.frame_payload_complete())
-          return;
-
         // Process the payload. Control frames must be processed as a whole.
         auto& payload = this->m_parser.mut_frame_payload();
 
@@ -202,6 +199,9 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
             this->do_on_wss_pong(::std::move(payload));
             break;
         }
+
+        if(!this->m_parser.frame_payload_complete())
+          return;
       }
 
       this->m_parser.next_frame();
