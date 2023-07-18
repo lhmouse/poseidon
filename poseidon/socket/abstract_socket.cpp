@@ -106,13 +106,17 @@ bool
 Abstract_Socket::
 quick_close() noexcept
   {
+    if(this->m_state.load() == socket_closed)
+      return true;
+
+    // It doesn't matter if this gets called multiple times.
     this->m_state.store(socket_closed);
 
+    // Discard pending data.
     ::linger lng;
     lng.l_onoff = 1;
     lng.l_linger = 0;
     ::setsockopt(this->m_fd, SOL_SOCKET, SO_LINGER, &lng, sizeof(lng));
-
     return ::shutdown(this->m_fd, SHUT_RDWR) == 0;
   }
 
