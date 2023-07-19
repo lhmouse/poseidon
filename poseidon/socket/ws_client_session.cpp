@@ -119,7 +119,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
           if(this->m_parser.frame_header().opcode != 0) {
             if(this->m_pmce_opt) {
               plain_mutex::unique_lock lock;
-              auto& out_buf = this->m_pmce_opt->inflate_output_buffer(lock).clear();
+              auto& out_buf = this->m_pmce_opt->inflate_output_buffer(lock);
               out_buf.clear();
             }
 
