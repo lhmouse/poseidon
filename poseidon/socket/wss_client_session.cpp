@@ -174,16 +174,10 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
             }
 
             case 8: {  // CLOSE
-              int status = 1005;
-              if(payload.size() >= 2) {
-                // Get the status code from the payload. The remaining part might
-                // be a UTF-8 string; just take it.
-                status = payload.getc() << 8;
-                status |= payload.getc();
-              }
-
               data.clear();
-              this->do_call_on_wss_close_once(static_cast<uint16_t>(status), payload);
+              uint16_t bestatus = htobe16(1005);
+              payload.getn(reinterpret_cast<char*>(&bestatus), 2);
+              this->do_call_on_wss_close_once(be16toh(bestatus), payload);
               return;
             }
 
@@ -361,9 +355,11 @@ wss_shut_down(uint16_t status, chars_proxy reason) noexcept
       // length of its payload cannot exceed 125 bytes, and the reason string has
       // to be truncated if it's too long.
       static_vector<char, 125> data;
-      data.push_back(static_cast<char>(status >> 8));
-      data.push_back(static_cast<char>(status));
-      data.append(reason.p, reason.p + min(reason.n, 123));
+      uint16_t bestatus = htobe16(status);
+      const char* eptr = reinterpret_cast<const char*>(&bestatus) + 2;
+      data.append(eptr - 2, eptr);
+      eptr = reason.p + ::std::min<size_t>(reason.n, 123);
+      data.append(reason.p, eptr);
 
       // FIN + CLOSE
       succ = this->do_wss_send_raw_frame(0b10000000 | 8, data);
