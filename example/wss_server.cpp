@@ -10,30 +10,34 @@ using namespace ::poseidon;
 extern Easy_WSS_Server my_server;
 
 void
-event_callback(shptrR<WSS_Server_Session> session, Abstract_Fiber& /*fiber*/, WebSocket_Event event, linear_buffer&& data)
+event_callback(shptrR<WSS_Server_Session> session, Abstract_Fiber& /*fiber*/, Easy_Socket_Event event, linear_buffer&& data)
   {
     switch(event) {
-      case websocket_open:
-        POSEIDON_LOG_ERROR(("example WS server accepted connection from `$1`: $2"), session->remote_address(), data);
+      case easy_socket_open:
+        POSEIDON_LOG_ERROR(("example WSS server accepted connection from `$1`: $2"), session->remote_address(), data);
         break;
 
-      case websocket_text:
+      case easy_socket_msg_text:
         POSEIDON_LOG_ERROR(("example WSS server received TEXT data: $1"), data);
-        session->wss_send_text(data);
+        session->wss_send(websocket_text, data);
         break;
 
-      case websocket_binary:
+      case easy_socket_msg_bin:
         POSEIDON_LOG_ERROR(("example WSS server received BINARY data: $1"), data);
-        session->wss_send_binary(data);
+        session->wss_send(websocket_bin, data);
         break;
 
-      case websocket_pong:
+      case easy_socket_pong:
         POSEIDON_LOG_ERROR(("example WSS server received PONG data: $1"), data);
         break;
 
-      case websocket_closed:
+      case easy_socket_close:
         POSEIDON_LOG_ERROR(("example WSS server shut down connection: $1"), data);
         break;
+
+      case easy_socket_stream:
+      default:
+        ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
     }
   }
 

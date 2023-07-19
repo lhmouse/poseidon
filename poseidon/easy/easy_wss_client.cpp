@@ -23,7 +23,7 @@ struct Event_Queue
     // shared fields between threads
     struct Event
       {
-        WebSocket_Event type;
+        Easy_Socket_Event type;
         linear_buffer data;
       };
 
@@ -132,37 +132,26 @@ struct Final_WSS_Client_Session final : WSS_Client_Session
     do_on_wss_connected(cow_string&& uri) override
       {
         Event_Queue::Event event;
-        event.type = websocket_open;
+        event.type = easy_socket_open;
         event.data.putn(uri.data(), uri.size());
         this->do_push_event_common(::std::move(event));
       }
 
     virtual
     void
-    do_on_wss_text(linear_buffer&& data) override
+    do_on_wss_message_finish(WebSocket_OpCode opcode, linear_buffer&& data) override
       {
         Event_Queue::Event event;
-        event.type = websocket_text;
-        event.data.swap(data);
-        this->do_push_event_common(::std::move(event));
-      }
 
-    virtual
-    void
-    do_on_wss_binary(linear_buffer&& data) override
-      {
-        Event_Queue::Event event;
-        event.type = websocket_binary;
-        event.data.swap(data);
-        this->do_push_event_common(::std::move(event));
-      }
+        if(opcode == websocket_text)
+          event.type = easy_socket_msg_text;
+        else if(opcode == websocket_bin)
+          event.type = easy_socket_msg_bin;
+        else if(opcode == websocket_pong)
+          event.type = easy_socket_pong;
+        else
+          return;
 
-    virtual
-    void
-    do_on_wss_pong(linear_buffer&& data) override
-      {
-        Event_Queue::Event event;
-        event.type = websocket_pong;
         event.data.swap(data);
         this->do_push_event_common(::std::move(event));
       }
@@ -171,12 +160,13 @@ struct Final_WSS_Client_Session final : WSS_Client_Session
     void
     do_on_wss_close(uint16_t status, chars_proxy reason) override
       {
+        Event_Queue::Event event;
+        event.type = easy_socket_close;
+
         tinyfmt_ln fmt;
         fmt << status << ": " << reason;
-
-        Event_Queue::Event event;
-        event.type = websocket_closed;
         event.data = fmt.extract_buffer();
+
         this->do_push_event_common(::std::move(event));
       }
   };
@@ -234,32 +224,12 @@ remote_address() const noexcept
 
 bool
 Easy_WSS_Client::
-wss_send_text(chars_proxy data)
+wss_send(WebSocket_OpCode opcode, chars_proxy data)
   {
     if(!this->m_session)
       return false;
 
-    return this->m_session->wss_send_text(data);
-  }
-
-bool
-Easy_WSS_Client::
-wss_send_binary(chars_proxy data)
-  {
-    if(!this->m_session)
-      return false;
-
-    return this->m_session->wss_send_binary(data);
-  }
-
-bool
-Easy_WSS_Client::
-wss_ping(chars_proxy data)
-  {
-    if(!this->m_session)
-      return false;
-
-    return this->m_session->wss_ping(data);
+    return this->m_session->wss_send(opcode, data);
   }
 
 bool

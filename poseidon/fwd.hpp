@@ -200,13 +200,6 @@ enum Socket_State : uint8_t
     socket_closed       = 3,
   };
 
-enum Connection_Event : uint8_t
-  {
-    connection_open    = 0,
-    connection_stream  = 1,
-    connection_closed  = 2,
-  };
-
 enum HTTP_Payload_Type : uint8_t
   {
     http_payload_normal   = 0,
@@ -214,13 +207,22 @@ enum HTTP_Payload_Type : uint8_t
     http_payload_connect  = 2,
   };
 
-enum WebSocket_Event : uint8_t
+enum WebSocket_OpCode : uint8_t
   {
-    websocket_open    = 0,
-    websocket_text    = 1,
-    websocket_binary  = 2,
-    websocket_pong    = 3,
-    websocket_closed  = 4,
+    websocket_text  =  1,
+    websocket_bin   =  2,
+    websocket_ping  =  9,
+    websocket_pong  = 10,
+  };
+
+enum Easy_Socket_Event : uint8_t
+  {
+    easy_socket_open      = 0,  // TCP, UDP, WebSocket
+    easy_socket_stream    = 1,  // TCP
+    easy_socket_close     = 2,  // TCP, UDP, WebSocket
+    easy_socket_msg_text  = 3,  // WebSocket
+    easy_socket_msg_bin   = 4,  // UDP, WebSocket
+    easy_socket_pong      = 5,  // WebSocket
   };
 
 struct cacheline_barrier

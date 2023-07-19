@@ -23,7 +23,7 @@ struct Event_Queue
     // shared fields between threads
     struct Event
       {
-        Connection_Event type;
+        Easy_Socket_Event type;
         linear_buffer data;
         int code = 0;
       };
@@ -73,8 +73,8 @@ struct Final_Fiber final : Abstract_Fiber
           lock.unlock();
 
           try {
-            if(event.type == connection_stream) {
-              // `connection_stream` is special. We append new data to
+            if(event.type == easy_socket_stream) {
+              // `easy_socket_stream` is really special. We append new data to
               // `data_stream` which is then passed to the callback instead of
               // `event.data`. `data_stream` may be consumed partially by user
               // code, and shall be preserved across callbacks.
@@ -141,7 +141,7 @@ struct Final_SSL_Socket final : SSL_Socket
     do_on_ssl_connected() override
       {
         Event_Queue::Event event;
-        event.type = connection_open;
+        event.type = easy_socket_open;
         this->do_push_event_common(::std::move(event));
       }
 
@@ -150,7 +150,7 @@ struct Final_SSL_Socket final : SSL_Socket
     do_on_ssl_stream(linear_buffer& data, bool eof) override
       {
         Event_Queue::Event event;
-        event.type = connection_stream;
+        event.type = easy_socket_stream;
         event.data.swap(data);
         event.code = eof;
         this->do_push_event_common(::std::move(event));
@@ -165,7 +165,7 @@ struct Final_SSL_Socket final : SSL_Socket
         const char* err_str = ::strerror_r(err_code, sbuf, sizeof(sbuf));
 
         Event_Queue::Event event;
-        event.type = connection_closed;
+        event.type = easy_socket_close;
         event.data.puts(err_str);
         event.code = err_code;
         this->do_push_event_common(::std::move(event));

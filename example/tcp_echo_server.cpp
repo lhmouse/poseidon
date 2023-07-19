@@ -10,22 +10,28 @@ using namespace ::poseidon;
 extern Easy_TCP_Server my_server;
 
 void
-event_callback(shptrR<TCP_Socket> socket, Abstract_Fiber& /*fiber*/, Connection_Event event, linear_buffer& data, int code)
+event_callback(shptrR<TCP_Socket> socket, Abstract_Fiber& /*fiber*/, Easy_Socket_Event event, linear_buffer& data, int code)
   {
     switch(event) {
-      case connection_open:
+      case easy_socket_open:
         POSEIDON_LOG_ERROR(("example SSL server accepted connection: $1"), socket->remote_address());
         break;
 
-      case connection_stream:
+      case easy_socket_stream:
         POSEIDON_LOG_ERROR(("example SSL server received data (eof = $1): $2"), code, data);
         socket->tcp_send(data);
         data.clear();
         break;
 
-      case connection_closed:
+      case easy_socket_close:
         POSEIDON_LOG_ERROR(("example SSL server shut down connection: (errno = $1) $2"), code, data);
         break;
+
+      case easy_socket_msg_text:
+      case easy_socket_msg_bin:
+      case easy_socket_pong:
+      default:
+        ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
     }
   }
 

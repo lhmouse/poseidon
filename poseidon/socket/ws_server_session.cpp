@@ -88,7 +88,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
   {
     for(;;) {
       // If something has gone wrong, ignore further incoming data.
-      if(this->m_parser.error()) {
+      if(this->m_parser.error() || this->m_closure_notified) {
         data.clear();
         return;
       }
@@ -115,109 +115,96 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
           return;
         }
 
-        // Process the payload. Control frames must be processed as a whole.
         auto& payload = this->m_parser.mut_frame_payload();
 
-        switch(this->m_parser.frame_header().opcode) {
-          case 1:  // TEXT
-          case 2: {  // BINARY
-            // If this is a data frame, it starts a new message.
+        if(this->m_parser.frame_header().opcode <= 7) {
+          // This is a data frame. If it is not a CONTINUATION, it must start a
+          // new message.
+          if(this->m_parser.frame_header().opcode != 0) {
             if(this->m_pmce_opt) {
               plain_mutex::unique_lock lock;
-              auto& out_buf = this->m_pmce_opt->inflate_output_buffer(lock);
+              auto& out_buf = this->m_pmce_opt->inflate_output_buffer(lock).clear();
               out_buf.clear();
             }
 
             this->m_msg.clear();
-            // fallthrough
-
-          case 0:  // CONTINUATION
-            if(this->m_parser.message_rsv1()) {
-              // The RSV1 bit indicates that the payload is part of a compressed
-              // message, so decompress it.
-              if(!this->m_pmce_opt) {
-                data.clear();
-                this->do_call_on_ws_close_once(1007, "permessage-deflate not initialized properly");
-                return;
-              }
-
-              plain_mutex::unique_lock lock;
-              this->m_pmce_opt->inflate_message_stream(lock, payload);
-
-              if(this->m_parser.message_fin())
-                this->m_pmce_opt->inflate_message_finish(lock);
-
-              // Replace the payload... nasty.
-              auto& out_buf = this->m_pmce_opt->inflate_output_buffer(lock);
-              payload.swap(out_buf);
-            }
-
-            // If this is a data frame or continuation, its payload is part of a
-            // (potentially fragmented) data message, so combine it.
-            if(this->m_msg.empty())
-              this->m_msg.swap(payload);
-            else
-              this->m_msg.putn(payload.data(), payload.size());
-
-            // Take this part of the message.
-            switch(this->m_parser.message_opcode()) {
-              case 1:  // TEXT
-                this->do_on_ws_text_stream(this->m_msg);
-                break;
-
-              case 2:  // BINARY
-                this->do_on_ws_binary_stream(this->m_msg);
-                break;
-
-              default:
-                ROCKET_ASSERT(false);
-            }
-            break;
           }
 
-          case 8: {  // CLOSE
-            uint16_t status = 1005;
-            chars_proxy reason = "no status code received";
-
-            if(payload.size() >= 2) {
-              // Get the status and reason string from the payload.
-              int ch = payload.getc();
-              ch = ch << 8 | payload.getc();
-              status = (uint16_t) ch;
-              reason = payload;
+          // The RSV1 bit indicates part of a compressed message.
+          if(this->m_parser.message_rsv1()) {
+            if(!this->m_pmce_opt) {
+              data.clear();
+              this->do_call_on_ws_close_once(1007, "permessage-deflate not initialized properly");
+              return;
             }
 
-            this->do_call_on_ws_close_once(status, reason);
-            break;
+            plain_mutex::unique_lock lock;
+            this->m_pmce_opt->inflate_message_stream(lock, payload);
+
+            if(this->m_parser.message_fin())
+              this->m_pmce_opt->inflate_message_finish(lock);
+
+            // Replace the payload... nasty.
+            auto& out_buf = this->m_pmce_opt->inflate_output_buffer(lock);
+            payload.swap(out_buf);
           }
 
-          case 9:  // PING
-            POSEIDON_LOG_TRACE(("WebSocket PING from `$1`: $2"), this->remote_address(), payload);
-            this->do_ws_send_raw_frame(0b10001010, payload);
-            break;
+          // If this is a data frame or continuation, its payload is part of a
+          // (potentially fragmented) data message, so combine it.
+          if(this->m_msg.empty())
+            this->m_msg.swap(payload);
+          else
+            this->m_msg.putn(payload.data(), payload.size());
 
-          case 10:  // PONG
-            POSEIDON_LOG_TRACE(("WebSocket PONG from `$1`: $2"), this->remote_address(), payload);
-            this->do_on_ws_pong(::std::move(payload));
-            break;
+          auto opcode = static_cast<WebSocket_OpCode>(this->m_parser.message_opcode());
+          ROCKET_ASSERT((opcode == websocket_text) || (opcode == websocket_bin));
+          this->do_on_ws_message_data_stream(opcode, this->m_msg);
         }
 
         if(!this->m_parser.frame_payload_complete())
           return;
 
-        // Has the final fragment been received?
-        if(this->m_parser.message_fin())
-          switch(this->m_parser.message_opcode()) {
+        // Handle this frame. Fragmented data frames have already been handled, so
+        // don't do it again. Control frames must be processed as a whole.
+        if(this->m_parser.frame_header().fin)
+          switch(this->m_parser.frame_header().opcode) {
+            case 0:  // CONTINUATION
             case 1:  // TEXT
-              this->do_on_ws_text(::std::move(this->m_msg));
+            case 2: {  // BINARY
+              auto opcode = static_cast<WebSocket_OpCode>(this->m_parser.message_opcode());
+              ROCKET_ASSERT((opcode == websocket_text) || (opcode == websocket_bin));
+              this->do_on_ws_message_finish(opcode, ::std::move(this->m_msg));
               break;
+            }
 
-            case 2:  // BINARY
-              this->do_on_ws_binary(::std::move(this->m_msg));
+            case 8: {  // CLOSE
+              uint16_t status = 1005;
+              if(payload.size() >= 2) {
+                // Get the status code from the payload. The remaining part might
+                // be a UTF-8 string; just take it.
+                status = static_cast<uint16_t>(payload.getc() << 8);
+                status |= static_cast<uint16_t>(payload.getc());
+              }
+
+              data.clear();
+              this->do_call_on_ws_close_once(status, payload);
+              return;
+            }
+
+            case 9: {  // PING
+              POSEIDON_LOG_TRACE(("WebSocket PING from `$1`: $2"), this->remote_address(), payload);
+              this->do_on_ws_message_finish(websocket_ping, ::std::move(payload));
+
+              // FIN + PONG
+              this->do_ws_send_raw_frame(0b10001010, payload);
               break;
+            }
 
-            default:
-              ROCKET_ASSERT(false);
+            case 10: {  // PONG
+              POSEIDON_LOG_TRACE(("WebSocket PONG from `$1`: $2"), this->remote_address(), payload);
+              this->do_on_ws_message_finish(websocket_pong, ::std::move(payload));
+              break;
+            }
           }
       }
 
@@ -235,71 +222,34 @@ do_on_ws_accepted(cow_string&& uri)
 
 void
 WS_Server_Session::
-do_on_ws_text_stream(linear_buffer& data)
+do_on_ws_message_data_stream(WebSocket_OpCode /*opcode*/, linear_buffer& data)
   {
-    // Leave `data` alone for consumption by `do_on_ws_text()`, but perform some
-    // security checks, so we won't be affected by compromized 3rd-party servers.
+    // Leave `data` alone for consumption by `do_on_ws_message_finish()`, but
+    // perform some security checks, so we won't be affected by compromized
+    // 3rd-party servers.
     const auto conf_file = main_config.copy();
-    int64_t max_websocket_text_message_length = 1048576;
+    int64_t max_websocket_message_length = 1048576;
 
-    auto conf_value = conf_file.query("network", "http", "max_websocket_text_message_length");
+    auto conf_value = conf_file.query("network", "http", "max_websocket_message_length");
     if(conf_value.is_integer())
-      max_websocket_text_message_length = conf_value.as_integer();
+      max_websocket_message_length = conf_value.as_integer();
     else if(!conf_value.is_null())
       POSEIDON_LOG_WARN((
-          "Ignoring `network.http.max_websocket_text_message_length`: expecting an `integer`, got `$1`",
+          "Ignoring `network.http.max_websocket_message_length`: expecting an `integer`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
 
-    if(max_websocket_text_message_length < 0)
+    if(max_websocket_message_length < 0)
       POSEIDON_THROW((
-          "`network.http.max_websocket_text_message_length` value `$1` out of range",
+          "`network.http.max_websocket_message_length` value `$1` out of range",
           "[in configuration file '$2']"),
-          max_websocket_text_message_length, conf_file.path());
+          max_websocket_message_length, conf_file.path());
 
-    if(data.size() > (uint64_t) max_websocket_text_message_length)
+    if(data.size() > (uint64_t) max_websocket_message_length)
       POSEIDON_THROW((
           "WebSocket text data message too large: `$3` > `$4`",
           "[WebSocket server session `$1` (class `$2`)]"),
-          this, typeid(*this), data.size(), max_websocket_text_message_length);
-  }
-
-void
-WS_Server_Session::
-do_on_ws_binary_stream(linear_buffer& data)
-  {
-    // Leave `data` alone for consumption by `do_on_ws_binary()`, but perform some
-    // security checks, so we won't be affected by compromized 3rd-party servers.
-    const auto conf_file = main_config.copy();
-    int64_t max_websocket_binary_message_length = 1048576;
-
-    auto conf_value = conf_file.query("network", "http", "max_websocket_binary_message_length");
-    if(conf_value.is_integer())
-      max_websocket_binary_message_length = conf_value.as_integer();
-    else if(!conf_value.is_null())
-      POSEIDON_LOG_WARN((
-          "Ignoring `network.http.max_websocket_binary_message_length`: expecting an `integer`, got `$1`",
-          "[in configuration file '$2']"),
-          conf_value, conf_file.path());
-
-    if(max_websocket_binary_message_length < 0)
-      POSEIDON_THROW((
-          "`network.http.max_websocket_binary_message_length` value `$1` out of range",
-          "[in configuration file '$2']"),
-          max_websocket_binary_message_length, conf_file.path());
-
-    if(data.size() > (uint64_t) max_websocket_binary_message_length)
-      POSEIDON_THROW((
-          "WebSocket binary data message too large: `$3` > `$4`",
-          "[WebSocket server session `$1` (class `$2`)]"),
-          this, typeid(*this), data.size(), max_websocket_binary_message_length);
-  }
-
-void
-WS_Server_Session::
-do_on_ws_pong(linear_buffer&& data)
-  {
-    POSEIDON_LOG_DEBUG(("WebSocket PONG from `$1`: $2"), this->remote_address(), data);
+          this, typeid(*this), data.size(), max_websocket_message_length);
   }
 
 void
@@ -330,86 +280,71 @@ do_ws_send_raw_frame(int rsv_opcode, chars_proxy data)
 
 bool
 WS_Server_Session::
-do_ws_send_raw_data_frame(int rsv_opcode, chars_proxy data)
+ws_send(WebSocket_OpCode opcode, chars_proxy data)
   {
-    // When PMCE is not active, send the frame as is.
-    if(!this->m_pmce_opt)
-      return this->do_ws_send_raw_frame(rsv_opcode, data);
+    if(!this->do_has_upgraded())
+      POSEIDON_THROW((
+          "WebSocket handshake not complete yet",
+          "[WebSocket server session `$1` (class `$2`)]"),
+          this, typeid(*this));
 
-    // Small frames are never compressed.
-    uint32_t pmce_threshold = this->m_parser.pmce_send_no_context_takeover() * 1024U + 16U;
-    if(data.n < pmce_threshold)
-      return this->do_ws_send_raw_frame(rsv_opcode, data);
+    switch(opcode) {
+      case 1:  // TEXT
+      case 2:  // BINARY
+        // Check whether the message should be compressed. We believe that small
+        // (including empty) messages are not worth compressing.
+        if(this->m_pmce_opt) {
+          uint32_t pmce_threshold = this->m_parser.pmce_send_no_context_takeover() * 1024U + 16U;
+          if(data.n >= pmce_threshold) {
+            // Compress the payload and send it. When context takeover is active,
+            // compressed frames have dependency on each other, so the mutex must
+            // not be unlocked before the message is sent completely.
+            plain_mutex::unique_lock lock;
+            auto& out_buf = this->m_pmce_opt->deflate_output_buffer(lock);
+            out_buf.clear();
 
-    // Compress the payload and send it. When context takeover is in effect,
-    // compressed frames have dependency on each other, so the mutex must not be
-    // unlocked before the message is sent completely.
-    plain_mutex::unique_lock lock;
-    auto& out_buf = this->m_pmce_opt->deflate_output_buffer(lock);
-    out_buf.clear();
+            if(this->m_parser.pmce_send_no_context_takeover())
+              this->m_pmce_opt->deflate_reset(lock);
 
-    if(this->m_parser.pmce_send_no_context_takeover())
-      this->m_pmce_opt->deflate_reset(lock);
+            try {
+              this->m_pmce_opt->deflate_message_stream(lock, data);
+              this->m_pmce_opt->deflate_message_finish(lock);
 
-    bool succ = false;
-    try {
-      this->m_pmce_opt->deflate_message_stream(lock, data);
-      this->m_pmce_opt->deflate_message_finish(lock);
+              // FIN + RSV1 + opcode
+              return this->do_ws_send_raw_frame(0b11000000 | opcode, out_buf);
+            }
+            catch(exception& stdex) {
+              // When an error occurred, the deflator is left in an indeterminate
+              // state, so reset it and send the message uncompressed.
+              POSEIDON_LOG_ERROR(("Could not compress message: $1"), stdex);
+              this->m_pmce_opt->deflate_reset(lock);
+            }
+          }
+        }
 
-      // RSV1 + opcode
-      this->do_ws_send_raw_frame(0b01000000 | rsv_opcode, out_buf);
+        // Send the message uncompressed.
+        // FIN + opcode
+        return this->do_ws_send_raw_frame(0b10000000 | opcode, data);
+
+      case 9:  // PING
+      case 10:  // PONG
+        // Control messages can't be fragmented.
+        if(data.n > 125)
+          POSEIDON_THROW((
+              "Control frame too large: `$3` > `125`",
+              "[WebSocket server session `$1` (class `$2`)]"),
+              this, typeid(*this), data.n);
+
+        // Control messages can't be compressed, so send it as is.
+        // FIN + opcode
+        return this->do_ws_send_raw_frame(0b10000000 | opcode, data);
+
+      default:
+        POSEIDON_THROW((
+            "WebSocket opcode `$3` not supported",
+            "[WebSocket server session `$1` (class `$2`)]"),
+            this, typeid(*this), opcode);
     }
-    catch(exception& stdex) {
-      POSEIDON_LOG_ERROR(("Could not compress message: $1"), stdex);
-      this->m_pmce_opt->deflate_reset(lock);
-    }
-    return succ;
-  }
-
-bool
-WS_Server_Session::
-ws_send_text(chars_proxy data)
-  {
-    if(!this->do_has_upgraded())
-      POSEIDON_THROW((
-          "WebSocket handshake not complete yet",
-          "[WebSocket server session `$1` (class `$2`)]"),
-          this, typeid(*this));
-
-    // FIN + TEXT
-    return this->do_ws_send_raw_data_frame(0b10000000 | 1, data);
-  }
-
-bool
-WS_Server_Session::
-ws_send_binary(chars_proxy data)
-  {
-    if(!this->do_has_upgraded())
-      POSEIDON_THROW((
-          "WebSocket handshake not complete yet",
-          "[WebSocket server session `$1` (class `$2`)]"),
-          this, typeid(*this));
-
-    // FIN + BINARY
-    return this->do_ws_send_raw_data_frame(0b10000000 | 2, data);
-  }
-
-bool
-WS_Server_Session::
-ws_ping(chars_proxy data)
-  {
-    if(!this->do_has_upgraded())
-      POSEIDON_THROW((
-          "WebSocket handshake not complete yet",
-          "[WebSocket server session `$1` (class `$2`)]"),
-          this, typeid(*this));
-
-    // The length of the payload of a control frame cannot exceed 125 bytes, so
-    // the data string has to be truncated if it's too long.
-    chars_proxy ctl_data(data.p, min(data.n, 125));
-
-    // FIN + PING
-    return this->do_ws_send_raw_frame(0b10000000 | 9, ctl_data);
   }
 
 bool

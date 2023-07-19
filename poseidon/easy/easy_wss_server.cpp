@@ -22,7 +22,7 @@ struct Client_Table
         // shared fields between threads
         struct Event
           {
-            WebSocket_Event type;
+            Easy_Socket_Event type;
             linear_buffer data;
           };
 
@@ -79,7 +79,7 @@ struct Final_Fiber final : Abstract_Fiber
           auto event = ::std::move(queue->events.front());
           queue->events.pop_front();
 
-          if(ROCKET_UNEXPECT(event.type == websocket_closed)) {
+          if(ROCKET_UNEXPECT(event.type == easy_socket_close)) {
             // This will be the last event on this session.
             queue = nullptr;
             table->client_map.erase(client_iter);
@@ -154,37 +154,26 @@ struct Final_WSS_Server_Session final : WSS_Server_Session
     do_on_wss_accepted(cow_string&& uri) override
       {
         Client_Table::Event_Queue::Event event;
-        event.type = websocket_open;
+        event.type = easy_socket_open;
         event.data.putn(uri.data(), uri.size());
         this->do_push_event_common(::std::move(event));
       }
 
     virtual
     void
-    do_on_wss_text(linear_buffer&& data) override
+    do_on_wss_message_finish(WebSocket_OpCode opcode, linear_buffer&& data) override
       {
         Client_Table::Event_Queue::Event event;
-        event.type = websocket_text;
-        event.data.swap(data);
-        this->do_push_event_common(::std::move(event));
-      }
 
-    virtual
-    void
-    do_on_wss_binary(linear_buffer&& data) override
-      {
-        Client_Table::Event_Queue::Event event;
-        event.type = websocket_binary;
-        event.data.swap(data);
-        this->do_push_event_common(::std::move(event));
-      }
+        if(opcode == websocket_text)
+          event.type = easy_socket_msg_text;
+        else if(opcode == websocket_bin)
+          event.type = easy_socket_msg_bin;
+        else if(opcode == websocket_pong)
+          event.type = easy_socket_pong;
+        else
+          return;
 
-    virtual
-    void
-    do_on_wss_pong(linear_buffer&& data) override
-      {
-        Client_Table::Event_Queue::Event event;
-        event.type = websocket_pong;
         event.data.swap(data);
         this->do_push_event_common(::std::move(event));
       }
@@ -193,12 +182,13 @@ struct Final_WSS_Server_Session final : WSS_Server_Session
     void
     do_on_wss_close(uint16_t status, chars_proxy reason) override
       {
+        Client_Table::Event_Queue::Event event;
+        event.type = easy_socket_close;
+
         tinyfmt_ln fmt;
         fmt << status << ": " << reason;
-
-        Client_Table::Event_Queue::Event event;
-        event.type = websocket_closed;
         event.data = fmt.extract_buffer();
+
         this->do_push_event_common(::std::move(event));
       }
   };

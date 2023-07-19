@@ -16,7 +16,7 @@ class Easy_WSS_Server
       thunk<
         shptrR<WSS_Server_Session>,  // server data socket
         Abstract_Fiber&,            // fiber for current callback
-        WebSocket_Event,            // event type
+        Easy_Socket_Event,          // event type; see comments above constructor
         linear_buffer&&>;           // message payload
 
   private:
@@ -29,13 +29,17 @@ class Easy_WSS_Server
   public:
     // Constructs a server. The argument shall be an invocable object taking
     // `(shptrR<WSS_Server_Session> session, Abstract_Fiber& fiber,
-    // WebSocket_Event event, linear_buffer&& data)`, where `session` is a
+    // Easy_Socket_Event event, linear_buffer&& data)`, where `session` is a
     // pointer to a client session object, and if `event` is
-    //  1) `websocket_open`, then `data` is the request URI; or
-    //  2) `websocket_text`/`websocket_binary`/`websocket_pong`, then `data` is a
-    //     complete text/binary/pong message that has been received; or
-    //  3) `websocket_closed`, then `data` is a string about the reason, such as
-    //     `"1002: invalid opcode"`.
+    //  1) `easy_socket_open`, then `data` is the request URI; or
+    //  2) `easy_socket_msg_text`, then `data` is a complete text message that
+    //     has been received; or
+    //  3) `easy_socket_msg_bin`, then `data` is a complete binary message that
+    //     has been received; or
+    //  4) `easy_socket_pong`, then `data` is a PONG notification that has been
+    //     received, usually a copy of a previous PING notification; or
+    //  5) `easy_socket_close`, then `data` is a string about the reason, such
+    //     as `"1002: invalid opcode"`.
     // The server object owns all client socket objects. As a recommendation,
     // applications should store only `wkptr`s to client sockets, and call
     // `.lock()` as needed. This server object stores a copy of the callback,

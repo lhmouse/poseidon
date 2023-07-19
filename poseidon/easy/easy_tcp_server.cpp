@@ -26,7 +26,7 @@ struct Client_Table
         // shared fields between threads
         struct Event
           {
-            Connection_Event type;
+            Easy_Socket_Event type;
             linear_buffer data;
             int code = 0;
           };
@@ -84,7 +84,7 @@ struct Final_Fiber final : Abstract_Fiber
           auto event = ::std::move(queue->events.front());
           queue->events.pop_front();
 
-          if(ROCKET_UNEXPECT(event.type == connection_closed)) {
+          if(ROCKET_UNEXPECT(event.type == easy_socket_close)) {
             // This will be the last event on this socket.
             queue = nullptr;
             table->client_map.erase(client_iter);
@@ -93,8 +93,8 @@ struct Final_Fiber final : Abstract_Fiber
           lock.unlock();
 
           try {
-            if(event.type == connection_stream) {
-              // `connection_stream` is special. We append new data to
+            if(event.type == easy_socket_stream) {
+              // `easy_socket_stream` is really special. We append new data to
               // `data_stream` which is then passed to the callback instead of
               // `event.data`. `data_stream` may be consumed partially by user
               // code, and shall be preserved across callbacks.
@@ -167,7 +167,7 @@ struct Final_TCP_Socket final : TCP_Socket
     do_on_tcp_connected() override
       {
         Client_Table::Event_Queue::Event event;
-        event.type = connection_open;
+        event.type = easy_socket_open;
         this->do_push_event_common(::std::move(event));
       }
 
@@ -176,7 +176,7 @@ struct Final_TCP_Socket final : TCP_Socket
     do_on_tcp_stream(linear_buffer& data, bool eof) override
       {
         Client_Table::Event_Queue::Event event;
-        event.type = connection_stream;
+        event.type = easy_socket_stream;
         event.data.swap(data);
         event.code = eof;
         this->do_push_event_common(::std::move(event));
@@ -191,7 +191,7 @@ struct Final_TCP_Socket final : TCP_Socket
         const char* err_str = ::strerror_r(err_code, sbuf, sizeof(sbuf));
 
         Client_Table::Event_Queue::Event event;
-        event.type = connection_closed;
+        event.type = easy_socket_close;
         event.data.puts(err_str);
         event.code = err_code;
         this->do_push_event_common(::std::move(event));
