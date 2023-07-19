@@ -174,16 +174,16 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
             }
 
             case 8: {  // CLOSE
-              uint16_t status = 1005;
+              int status = 1005;
               if(payload.size() >= 2) {
                 // Get the status code from the payload. The remaining part might
                 // be a UTF-8 string; just take it.
-                status = static_cast<uint16_t>(payload.getc() << 8);
-                status |= static_cast<uint16_t>(payload.getc());
+                status = payload.getc() << 8;
+                status |= payload.getc();
               }
 
               data.clear();
-              this->do_call_on_ws_close_once(status, payload);
+              this->do_call_on_ws_close_once(static_cast<uint16_t>(status), payload);
               return;
             }
 
@@ -355,17 +355,18 @@ ws_shut_down(uint16_t status, chars_proxy reason) noexcept
     if(!this->do_has_upgraded())
       return this->tcp_shut_down();
 
-    // Compose a CLOSE frame. The length of the payload of a control frame cannot
-    // exceed 125 bytes, so the reason string has to be truncated if it's too long.
-    static_vector<char, 125> ctl_data;
-    ctl_data.push_back(static_cast<char>(status >> 8));
-    ctl_data.push_back(static_cast<char>(status));
-    ctl_data.append(reason.p, reason.p + min(reason.n, 123));
-
     bool succ = false;
     try {
+      // Compose a CLOSE frame. A control frame shall not be fragmented, so the
+      // length of its payload cannot exceed 125 bytes, and the reason string has
+      // to be truncated if it's too long.
+      static_vector<char, 125> data;
+      data.push_back(static_cast<char>(status >> 8));
+      data.push_back(static_cast<char>(status));
+      data.append(reason.p, reason.p + min(reason.n, 123));
+
       // FIN + CLOSE
-      succ = this->do_ws_send_raw_frame(0b10000000 | 8, ctl_data);
+      succ = this->do_ws_send_raw_frame(0b10000000 | 8, data);
     }
     catch(exception& stdex) {
       POSEIDON_LOG_ERROR((
