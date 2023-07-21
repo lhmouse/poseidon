@@ -217,12 +217,12 @@ enum WebSocket_OpCode : uint8_t
 
 enum Easy_Socket_Event : uint8_t
   {
-    easy_socket_open      = 0,  // TCP, UDP, WebSocket
+    easy_socket_open      = 0,  // TCP  UDP  WebSocket
     easy_socket_stream    = 1,  // TCP
-    easy_socket_close     = 2,  // TCP, UDP, WebSocket
-    easy_socket_msg_text  = 3,  // WebSocket
-    easy_socket_msg_bin   = 4,  // UDP, WebSocket
-    easy_socket_pong      = 5,  // WebSocket
+    easy_socket_close     = 2,  // TCP  UDP  WebSocket
+    easy_socket_msg_text  = 3,  //           WebSocket
+    easy_socket_msg_bin   = 4,  //      UDP  WebSocket
+    easy_socket_pong      = 5,  //           WebSocket
   };
 
 struct cacheline_barrier
@@ -231,6 +231,7 @@ struct cacheline_barrier
     static constexpr size_t size = 64UL - alignof(max_align_t);
     alignas(align) uchar_array<size> bytes;
 
+    // All contents are padding, so these functions do nothing.
     cacheline_barrier() noexcept { }
     cacheline_barrier(const cacheline_barrier&) { }
     cacheline_barrier& operator=(const cacheline_barrier&) { return *this;  }
