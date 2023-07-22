@@ -22,6 +22,7 @@ class Easy_WSS_Client
   private:
     thunk_type m_thunk;
 
+    shptr<Async_Connect> m_dns_task;
     struct X_Event_Queue;
     shptr<X_Event_Queue> m_queue;
     shptr<WSS_Client_Session> m_session;
@@ -56,9 +57,12 @@ class Easy_WSS_Client
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_WSS_Client);
 
-    // Initiates a new connection to the given address.
+    // Initiates a new connection to the given address. `uri` shall start with
+    // `ws://`, followed by a host name, an optional port number, a request path,
+    // and optional query parameters; user information and fragments are not
+    // allowed. If no port number is specified, 443 is assumed.
     void
-    connect(const Socket_Address& addr, cow_stringR host, cow_stringR uri = sref("/"), cow_stringR query = sref(""));
+    connect(cow_stringR uri);
 
     // Destroys the current connection without graceful shutdown. This function
     // should only be called after all data from the server have been read and

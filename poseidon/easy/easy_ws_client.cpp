@@ -6,7 +6,10 @@
 #include "../static/network_driver.hpp"
 #include "../fiber/abstract_fiber.hpp"
 #include "../static/fiber_scheduler.hpp"
+#include "../socket/async_connect.hpp"
+#include "../static/async_task_executor.hpp"
 #include "../utils.hpp"
+#include <http_parser.h>
 namespace poseidon {
 namespace {
 
@@ -181,14 +184,43 @@ Easy_WS_Client::
 
 void
 Easy_WS_Client::
-connect(const Socket_Address& addr, cow_stringR host, cow_stringR uri, cow_stringR query)
+connect(cow_stringR uri)
   {
-    auto queue = new_sh<X_Event_Queue>();
-    auto session = new_sh<Final_WS_Client_Session>(host, uri, query, this->m_thunk, queue);
-    queue->wsession = session;
-    session->connect(addr);
+    // Parse the URI.
+    ::http_parser_url uri_hp = { };
+    if((uri.size() > UINT16_MAX) || (::http_parser_parse_url(uri.data(), uri.size(), false, &uri_hp)))
+      POSEIDON_THROW(("URI `$1` not resolvable"), uri);
 
-    network_driver.insert(session);
+    if(!::rocket::ascii_ci_equal(uri.data() + uri_hp.field_data[UF_SCHEMA].off, uri_hp.field_data[UF_SCHEMA].len, "ws", 2))
+      POSEIDON_THROW(("Protocol must be `ws://` (URI `$1`)"), uri);
+
+    if(uri_hp.field_set & (1U << UF_USERINFO))
+      POSEIDON_THROW(("User information not supported (URI `$1`)"), uri);
+
+    // Set connection parameters. The host part is required; all the others have
+    // default values.
+    cow_string host = uri.substr(uri_hp.field_data[UF_HOST].off, uri_hp.field_data[UF_HOST].len);
+    uint16_t port = 80;
+    cow_string path = sref("/");
+    cow_string query;
+
+    if(uri_hp.field_set & (1U << UF_PORT))
+      port = uri_hp.port;
+
+    if(uri_hp.field_set & (1U << UF_PATH))
+      path.assign(uri, uri_hp.field_data[UF_PATH].off, uri_hp.field_data[UF_PATH].len);
+
+    if(uri_hp.field_set & (1U << UF_QUERY))
+      query.assign(uri, uri_hp.field_data[UF_QUERY].off, uri_hp.field_data[UF_QUERY].len);
+
+    // Initiate the connection.
+    auto host_header = format_string("$1:$2", host, port);
+    auto queue = new_sh<X_Event_Queue>();
+    auto session = new_sh<Final_WS_Client_Session>(host_header, path, query, this->m_thunk, queue);
+    queue->wsession = session;
+
+    this->m_dns_task = new_sh<Async_Connect>(network_driver, session, host, port);
+    async_task_executor.enqueue(this->m_dns_task);
     this->m_queue = ::std::move(queue);
     this->m_session = ::std::move(session);
   }
@@ -197,6 +229,7 @@ void
 Easy_WS_Client::
 close() noexcept
   {
+    this->m_dns_task = nullptr;
     this->m_queue = nullptr;
     this->m_session = nullptr;
   }

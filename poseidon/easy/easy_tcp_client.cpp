@@ -6,6 +6,8 @@
 #include "../static/network_driver.hpp"
 #include "../fiber/abstract_fiber.hpp"
 #include "../static/fiber_scheduler.hpp"
+#include "../socket/async_connect.hpp"
+#include "../static/async_task_executor.hpp"
 #include "../utils.hpp"
 namespace poseidon {
 namespace {
@@ -183,14 +185,14 @@ Easy_TCP_Client::
 
 void
 Easy_TCP_Client::
-connect(const Socket_Address& addr)
+connect(cow_stringR host, uint16_t port)
   {
     auto queue = new_sh<X_Event_Queue>();
     auto socket = new_sh<Final_TCP_Socket>(this->m_thunk, queue);
     queue->wsocket = socket;
-    socket->connect(addr);
 
-    network_driver.insert(socket);
+    this->m_dns_task = new_sh<Async_Connect>(network_driver, socket, host, port);
+    async_task_executor.enqueue(this->m_dns_task);
     this->m_queue = ::std::move(queue);
     this->m_socket = ::std::move(socket);
   }
@@ -199,6 +201,7 @@ void
 Easy_TCP_Client::
 close() noexcept
   {
+    this->m_dns_task = nullptr;
     this->m_queue = nullptr;
     this->m_socket = nullptr;
   }

@@ -23,6 +23,7 @@ class Easy_HTTPS_Client
   private:
     thunk_type m_thunk;
 
+    shptr<Async_Connect> m_dns_task;
     struct X_Event_Queue;
     shptr<X_Event_Queue> m_queue;
     shptr<HTTPS_Client_Session> m_session;
@@ -52,9 +53,9 @@ class Easy_HTTPS_Client
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_HTTPS_Client);
 
-    // Initiates a new connection to the given address.
+    // Initiates a new connection to the given server.
     void
-    connect(const Socket_Address& addr);
+    connect(cow_stringR host, uint16_t port = 443);
 
     // Destroys the current connection without graceful shutdown. This function
     // should only be called after all data from the server have been read and

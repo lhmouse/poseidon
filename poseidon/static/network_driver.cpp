@@ -349,7 +349,7 @@ thread_loop()
 
     socket = socket_it->second.lock();
     if(!socket) {
-      // Remove expired sockete. It will be deleted automatically after being closed.
+      // Remove expired socket. It will be deleted automatically after being closed.
       this->m_epoll_sockets.erase(socket_it);
       POSEIDON_LOG_TRACE(("Socket expired: $1"), event.data.ptr);
       return;
@@ -470,7 +470,6 @@ void
 Network_Driver::
 insert(shptrR<Abstract_Socket> socket)
   {
-    // Validate arguments.
     if(!socket)
       POSEIDON_THROW(("Null socket pointer not valid"));
 

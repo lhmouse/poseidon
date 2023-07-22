@@ -66,10 +66,6 @@ class Easy_UDP_Client
     const Socket_Address&
     local_address() const noexcept;
 
-    // Sets the peer address. This limits what can be received from this socket.
-    void
-    connect(const Socket_Address& addr);
-
     // Joins/leaves a multicast group.
     // `maddr` is the multicast group to join/leave, and must be a valid multicast
     // address. It is also used to determine which network interface to use. `ttl`

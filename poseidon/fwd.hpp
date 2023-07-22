@@ -489,6 +489,7 @@ class WS_Server_Session;
 class WS_Client_Session;
 class WSS_Server_Session;
 class WSS_Client_Session;
+class Async_Connect;
 
 // HTTP types
 class HTTP_DateTime;

@@ -6,6 +6,8 @@
 #include "../static/network_driver.hpp"
 #include "../fiber/abstract_fiber.hpp"
 #include "../static/fiber_scheduler.hpp"
+#include "../socket/async_connect.hpp"
+#include "../static/async_task_executor.hpp"
 #include "../utils.hpp"
 namespace poseidon {
 namespace {
@@ -92,12 +94,14 @@ struct Final_Fiber final : Abstract_Fiber
 
 struct Final_HTTP_Client_Session final : HTTP_Client_Session
   {
+    cow_string m_host_header;
     Easy_HTTP_Client::thunk_type m_thunk;
     wkptr<Event_Queue> m_wqueue;
 
     explicit
-    Final_HTTP_Client_Session(const Easy_HTTP_Client::thunk_type& thunk, const shptr<Event_Queue>& queue)
-      : m_thunk(thunk), m_wqueue(queue)  { }
+    Final_HTTP_Client_Session(cow_stringR host_header,
+          const Easy_HTTP_Client::thunk_type& thunk, const shptr<Event_Queue>& queue)
+      : m_host_header(host_header), m_thunk(thunk), m_wqueue(queue)  { }
 
     void
     do_push_event_common(Event_Queue::Event&& event)
@@ -153,6 +157,18 @@ struct Final_HTTP_Client_Session final : HTTP_Client_Session
         event.data.puts(err_str);
         this->do_push_event_common(::std::move(event));
       }
+
+    void
+    fix_headers(HTTP_Request_Headers& req) const
+      {
+        // Erase bad headers.
+        for(size_t hindex = 0;  hindex < req.headers.size();  hindex ++)
+          if(ascii_ci_equal(req.headers.at(hindex).first, sref("Host")))
+            req.headers.erase(hindex --);
+
+        // Add required headers.
+        req.headers.emplace_back(sref("Host"), this->m_host_header);
+      }
   };
 
 }  // namespace
@@ -166,14 +182,15 @@ Easy_HTTP_Client::
 
 void
 Easy_HTTP_Client::
-connect(const Socket_Address& addr)
+connect(cow_stringR host, uint16_t port)
   {
+    auto host_header = format_string("$1:$2", host, port);
     auto queue = new_sh<X_Event_Queue>();
-    auto session = new_sh<Final_HTTP_Client_Session>(this->m_thunk, queue);
+    auto session = new_sh<Final_HTTP_Client_Session>(host_header, this->m_thunk, queue);
     queue->wsession = session;
-    session->connect(addr);
 
-    network_driver.insert(session);
+    this->m_dns_task = new_sh<Async_Connect>(network_driver, session, host, port);
+    async_task_executor.enqueue(this->m_dns_task);
     this->m_queue = ::std::move(queue);
     this->m_session = ::std::move(session);
   }
@@ -182,6 +199,7 @@ void
 Easy_HTTP_Client::
 close() noexcept
   {
+    this->m_dns_task = nullptr;
     this->m_queue = nullptr;
     this->m_session = nullptr;
   }
@@ -214,6 +232,7 @@ http_GET(HTTP_Request_Headers&& req)
       return false;
 
     req.method = "GET";
+    static_cast<Final_HTTP_Client_Session*>(this->m_session.get())->fix_headers(req);
     return this->m_session->http_request(::std::move(req), "");
   }
 
@@ -225,6 +244,7 @@ http_POST(HTTP_Request_Headers&& req, chars_proxy data)
       return false;
 
     req.method = "POST";
+    static_cast<Final_HTTP_Client_Session*>(this->m_session.get())->fix_headers(req);
     return this->m_session->http_request(::std::move(req), data);
   }
 
@@ -236,6 +256,7 @@ http_PUT(HTTP_Request_Headers&& req, chars_proxy data)
       return false;
 
     req.method = "PUT";
+    static_cast<Final_HTTP_Client_Session*>(this->m_session.get())->fix_headers(req);
     return this->m_session->http_request(::std::move(req), data);
   }
 
@@ -247,6 +268,7 @@ http_DELETE(HTTP_Request_Headers&& req)
       return false;
 
     req.method = "DELETE";
+    static_cast<Final_HTTP_Client_Session*>(this->m_session.get())->fix_headers(req);
     return this->m_session->http_request(::std::move(req), "");
   }
 

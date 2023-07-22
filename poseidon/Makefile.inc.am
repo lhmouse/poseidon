@@ -38,6 +38,7 @@ nobase_include_HEADERS +=  \
   %reldir%/socket/ws_client_session.hpp  \
   %reldir%/socket/wss_server_session.hpp  \
   %reldir%/socket/wss_client_session.hpp  \
+  %reldir%/socket/async_connect.hpp  \
   %reldir%/http/http_datetime.hpp  \
   %reldir%/http/http_value.hpp  \
   %reldir%/http/http_header_parser.hpp  \
@@ -102,6 +103,7 @@ lib_libposeidon_la_SOURCES =  \
   %reldir%/socket/ws_client_session.cpp  \
   %reldir%/socket/wss_server_session.cpp  \
   %reldir%/socket/wss_client_session.cpp  \
+  %reldir%/socket/async_connect.cpp  \
   %reldir%/http/http_datetime.cpp  \
   %reldir%/http/http_value.cpp  \
   %reldir%/http/http_header_parser.cpp  \

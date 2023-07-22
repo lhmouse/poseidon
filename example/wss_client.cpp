@@ -53,8 +53,8 @@ timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/, stea
 
     switch(state) {
       case 0: {
-        Socket_Address addr("127.0.0.1:3807");
-        my_client.connect(addr, sref("localhost"), sref("/some/uri"));
+        cow_string addr = sref("wss://localhost:3807/some/uri");
+        my_client.connect(addr);
         POSEIDON_LOG_WARN(("example WSS client connecting: addr = $1"), addr);
         break;
       }
