@@ -15,15 +15,31 @@ extern Easy_HTTPS_Client my_client;
 extern Easy_Timer my_timer;
 
 void
-event_callback(shptrR<HTTPS_Client_Session> session, Abstract_Fiber& /*fiber*/, HTTP_Response_Headers&& resp, linear_buffer&& data)
+event_callback(shptrR<HTTPS_Client_Session> session, Abstract_Fiber& /*fiber*/, Easy_Socket_Event event, HTTP_Response_Headers&& resp, linear_buffer&& data)
   {
-    POSEIDON_LOG_WARN(("HTTPS client received response from `$1`: $2 $3"),
-        session->remote_address(), resp.status, resp.reason);
+    switch(event) {
+      case easy_socket_msg_bin: {
+        POSEIDON_LOG_WARN(("HTTPS client received response from `$1`: $2 $3"),
+            session->remote_address(), resp.status, resp.reason);
 
-    for(const auto& pair : resp.headers)
-      POSEIDON_LOG_WARN(("  $1 --> $2"), pair.first, pair.second);
+        for(const auto& pair : resp.headers)
+          POSEIDON_LOG_WARN(("  $1 --> $2"), pair.first, pair.second);
 
-    POSEIDON_LOG_WARN(("    payload ($1 bytes):\n$2"), data.size(), data);
+        POSEIDON_LOG_WARN(("    payload ($1 bytes):\n$2"), data.size(), data);
+        break;
+      }
+
+      case easy_socket_close:
+        POSEIDON_LOG_WARN(("example HTTPS client shut down connection: $1"), data);
+        break;
+
+      case easy_socket_open:
+      case easy_socket_stream:
+      case easy_socket_msg_text:
+      case easy_socket_pong:
+      default:
+        ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
+    }
   }
 
 void

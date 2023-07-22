@@ -22,10 +22,11 @@ struct Client_Table
         // shared fields between threads
         struct Event
           {
+            Easy_Socket_Event type;
             HTTP_Request_Headers req;
             linear_buffer data;
             bool close_now = false;
-            uint32_t has_status = 0;
+            uint32_t status = 0;
           };
 
         deque<Event> events;
@@ -81,7 +82,7 @@ struct Final_Fiber final : Abstract_Fiber
           auto event = ::std::move(queue->events.front());
           queue->events.pop_front();
 
-          if(ROCKET_UNEXPECT(event.close_now)) {
+          if(ROCKET_UNEXPECT(event.type == easy_socket_close)) {
             // This will be the last event on this session.
             queue = nullptr;
             table->client_map.erase(client_iter);
@@ -90,16 +91,16 @@ struct Final_Fiber final : Abstract_Fiber
           lock.unlock();
 
           try {
-            if(event.has_status == 0) {
-              // Process a request.
-              this->m_thunk(session, *this, ::std::move(event.req), ::std::move(event.data));
-            }
-            else {
+            if(event.type == easy_socket_pong) {
               // Send a bad request response.
               HTTP_Response_Headers resp;
-              resp.status = event.has_status;
+              resp.status = event.status;
               resp.headers.emplace_back(sref("Connection"), sref("close"));
               session->http_response(::std::move(resp), "");
+            }
+            else {
+              // Process a request.
+              this->m_thunk(session, *this, event.type, ::std::move(event.req), ::std::move(event.data));
             }
 
             if(event.close_now)
@@ -132,20 +133,6 @@ struct Final_HTTP_Server_Session final : HTTP_Server_Session
     Final_HTTP_Server_Session(unique_posix_fd&& fd,
           const Easy_HTTP_Server::thunk_type& thunk, const shptr<Client_Table>& table)
       : TCP_Socket(::std::move(fd)), m_thunk(thunk), m_wtable(table)  { }
-
-    virtual
-    void
-    do_abstract_socket_on_closed() override
-      {
-        auto table = this->m_wtable.lock();
-        if(!table)
-          return;
-
-        // We are in the network thread here.
-        plain_mutex::unique_lock lock(table->mutex);
-
-        table->client_map.erase(this);
-      }
 
     void
     do_push_event_common(Client_Table::Event_Queue::Event&& event)
@@ -186,6 +173,7 @@ struct Final_HTTP_Server_Session final : HTTP_Server_Session
     do_on_http_request_finish(HTTP_Request_Headers&& req, linear_buffer&& data, bool close_now) override
       {
         Client_Table::Event_Queue::Event event;
+        event.type = easy_socket_msg_bin;
         event.req = ::std::move(req);
         event.data = ::std::move(data);
         event.close_now = close_now;
@@ -197,8 +185,23 @@ struct Final_HTTP_Server_Session final : HTTP_Server_Session
     do_on_http_request_error(uint32_t status) override
       {
         Client_Table::Event_Queue::Event event;
-        event.has_status = status;
+        event.type = easy_socket_pong;
+        event.status = status;
         event.close_now = true;
+        this->do_push_event_common(::std::move(event));
+      }
+
+    virtual
+    void
+    do_abstract_socket_on_closed() override
+      {
+        char sbuf[1024];
+        int err_code = errno;
+        const char* err_str = ::strerror_r(err_code, sbuf, sizeof(sbuf));
+
+        Client_Table::Event_Queue::Event event;
+        event.type = easy_socket_close;
+        event.data.puts(err_str);
         this->do_push_event_common(::std::move(event));
       }
   };

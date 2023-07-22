@@ -16,6 +16,7 @@ class Easy_HTTPS_Client
       thunk<
         shptrR<HTTPS_Client_Session>,  // client data socket
         Abstract_Fiber&,               // fiber for current callback
+        Easy_Socket_Event,            // event type; see comments above constructor
         HTTP_Response_Headers&&,       // response status code and headers
         linear_buffer&&>;              // response payload body
 
@@ -29,11 +30,16 @@ class Easy_HTTPS_Client
   public:
     // Constructs a client. The argument shall be an invocable object taking
     // `(shptrR<HTTPS_Client_Session> session, Abstract_Fiber& fiber,
-    // HTTP_Response_Headers&& resp, linear_buffer&& data)`, where `session` is
-    // a pointer to a client socket object, and `req` and `data` are the headers
-    // and body of a response respectively. This client object stores a copy of
-    // the callback object, which is invoked accordingly in the main thread.
-    // The callback object is never copied, and is allowed to modify itself.
+    // Easy_Socket_Event event, HTTP_Response_Headers&& resp, linear_buffer&&
+    // data)`, where `session` is a pointer to a client socket object, and if
+    // `event` is
+    //  1) `easy_socket_msg_bin`, then `resp` and `data` are the headers and body
+    //     of a response message, respectively; or
+    //  2) `easy_socket_close`, then `resp` is empty and `data` is the error
+    //     description.
+    // This client object stores a copy of the callback object, which is invoked
+    // accordingly in the main thread. The callback object is never copied, and
+    // is allowed to modify itself.
     template<typename CallbackT,
     ROCKET_ENABLE_IF(thunk_type::is_invocable<CallbackT>::value)>
     explicit

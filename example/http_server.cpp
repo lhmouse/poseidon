@@ -10,21 +10,37 @@ using namespace ::poseidon;
 extern Easy_HTTP_Server my_server;
 
 void
-event_callback(shptrR<HTTP_Server_Session> session, Abstract_Fiber& /*fiber*/, HTTP_Request_Headers&& req, linear_buffer&& data)
+event_callback(shptrR<HTTP_Server_Session> session, Abstract_Fiber& /*fiber*/, Easy_Socket_Event event, HTTP_Request_Headers&& req, linear_buffer&& data)
   {
-    POSEIDON_LOG_ERROR(("HTTP request --> $1 $2: $3"), req.method, req.uri_path, req.uri_query);
-    for(const auto& r : req.headers)
-      POSEIDON_LOG_ERROR(("HTTP header --> $1: $2"), r.first, r.second);
+    switch(event) {
+      case easy_socket_msg_bin: {
+        POSEIDON_LOG_ERROR(("HTTP request --> $1 $2: $3"), req.method, req.uri_path, req.uri_query);
+        for(const auto& r : req.headers)
+          POSEIDON_LOG_ERROR(("HTTP header --> $1: $2"), r.first, r.second);
 
-    HTTP_Response_Headers resp;
-    resp.status = 200;
-    resp.headers.emplace_back(sref("Date"), system_clock::now());
-    resp.headers.emplace_back(sref("Content-Type"), sref("text/plain"));
+        HTTP_Response_Headers resp;
+        resp.status = 200;
+        resp.headers.emplace_back(sref("Date"), system_clock::now());
+        resp.headers.emplace_back(sref("Content-Type"), sref("text/plain"));
 
-    tinyfmt_ln fmt;
-    fmt << "request payload length = " << data.size() << "\n";
+        tinyfmt_ln fmt;
+        fmt << "request payload length = " << data.size() << "\n";
 
-    session->http_response(::std::move(resp), fmt);
+        session->http_response(::std::move(resp), fmt);
+        break;
+      }
+
+      case easy_socket_close:
+        POSEIDON_LOG_ERROR(("example HTTP server shut down connection: $1"), data);
+        break;
+
+      case easy_socket_open:
+      case easy_socket_stream:
+      case easy_socket_msg_text:
+      case easy_socket_pong:
+      default:
+        ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
+    }
   }
 
 int

@@ -19,6 +19,7 @@ struct Event_Queue
     // shared fields between threads
     struct Event
       {
+        Easy_Socket_Event type;
         HTTP_Response_Headers resp;
         linear_buffer data;
         bool close_now = false;
@@ -70,7 +71,7 @@ struct Final_Fiber final : Abstract_Fiber
 
           try {
             // Process a response.
-            this->m_thunk(session, *this, ::std::move(event.resp), ::std::move(event.data));
+            this->m_thunk(session, *this, event.type, ::std::move(event.resp), ::std::move(event.data));
 
             if(event.close_now)
               session->tcp_shut_down();
@@ -98,9 +99,8 @@ struct Final_HTTP_Client_Session final : HTTP_Client_Session
     Final_HTTP_Client_Session(const Easy_HTTP_Client::thunk_type& thunk, const shptr<Event_Queue>& queue)
       : m_thunk(thunk), m_wqueue(queue)  { }
 
-    virtual
     void
-    do_on_http_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data, bool close_now) override
+    do_push_event_common(Event_Queue::Event&& event)
       {
         auto queue = this->m_wqueue.lock();
         if(!queue)
@@ -109,18 +109,49 @@ struct Final_HTTP_Client_Session final : HTTP_Client_Session
         // We are in the network thread here.
         plain_mutex::unique_lock lock(queue->mutex);
 
-        if(!queue->fiber_active) {
-          // Create a new fiber, if none is active. The fiber shall only reset
-          // `m_fiber_private_buffer` if no event is pending.
-          fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, queue));
-          queue->fiber_active = true;
-        }
+        try {
+          if(!queue->fiber_active) {
+            // Create a new fiber, if none is active. The fiber shall only reset
+            // `m_fiber_private_buffer` if no event is pending.
+            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, queue));
+            queue->fiber_active = true;
+          }
 
+          queue->events.push_back(::std::move(event));
+        }
+        catch(exception& stdex) {
+          POSEIDON_LOG_ERROR((
+              "Could not push network event: $1"),
+              stdex);
+
+          this->quick_close();
+        }
+      }
+
+    virtual
+    void
+    do_on_http_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data, bool close_now) override
+      {
         Event_Queue::Event event;
+        event.type = easy_socket_msg_bin;
         event.resp = ::std::move(resp);
         event.data = ::std::move(data);
         event.close_now = close_now;
-        queue->events.push_back(::std::move(event));
+        this->do_push_event_common(::std::move(event));
+      }
+
+    virtual
+    void
+    do_abstract_socket_on_closed() override
+      {
+        char sbuf[1024];
+        int err_code = errno;
+        const char* err_str = ::strerror_r(err_code, sbuf, sizeof(sbuf));
+
+        Event_Queue::Event event;
+        event.type = easy_socket_close;
+        event.data.puts(err_str);
+        this->do_push_event_common(::std::move(event));
       }
   };
 

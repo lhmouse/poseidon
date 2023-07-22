@@ -216,16 +216,6 @@ enum WebSocket_OpCode : uint8_t
     websocket_pong  = 10,
   };
 
-enum Easy_Socket_Event : uint8_t
-  {
-    easy_socket_open      = 0,  // TCP  UDP  WebSocket
-    easy_socket_stream    = 1,  // TCP
-    easy_socket_close     = 2,  // TCP  UDP  WebSocket
-    easy_socket_msg_text  = 3,  //           WebSocket
-    easy_socket_msg_bin   = 4,  //      UDP  WebSocket
-    easy_socket_pong      = 5,  //           WebSocket
-  };
-
 struct cacheline_barrier
   {
     static constexpr size_t align = alignof(max_align_t);
@@ -453,6 +443,20 @@ new_sh(ValueT&& value)
   {
     return ::std::make_shared<typename ::std::decay<ValueT>::type>(::std::forward<ValueT>(value));
   }
+
+// This is a generic enumeration for `Easy_*` classes.
+// * TCP   := TCP or SSL/TLS
+// * HTTP  := HTTP or HTTPS
+// * WS    := WebSocket over HTTP or HTTPS
+enum Easy_Socket_Event : uint8_t
+  {
+    easy_socket_open      = 0,  // TCP        WS
+    easy_socket_stream    = 1,  // TCP
+    easy_socket_close     = 2,  // TCP  HTTP  WS
+    easy_socket_msg_text  = 3,  //            WS
+    easy_socket_msg_bin   = 4,  //      HTTP  WS
+    easy_socket_pong      = 5,  //            WS
+  };
 
 // Base types
 class uuid;
