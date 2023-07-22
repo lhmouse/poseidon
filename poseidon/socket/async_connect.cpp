@@ -48,7 +48,7 @@ do_abstract_task_on_execute()
             this->m_host, ::gai_strerror(err));
 
       // Iterate over the list and find a suitable address to connect. IPv4
-      // addresses are preferred to IPv6 addresses, so this has to be done as two
+      // addresses are preferred to IPv6 ones, so this has to be done as two
       // passes.
       const ::rocket::unique_ptr<::addrinfo, void (::addrinfo*)> guard(res, ::freeaddrinfo);
 
