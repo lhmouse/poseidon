@@ -10,9 +10,15 @@ void
 HTTP_Request_Headers::
 encode(tinyfmt& fmt) const
   {
-    // Write the request line. This function does not validate whether these
-    // fields contain valid values.
-    fmt << this->method << " " << this->uri << " HTTP/1.1";
+    // Write the request line. If `method` is null or points to an empty string,
+    // `GET` is assumed. This function does not validate whether these fields
+    // contain valid values.
+    if((this->method == nullptr) || (this->method[0] == 0))
+      fmt << "GET ";
+    else
+      fmt << this->method << ' ';
+
+    fmt << this->uri << " HTTP/1.1";
 
     // Write request headers. Empty headers are ignored.
     for(const auto& hpair : this->headers) {
@@ -20,6 +26,7 @@ encode(tinyfmt& fmt) const
         continue;
 
       fmt << "\r\n" << hpair.first << ": ";
+
       if(hpair.second.is_string())
         fmt << hpair.second.as_string();
       else

@@ -17,7 +17,7 @@ HTTP_Request_Parser::s_settings[1] =
     // on_url
     +[](::http_parser* ps, const char* str, size_t len)
       {
-        this->m_headers.method = sref(::http_method_str((::http_method) ps->method));
+        this->m_headers.method = ::http_method_str((::http_method) ps->method);
         this->m_headers.uri.append(str, len);
         return 0;
       },

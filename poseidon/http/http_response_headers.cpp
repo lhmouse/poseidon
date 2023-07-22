@@ -15,8 +15,9 @@ encode(tinyfmt& fmt) const
     // is written. This function does not validate whether these fields
     // contain valid values.
     fmt << "HTTP/1.1 " << this->status << " ";
+
     if(this->reason.empty())
-      fmt << ::http_status_str((::http_status) this->status);
+      fmt << ::http_status_str(static_cast<::http_status>(this->status));
     else
       fmt << this->reason;
 
@@ -26,6 +27,7 @@ encode(tinyfmt& fmt) const
         continue;
 
       fmt << "\r\n" << hpair.first << ": ";
+
       if(hpair.second.is_string())
         fmt << hpair.second.as_string();
       else

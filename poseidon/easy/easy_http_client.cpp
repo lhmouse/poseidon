@@ -182,7 +182,7 @@ http_GET(HTTP_Request_Headers&& req)
     if(!this->m_session)
       return false;
 
-    req.method = sref("GET");
+    req.method = "GET";
     return this->m_session->http_request(::std::move(req), "");
   }
 
@@ -193,7 +193,7 @@ http_POST(HTTP_Request_Headers&& req, chars_proxy data)
     if(!this->m_session)
       return false;
 
-    req.method = sref("POST");
+    req.method = "POST";
     return this->m_session->http_request(::std::move(req), data);
   }
 
@@ -204,7 +204,7 @@ http_PUT(HTTP_Request_Headers&& req, chars_proxy data)
     if(!this->m_session)
       return false;
 
-    req.method = sref("PUT");
+    req.method = "PUT";
     return this->m_session->http_request(::std::move(req), data);
   }
 
@@ -215,7 +215,7 @@ http_DELETE(HTTP_Request_Headers&& req)
     if(!this->m_session)
       return false;
 
-    req.method = sref("DELETE");
+    req.method = "DELETE";
     return this->m_session->http_request(::std::move(req), "");
   }
 

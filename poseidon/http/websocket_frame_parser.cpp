@@ -169,7 +169,7 @@ create_handshake_request(HTTP_Request_Headers& req)
           this->m_wshs);
 
     // Compose the handshake request.
-    req.method = sref("GET");
+    req.method = "GET";
     req.uri = sref("/");
     req.headers.clear();
     req.headers.reserve(8);

@@ -21,18 +21,7 @@ HTTP_Response_Parser::s_settings[1] =
     +[](::http_parser* ps, const char* str, size_t len)
       {
         this->m_headers.status = ps->status_code;
-        if(this->m_headers.reason.empty()) {
-          // The reason string is very likely a predefined one, so don't bother
-          // allocating storage for it.
-          auto stat_sh = sref(::http_status_str((::http_status) ps->status_code));
-          if(xmemeq(stat_sh.data(), stat_sh.size(), str, len))
-            this->m_headers.reason = stat_sh;
-          else
-            this->m_headers.reason.assign(str, len);
-        }
-        else {
-          this->m_headers.reason.append(str, len);
-        }
+        this->m_headers.reason.append(str, len);
         return 0;
       },
 

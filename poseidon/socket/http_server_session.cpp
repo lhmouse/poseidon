@@ -99,7 +99,7 @@ HTTP_Payload_Type
 HTTP_Server_Session::
 do_on_http_request_headers(HTTP_Request_Headers& req)
   {
-    if((req.method == sref("CONNECT")) || !req.uri.starts_with(sref("/"))) {
+    if((::strcmp(req.method, "CONNECT") == 0) || (req.uri[0] != '/')) {
       // Reject proxy requests.
       this->do_on_http_request_error(HTTP_STATUS_NOT_IMPLEMENTED);
       return http_payload_normal;

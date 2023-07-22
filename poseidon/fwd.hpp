@@ -134,6 +134,7 @@ using ::rocket::nullopt;
 using ::rocket::xstrlen;
 using ::rocket::xstrchr;
 using ::rocket::xstrcmp;
+using ::rocket::xstreq;
 using ::rocket::xstrpcpy;
 using ::rocket::xstrrpcpy;
 using ::rocket::xmemchr;
