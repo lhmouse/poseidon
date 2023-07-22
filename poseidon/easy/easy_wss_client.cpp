@@ -191,8 +191,8 @@ connect(cow_stringR uri)
     if((uri.size() > UINT16_MAX) || (::http_parser_parse_url(uri.data(), uri.size(), false, &uri_hp)))
       POSEIDON_THROW(("URI `$1` not resolvable"), uri);
 
-    if(!::rocket::ascii_ci_equal(uri.data() + uri_hp.field_data[UF_SCHEMA].off, uri_hp.field_data[UF_SCHEMA].len, "ws", 2))
-      POSEIDON_THROW(("Protocol must be `ws://` (URI `$1`)"), uri);
+    if(!::rocket::ascii_ci_equal(uri.data() + uri_hp.field_data[UF_SCHEMA].off, uri_hp.field_data[UF_SCHEMA].len, "wss", 3))
+      POSEIDON_THROW(("Protocol must be `wss://` (URI `$1`)"), uri);
 
     if(uri_hp.field_set & (1U << UF_USERINFO))
       POSEIDON_THROW(("User information not supported (URI `$1`)"), uri);
