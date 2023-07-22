@@ -188,9 +188,10 @@ connect(cow_stringR host, uint16_t port)
     auto queue = new_sh<X_Event_Queue>();
     auto session = new_sh<Final_HTTP_Client_Session>(host_header, this->m_thunk, queue);
     queue->wsession = session;
+    auto dns_task = new_sh<Async_Connect>(network_driver, session, host, port);
 
-    this->m_dns_task = new_sh<Async_Connect>(network_driver, session, host, port);
-    async_task_executor.enqueue(this->m_dns_task);
+    async_task_executor.enqueue(dns_task);
+    this->m_dns_task = ::std::move(dns_task);
     this->m_queue = ::std::move(queue);
     this->m_session = ::std::move(session);
   }

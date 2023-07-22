@@ -190,9 +190,10 @@ connect(cow_stringR host, uint16_t port)
     auto queue = new_sh<X_Event_Queue>();
     auto socket = new_sh<Final_SSL_Socket>(this->m_thunk, queue);
     queue->wsocket = socket;
+    auto dns_task = new_sh<Async_Connect>(network_driver, socket, host, port);
 
-    this->m_dns_task = new_sh<Async_Connect>(network_driver, socket, host, port);
-    async_task_executor.enqueue(this->m_dns_task);
+    async_task_executor.enqueue(dns_task);
+    this->m_dns_task = ::std::move(dns_task);
     this->m_queue = ::std::move(queue);
     this->m_socket = ::std::move(socket);
   }
