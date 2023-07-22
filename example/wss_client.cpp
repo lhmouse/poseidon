@@ -16,7 +16,7 @@ event_callback(shptrR<WSS_Client_Session> session, Abstract_Fiber& /*fiber*/, Ea
   {
     switch(event) {
       case easy_socket_open:
-        POSEIDON_LOG_WARN(("example WSS client accepted connection from `$1`: $2"), session->remote_address(), data);
+        POSEIDON_LOG_WARN(("example WSS client established connection to `$1`: $2"), session->remote_address(), data);
         break;
 
       case easy_socket_msg_text:
