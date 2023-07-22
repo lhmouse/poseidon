@@ -111,7 +111,7 @@ HTTP_Payload_Type
 HTTPS_Server_Session::
 do_on_http_request_headers(HTTP_Request_Headers& req)
   {
-    if((::strcmp(req.method, "CONNECT") == 0) || (req.uri[0] != '/')) {
+    if(req.is_proxy) {
       // Reject proxy requests.
       this->do_on_https_request_error(HTTP_STATUS_NOT_IMPLEMENTED);
       return http_payload_normal;
@@ -120,7 +120,7 @@ do_on_http_request_headers(HTTP_Request_Headers& req)
     POSEIDON_LOG_DEBUG((
         "HTTPS server received request: $3 $4",
         "[HTTPS server session `$1` (class `$2`)]"),
-        this, typeid(*this), req.method, req.uri);
+        this, typeid(*this), req.method, req.uri_path);
 
     // The default handler doesn't handle Upgrade requests.
     return http_payload_normal;

@@ -50,6 +50,12 @@ void
 WSS_Server_Session::
 do_on_https_request_finish(HTTP_Request_Headers&& req, linear_buffer&& /*data*/, bool close_now)
   {
+    if(req.is_proxy) {
+      // Reject proxy requests.
+      this->do_on_https_request_error(HTTP_STATUS_NOT_IMPLEMENTED);
+      return;
+    }
+
     // Send the handshake response.
     HTTP_Response_Headers resp;
     this->m_parser.accept_handshake_request(resp, req);
@@ -65,7 +71,15 @@ do_on_https_request_finish(HTTP_Request_Headers&& req, linear_buffer&& /*data*/,
     if(this->m_parser.pmce_send_max_window_bits() != 0)
       this->m_pmce_opt = new_sh<WebSocket_Deflator>(this->m_parser);
 
-    this->do_on_wss_accepted(::std::move(req.uri));
+    // Rebuild the URI.
+    // XXX: `req.uri_port` and `req.uri_userinfo` are discarded.
+    tinyfmt_str uri_fmt;
+    uri_fmt << req.uri_host << req.uri_path;
+
+    if(!req.uri_query.empty())
+      uri_fmt << '?' << req.uri_query;
+
+    this->do_on_wss_accepted(uri_fmt.extract_string());
   }
 
 void

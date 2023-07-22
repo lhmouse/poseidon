@@ -12,7 +12,7 @@ extern Easy_HTTPS_Server my_server;
 void
 event_callback(shptrR<HTTPS_Server_Session> session, Abstract_Fiber& /*fiber*/, HTTP_Request_Headers&& req, linear_buffer&& data)
   {
-    POSEIDON_LOG_WARN(("HTTPS request --> $1 $2"), req.method, req.uri);
+    POSEIDON_LOG_WARN(("HTTP request --> $1 $2: $3"), req.method, req.uri_path, req.uri_query);
     for(const auto& r : req.headers)
       POSEIDON_LOG_WARN(("HTTPS header --> $1: $2"), r.first, r.second);
 

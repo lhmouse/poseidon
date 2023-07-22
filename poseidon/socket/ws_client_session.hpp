@@ -13,7 +13,9 @@ class WS_Client_Session
   : public HTTP_Client_Session
   {
   private:
-    cow_string m_uri;
+    cow_string m_host;
+    cow_string m_path;
+    cow_string m_query;
     WebSocket_Frame_Parser m_parser;
     shptr<WebSocket_Deflator> m_pmce_opt;
     linear_buffer m_msg;
@@ -22,7 +24,7 @@ class WS_Client_Session
   public:
     // Constructs a socket for outgoing connections.
     explicit
-    WS_Client_Session(cow_stringR uri);
+    WS_Client_Session(cow_stringR host, cow_stringR path, cow_stringR query);
 
   private:
     void

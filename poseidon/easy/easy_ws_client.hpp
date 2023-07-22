@@ -58,7 +58,7 @@ class Easy_WS_Client
 
     // Initiates a new connection to the given address.
     void
-    connect(const Socket_Address& addr, cow_stringR uri = sref("/"));
+    connect(const Socket_Address& addr, cow_stringR host, cow_stringR uri = sref("/"), cow_stringR query = sref(""));
 
     // Destroys the current connection without graceful shutdown. This function
     // should only be called after all data from the server have been read and

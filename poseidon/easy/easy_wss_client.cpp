@@ -91,12 +91,11 @@ struct Final_WSS_Client_Session final : WSS_Client_Session
   {
     Easy_WSS_Client::thunk_type m_thunk;
     wkptr<Event_Queue> m_wqueue;
-    cow_string m_uri;
 
     explicit
-    Final_WSS_Client_Session(cow_stringR uri, const Easy_WSS_Client::thunk_type& thunk,
-          const shptr<Event_Queue>& queue)
-      : WSS_Client_Session(uri), m_thunk(thunk), m_wqueue(queue), m_uri(uri)  { }
+    Final_WSS_Client_Session(cow_stringR host, cow_stringR uri, cow_stringR query,
+          const Easy_WSS_Client::thunk_type& thunk, const shptr<Event_Queue>& queue)
+      : WSS_Client_Session(host, uri, query), m_thunk(thunk), m_wqueue(queue)  { }
 
     void
     do_push_event_common(Event_Queue::Event&& event)
@@ -182,10 +181,10 @@ Easy_WSS_Client::
 
 void
 Easy_WSS_Client::
-connect(const Socket_Address& addr, cow_stringR uri)
+connect(const Socket_Address& addr, cow_stringR host, cow_stringR uri, cow_stringR query)
   {
     auto queue = new_sh<X_Event_Queue>();
-    auto session = new_sh<Final_WSS_Client_Session>(uri, this->m_thunk, queue);
+    auto session = new_sh<Final_WSS_Client_Session>(host, uri, query, this->m_thunk, queue);
     queue->wsession = session;
     session->connect(addr);
 

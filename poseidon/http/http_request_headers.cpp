@@ -18,7 +18,31 @@ encode(tinyfmt& fmt) const
     else
       fmt << this->method << ' ';
 
-    fmt << this->uri << " HTTP/1.1";
+    if(this->is_proxy) {
+      // Initiate a full request URI.
+      if(this->is_ssl)
+        fmt << "https://";
+      else
+        fmt << "http://";
+
+      if(!this->uri_userinfo.empty())
+        fmt << this->uri_userinfo << '@';
+
+      fmt << this->uri_host;
+
+      if(this->uri_port != 0)
+        fmt << ':' << this->uri_port;
+    }
+
+    if(!this->uri_path.starts_with("/"))
+      fmt << '/';
+
+    fmt << this->uri_path;
+
+    if(!this->uri_query.empty())
+      fmt << '?' << this->uri_query;
+
+    fmt << " HTTP/1.1";
 
     // Write request headers. Empty headers are ignored.
     for(const auto& hpair : this->headers) {

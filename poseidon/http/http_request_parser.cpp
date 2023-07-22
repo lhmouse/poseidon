@@ -10,6 +10,9 @@ constexpr
 const ::http_parser_settings
 HTTP_Request_Parser::s_settings[1] =
 #define this   static_cast<HTTP_Request_Parser*>(ps->data)
+#define temp_uri                m_headers.uri_query
+#define has_temp_header_value   m_headers.is_ssl
+#define temp_header_value       m_headers.uri_path
   {{
     // on_message_begin
     nullptr,
@@ -18,7 +21,7 @@ HTTP_Request_Parser::s_settings[1] =
     +[](::http_parser* ps, const char* str, size_t len)
       {
         this->m_headers.method = ::http_method_str((::http_method) ps->method);
-        this->m_headers.uri.append(str, len);
+        this->temp_uri.append(str, len);
         return 0;
       },
 
@@ -31,19 +34,19 @@ HTTP_Request_Parser::s_settings[1] =
         if(this->m_headers.headers.empty())
           this->m_headers.headers.emplace_back();
 
-        if(this->m_payload.size() != 0) {
-          // If `m_payload` is not empty, a previous header is now complete.
-          const char* value_str = this->m_payload.data() + 1;
-          ROCKET_ASSERT(value_str[-1] == '\n');  // magic character
-          size_t value_len = this->m_payload.size() - 1;
-
+        if(this->has_temp_header_value) {
+          // If a previous value exists, the header is now complete, so parse it.
           auto& value = this->m_headers.headers.mut_back().second;
-          if(value.parse(value_str, value_len) != value_len)
-            value.set_string(cow_string(value_str, value_len));
+          size_t plen = value.parse(this->temp_header_value.data(), this->temp_header_value.size());
 
-          // Create the next header.
+          // If the value doesn't match a special format, accept it as a string.
+          if(plen != this->temp_header_value.size())
+            value = ::std::move(this->temp_header_value);
+
+          // Prepare the next header.
           this->m_headers.headers.emplace_back();
-          this->m_payload.clear();
+          this->has_temp_header_value = false;
+          this->temp_header_value.clear();
         }
 
         // Append the header name to the last key, as this callback might be
@@ -55,32 +58,84 @@ HTTP_Request_Parser::s_settings[1] =
     // on_header_value
     +[](::http_parser* ps, const char* str, size_t len)
       {
-        // Add a magic character to indicate that a part of the value has been
-        // received. This makes `m_payload` non-empty.
-        if(this->m_payload.empty())
-           this->m_payload.putc('\n');
-
-        // Abuse `m_payload` to store the header value.
-        this->m_payload.putn(str, len);
+        this->has_temp_header_value = true;
+        this->temp_header_value.append(str, len);
         return 0;
       },
 
     // on_headers_complete
     +[](::http_parser* ps)
       {
-        if(this->m_payload.size() != 0) {
-          // If `m_payload` is not empty, a previous header is now complete.
-          const char* value_str = this->m_payload.data() + 1;
-          ROCKET_ASSERT(value_str[-1] == '\n');  // magic character
-          size_t value_len = this->m_payload.size() - 1;
-
+        if(this->has_temp_header_value) {
+          // If a previous value exists, the header is now complete, so parse it.
           auto& value = this->m_headers.headers.mut_back().second;
-          if(value.parse(value_str, value_len) != value_len)
-            value.set_string(cow_string(value_str, value_len));
+          size_t plen = value.parse(this->temp_header_value.data(), this->temp_header_value.size());
 
-          // Finish abuse of `m_payload`.
-          this->m_payload.clear();
+          // If the value doesn't match a special format, accept it as a string.
+          if(plen != this->temp_header_value.size())
+            value = ::std::move(this->temp_header_value);
         }
+
+        // Parse the URI.
+        cow_string uri = ::std::move(this->temp_uri);
+        ::http_parser_url uri_hp = { };
+
+        if((uri.size() > UINT16_MAX) || (::http_parser_parse_url(uri.data(), uri.size(), ps->method == HTTP_CONNECT, &uri_hp))) {
+          ps->http_errno = HPE_INVALID_URL;
+          return 0;
+        }
+
+        this->temp_uri.clear();
+        this->has_temp_header_value = false;
+        this->temp_header_value.clear();
+
+        if(uri_hp.field_set & (1U << UF_SCHEMA)) {
+          // The scheme shall be `http://` or `https://`.
+          if(::rocket::ascii_ci_equal(uri.data() + uri_hp.field_data[UF_SCHEMA].off, uri_hp.field_data[UF_SCHEMA].len, "http", 4)) {
+            this->m_headers.is_proxy = true;
+            this->m_headers.is_ssl = false;
+          }
+          else if(::rocket::ascii_ci_equal(uri.data() + uri_hp.field_data[UF_SCHEMA].off, uri_hp.field_data[UF_SCHEMA].len, "https", 5)) {
+            this->m_headers.is_proxy = true;
+            this->m_headers.is_ssl = true;
+          }
+          else {
+            ps->http_errno = HPE_INVALID_URL;
+            return 2;
+          }
+        }
+
+        if(uri_hp.field_set & (1U << UF_HOST)) {
+          // Use the host name in the request URI and ignore the `Host:` header.
+          this->m_headers.is_proxy = true;
+          this->m_headers.uri_host.assign(uri, uri_hp.field_data[UF_HOST].off, uri_hp.field_data[UF_HOST].len);
+        }
+        else {
+          // Get the `Host:` header. Multiple `Host:` headers are not allowed.
+          bool host_header_found = false;
+
+          for(const auto& hpair : this->m_headers.headers)
+            if(ascii_ci_equal(hpair.first, sref("Host"))) {
+              if(hpair.second.is_string() && !host_header_found) {
+                host_header_found = true;
+                this->m_headers.uri_host = hpair.second.as_string();
+              }
+              else {
+                ps->http_errno = HPE_INVALID_URL;
+                return 2;
+              }
+            }
+
+          if(!host_header_found) {
+            ps->http_errno = HPE_INVALID_URL;
+            return 2;
+          }
+        }
+
+        this->m_headers.uri_port = uri_hp.port;
+        this->m_headers.uri_userinfo.assign(uri, uri_hp.field_data[UF_USERINFO].off, uri_hp.field_data[UF_USERINFO].len);
+        this->m_headers.uri_path.assign(uri, uri_hp.field_data[UF_PATH].off, uri_hp.field_data[UF_PATH].len);
+        this->m_headers.uri_query.assign(uri, uri_hp.field_data[UF_QUERY].off, uri_hp.field_data[UF_QUERY].len);
 
         // The headers are complete, so halt.
         this->m_hreq = hreq_headers_done;
@@ -115,6 +170,9 @@ HTTP_Request_Parser::s_settings[1] =
     nullptr,
   }};
 #undef this
+#undef temp_uri
+#undef has_temp_header_value
+#undef temp_header_value
 
 HTTP_Request_Parser::
 ~HTTP_Request_Parser()

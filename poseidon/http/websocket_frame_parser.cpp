@@ -169,9 +169,9 @@ create_handshake_request(HTTP_Request_Headers& req)
           this->m_wshs);
 
     // Compose the handshake request.
+    req.clear();
     req.method = "GET";
-    req.uri = sref("/");
-    req.headers.clear();
+    req.uri_path = sref("/");
     req.headers.reserve(8);
     req.headers.emplace_back(sref("Connection"), sref("Upgrade"));
     req.headers.emplace_back(sref("Upgrade"), sref("websocket"));
@@ -197,9 +197,8 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
           this->m_wshs);
 
     // Compose a default response, so in case of errors, we return immediately.
+    resp.clear();
     resp.status = 400;
-    resp.reason.clear();
-    resp.headers.clear();
     resp.headers.reserve(8);
     resp.headers.emplace_back(sref("Connection"), sref("close"));
 

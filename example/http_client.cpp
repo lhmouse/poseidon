@@ -61,29 +61,29 @@ timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& fiber, steady_t
 
       case 1: {
         HTTP_Request_Headers req;
-        req.uri = sref("/");
+        req.uri_path = sref("/");
         req.headers.emplace_back(sref("Host"), host);
         req.headers.emplace_back(sref("Connection"), sref("keep-alive"));
         my_client.http_GET(::std::move(req));
-        POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method, req.uri);
+        POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method, req.uri_path);
         break;
       }
 
       case 2: {
         HTTP_Request_Headers req;
-        req.uri = sref("/");
+        req.uri_path = sref("/");
         req.headers.emplace_back(sref("Host"), host);
         my_client.http_POST(::std::move(req), "testdata");
-        POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method, req.uri);
+        POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method, req.uri_path);
         break;
       }
 
       case 3: {
         HTTP_Request_Headers req;
-        req.uri = sref("/");
+        req.uri_path = sref("/");
         req.headers.emplace_back(sref("Host"), host);
         my_client.http_DELETE(::std::move(req));
-        POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method, req.uri);
+        POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method, req.uri_path);
         break;
       }
 

@@ -10,9 +10,16 @@
 namespace poseidon {
 
 WS_Client_Session::
-WS_Client_Session(cow_stringR uri)
+WS_Client_Session(cow_stringR host, cow_stringR path, cow_stringR query)
   {
-    this->m_uri = uri;
+    if(!path.starts_with("/"))
+      POSEIDON_THROW((
+          "Request paths must start with `/` (path `$1` not valid)"),
+          path);
+
+    this->m_host = host;
+    this->m_path = path;
+    this->m_query = query;
   }
 
 WS_Client_Session::
@@ -46,7 +53,10 @@ do_on_tcp_connected()
     // Send a handshake request.
     HTTP_Request_Headers req;
     this->m_parser.create_handshake_request(req);
-    req.uri = this->m_uri;
+    req.is_ssl = false;
+    req.headers.emplace_back(sref("Host"), this->m_host);
+    req.uri_path = this->m_path;
+    req.uri_query = this->m_query;
     this->http_request(::std::move(req), "");
   }
 
@@ -75,7 +85,14 @@ do_on_http_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& /*data*
     if(this->m_parser.pmce_send_max_window_bits() != 0)
       this->m_pmce_opt = new_sh<WebSocket_Deflator>(this->m_parser);
 
-    this->do_on_ws_connected(::std::move(this->m_uri));
+    // Rebuild the URI.
+    tinyfmt_str uri_fmt;
+    uri_fmt << this->m_host << this->m_path;
+
+    if(!this->m_query.empty())
+      uri_fmt << '?' << this->m_query;
+
+    this->do_on_ws_connected(uri_fmt.extract_string());
   }
 
 void
