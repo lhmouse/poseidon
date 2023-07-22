@@ -103,7 +103,8 @@ do_abstract_socket_on_readable()
           continue;
 
         POSEIDON_LOG_INFO((
-            "Accepted new TCP connection `$3` (class `$4`)]",
+            "Accepted new TCP connection from `$3`",
+            "[accepted socket `$4` (class `$5`)]",
             "[TCP listen socket `$1` (class `$2`)]"),
             this, typeid(*this), this->m_taddr, client, typeid(*client));
 
