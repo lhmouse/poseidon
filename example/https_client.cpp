@@ -60,18 +60,23 @@ timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& fiber, steady_t
 
         POSEIDON_LOG_WARN(("DNS request: `$1`"), host);
         fiber.yield(dns);
+        auto& addrs = dns->mut_result().addrs;
 
-        if(dns->result().addrs.empty()) {
+        if(addrs.empty()) {
           POSEIDON_LOG_WARN(("DNS error: `$1` no address"), host);
           break;
         }
 
-        auto& addr = dns->mut_result().addrs.mut(0);
-        addr.set_port(443);
-        POSEIDON_LOG_WARN(("DNS result: `$1` = `$2`"), host, addr);
+        for(auto it = addrs.mut_begin();  it != addrs.end();  ++it) {
+          it->set_port(443);
+          POSEIDON_LOG_WARN(("DNS result: `$1` = `$2`, v4mapped = `$3`"), host, *it, it->is_v4mapped());
 
-        my_client.connect(addr);
-        POSEIDON_LOG_WARN(("example HTTPS client connecting: addr = $1"), addr);
+          if(it->is_v4mapped() || (it == addrs.end() - 1)) {
+            my_client.connect(*it);
+            POSEIDON_LOG_WARN(("example HTTPS client connecting to `$1`"), addrs.front());
+            break;
+          }
+        }
         break;
       }
 

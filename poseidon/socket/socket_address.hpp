@@ -111,6 +111,18 @@ class Socket_Address
     IP_Address_Class
     classify() const noexcept;
 
+    // Checks whether this is an IPv4-mapped address.
+    ROCKET_PURE
+    bool
+    is_v4mapped() const noexcept
+      {
+        __m128i tval = _mm_load_si128(&(this->m_addr_stor));
+        __m128i oval = _mm_setr_epi16(0, 0, 0, 0, 0, -1, 0, 0);
+        int cmp = _mm_movemask_epi8(_mm_cmpeq_epi16(tval, oval));  // low 16-bits := 0xFFFF if equal
+        cmp &= 0x0FFF;
+        return cmp == 0x0FFF;
+      }
+
     // Parses an address from a string, which may be an IPv4 address, or
     // an IPv6 address in brackets, followed by a port number. Examples
     // are `127.0.0.1:80` and `[::1]:1300`. If an address has been parsed,

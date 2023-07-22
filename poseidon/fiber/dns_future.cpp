@@ -26,8 +26,6 @@ do_abstract_task_on_execute()
     // Perform DNS query. This will block the worker thread.
     ::addrinfo hints = { };
     hints.ai_flags = AI_V4MAPPED | AI_ADDRCONFIG;
-    hints.ai_family = AF_INET6;
-
     ::addrinfo* res;
     int err = ::getaddrinfo(this->m_result.host.safe_c_str(), nullptr, &hints, &res);
     if(err != 0)
