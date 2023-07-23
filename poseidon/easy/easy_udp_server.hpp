@@ -49,7 +49,7 @@ class Easy_UDP_Server
 
     // Starts listening the given address and port for incoming packets.
     void
-    start(const Socket_Address& addr);
+    start(cow_stringR addr);
 
     // Shuts down the socket, if any.
     void

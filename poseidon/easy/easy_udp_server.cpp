@@ -124,10 +124,10 @@ Easy_UDP_Server::
 
 void
 Easy_UDP_Server::
-start(const Socket_Address& addr)
+start(cow_stringR addr)
   {
     auto queue = new_sh<X_Packet_Queue>();
-    auto socket = new_sh<Final_UDP_Socket>(addr, this->m_thunk, queue);
+    auto socket = new_sh<Final_UDP_Socket>(Socket_Address(addr), this->m_thunk, queue);
     queue->wsocket = socket;
 
     network_driver.insert(socket);

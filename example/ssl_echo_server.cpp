@@ -38,8 +38,7 @@ event_callback(shptrR<SSL_Socket> socket, Abstract_Fiber& /*fiber*/, Easy_Socket
 int
 start_server()
   {
-    Socket_Address addr("[::]:3803");
-    my_server.start(addr);
+    my_server.start(sref("[::]:3803"));
     POSEIDON_LOG_WARN(("example SSL server started: bind = $1"), my_server.local_address());
     return 0;
   }

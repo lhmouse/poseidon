@@ -46,8 +46,7 @@ event_callback(shptrR<HTTPS_Server_Session> session, Abstract_Fiber& /*fiber*/, 
 int
 start_server()
   {
-    Socket_Address addr("[::]:3805");
-    my_server.start(addr);
+    my_server.start(sref("[::]:3805"));
     POSEIDON_LOG_WARN(("example HTTPS server started: bind = $1"), my_server.local_address());
     return 0;
   }

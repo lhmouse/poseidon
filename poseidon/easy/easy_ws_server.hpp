@@ -60,7 +60,7 @@ class Easy_WS_Server
 
     // Starts listening the given address and port for incoming connections.
     void
-    start(const Socket_Address& addr);
+    start(cow_stringR addr);
 
     // Shuts down the listening socket, if any. All existent clients are also
     // disconnected immediately.

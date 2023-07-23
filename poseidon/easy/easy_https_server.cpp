@@ -251,10 +251,10 @@ Easy_HTTPS_Server::
 
 void
 Easy_HTTPS_Server::
-start(const Socket_Address& addr)
+start(cow_stringR addr)
   {
     auto table = new_sh<X_Client_Table>();
-    auto socket = new_sh<Final_Listen_Socket>(addr, this->m_thunk, table);
+    auto socket = new_sh<Final_Listen_Socket>(Socket_Address(addr), this->m_thunk, table);
 
     network_driver.insert(socket);
     this->m_client_table = ::std::move(table);

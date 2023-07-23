@@ -20,8 +20,7 @@ data_callback(shptrR<UDP_Socket> socket, Abstract_Fiber& /*fiber*/, Socket_Addre
 int
 start_server()
   {
-    Socket_Address addr("[::]:3801");
-    my_server.start(addr);
+    my_server.start(sref("[::]:3801"));
     POSEIDON_LOG_FATAL(("example UDP server started: bind = $1"), my_server.local_address());
     return 0;
   }

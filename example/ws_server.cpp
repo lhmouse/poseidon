@@ -44,8 +44,7 @@ event_callback(shptrR<WS_Server_Session> session, Abstract_Fiber& /*fiber*/, Eas
 int
 start_server()
   {
-    Socket_Address addr("[::]:3806");
-    my_server.start(addr);
+    my_server.start(sref("[::]:3806"));
     POSEIDON_LOG_ERROR(("example WS server started: bind = $1"), my_server.local_address());
     return 0;
   }

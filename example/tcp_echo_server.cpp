@@ -38,8 +38,7 @@ event_callback(shptrR<TCP_Socket> socket, Abstract_Fiber& /*fiber*/, Easy_Socket
 int
 start_server()
   {
-    Socket_Address addr("[::]:3802");
-    my_server.start(addr);
+    my_server.start(sref("[::]:3802"));
     POSEIDON_LOG_ERROR(("example TCP server started: bind = $1"), my_server.local_address());
     return 0;
   }

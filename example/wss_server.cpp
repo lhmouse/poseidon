@@ -44,8 +44,7 @@ event_callback(shptrR<WSS_Server_Session> session, Abstract_Fiber& /*fiber*/, Ea
 int
 start_server()
   {
-    Socket_Address addr("[::]:3807");
-    my_server.start(addr);
+    my_server.start(sref("[::]:3807"));
     POSEIDON_LOG_ERROR(("example WSS server started: bind = $1"), my_server.local_address());
     return 0;
   }
