@@ -53,9 +53,12 @@ class Easy_HTTPS_Client
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_HTTPS_Client);
 
-    // Initiates a new connection to the given server.
+    // Initiates a new connection to the given address. `uri` shall start with
+    // `https://`, followed by a host name and an optional port number. Request
+    // paths, query parameters, user information and fragments are not allowed.
+    // If no port number is specified, 443 is assumed.
     void
-    connect(cow_stringR host, uint16_t port = 443);
+    connect(cow_stringR uri);
 
     // Destroys the current connection without graceful shutdown. This function
     // should only be called after all data from the server have been read and

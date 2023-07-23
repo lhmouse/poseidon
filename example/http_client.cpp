@@ -51,7 +51,9 @@ timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/, stea
 
     switch(state) {
       case 0: {
-        my_client.connect(sref("www.example.org"));
+        cow_string addr = sref("http://www.example.org");
+        my_client.connect(addr);
+        POSEIDON_LOG_ERROR(("example HTTP client connecting: addr = $1"), addr);
         break;
       }
 

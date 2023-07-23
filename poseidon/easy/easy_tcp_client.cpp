@@ -9,6 +9,7 @@
 #include "../socket/async_connect.hpp"
 #include "../static/async_task_executor.hpp"
 #include "../utils.hpp"
+#include <http_parser.h>
 namespace poseidon {
 namespace {
 
@@ -185,8 +186,18 @@ Easy_TCP_Client::
 
 void
 Easy_TCP_Client::
-connect(cow_stringR host, uint16_t port)
+connect(cow_stringR addr)
   {
+    // Parse the address.
+    ::http_parser_url uri_hp = { };
+    if((addr.size() > UINT16_MAX) || (::http_parser_parse_url(addr.data(), addr.size(), true, &uri_hp)))
+      POSEIDON_THROW(("Target address `$1` not resolvable"), addr);
+
+    // Set connection parameters.
+    cow_string host = addr.substr(uri_hp.field_data[UF_HOST].off, uri_hp.field_data[UF_HOST].len);
+    uint16_t port = uri_hp.port;
+
+    // Initiate the connection.
     auto queue = new_sh<X_Event_Queue>();
     auto socket = new_sh<Final_TCP_Socket>(this->m_thunk, queue);
     queue->wsocket = socket;
