@@ -43,6 +43,7 @@ void
 WSS_Client_Session::
 do_abstract_socket_on_closed()
   {
+    POSEIDON_LOG_DEBUG(("Closing WebSocket connection to `$1`: ${errno:full}"), this->remote_address());
     this->do_call_on_wss_close_once(1006, "no CLOSE frame received");
   }
 
