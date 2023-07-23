@@ -193,8 +193,7 @@ uint32_t
 random_uint32() noexcept
   {
     uint32_t bits;
-    ::RAND_priv_bytes((unsigned char*) &bits, sizeof(bits));
-    bits ^= (uint32_t) __rdtsc();
+    ::RAND_bytes((uint8_t*) &bits, sizeof(bits));
     return bits;
   }
 
@@ -202,8 +201,7 @@ uint64_t
 random_uint64() noexcept
   {
     uint64_t bits;
-    ::RAND_priv_bytes((unsigned char*) &bits, sizeof(bits));
-    bits ^= __rdtsc();
+    ::RAND_bytes((uint8_t*) &bits, sizeof(bits));
     return bits;
   }
 
@@ -211,8 +209,7 @@ float
 random_float() noexcept
   {
     uint32_t bits;
-    ::RAND_priv_bytes((unsigned char*) &bits, sizeof(bits));
-    bits ^= (uint32_t) __rdtsc();
+    ::RAND_bytes((uint8_t*) &bits, sizeof(bits));
     bits = 0x7FU << 23 | bits >> 9;  // 1:8:23
     float valp1;
     ::memcpy(&valp1, &bits, sizeof(valp1));
@@ -223,8 +220,7 @@ double
 random_double() noexcept
   {
     uint64_t bits;
-    ::RAND_priv_bytes((unsigned char*) &bits, sizeof(bits));
-    bits ^= __rdtsc();
+    ::RAND_bytes((uint8_t*) &bits, sizeof(bits));
     bits = 0x3FFULL << 52 | bits >> 12;  // 1:11:52
     double valp1;
     ::memcpy(&valp1, &bits, sizeof(valp1));
