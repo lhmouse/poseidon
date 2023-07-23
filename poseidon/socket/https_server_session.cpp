@@ -113,7 +113,7 @@ do_on_http_request_headers(HTTP_Request_Headers& req)
   {
     if(req.is_proxy) {
       // Reject proxy requests.
-      this->do_on_https_request_error(HTTP_STATUS_NOT_IMPLEMENTED);
+      this->do_on_https_request_error(HTTP_STATUS_FORBIDDEN);
       return http_payload_normal;
     }
 

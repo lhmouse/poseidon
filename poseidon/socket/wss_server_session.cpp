@@ -52,7 +52,7 @@ do_on_https_request_finish(HTTP_Request_Headers&& req, linear_buffer&& /*data*/,
   {
     if(req.is_proxy) {
       // Reject proxy requests.
-      this->do_on_https_request_error(HTTP_STATUS_NOT_IMPLEMENTED);
+      this->do_on_https_request_error(HTTP_STATUS_FORBIDDEN);
       return;
     }
 
