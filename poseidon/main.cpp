@@ -19,6 +19,8 @@
 #include <sys/file.h>
 #include <sys/socket.h>
 #include <sys/resource.h>
+#include <openssl/rand.h>
+#include <openssl/err.h>
 namespace {
 using namespace poseidon;
 
@@ -385,6 +387,21 @@ do_create_resident_thread(ObjectT& obj, const char* name)
 
 ROCKET_NEVER_INLINE
 void
+do_check_random()
+  {
+    long seed;
+    if(::RAND_priv_bytes((uint8_t*) &seed, sizeof(seed)) != 1)
+      do_exit_printf(exit_system_error,
+          "Could not initialize OpenSSL random number generator: %s\n",
+          ::ERR_reason_error_string(::ERR_peek_error()));
+
+    // Initialize standard random functions, too.
+    ::srand((unsigned) seed);
+    ::srand48(seed);
+  }
+
+ROCKET_NEVER_INLINE
+void
 do_create_threads()
   {
     do_create_resident_thread(async_logger, "logger");
@@ -578,6 +595,7 @@ main(int argc, char** argv)
 
     do_init_signal_handlers();
     do_write_pid_file();
+    do_check_random();
     do_create_threads();
     do_load_addons();
 
