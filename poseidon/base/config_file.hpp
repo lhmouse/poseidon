@@ -20,7 +20,7 @@ class Config_File
     Config_File() noexcept
       : m_path(), m_root()  { }
 
-    // Loads the file denoted by `path`, like `reload(path)`.
+    // Loads the file denoted by `path`.
     explicit
     Config_File(cow_stringR path);
 
@@ -45,23 +45,6 @@ class Config_File
     ::asteria::V_object
     root() const noexcept
       { return this->m_root;  }
-
-    bool
-    empty() const noexcept
-      { return this->m_root.empty();  }
-
-    void
-    clear() noexcept
-      {
-        this->m_path.clear();
-        this->m_root.clear();
-      }
-
-    // Loads the file denoted by `path`.
-    // This function provides strong exception guarantee. In case of failure,
-    // an exception is thrown, and the contents of this object are unchanged.
-    void
-    reload(cow_stringR file_path);
 
     // Gets a value denoted by a path, which shall not be empty.
     // If the path does not denote an existent value, a statically allocated

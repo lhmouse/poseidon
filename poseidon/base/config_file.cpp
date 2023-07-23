@@ -11,33 +11,22 @@ namespace poseidon {
 Config_File::
 Config_File(cow_stringR path)
   {
-    this->reload(path);
+    // Resolve the path to an absolute one.
+    ::rocket::unique_ptr<char, void (void*)> abs_path(::realpath(path.safe_c_str(), nullptr), ::free);
+    if(!abs_path)
+      POSEIDON_THROW((
+          "Could not find configuration file '$1'",
+          "[`realpath()` failed: ${errno:full}]"),
+          path);
+
+    // Read the file.
+    this->m_path.append(abs_path.get());
+    this->m_root = ::asteria::std_system_conf_load_file(this->m_path);
   }
 
 Config_File::
 ~Config_File()
   {
-  }
-
-void
-Config_File::
-reload(cow_stringR file_path)
-  {
-    // Resolve the path to an absolute one.
-    ::rocket::unique_ptr<char, void (void*)> abs_path(::free);
-    if(!abs_path.reset(::realpath(file_path.safe_c_str(), nullptr)))
-      POSEIDON_THROW((
-          "Could not find configuration file '$1'",
-          "[`realpath()` failed: ${errno:full}]"),
-          file_path);
-
-    // Read the file.
-    cow_string path(abs_path.get());
-    ::asteria::V_object root = ::asteria::std_system_conf_load_file(path);
-
-    // Set new contents. This shall not throw exceptions.
-    this->m_path = ::std::move(path);
-    this->m_root = ::std::move(root);
   }
 
 const ::asteria::Value&
