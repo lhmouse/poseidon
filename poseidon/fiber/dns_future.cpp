@@ -30,36 +30,32 @@ do_abstract_task_on_execute()
     int err = ::getaddrinfo(this->m_result.host.safe_c_str(), nullptr, &hints, &res);
     if(err != 0)
       POSEIDON_THROW((
-          "Could not perform DNS query for host `$1`",
+          "Could not resolve host `$1`",
           "[`getaddrinfo()` failed: $2]"),
           this->m_result.host, ::gai_strerror(err));
 
     // Copy records into `m_result`.
     const ::rocket::unique_ptr<::addrinfo, void (::addrinfo*)> guard(res, ::freeaddrinfo);
-    for(; res;  res = res->ai_next)
-      switch(res->ai_family) {
-        case AF_INET: {
-          // IPv4
-          Socket_Address addr;
-          ::memcpy(addr.mut_data(), "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF", 12);
-          ::memcpy(addr.mut_data() + 12, &(((::sockaddr_in*) res->ai_addr)->sin_addr), 4);
 
-          // Ignore duplicate records.
-          if(find(this->m_result.addrs, addr) == nullptr)
-            this->m_result.addrs.push_back(addr);
-        }
-        break;
+    for(res = guard; res;  res = res->ai_next)
+      if(res->ai_family == AF_INET) {
+        // IPv4
+        Socket_Address addr;
+        ::memcpy(addr.mut_data(), "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF", 12);
+        ::memcpy(addr.mut_data() + 12, &(((::sockaddr_in*) res->ai_addr)->sin_addr), 4);
 
-        case AF_INET6: {
-          // IPv6
-          Socket_Address addr;
-          ::memcpy(addr.mut_data(), &(((::sockaddr_in6*) res->ai_addr)->sin6_addr), 16);
+        // Ignore duplicate records.
+        if(find(this->m_result.addrs, addr) == nullptr)
+          this->m_result.addrs.push_back(addr);
+      }
+      else if(res->ai_family == AF_INET6) {
+        // IPv6
+        Socket_Address addr;
+        ::memcpy(addr.mut_data(), &(((::sockaddr_in6*) res->ai_addr)->sin6_addr), 16);
 
-          // Ignore duplicate records.
-          if(find(this->m_result.addrs, addr) == nullptr)
-            this->m_result.addrs.push_back(addr);
-        }
-        break;
+        // Ignore duplicate records.
+        if(find(this->m_result.addrs, addr) == nullptr)
+          this->m_result.addrs.push_back(addr);
       }
 
     // Set the future as a success.

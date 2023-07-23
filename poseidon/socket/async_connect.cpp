@@ -43,7 +43,7 @@ do_abstract_task_on_execute()
       int err = ::getaddrinfo(this->m_host.safe_c_str(), nullptr, &hints, &res);
       if(err != 0)
         POSEIDON_THROW((
-            "Could not perform DNS query for host `$1`",
+            "Could not resolve host `$1`",
             "[`getaddrinfo()` failed: $2]"),
             this->m_host, ::gai_strerror(err));
 
@@ -62,7 +62,7 @@ do_abstract_task_on_execute()
 
           socket->connect(addr);
           this->m_driver->insert(socket);
-          POSEIDON_LOG_DEBUG(("Initiated a new connection to `$1`"), addr);
+          POSEIDON_LOG_DEBUG(("Initiating new connection to `$1`"), addr);
           return;
         }
 
@@ -75,7 +75,7 @@ do_abstract_task_on_execute()
 
           socket->connect(addr);
           this->m_driver->insert(socket);
-          POSEIDON_LOG_DEBUG(("Initiated a new connection to `$1`"), addr);
+          POSEIDON_LOG_DEBUG(("Initiating new connection to `$1`"), addr);
           return;
         }
 
