@@ -10,7 +10,6 @@
 #include "../static/main_config.hpp"
 #include "../utils.hpp"
 #define OPENSSL_API_COMPAT  0x10100000L
-#include <openssl/md5.h>
 #include <openssl/sha.h>
 #include <openssl/evp.h>
 namespace poseidon {
@@ -18,23 +17,22 @@ namespace {
 
 struct Sec_WebSocket
   {
-    unsigned char key[16];  // MD5_DIGEST_LENGTH
-    char key_str[25] = "";  // ceil(sizeof(key) / 3) * 4 + 1
-    char key_padding[3];  // 44
+    char key_str[25] = "";  // ceil(16 / 3) * 4 + 1
+    char key_padding[3];
 
-    unsigned char accept[20];  // SHA_DIGEST_LENGTH
-    char accept_str[29] = "";  // ceil(sizeof(accept) / 3) * 4 + 1
-    char accept_padding[3];  // 52
+    char accept_str[29] = "";  // ceil(20 / 3) * 4 + 1
+    char accept_padding[3];
 
     void
     make_key_str(const void* self)
       {
-        ::MD5_CTX ctx;
-        ::MD5_Init(&ctx);
+        ::SHA_CTX ctx;
+        ::SHA1_Init(&ctx);
         int64_t source_data[7] = { -7, -6, -5, -4, -3, ::getpid(), (intptr_t) self };
-        ::MD5_Update(&ctx, source_data, 56);
-        ::MD5_Final(this->key, &ctx);
-        ::EVP_EncodeBlock((unsigned char*) this->key_str, this->key, 16);
+        ::SHA1_Update(&ctx, source_data, 56);
+        unsigned char checksum[20];
+        ::SHA1_Final(checksum, &ctx);
+        ::EVP_EncodeBlock((unsigned char*) this->key_str, checksum, 16);
       }
 
     void
@@ -44,8 +42,9 @@ struct Sec_WebSocket
         ::SHA1_Init(&ctx);
         ::SHA1_Update(&ctx, this->key_str, 24);
         ::SHA1_Update(&ctx, "258EAFA5-E914-47DA-95CA-C5AB0DC85B11", 36);
-        ::SHA1_Final(this->accept, &ctx);
-        ::EVP_EncodeBlock((unsigned char*) this->accept_str, this->accept, 20);
+        unsigned char checksum[20];
+        ::SHA1_Final(checksum, &ctx);
+        ::EVP_EncodeBlock((unsigned char*) this->accept_str, checksum, 20);
       }
   };
 
