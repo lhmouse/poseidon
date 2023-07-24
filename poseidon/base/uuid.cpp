@@ -134,12 +134,10 @@ parse(chars_proxy str) noexcept
   {
     // A string with an erroneous length will not be accepted, so we just need to
     // check for possibilities by `str.n`.
-    if(str.n >= 36) {
-      // Try it.
-      size_t aclen = this->parse_partial(str.p);
-      if(aclen != 0)
+    if(str.n >= 36)
+      if(size_t aclen = this->parse_partial(str.p))
         return aclen;
-    }
+
     return 0;
   }
 
