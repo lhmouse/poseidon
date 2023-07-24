@@ -132,33 +132,10 @@ const Socket_Address ipv4_loopback      = { (::in6_addr) { V4_MAPPED_ 127,0,0,1 
 const Socket_Address ipv4_broadcast     = { (::in6_addr) { V4_MAPPED_ 255,255,255,255 },  0 };
 
 Socket_Address::
-Socket_Address(const char* str, size_t len)
+Socket_Address(chars_proxy str)
   {
-    size_t r = this->parse(str, len);
-    if(r != len)
-      POSEIDON_THROW((
-          "Could not parse socket address string `$1`"),
-          cow_string(str, len));
-  }
-
-Socket_Address::
-Socket_Address(const char* str)
-  {
-    size_t r = this->parse(str, ::strlen(str));
-    if(str[r] != 0)
-      POSEIDON_THROW((
-          "Could not parse socket address string `$1`"),
-          str);
-  }
-
-Socket_Address::
-Socket_Address(cow_stringR str)
-  {
-    size_t r = this->parse(str.data(), str.size());
-    if(r != str.size())
-      POSEIDON_THROW((
-          "Could not parse socket address string `$1`"),
-          str);
+    if(this->parse(str) != str.n)
+      POSEIDON_THROW(("Could not parse socket address string `$1`"), str);
   }
 
 int
@@ -187,22 +164,24 @@ classify() const noexcept
 
 size_t
 Socket_Address::
-parse(const char* str, size_t len) noexcept
+parse(chars_proxy str) noexcept
   {
     this->clear();
 
-    if((len == 0) || (len > UINT16_MAX))
+    if((str.n == 0) || (str.n > UINT16_MAX))
       return 0;
+
+// FIXME: will be refactored soon.
 
     // Break down the host:port string as a URL.
     ::http_parser_url url;
     url.field_set = 0;
-    if(::http_parser_parse_url(str, len, true, &url) != 0)
+    if(::http_parser_parse_url(str.p, str.n, true, &url) != 0)
       return 0;
 
     char* addr = (char*) &(this->m_addr);
     char sbuf[64];
-    const char* host = str + url.field_data[UF_HOST].off;
+    const char* host = str.p + url.field_data[UF_HOST].off;
     size_t hostlen = url.field_data[UF_HOST].len;
 
     if((hostlen < 1) || (hostlen > 63))
