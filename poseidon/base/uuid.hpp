@@ -96,18 +96,12 @@ class uuid
     // This function shall be cryptographically secure. An exception is thrown
     // if the system entropy source fails.
     __attribute__((__leaf__))
-    uuid(const random&);
+    uuid(const random& unused);
 
     // Parses a UUID from a string, like `parse()`.
     // An exception is thrown if the UUID string is not valid.
     explicit
-    uuid(const char* str, size_t len);
-
-    explicit
-    uuid(const char* str);
-
-    explicit
-    uuid(cow_stringR str);
+    uuid(chars_proxy str);
 
     uuid&
     swap(uuid& other) noexcept
@@ -184,7 +178,7 @@ class uuid
     parse_partial(const char* str) noexcept;
 
     size_t
-    parse(const char* str, size_t len) noexcept;
+    parse(chars_proxy str) noexcept;
 
     // Converts this UUID to its RFC 4112 form. Hexadecimal digits are written
     // in uppercase. The caller should supply a buffer for 37 characters. A

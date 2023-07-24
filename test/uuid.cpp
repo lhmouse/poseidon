@@ -19,11 +19,11 @@ main()
     POSEIDON_TEST_CHECK(uuid_max > tid);
     POSEIDON_TEST_CHECK(uuid_max >= tid);
 
-    POSEIDON_TEST_CHECK(tid.parse("", 1) == 0);
-    POSEIDON_TEST_CHECK(tid.parse("ef8a3765-a4f4-4d24-9c72-ee61d7b1253.", 36) == 0);
-    POSEIDON_TEST_CHECK_CATCH(uuid("ef8a3765-a4f4-4d24-9c72-ee61d7b1253.", 36));
+    POSEIDON_TEST_CHECK(tid.parse("") == 0);
+    POSEIDON_TEST_CHECK(tid.parse("ef8a3765-a4f4-4d24-9c72-ee61d7b1253.") == 0);
+    POSEIDON_TEST_CHECK_CATCH(uuid("ef8a3765-a4f4-4d24-9c72-ee61d7b1253."));
 
-    POSEIDON_TEST_CHECK(tid.parse("ef8a3765-a4f4-4d24-9c72-ee61d7b1253d", 36) == 36);
+    POSEIDON_TEST_CHECK(tid.parse("ef8a3765-a4f4-4d24-9c72-ee61d7b1253d") == 36);
     POSEIDON_TEST_CHECK(tid == ((uuid::fields) { 0xef8a3765,0xa4f4,0x4d24,0x9c72,0xee61d7b1253d }));
 
     char uuid_dstr[64];

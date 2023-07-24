@@ -45,33 +45,10 @@ uuid(const random&)
   }
 
 uuid::
-uuid(const char* str, size_t len)
+uuid(chars_proxy str)
   {
-    size_t r = this->parse(str, len);
-    if(r != len)
-      POSEIDON_THROW((
-          "Could not parse UUID string `$1`"),
-          cow_string(str, len));
-  }
-
-uuid::
-uuid(const char* str)
-  {
-    size_t r = this->parse(str, ::strlen(str));
-    if(str[r] != 0)
-      POSEIDON_THROW((
-          "Could not parse UUID string `$1`"),
-          str);
-  }
-
-uuid::
-uuid(cow_stringR str)
-  {
-    size_t r = this->parse(str.data(), str.size());
-    if(r != str.size())
-      POSEIDON_THROW((
-          "Could not parse UUID string `$1`"),
-          str);
+    if(this->parse(str) != str.n)
+      POSEIDON_THROW(("Could not parse UUID string `$1`"), str);
   }
 
 int
@@ -153,16 +130,17 @@ parse_partial(const char* str) noexcept
 
 size_t
 uuid::
-parse(const char* str, size_t len) noexcept
+parse(chars_proxy str) noexcept
   {
-    // A string with an erroneous length will not be accepted, so
-    // we just need to check for possibilities by `len`.
-    size_t acc_len = 0;
-
-    if(len >= 36)
-      acc_len = this->parse_partial(str);
-
-    return acc_len;
+    // A string with an erroneous length will not be accepted, so we just need to
+    // check for possibilities by `str.n`.
+    if(str.n >= 36) {
+      // Try it.
+      size_t aclen = this->parse_partial(str.p);
+      if(aclen != 0)
+        return aclen;
+    }
+    return 0;
   }
 
 size_t
