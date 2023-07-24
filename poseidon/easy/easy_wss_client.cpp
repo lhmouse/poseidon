@@ -42,7 +42,8 @@ struct Final_Fiber final : Abstract_Fiber
 
     explicit
     Final_Fiber(const Easy_WSS_Client::thunk_type& thunk, const shptr<Event_Queue>& queue)
-      : m_thunk(thunk), m_wqueue(queue)  { }
+      : m_thunk(thunk), m_wqueue(queue)
+      { }
 
     virtual
     void
@@ -98,7 +99,8 @@ struct Final_WSS_Client_Session final : WSS_Client_Session
     explicit
     Final_WSS_Client_Session(cow_stringR host, cow_stringR uri, cow_stringR query,
           const Easy_WSS_Client::thunk_type& thunk, const shptr<Event_Queue>& queue)
-      : WSS_Client_Session(host, uri, query), m_thunk(thunk), m_wqueue(queue)  { }
+      : WSS_Client_Session(host, uri, query), m_thunk(thunk), m_wqueue(queue)
+      { }
 
     void
     do_push_event_common(Event_Queue::Event&& event)

@@ -43,7 +43,8 @@ struct Final_Fiber final : Abstract_Fiber
 
     explicit
     Final_Fiber(const Easy_TCP_Client::thunk_type& thunk, const shptr<Event_Queue>& queue)
-      : m_thunk(thunk), m_wqueue(queue)  { }
+      : m_thunk(thunk), m_wqueue(queue)
+      { }
 
     virtual
     void
@@ -108,7 +109,8 @@ struct Final_TCP_Socket final : TCP_Socket
 
     explicit
     Final_TCP_Socket(const Easy_TCP_Client::thunk_type& thunk, const shptr<Event_Queue>& queue)
-      : m_thunk(thunk), m_wqueue(queue)  { }
+      : m_thunk(thunk), m_wqueue(queue)
+      { }
 
     void
     do_push_event_common(Event_Queue::Event&& event)

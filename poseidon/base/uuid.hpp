@@ -57,7 +57,8 @@ class uuid
     // Constructs a nil UUID.
     constexpr
     uuid() noexcept
-      : m_stor()  { }
+      : m_stor()
+      { }
 
     // Constructs a UUID in the RFC 4122 format.
     constexpr

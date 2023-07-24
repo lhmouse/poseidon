@@ -17,7 +17,8 @@ struct HTTP_Response_Headers
     // Define some helper functions.
     constexpr
     HTTP_Response_Headers() noexcept
-      : status(), reason(), headers()  { }
+      : status(), reason(), headers()
+      { }
 
     HTTP_Response_Headers&
     swap(HTTP_Response_Headers& other) noexcept
