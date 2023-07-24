@@ -438,13 +438,12 @@ struct chars_view
         return this->p[index];
       }
 
-    // Removes `n` characters from the left.
+    // Moves the view to the left.
     constexpr
     chars_view
     operator<<(size_t dist) const noexcept
       {
-        size_t rdist = ::std::min(this->n, dist);
-        return chars_view(this->p + rdist, this->n - rdist);
+        return chars_view(this->p - dist, this->n + dist);
       }
 
     chars_view
@@ -453,13 +452,13 @@ struct chars_view
         return *this = *this << dist;
       }
 
-    // Removes `n` characters from the right.
+    // Moves the view to the right, stopping at the boundary.
     constexpr
     chars_view
     operator>>(size_t dist) const noexcept
       {
-        size_t rdist = ::std::min(this->n, dist);
-        return chars_view(this->p, this->n - rdist);
+        ROCKET_ASSERT(dist <= this->n);
+        return chars_view(this->p + dist, this->n - dist);
       }
 
     chars_view

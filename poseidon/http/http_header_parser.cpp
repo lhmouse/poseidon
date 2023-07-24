@@ -31,12 +31,12 @@ do_next_attribute_from_separator()
     ROCKET_ASSERT(this->m_hpos <= this->m_hstr.size());
 
     chars_view sview = this->m_hstr;
-    sview <<= this->m_hpos;
+    sview >>= this->m_hpos;
 
     // Skip whitespace and attribute separators. This function shall not move
     // across element boundaries.
     while((*sview == ' ') || (*sview == '\t') || (*sview == ';'))
-      sview <<= 1;
+      sview >>= 1;
 
     if((*sview == ',') || (sview.n == 0))
       return -1;
@@ -48,26 +48,26 @@ do_next_attribute_from_separator()
       return -1;
     }
 
-    sview <<= tlen;
+    sview >>= tlen;
     this->m_name.swap(this->m_value.mut_string());
     this->m_value = nullptr;
 
     // Skip bad whitespace.
     while((*sview == ' ') || (*sview == '\t'))
-      sview <<= 1;
+      sview >>= 1;
 
     if(*sview == '=') {
-      sview <<= 1;
+      sview >>= 1;
 
       // Skip bad whitespace again, then parse the optional value.
       while((*sview == ' ') || (*sview == '\t'))
-        sview <<= 1;
+        sview >>= 1;
 
       tlen = this->m_value.parse(sview);
-      sview <<= tlen;
+      sview >>= tlen;
 
       while((*sview == ' ') || (*sview == '\t'))
-        sview <<= 1;
+        sview >>= 1;
     }
 
     // The attribute shall be terminated by a separator.
