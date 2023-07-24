@@ -428,6 +428,38 @@ operator<<(tinyfmt& fmt, chars_proxy data)
     return fmt.putn(data.p, data.n);
   }
 
+constexpr
+chars_proxy
+operator<<(chars_proxy str, size_t n) noexcept
+  {
+    // Remove `n` characters from the left.
+    size_t ndiff = ::std::min(str.n, n);
+    return chars_proxy(str.p + ndiff, str.n - ndiff);
+  }
+
+constexpr
+chars_proxy&
+operator<<=(chars_proxy& str, size_t n) noexcept
+  {
+    return str = str << n;
+  }
+
+constexpr
+chars_proxy
+operator>>(chars_proxy str, size_t n) noexcept
+  {
+    // Remove `n` characters from the right.
+    size_t ndiff = ::std::min(str.n, n);
+    return chars_proxy(str.p, str.n - ndiff);
+  }
+
+constexpr
+chars_proxy&
+operator>>=(chars_proxy& str, size_t n) noexcept
+  {
+    return str = str >> n;
+  }
+
 template<typename ValueT, typename... ArgsT>
 ROCKET_ALWAYS_INLINE
 uniptr<ValueT>
