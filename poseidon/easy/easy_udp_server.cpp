@@ -177,7 +177,7 @@ leave_multicast_group(const Socket_Address& maddr, const char* ifname_opt)
 
 bool
 Easy_UDP_Server::
-udp_send(const Socket_Address& addr, chars_proxy data)
+udp_send(const Socket_Address& addr, chars_view data)
   {
     if(!this->m_socket)
       return false;

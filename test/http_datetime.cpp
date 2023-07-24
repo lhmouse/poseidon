@@ -138,15 +138,15 @@ main()
       POSEIDON_TEST_CHECK(dt.as_seconds_since_epoch() == (seconds) r.ts);
 
       dt.set_unix_time({});
-      POSEIDON_TEST_CHECK(dt.parse(r.rfc1123, ::strlen(r.rfc1123)) == ::strlen(r.rfc1123));
+      POSEIDON_TEST_CHECK(dt.parse(r.rfc1123) == ::strlen(r.rfc1123));
       POSEIDON_TEST_CHECK(dt.as_seconds_since_epoch() == (seconds) r.ts);
 
       dt.set_unix_time({});
-      POSEIDON_TEST_CHECK(dt.parse(r.rfc850, ::strlen(r.rfc850)) == ::strlen(r.rfc850));
+      POSEIDON_TEST_CHECK(dt.parse(r.rfc850) == ::strlen(r.rfc850));
       POSEIDON_TEST_CHECK(dt.as_seconds_since_epoch() == (seconds) r.ts);
 
       dt.set_unix_time({});
-      POSEIDON_TEST_CHECK(dt.parse(r.asctime, ::strlen(r.asctime)) == ::strlen(r.asctime));
+      POSEIDON_TEST_CHECK(dt.parse(r.asctime) == ::strlen(r.asctime));
       POSEIDON_TEST_CHECK(dt.as_seconds_since_epoch() == (seconds) r.ts);
     }
 

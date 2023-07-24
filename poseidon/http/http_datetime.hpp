@@ -28,13 +28,7 @@ class HTTP_DateTime
     // Parses a timestamp from an HTTP date/time string, like `parse()`.
     // An exception is thrown if the date/time string is not valid.
     explicit
-    HTTP_DateTime(const char* str, size_t len);
-
-    explicit
-    HTTP_DateTime(const char* str);
-
-    explicit
-    HTTP_DateTime(cow_stringR str);
+    HTTP_DateTime(chars_view str);
 
     HTTP_DateTime&
     swap(HTTP_DateTime& other) noexcept
@@ -91,7 +85,7 @@ class HTTP_DateTime
     // is returned. If zero is returned or an exception is thrown, the contents
     // of this object are unspecified.
     size_t
-    parse(const char* str, size_t len);
+    parse(chars_view str);
 
     // Converts this timestamp to its RFC 1123 format, with a null terminator.
     // There shall be at least 30 characters in the buffer that `str` points to.

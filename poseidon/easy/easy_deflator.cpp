@@ -101,7 +101,7 @@ output_clear() noexcept
 
 size_t
 Easy_Deflator::
-deflate(chars_proxy data)
+deflate(chars_view data)
   {
     if(!this->m_defl)
       return 0;

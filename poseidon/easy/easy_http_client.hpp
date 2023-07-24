@@ -109,7 +109,7 @@ class Easy_HTTP_Client
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    http_POST(HTTP_Request_Headers&& req, chars_proxy data);
+    http_POST(HTTP_Request_Headers&& req, chars_view data);
 
     // Sends a PUT request. The request must contain a payload body. The
     // caller should neither set `req.method` nor supply `Content-Length` or
@@ -121,7 +121,7 @@ class Easy_HTTP_Client
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    http_PUT(HTTP_Request_Headers&& req, chars_proxy data);
+    http_PUT(HTTP_Request_Headers&& req, chars_view data);
 
     // Sends a DELETE request. The request cannot contain a payload body. The
     // caller should neither set `req.method` nor supply `Content-Length` or

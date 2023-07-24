@@ -26,7 +26,7 @@ reset() noexcept
 
 size_t
 Inflator::
-inflate(chars_proxy data)
+inflate(chars_view data)
   {
     const char* in_ptr = data.p;
     const char* in_end = in_ptr + data.n;

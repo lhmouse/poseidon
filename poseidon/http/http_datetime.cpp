@@ -148,33 +148,10 @@ const HTTP_DateTime http_datetime_min = (unix_time)(days) 0;
 const HTTP_DateTime http_datetime_max = (unix_time)(days) 2932532;
 
 HTTP_DateTime::
-HTTP_DateTime(const char* str, size_t len)
+HTTP_DateTime(chars_view str)
   {
-    size_t r = this->parse(str, len);
-    if(r != len)
-      POSEIDON_THROW((
-          "Could not parse HTTP data/time string `$1`"),
-          cow_string(str, len));
-  }
-
-HTTP_DateTime::
-HTTP_DateTime(const char* str)
-  {
-    size_t r = this->parse(str, ::strlen(str));
-    if(str[r] != 0)
-      POSEIDON_THROW((
-          "Could not parse HTTP data/time string `$1`"),
-          str);
-  }
-
-HTTP_DateTime::
-HTTP_DateTime(cow_stringR str)
-  {
-    size_t r = this->parse(str.data(), str.size());
-    if(r != str.size())
-      POSEIDON_THROW((
-          "Could not parse HTTP data/time string `$1`"),
-          str);
+    if(this->parse(str) != str.n)
+      POSEIDON_THROW(("Could not parse HTTP date/time string `$1`"), str);
   }
 
 size_t
@@ -206,8 +183,7 @@ parse_rfc1123_partial(const char* str)
     if(rptr == nullptr)
       return 0;
 
-    // Compose the timestamp and return the number of characters
-    // that have been accepted.
+    // Compose the timestamp.
     this->m_tp = (unix_time)(seconds) ::timegm(&tm);
     return (size_t) (rptr - str);
   }
@@ -240,8 +216,7 @@ parse_rfc850_partial(const char* str)
     if(rptr == nullptr)
       return 0;
 
-    // Compose the timestamp and return the number of characters
-    // that have been accepted.
+    // Compose the timestamp.
     this->m_tp = (unix_time)(seconds) ::timegm(&tm);
     return (size_t) (rptr - str);
   }
@@ -274,8 +249,7 @@ parse_asctime_partial(const char* str)
     if(rptr == nullptr)
       return 0;
 
-    // Compose the timestamp and return the number of characters
-    // that have been accepted.
+    // Compose the timestamp.
     this->m_tp = (unix_time)(seconds) ::timegm(&tm);
     return (size_t) (rptr - str);
   }
@@ -309,34 +283,34 @@ parse_cookie_partial(const char* str)
     if(rptr == nullptr)
       return 0;
 
-    // Compose the timestamp and return the number of characters
-    // that have been accepted.
+    // Compose the timestamp.
     this->m_tp = (unix_time)(seconds) ::timegm(&tm);
     return (size_t) (rptr - str);
   }
 
 size_t
 HTTP_DateTime::
-parse(const char* str, size_t len)
+parse(chars_view str)
   {
-    if(len == 0)
-      return 0;
+    // A string with an erroneous length will not be accepted, so we just need to
+    // check for possibilities by `str.n`.
+    if(str.n >= 29)
+      if(size_t aclen = this->parse_rfc1123_partial(str.p))
+        return aclen;
 
-    size_t acc_len = 0;
+    if(str.n >= 30)
+      if(size_t aclen = this->parse_rfc850_partial(str.p))
+        return aclen;
 
-    if((len >= 29) && (acc_len == 0))
-      acc_len = this->parse_rfc1123_partial(str);
+    if(str.n >= 24)
+      if(size_t aclen = this->parse_asctime_partial(str.p))
+        return aclen;
 
-    if((len >= 30) && (acc_len == 0))
-      acc_len = this->parse_rfc850_partial(str);
+    if(str.n >= 29)
+      if(size_t aclen = this->parse_cookie_partial(str.p))
+        return aclen;
 
-    if((len >= 24) && (acc_len == 0))
-      acc_len = this->parse_asctime_partial(str);
-
-    if((len >= 29) && (acc_len == 0))
-      acc_len = this->parse_cookie_partial(str);
-
-    return acc_len;
+    return 0;
   }
 
 size_t

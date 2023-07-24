@@ -211,7 +211,7 @@ remote_address() const noexcept
 
 bool
 TCP_Socket::
-tcp_send(chars_proxy data)
+tcp_send(chars_view data)
   {
     if((data.p == nullptr) && (data.n != 0))
       POSEIDON_THROW((

@@ -45,7 +45,7 @@ uuid(const random&)
   }
 
 uuid::
-uuid(chars_proxy str)
+uuid(chars_view str)
   {
     if(this->parse(str) != str.n)
       POSEIDON_THROW(("Could not parse UUID string `$1`"), str);
@@ -130,7 +130,7 @@ parse_partial(const char* str) noexcept
 
 size_t
 uuid::
-parse(chars_proxy str) noexcept
+parse(chars_view str) noexcept
   {
     // A string with an erroneous length will not be accepted, so we just need to
     // check for possibilities by `str.n`.

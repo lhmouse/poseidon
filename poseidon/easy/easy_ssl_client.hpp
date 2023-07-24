@@ -95,7 +95,7 @@ class Easy_SSL_Client
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    ssl_send(chars_proxy data);
+    ssl_send(chars_view data);
 
     // Shuts the socket down gracefully. Errors during the shutdown operation
     // are ignored.

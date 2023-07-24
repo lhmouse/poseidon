@@ -92,7 +92,7 @@ class Easy_UDP_Server
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    udp_send(const Socket_Address& addr, chars_proxy data);
+    udp_send(const Socket_Address& addr, chars_view data);
   };
 
 }  // namespace poseidon

@@ -242,7 +242,7 @@ remote_address() const noexcept
 
 bool
 Easy_TCP_Client::
-tcp_send(chars_proxy data)
+tcp_send(chars_view data)
   {
     if(!this->m_socket)
       return false;

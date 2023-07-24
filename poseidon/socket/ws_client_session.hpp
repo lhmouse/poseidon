@@ -28,7 +28,7 @@ class WS_Client_Session
 
   private:
     void
-    do_call_on_ws_close_once(uint16_t status, chars_proxy reason);
+    do_call_on_ws_close_once(uint16_t status, chars_view reason);
 
   protected:
     // This function implements `HTTP_Client_Session`.
@@ -86,13 +86,13 @@ class WS_Client_Session
     // The default implementation does nothing.
     virtual
     void
-    do_on_ws_close(uint16_t status, chars_proxy reason);
+    do_on_ws_close(uint16_t status, chars_view reason);
 
     // Sends a raw frame (not a message). No error checking is performed. This
     // function is provided for convenience only, and maybe isn't very useful
     // unless for some low-level hacks.
     bool
-    do_ws_send_raw_frame(int rsv_opcode, chars_proxy data);
+    do_ws_send_raw_frame(int rsv_opcode, chars_view data);
 
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(WS_Client_Session);
@@ -102,7 +102,7 @@ class WS_Client_Session
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    ws_send(WebSocket_OpCode opcode, chars_proxy data);
+    ws_send(WebSocket_OpCode opcode, chars_view data);
 
     // Sends a CLOSE frame with an optional error message, then shuts down the
     // connection. The reason string will be truncated to 123 bytes if it's too
@@ -110,7 +110,7 @@ class WS_Client_Session
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    ws_shut_down(uint16_t status = 1000, chars_proxy reason = "") noexcept;
+    ws_shut_down(uint16_t status = 1000, chars_view reason = "") noexcept;
   };
 
 }  // namespace poseidon

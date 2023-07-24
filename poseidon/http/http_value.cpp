@@ -44,124 +44,111 @@ HTTP_Value::
 
 size_t
 HTTP_Value::
-parse_quoted_string_partial(const char* str, size_t len)
+parse_quoted_string_partial(chars_view str)
   {
-    if((len <= 1) || (*str != '\"'))
+    if((str.n == 0) || (*str != '\"'))
       return 0;
 
     this->m_str.clear();
     this->m_index = index_string;
 
     // Get a quoted string. Zero shall be returned in case of any errors.
-    size_t plain = 1;
-    const char* bp = str + 1;
+    const char* curp = str.p + 1;
+    intptr_t plain = 1;
 
-    while(!plain || (*bp != '\"')) {
+    while((*curp != '\"') || (plain == 0)) {
       // A previous escape character exists if `plain` equals zero.
-      if(!plain || (*bp != '\\'))
-        this->m_str.push_back(*bp);
+      if((*curp != '\\') || (plain == 0))
+        this->m_str.push_back(*curp);
       else
-        plain = SIZE_MAX;
+        plain = -1;
 
+      curp ++;
       plain ++;
-      bp ++;
 
       // Fail if there is no closing quote.
-      if(bp == str + len)
+      if(curp == str.p + str.n)
         return 0;
     }
 
     // Return the number of characters that have been parsed.
-    return static_cast<size_t>(bp + 1 - str);
+    return (size_t) (curp + 1 - str.p);
   }
 
 size_t
 HTTP_Value::
-parse_datetime_partial(const char* str, size_t len)
+parse_datetime_partial(chars_view str)
   {
-    size_t ac = this->m_dt.parse(str, len);
+    size_t aclen = this->m_dt.parse(str);
     this->m_index = index_datetime;
-    return ac;
+    return aclen;
   }
 
 size_t
 HTTP_Value::
-parse_number_partial(const char* str, size_t len)
+parse_number_partial(chars_view str)
   {
     ::rocket::ascii_numget numg;
-    size_t ac = numg.parse_D(str, len);
+    size_t aclen = numg.parse_D(str.p, str.n);
 
-    // Reject partial matches.
-    if((ac < len) && !do_is_ctl_or_sep(str[ac]))
+    // Do not mistake a token prefix.
+    if((aclen != str.n) && !do_is_ctl_or_sep(str.p[aclen]))
       return 0;
 
     numg.cast_D(this->m_num, -HUGE_VAL, +HUGE_VAL);
     this->m_index = index_number;
-    return ac;
+    return aclen;
   }
 
 size_t
 HTTP_Value::
-parse_token_partial(const char* str, size_t len)
+parse_token_partial(chars_view str)
   {
-    auto pos = ::std::find_if(str, str + len, do_is_ctl_or_sep);
-    this->m_str.assign(str, pos);
+    auto eptr = ::std::find_if(str.p, str.p + str.n, do_is_ctl_or_sep);
+    size_t aclen = (size_t) (eptr - str.p);
+
+    this->m_str.assign(str.p, aclen);
     this->m_index = index_string;
-    return static_cast<size_t>(pos - str);
+    return aclen;
   }
 
 size_t
 HTTP_Value::
-parse_unquoted_partial(const char* str, size_t len)
+parse_unquoted_partial(chars_view str)
   {
-    auto pos = ::std::find_if(str, str + len, do_is_ctl_or_unquoted_sep);
-    this->m_str.assign(str, pos);
+    auto eptr = ::std::find_if(str.p, str.p + str.n, do_is_ctl_or_unquoted_sep);
+    size_t aclen = (size_t) (eptr - str.p);
+
+    this->m_str.assign(str.p, aclen);
     this->m_index = index_string;
-    return static_cast<size_t>(pos - str);
+    return aclen;
   }
 
 size_t
 HTTP_Value::
-parse(const char* str, size_t len)
+parse(chars_view str)
   {
-    if(len == 0)
+    if(str.n == 0)
       return 0;
 
-    size_t acc_len = 0;
-
     // What does the string look like?
-    switch(*str) {
-      case '\"':
-        acc_len = this->parse_quoted_string_partial(str, len);
-        break;
+    if(*str == '\"')
+      if(size_t aclen = this->parse_quoted_string_partial(str))
+        return aclen;
 
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9':
-        acc_len = this->parse_number_partial(str, len);
-        break;
+    if((*str >= '0') && (*str <= '9'))
+      if(size_t aclen = this->parse_number_partial(str))
+        return aclen;
 
-      case 'S':  // Sun, Sat
-      case 'M':  // Mon
-      case 'T':  // Tue, Thu
-      case 'W':  // Wed
-      case 'F':  // Fri
-        acc_len = this->parse_datetime_partial(str, len);
-        break;
-    }
+    if((*str >= 'F') && (*str <= 'W'))
+      if(size_t aclen = this->parse_datetime_partial(str))
+        return aclen;
 
-    // If previous attempts have failed, try this generic one.
-    if(acc_len == 0)
-      acc_len = this->parse_unquoted_partial(str, len);
+    // This is the fallback for everything.
+    if(size_t aclen = this->parse_unquoted_partial(str))
+      return aclen;
 
-    return acc_len;
+    return 0;
   }
 
 tinyfmt&

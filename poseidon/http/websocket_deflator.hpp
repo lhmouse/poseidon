@@ -50,7 +50,7 @@ class WebSocket_Deflator
 
     // Compresses a part of the frame payload.
     void
-    deflate_message_stream(plain_mutex::unique_lock& lock, chars_proxy data);
+    deflate_message_stream(plain_mutex::unique_lock& lock, chars_view data);
 
     // Completes this frame. This function flushes all pending output, removes
     // the final `00 00 FF FF`.
@@ -67,7 +67,7 @@ class WebSocket_Deflator
 
     // Decompresses a part of the frame payload.
     void
-    inflate_message_stream(plain_mutex::unique_lock& lock, chars_proxy data);
+    inflate_message_stream(plain_mutex::unique_lock& lock, chars_view data);
 
     // Completes this frame. This function appends a final `00 00 FF FF`, flushes
     // all pending output.

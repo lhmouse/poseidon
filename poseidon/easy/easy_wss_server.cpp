@@ -181,7 +181,7 @@ struct Final_WSS_Server_Session final : WSS_Server_Session
 
     virtual
     void
-    do_on_wss_close(uint16_t status, chars_proxy reason) override
+    do_on_wss_close(uint16_t status, chars_view reason) override
       {
         Client_Table::Event_Queue::Event event;
         event.type = easy_socket_close;

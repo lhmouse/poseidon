@@ -38,7 +38,7 @@ class Socket_Address
     // Parses an address from a string, like `parse()`.
     // An exception is thrown if the address string is not valid.
     explicit
-    Socket_Address(chars_proxy str);
+    Socket_Address(chars_view str);
 
     Socket_Address&
     swap(Socket_Address& other) noexcept
@@ -127,7 +127,7 @@ class Socket_Address
     // zero is returned or an exception is thrown, the contents of this
     // object are unspecified.
     size_t
-    parse(chars_proxy str) noexcept;
+    parse(chars_view str) noexcept;
 
     // Converts this address to its string form. The caller should supply
     // a buffer for 48 characters, which is capable of storing the longest

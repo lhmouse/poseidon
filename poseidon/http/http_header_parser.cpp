@@ -27,55 +27,58 @@ HTTP_Header_Parser::
 do_next_attribute_from_separator()
   {
     // Skip the current separator.
-    size_t& hpos = this->m_hpos;
-    hpos ++;
-    ROCKET_ASSERT(hpos <= this->m_hstr.size());
+    this->m_hpos ++;
+    ROCKET_ASSERT(this->m_hpos <= this->m_hstr.size());
+
+    chars_view sview = this->m_hstr;
+    sview <<= this->m_hpos;
 
     // Skip whitespace and attribute separators. This function shall not move
     // across element boundaries.
-    while((this->m_hstr[hpos] == ' ') || (this->m_hstr[hpos] == '\t') || (this->m_hstr[hpos] == ';'))
-      hpos ++;
+    while((*sview == ' ') || (*sview == '\t') || (*sview == ';'))
+      sview <<= 1;
 
-    if((this->m_hstr[hpos] == ',') || (hpos >= this->m_hstr.size()))
+    if((*sview == ',') || (sview.n == 0))
       return -1;
 
     // Parse the name of an attribute, and initialize its value to null.
-    size_t tlen = this->m_value.parse_token_partial(this->m_hstr.data() + hpos, this->m_hstr.size() - hpos);
+    size_t tlen = this->m_value.parse_token_partial(sview);
     if(tlen == 0) {
       this->m_hpos = error_hpos;
       return -1;
     }
 
-    hpos += tlen;
+    sview <<= tlen;
     this->m_name.swap(this->m_value.mut_string());
     this->m_value = nullptr;
 
     // Skip bad whitespace.
-    while((this->m_hstr[hpos] == ' ') || (this->m_hstr[hpos] == '\t'))
-      hpos ++;
+    while((*sview == ' ') || (*sview == '\t'))
+      sview <<= 1;
 
-    if(this->m_hstr[hpos] == '=') {
-      hpos ++;
+    if(*sview == '=') {
+      sview <<= 1;
 
-      // Parse the optional value.
-      while((this->m_hstr[hpos] == ' ') || (this->m_hstr[hpos] == '\t'))
-        hpos ++;
+      // Skip bad whitespace again, then parse the optional value.
+      while((*sview == ' ') || (*sview == '\t'))
+        sview <<= 1;
 
-      tlen = this->m_value.parse(this->m_hstr.data() + hpos, this->m_hstr.size() - hpos);
-      hpos += tlen;
+      tlen = this->m_value.parse(sview);
+      sview <<= tlen;
 
-      while((this->m_hstr[hpos] == ' ') || (this->m_hstr[hpos] == '\t'))
-        hpos ++;
+      while((*sview == ' ') || (*sview == '\t'))
+        sview <<= 1;
     }
 
     // The attribute shall be terminated by a separator.
-    if((this->m_hstr[hpos] != ';') && (this->m_hstr[hpos] != ',') && (hpos != this->m_hstr.size())) {
+    if((*sview != ';') && (*sview != ',') && (sview.n != 0)) {
       this->m_hpos = error_hpos;
       return -1;
     }
 
-    // Accept this attribute and return the current separator.
-    return (uint8_t) this->m_hstr[hpos];
+    // Accept this attribute and return the terminating separator.
+    this->m_hpos = (size_t) (sview.p - this->m_hstr.c_str());
+    return (uint8_t) *sview;
   }
 
 bool

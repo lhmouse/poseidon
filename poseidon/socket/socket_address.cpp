@@ -132,7 +132,7 @@ const Socket_Address ipv4_loopback      = { (::in6_addr) { V4_MAPPED_ 127,0,0,1 
 const Socket_Address ipv4_broadcast     = { (::in6_addr) { V4_MAPPED_ 255,255,255,255 },  0 };
 
 Socket_Address::
-Socket_Address(chars_proxy str)
+Socket_Address(chars_view str)
   {
     if(this->parse(str) != str.n)
       POSEIDON_THROW(("Could not parse socket address string `$1`"), str);
@@ -164,7 +164,7 @@ classify() const noexcept
 
 size_t
 Socket_Address::
-parse(chars_proxy str) noexcept
+parse(chars_view str) noexcept
   {
     this->clear();
 

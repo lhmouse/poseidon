@@ -154,11 +154,11 @@ class HTTP_Value
         return this->m_str.c_str();
       }
 
-    char*
-    mut_c_str()
+    size_t
+    str_length() const
       {
         this->do_check_index(index_string, "a string");
-        return this->m_str.mut_data();
+        return this->m_str.length();
       }
 
     void
@@ -169,9 +169,16 @@ class HTTP_Value
       }
 
     void
-    set_string(const char* str, size_t len) noexcept
+    set_string(cow_string::shallow_type str) noexcept
       {
-        this->m_str.assign(str, len);
+        this->m_str = str;
+        this->m_index = index_string;
+      }
+
+    void
+    set_string(chars_view str) noexcept
+      {
+        this->m_str.assign(str.p, str.n);
         this->m_index = index_string;
       }
 
@@ -243,26 +250,26 @@ class HTTP_Value
     // have been accepted is returned. Otherwise zero is returned, and the
     // contents of this object is indeterminate.
     size_t
-    parse_quoted_string_partial(const char* str, size_t len);
+    parse_quoted_string_partial(chars_view str);
 
     // Try parsing a floating-point number, starting with a decimal digit. Upon
     // success, the number of characters that have been accepted is returned.
     // Otherwise zero is returned, and the contents of this object are
     // indeterminate.
     size_t
-    parse_number_partial(const char* str, size_t len);
+    parse_number_partial(chars_view str);
 
     // Try parsing an HTTP date/time partially from a string. Upon success, the
     // number of characters that have been accepted is returned. Otherwise zero
     // is returned, and the contents of this object are indeterminate.
     size_t
-    parse_datetime_partial(const char* str, size_t len);
+    parse_datetime_partial(chars_view str);
 
     // Try parsing an HTTP token and store it as a string. Upon success, the
     // number of characters that have been accepted is returned. Otherwise zero
     // is returned, and the contents of this object are indeterminate.
     size_t
-    parse_token_partial(const char* str, size_t len);
+    parse_token_partial(chars_view str);
 
     // Try parsing an HTTP unquoted string and store it. This is a more
     // permissive variant of a token. All characters other than whitespace,
@@ -270,7 +277,7 @@ class HTTP_Value
     // number of characters that have been accepted is returned. Otherwise zero
     // is returned, and the contents of this object are indeterminate.
     size_t
-    parse_unquoted_partial(const char* str, size_t len);
+    parse_unquoted_partial(chars_view str);
 
     // Try parsing an HTTP value, possibly from an HTTP header. The string is
     // matched against these rules (in this order):
@@ -284,7 +291,7 @@ class HTTP_Value
     // that have been consumed is returned. Otherwise zero is  returned, and
     // the contents of this object are indeterminate.
     size_t
-    parse(const char* str, size_t len);
+    parse(chars_view str);
 
     // Converts this value to its string form. The result will be suitable
     // for immediate use in an HTTP header. It is important to note that

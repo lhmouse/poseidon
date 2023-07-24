@@ -266,7 +266,7 @@ leave_multicast_group(const Socket_Address& maddr, const char* ifname_opt)
 
 bool
 UDP_Socket::
-udp_send(const Socket_Address& addr, chars_proxy data)
+udp_send(const Socket_Address& addr, chars_view data)
   {
     if((data.p == nullptr) && (data.n != 0))
       POSEIDON_THROW((

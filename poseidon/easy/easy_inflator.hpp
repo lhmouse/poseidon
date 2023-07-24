@@ -52,7 +52,7 @@ class Easy_Inflator
     // Decompresses some data and returns the number of bytes that have been
     // consumed.
     size_t
-    inflate(chars_proxy data);
+    inflate(chars_view data);
 
     // Completes the current stream. No data shall be written any further. If
     // no end-of-stream marker has been found in the current stream, `false` is

@@ -21,7 +21,7 @@ WSS_Server_Session::
 
 void
 WSS_Server_Session::
-do_call_on_wss_close_once(uint16_t status, chars_proxy reason)
+do_call_on_wss_close_once(uint16_t status, chars_view reason)
   {
     if(this->m_closure_notified)
       return;
@@ -263,14 +263,14 @@ do_on_wss_message_data_stream(WebSocket_OpCode /*opcode*/, linear_buffer& data)
 
 void
 WSS_Server_Session::
-do_on_wss_close(uint16_t status, chars_proxy reason)
+do_on_wss_close(uint16_t status, chars_view reason)
   {
     POSEIDON_LOG_DEBUG(("WebSocket CLOSE from `$1` (status $2): $3"), this->remote_address(), status, reason);
   }
 
 bool
 WSS_Server_Session::
-do_wss_send_raw_frame(int rsv_opcode, chars_proxy data)
+do_wss_send_raw_frame(int rsv_opcode, chars_view data)
   {
     // Compose a single frame and send it. Frames to clients will not be masked.
     WebSocket_Frame_Header header;
@@ -289,7 +289,7 @@ do_wss_send_raw_frame(int rsv_opcode, chars_proxy data)
 
 bool
 WSS_Server_Session::
-wss_send(WebSocket_OpCode opcode, chars_proxy data)
+wss_send(WebSocket_OpCode opcode, chars_view data)
   {
     if(!this->do_has_upgraded())
       POSEIDON_THROW((
@@ -358,7 +358,7 @@ wss_send(WebSocket_OpCode opcode, chars_proxy data)
 
 bool
 WSS_Server_Session::
-wss_shut_down(uint16_t status, chars_proxy reason) noexcept
+wss_shut_down(uint16_t status, chars_view reason) noexcept
   {
     if(!this->do_has_upgraded())
       return this->ssl_shut_down();

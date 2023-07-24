@@ -327,137 +327,145 @@ operator<<(tinyfmt& fmt, const char256& cbuf)
     return fmt.putn(cbuf.c_str(), ::rocket::xstrlen(cbuf.c_str()));
   }
 
-struct chars_proxy
+struct chars_view
   {
     const char* p;
     size_t n;
 
     constexpr
-    chars_proxy(nullptr_t = nullptr) noexcept
+    chars_view(nullptr_t = nullptr) noexcept
       : p(nullptr), n(0U)
       { }
 
     constexpr
-    chars_proxy(const char* xp, size_t xn) noexcept
+    chars_view(const char* xp, size_t xn) noexcept
       : p(xp), n(xn)
       { }
 
     constexpr
-    chars_proxy(const char* xs) noexcept
+    chars_view(const char* xs) noexcept
       : p(xs), n(xs ? xstrlen(xs) : 0U)
       { }
 
     template<typename traitsT, typename allocT>
     constexpr
-    chars_proxy(const ::std::basic_string<char, traitsT, allocT>& rs) noexcept
+    chars_view(const ::std::basic_string<char, traitsT, allocT>& rs) noexcept
       : p(rs.data()), n(rs.size())
       { }
 
     template<typename allocT>
     constexpr
-    chars_proxy(const ::std::vector<char, allocT>& rs) noexcept
+    chars_view(const ::std::vector<char, allocT>& rs) noexcept
       : p(rs.data()), n(rs.size())
       { }
 
 #ifdef __cpp_lib_string_view
     template<typename traitsT>
     constexpr
-    chars_proxy(const ::std::basic_string_view<char, traitsT>& rs) noexcept
+    chars_view(const ::std::basic_string_view<char, traitsT>& rs) noexcept
       : p(rs.data()), n(rs.size())
       { }
 #endif  // __cpp_lib_string_view
 
     constexpr
-    chars_proxy(const ::rocket::shallow_string rs) noexcept
+    chars_view(const ::rocket::shallow_string rs) noexcept
       : p(rs.data()), n(rs.size())
       { }
 
     template<typename allocT>
     constexpr
-    chars_proxy(const ::rocket::basic_cow_string<char, allocT>& rs) noexcept
+    chars_view(const ::rocket::basic_cow_string<char, allocT>& rs) noexcept
       : p(rs.data()), n(rs.size())
       { }
 
     template<typename allocT>
     constexpr
-    chars_proxy(const ::rocket::basic_tinybuf_str<char, allocT>& rs) noexcept
+    chars_view(const ::rocket::basic_tinybuf_str<char, allocT>& rs) noexcept
       : p(rs.data()), n(rs.size())
       { }
 
     template<typename allocT>
     constexpr
-    chars_proxy(const ::rocket::basic_tinyfmt_str<char, allocT>& rs) noexcept
+    chars_view(const ::rocket::basic_tinyfmt_str<char, allocT>& rs) noexcept
       : p(rs.data()), n(rs.size())
       { }
 
     template<typename allocT>
     constexpr
-    chars_proxy(const ::rocket::basic_linear_buffer<char, allocT>& rs) noexcept
+    chars_view(const ::rocket::basic_linear_buffer<char, allocT>& rs) noexcept
       : p(rs.data()), n(rs.size())
       { }
 
     template<typename allocT>
     constexpr
-    chars_proxy(const ::rocket::basic_tinybuf_ln<char, allocT>& rs) noexcept
+    chars_view(const ::rocket::basic_tinybuf_ln<char, allocT>& rs) noexcept
       : p(rs.data()), n(rs.size())
       { }
 
     template<typename allocT>
     constexpr
-    chars_proxy(const ::rocket::basic_tinyfmt_ln<char, allocT>& rs) noexcept
+    chars_view(const ::rocket::basic_tinyfmt_ln<char, allocT>& rs) noexcept
       : p(rs.data()), n(rs.size())
       { }
 
     template<typename allocT>
     constexpr
-    chars_proxy(const ::rocket::cow_vector<char, allocT>& rs) noexcept
+    chars_view(const ::rocket::cow_vector<char, allocT>& rs) noexcept
       : p(rs.data()), n(rs.size())
       { }
 
     template<size_t N, typename allocT>
     constexpr
-    chars_proxy(const ::rocket::static_vector<char, N, allocT>& rs) noexcept
+    chars_view(const ::rocket::static_vector<char, N, allocT>& rs) noexcept
       : p(rs.data()), n(rs.size())
       { }
+
+    // Returns the first character. Depending on the nature of the source string,
+    // reading one character past the end might be allowed, so we don't check
+    // whether `n` equals zero here.
+    constexpr
+    char
+    operator*() const noexcept
+      {
+        return *(this->p);
+      }
+
+    // Removes `n` characters from the left.
+    constexpr
+    chars_view
+    operator<<(size_t dist) const noexcept
+      {
+        size_t rdist = ::std::min(this->n, dist);
+        return chars_view(this->p + rdist, this->n - rdist);
+      }
+
+    chars_view
+    operator<<=(size_t dist) & noexcept
+      {
+        return *this = *this << dist;
+      }
+
+    // Removes `n` characters from the right.
+    constexpr
+    chars_view
+    operator>>(size_t dist) const noexcept
+      {
+        size_t rdist = ::std::min(this->n, dist);
+        return chars_view(this->p, this->n - rdist);
+      }
+
+    chars_view
+    operator>>=(size_t dist) & noexcept
+      {
+        return *this = *this >> dist;
+      }
   };
 
 inline
 tinyfmt&
-operator<<(tinyfmt& fmt, chars_proxy data)
+operator<<(tinyfmt& fmt, chars_view data)
   {
     return fmt.putn(data.p, data.n);
-  }
-
-constexpr
-chars_proxy
-operator<<(chars_proxy str, size_t n) noexcept
-  {
-    // Remove `n` characters from the left.
-    size_t ndiff = ::std::min(str.n, n);
-    return chars_proxy(str.p + ndiff, str.n - ndiff);
-  }
-
-constexpr
-chars_proxy&
-operator<<=(chars_proxy& str, size_t n) noexcept
-  {
-    return str = str << n;
-  }
-
-constexpr
-chars_proxy
-operator>>(chars_proxy str, size_t n) noexcept
-  {
-    // Remove `n` characters from the right.
-    size_t ndiff = ::std::min(str.n, n);
-    return chars_proxy(str.p, str.n - ndiff);
-  }
-
-constexpr
-chars_proxy&
-operator>>=(chars_proxy& str, size_t n) noexcept
-  {
-    return str = str >> n;
   }
 
 template<typename ValueT, typename... ArgsT>

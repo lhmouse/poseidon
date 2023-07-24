@@ -95,14 +95,14 @@ class Easy_WS_Client
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    ws_send(WebSocket_OpCode opcode, chars_proxy data);
+    ws_send(WebSocket_OpCode opcode, chars_view data);
 
     // Sends a CLOSE frame with an optional error message, then shuts down the
     // connection. The reason string will be truncated to 123 bytes if it's too
     // long.
     // This function is thread-safe.
     bool
-    ws_shut_down(uint16_t status = 1000, chars_proxy reason = "") noexcept;
+    ws_shut_down(uint16_t status = 1000, chars_view reason = "") noexcept;
   };
 
 }  // namespace poseidon

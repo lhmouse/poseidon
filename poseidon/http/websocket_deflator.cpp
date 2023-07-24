@@ -21,7 +21,7 @@ WebSocket_Deflator::
 
 void
 WebSocket_Deflator::
-deflate_message_stream(plain_mutex::unique_lock& lock, chars_proxy data)
+deflate_message_stream(plain_mutex::unique_lock& lock, chars_view data)
   {
     lock.lock(this->m_def_mtx);
 
@@ -75,7 +75,7 @@ deflate_message_finish(plain_mutex::unique_lock& lock)
 
 void
 WebSocket_Deflator::
-inflate_message_stream(plain_mutex::unique_lock& lock, chars_proxy data)
+inflate_message_stream(plain_mutex::unique_lock& lock, chars_view data)
   {
     lock.lock(this->m_inf_mtx);
 

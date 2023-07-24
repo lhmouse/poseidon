@@ -26,7 +26,7 @@ reset() noexcept
 
 size_t
 Deflator::
-deflate(chars_proxy data)
+deflate(chars_view data)
   {
     if(data.n == 0)
       return 0;

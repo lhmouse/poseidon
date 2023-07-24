@@ -101,7 +101,7 @@ class uuid
     // Parses a UUID from a string, like `parse()`.
     // An exception is thrown if the UUID string is not valid.
     explicit
-    uuid(chars_proxy str);
+    uuid(chars_view str);
 
     uuid&
     swap(uuid& other) noexcept
@@ -178,7 +178,7 @@ class uuid
     parse_partial(const char* str) noexcept;
 
     size_t
-    parse(chars_proxy str) noexcept;
+    parse(chars_view str) noexcept;
 
     // Converts this UUID to its RFC 4112 form. Hexadecimal digits are written
     // in uppercase. The caller should supply a buffer for 37 characters. A

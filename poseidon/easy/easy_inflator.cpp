@@ -101,7 +101,7 @@ output_clear() noexcept
 
 size_t
 Easy_Inflator::
-inflate(chars_proxy data)
+inflate(chars_view data)
   {
     if(!this->m_infl)
       return 0;

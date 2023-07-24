@@ -51,7 +51,7 @@ class Deflator
     // consumed. This function returns zero if `finish()` has been called to
     // complete the current stream.
     size_t
-    deflate(chars_proxy data);
+    deflate(chars_view data);
 
     // Completes the current deflate block. The effect of this function is
     // described by zlib about its `Z_SYNC_FLUSH` argument.

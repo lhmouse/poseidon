@@ -162,7 +162,7 @@ struct Final_WSS_Client_Session final : WSS_Client_Session
 
     virtual
     void
-    do_on_wss_close(uint16_t status, chars_proxy reason) override
+    do_on_wss_close(uint16_t status, chars_view reason) override
       {
         Event_Queue::Event event;
         event.type = easy_socket_close;
@@ -259,7 +259,7 @@ remote_address() const noexcept
 
 bool
 Easy_WSS_Client::
-wss_send(WebSocket_OpCode opcode, chars_proxy data)
+wss_send(WebSocket_OpCode opcode, chars_view data)
   {
     if(!this->m_session)
       return false;
@@ -269,7 +269,7 @@ wss_send(WebSocket_OpCode opcode, chars_proxy data)
 
 bool
 Easy_WSS_Client::
-wss_shut_down(uint16_t status, chars_proxy reason) noexcept
+wss_shut_down(uint16_t status, chars_view reason) noexcept
   {
     if(!this->m_session)
       return false;

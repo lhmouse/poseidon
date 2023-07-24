@@ -100,7 +100,7 @@ class HTTPS_Server_Session
     // performed. This function is provided for convenience only, and maybe
     // isn't very useful unless for some low-level hacks.
     bool
-    do_https_raw_response(const HTTP_Response_Headers& resp, chars_proxy data);
+    do_https_raw_response(const HTTP_Response_Headers& resp, chars_view data);
 
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(HTTPS_Server_Session);
@@ -123,7 +123,7 @@ class HTTPS_Server_Session
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    https_response(HTTP_Response_Headers&& resp, chars_proxy data);
+    https_response(HTTP_Response_Headers&& resp, chars_view data);
 
     // Send a response with a chunked payload, which may contain multiple chunks.
     // Callers should not supply `Transfer-Encoding` headers, as they will be
@@ -139,7 +139,7 @@ class HTTPS_Server_Session
     https_chunked_response_start(HTTP_Response_Headers&& resp);
 
     bool
-    https_chunked_response_send(chars_proxy data);
+    https_chunked_response_send(chars_view data);
 
     bool
     https_chunked_respnse_finish();
