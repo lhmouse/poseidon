@@ -430,6 +430,14 @@ struct chars_view
         return *(this->p);
       }
 
+    constexpr
+    char
+    operator[](size_t index) const noexcept
+      {
+        ROCKET_ASSERT(index <= this->n);
+        return this->p[index];
+      }
+
     // Removes `n` characters from the left.
     constexpr
     chars_view
