@@ -28,23 +28,10 @@ HTTP_Response_Parser::s_settings[1] =
     // on_header_field
     +[](::http_parser* ps, const char* str, size_t len)
       {
-        if(this->m_headers.headers.empty())
+        // If this notification is received when no header exists, or a previous
+        // header value has been accepted, then a new header starts.
+        if(this->m_headers.headers.empty() || !this->m_headers.headers.back().second.is_null())
           this->m_headers.headers.emplace_back();
-
-        if(this->m_payload.size() != 0) {
-          // If `m_payload` is not empty, a previous header is now complete.
-          const char* value_str = this->m_payload.data() + 1;
-          ROCKET_ASSERT(value_str[-1] == '\n');  // magic character
-          size_t value_len = this->m_payload.size() - 1;
-
-          auto& value = this->m_headers.headers.mut_back().second;
-          if(value.parse(value_str, value_len) != value_len)
-            value.set_string(cow_string(value_str, value_len));
-
-          // Create the next header.
-          this->m_headers.headers.emplace_back();
-          this->m_payload.clear();
-        }
 
         // Append the header name to the last key, as this callback might be
         // invoked repeatedly.
@@ -55,32 +42,25 @@ HTTP_Response_Parser::s_settings[1] =
     // on_header_value
     +[](::http_parser* ps, const char* str, size_t len)
       {
-        // Add a magic character to indicate that a part of the value has been
-        // received. This makes `m_payload` non-empty.
-        if(this->m_payload.empty())
-           this->m_payload.putc('\n');
+        // Accept the value as a string.
+        if(!this->m_headers.headers.back().second.is_string())
+          this->m_headers.headers.mut_back().second.set_string("", 0);
 
-        // Abuse `m_payload` to store the header value.
-        this->m_payload.putn(str, len);
+        // Append the header value, as this callback might be invoked repeatedly.
+        this->m_headers.headers.mut_back().second.mut_string().append(str, len);
         return 0;
       },
 
     // on_headers_complete
     +[](::http_parser* ps)
       {
-        if(this->m_payload.size() != 0) {
-          // If `m_payload` is not empty, a previous header is now complete.
-          const char* value_str = this->m_payload.data() + 1;
-          ROCKET_ASSERT(value_str[-1] == '\n');  // magic character
-          size_t value_len = this->m_payload.size() - 1;
-
-          auto& value = this->m_headers.headers.mut_back().second;
-          if(value.parse(value_str, value_len) != value_len)
-            value.set_string(cow_string(value_str, value_len));
-
-          // Finish abuse of `m_payload`.
-          this->m_payload.clear();
-        }
+        // Convert header values from strings to their presumed form.
+        HTTP_Value value;
+        for(auto hiter = this->m_headers.headers.mut_begin();  hiter != this->m_headers.headers.end();  ++ hiter)
+          if(hiter->second.is_null())
+            hiter->second.set_string("", 0);
+          else if(value.parse(hiter->second.as_string().data(), hiter->second.as_string().size()) == hiter->second.as_string().size())
+            hiter->second = ::std::move(value);
 
         // The headers are complete, so halt.
         this->m_hresp = hresp_headers_done;

@@ -14,15 +14,11 @@ HTTP_Request_Parser::s_settings[1] =
     // on_message_begin
     nullptr,
 
-#define temp_uri_                m_headers.uri_query
-#define has_temp_header_value_   m_headers.is_ssl
-#define temp_header_value_       m_headers.uri_path
-
     // on_url
     +[](::http_parser* ps, const char* str, size_t len)
       {
         this->m_headers.method = ::http_method_str((::http_method) ps->method);
-        this->temp_uri_.append(str, len);
+        this->m_headers.uri_host.append(str, len);
         return 0;
       },
 
@@ -32,23 +28,10 @@ HTTP_Request_Parser::s_settings[1] =
     // on_header_field
     +[](::http_parser* ps, const char* str, size_t len)
       {
-        if(this->m_headers.headers.empty())
+        // If this notification is received when no header exists, or a previous
+        // header value has been accepted, then a new header starts.
+        if(this->m_headers.headers.empty() || !this->m_headers.headers.back().second.is_null())
           this->m_headers.headers.emplace_back();
-
-        if(this->has_temp_header_value_) {
-          // If a previous value exists, the header is now complete, so parse it.
-          auto& value = this->m_headers.headers.mut_back().second;
-          size_t plen = value.parse(this->temp_header_value_.data(), this->temp_header_value_.size());
-
-          // If the value doesn't match a special format, accept it as a string.
-          if(plen != this->temp_header_value_.size())
-            value = ::std::move(this->temp_header_value_);
-
-          // Prepare the next header.
-          this->m_headers.headers.emplace_back();
-          this->has_temp_header_value_ = false;
-          this->temp_header_value_.clear();
-        }
 
         // Append the header name to the last key, as this callback might be
         // invoked repeatedly.
@@ -59,30 +42,29 @@ HTTP_Request_Parser::s_settings[1] =
     // on_header_value
     +[](::http_parser* ps, const char* str, size_t len)
       {
-        this->has_temp_header_value_ = true;
-        this->temp_header_value_.append(str, len);
+        // Accept the value as a string.
+        if(!this->m_headers.headers.back().second.is_string())
+          this->m_headers.headers.mut_back().second.set_string("", 0);
+
+        // Append the header value, as this callback might be invoked repeatedly.
+        this->m_headers.headers.mut_back().second.mut_string().append(str, len);
         return 0;
       },
 
     // on_headers_complete
     +[](::http_parser* ps)
       {
-        if(this->has_temp_header_value_) {
-          // If a previous value exists, the header is now complete, so parse it.
-          auto& value = this->m_headers.headers.mut_back().second;
-          size_t plen = value.parse(this->temp_header_value_.data(), this->temp_header_value_.size());
-
-          // If the value doesn't match a special format, accept it as a string.
-          if(plen != this->temp_header_value_.size())
-            value = ::std::move(this->temp_header_value_);
-        }
+        // Convert header values from strings to their presumed form.
+        HTTP_Value value;
+        for(auto hiter = this->m_headers.headers.mut_begin();  hiter != this->m_headers.headers.end();  ++ hiter)
+          if(hiter->second.is_null())
+            hiter->second.set_string("", 0);
+          else if(value.parse(hiter->second.as_string().data(), hiter->second.as_string().size()) == hiter->second.as_string().size())
+            hiter->second = ::std::move(value);
 
         // Parse the URI.
-        const auto uri = ::std::move(this->temp_uri_);
-
-        this->temp_uri_.clear();
-        this->has_temp_header_value_ = false;
-        this->temp_header_value_.clear();
+        cow_string uri;
+        uri.swap(this->m_headers.uri_host);
 
         ::http_parser_url uri_hp = { };
         if(::http_parser_parse_url(uri.data(), uri.size(), ps->method == HTTP_CONNECT, &uri_hp)) {
