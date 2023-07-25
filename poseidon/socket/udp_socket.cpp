@@ -146,7 +146,7 @@ join_multicast_group(const Socket_Address& maddr, uint8_t ttl, bool loopback, co
 
     // IPv6 doesn't take IPv4-mapped multicast addresses, so there has to be
     // special treatement. `sendto()` is not affected.
-    if(::memcmp(maddr.data(), "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF", 12) == 0) {
+    if(::memcmp(maddr.data(), ipv4_unspecified.data(), 12) == 0) {
       // Join the multicast group.
       ::ip_mreqn mreq;
       ::memcpy(&(mreq.imr_multiaddr.s_addr), maddr.data() + 12, 4);
@@ -232,7 +232,7 @@ leave_multicast_group(const Socket_Address& maddr, const char* ifname_opt)
 
     // IPv6 doesn't take IPv4-mapped multicast addresses, so there has to be
     // special treatement. `sendto()` is not affected.
-    if(::memcmp(maddr.data(), "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF", 12) == 0) {
+    if(::memcmp(maddr.data(), ipv4_unspecified.data(), 12) == 0) {
       // Leave the multicast group.
       ::ip_mreqn mreq;
       ::memcpy(&(mreq.imr_multiaddr.s_addr), maddr.data() + 12, 4);

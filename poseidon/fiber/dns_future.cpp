@@ -41,7 +41,7 @@ do_abstract_task_on_execute()
       if(res->ai_family == AF_INET) {
         // IPv4
         Socket_Address addr;
-        ::memcpy(addr.mut_data(), "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF", 12);
+        ::memcpy(addr.mut_data(), ipv4_unspecified.data(), 12);
         ::memcpy(addr.mut_data() + 12, &(((::sockaddr_in*) res->ai_addr)->sin_addr), 4);
 
         // Ignore duplicate records.
