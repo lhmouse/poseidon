@@ -377,7 +377,7 @@ parse_network_reference(Network_Reference& caddr, chars_view str) noexcept
     }
 
     // Return the number of characters that have been consumed.
-    return str.n;
+    return (size_t) (mptr - str.p);
   }
 
 }  // namespace poseidon
