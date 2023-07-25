@@ -171,8 +171,8 @@ hex_encode_16_partial(char* str, const void* data) noexcept
   {
     // Split the higher and lower halves into two SSE registers.
     __m128i tval = _mm_loadu_si128((const __m128i*) data);
-    __m128i hi = _mm_and_si128(_mm_srli_epi64(tval, 4), _mm_set1_epi8(0x0F));
-    __m128i lo = _mm_and_si128(tval, _mm_set1_epi8(0x0F));
+    __m128i hi = _mm_and_si128(_mm_srli_epi64(tval, 4), _mm_set1_epi8(15));
+    __m128i lo = _mm_and_si128(tval, _mm_set1_epi8(15));
 
     // Convert digits into their string forms:
     //   xdigit := val + '0' + ((val > 9) ? 7 : 0)

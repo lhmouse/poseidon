@@ -73,8 +73,8 @@ explode(cow_vector<cow_string>& segments, cow_stringR text, char delim = ',', si
 size_t
 implode(cow_string& text, const cow_vector<cow_string>& segments, char delim = ',');
 
-// Converts 16 bytes into a hexadecimal string. Exact 33 characters will
-// be written. A null terminator will always be appended.
+// Converts 16 bytes into a hexadecimal string. Exactly 33 characters will be
+// written. A null terminator will always be appended.
 char*
 hex_encode_16_partial(char* str, const void* data) noexcept;
 
