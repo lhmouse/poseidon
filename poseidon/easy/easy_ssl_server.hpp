@@ -62,7 +62,7 @@ class Easy_SSL_Server
 
     // Starts listening the given address and port for incoming connections.
     void
-    start(cow_stringR addr);
+    start(chars_view addr);
 
     // Shuts down the listening socket, if any. All existent clients are also
     // disconnected immediately.

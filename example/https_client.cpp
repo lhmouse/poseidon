@@ -51,7 +51,7 @@ timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/, stea
 
     switch(state) {
       case 0: {
-        cow_string addr = sref("https://www.example.org");
+        cow_string addr = sref("www.example.org");
         my_client.connect(addr);
         POSEIDON_LOG_WARN(("example HTTPS client connecting: addr = $1"), addr);
         break;

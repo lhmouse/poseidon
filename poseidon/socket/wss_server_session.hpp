@@ -58,7 +58,7 @@ class WSS_Server_Session
     // The default implementation does nothing.
     virtual
     void
-    do_on_wss_accepted(cow_string&& uri);
+    do_on_wss_accepted(cow_string&& caddr);
 
     // This callback is invoked by the network thread for each fragment of a data
     // message. `opcode` indicates the type of the message, which can be either

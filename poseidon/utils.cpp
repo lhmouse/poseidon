@@ -227,4 +227,157 @@ random_double() noexcept
     return valp1 - 1;
   }
 
+size_t
+parse_network_reference(Network_Reference& caddr, chars_view str) noexcept
+  {
+    // Set fields to default values.
+    caddr = Network_Reference();
+
+    // Parse the source string. Users shall have removed leading and trailing
+    // whitespace before calling this function.
+    if(str.n == 0)
+      return 0;
+
+    const char* bptr;
+    const char* mptr = str.p;
+    uint32_t nport = 0;
+
+    if(*mptr == '[') {
+      // Get an IPv6 address in brackets. An IPv4-mapped address may contain both
+      // colons and dots. The address is not otherwise verified.
+      bptr = mptr + 1;
+      mptr = ::std::find_if_not(bptr, str.p + str.n,
+        [](char c) {
+          return ((c >= '0') && (c <= '9'))
+                 || ((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z'))
+                 || (c == ':') || (c == '.');
+        });
+
+      if((bptr == mptr) || (mptr == str.p + str.n) || (*mptr != ']'))
+        return 0;
+
+      caddr.host.p = bptr;
+      caddr.host.n = (size_t) (mptr - bptr);
+      caddr.is_ipv6 = true;
+
+      // Skip it.
+      ROCKET_ASSERT(*mptr == ']');
+      mptr ++;
+
+      if(mptr == str.p + str.n)
+        return str.n;
+    }
+    else {
+      // Get a host name or an IPv4 address.
+      bptr = mptr;
+      mptr = ::std::find_if_not(bptr, str.p + str.n,
+        [](char c) {
+          return ((c >= '0') && (c <= '9'))
+                 || ((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z'))
+                 || (c == '-') || (c == '.');
+        });
+
+      if(bptr == mptr)
+        return 0;
+
+      caddr.host.p = bptr;
+      caddr.host.n = (size_t) (mptr - bptr);
+
+      if(mptr == str.p + str.n)
+        return str.n;
+    }
+
+    if(*mptr == ':') {
+      // Get a port number.
+      bptr = mptr + 1;
+      mptr = ::std::find_if_not(bptr, str.p + str.n,
+        [](char c) {
+          return ((c >= '0') && (c <= '9'));
+        });
+
+      if(bptr == mptr)
+        return 0;
+
+      for(auto q = bptr;  q != mptr;  ++q)
+        if((nport = nport * 10 + (uint8_t) *q - '0') > UINT16_MAX)
+          return 0;
+
+      caddr.port.p = bptr;
+      caddr.port.n = (size_t) (mptr - bptr);
+      caddr.port_num = (uint16_t) nport;
+
+      if(mptr == str.p + str.n)
+        return str.n;
+    }
+
+    if(*mptr == '/') {
+      // Get a path. The leading slash is part of the path.
+      bptr = mptr;
+      mptr = ::std::find_if_not(bptr, str.p + str.n,
+        [](char c) {
+          return ((c >= '0') && (c <= '9'))
+                 || ((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z'))
+                 || (c == '-') || (c == '.') || (c == '_') || (c == '~')  // ^^ unreserved
+                 || (c == '!') || (c == '$') || (c == '&') || (c == '\'')
+                 || (c == '(') || (c == ')') || (c == '*') || (c == '+')
+                 || (c == ',') || (c == ';') || (c == '=')  // ^^ sub-delims
+                 || (c == '%') || (c == ':') || (c == '@')  // ^^ pchar
+                 || (c == '/');
+        });
+
+      caddr.path.p = bptr;
+      caddr.path.n = (size_t) (mptr - bptr);
+
+      if(mptr == str.p + str.n)
+        return str.n;
+    }
+
+    if(*mptr == '?') {
+      // Get a query string.
+      bptr = mptr + 1;
+      mptr = ::std::find_if_not(bptr, str.p + str.n,
+        [](char c) {
+          return ((c >= '0') && (c <= '9'))
+                 || ((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z'))
+                 || (c == '-') || (c == '.') || (c == '_') || (c == '~')  // ^^ unreserved
+                 || (c == '!') || (c == '$') || (c == '&') || (c == '\'')
+                 || (c == '(') || (c == ')') || (c == '*') || (c == '+')
+                 || (c == ',') || (c == ';') || (c == '=')  // ^^ sub-delims
+                 || (c == '%') || (c == ':') || (c == '@')  // ^^ pchar
+                 || (c == '/') || (c == '?');
+        });
+
+      caddr.query.p = bptr;
+      caddr.query.n = (size_t) (mptr - bptr);
+
+      if(mptr == str.p + str.n)
+        return str.n;
+    }
+
+    if(*mptr == '#') {
+      // Get a fragment string.
+      bptr = mptr + 1;
+      mptr = ::std::find_if_not(bptr, str.p + str.n,
+        [](char c) {
+          return ((c >= '0') && (c <= '9'))
+                 || ((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z'))
+                 || (c == '-') || (c == '.') || (c == '_') || (c == '~')  // ^^ unreserved
+                 || (c == '!') || (c == '$') || (c == '&') || (c == '\'')
+                 || (c == '(') || (c == ')') || (c == '*') || (c == '+')
+                 || (c == ',') || (c == ';') || (c == '=')  // ^^ sub-delims
+                 || (c == '%') || (c == ':') || (c == '@')  // ^^ pchar
+                 || (c == '/') || (c == '?') || (c == '#');
+        });
+
+      caddr.fragment.p = bptr;
+      caddr.fragment.n = (size_t) (mptr - bptr);
+
+      if(mptr == str.p + str.n)
+        return str.n;
+    }
+
+    // Return the number of characters that have been consumed.
+    return str.n;
+  }
+
 }  // namespace poseidon

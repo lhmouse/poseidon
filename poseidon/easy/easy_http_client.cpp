@@ -9,7 +9,6 @@
 #include "../socket/async_connect.hpp"
 #include "../static/async_task_executor.hpp"
 #include "../utils.hpp"
-#include <http_parser.h>
 namespace poseidon {
 namespace {
 
@@ -185,29 +184,32 @@ Easy_HTTP_Client::
 
 void
 Easy_HTTP_Client::
-connect(cow_stringR uri)
+connect(chars_view addr)
   {
-    // Parse the URI.
-    ::http_parser_url uri_hp = { };
-    if((uri.size() > UINT16_MAX) || (::http_parser_parse_url(uri.data(), uri.size(), false, &uri_hp)))
-      POSEIDON_THROW(("URI `$1` not resolvable"), uri);
+    // Parse the address string, which shall contain a host name and an optional
+    // port to connect. If no port is specified, 80 is implied. Paths or queries
+    // are not allowed.
+    Network_Reference caddr;
+    if(parse_network_reference(caddr, addr) != addr.n)
+      POSEIDON_THROW(("Invalid connect address `$1`"), addr);
 
-    if(!::rocket::ascii_ci_equal(uri.data() + uri_hp.field_data[UF_SCHEMA].off, uri_hp.field_data[UF_SCHEMA].len, "http", 4))
-      POSEIDON_THROW(("Protocol must be `http://` (URI `$1`)"), uri);
+    if(caddr.host.n == 0)
+      POSEIDON_THROW(("No host name specified in address string `$1`"), addr);
 
-    if(uri_hp.field_set & (1U << UF_USERINFO))
-      POSEIDON_THROW(("User information not supported (URI `$1`)"), uri);
+    if(caddr.path.p != nullptr)
+      POSEIDON_THROW(("URI paths shall not be specified in connect address `$1`"), addr);
 
-    if((uri_hp.field_set & (1U << UF_PATH)) && !::rocket::xmemeq(uri.data() + uri_hp.field_data[UF_PATH].off, uri_hp.field_data[UF_PATH].len, "/", 1))
-      POSEIDON_THROW(("Request path can only be specified on individual requests (URI `$1`)"), uri);
+    if(caddr.query.p != nullptr)
+      POSEIDON_THROW(("URI queries shall not be specified in connect address `$1`"), addr);
 
-    // Set connection parameters. The host part is required. The port number is
-    // optional.
-    cow_string host = uri.substr(uri_hp.field_data[UF_HOST].off, uri_hp.field_data[UF_HOST].len);
-    uint16_t port = 80;
+    if(caddr.fragment.p != nullptr)
+      POSEIDON_THROW(("URI fragments shall not be specified in connect address `$1`"), addr);
 
-    if(uri_hp.field_set & (1U << UF_PORT))
-      port = uri_hp.port;
+    if(caddr.port.n == 0)
+      caddr.port_num = 80;  // default port
+
+    cow_string host(caddr.host.p, caddr.host.n);
+    uint16_t port = caddr.port_num;
 
     // Initiate the connection.
     auto host_header = format_string("$1:$2", host, port);

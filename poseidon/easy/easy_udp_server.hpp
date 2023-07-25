@@ -51,7 +51,7 @@ class Easy_UDP_Server
 
     // Starts listening the given address and port for incoming packets.
     void
-    start(cow_stringR addr);
+    start(chars_view addr);
 
     // Shuts down the socket, if any.
     void

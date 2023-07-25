@@ -223,9 +223,9 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
 void
 WS_Client_Session::
-do_on_ws_connected(cow_string&& uri)
+do_on_ws_connected(cow_string&& caddr)
   {
-    POSEIDON_LOG_DEBUG(("Connected WebSocket to `$1`: $2"), this->remote_address(), uri);
+    POSEIDON_LOG_DEBUG(("Connected WebSocket to `$1`: $2"), this->remote_address(), caddr);
   }
 
 void

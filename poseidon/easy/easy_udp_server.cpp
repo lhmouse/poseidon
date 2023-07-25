@@ -126,10 +126,14 @@ Easy_UDP_Server::
 
 void
 Easy_UDP_Server::
-start(cow_stringR addr)
+start(chars_view addr)
   {
+    // Parse the listen address string.
+    Socket_Address saddr(addr);
+
+    // Initiate the server.
     auto queue = new_sh<X_Packet_Queue>();
-    auto socket = new_sh<Final_UDP_Socket>(Socket_Address(addr), this->m_thunk, queue);
+    auto socket = new_sh<Final_UDP_Socket>(saddr, this->m_thunk, queue);
     queue->wsocket = socket;
 
     network_driver.insert(socket);

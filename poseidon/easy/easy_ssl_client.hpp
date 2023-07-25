@@ -62,7 +62,7 @@ class Easy_SSL_Client
     // Initiates a new connection to the given address. `addr` shall specify the
     // host and port to connect, such as `localhost:12345`.
     void
-    connect(cow_stringR addr);
+    connect(chars_view addr);
 
     // Destroys the current connection without graceful shutdown. This function
     // should only be called after all data from the server have been read and

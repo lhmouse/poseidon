@@ -20,21 +20,12 @@ main()
 
     ::memset(data, 0x66, size);
     POSEIDON_TEST_CHECK(addr.parse("3.2.128.255:") == 0);
-    POSEIDON_TEST_CHECK(::memcmp(data,
-        "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 16) == 0);
-    POSEIDON_TEST_CHECK(addr.port() == 0);
 
     ::memset(data, 0x66, size);
     POSEIDON_TEST_CHECK(addr.parse("3.2.128.255") == 0);
-    POSEIDON_TEST_CHECK(::memcmp(data,
-        "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 16) == 0);
-    POSEIDON_TEST_CHECK(addr.port() == 0);
 
     ::memset(data, 0x66, size);
     POSEIDON_TEST_CHECK(addr.parse("") == 0);
-    POSEIDON_TEST_CHECK(::memcmp(data,
-        "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 16) == 0);
-    POSEIDON_TEST_CHECK(addr.port() == 0);
 
     ::memset(data, 0x66, size);
     POSEIDON_TEST_CHECK(addr.parse("[fe80:1234:5678::90ab:cdef]:54321") == 33);

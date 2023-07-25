@@ -63,17 +63,17 @@ HTTP_Request_Parser::s_settings[1] =
             hiter->second = ::std::move(value);
 
         // Parse the URI.
-        cow_string uri;
-        uri.swap(this->m_headers.uri_host);
+        cow_string caddr;
+        caddr.swap(this->m_headers.uri_host);
 
         ::http_parser_url uri_hp = { };
-        if(::http_parser_parse_url(uri.data(), uri.size(), ps->method == HTTP_CONNECT, &uri_hp)) {
+        if(::http_parser_parse_url(caddr.data(), caddr.size(), ps->method == HTTP_CONNECT, &uri_hp)) {
           ps->http_errno = HPE_INVALID_URL;
           return 0;
         }
 
 #define uri_has_(x)  ((uri_hp.field_set & (1U << UF_##x)) != 0)
-#define uri_str_(x)  (uri.data() + uri_hp.field_data[UF_##x].off)
+#define uri_str_(x)  (caddr.data() + uri_hp.field_data[UF_##x].off)
 #define uri_len_(x)  (uri_hp.field_data[UF_##x].len)
 
         if(uri_has_(SCHEMA)) {

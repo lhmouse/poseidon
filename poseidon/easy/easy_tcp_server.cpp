@@ -243,10 +243,14 @@ Easy_TCP_Server::
 
 void
 Easy_TCP_Server::
-start(cow_stringR addr)
+start(chars_view addr)
   {
+    // Parse the listen address string.
+    Socket_Address saddr(addr);
+
+    // Initiate the server.
     auto table = new_sh<X_Client_Table>();
-    auto socket = new_sh<Final_Listen_Socket>(Socket_Address(addr), this->m_thunk, table);
+    auto socket = new_sh<Final_Listen_Socket>(saddr, this->m_thunk, table);
 
     network_driver.insert(socket);
     this->m_client_table = ::std::move(table);

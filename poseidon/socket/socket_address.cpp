@@ -5,7 +5,6 @@
 #include "socket_address.hpp"
 #include "../utils.hpp"
 #include <arpa/inet.h>
-#include <http_parser.h>
 namespace poseidon {
 namespace {
 
@@ -166,46 +165,36 @@ size_t
 Socket_Address::
 parse(chars_view str) noexcept
   {
-    this->clear();
+    Network_Reference caddr;
+    size_t aclen = parse_network_reference(caddr, str);
 
-    if((str.n == 0) || (str.n > UINT16_MAX))
+    // The URI string shall only contain the host and port parts.
+    if((caddr.host.n == 0) || (caddr.host.n > 63))
       return 0;
 
-// FIXME: will be refactored soon.
-
-    // Break down the host:port string as a URL.
-    ::http_parser_url url;
-    url.field_set = 0;
-    if(::http_parser_parse_url(str.p, str.n, true, &url) != 0)
+    if((caddr.port.n == 0) || (caddr.path.n != 0) || (caddr.query.n != 0)  || (caddr.fragment.n != 0))
       return 0;
 
-    char* addr = (char*) &(this->m_addr);
+    // Null-terminate the host name.
     char sbuf[64];
-    const char* host = str.p + url.field_data[UF_HOST].off;
-    size_t hostlen = url.field_data[UF_HOST].len;
+    ::memcpy(sbuf, caddr.host.p, caddr.host.n);
+    sbuf[caddr.host.n] = 0;
 
-    if((hostlen < 1) || (hostlen > 63))
-      return 0;
-
-    ::memcpy(sbuf, host, hostlen);
-    sbuf[hostlen] = 0;
-
-    if(host[hostlen] != ']') {
-      // IPv4
-      ::memcpy(addr, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF", 12);
-      addr += 12;
-      if(::inet_pton(AF_INET, sbuf, addr) == 0)
+    if(caddr.is_ipv6) {
+      // IPv6
+      if(::inet_pton(AF_INET6, sbuf, &(this->m_addr)) == 0)
         return 0;
     }
     else {
-      // IPv6
-      if(::inet_pton(AF_INET6, sbuf, addr) == 0)
+      // IPv4-mapped
+      ::memcpy(&(this->m_addr), "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF", 12);
+
+      if(::inet_pton(AF_INET, sbuf, (char*) &(this->m_addr) + 12) == 0)
         return 0;
     }
-    this->m_port = url.port;
 
-    // Return the number of characters up to the end of the port field.
-    return (size_t) url.field_data[UF_PORT].off + url.field_data[UF_PORT].len;
+    this->m_port = caddr.port_num;
+    return aclen;
   }
 
 size_t

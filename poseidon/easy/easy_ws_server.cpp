@@ -151,11 +151,11 @@ struct Final_WS_Server_Session final : WS_Server_Session
 
     virtual
     void
-    do_on_ws_accepted(cow_string&& uri) override
+    do_on_ws_accepted(cow_string&& caddr) override
       {
         Client_Table::Event_Queue::Event event;
         event.type = easy_socket_open;
-        event.data.putn(uri.data(), uri.size());
+        event.data.putn(caddr.data(), caddr.size());
         this->do_push_event_common(::std::move(event));
       }
 
@@ -238,7 +238,7 @@ Easy_WS_Server::
 
 void
 Easy_WS_Server::
-start(cow_stringR addr)
+start(chars_view addr)
   {
     auto table = new_sh<X_Client_Table>();
     auto socket = new_sh<Final_Listen_Socket>(Socket_Address(addr), this->m_thunk, table);

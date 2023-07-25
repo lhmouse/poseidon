@@ -9,7 +9,6 @@
 #include "../socket/async_connect.hpp"
 #include "../static/async_task_executor.hpp"
 #include "../utils.hpp"
-#include <http_parser.h>
 namespace poseidon {
 namespace {
 
@@ -97,9 +96,9 @@ struct Final_WS_Client_Session final : WS_Client_Session
     wkptr<Event_Queue> m_wqueue;
 
     explicit
-    Final_WS_Client_Session(cow_stringR host, cow_stringR uri, cow_stringR query,
+    Final_WS_Client_Session(cow_stringR host, cow_stringR caddr, cow_stringR query,
           const Easy_WS_Client::thunk_type& thunk, const shptr<Event_Queue>& queue)
-      : WS_Client_Session(host, uri, query), m_thunk(thunk), m_wqueue(queue)
+      : WS_Client_Session(host, caddr, query), m_thunk(thunk), m_wqueue(queue)
       { }
 
     void
@@ -133,11 +132,11 @@ struct Final_WS_Client_Session final : WS_Client_Session
 
     virtual
     void
-    do_on_ws_connected(cow_string&& uri) override
+    do_on_ws_connected(cow_string&& caddr) override
       {
         Event_Queue::Event event;
         event.type = easy_socket_open;
-        event.data.putn(uri.data(), uri.size());
+        event.data.putn(caddr.data(), caddr.size());
         this->do_push_event_common(::std::move(event));
       }
 
@@ -186,34 +185,31 @@ Easy_WS_Client::
 
 void
 Easy_WS_Client::
-connect(cow_stringR uri)
+connect(chars_view addr)
   {
-    // Parse the URI.
-    ::http_parser_url uri_hp = { };
-    if((uri.size() > UINT16_MAX) || (::http_parser_parse_url(uri.data(), uri.size(), false, &uri_hp)))
-      POSEIDON_THROW(("URI `$1` not resolvable"), uri);
+    // Parse the address string, which shall contain a host name and an optional
+    // port to connect. If no port is specified, 80 is implied. Paths or queries
+    // are not allowed.
+    Network_Reference caddr;
+    if(parse_network_reference(caddr, addr) != addr.n)
+      POSEIDON_THROW(("Invalid WebSocket connect address `$1`"), addr);
 
-    if(!::rocket::ascii_ci_equal(uri.data() + uri_hp.field_data[UF_SCHEMA].off, uri_hp.field_data[UF_SCHEMA].len, "ws", 2))
-      POSEIDON_THROW(("Protocol must be `ws://` (URI `$1`)"), uri);
+    if(caddr.host.n == 0)
+      POSEIDON_THROW(("No host name specified in WebSocket connect address `$1`"), addr);
 
-    if(uri_hp.field_set & (1U << UF_USERINFO))
-      POSEIDON_THROW(("User information not supported (URI `$1`)"), uri);
+    if(caddr.fragment.p != nullptr)
+      POSEIDON_THROW(("URI fragments shall not be specified in WebSocket connect address `$1`"), addr);
 
-    // Set connection parameters. The host part is required; all the others have
-    // default values.
-    cow_string host = uri.substr(uri_hp.field_data[UF_HOST].off, uri_hp.field_data[UF_HOST].len);
-    uint16_t port = 80;
-    cow_string path = sref("/");
-    cow_string query;
+    if(caddr.port.n == 0)
+      caddr.port_num = 80;  // default port
 
-    if(uri_hp.field_set & (1U << UF_PORT))
-      port = uri_hp.port;
+    if(caddr.path.n == 0)
+      caddr.path = "/";  // ensure not empty
 
-    if(uri_hp.field_set & (1U << UF_PATH))
-      path.assign(uri, uri_hp.field_data[UF_PATH].off, uri_hp.field_data[UF_PATH].len);
-
-    if(uri_hp.field_set & (1U << UF_QUERY))
-      query.assign(uri, uri_hp.field_data[UF_QUERY].off, uri_hp.field_data[UF_QUERY].len);
+    cow_string host(caddr.host.p, caddr.host.n);
+    uint16_t port = caddr.port_num;
+    cow_string path(caddr.path.p, caddr.path.n);
+    cow_string query(caddr.query.p, caddr.query.n);
 
     // Initiate the connection.
     auto host_header = format_string("$1:$2", host, port);

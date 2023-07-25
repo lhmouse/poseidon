@@ -253,7 +253,7 @@ Easy_HTTPS_Server::
 
 void
 Easy_HTTPS_Server::
-start(cow_stringR addr)
+start(chars_view addr)
   {
     auto table = new_sh<X_Client_Table>();
     auto socket = new_sh<Final_Listen_Socket>(Socket_Address(addr), this->m_thunk, table);

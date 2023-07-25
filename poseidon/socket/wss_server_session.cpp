@@ -262,9 +262,9 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
 
 void
 WSS_Server_Session::
-do_on_wss_accepted(cow_string&& uri)
+do_on_wss_accepted(cow_string&& caddr)
   {
-    POSEIDON_LOG_DEBUG(("Accepted WebSocket from `$1`: $2"), this->remote_address(), uri);
+    POSEIDON_LOG_DEBUG(("Accepted WebSocket from `$1`: $2"), this->remote_address(), caddr);
   }
 
 void

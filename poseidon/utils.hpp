@@ -94,5 +94,23 @@ random_float() noexcept;
 double
 random_double() noexcept;
 
+// Parses a network reference. The string shall start with a host name, followed
+// by an optional port, an optional absolute path, an optional query string, and
+// an optional fragment. It resembles an absolute URI without the `scheme://` and
+// `userinfo@` parts.
+struct Network_Reference
+  {
+    chars_view host;
+    chars_view port;
+    chars_view path;
+    chars_view query;
+    chars_view fragment;
+    uint16_t port_num = 0;
+    bool is_ipv6 = false;
+  };
+
+size_t
+parse_network_reference(Network_Reference& caddr, chars_view str) noexcept;
+
 }  // namespace poseidon
 #endif
