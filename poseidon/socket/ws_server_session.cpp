@@ -39,33 +39,45 @@ do_abstract_socket_on_closed()
     this->do_call_on_ws_close_once(1006, "no CLOSE frame received");
   }
 
-void
+HTTP_Payload_Type
 WS_Server_Session::
-do_on_http_request_payload_stream(linear_buffer& data)
-  {
-    // The request payload is ignored.
-    data.clear();
-  }
-
-void
-WS_Server_Session::
-do_on_http_request_finish(HTTP_Request_Headers&& req, linear_buffer&& /*data*/, bool close_now)
+do_on_http_request_headers(HTTP_Request_Headers& req, bool close_after_payload)
   {
     if(req.is_proxy) {
       // Reject proxy requests.
       this->do_on_http_request_error(HTTP_STATUS_FORBIDDEN);
-      return;
+      return http_payload_normal;
+    }
+
+    if(xstreq(req.method, "OPTIONS")) {
+      // Allow cross-origin access.
+      HTTP_Response_Headers resp;
+      resp.status = 204;
+      resp.headers.reserve(8);
+
+      resp.headers.emplace_back(sref("Access-Control-Allow-Origin"), sref("*"));
+      resp.headers.emplace_back(sref("Access-Control-Allow-Methods"), sref("GET"));
+
+      resp.headers.emplace_back(sref("Access-Control-Allow-Headers"),
+              sref("Upgrade, Origin, Sec-WebSocket-Version, Sec-WebSocket-Key, "
+                   "Sec-WebSocket-Extensions, Sec-WebSocket-Protocol"));
+
+      if(close_after_payload)
+        resp.headers.emplace_back(sref("Connection"), sref("close"));
+
+      this->http_response_headers_only(::std::move(resp));
+      return http_payload_normal;
     }
 
     // Send the handshake response.
     HTTP_Response_Headers resp;
     this->m_parser.accept_handshake_request(resp, req);
-    this->http_response(::std::move(resp), "");
+    this->http_response_headers_only(::std::move(resp));
 
-    if(close_now || !this->m_parser.is_server_mode()) {
-      const char* err_desc = close_now ? "connection closing" : this->m_parser.error_description();
-      this->do_call_on_ws_close_once(1002, err_desc);
-      return;
+    if(close_after_payload || !this->m_parser.is_server_mode()) {
+      // The handshake failed.
+      this->do_call_on_ws_close_once(1002, this->m_parser.error_description());
+      return http_payload_normal;
     }
 
     // Initialize extensions.
@@ -81,6 +93,20 @@ do_on_http_request_finish(HTTP_Request_Headers&& req, linear_buffer&& /*data*/, 
       uri_fmt << '?' << req.uri_query;
 
     this->do_on_ws_accepted(uri_fmt.extract_string());
+    return http_payload_normal;
+  }
+
+void
+WS_Server_Session::
+do_on_http_request_payload_stream(linear_buffer& data)
+  {
+    data.clear();
+  }
+
+void
+WS_Server_Session::
+do_on_http_request_finish(HTTP_Request_Headers&& /*req*/, linear_buffer&& /*data*/, bool /*close_now*/)
+  {
   }
 
 void

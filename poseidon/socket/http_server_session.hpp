@@ -46,7 +46,7 @@ class HTTP_Server_Session
     // `http_payload_normal`.
     virtual
     HTTP_Payload_Type
-    do_on_http_request_headers(HTTP_Request_Headers& req);
+    do_on_http_request_headers(HTTP_Request_Headers& req, bool close_after_payload);
 
     // This callback is invoked by the network thread for each fragment of the
     // request payload that has been received. As with `TCP_Connection::

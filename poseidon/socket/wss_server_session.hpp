@@ -34,6 +34,10 @@ class WSS_Server_Session
     do_abstract_socket_on_closed() override;
 
     virtual
+    HTTP_Payload_Type
+    do_on_https_request_headers(HTTP_Request_Headers& req, bool close_after_payload) override;
+
+    virtual
     void
     do_on_https_request_payload_stream(linear_buffer& data) override;
 
