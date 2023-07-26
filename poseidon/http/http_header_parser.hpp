@@ -59,8 +59,7 @@ class HTTP_Header_Parser
     bool
     next_element();
 
-    // Examine the name of the current attribute.
-    constexpr
+    // Get the name of the current attribute.
     cow_stringR
     current_name() const noexcept
       { return this->m_name;  }
@@ -70,7 +69,6 @@ class HTTP_Header_Parser
       { return this->m_name;  }
 
     // Get the value of the current attribute.
-    constexpr
     const HTTP_Value&
     current_value() const noexcept
       { return this->m_value;  }

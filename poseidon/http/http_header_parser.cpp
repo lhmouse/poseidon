@@ -13,6 +13,16 @@ HTTP_Header_Parser::
 
 void
 HTTP_Header_Parser::
+clear() noexcept
+  {
+    this->m_hstr.clear();
+    this->m_hpos = 0;
+    this->m_name.clear();
+    this->m_value.clear();
+  }
+
+void
+HTTP_Header_Parser::
 reload(cow_stringR hstr)
   {
     this->m_hstr = hstr;
@@ -79,63 +89,66 @@ do_next_attribute_from_separator()
     return (uint8_t) *sptr;
   }
 
-void
-HTTP_Header_Parser::
-clear() noexcept
-  {
-    this->m_hstr.clear();
-    this->m_hpos = 0;
-    this->m_name.clear();
-    this->m_value.clear();
-  }
-
 bool
 HTTP_Header_Parser::
 next_attribute()
   {
+    // The first call shall retrieve the first attribute.
     if(this->m_hpos == SIZE_MAX)
       return this->do_next_attribute_from_separator() >= 0;
 
-    // If `m_hpos` is not before the beginning, it shall have stopped on a
-    // separator. This function shall not move past an element separator.
-    if(this->m_hpos >= this->m_hstr.size())
-      return false;
-
-    if(this->m_hstr[this->m_hpos] == ',')
-      return false;
-
-    if(this->m_hstr[this->m_hpos] != ';') {
-      this->m_hpos = error_hpos;
+    if(this->m_hpos >= this->m_hstr.size()) {
+      // If `m_hpos` equals `m_hstr.size()` then the end of the input
+      // string has been reached; otherwise it indicates an error, so
+      // don't touch it.
       return false;
     }
+    else
+      switch(this->m_hstr.at(this->m_hpos)) {
+        case ',':
+          // Stop at this element separator.
+          return false;
 
-    // Move past this attribute separator.
-    return this->do_next_attribute_from_separator() >= 0;
+        case ';':
+          // Move past this attribute separator.
+          return this->do_next_attribute_from_separator() >= 0;
+
+        default:
+          this->m_hpos = error_hpos;
+          return false;
+      }
   }
 
 bool
 HTTP_Header_Parser::
 next_element()
   {
+    // The first call shall retrieve the first attribute.
     if(this->m_hpos == SIZE_MAX)
       return this->do_next_attribute_from_separator() >= 0;
 
-    // Skip attributes in this element.
-    while((this->m_hpos < this->m_hstr.size()) && (this->m_hstr[this->m_hpos] == ';'))
-      this->do_next_attribute_from_separator();
+    for(;;)
+      if(this->m_hpos >= this->m_hstr.size()) {
+        // If `m_hpos` equals `m_hstr.size()` then the end of the input
+        // string has been reached; otherwise it indicates an error, so
+        // don't touch it.
+        return false;
+      }
+      else
+        switch(this->m_hstr.at(this->m_hpos)) {
+          case ',':
+            // Move past this element separator.
+            return this->do_next_attribute_from_separator() >= 0;
 
-    // If `m_hpos` is not before the beginning, it shall have stopped on a
-    // separator.
-    if(this->m_hpos >= this->m_hstr.size())
-      return false;
+          case ';':
+            // Move past this attribute separator.
+            this->do_next_attribute_from_separator();
+            continue;
 
-    if(this->m_hstr[this->m_hpos] != ',') {
-      this->m_hpos = error_hpos;
-      return false;
-    }
-
-    // Move past this attribute separator.
-    return this->do_next_attribute_from_separator() >= 0;
+          default:
+            this->m_hpos = error_hpos;
+            return false;
+        }
   }
 
 }  // namespace poseidon
