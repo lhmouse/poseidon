@@ -51,6 +51,9 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
           return;
 
         // Check request headers.
+        if(this->m_req_parser->mut_headers().is_proxy == false)
+          this->m_req_parser->mut_headers().is_ssl = true;
+
         auto payload_type = this->do_on_https_request_headers(this->m_req_parser->mut_headers(),
                 this->m_req_parser->should_close_after_payload());
 

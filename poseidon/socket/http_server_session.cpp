@@ -51,6 +51,9 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
           return;
 
         // Check request headers.
+        if(this->m_req_parser->mut_headers().is_proxy == false)
+          this->m_req_parser->mut_headers().is_ssl = false;
+
         auto payload_type = this->do_on_http_request_headers(this->m_req_parser->mut_headers(),
                 this->m_req_parser->should_close_after_payload());
 
