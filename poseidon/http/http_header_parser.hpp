@@ -14,7 +14,7 @@ class HTTP_Header_Parser
     // source header string
     cow_string m_hstr;
     static constexpr size_t error_hpos = (size_t) -127;
-    size_t m_hpos;
+    size_t m_hpos = 0;
 
     // name and value of current attribute
     cow_string m_name;
@@ -25,9 +25,7 @@ class HTTP_Header_Parser
     // various HTTP headers in the semicolon-inside-comma-separated format,
     // such as `Cookie` and `Accept-Encoding`.
     HTTP_Header_Parser() noexcept
-      {
-        this->clear();
-      }
+      { }
 
   private:
     int
@@ -43,13 +41,7 @@ class HTTP_Header_Parser
 
     // Clears all fields.
     void
-    clear() noexcept
-      {
-        this->m_hstr.clear();
-        this->m_hpos = 0;
-        this->m_name.clear();
-        this->m_value.clear();
-      }
+    clear() noexcept;
 
     // Reloads a new string. All existent contents are destroyed.
     void

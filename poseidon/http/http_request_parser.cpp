@@ -197,6 +197,20 @@ http_status_from_error() const noexcept
 
 void
 HTTP_Request_Parser::
+clear() noexcept
+  {
+    ::http_parser_init(this->m_parser, HTTP_REQUEST);
+    this->m_parser->data = this;
+
+    this->m_headers.clear();
+    this->m_payload.clear();
+
+    this->m_hreq = hreq_new;
+    this->m_close_after_payload = false;
+  }
+
+void
+HTTP_Request_Parser::
 parse_headers_from_stream(linear_buffer& data, bool eof)
   {
     if(this->m_hreq >= hreq_headers_done)

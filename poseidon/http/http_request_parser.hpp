@@ -25,8 +25,8 @@ class HTTP_Request_Parser
     HTTP_Request_Headers m_headers;
     linear_buffer m_payload;
 
-    HREQ_State m_hreq;
-    bool m_close_after_payload;
+    HREQ_State m_hreq = hreq_new;
+    bool m_close_after_payload = false;
     char m_reserved_1;
     char m_reserved_2;
 
@@ -34,7 +34,8 @@ class HTTP_Request_Parser
     // Constructs a parser for incoming requests.
     HTTP_Request_Parser() noexcept
       {
-        this->clear();
+        ::http_parser_init(this->m_parser, HTTP_REQUEST);
+        this->m_parser->data = this;
       }
 
   public:
@@ -53,19 +54,7 @@ class HTTP_Request_Parser
     // Clears all fields. This function shall not be called unless the parser is
     // to be reused for another stream.
     void
-    clear() noexcept
-      {
-        ::http_parser_init(this->m_parser, HTTP_REQUEST);
-        this->m_parser->data = this;
-
-        this->m_headers.clear();
-        this->m_payload.clear();
-
-        this->m_hreq = hreq_new;
-        this->m_close_after_payload = false;
-        this->m_reserved_1 = 0;
-        this->m_reserved_2 = 0;
-      }
+    clear() noexcept;
 
     // Parses the request line and headers of an HTTP request from a stream.
     // `data` may be consumed partially, and must be preserved between calls. If

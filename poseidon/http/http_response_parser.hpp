@@ -34,7 +34,9 @@ class HTTP_Response_Parser
     // Constructs a parser for incoming responses.
     HTTP_Response_Parser() noexcept
       {
-        this->clear();
+        ::http_parser_init(this->m_parser, HTTP_RESPONSE);
+        this->m_parser->data = this;
+        this->m_parser->allow_chunked_length = true;
       }
 
   public:
@@ -48,20 +50,7 @@ class HTTP_Response_Parser
     // Clears all fields. This function shall not be called unless the parser is
     // to be reused for another stream.
     void
-    clear() noexcept
-      {
-        ::http_parser_init(this->m_parser, HTTP_RESPONSE);
-        this->m_parser->allow_chunked_length = true;
-        this->m_parser->data = this;
-
-        this->m_headers.clear();
-        this->m_payload.clear();
-
-        this->m_hresp = hresp_new;
-        this->m_close_after_payload = false;
-        this->m_reserved_1 = 0;
-        this->m_reserved_2 = 0;
-      }
+    clear() noexcept;
 
     // Parses the response line and headers of an HTTP response from a stream.
     // `data` may be consumed partially, and must be preserved between calls. If

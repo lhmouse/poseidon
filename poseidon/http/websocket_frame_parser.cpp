@@ -160,6 +160,18 @@ WebSocket_Frame_Parser::
 
 void
 WebSocket_Frame_Parser::
+clear() noexcept
+  {
+    this->m_frm_header.clear();
+    this->m_frm_payload.clear();
+    this->m_frm_payload_rem = 0;
+
+    this->m_state_stor = 0;
+    this->m_error_desc = "";
+  }
+
+void
+WebSocket_Frame_Parser::
 create_handshake_request(HTTP_Request_Headers& req)
   {
     if((this->m_wshs != wshs_pending) && (this->m_wshs != wshs_c_req_sent))

@@ -29,28 +29,37 @@ class WebSocket_Frame_Parser
 
     WebSocket_Frame_Header m_frm_header;
     linear_buffer m_frm_payload;
-    uint64_t m_frm_payload_rem;
-    const char* m_error_desc;
+    uint64_t m_frm_payload_rem = 0;
 
-    WSHS_State m_wshs : 2;
-    uint8_t m_pmce_reserved : 2;
-    uint8_t m_pmce_send_compression_level_m2 : 3;
-    uint8_t m_pmce_send_no_context_takeover : 1;
-    uint8_t m_pmce_send_max_window_bits : 4;
-    uint8_t m_pmce_recv_max_window_bits : 4;
-    WSF_State m_wsf;
-    uint8_t m_msg_opcode : 4;
-    uint8_t m_msg_rsv3 : 1;
-    uint8_t m_msg_rsv2 : 1;
-    uint8_t m_msg_rsv1 : 1;
-    uint8_t m_msg_fin : 1;
+    union {
+      uint32_t m_state_stor = 0;
+
+      struct {
+        // 0
+        WSHS_State m_wshs : 2;
+        uint8_t m_pmce_reserved : 2;
+        uint8_t m_pmce_send_compression_level_m2 : 3;
+        uint8_t m_pmce_send_no_context_takeover : 1;
+        // 1
+        uint8_t m_pmce_send_max_window_bits : 4;
+        uint8_t m_pmce_recv_max_window_bits : 4;
+        // 2
+        WSF_State m_wsf;
+        // 3
+        uint8_t m_msg_opcode : 4;
+        uint8_t m_msg_rsv3 : 1;
+        uint8_t m_msg_rsv2 : 1;
+        uint8_t m_msg_rsv1 : 1;
+        uint8_t m_msg_fin : 1;
+      };
+    };
+
+    const char* m_error_desc = "";
 
   public:
     // Constructs a parser for incoming frames.
     WebSocket_Frame_Parser() noexcept
-      {
-        this->clear();
-      }
+      { }
 
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(WebSocket_Frame_Parser);
@@ -94,26 +103,7 @@ class WebSocket_Frame_Parser
     // Clears all fields. This function shall not be called unless the parser is
     // to be reused for another stream.
     void
-    clear() noexcept
-      {
-        this->m_frm_header.clear();
-        this->m_frm_payload.clear();
-        this->m_frm_payload_rem = 0;
-        this->m_error_desc = "";
-
-        this->m_wshs = wshs_pending;
-        this->m_pmce_reserved = 0;
-        this->m_pmce_send_compression_level_m2 = 0;
-        this->m_pmce_send_no_context_takeover = 0;
-        this->m_pmce_send_max_window_bits = 0;
-        this->m_pmce_recv_max_window_bits = 0;
-        this->m_wsf = wsf_new;
-        this->m_msg_fin = 0;
-        this->m_msg_rsv1 = 0;
-        this->m_msg_rsv2 = 0;
-        this->m_msg_rsv3 = 0;
-        this->m_msg_opcode = 0;
-      }
+    clear() noexcept;
 
     // Creates a WebSocket handshake request from a client. The user may modify
     // the request URI or append new headers after this function returns. The

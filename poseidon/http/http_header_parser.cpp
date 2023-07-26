@@ -79,6 +79,16 @@ do_next_attribute_from_separator()
     return (uint8_t) *sptr;
   }
 
+void
+HTTP_Header_Parser::
+clear() noexcept
+  {
+    this->m_hstr.clear();
+    this->m_hpos = 0;
+    this->m_name.clear();
+    this->m_value.clear();
+  }
+
 bool
 HTTP_Header_Parser::
 next_attribute()

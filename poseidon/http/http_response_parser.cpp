@@ -100,6 +100,21 @@ HTTP_Response_Parser::
 
 void
 HTTP_Response_Parser::
+clear() noexcept
+  {
+    ::http_parser_init(this->m_parser, HTTP_RESPONSE);
+    this->m_parser->data = this;
+    this->m_parser->allow_chunked_length = true;
+
+    this->m_headers.clear();
+    this->m_payload.clear();
+
+    this->m_hresp = hresp_new;
+    this->m_close_after_payload = false;
+  }
+
+void
+HTTP_Response_Parser::
 parse_headers_from_stream(linear_buffer& data, bool eof)
   {
     if(this->m_hresp >= hresp_headers_done)
