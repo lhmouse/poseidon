@@ -16,23 +16,21 @@ encode(tinyfmt& fmt) const
     // contain valid values.
     fmt << "HTTP/1.1 " << this->status << " ";
 
-    if(this->reason.empty())
-      fmt << ::http_status_str(static_cast<::http_status>(this->status));
-    else
+    if(!this->reason.empty())
       fmt << this->reason;
+    else
+      fmt << ::http_status_str((::http_status) this->status);
 
     // Write response headers. Empty headers are ignored.
-    for(const auto& hpair : this->headers) {
-      if(hpair.first.empty())
-        continue;
+    for(const auto& hpair : this->headers)
+      if(!hpair.first.empty()) {
+        fmt << "\r\n" << hpair.first << ": ";
 
-      fmt << "\r\n" << hpair.first << ": ";
-
-      if(hpair.second.is_string())
-        fmt << hpair.second.as_string();
-      else
-        fmt << hpair.second;
-    }
+        if(hpair.second.is_string())
+          fmt << hpair.second.as_string();
+        else
+          fmt << hpair.second;
+      }
 
     // Terminate the response with an empty line.
     fmt << "\r\n\r\n";
