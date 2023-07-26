@@ -96,9 +96,9 @@ struct Final_WS_Client_Session final : WS_Client_Session
     wkptr<Event_Queue> m_wqueue;
 
     explicit
-    Final_WS_Client_Session(cow_stringR host, cow_stringR caddr, cow_stringR query,
-          const Easy_WS_Client::thunk_type& thunk, const shptr<Event_Queue>& queue)
-      : WS_Client_Session(host, caddr, query), m_thunk(thunk), m_wqueue(queue)
+    Final_WS_Client_Session(const Easy_WS_Client::thunk_type& thunk, const shptr<Event_Queue>& queue,
+          cow_stringR host, cow_stringR path, cow_stringR query)
+      : WS_Client_Session(host, path, query), m_thunk(thunk), m_wqueue(queue)
       { }
 
     void
@@ -188,35 +188,26 @@ Easy_WS_Client::
 connect(chars_view addr)
   {
     // Parse the address string, which shall contain a host name and an optional
-    // port to connect. If no port is specified, 80 is implied. Paths or queries
-    // are not allowed.
+    // port to connect, followed by an optional path and an optional query string.
+    // If no port is specified, 80 is implied.
     Network_Reference caddr;
+    caddr.port_num = 80;
     if(parse_network_reference(caddr, addr) != addr.n)
-      POSEIDON_THROW(("Invalid WebSocket connect address `$1`"), addr);
+      POSEIDON_THROW(("Invalid connect address `$1`"), addr);
 
-    if(caddr.host.n == 0)
-      POSEIDON_THROW(("No host name specified in WebSocket connect address `$1`"), addr);
-
+    // Disallow superfluous components.
     if(caddr.fragment.p != nullptr)
-      POSEIDON_THROW(("URI fragments shall not be specified in WebSocket connect address `$1`"), addr);
-
-    if(caddr.port.n == 0)
-      caddr.port_num = 80;  // default port
-
-    if(caddr.path.n == 0)
-      caddr.path = "/";  // ensure not empty
-
-    cow_string host(caddr.host.p, caddr.host.n);
-    uint16_t port = caddr.port_num;
-    cow_string path(caddr.path.p, caddr.path.n);
-    cow_string query(caddr.query.p, caddr.query.n);
+      POSEIDON_THROW(("URI fragments shall not be specified in connect address `$1`"), addr);
 
     // Initiate the connection.
-    auto host_header = format_string("$1:$2", host, port);
     auto queue = new_sh<X_Event_Queue>();
-    auto session = new_sh<Final_WS_Client_Session>(host_header, path, query, this->m_thunk, queue);
+    auto session = new_sh<Final_WS_Client_Session>(this->m_thunk, queue,
+          format_string("$1:$2", caddr.host, caddr.port_num),
+          caddr.path.str(), caddr.query.str());
+
     queue->wsession = session;
-    auto dns_task = new_sh<Async_Connect>(network_driver, session, host, port);
+    auto dns_task = new_sh<Async_Connect>(network_driver, session,
+          caddr.host.str(), caddr.port_num);
 
     async_task_executor.enqueue(dns_task);
     this->m_dns_task = ::std::move(dns_task);

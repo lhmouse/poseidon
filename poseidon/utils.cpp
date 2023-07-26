@@ -230,9 +230,6 @@ random_double() noexcept
 size_t
 parse_network_reference(Network_Reference& caddr, chars_view str) noexcept
   {
-    // Set fields to default values.
-    caddr = Network_Reference();
-
     // Parse the source string. Users shall have removed leading and trailing
     // whitespace before calling this function.
     if(str.n == 0)
@@ -240,7 +237,7 @@ parse_network_reference(Network_Reference& caddr, chars_view str) noexcept
 
     const char* bptr;
     const char* mptr = str.p;
-    uint32_t nport = 0;
+    uint32_t port_num = 0;
 
     if(*mptr == '[') {
       // Get an IPv6 address in brackets. An IPv4-mapped address may contain both
@@ -299,12 +296,12 @@ parse_network_reference(Network_Reference& caddr, chars_view str) noexcept
         return 0;
 
       for(auto q = bptr;  q != mptr;  ++q)
-        if((nport = nport * 10 + (uint8_t) *q - '0') > UINT16_MAX)
+        if((port_num = port_num * 10 + (uint8_t) *q - '0') > UINT16_MAX)
           return 0;
 
       caddr.port.p = bptr;
       caddr.port.n = (size_t) (mptr - bptr);
-      caddr.port_num = (uint16_t) nport;
+      caddr.port_num = (uint16_t) port_num;
 
       if(mptr == str.p + str.n)
         return str.n;

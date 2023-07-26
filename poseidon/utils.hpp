@@ -115,10 +115,7 @@ random_float() noexcept;
 double
 random_double() noexcept;
 
-// Parses a network reference. The string shall start with a host name, followed
-// by an optional port, an optional absolute path, an optional query string, and
-// an optional fragment. It resembles an absolute URI without the `scheme://` and
-// `userinfo@` parts.
+// This resembles a URI without the `scheme://` and `userinfo@` parts.
 struct Network_Reference
   {
     chars_view host;
@@ -130,6 +127,13 @@ struct Network_Reference
     bool is_ipv6 = false;
   };
 
+// Parses a network reference. `str` shall start with a host name, followed by an
+// optional port, an optional absolute path, an optional query string, and an
+// optional fragment. If any optional part is absent, the corresponding field in
+// `caddr` is left unmodified. They may be initialized with default values before
+// calling this function.
+// Returns the number of character that have been parsed. Zero is returned if the
+// address string is malformed.
 size_t
 parse_network_reference(Network_Reference& caddr, chars_view str) noexcept;
 

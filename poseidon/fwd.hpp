@@ -466,6 +466,13 @@ struct chars_view
       {
         return *this = *this >> dist;
       }
+
+    // Makes a copy.
+    cow_string
+    str() const
+      {
+        return cow_string(this->p, this->n);
+      }
   };
 
 inline

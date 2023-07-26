@@ -95,14 +95,14 @@ struct Final_Fiber final : Abstract_Fiber
 
 struct Final_HTTPS_Client_Session final : HTTPS_Client_Session
   {
-    cow_string m_host_header;
     Easy_HTTPS_Client::thunk_type m_thunk;
     wkptr<Event_Queue> m_wqueue;
+    cow_string m_host_header;
 
     explicit
-    Final_HTTPS_Client_Session(cow_stringR host_header,
-          const Easy_HTTPS_Client::thunk_type& thunk, const shptr<Event_Queue>& queue)
-      : m_host_header(host_header), m_thunk(thunk), m_wqueue(queue)
+    Final_HTTPS_Client_Session(const Easy_HTTPS_Client::thunk_type& thunk, const shptr<Event_Queue>& queue,
+          cow_stringR host_header)
+      : m_thunk(thunk), m_wqueue(queue), m_host_header(host_header)
       { }
 
     void
@@ -187,15 +187,13 @@ Easy_HTTPS_Client::
 connect(chars_view addr)
   {
     // Parse the address string, which shall contain a host name and an optional
-    // port to connect. If no port is specified, 443 is implied. Paths or queries
-    // are not allowed.
+    // port to connect. If no port is specified, 443 is implied.
     Network_Reference caddr;
+    caddr.port_num = 443;
     if(parse_network_reference(caddr, addr) != addr.n)
       POSEIDON_THROW(("Invalid connect address `$1`"), addr);
 
-    if(caddr.host.n == 0)
-      POSEIDON_THROW(("No host name specified in address string `$1`"), addr);
-
+    // Disallow superfluous components.
     if(caddr.path.p != nullptr)
       POSEIDON_THROW(("URI paths shall not be specified in connect address `$1`"), addr);
 
@@ -205,18 +203,14 @@ connect(chars_view addr)
     if(caddr.fragment.p != nullptr)
       POSEIDON_THROW(("URI fragments shall not be specified in connect address `$1`"), addr);
 
-    if(caddr.port.n == 0)
-      caddr.port_num = 443;  // default port
-
-    cow_string host(caddr.host.p, caddr.host.n);
-    uint16_t port = caddr.port_num;
-
     // Initiate the connection.
-    auto host_header = format_string("$1:$2", host, port);
     auto queue = new_sh<X_Event_Queue>();
-    auto session = new_sh<Final_HTTPS_Client_Session>(host_header, this->m_thunk, queue);
+    auto session = new_sh<Final_HTTPS_Client_Session>(this->m_thunk, queue,
+          format_string("$1:$2", caddr.host, caddr.port_num));
+
     queue->wsession = session;
-    auto dns_task = new_sh<Async_Connect>(network_driver, session, host, port);
+    auto dns_task = new_sh<Async_Connect>(network_driver, session,
+          caddr.host.str(), caddr.port_num);
 
     async_task_executor.enqueue(dns_task);
     this->m_dns_task = ::std::move(dns_task);

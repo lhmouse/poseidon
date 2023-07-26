@@ -187,21 +187,32 @@ void
 Easy_TCP_Client::
 connect(chars_view addr)
   {
-    // Parse the address string.
+    // Parse the address string, which shall contain a host name and an optional
+    // port to connect. A port is required.
     Network_Reference caddr;
-    if((parse_network_reference(caddr, addr) != addr.n)
-       || (caddr.host.n == 0) || (caddr.port.n == 0)
-       || (caddr.path.p != nullptr) || (caddr.query.p != nullptr) || (caddr.fragment.p != nullptr))
-      POSEIDON_THROW(("Invalid address string `$1`"), addr);
+    if(parse_network_reference(caddr, addr) != addr.n)
+      POSEIDON_THROW(("Invalid connect address `$1`"), addr);
 
-    cow_string host(caddr.host.p, caddr.host.n);
-    uint16_t port = caddr.port_num;
+    if(caddr.port.n == 0)
+      POSEIDON_THROW(("No port specified in connect address `$1`"), addr);
+
+    // Disallow superfluous components.
+    if(caddr.path.p != nullptr)
+      POSEIDON_THROW(("URI paths shall not be specified in connect address `$1`"), addr);
+
+    if(caddr.query.p != nullptr)
+      POSEIDON_THROW(("URI queries shall not be specified in connect address `$1`"), addr);
+
+    if(caddr.fragment.p != nullptr)
+      POSEIDON_THROW(("URI fragments shall not be specified in connect address `$1`"), addr);
 
     // Initiate the connection.
     auto queue = new_sh<X_Event_Queue>();
     auto socket = new_sh<Final_TCP_Socket>(this->m_thunk, queue);
+
     queue->wsocket = socket;
-    auto dns_task = new_sh<Async_Connect>(network_driver, socket, host, port);
+    auto dns_task = new_sh<Async_Connect>(network_driver, socket,
+          caddr.host.str(), caddr.port_num);
 
     async_task_executor.enqueue(dns_task);
     this->m_dns_task = ::std::move(dns_task);
