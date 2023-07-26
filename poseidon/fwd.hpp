@@ -558,6 +558,7 @@ class Async_Connect;
 class HTTP_DateTime;
 class HTTP_Value;
 class HTTP_Header_Parser;
+class HTTP_Query_Parser;
 struct HTTP_Request_Headers;
 class HTTP_Request_Parser;
 struct HTTP_Response_Headers;

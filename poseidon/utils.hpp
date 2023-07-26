@@ -45,6 +45,27 @@ throw_runtime_error_with_backtrace(const char* file, long line, const char* func
        ),  \
      __builtin_unreachable())
 
+// Splices two buffers. After this function returns, `in` will be empty.
+inline
+linear_buffer&
+splice_buffers(linear_buffer& out, linear_buffer&& in)
+  {
+    if(&out == &in)
+      return out;
+
+    if(in.empty())
+      return out;
+
+    // Don't bother making a copy if `out` is empty.
+    if(ROCKET_EXPECT(out.empty()))
+      out.swap(in);
+    else {
+      out.putn(in.data(), in.size());
+      in.clear();
+    }
+    return out;
+  }
+
 // Converts all ASCII letters in a string into uppercase.
 cow_string
 ascii_uppercase(cow_string text);

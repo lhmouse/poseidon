@@ -94,14 +94,12 @@ struct Final_Fiber final : Abstract_Fiber
           lock.unlock();
 
           try {
-            if(event.type == easy_socket_stream) {
-              // `easy_socket_stream` is really special. We append new data to
-              // `data_stream` which is then passed to the callback instead of
-              // `event.data`. `data_stream` may be consumed partially by user
-              // code, and shall be preserved across callbacks.
-              queue->data_stream.putn(event.data.data(), event.data.size());
-              this->m_thunk(socket, *this, event.type, queue->data_stream, event.code);
-            }
+            // `easy_socket_stream` is really special. We append new data to
+            // `data_stream` which is passed to the callback instead of
+            // `event.data`. `data_stream` may be consumed partially by user code,
+            // and shall be preserved across callbacks.
+            if(event.type == easy_socket_stream)
+              this->m_thunk(socket, *this, event.type, splice_buffers(queue->data_stream, ::std::move(event.data)), event.code);
             else
               this->m_thunk(socket, *this, event.type, event.data, event.code);
           }

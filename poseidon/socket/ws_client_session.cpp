@@ -165,14 +165,9 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
           // If this is a data frame or continuation, its payload is part of a
           // (potentially fragmented) data message, so combine it.
-          if(this->m_msg.empty())
-            this->m_msg.swap(payload);
-          else
-            this->m_msg.putn(payload.data(), payload.size());
-
           auto opcode = static_cast<WebSocket_OpCode>(this->m_parser.message_opcode());
-          ROCKET_ASSERT((opcode == websocket_text) || (opcode == websocket_bin));
-          this->do_on_ws_message_data_stream(opcode, this->m_msg);
+          ROCKET_ASSERT(is_any_of(opcode, { websocket_text, websocket_bin }));
+          this->do_on_ws_message_data_stream(opcode, splice_buffers(this->m_msg, ::std::move(payload)));
         }
 
         if(!this->m_parser.frame_payload_complete())
@@ -186,7 +181,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
             case 1:  // TEXT
             case 2: {  // BINARY
               auto opcode = static_cast<WebSocket_OpCode>(this->m_parser.message_opcode());
-              ROCKET_ASSERT((opcode == websocket_text) || (opcode == websocket_bin));
+              ROCKET_ASSERT(is_any_of(opcode, { websocket_text, websocket_bin }));
               this->do_on_ws_message_finish(opcode, ::std::move(this->m_msg));
               break;
             }
