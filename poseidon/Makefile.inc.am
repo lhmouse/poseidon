@@ -42,6 +42,7 @@ nobase_include_HEADERS +=  \
   %reldir%/http/http_datetime.hpp  \
   %reldir%/http/http_value.hpp  \
   %reldir%/http/http_header_parser.hpp  \
+  %reldir%/http/http_query_parser.hpp  \
   %reldir%/http/http_request_headers.hpp  \
   %reldir%/http/http_request_parser.hpp  \
   %reldir%/http/http_response_headers.hpp  \
@@ -107,6 +108,7 @@ lib_libposeidon_la_SOURCES =  \
   %reldir%/http/http_datetime.cpp  \
   %reldir%/http/http_value.cpp  \
   %reldir%/http/http_header_parser.cpp  \
+  %reldir%/http/http_query_parser.cpp  \
   %reldir%/http/http_request_headers.cpp  \
   %reldir%/http/http_request_parser.cpp  \
   %reldir%/http/http_response_headers.cpp  \

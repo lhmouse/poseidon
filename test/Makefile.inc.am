@@ -7,6 +7,7 @@ check_PROGRAMS +=  \
   %reldir%/http_datetime.test  \
   %reldir%/http_value.test  \
   %reldir%/http_header_parser.test  \
+  %reldir%/http_query_parser.test  \
   %reldir%/websocket_frame_header.test  \
   %reldir%/websocket_handshake.test  \
   ${END}

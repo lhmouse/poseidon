@@ -44,7 +44,7 @@ HTTP_Response_Parser::s_settings[1] =
       {
         // Accept the value as a string.
         if(!this->m_headers.headers.back().second.is_string())
-          this->m_headers.headers.mut_back().second.set_string("");
+          this->m_headers.headers.mut_back().second.set_string("", 0);
 
         // Append the header value, as this callback might be invoked repeatedly.
         this->m_headers.headers.mut_back().second.mut_string().append(str, len);
@@ -58,7 +58,7 @@ HTTP_Response_Parser::s_settings[1] =
         HTTP_Value value;
         for(auto hiter = this->m_headers.headers.mut_begin();  hiter != this->m_headers.headers.end();  ++ hiter)
           if(hiter->second.is_null())
-            hiter->second.set_string("");
+            hiter->second.set_string("", 0);
           else if(value.parse(hiter->second.as_string()) == hiter->second.str_length())
             hiter->second = ::std::move(value);
 
