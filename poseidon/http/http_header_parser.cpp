@@ -46,7 +46,7 @@ do_next_attribute_from_separator()
     while((*sptr == ' ') || (*sptr == '\t') || (*sptr == ';'))
       sptr ++;
 
-    if((sptr == this->m_hstr.c_str() + this->m_hstr.ssize()) || (*sptr == ','))
+    if((*sptr == 0) || (*sptr == ','))
       return -1;
 
     // Parse the name of an attribute, and initialize its value to null.
@@ -79,7 +79,7 @@ do_next_attribute_from_separator()
     }
 
     // The attribute shall be terminated by a separator.
-    if((sptr != this->m_hstr.c_str() + this->m_hstr.ssize()) && (*sptr != ';') && (*sptr != ',')) {
+    if((*sptr != 0) && (*sptr != ';') && (*sptr != ',')) {
       this->m_hpos = error_hpos;
       return -1;
     }
