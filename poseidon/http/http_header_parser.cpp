@@ -17,6 +17,7 @@ clear() noexcept
   {
     this->m_hstr.clear();
     this->m_hpos = 0;
+
     this->m_name.clear();
     this->m_value.clear();
   }
@@ -27,6 +28,7 @@ reload(cow_stringR hstr)
   {
     this->m_hstr = hstr;
     this->m_hpos = SIZE_MAX;
+
     this->m_name.clear();
     this->m_value.clear();
   }
