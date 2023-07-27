@@ -27,6 +27,7 @@ WSS_Client_Session::
   {
   }
 
+POSEIDON_VISIBILITY_HIDDEN
 void
 WSS_Client_Session::
 do_call_on_wss_close_once(uint16_t status, chars_view reason)
@@ -77,8 +78,8 @@ do_on_https_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& /*data
     this->m_parser.accept_handshake_response(resp);
 
     if(close_now || !this->m_parser.is_client_mode()) {
-      const char* err_desc = close_now ? "connection closing" : this->m_parser.error_description();
-      this->do_call_on_wss_close_once(1002, err_desc);
+      // The handshake failed.
+      this->do_call_on_wss_close_once(1002, this->m_parser.error_description());
       return;
     }
 

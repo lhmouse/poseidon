@@ -19,6 +19,7 @@ WSS_Server_Session::
   {
   }
 
+POSEIDON_VISIBILITY_HIDDEN
 void
 WSS_Server_Session::
 do_call_on_wss_close_once(uint16_t status, chars_view reason)
