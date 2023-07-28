@@ -43,12 +43,12 @@ do_next_attribute_from_separator()
     ROCKET_ASSERT(this->m_hpos <= this->m_hstr.size());
     const char* sptr = this->m_hstr.c_str() + this->m_hpos;
 
-    // Skip whitespace and attribute separators. This function shall not move
-    // across element boundaries.
-    while((*sptr == ' ') || (*sptr == '\t') || (*sptr == ';'))
+    // Skip leading whitespace. This function shall not move across element
+    // boundaries.
+    while((*sptr == ' ') || (*sptr == '\t'))
       sptr ++;
 
-    if((*sptr == 0) || (*sptr == ','))
+    if((*sptr == 0) || (*sptr == ';') || (*sptr == ','))
       return -1;
 
     // Parse the name of an attribute, and initialize its value to null.
@@ -62,25 +62,31 @@ do_next_attribute_from_separator()
     this->m_name.swap(this->m_value.mut_string());
     this->m_value = nullptr;
 
-    // Skip bad whitespace.
+    // If an equals sign is encountered, then there will be a value, so
+    // parse it.
     while((*sptr == ' ') || (*sptr == '\t'))
       sptr ++;
 
     if(*sptr == '=') {
       sptr ++;
 
-      // Skip bad whitespace again, then parse the optional value.
       while((*sptr == ' ') || (*sptr == '\t'))
         sptr ++;
 
       tlen = this->m_value.parse(sptr);
       sptr += tlen;
 
-      while((*sptr == ' ') || (*sptr == '\t'))
-        sptr ++;
+      // Ensure the value is not null in this case, so it's distinguishable
+      // from not having a value.
+      if(tlen == 0)
+        this->m_value.set_string(sref(""));
     }
 
-    // The attribute shall be terminated by a separator.
+    // Skip trailing whitespace.
+    while((*sptr == ' ') || (*sptr == '\t'))
+      sptr ++;
+
+    // The attribute shall have been terminated by a separator.
     if((*sptr != 0) && (*sptr != ';') && (*sptr != ',')) {
       this->m_hpos = error_hpos;
       return -1;
