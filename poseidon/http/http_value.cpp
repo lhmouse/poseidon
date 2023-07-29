@@ -46,7 +46,7 @@ size_t
 HTTP_Value::
 parse_quoted_string_partial(chars_view str)
   {
-    if((str.n == 0) || (*str != '\"'))
+    if((str.n < 2) || (str[0] != '\"'))
       return 0;
 
     this->m_str.clear();
@@ -92,7 +92,7 @@ parse_number_partial(chars_view str)
     size_t aclen = numg.parse_D(str.p, str.n);
 
     // Do not mistake a token prefix.
-    if((aclen != str.n) && !do_is_ctl_or_sep(str.p[aclen]))
+    if((aclen < str.n) && !do_is_ctl_or_sep(str[aclen]))
       return 0;
 
     numg.cast_D(this->m_num, -HUGE_VAL, +HUGE_VAL);
