@@ -169,16 +169,9 @@ class HTTP_Value
       }
 
     void
-    set_string(cow_string::shallow_type str) noexcept
+    set_string(const char* str, size_t len) noexcept
       {
-        this->m_str = str;
-        this->m_index = index_string;
-      }
-
-    void
-    set_string(chars_view str) noexcept
-      {
-        this->m_str.assign(str.p, str.n);
+        this->m_str.assign(str, len);
         this->m_index = index_string;
       }
 

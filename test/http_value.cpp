@@ -19,7 +19,7 @@ main()
     POSEIDON_TEST_CHECK(hval.as_number() == 43.5);
     POSEIDON_TEST_CHECK(hval.print_to_string() == "43.5");
 
-    hval.set_string("meow");
+    hval.set_string(sref("meow"));
     POSEIDON_TEST_CHECK(hval.is_string());
     POSEIDON_TEST_CHECK(hval.as_string() == "meow");
     hval.mut_string() += "MEOW";
@@ -35,11 +35,11 @@ main()
     POSEIDON_TEST_CHECK(hval.is_null());
     POSEIDON_TEST_CHECK(hval.print_to_string() == "");
 
-    hval.set_string("hello\r\n\tworld");
+    hval.set_string(sref("hello\r\n\tworld"));
     POSEIDON_TEST_CHECK(hval.is_string());
     POSEIDON_TEST_CHECK(hval.print_to_string() == "\"hello world\"");
 
-    hval.set_string("with,comma");
+    hval.set_string(sref("with,comma"));
     POSEIDON_TEST_CHECK(hval.is_string());
     POSEIDON_TEST_CHECK(hval.print_to_string() == "\"with,comma\"");
 
