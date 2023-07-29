@@ -40,9 +40,9 @@ class HTTPS_Client_Session
     // header. Returning `http_payload_empty` indicates that the message
     // does not have a payload even if it appears so, such as the response to a
     // HEAD request. Returning `http_payload_connect` causes all further
-    // incoming data to be delivered via `do_on_https_upgraded_stream()`.
-    // This callback is primarily used to examine the status code before
-    // processing response data.
+    // incoming data to be delivered via `do_on_https_upgraded_stream()`. This
+    // callback is primarily used to examine the status code before processing
+    // response data.
     // The default implementation does not check for HEAD or upgrade responses
     // and returns `http_payload_normal`.
     virtual
