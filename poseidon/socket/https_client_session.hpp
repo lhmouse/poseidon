@@ -47,7 +47,7 @@ class HTTPS_Client_Session
     // and returns `http_payload_normal`.
     virtual
     HTTP_Payload_Type
-    do_on_http_response_headers(HTTP_Response_Headers& resp);
+    do_on_https_response_headers(HTTP_Response_Headers& resp);
 
     // This callback is invoked by the network thread for each fragment of the
     // response payload that has been received. As with `SSL_Connection::
@@ -55,7 +55,7 @@ class HTTPS_Client_Session
     // been accumulated so far and callees are supposed to remove bytes that
     // have been processed.
     // The default implementation leaves all data alone for consumption by
-    // `do_on_http_response_finish()`, but it checks the total length of the
+    // `do_on_https_response_finish()`, but it checks the total length of the
     // payload so it will not exceed `network.http.max_response_content_length`
     // in 'main.conf'.
     virtual
@@ -99,8 +99,8 @@ class HTTPS_Client_Session
     // Callers should not supply `Transfer-Encoding` headers, as they will be
     // rewritten. The HTTP/1.1 specification says that a chunk of length zero
     // terminates the chunked payload; therefore, empty chunks are ignored by
-    // `http_chunked_request_send()`. These functions do little error checking.
-    // Calling `http_chunked_request_send()` or `http_chunked_request_finish()`
+    // `https_chunked_request_send()`. These functions do little error checking.
+    // Calling `https_chunked_request_send()` or `https_chunked_request_finish()`
     // when no chunked request is active will corrupt the connection.
     // If these function throw an exception, there is no effect.
     // These functions are thread-safe.

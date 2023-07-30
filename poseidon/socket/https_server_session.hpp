@@ -59,7 +59,7 @@ class HTTPS_Server_Session
     // processed. This callback will not not invoked for GET, HEAD, DELETE or
     // CONNECT methods.
     // The default implementation leaves all data alone for consumption by
-    // `do_on_http_request_finish()`. For security reasons, the length of the
+    // `do_on_https_request_finish()`. For security reasons, the length of the
     // payload body is checked; an error is reported if it exceeds the
     // `network.http.max_request_content_length` limit in 'main.conf'.
     virtual
@@ -129,9 +129,9 @@ class HTTPS_Server_Session
     // Callers should not supply `Transfer-Encoding` headers, as they will be
     // rewritten. The HTTP/1.1 specification says that a chunk of length zero
     // terminates the chunked payload; therefore, empty chunks are ignored by
-    // `http_chunked_response_send()`. These functions do very little error
-    // checking. Calling `http_chunked_response_send()` or
-    // `http_chunked_response_finish()` when no chunked response is active is
+    // `https_chunked_response_send()`. These functions do very little error
+    // checking. Calling `https_chunked_response_send()` or
+    // `https_chunked_response_finish()` when no chunked response is active is
     // likely to corrupt the connection.
     // If these function throw an exception, there is no effect.
     // These functions are thread-safe.
