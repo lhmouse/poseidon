@@ -29,7 +29,7 @@ class Async_Connect
     // This class implements `Abstract_Async_Task`.
     virtual
     void
-    do_abstract_task_on_execute() override;
+    do_on_abstract_async_task_execute() override;
 
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Async_Connect);

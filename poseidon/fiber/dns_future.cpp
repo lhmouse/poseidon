@@ -21,7 +21,7 @@ DNS_Future::
 
 void
 DNS_Future::
-do_abstract_task_on_execute()
+do_on_abstract_async_task_execute()
   try {
     // Perform DNS query. This will block the worker thread.
     ::addrinfo hints = { };

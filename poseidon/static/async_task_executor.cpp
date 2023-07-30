@@ -38,7 +38,7 @@ thread_loop()
     task->m_state.store(async_running);
 
     try {
-      task->do_abstract_task_on_execute();
+      task->do_on_abstract_async_task_execute();
     }
     catch(exception& stdex) {
       POSEIDON_LOG_ERROR((

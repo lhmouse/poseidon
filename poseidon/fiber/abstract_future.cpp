@@ -7,7 +7,7 @@
 namespace poseidon {
 
 Abstract_Future::
-Abstract_Future() noexcept
+Abstract_Future()
   {
   }
 

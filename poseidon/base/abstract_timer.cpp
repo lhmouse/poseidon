@@ -6,7 +6,7 @@
 namespace poseidon {
 
 Abstract_Timer::
-Abstract_Timer() noexcept
+Abstract_Timer()
   {
   }
 

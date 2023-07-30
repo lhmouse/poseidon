@@ -36,7 +36,7 @@ class DNS_Future
     // Performs DNS lookup.
     virtual
     void
-    do_abstract_task_on_execute() override;
+    do_on_abstract_async_task_execute() override;
 
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(DNS_Future);

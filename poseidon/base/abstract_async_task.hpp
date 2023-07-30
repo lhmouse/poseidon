@@ -17,14 +17,14 @@ class Abstract_Async_Task
   protected:
     // Constructs an asynchronous task.
     explicit
-    Abstract_Async_Task() noexcept;
+    Abstract_Async_Task();
 
   protected:
     // This callback is invoked by the task executor thread and is intended to
     // be overriden by derived classes.
     virtual
     void
-    do_abstract_task_on_execute() = 0;
+    do_on_abstract_async_task_execute() = 0;
 
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Abstract_Async_Task);

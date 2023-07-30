@@ -46,7 +46,7 @@ struct Final_Fiber final : Abstract_Fiber
 
     virtual
     void
-    do_abstract_fiber_on_work()
+    do_on_abstract_fiber_execute() override
       {
         for(;;) {
           // The event callback may stop this client, so we have to check for

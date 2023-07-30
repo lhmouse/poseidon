@@ -6,7 +6,7 @@
 namespace poseidon {
 
 Abstract_Async_Task::
-Abstract_Async_Task() noexcept
+Abstract_Async_Task()
   {
   }
 

@@ -22,7 +22,7 @@ Read_File_Future::
 
 void
 Read_File_Future::
-do_abstract_task_on_execute()
+do_on_abstract_async_task_execute()
   try {
     // Open the file and get basic information.
     unique_posix_fd fd(::open(this->m_result.path.safe_c_str(), O_RDONLY | O_NOCTTY, 0));

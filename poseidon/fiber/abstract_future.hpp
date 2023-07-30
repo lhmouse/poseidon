@@ -22,7 +22,7 @@ class Abstract_Future
   protected:
     // Constructs an empty future that is not ready.
     explicit
-    Abstract_Future() noexcept;
+    Abstract_Future();
 
   protected:
     // Makes this future ready by setting an optional exception, and then notifies

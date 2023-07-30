@@ -7,7 +7,7 @@
 namespace poseidon {
 
 Abstract_Fiber::
-Abstract_Fiber() noexcept
+Abstract_Fiber()
   {
   }
 
@@ -18,7 +18,7 @@ Abstract_Fiber::
 
 void
 Abstract_Fiber::
-do_abstract_fiber_on_resumed() noexcept
+do_on_abstract_fiber_resumed()
   {
     POSEIDON_LOG_TRACE((
         "Resumed fiber `$1` (class `$2`): state `$3`"),
@@ -28,7 +28,7 @@ do_abstract_fiber_on_resumed() noexcept
 
 void
 Abstract_Fiber::
-do_abstract_fiber_on_suspended() noexcept
+do_on_abstract_fiber_suspended()
   {
     POSEIDON_LOG_TRACE((
         "Suspended fiber `$1` (class `$2`): state `$3`"),

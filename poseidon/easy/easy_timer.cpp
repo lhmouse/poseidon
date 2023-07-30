@@ -40,7 +40,7 @@ struct Final_Fiber final : Abstract_Fiber
 
     virtual
     void
-    do_abstract_fiber_on_work() override
+    do_on_abstract_fiber_execute() override
       {
         for(;;) {
           // The packet callback may stop this timer, so we have to check for

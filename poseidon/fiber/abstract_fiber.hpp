@@ -21,7 +21,7 @@ class Abstract_Fiber
   protected:
     // Constructs an empty fiber.
     explicit
-    Abstract_Fiber() noexcept;
+    Abstract_Fiber();
 
   protected:
     // Gets the scheduler instance inside one of the fiber callbacks.
@@ -34,27 +34,27 @@ class Abstract_Fiber
         return *sched;
       }
 
-    // This callback is invoked by the fiber scheduler and is intended to be
-    // overriden by derived classes to perform useful operation.
-    virtual
-    void
-    do_abstract_fiber_on_work() = 0;
-
-    // This callback is invoked before `do_abstract_fiber_on_execution()`, and
+    // This callback is invoked before `do_on_abstract_fiber_execute()`, and
     // after it is resumed from a preivous yield operation. `async_state()` can
     // be used to examine the current operation.
     // The default implementations merely print a message.
     virtual
     void
-    do_abstract_fiber_on_resumed() noexcept;
+    do_on_abstract_fiber_resumed();
 
-    // This callback is invoked after `do_abstract_fiber_on_execution()`, and
+    // This callback is invoked by the fiber scheduler and is intended to be
+    // overriden by derived classes to perform useful operation.
+    virtual
+    void
+    do_on_abstract_fiber_execute() = 0;
+
+    // This callback is invoked after `do_on_abstract_fiber_execute()`, and
     // before it is suspended by a yield operation. `async_state()` can  be
     // used to examine the current operation.
     // The default implementations merely print a message.
     virtual
     void
-    do_abstract_fiber_on_suspended() noexcept;
+    do_on_abstract_fiber_suspended();
 
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Abstract_Fiber);

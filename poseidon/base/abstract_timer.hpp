@@ -18,7 +18,7 @@ class Abstract_Timer
   protected:
     // Constructs an inactive timer.
     explicit
-    Abstract_Timer() noexcept;
+    Abstract_Timer();
 
   protected:
     // This callback is invoked by the timer thread and is intended to be
