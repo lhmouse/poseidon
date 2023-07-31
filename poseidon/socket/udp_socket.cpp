@@ -5,6 +5,7 @@
 #include "udp_socket.hpp"
 #include "../utils.hpp"
 #include <sys/socket.h>
+#include <netinet/udp.h>
 #include <net/if.h>
 namespace poseidon {
 
