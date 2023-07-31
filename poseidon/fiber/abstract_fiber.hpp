@@ -37,6 +37,7 @@ class Abstract_Fiber
     // This callback is invoked before `do_on_abstract_fiber_execute()`, and
     // after it is resumed from a preivous yield operation. `async_state()` can
     // be used to examine the current operation.
+    // This function should not throw exceptions; exceptions are ignored.
     // The default implementations merely print a message.
     virtual
     void
@@ -51,6 +52,7 @@ class Abstract_Fiber
     // This callback is invoked after `do_on_abstract_fiber_execute()`, and
     // before it is suspended by a yield operation. `async_state()` can  be
     // used to examine the current operation.
+    // This function should not throw exceptions; exceptions are ignored.
     // The default implementations merely print a message.
     virtual
     void
