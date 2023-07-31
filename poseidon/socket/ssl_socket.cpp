@@ -6,6 +6,7 @@
 #include "../static/network_driver.hpp"
 #include "../utils.hpp"
 #include <sys/socket.h>
+#include <netinet/tcp.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 namespace poseidon {
@@ -348,6 +349,23 @@ remote_address() const noexcept
     ::std::atomic_thread_fence(::std::memory_order_release);
     this->m_peername_ready.store(true);
     return this->m_peername;
+  }
+
+uint32_t
+SSL_Socket::
+max_segment_size() const
+  {
+    int optval;
+    ::socklen_t optlen = sizeof(optval);
+    if(::getsockopt(this->do_get_fd(), IPPROTO_TCP, TCP_MAXSEG, &optval, &optlen) != 0)
+      POSEIDON_THROW((
+          "Failed to get MSS value",
+          "[`getsockopt()` failed: ${errno:full}]",
+          "[TCP socket `$1` (class `$2`)]"),
+          this, typeid(*this));
+
+    ROCKET_ASSERT(optlen == sizeof(optval));
+    return (uint32_t) optval;
   }
 
 bool

@@ -110,6 +110,10 @@ class SSL_Socket
     const Socket_Address&
     remote_address() const noexcept;
 
+    // Gets the maximum segment size (MSS) for outgoing packets.
+    uint32_t
+    max_segment_size() const;
+
     // Gets the protocol that has been selected by ALPN.
     // For a server-side socket, this string equals the result of a previous
     // `do_on_ssl_alpn_request()` callback. For a client-side socket, this

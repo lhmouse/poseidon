@@ -77,6 +77,10 @@ class TCP_Socket
     const Socket_Address&
     remote_address() const noexcept;
 
+    // Gets the maximum segment size (MSS) for outgoing packets.
+    uint32_t
+    max_segment_size() const;
+
     // Enqueues some bytes for sending.
     // If this function returns `true`, data will have been enqueued; however it
     // is not guaranteed that they will arrive at the destination host. If this
