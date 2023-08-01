@@ -638,7 +638,7 @@ async_logger_enqueue_generic(const Log_Context& ctx, const ParamsT&... params) n
   {
     const auto compose = [&](cow_string& sbuf) { ::asteria::format(sbuf, params...);  };
     constexpr auto invoke = +[](cow_string& sbuf, const void* vp) { (*(decltype(compose)*) vp) (sbuf);  };
-    noadl::async_logger_enqueue(ctx, invoke, &compose);
+    async_logger_enqueue(ctx, invoke, &compose);  // ADL intended
     return true;
   }
 
