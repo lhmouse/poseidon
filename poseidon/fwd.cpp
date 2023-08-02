@@ -20,8 +20,14 @@ Timer_Driver& timer_driver = *new Timer_Driver;
 Async_Task_Executor& async_task_executor = *new Async_Task_Executor;
 Network_Driver& network_driver = *new Network_Driver;
 
+bool
+async_logger_check_level(Log_Level level) noexcept
+  {
+    return async_logger.enabled(level);
+  }
+
 void
-async_logger_enqueue(const Log_Context& ctx, vfptr<cow_string&, const void*> invoke, const void* compose) noexcept
+async_logger_enqueue(const Log_Context& ctx, vfptr<cow_string&, void*> invoke, void* compose) noexcept
   try {
     cow_string sbuf;
     invoke(sbuf, compose);
@@ -34,12 +40,6 @@ async_logger_enqueue(const Log_Context& ctx, vfptr<cow_string&, const void*> inv
     ::fprintf(stderr,
         "WARNING: Could not compose log message: %s\n",
         stdex.what());
-  }
-
-bool
-async_logger_check_level(Log_Level level) noexcept
-  {
-    return async_logger.enabled(level);
   }
 
 }  // namespace poseidon

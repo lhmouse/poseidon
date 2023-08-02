@@ -624,32 +624,29 @@ struct Log_Context
     const char* func;
   };
 
-void
-async_logger_enqueue(const Log_Context& ctx, vfptr<cow_string&, const void*> invoke, const void* compose) noexcept;
-
 ROCKET_CONST
 bool
 async_logger_check_level(Log_Level level) noexcept;
 
-template<typename... ParamsT>
-static ROCKET_ALWAYS_INLINE
-bool
-async_logger_enqueue_generic(const Log_Context& ctx, const ParamsT&... params) noexcept
-  {
-    const auto compose = [&](cow_string& sbuf) { ::asteria::format(sbuf, params...);  };
-    constexpr auto invoke = +[](cow_string& sbuf, const void* vp) { (*(decltype(compose)*) vp) (sbuf);  };
-    async_logger_enqueue(ctx, invoke, &compose);  // ADL intended
-    return true;
-  }
+void
+async_logger_enqueue(const Log_Context& ctx, vfptr<cow_string&, void*> invoke, void* compose) noexcept;
 
 // Define helper macros that compose log messages. The `TEMPLATE` argument shall
 // be a list of string literals in parentheses. Multiple strings are joined with
-// line separators.
+// line separators. `format()` and `async_logger_enqueue()` are found via ADL.
 #define POSEIDON_LOG_G_(LEVEL, TEMPLATE, ...)  \
-  (::poseidon::async_logger_check_level(::poseidon::log_level_##LEVEL)  \
-   && ::poseidon::async_logger_enqueue_generic(  \
-          { __FILE__, __LINE__, ::poseidon::log_level_##LEVEL, __FUNCTION__ }, \
-            (::asteria::make_string_template TEMPLATE), ##__VA_ARGS__))
+    (::poseidon::async_logger_check_level(::poseidon::log_level_##LEVEL)  \
+      &&  \
+      __extension__ ({  \
+        auto compose = [&](::rocket::cow_string& sbuf)  \
+          { format(sbuf, (::asteria::make_string_template TEMPLATE), ##__VA_ARGS__);  };  \
+        constexpr auto invoke = +[](::rocket::cow_string& sbuf, void* vp)  \
+          { (*(decltype(compose)*) vp) (sbuf);  };  \
+        static const ::poseidon::Log_Context ctx =  \
+          { __FILE__, __LINE__, ::poseidon::log_level_##LEVEL, __FUNCTION__ };  \
+        async_logger_enqueue(ctx, invoke, &compose);  \
+        true;  \
+      }))
 
 #define POSEIDON_LOG_FATAL(...)   POSEIDON_LOG_G_(fatal, __VA_ARGS__)
 #define POSEIDON_LOG_ERROR(...)   POSEIDON_LOG_G_(error, __VA_ARGS__)
@@ -661,15 +658,14 @@ async_logger_enqueue_generic(const Log_Context& ctx, const ParamsT&... params) n
 // Evaluates an expression. If an exception is thrown, a message is printed but
 // the exception itself is caught and ignored.
 #define POSEIDON_CATCH_ALL(...)  \
-  ([&]() -> void  \
-    {  \
+    __extension__ ({  \
       try {  \
         (void) (__VA_ARGS__);  \
       }  \
       catch(::std::exception& zeew2aeY) {  \
         POSEIDON_LOG_FATAL(("Ignoring exception: $1"), zeew2aeY);  \
       }  \
-    }())
+    })
 
 }  // namespace poseidon
 #endif

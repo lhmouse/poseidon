@@ -25,13 +25,12 @@ using ::asteria::weaken_enum;
 // Performs a syscall and retries upon interrupts.
 // Note the arguments may be evaluated more than once.
 #define POSEIDON_SYSCALL_LOOP(...)  \
-  ([&]{  \
-    for(;;) {  \
+    __extension__ ({  \
       auto wdLAlUiJ = (__VA_ARGS__);  \
-      if((wdLAlUiJ >= 0) || (errno != EINTR))  \
-        return wdLAlUiJ;  \
-    }  \
-  }())
+      while(ROCKET_UNEXPECT(wdLAlUiJ < 0) && (errno == EINTR))  \
+        /* retry */ wdLAlUiJ = (__VA_ARGS__);  \
+      wdLAlUiJ;  \
+    })
 
 // Throws an exception, with backtraces.
 [[noreturn]]
