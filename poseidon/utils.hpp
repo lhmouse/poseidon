@@ -39,9 +39,7 @@ throw_runtime_error_with_backtrace(const char* file, long line, const char* func
 
 #define POSEIDON_THROW(TEMPLATE, ...)  \
     (::poseidon::throw_runtime_error_with_backtrace(__FILE__, __LINE__, __FUNCTION__,  \
-       ::asteria::format_string(  \
-         (::asteria::make_string_template TEMPLATE), ##__VA_ARGS__)  \
-       ),  \
+          ::asteria::format_string((::asteria::make_string_template TEMPLATE), ##__VA_ARGS__)),  \
      __builtin_unreachable())
 
 // Splices two buffers. After this function returns, `in` will be empty.
