@@ -3,8 +3,10 @@
 
 #include "precompiled.ipp"
 #include "utils.hpp"
-#include <libunwind.h>
 #include <openssl/rand.h>
+#ifdef HAVE_LIBUNWIND
+#include <libunwind.h>
+#endif
 namespace poseidon {
 
 void
@@ -14,6 +16,12 @@ throw_runtime_error_with_backtrace(const char* file, long line, const char* func
     size_t pos = msg.rfind_not_of(" \f\n\r\t\v");
     msg.erase(pos + 1);
 
+    // Compose the string to throw.
+    tinyfmt_ln fmt;
+    fmt << func << ": " << msg;
+    fmt << "\n[thrown from '" << file << ':' << line << "']";
+
+#ifdef HAVE_LIBUNWIND
     // Calculate the number of stack frames.
     size_t nframes = 0;
     ::unw_context_t unw_ctx[1];
@@ -25,18 +33,13 @@ throw_runtime_error_with_backtrace(const char* file, long line, const char* func
       while(::unw_step(unw_cur) > 0)
         ++ nframes;
 
-    // Determine the width of the frame index field.
-    ::rocket::ascii_numput nump;
-    nump.put_DU(nframes);
-    static_vector<char, 8> numfield(nump.size(), ' ');
-    numfield.emplace_back();
-
-    // Compose the string to throw.
-    tinyfmt_ln fmt;
-    fmt << func << ": " << msg;
-    fmt << "\n[thrown from '" << file << ':' << line << "']";
-
     if(nframes != 0) {
+      // Determine the width of the frame index field.
+      ::rocket::ascii_numput nump;
+      nump.put_DU(nframes);
+      static_vector<char, 8> numfield(nump.size(), ' ');
+      numfield.emplace_back();
+
       fmt << "\n[stack backtrace:";
       nframes = 0;
 
@@ -63,6 +66,7 @@ throw_runtime_error_with_backtrace(const char* file, long line, const char* func
       fmt << "\n  -- end of stack backtrace]";
     }
     else
+#endif  // HAVE_LIBUNWIND
       fmt << "\n[no stack backtrace available]";
 
     // Throw it.
