@@ -151,7 +151,7 @@ main()
     }
 
     for(const auto& r : tests) {
-      dt.set_unix_time((unix_time)(seconds) r.ts);
+      dt.set_seconds_since_epoch((seconds) r.ts);
       POSEIDON_TEST_CHECK(dt.print_to_string() == r.rfc1123);
 
       ::memset(temp, '*', sizeof(temp));

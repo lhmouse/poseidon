@@ -44,14 +44,18 @@ class HTTP_DateTime
     as_unix_time() const noexcept
       { return this->m_tp;  }
 
+    void
+    set_unix_time(unix_time tp) noexcept
+      { this->m_tp = tp;  }
+
     constexpr
     seconds
     as_seconds_since_epoch() const noexcept
       { return this->m_tp.time_since_epoch();  }
 
     void
-    set_unix_time(unix_time tp) noexcept
-      { this->m_tp = tp;  }
+    set_seconds_since_epoch(seconds td) noexcept
+      { this->m_tp = (unix_time) td;  }
 
     // Try parsing an HTTP date/time in the formal RFC 1123 format. An example
     // is `Sun, 06 Nov 1994 08:49:37 GMT`. This function returns the number of
