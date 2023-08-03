@@ -331,7 +331,6 @@ void
 Async_Logger::
 thread_loop()
   {
-    // Get all pending elements.
     plain_mutex::unique_lock lock(this->m_queue_mutex);
     while(this->m_queue.empty())
       this->m_queue_avail.wait(lock);
@@ -341,16 +340,15 @@ thread_loop()
     this->m_io_queue.swap(this->m_queue);
     lock.unlock();
 
-    // Get configuration.
+    // Get configuration of all levels.
     lock.lock(this->m_conf_mutex);
     const auto levels = this->m_conf_levels;
     lock.unlock();
 
     // Write all elements.
     for(const auto& msg : this->m_io_queue)
-      if(msg.ctx.level < levels.size())
-        if((this->m_io_queue.size() <= 1024U) || (levels[msg.ctx.level].trivial == false))
-          do_write_nothrow(levels[msg.ctx.level], msg);
+      if((this->m_io_queue.size() <= 1024U) || (levels.at(msg.ctx.level).trivial == false))
+        do_write_nothrow(levels.at(msg.ctx.level), msg);
 
     this->m_io_queue.clear();
     io_sync_lock.unlock();

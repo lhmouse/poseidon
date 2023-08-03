@@ -32,8 +32,7 @@ thread_loop()
     if(!task)
       return;
 
-    // Execute it.
-    // Exceptions are ignored.
+    // Execute it. Exceptions are ignored.
     POSEIDON_LOG_TRACE(("Executing task `$1` (class `$2`)"), task, typeid(*task));
     task->m_state.store(async_running);
 

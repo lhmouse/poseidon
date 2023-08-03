@@ -83,8 +83,7 @@ thread_loop()
     }
     lock.unlock();
 
-    // Execute it.
-    // Exceptions are ignored.
+    // Execute it. Exceptions are ignored.
     POSEIDON_LOG_TRACE(("Executing timer `$1` (class `$2`)"), timer, typeid(*timer));
     timer->m_state.store(async_running);
 
