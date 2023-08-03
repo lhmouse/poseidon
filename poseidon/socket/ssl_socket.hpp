@@ -50,9 +50,8 @@ class SSL_Socket
     void
     do_abstract_socket_on_writable() override;
 
-    // This callback is invoked by the network thread when an outgoing (from
-    // client) full-duplex connection has been established. It is not called for
-    // incoming connections.
+    // This callback is invoked by the network thread after a full-duplex
+    // connection has been established.
     // The default implemention merely prints a message.
     virtual
     void
