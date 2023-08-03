@@ -369,25 +369,14 @@ thread_loop()
     if(event.events & (EPOLLHUP | EPOLLERR)) {
       POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLHUP | EPOLLERR"), socket, typeid(*socket));
 
+      // Pass the socket error code via `errno`... Is this good?
+      ::socklen_t optlen = sizeof(errno);
+      errno = 0;
+      if(event.events & EPOLLERR)
+        ::getsockopt(socket->m_fd, SOL_SOCKET, SO_ERROR, &errno, &optlen);
+
       socket->m_state.store(socket_closed);
-
-      try {
-        // Pass the socket error code via `errno`... Is this good?
-        ::socklen_t optlen = sizeof(errno);
-        errno = 0;
-        if(event.events & EPOLLERR)
-          ::getsockopt(socket->m_fd, SOL_SOCKET, SO_ERROR, &errno, &optlen);
-
-        socket->do_abstract_socket_on_closed();
-      }
-      catch(exception& stdex) {
-        POSEIDON_LOG_ERROR((
-            "Unhandled exception thrown from `do_abstract_socket_on_closed()`: $1",
-            "[socket class `$2`]"),
-            stdex, typeid(*socket));
-      }
-      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`) shutdown pending"), socket, typeid(*socket));
-
+      POSEIDON_CATCH_ALL(socket->do_abstract_socket_on_closed());
       socket->m_io_driver = (Network_Driver*) 123456789;
       return;
     }

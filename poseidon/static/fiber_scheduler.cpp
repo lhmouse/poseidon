@@ -131,16 +131,7 @@ do_fiber_function() noexcept
     const auto& elem = this->m_sched_elem;
     ROCKET_ASSERT(elem);
 
-    try {
-      elem->fiber->do_on_abstract_fiber_resumed();
-    }
-    catch(exception& stdex) {
-      POSEIDON_LOG_ERROR((
-          "Unhandled exception thrown from `do_on_abstract_fiber_resumed()`: $1",
-          "[fiber class `$2`]"),
-          stdex, typeid(*(elem->fiber)));
-    }
-
+    POSEIDON_CATCH_ALL(elem->fiber->do_on_abstract_fiber_resumed());
     ROCKET_ASSERT(elem->fiber->m_state.load() == async_pending);
     elem->fiber->m_state.store(async_running);
     POSEIDON_LOG_TRACE(("Starting fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
@@ -160,16 +151,7 @@ do_fiber_function() noexcept
     ROCKET_ASSERT(elem->fiber->m_state.load() == async_running);
     elem->fiber->m_state.store(async_finished);
     POSEIDON_LOG_TRACE(("Terminating fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
-
-    try {
-      elem->fiber->do_on_abstract_fiber_suspended();
-    }
-    catch(exception& stdex) {
-      POSEIDON_LOG_ERROR((
-          "Unhandled exception thrown from `do_on_abstract_fiber_suspended()`: $1",
-          "[fiber class `$2`]"),
-          stdex, typeid(*(elem->fiber)));
-    }
+    POSEIDON_CATCH_ALL(elem->fiber->do_on_abstract_fiber_suspended());
 
     // Return to the scheduler.
     elem->async_time.store(steady_clock::now());
@@ -219,31 +201,13 @@ do_yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override)
     ROCKET_ASSERT(elem->fiber->m_state.load() == async_running);
     elem->fiber->m_state.store(async_suspended);
     POSEIDON_LOG_TRACE(("Suspending fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
-
-    try {
-      elem->fiber->do_on_abstract_fiber_suspended();
-    }
-    catch(exception& stdex) {
-      POSEIDON_LOG_ERROR((
-          "Unhandled exception thrown from `do_on_abstract_fiber_suspended()`: $1",
-          "[fiber class `$2`]"),
-          stdex, typeid(*(elem->fiber)));
-    }
+    POSEIDON_CATCH_ALL(elem->fiber->do_on_abstract_fiber_suspended());
 
     asan_fiber_switch_start(this->m_sched_asan_save, this->m_sched_outer);
     ::swapcontext(elem->sched_inner, this->m_sched_outer);
     asan_fiber_switch_finish(this->m_sched_asan_save);
 
-    try {
-      elem->fiber->do_on_abstract_fiber_resumed();
-    }
-    catch(exception& stdex) {
-      POSEIDON_LOG_ERROR((
-          "Unhandled exception thrown from `do_on_abstract_fiber_resumed()`: $1",
-          "[fiber class `$2`]"),
-          stdex, typeid(*(elem->fiber)));
-    }
-
+    POSEIDON_CATCH_ALL(elem->fiber->do_on_abstract_fiber_resumed());
     POSEIDON_LOG_TRACE(("Resumed fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
     ROCKET_ASSERT(elem->fiber->m_state.load() == async_suspended);
     elem->fiber->m_state.store(async_running);

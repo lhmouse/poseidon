@@ -659,14 +659,14 @@ async_logger_enqueue(const Log_Context& ctx, vfptr<cow_string&, void*> invoke, v
 // Evaluates an expression. If an exception is thrown, a message is printed but
 // the exception itself is caught and ignored.
 #define POSEIDON_CATCH_ALL(...)  \
-    __extension__ ({  \
+    (__extension__ ({  \
       try {  \
         (void) (__VA_ARGS__);  \
       }  \
       catch(::std::exception& zeew2aeY) {  \
         POSEIDON_LOG_FATAL(("Ignoring exception: $1"), zeew2aeY);  \
       }  \
-    })
+    }))
 
 }  // namespace poseidon
 #endif
