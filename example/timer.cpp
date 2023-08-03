@@ -18,10 +18,8 @@ timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/, stea
 int
 start_timer()
   {
-    constexpr auto delay = (seconds) 5;  // 5 seconds
-    constexpr auto period = (seconds) 1;  // 1 second
-    my_timer.start(delay, period);
-    POSEIDON_LOG_ERROR(("example timer started: delay = $1, period = $2"), delay, period);
+    my_timer.start(5s, 1s);
+    POSEIDON_LOG_ERROR(("example timer started"));
     return 0;
   }
 

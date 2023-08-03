@@ -34,7 +34,7 @@ do_set_ready(exception_ptr&& except_opt) noexcept
           if(timep)
             timep->store(now);
 
-          now += (nanoseconds) 1;
+          now += 1ns;
           this->m_waiters.pop_back();
         }
 

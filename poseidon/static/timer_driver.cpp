@@ -109,10 +109,10 @@ insert(shptrR<Abstract_Timer> timer, milliseconds delay, milliseconds period)
     if(!timer)
       POSEIDON_THROW(("Null timer pointer not valid"));
 
-    if((delay < (days) 0) || (delay > (days) 1000))
+    if((delay < 0h) || (delay > 24000h))
       POSEIDON_THROW(("Timer delay out of range: $1"), delay);
 
-    if((period < (days) 0) || (period > (days) 1000))
+    if((period < 0h) || (period > 24000h))
       POSEIDON_THROW(("Timer period out of range: $1"), period);
 
     // Calculate the end time point.

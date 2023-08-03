@@ -77,6 +77,7 @@ using ::std::unordered_multimap;
 using ::std::unordered_set;
 using ::std::unordered_multiset;
 
+using namespace ::std::literals;
 using ::std::chrono::duration;
 using ::std::chrono::nanoseconds;
 using ::std::chrono::milliseconds;

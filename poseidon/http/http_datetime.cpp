@@ -144,8 +144,8 @@ do_match(const char*& rptr_out, int& add_to_value, const char (&cstrs)[N][S], in
 
 }  // namespace
 
-const HTTP_DateTime http_datetime_min = (unix_time)(days) 0;
-const HTTP_DateTime http_datetime_max = (unix_time)(days) 2932532;
+const HTTP_DateTime http_datetime_min = (unix_time)        0h;  // 1970-01-01
+const HTTP_DateTime http_datetime_max = (unix_time) 70380768h;  // 9999-01-01
 
 HTTP_DateTime::
 HTTP_DateTime(chars_view str)

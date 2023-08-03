@@ -206,7 +206,7 @@ do_yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override)
 
       // Clamp the timeout for safety.
       if(fail_timeout_override != zero_duration)
-        real_fail_timeout = clamp(fail_timeout_override, (hours) 0, (hours) 1);
+        real_fail_timeout = clamp(fail_timeout_override, 0h, 1h);
 
       elem->fail_time = elem->yield_time + real_fail_timeout;
       elem->async_time.store(min(elem->yield_time + warn_timeout, elem->fail_time));

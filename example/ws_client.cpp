@@ -203,7 +203,7 @@ timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/, stea
 int
 start_timer()
   {
-    my_timer.start((seconds) 1, (seconds) 2);
+    my_timer.start(1s, 2s);
     return 0;
   }
 

@@ -203,7 +203,7 @@ struct Final_Listen_Socket final : Listen_Socket
           const Easy_WS_Server::thunk_type& thunk, const shptr<Client_Table>& table)
       : Listen_Socket(addr), m_thunk(thunk), m_wtable(table)
       {
-        this->defer_accept((seconds) 10);
+        this->defer_accept(10s);
       }
 
     virtual
