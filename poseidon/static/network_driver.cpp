@@ -57,6 +57,41 @@ do_epoll_ctl(int op, shptrR<Abstract_Socket> socket, uint32_t events)
   }
 
 POSEIDON_VISIBILITY_HIDDEN
+wkptr<Abstract_Socket>&
+Network_Driver::
+do_linear_probe_socket_no_lock(const volatile Abstract_Socket* socket) noexcept
+  {
+    static constexpr const volatile Abstract_Socket* xnullptr = nullptr;
+    ROCKET_ASSERT(socket);
+
+    // Keep the load factor no more than 0.5. The table shall not be empty.
+    uint64_t dist = this->m_epoll_map_stor.size();
+    ROCKET_ASSERT(dist != 0);
+    ROCKET_ASSERT(this->m_epoll_map_used <= dist / 2);
+
+    // Make a fixed-point value in the interval [0,1), and then multiply `dist` by
+    // it to get an index in the middle.
+    uint32_t ratio = (uint32_t) ((uintptr_t) socket / sizeof(void*)) * 0x9E3779B9U;
+    auto begin = &(this->m_epoll_map_stor[0]);
+    auto origin = begin + (ptrdiff_t) (dist * ratio >> 32);
+    auto end = begin + this->m_epoll_map_stor.size();
+
+    // Find an element using linear probing. If the socket is not found, a
+    // reference to an empty element is returned.
+    // HACK: Compare the socket pointer without tampering with the reference
+    // counter. The pointer itself will never be dereferenced.
+    for(auto elem = origin;  elem != end;  ++elem)
+      if((::memcmp(elem, &xnullptr, sizeof(void*)) == 0) || (::memcmp(elem, &socket, sizeof(void*)) == 0))
+        return *elem;
+
+    for(auto elem = begin;  elem != origin;  ++elem)
+      if((::memcmp(elem, &xnullptr, sizeof(void*)) == 0) || (::memcmp(elem, &socket, sizeof(void*)) == 0))
+        return *elem;
+
+    ROCKET_UNREACHABLE();
+  }
+
+POSEIDON_VISIBILITY_HIDDEN
 int
 Network_Driver::
 do_alpn_callback(::SSL* ssl, const uint8_t** outp, uint8_t* outn, const uint8_t* inp, unsigned inn, void* arg) noexcept
@@ -313,56 +348,41 @@ void
 Network_Driver::
 thread_loop()
   {
-    // Await events.
-    shptr<Abstract_Socket> socket;
-    ::epoll_event event;
-
     plain_mutex::unique_lock lock(this->m_conf_mutex);
     const uint32_t event_buffer_size = this->m_event_buffer_size;
     const uint32_t throttle_size = this->m_throttle_size;
     const auto server_ssl_ctx = this->m_server_ssl_ctx;
     lock.unlock();
 
-    lock.lock(this->m_event_mutex);
-    if(this->m_events.empty()) {
-      // If the queue has been exhausted, try getting more events from the epoll.
-      // Errors are ignored.
-      this->m_events.reserve_after_end(sizeof(::epoll_event) * event_buffer_size);
-      int nevents = ::epoll_wait(this->m_epoll, (::epoll_event*) this->m_events.mut_end(), (int) event_buffer_size, 5000);
-      if(nevents < 0) {
-        POSEIDON_LOG_DEBUG(("`epoll_wait()` failed: ${errno:full}"));
+    // Get an event from the queue. If the queue is empty, populate it with more
+    // events from the epoll. Errors are ignored.
+    lock.lock(this->m_epoll_event_mutex);
+    if(this->m_epoll_events.empty()) {
+      this->m_epoll_events.reserve_after_end(event_buffer_size * sizeof(::epoll_event));
+      int nevents = ::epoll_wait(this->m_epoll, (::epoll_event*) this->m_epoll_events.mut_end(), (int) event_buffer_size, 5000);
+      if(nevents <= 0) {
+        POSEIDON_LOG_DEBUG(("`epoll_wait()` wait: ${errno:full}"));
         return;
       }
-      else if(nevents == 0)
-        return;
 
-      this->m_events.accept(sizeof(::epoll_event) * (uint32_t) nevents);
       POSEIDON_LOG_TRACE(("Collected `$1` socket event(s) from epoll"), (uint32_t) nevents);
+      this->m_epoll_events.accept((uint32_t) nevents * sizeof(::epoll_event));
     }
 
-    ROCKET_ASSERT(this->m_events.size() >= sizeof(event));
-    this->m_events.getn((char*) &event, sizeof(event));
+    ::epoll_event event;
+    ROCKET_ASSERT(this->m_epoll_events.size() >= sizeof(event));
+    this->m_epoll_events.getn((char*) &event, sizeof(event));
     lock.unlock();
 
-    // Get the socket.
-    lock.lock(this->m_epoll_mutex);
-    auto socket_it = this->m_epoll_sockets.find(static_cast<Abstract_Socket*>(event.data.ptr));
-    if(socket_it == this->m_epoll_sockets.end())
+    // Lock the socket.
+    lock.lock(this->m_epoll_map_mutex);
+    if(this->m_epoll_map_stor.size() == 0)
       return;
 
-    socket = socket_it->second.lock();
+    auto socket = this->do_linear_probe_socket_no_lock(static_cast<Abstract_Socket*>(event.data.ptr)).lock();
     if(!socket) {
-      // Remove expired socket. It will be deleted automatically after being closed.
-      this->m_epoll_sockets.erase(socket_it);
       POSEIDON_LOG_TRACE(("Socket expired: $1"), event.data.ptr);
       return;
-    }
-
-    if(event.events & (EPOLLHUP | EPOLLERR)) {
-      // Remove the socket due to an error, or an end-of-file condition.
-      POSEIDON_LOG_TRACE(("Removing closed socket `$1` (class `$2`)"), socket, typeid(*socket));
-      this->m_epoll_sockets.erase(socket_it);
-      this->do_epoll_ctl(EPOLL_CTL_DEL, socket, 0);
     }
 
     recursive_mutex::unique_lock io_lock(socket->m_io_mutex);
@@ -466,11 +486,45 @@ insert(shptrR<Abstract_Socket> socket)
       POSEIDON_THROW(("Null socket pointer not valid"));
 
     // Register the socket. Note exception safety.
-    // The socket will be deleted from an epoll automatically when it's closed,
-    // so there is no need to remove it in case of an exception.
-    plain_mutex::unique_lock lock(this->m_epoll_mutex);
+    plain_mutex::unique_lock lock(this->m_epoll_map_mutex);
+
+    if(this->m_epoll_map_used >= this->m_epoll_map_stor.size() / 2) {
+      // When the map is empty or the load factor would exceed 0.5, allocate a
+      // larger map.
+      uint32_t new_capacity = 17;
+      for(size_t k = 0;  k != this->m_epoll_map_stor.size();  ++k)
+        if(!this->m_epoll_map_stor[k].expired())
+          new_capacity += 3;
+
+      ::std::valarray<wkptr<Abstract_Socket>> old_map_stor(new_capacity);
+      this->m_epoll_map_stor.swap(old_map_stor);
+      this->m_epoll_map_used = 0;
+
+      for(size_t k = 0;  k != old_map_stor.size();  ++k) {
+        // Expired sockets are ignored.
+        if(old_map_stor[k].expired())
+          continue;
+
+        // HACK: Get the socket pointer without tampering with the reference
+        // counter. The pointer itself will never be dereferenced.
+        volatile Abstract_Socket* old_socket;
+        ::memcpy(&old_socket, (void*) &(old_map_stor[k]), sizeof(old_socket));
+
+#ifdef ROCKET_DEBUG
+        if(auto old_sock = old_map_stor[k].lock())
+          ROCKET_ASSERT_MSG(old_sock.get() == old_socket, "Please fix this HACK");
+#endif  // ROCKET_DEBUG
+
+        // Move this socket into the new map.
+        this->do_linear_probe_socket_no_lock(old_socket).swap(old_map_stor[k]);
+        this->m_epoll_map_used ++;
+      }
+    }
+
+    // Insert the socket.
     this->do_epoll_ctl(EPOLL_CTL_ADD, socket, EPOLLIN | EPOLLPRI | EPOLLOUT | EPOLLET);
-    this->m_epoll_sockets[socket.get()] = socket;
+    this->do_linear_probe_socket_no_lock(socket.get()) = socket;
+    this->m_epoll_map_used ++;
   }
 
 }  // namespace poseidon

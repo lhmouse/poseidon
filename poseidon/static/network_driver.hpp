@@ -20,12 +20,12 @@ class Network_Driver
     SSL_CTX_ptr m_server_ssl_ctx;
     SSL_CTX_ptr m_client_ssl_ctx;
 
-    mutable plain_mutex m_epoll_mutex;
-    ::std::valarray<wkptr<Abstract_Socket>> m_epoll_map;
-    uint32_t m_epoll_map_size = 0;
+    mutable plain_mutex m_epoll_event_mutex;
+    linear_buffer m_epoll_events;
 
-    mutable plain_mutex m_event_mutex;
-    linear_buffer m_events;
+    mutable plain_mutex m_epoll_map_mutex;
+    ::std::valarray<wkptr<Abstract_Socket>> m_epoll_map_stor;
+    uint32_t m_epoll_map_used = 0;
 
   public:
     // Constructs an empty driver.
@@ -35,6 +35,9 @@ class Network_Driver
   private:
     void
     do_epoll_ctl(int op, shptrR<Abstract_Socket> socket, uint32_t events);
+
+    wkptr<Abstract_Socket>&
+    do_linear_probe_socket_no_lock(const volatile Abstract_Socket* socket) noexcept;
 
     static
     int
