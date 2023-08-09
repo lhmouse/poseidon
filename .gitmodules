@@ -4,6 +4,3 @@
 [submodule "http-parser"]
 	path = http-parser
 	url = https://github.com/lhmouse/http-parser.git
-[submodule "sparsehash-c11"]
-	path = sparsehash-c11
-	url = https://github.com/lhmouse/sparsehash-c11.git

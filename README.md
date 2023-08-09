@@ -19,12 +19,12 @@
 ```sh
 # For Ubuntu Focal
 sudo aptitude install zlib1g-dev  \
-   lib{edit,pcre2,ssl,magic,mongoc,http-parser,sparsehash,unwind}-dev  \
+   lib{edit,pcre2,ssl,magic,mongoc,http-parser,unwind}-dev  \
    libmysqlclient-dev
 
 # For Debian Buster
 sudo aptitude install zlib1g-dev  \
-   lib{edit,pcre2,ssl,magic,mongoc,http-parser,sparsehash,unwind}-dev  \
+   lib{edit,pcre2,ssl,magic,mongoc,http-parser,unwind}-dev  \
    libmariadb-dev-compat
 ```
 
