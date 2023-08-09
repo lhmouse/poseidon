@@ -6,7 +6,7 @@
 
 #include "../fwd.hpp"
 #include "../third/openssl_fwd.hpp"
-#include <sparsehash/dense_hash_map>
+#include <valarray>
 namespace poseidon {
 
 class Network_Driver
@@ -21,7 +21,8 @@ class Network_Driver
     SSL_CTX_ptr m_client_ssl_ctx;
 
     mutable plain_mutex m_epoll_mutex;
-    ::google::dense_hash_map<const volatile Abstract_Socket*, wkptr<Abstract_Socket>> m_epoll_sockets;
+    ::std::valarray<wkptr<Abstract_Socket>> m_epoll_map;
+    uint32_t m_epoll_map_size = 0;
 
     mutable plain_mutex m_event_mutex;
     linear_buffer m_events;

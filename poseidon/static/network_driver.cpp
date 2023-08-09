@@ -15,9 +15,6 @@ namespace poseidon {
 Network_Driver::
 Network_Driver()
   {
-    this->m_epoll_sockets.set_empty_key(reinterpret_cast<Abstract_Socket*>(-1));
-    this->m_epoll_sockets.set_deleted_key(reinterpret_cast<Abstract_Socket*>(-3));
-
     if(!this->m_epoll.reset(::epoll_create1(0)))
       POSEIDON_THROW((
           "Could not create epoll object",
@@ -321,24 +318,30 @@ thread_loop()
     ::epoll_event event;
 
     plain_mutex::unique_lock lock(this->m_conf_mutex);
-    const size_t event_buffer_size = this->m_event_buffer_size;
-    const size_t throttle_size = this->m_throttle_size;
+    const uint32_t event_buffer_size = this->m_event_buffer_size;
+    const uint32_t throttle_size = this->m_throttle_size;
     const auto server_ssl_ctx = this->m_server_ssl_ctx;
     lock.unlock();
 
     lock.lock(this->m_event_mutex);
-    if(this->m_events.getn((char*) &event, sizeof(event)) == 0) {
-      // If the queue has been exhausted, get events from the epoll and fill it.
+    if(this->m_events.empty()) {
+      // If the queue has been exhausted, try getting more events from the epoll.
+      // Errors are ignored.
       this->m_events.reserve_after_end(sizeof(::epoll_event) * event_buffer_size);
-      int nevents = ::epoll_wait(this->m_epoll, (::epoll_event*) this->m_events.end(), (int) this->m_events.capacity_after_end(), 5000);
-      if(nevents <= 0)
+      int nevents = ::epoll_wait(this->m_epoll, (::epoll_event*) this->m_events.mut_end(), (int) event_buffer_size, 5000);
+      if(nevents < 0) {
+        POSEIDON_LOG_DEBUG(("`epoll_wait()` failed: ${errno:full}"));
+        return;
+      }
+      else if(nevents == 0)
         return;
 
       this->m_events.accept(sizeof(::epoll_event) * (uint32_t) nevents);
       POSEIDON_LOG_TRACE(("Collected `$1` socket event(s) from epoll"), (uint32_t) nevents);
-
-      this->m_events.getn((char*) &event, sizeof(event));
     }
+
+    ROCKET_ASSERT(this->m_events.size() >= sizeof(event));
+    this->m_events.getn((char*) &event, sizeof(event));
     lock.unlock();
 
     // Get the socket.
