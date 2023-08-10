@@ -76,8 +76,9 @@ do_linear_probe_socket_no_lock(const volatile Abstract_Socket* socket) noexcept
     auto end = begin + this->m_epoll_map_stor.size();
 
     // HACK: Compare the socket pointer without tampering with the reference
-    // counter. The pointer itself will never be dereferenced.
-#define do_get_weak_(wptr)  reinterpret_cast<const volatile Abstract_Socket* const&>(wptr)
+    // counter. The pointer itself will never be dereferenced. It [should] be
+    // reasonable to assume `shared_ptr` and `weak_ptr` have identical layout.
+#define do_get_weak_(wptr)  (reinterpret_cast<const shptr<Abstract_Socket>&>(wptr).get())
 
     // Find an element using linear probing. If the socket is not found, a
     // reference to an empty element is returned.
