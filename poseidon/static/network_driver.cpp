@@ -77,7 +77,7 @@ do_linear_probe_socket_no_lock(const volatile Abstract_Socket* socket) noexcept
 
     // HACK: Compare the socket pointer without tampering with the reference
     // counter. The pointer itself will never be dereferenced.
-#define do_get_weak_(wptr)  reinterpret_cast<const volatile Abstract_Socket*&>(wptr)
+#define do_get_weak_(wptr)  reinterpret_cast<const volatile Abstract_Socket* const&>(wptr)
 
     // Find an element using linear probing. If the socket is not found, a
     // reference to an empty element is returned.
