@@ -172,6 +172,7 @@ do_yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override)
     lock.unlock();
 
     // Set re-scheduling parameters.
+    elem->wfutr = futr_opt;
     elem->yield_time = steady_clock::now();
     elem->fail_time = elem->yield_time;
     elem->async_time.store(elem->yield_time);
@@ -193,11 +194,10 @@ do_yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override)
       elem->fail_time = elem->yield_time + real_fail_timeout;
       elem->async_time.store(min(elem->yield_time + warn_timeout, elem->fail_time));
       futr_opt->m_waiters.emplace_back(async_time_ptr);
+      lock.unlock();
     }
-    lock.unlock();
 
     // -- NOEXCEPT REGION BEGINS --
-    elem->wfutr = futr_opt;
     ROCKET_ASSERT(elem->fiber->m_state.load() == async_running);
     elem->fiber->m_state.store(async_suspended);
     POSEIDON_LOG_TRACE(("Suspending fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
@@ -211,8 +211,9 @@ do_yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override)
     POSEIDON_LOG_TRACE(("Resumed fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
     ROCKET_ASSERT(elem->fiber->m_state.load() == async_suspended);
     elem->fiber->m_state.store(async_running);
-    elem->wfutr.reset();
     // -- NOEXCEPT REGION ENDS --
+
+    elem->wfutr.reset();
   }
 
 void
