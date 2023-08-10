@@ -61,7 +61,6 @@ wkptr<Abstract_Socket>&
 Network_Driver::
 do_linear_probe_socket_no_lock(const volatile Abstract_Socket* socket) noexcept
   {
-    static constexpr const volatile Abstract_Socket* xnullptr = nullptr;
     ROCKET_ASSERT(socket);
 
     // Keep the load factor no more than 0.5. The table shall not be empty.
@@ -76,16 +75,18 @@ do_linear_probe_socket_no_lock(const volatile Abstract_Socket* socket) noexcept
     auto origin = begin + (ptrdiff_t) (dist * ratio >> 32);
     auto end = begin + this->m_epoll_map_stor.size();
 
-    // Find an element using linear probing. If the socket is not found, a
-    // reference to an empty element is returned.
     // HACK: Compare the socket pointer without tampering with the reference
     // counter. The pointer itself will never be dereferenced.
+#define do_get_weak_(wptr)  reinterpret_cast<const volatile Abstract_Socket*&>(wptr)
+
+    // Find an element using linear probing. If the socket is not found, a
+    // reference to an empty element is returned.
     for(auto elem = origin;  elem != end;  ++elem)
-      if((::memcmp(elem, &xnullptr, sizeof(void*)) == 0) || (::memcmp(elem, &socket, sizeof(void*)) == 0))
+      if((do_get_weak_(*elem) == nullptr) || (do_get_weak_(*elem) == socket))
         return *elem;
 
     for(auto elem = begin;  elem != origin;  ++elem)
-      if((::memcmp(elem, &xnullptr, sizeof(void*)) == 0) || (::memcmp(elem, &socket, sizeof(void*)) == 0))
+      if((do_get_weak_(*elem) == nullptr) || (do_get_weak_(*elem) == socket))
         return *elem;
 
     ROCKET_UNREACHABLE();
@@ -505,18 +506,10 @@ insert(shptrR<Abstract_Socket> socket)
         if(old_map_stor[k].expired())
           continue;
 
+        // Move this socket into the new map.
         // HACK: Get the socket pointer without tampering with the reference
         // counter. The pointer itself will never be dereferenced.
-        volatile Abstract_Socket* old_socket;
-        ::memcpy(&old_socket, (void*) &(old_map_stor[k]), sizeof(old_socket));
-
-#ifdef ROCKET_DEBUG
-        if(auto old_sock = old_map_stor[k].lock())
-          ROCKET_ASSERT_MSG(old_sock.get() == old_socket, "Please fix this HACK");
-#endif  // ROCKET_DEBUG
-
-        // Move this socket into the new map.
-        this->do_linear_probe_socket_no_lock(old_socket).swap(old_map_stor[k]);
+        this->do_linear_probe_socket_no_lock(do_get_weak_(old_map_stor[k])).swap(old_map_stor[k]);
         this->m_epoll_map_used ++;
       }
     }
