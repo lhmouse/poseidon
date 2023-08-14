@@ -394,9 +394,14 @@ thread_loop()
     if(event.events & EPOLLERR) {
       POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLERR"), socket, typeid(*socket));
       socket->m_state.store(socket_closed);
-      ::socklen_t optlen = sizeof(errno);
-      ::getsockopt(socket->m_fd, SOL_SOCKET, SO_ERROR, &errno, &optlen);
-      POSEIDON_CATCH_ALL(socket->do_abstract_socket_on_closed());
+      try {
+        ::socklen_t optlen = sizeof(errno);
+        ::getsockopt(socket->m_fd, SOL_SOCKET, SO_ERROR, &errno, &optlen);
+        socket->do_abstract_socket_on_closed();
+      }
+      catch(exception& stdex) {
+        POSEIDON_LOG_ERROR(("`do_abstract_socket_on_closed()` error: $1", "[socket class `$2`]"), stdex, typeid(*socket));
+      }
       socket->m_io_driver = (Network_Driver*) 123456789;
       POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLERR done"), socket, typeid(*socket));
       return;
@@ -405,8 +410,13 @@ thread_loop()
     if(event.events & EPOLLHUP) {
       POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLHUP"), socket, typeid(*socket));
       socket->m_state.store(socket_closed);
-      errno = 0;
-      POSEIDON_CATCH_ALL(socket->do_abstract_socket_on_closed());
+      try {
+        errno = 0;
+        socket->do_abstract_socket_on_closed();
+      }
+      catch(exception& stdex) {
+        POSEIDON_LOG_ERROR(("`do_abstract_socket_on_closed()` error: $1", "[socket class `$2`]"), stdex, typeid(*socket));
+      }
       socket->m_io_driver = (Network_Driver*) 123456789;
       POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLHUP done"), socket, typeid(*socket));
       return;
