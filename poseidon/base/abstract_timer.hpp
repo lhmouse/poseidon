@@ -13,7 +13,6 @@ class Abstract_Timer
     friend class Timer_Driver;
 
     atomic_relaxed<Async_State> m_state;
-    uint64_t m_serial;  // used by timer driver
 
   protected:
     // Constructs an inactive timer.

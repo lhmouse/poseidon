@@ -11,7 +11,6 @@ namespace {
 struct Queued_Timer
   {
     wkptr<Abstract_Timer> wtimer;
-    uint64_t serial;
     steady_time next;
     milliseconds period;
   };
@@ -65,12 +64,12 @@ thread_loop()
     steady_time next = this->m_pq.back().next;
     auto timer = this->m_pq.back().wtimer.lock();
     Async_State next_state;
-    if(!timer || (this->m_pq.back().serial != timer->m_serial)) {
-      // If the element has been invalidated, delete it.
+    if(!timer) {
+      // If the timer has expired, delete it.
       this->m_pq.pop_back();
       return;
     }
-    else if(this->m_pq.back().period != zero_duration) {
+    else if(this->m_pq.back().period != 0s) {
       // Update the next time point and insert the timer back.
       this->m_pq.back().next += this->m_pq.back().period;
       ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), timer_comparator);
@@ -122,8 +121,6 @@ insert(shptrR<Abstract_Timer> timer, milliseconds delay, milliseconds period)
 
     // Insert the timer.
     plain_mutex::unique_lock lock(this->m_pq_mutex);
-    elem.serial = ++ this->m_serial;
-    timer->m_serial = elem.serial;
     this->m_pq.emplace_back(::std::move(elem));
     ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), timer_comparator);
     this->m_pq_avail.notify_one();
