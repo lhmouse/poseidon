@@ -391,86 +391,56 @@ thread_loop()
     socket->m_io_driver = this;
     lock.unlock();
 
-    if(event.events & (EPOLLHUP | EPOLLERR)) {
-      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLHUP | EPOLLERR"), socket, typeid(*socket));
-
-      // Pass the socket error code via `errno`... Is this good?
-      ::socklen_t optlen = sizeof(errno);
-      errno = 0;
-      if(event.events & EPOLLERR)
-        ::getsockopt(socket->m_fd, SOL_SOCKET, SO_ERROR, &errno, &optlen);
-
+    if(event.events & EPOLLERR) {
+      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLERR"), socket, typeid(*socket));
       socket->m_state.store(socket_closed);
+      ::socklen_t optlen = sizeof(errno);
+      ::getsockopt(socket->m_fd, SOL_SOCKET, SO_ERROR, &errno, &optlen);
       POSEIDON_CATCH_ALL(socket->do_abstract_socket_on_closed());
       socket->m_io_driver = (Network_Driver*) 123456789;
+      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLERR done"), socket, typeid(*socket));
+      return;
+    }
+
+    if(event.events & EPOLLHUP) {
+      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLHUP"), socket, typeid(*socket));
+      socket->m_state.store(socket_closed);
+      errno = 0;
+      POSEIDON_CATCH_ALL(socket->do_abstract_socket_on_closed());
+      socket->m_io_driver = (Network_Driver*) 123456789;
+      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLHUP done"), socket, typeid(*socket));
       return;
     }
 
     if(server_ssl_ctx)
       ::SSL_CTX_set_alpn_select_cb(server_ssl_ctx, do_alpn_callback, static_cast<Abstract_Socket*>(socket.get()));
 
-    if(event.events & EPOLLOUT) {
-      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLOUT"), socket, typeid(*socket));
-
-      try {
-        socket->do_abstract_socket_on_writable();
-      }
-      catch(exception& stdex) {
-        POSEIDON_LOG_ERROR((
-            "Unhandled exception thrown from `do_abstract_socket_on_writable()`: $1",
-            "[socket class `$2`]"),
-            stdex, typeid(*socket));
-
-        socket->quick_close();
-        socket->m_io_driver = (Network_Driver*) 123456789;
-        return;
-      }
-      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLOUT done"), socket, typeid(*socket));
+#define do_handle_epoll_event_(EPOLL_EVENT, target_function)  \
+    if(event.events & EPOLL_EVENT) {  \
+      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): " #EPOLL_EVENT), socket, typeid(*socket));  \
+      try {  \
+        socket->target_function();  \
+      }  \
+      catch(exception& stdex) {  \
+        POSEIDON_LOG_ERROR(("`" #target_function "()` error: $1", "[socket class `$2`]"), stdex, typeid(*socket));  \
+        socket->quick_close();  \
+        socket->m_io_driver = (Network_Driver*) 123456789;  \
+        return;  \
+      }  \
+      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): " #EPOLL_EVENT " done"), socket, typeid(*socket));  \
     }
 
-    if(event.events & EPOLLPRI) {
-      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLPRI"), socket, typeid(*socket));
+    // `EPOLLOUT` must be the very first event, as it also delivers connection
+    // establishment notifications.
+    do_handle_epoll_event_(EPOLLOUT, do_abstract_socket_on_writable)
+    do_handle_epoll_event_(EPOLLIN, do_abstract_socket_on_readable)
+    do_handle_epoll_event_(EPOLLPRI, do_abstract_socket_on_oob_readable)
 
-      try {
-        socket->do_abstract_socket_on_oob_readable();
-      }
-      catch(exception& stdex) {
-        POSEIDON_LOG_ERROR((
-            "Unhandled exception thrown from `do_abstract_socket_on_oob_readable()`: $1",
-            "[socket class `$2`]"),
-            stdex, typeid(*socket));
-
-        socket->quick_close();
-        socket->m_io_driver = (Network_Driver*) 123456789;
-        return;
-      }
-    }
-
-    if(event.events & EPOLLIN) {
-      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLIN"), socket, typeid(*socket));
-
-      try {
-        socket->do_abstract_socket_on_readable();
-      }
-      catch(exception& stdex) {
-        POSEIDON_LOG_ERROR((
-            "Unhandled exception thrown from `do_abstract_socket_on_readable()`: $1",
-            "[socket class `$2`]"),
-            stdex, typeid(*socket));
-
-        socket->quick_close();
-        socket->m_io_driver = (Network_Driver*) 123456789;
-        return;
-      }
-      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLIN done"), socket, typeid(*socket));
-    }
-
+    // If there are too many bytes pending, disable `EPOLLIN` notification.
     bool throttled = socket->m_io_write_queue.size() > throttle_size;
     if(throttled != socket->m_io_throttled) {
       socket->m_io_throttled = throttled;
-
-      // If there are too many bytes pending, disable `EPOLLIN` notification.
-      this->do_epoll_ctl(EPOLL_CTL_MOD, socket, throttled ? EPOLLOUT : (EPOLLIN | EPOLLPRI | EPOLLOUT | EPOLLET));
+      this->do_epoll_ctl(EPOLL_CTL_MOD, socket, throttled * (EPOLLIN | EPOLLPRI | EPOLLET) | EPOLLOUT);
     }
 
     if(server_ssl_ctx)
