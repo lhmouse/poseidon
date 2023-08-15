@@ -356,10 +356,11 @@ thread_loop()
     const auto server_ssl_ctx = this->m_server_ssl_ctx;
     lock.unlock();
 
-    // Get an event from the queue. If the queue is empty, populate it with more
-    // events from the epoll. Errors are ignored.
+    // Get an event from the queue.
     lock.lock(this->m_epoll_event_mutex);
     if(this->m_epoll_events.empty()) {
+      // If the queue is empty, populate it with more events from the epoll.
+      // Errors are ignored.
       this->m_epoll_events.reserve_after_end(event_buffer_size * sizeof(::epoll_event));
       int nevents = ::epoll_wait(this->m_epoll, (::epoll_event*) this->m_epoll_events.mut_end(), (int) event_buffer_size, 5000);
       if(nevents <= 0) {
@@ -391,39 +392,27 @@ thread_loop()
     socket->m_io_driver = this;
     lock.unlock();
 
-    if(event.events & EPOLLERR) {
-      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLERR"), socket, typeid(*socket));
-      socket->m_state.store(socket_closed);
-      try {
-        ::socklen_t optlen = sizeof(errno);
-        ::getsockopt(socket->m_fd, SOL_SOCKET, SO_ERROR, &errno, &optlen);
-        socket->do_abstract_socket_on_closed();
-      }
-      catch(exception& stdex) {
-        POSEIDON_LOG_ERROR(("`do_abstract_socket_on_closed()` error: $1", "[socket class `$2`]"), stdex, typeid(*socket));
-      }
-      socket->m_io_driver = (Network_Driver*) 123456789;
-      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLERR done"), socket, typeid(*socket));
-      return;
-    }
-
-    if(event.events & EPOLLHUP) {
-      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLHUP"), socket, typeid(*socket));
-      socket->m_state.store(socket_closed);
-      try {
-        errno = 0;
-        socket->do_abstract_socket_on_closed();
-      }
-      catch(exception& stdex) {
-        POSEIDON_LOG_ERROR(("`do_abstract_socket_on_closed()` error: $1", "[socket class `$2`]"), stdex, typeid(*socket));
-      }
-      socket->m_io_driver = (Network_Driver*) 123456789;
-      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLHUP done"), socket, typeid(*socket));
-      return;
-    }
-
     if(server_ssl_ctx)
       ::SSL_CTX_set_alpn_select_cb(server_ssl_ctx, do_alpn_callback, static_cast<Abstract_Socket*>(socket.get()));
+
+    if(event.events & (EPOLLHUP | EPOLLERR)) {
+      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLHUP | EPOLLERR"), socket, typeid(*socket));
+      try {
+        socket->m_state.store(socket_closed);
+        ::socklen_t optlen = sizeof(int);
+        if(event.events & EPOLLERR)
+          ::getsockopt(socket->m_fd, SOL_SOCKET, SO_ERROR, &errno, &optlen);
+        else
+          errno = 0;
+        socket->do_abstract_socket_on_closed();
+      }
+      catch(exception& stdex) {
+        POSEIDON_LOG_ERROR(("`do_abstract_socket_on_closed()` error: $1", "[socket class `$2`]"), stdex, typeid(*socket));
+      }
+      socket->m_io_driver = (Network_Driver*) 123456789;
+      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLHUP | EPOLLERR done"), socket, typeid(*socket));
+      return;
+    }
 
 #define do_handle_epoll_event_(EPOLL_EVENT, target_function)  \
     if(event.events & EPOLL_EVENT) {  \
@@ -446,15 +435,17 @@ thread_loop()
     do_handle_epoll_event_(EPOLLIN, do_abstract_socket_on_readable)
     do_handle_epoll_event_(EPOLLPRI, do_abstract_socket_on_oob_readable)
 
-    // If there are too many bytes pending, disable `EPOLLIN` notification.
-    bool throttled = socket->m_io_write_queue.size() > throttle_size;
-    if(throttled != socket->m_io_throttled) {
-      socket->m_io_throttled = throttled;
-      this->do_epoll_ctl(EPOLL_CTL_MOD, socket, throttled * (EPOLLIN | EPOLLPRI | EPOLLET) | EPOLLOUT);
-    }
+    if(socket->m_io_throttled != (socket->m_io_write_queue.size() > throttle_size)) {
+      // When there are too many outgoing bytes pending, mostly likely due to
+      // network instability, as a safety measure, EPOLLIN notifications are
+      // disabled until some bytes can be transferred.
+      socket->m_io_throttled ^= true;
+      this->do_epoll_ctl(EPOLL_CTL_MOD, socket, EPOLLOUT | socket->m_io_throttled * (EPOLLIN | EPOLLPRI | EPOLLET));
 
-    if(server_ssl_ctx)
-      ::SSL_CTX_set_alpn_select_cb(server_ssl_ctx, nullptr, nullptr);
+      POSEIDON_LOG_INFO((
+          "Throttle socket `$1` (class `$2`): queue_size = `$3`, throttled = `$4`"),
+          socket, typeid(*socket), socket->m_io_write_queue.size(), socket->m_io_throttled);
+    }
 
     POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`) I/O complete"), socket, typeid(*socket));
     socket->m_io_driver = (Network_Driver*) 123456789;
