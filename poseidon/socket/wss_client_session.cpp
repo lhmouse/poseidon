@@ -188,10 +188,12 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
             }
 
             case 8: {  // CLOSE
+              ROCKET_ASSERT(this->m_closure_notified == false);
+              this->m_closure_notified = true;
               data.clear();
               uint16_t bestatus = htobe16(1005);
               payload.getn(reinterpret_cast<char*>(&bestatus), 2);
-              this->do_call_on_wss_close_once(be16toh(bestatus), payload);
+              this->do_on_wss_close(be16toh(bestatus), payload);
               return;
             }
 
@@ -360,7 +362,7 @@ bool
 WSS_Client_Session::
 wss_shut_down(uint16_t status, chars_view reason) noexcept
   {
-    if(!this->do_has_upgraded())
+    if(!this->do_has_upgraded() || (this->socket_state() >= socket_closing))
       return this->ssl_shut_down();
 
     bool succ = false;
