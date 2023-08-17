@@ -360,15 +360,13 @@ thread_loop()
     ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), fiber_comparator);
 
     recursive_mutex::unique_lock sched_lock(this->m_sched_mutex);
+    auto futr = elem->wfutr.lock();
     elem->fiber->m_sched = this;
     lock.unlock();
 
     POSEIDON_LOG_TRACE((
         "Processing fiber `$1` (class `$2`): state = $3"),
         elem->fiber, typeid(*(elem->fiber)), elem->fiber->m_state.load());
-
-    // Check timeouts.
-    auto futr = elem->wfutr.lock();
 
     if(now >= elem->yield_time + warn_timeout)
       POSEIDON_LOG_WARN((
@@ -388,12 +386,6 @@ thread_loop()
       POSEIDON_LOG_TRACE(("Initializing fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
       ROCKET_ASSERT(elem->sched_inner->uc_stack.ss_sp == nullptr);
 
-      elem->fiber->m_yield =
-          +[](Fiber_Scheduler* xthis, shptrR<Abstract_Future> xfutr, milliseconds xtimeout)
-            {
-              xthis->do_yield(xfutr, xtimeout);
-            };
-
       // Initialize the fiber procedure and its stack.
       ::getcontext(elem->sched_inner);
       elem->sched_inner->uc_stack = do_alloc_stack(stack_vm_size);  // may throw
@@ -412,7 +404,14 @@ thread_loop()
 
               ythis->do_fiber_function();
             },
-          2, xargs[0], xargs[1]);
+          2,
+          xargs[0], xargs[1]);
+
+      elem->fiber->m_yield =
+          +[](Fiber_Scheduler* ythis, shptrR<Abstract_Future> yfutr, milliseconds ytimeout)
+            {
+              ythis->do_yield(yfutr, ytimeout);
+            };
     }
 
     // Start or resume this fiber.
