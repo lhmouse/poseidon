@@ -348,6 +348,7 @@ thread_loop()
 
       POSEIDON_LOG_TRACE(("Deleting fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
       elem->fiber.reset();
+      ROCKET_ASSERT(elem->sched_inner->uc_stack.ss_sp != nullptr);
       do_free_stack(elem->sched_inner->uc_stack);
       return;
     }
