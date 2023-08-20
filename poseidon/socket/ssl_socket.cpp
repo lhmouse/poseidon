@@ -186,8 +186,8 @@ do_abstract_socket_on_readable()
     if(ssl_err == SSL_ERROR_ZERO_RETURN) {
       // If the end of stream has been reached, shut the connection down anyway.
       // Half-open connections are not supported.
-      int alert = ::SSL_shutdown(this->ssl());
-      POSEIDON_LOG_INFO(("Closing SSL connection: remote = $1, alert = $2"), this->remote_address(), alert);
+      int alerted = ::SSL_shutdown(this->ssl());
+      POSEIDON_LOG_INFO(("Closing SSL connection: remote = $1, alerted = $2"), this->remote_address(), alerted);
       ::shutdown(this->do_get_fd(), SHUT_RDWR);
     }
 
@@ -289,7 +289,8 @@ do_abstract_socket_on_writable()
     if(queue.empty() && this->do_abstract_socket_change_state(socket_closing, socket_closed)) {
       // If the socket has been marked closing and there are no more data, perform
       // complete shutdown.
-      ::SSL_shutdown(this->ssl());
+      int alerted = ::SSL_shutdown(this->ssl());
+      POSEIDON_LOG_INFO(("Closing SSL connection: remote = $1, alerted = $2"), this->remote_address(), alerted);
       ::shutdown(this->do_get_fd(), SHUT_RDWR);
     }
 
