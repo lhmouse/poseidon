@@ -260,7 +260,9 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
           ::memcpy(sec_ws.key_str, hpair.second.as_c_str(), 25);
       }
       else if(ascii_ci_equal(hpair.first, sref("Sec-WebSocket-Extensions"))) {
-        if(!hpair.second.is_string())
+        if(hpair.second.is_null())
+          continue;
+        else if(!hpair.second.is_string())
           return;
 
         // Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits
@@ -268,8 +270,6 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
         while(hparser.next_element())
           if(ascii_ci_equal(hparser.current_name(), sref("permessage-deflate")))
             pmce.use_permessage_deflate(hparser);
-          else
-            return;  // unknown extension; ignore
       }
 
     if(!upgrade_ok || !ws_version_ok || !sec_ws.key_str[0]) {
