@@ -444,18 +444,52 @@ ROCKET_NEVER_INLINE
 void
 do_init_signal_handlers()
   {
-    // Ignore some signals for good.
     struct ::sigaction sigact;
     ::sigemptyset(&(sigact.sa_mask));
+
+    // Ignore some signals for good.
     sigact.sa_flags = 0;
     sigact.sa_handler = SIG_IGN;
     ::sigaction(SIGPIPE, &sigact, nullptr);
+    ::sigaction(SIGCHLD, &sigact, nullptr);
 
-    if(cmdline.daemonize)
-      ::sigaction(SIGHUP, &sigact, nullptr);
+#ifdef POSEIDON_USE_NON_CALL_EXCEPTIONS
+    // Install fault handlers. Errors are ignored.
+    sigact.sa_flags = SA_SIGINFO;
+    sigact.sa_sigaction = +[](int sig, ::siginfo_t* info, void* /*uctx*/)
+      {
+        const char* sig_name = "unknown";
+        const char* sig_desc = "Unknown signal";
 
-    // Trap signals. Errors are ignored.
+        switch(sig) {
+#define do_signal_case_(name, desc)  \
+          case (name):  sig_name = #name;  sig_desc = desc;  break;
+
+          do_signal_case_(SIGABRT, "Abortion")
+          do_signal_case_(SIGTRAP, "Breakpoint")
+          do_signal_case_(SIGBUS, "Alignment fault")
+          do_signal_case_(SIGFPE, "Arithmetic exception")
+          do_signal_case_(SIGILL, "Illegal instruction")
+          do_signal_case_(SIGSEGV, "General protection fault")
+        };
+
+        POSEIDON_THROW((
+            "Deadly signal $1 ($2) received: $3 at address $4"),
+            sig, sig_name, sig_desc, info->si_addr);
+      };
+
+    ::sigaction(SIGABRT, &sigact, nullptr);
+    ::sigaction(SIGTRAP, &sigact, nullptr);
+    ::sigaction(SIGBUS, &sigact, nullptr);
+    ::sigaction(SIGFPE, &sigact, nullptr);
+    ::sigaction(SIGILL, &sigact, nullptr);
+    ::sigaction(SIGSEGV, &sigact, nullptr);
+#endif
+
+    // Install termination handlers. Errors are ignored.
+    sigact.sa_flags = 0;
     sigact.sa_handler = +[](int n) { exit_signal.store(n);  };
+
     ::sigaction(SIGINT, &sigact, nullptr);
     ::sigaction(SIGTERM, &sigact, nullptr);
     ::sigaction(SIGALRM, &sigact, nullptr);
