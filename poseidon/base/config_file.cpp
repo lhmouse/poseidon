@@ -66,8 +66,10 @@ query(initializer_list<phsh_string> path) const
       value = parent->ptr(*pcur);
     }
 
-    // If the path does not exist, return the static null value.
-    return value ? *value : ::asteria::null_value;
+    if(!value)
+      return ::asteria::null_value;
+
+    return *value;
   }
 
 }  // namespace poseidon
