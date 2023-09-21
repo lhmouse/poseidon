@@ -492,6 +492,7 @@ do_init_signal_handlers()
 
     ::sigaction(SIGINT, &sigact, nullptr);
     ::sigaction(SIGTERM, &sigact, nullptr);
+    ::sigaction(SIGHUP, &sigact, nullptr);
     ::sigaction(SIGALRM, &sigact, nullptr);
   }
 
