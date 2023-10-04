@@ -51,14 +51,24 @@ mask_payload(char* data, size_t size) noexcept
     char* esdata = data + size;
 
     while(esdata - cur >= 16) {
+      // by XMMWORD
       __m128i* xcur = (__m128i*) cur;
       _mm_storeu_si128(xcur, _mm_loadu_si128(xcur) ^ exmask);
       cur += 16;
     }
 
+    if(esdata - cur >= 8) {
+      // by QWORD
+      __m128i* xcur = (__m128i*) cur;
+      _mm_storeu_si64(xcur, _mm_loadu_si64(xcur) ^ exmask);
+      cur += 8;
+    }
+
     while(cur != esdata) {
+      // bytewise
       *cur ^= this->mask_key[0];
-      ::rocket::rotate(this->mask_key, 0, 1, 4);
+      exmask = _mm_srli_si128(exmask, 1);
+      _mm_storeu_si32(this->mask_key, exmask);
       cur ++;
     }
 
