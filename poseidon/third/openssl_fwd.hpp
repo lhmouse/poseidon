@@ -20,13 +20,17 @@ namespace poseidon {
     public:  \
       constexpr  \
       OBJ##_ptr(nullptr_t = nullptr) noexcept  \
-        : m_ptr(nullptr)  \
-        { }  \
+        :  \
+          m_ptr(nullptr)  \
+        {  \
+        }  \
   \
       explicit constexpr  \
       OBJ##_ptr(::OBJ* ptr) noexcept  \
-        : m_ptr(ptr)  \
-        { }  \
+        :  \
+          m_ptr(ptr)  \
+        {  \
+        }  \
   \
       OBJ##_ptr(const OBJ##_ptr& other) noexcept  \
         {  \

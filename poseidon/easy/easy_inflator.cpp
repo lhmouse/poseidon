@@ -14,8 +14,10 @@ struct Final_Inflator final : Inflator
 
     explicit
     Final_Inflator(zlib_Format format)
-      : Inflator(format)
-      { }
+      :
+        Inflator(format)
+      {
+      }
 
     virtual
     char*

@@ -9,7 +9,8 @@
 namespace poseidon {
 
 class Async_Connect
-  : public Abstract_Async_Task
+  :
+    public Abstract_Async_Task
   {
   private:
     Network_Driver* m_driver;

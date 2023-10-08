@@ -48,13 +48,17 @@ class Easy_SSL_Client
     ROCKET_ENABLE_IF(thunk_type::is_invocable<CallbackT>::value)>
     explicit
     Easy_SSL_Client(CallbackT&& cb)
-      : m_thunk(new_sh(::std::forward<CallbackT>(cb)))
-      { }
+      :
+        m_thunk(new_sh(::std::forward<CallbackT>(cb)))
+      {
+      }
 
     explicit
     Easy_SSL_Client(thunk_type::function_type* fptr)
-      : m_thunk(fptr)
-      { }
+      :
+        m_thunk(fptr)
+      {
+      }
 
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_SSL_Client);

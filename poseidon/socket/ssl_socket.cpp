@@ -13,7 +13,8 @@ namespace poseidon {
 
 SSL_Socket::
 SSL_Socket(unique_posix_fd&& fd, ::SSL_CTX* ctx_opt)
-  : Abstract_Socket(::std::move(fd))
+  :
+    Abstract_Socket(::std::move(fd))
   {
     this->m_ssl.reset(::SSL_new(ctx_opt ? ctx_opt : network_driver.default_server_ssl_ctx().get()));
     if(!this->m_ssl)
@@ -35,7 +36,8 @@ SSL_Socket(unique_posix_fd&& fd, ::SSL_CTX* ctx_opt)
 
 SSL_Socket::
 SSL_Socket(::SSL_CTX* ctx_opt)
-  : Abstract_Socket(SOCK_STREAM, IPPROTO_TCP)
+  :
+    Abstract_Socket(SOCK_STREAM, IPPROTO_TCP)
   {
     this->m_ssl.reset(::SSL_new(ctx_opt ? ctx_opt : network_driver.default_client_ssl_ctx().get()));
     if(!this->m_ssl)

@@ -11,7 +11,8 @@
 namespace poseidon {
 
 class HTTPS_Server_Session
-  : public virtual SSL_Socket
+  :
+    public virtual SSL_Socket
   {
   private:
     optional<HTTP_Request_Parser> m_req_parser;

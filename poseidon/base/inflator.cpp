@@ -8,7 +8,8 @@ namespace poseidon {
 
 Inflator::
 Inflator(zlib_Format format)
-  : m_strm(format, 15)
+  :
+    m_strm(format, 15)
   {
   }
 

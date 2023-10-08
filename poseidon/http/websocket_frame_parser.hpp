@@ -59,7 +59,8 @@ class WebSocket_Frame_Parser
   public:
     // Constructs a parser for incoming frames.
     WebSocket_Frame_Parser() noexcept
-      { }
+      {
+      }
 
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(WebSocket_Frame_Parser);

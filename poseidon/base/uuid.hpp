@@ -57,13 +57,16 @@ class uuid
     // Constructs a nil UUID.
     constexpr
     uuid() noexcept
-      : m_stor()
-      { }
+      :
+        m_stor()
+      {
+      }
 
     // Constructs a UUID in the RFC 4122 format.
     constexpr
     uuid(const fields& fs) noexcept
-      : m_data_1_3()
+      :
+        m_data_1_3()
       {
         this->m_data_1_3 = (uint8_t) (fs.time_low >> 24);
         this->m_data_1_2 = (uint8_t) (fs.time_low >> 16);

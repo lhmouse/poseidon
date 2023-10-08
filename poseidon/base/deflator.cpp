@@ -8,7 +8,8 @@ namespace poseidon {
 
 Deflator::
 Deflator(zlib_Format format, int level)
-  : m_strm(format, 15, level)
+  :
+    m_strm(format, 15, level)
   {
   }
 

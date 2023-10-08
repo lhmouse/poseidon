@@ -23,8 +23,10 @@ struct HTTP_Request_Headers
     // Define some helper functions.
     constexpr
     HTTP_Request_Headers() noexcept
-      : method(), uri_host(), uri_port(), is_proxy(), is_ssl(), headers()
-      { }
+      :
+        method(), uri_host(), uri_port(), is_proxy(), is_ssl(), headers()
+      {
+      }
 
     HTTP_Request_Headers&
     swap(HTTP_Request_Headers& other) noexcept

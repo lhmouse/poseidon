@@ -10,13 +10,15 @@ namespace poseidon {
 
 TCP_Socket::
 TCP_Socket(unique_posix_fd&& fd)
-  : Abstract_Socket(::std::move(fd))
+  :
+    Abstract_Socket(::std::move(fd))
   {
   }
 
 TCP_Socket::
 TCP_Socket()
-  : Abstract_Socket(SOCK_STREAM, IPPROTO_TCP)
+  :
+    Abstract_Socket(SOCK_STREAM, IPPROTO_TCP)
   {
   }
 

@@ -10,7 +10,8 @@
 namespace poseidon {
 
 class Read_File_Future
-  : public Abstract_Future,
+  :
+    public Abstract_Future,
     public Abstract_Async_Task
   {
   public:

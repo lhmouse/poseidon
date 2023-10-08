@@ -9,7 +9,8 @@ namespace poseidon {
 
 WebSocket_Deflator::
 WebSocket_Deflator(const WebSocket_Frame_Parser& parser)
-  : m_def_strm(zlib_raw, parser.pmce_send_max_window_bits(),  parser.pmce_send_compression_level()),
+  :
+    m_def_strm(zlib_raw, parser.pmce_send_max_window_bits(),  parser.pmce_send_compression_level()),
     m_inf_strm(zlib_raw, parser.pmce_recv_max_window_bits())
   {
   }

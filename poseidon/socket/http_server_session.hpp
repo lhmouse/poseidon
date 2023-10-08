@@ -11,7 +11,8 @@
 namespace poseidon {
 
 class HTTP_Server_Session
-  : public virtual TCP_Socket
+  :
+    public virtual TCP_Socket
   {
   private:
     optional<HTTP_Request_Parser> m_req_parser;

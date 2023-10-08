@@ -10,7 +10,8 @@
 namespace poseidon {
 
 class WSS_Client_Session
-  : public HTTPS_Client_Session
+  :
+    public HTTPS_Client_Session
   {
   private:
     cow_string m_host;

@@ -9,7 +9,8 @@
 namespace poseidon {
 
 class UDP_Socket
-  : public Abstract_Socket
+  :
+    public Abstract_Socket
   {
   private:
     friend class Network_Driver;

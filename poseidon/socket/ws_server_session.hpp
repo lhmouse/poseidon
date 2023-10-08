@@ -10,7 +10,8 @@
 namespace poseidon {
 
 class WS_Server_Session
-  : public HTTP_Server_Session
+  :
+    public HTTP_Server_Session
   {
   private:
     WebSocket_Frame_Parser m_parser;

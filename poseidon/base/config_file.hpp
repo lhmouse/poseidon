@@ -18,8 +18,10 @@ class Config_File
     // Constructs an empty file.
     constexpr
     Config_File() noexcept
-      : m_path(), m_root()
-      { }
+      :
+        m_path(), m_root()
+      {
+      }
 
     // Loads the file denoted by `path`.
     explicit

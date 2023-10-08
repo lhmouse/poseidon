@@ -10,7 +10,8 @@
 namespace poseidon {
 
 class WS_Client_Session
-  : public HTTP_Client_Session
+  :
+    public HTTP_Client_Session
   {
   private:
     cow_string m_host;

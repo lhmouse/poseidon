@@ -25,7 +25,8 @@ class HTTP_Header_Parser
     // various HTTP headers in the semicolon-inside-comma-separated format,
     // such as `Cookie` and `Accept-Encoding`.
     HTTP_Header_Parser() noexcept
-      { }
+      {
+      }
 
   private:
     int

@@ -11,7 +11,8 @@
 namespace poseidon {
 
 class DNS_Future
-  : public Abstract_Future,
+  :
+    public Abstract_Future,
     public Abstract_Async_Task
   {
   public:

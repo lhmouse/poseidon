@@ -11,7 +11,8 @@ namespace poseidon {
 
 Listen_Socket::
 Listen_Socket(const Socket_Address& addr)
-  : Abstract_Socket(SOCK_STREAM, IPPROTO_TCP)
+  :
+    Abstract_Socket(SOCK_STREAM, IPPROTO_TCP)
   {
     // Use `SO_REUSEADDR`. Errors are ignored.
     static constexpr int true_value = 1;
