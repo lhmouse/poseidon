@@ -59,8 +59,7 @@ class uuid
     uuid() noexcept
       :
         m_stor()
-      {
-      }
+      { }
 
     // Constructs a UUID in the RFC 4122 format.
     constexpr

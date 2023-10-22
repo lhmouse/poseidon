@@ -20,8 +20,7 @@ class Config_File
     Config_File() noexcept
       :
         m_path(), m_root()
-      {
-      }
+      { }
 
     // Loads the file denoted by `path`.
     explicit

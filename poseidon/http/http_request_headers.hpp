@@ -25,11 +25,7 @@ struct HTTP_Request_Headers
     HTTP_Request_Headers() noexcept
       :
         method(), uri_host(), uri_port(), is_proxy(), is_ssl(), headers()
-      {
-      }
-
-    HTTP_Request_Headers&
-    swap(HTTP_Request_Headers& other) noexcept
+      { }p(HTTP_Request_Headers& other) noexcept
       {
         ::std::swap(this->method, other.method);
         this->uri_host.swap(other.uri_host);

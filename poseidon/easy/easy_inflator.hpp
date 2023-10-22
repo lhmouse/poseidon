@@ -19,8 +19,7 @@ class Easy_Inflator
     Easy_Inflator() noexcept
       :
         m_infl(), m_out()
-      {
-      }
+      { }
 
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_Inflator);

@@ -23,23 +23,19 @@ class Socket_Address
     Socket_Address() noexcept
       :
         m_addr(), m_port(0)
-      {
-      }
-
+      { }
     // Initializes an address from a foreign source.
     constexpr
     Socket_Address(const ::in6_addr& addr, uint16_t port = 0) noexcept
       :
         m_addr(addr), m_port(port)
-      {
-      }
+      { }
 
     constexpr
     Socket_Address(const Socket_Address& other, uint16_t port) noexcept
       :
         m_addr(other.m_addr), m_port(port)
-      {
-      }
+      { }
 
     // Parses an address from a string, like `parse()`.
     // An exception is thrown if the address string is not valid.

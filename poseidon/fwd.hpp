@@ -286,8 +286,7 @@ class char256
     char256() noexcept
       :
         m_data()
-      {
-      }
+      { }
 
     // Constructs a null-terminated string.
     // This constructor is not explicit as it doesn't allocate memory.
@@ -340,38 +339,33 @@ struct chars_view
     chars_view(nullptr_t = nullptr) noexcept
       :
         p(nullptr), n(0U)
-      {
-      }
+      { }
 
     constexpr
     chars_view(const char* xp, size_t xn) noexcept
       :
         p(xp), n(xn)
-      {
-      }
+      { }
 
     constexpr
     chars_view(const char* xs) noexcept
       :
         p(xs), n(xs ? xstrlen(xs) : 0U)
-      {
-      }
+      { }
 
     template<typename traitsT, typename allocT>
     constexpr
     chars_view(const ::std::basic_string<char, traitsT, allocT>& rs) noexcept
       :
         p(rs.data()), n(rs.size())
-      {
-      }
+      { }
 
     template<typename allocT>
     constexpr
     chars_view(const ::std::vector<char, allocT>& rs) noexcept
       :
         p(rs.data()), n(rs.size())
-      {
-      }
+      { }
 
 #ifdef __cpp_lib_string_view
     template<typename traitsT>
@@ -379,80 +373,70 @@ struct chars_view
     chars_view(const ::std::basic_string_view<char, traitsT>& rs) noexcept
       :
         p(rs.data()), n(rs.size())
-      {
-      }
+      { }
 #endif  // __cpp_lib_string_view
 
     constexpr
     chars_view(const ::rocket::shallow_string rs) noexcept
       :
         p(rs.data()), n(rs.size())
-      {
-      }
+      { }
 
     template<typename allocT>
     constexpr
     chars_view(const ::rocket::basic_cow_string<char, allocT>& rs) noexcept
       :
         p(rs.data()), n(rs.size())
-      {
-      }
+      { }
 
     template<typename allocT>
     constexpr
     chars_view(const ::rocket::basic_tinybuf_str<char, allocT>& rs) noexcept
       :
         p(rs.data()), n(rs.size())
-      {
-      }
+      { }
 
     template<typename allocT>
     constexpr
     chars_view(const ::rocket::basic_tinyfmt_str<char, allocT>& rs) noexcept
       :
         p(rs.data()), n(rs.size())
-      {
-      }
+      { }
 
     template<typename allocT>
     constexpr
     chars_view(const ::rocket::basic_linear_buffer<char, allocT>& rs) noexcept
       :
         p(rs.data()), n(rs.size())
-      {
-      }
+      { }
 
     template<typename allocT>
     constexpr
     chars_view(const ::rocket::basic_tinybuf_ln<char, allocT>& rs) noexcept
       :
         p(rs.data()), n(rs.size())
-      {
-      }
+      { }
 
     template<typename allocT>
     constexpr
     chars_view(const ::rocket::basic_tinyfmt_ln<char, allocT>& rs) noexcept
       :
         p(rs.data()), n(rs.size())
-      {
-      }
+      { }
 
     template<typename allocT>
     constexpr
     chars_view(const ::rocket::cow_vector<char, allocT>& rs) noexcept
       :
         p(rs.data()), n(rs.size())
-      {
-      }
+      { }
 
     template<size_t N, typename allocT>
     constexpr
     chars_view(const ::rocket::static_vector<char, N, allocT>& rs) noexcept
       :
         p(rs.data()), n(rs.size())
-      {
-      }
+      { }
 
     // Returns the first character. Depending on the nature of the source string,
     // reading one character past the end might be allowed, so we don't check

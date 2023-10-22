@@ -25,8 +25,7 @@ class HTTP_Query_Parser
     // the query component of a URI or URL, or the body of an HTTP request whose
     // `Content-Type:` equals `application/x-www-form-urlencoded`.
     HTTP_Query_Parser() noexcept
-      {
-      }
+      { }
 
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(HTTP_Query_Parser);

@@ -37,8 +37,7 @@ struct WebSocket_Frame_Header
     WebSocket_Frame_Header() noexcept
       :
         m_stor()
-      {
-      }
+      { }
 
     WebSocket_Frame_Header&
     swap(WebSocket_Frame_Header& other) noexcept

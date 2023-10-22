@@ -36,15 +36,13 @@ class Easy_Timer
     Easy_Timer(CallbackT&& cb)
       :
         m_thunk(new_sh(::std::forward<CallbackT>(cb)))
-      {
-      }
+      { }
 
     explicit
     Easy_Timer(thunk_type::function_type* fptr)
       :
         m_thunk(fptr)
-      {
-      }
+      { }
 
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_Timer);

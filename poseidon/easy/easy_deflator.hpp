@@ -19,8 +19,7 @@ class Easy_Deflator
     Easy_Deflator() noexcept
       :
         m_defl(), m_out()
-      {
-      }
+      { }
 
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_Deflator);

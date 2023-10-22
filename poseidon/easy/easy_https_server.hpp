@@ -48,15 +48,13 @@ class Easy_HTTPS_Server
     Easy_HTTPS_Server(CallbackT&& cb)
       :
         m_thunk(new_sh(::std::forward<CallbackT>(cb)))
-      {
-      }
+      { }
 
     explicit
     Easy_HTTPS_Server(thunk_type::function_type* fptr)
       :
         m_thunk(fptr)
-      {
-      }
+      { }
 
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_HTTPS_Server);

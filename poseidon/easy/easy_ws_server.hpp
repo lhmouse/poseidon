@@ -51,15 +51,13 @@ class Easy_WS_Server
     Easy_WS_Server(CallbackT&& cb)
       :
         m_thunk(new_sh(::std::forward<CallbackT>(cb)))
-      {
-      }
+      { }
 
     explicit
     Easy_WS_Server(thunk_type::function_type* fptr)
       :
         m_thunk(fptr)
-      {
-      }
+      { }
 
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_WS_Server);

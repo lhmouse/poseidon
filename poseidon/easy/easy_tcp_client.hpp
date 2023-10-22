@@ -50,15 +50,13 @@ class Easy_TCP_Client
     Easy_TCP_Client(CallbackT&& cb)
       :
         m_thunk(new_sh(::std::forward<CallbackT>(cb)))
-      {
-      }
+      { }
 
     explicit
     Easy_TCP_Client(thunk_type::function_type* fptr)
       :
         m_thunk(fptr)
-      {
-      }
+      { }
 
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_TCP_Client);

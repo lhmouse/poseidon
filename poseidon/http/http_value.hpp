@@ -44,38 +44,30 @@ class HTTP_Value
     HTTP_Value(nullptr_t = nullptr) noexcept
       :
         m_index_stor(), m_str(), m_num(), m_dt()
-      {
-      }
+      { }
 
     HTTP_Value(cow_stringR str) noexcept
       :
         m_index(index_string), m_str(str)
-      {
-      }
-
+      { }
     HTTP_Value(int num) noexcept
       :
         m_index(index_number), m_num(num)
-      {
-      }
-
+      { }
     HTTP_Value(double num) noexcept
       :
         m_index(index_number), m_num(num)
-      {
-      }
+      { }
 
     HTTP_Value(const HTTP_DateTime& dt) noexcept
       :
         m_index(index_datetime), m_dt(dt)
-      {
-      }
+      { }
 
     HTTP_Value(system_time tm) noexcept
       :
         m_index(index_datetime), m_dt(time_point_cast<seconds>(tm))
-      {
-      }
+      { }
 
     HTTP_Value&
     operator=(nullptr_t) & noexcept

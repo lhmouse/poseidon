@@ -18,16 +18,14 @@ class HTTP_DateTime
     HTTP_DateTime() noexcept
       :
         m_tp()
-      {
-      }
+      { }
 
     // Initializes a timestamp from a foreign source.
     constexpr
     HTTP_DateTime(unix_time tp) noexcept
       :
         m_tp(tp)
-      {
-      }
+      { }
 
     // Parses a timestamp from an HTTP date/time string, like `parse()`.
     // An exception is thrown if the date/time string is not valid.

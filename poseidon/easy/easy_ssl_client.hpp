@@ -50,15 +50,13 @@ class Easy_SSL_Client
     Easy_SSL_Client(CallbackT&& cb)
       :
         m_thunk(new_sh(::std::forward<CallbackT>(cb)))
-      {
-      }
+      { }
 
     explicit
     Easy_SSL_Client(thunk_type::function_type* fptr)
       :
         m_thunk(fptr)
-      {
-      }
+      { }
 
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_SSL_Client);
