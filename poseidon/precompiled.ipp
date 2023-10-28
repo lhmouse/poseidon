@@ -28,9 +28,7 @@
 #include <rocket/tinyfmt_file.hpp>
 #include <rocket/ascii_numget.hpp>
 #include <rocket/ascii_numput.hpp>
-#include <rocket/format.hpp>
 #include <rocket/atomic.hpp>
-#include <rocket/ascii_case.hpp>
 #include <rocket/mutex.hpp>
 #include <rocket/recursive_mutex.hpp>
 #include <rocket/condition_variable.hpp>

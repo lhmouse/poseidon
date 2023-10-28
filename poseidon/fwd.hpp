@@ -6,7 +6,6 @@
 
 #include "version.h"
 #include <asteria/utils.hpp>
-#include <rocket/ascii_case.hpp>
 #include <rocket/atomic.hpp>
 #include <rocket/mutex.hpp>
 #include <rocket/recursive_mutex.hpp>
@@ -16,7 +15,6 @@
 #include <rocket/unique_posix_fd.hpp>
 #include <rocket/unique_posix_file.hpp>
 #include <rocket/unique_posix_dir.hpp>
-#include <rocket/xstring.hpp>
 #include <array>
 #include <vector>
 #include <deque>
