@@ -191,9 +191,9 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
               ROCKET_ASSERT(this->m_closure_notified == false);
               this->m_closure_notified = true;
               data.clear();
-              uint16_t bestatus = htobe16(1005);
+              uint16_t bestatus = ROCKET_HTOBE16(1005);
               payload.getn(reinterpret_cast<char*>(&bestatus), 2);
-              this->do_on_wss_close(be16toh(bestatus), payload);
+              this->do_on_wss_close(ROCKET_BETOH16(bestatus), payload);
               return;
             }
 
@@ -371,7 +371,7 @@ wss_shut_down(uint16_t status, chars_view reason) noexcept
       // length of its payload cannot exceed 125 bytes, and the reason string has
       // to be truncated if it's too long.
       static_vector<char, 125> data;
-      uint16_t bestatus = htobe16(status);
+      uint16_t bestatus = ROCKET_HTOBE16(status);
       const char* eptr = reinterpret_cast<const char*>(&bestatus) + 2;
       data.append(eptr - 2, eptr);
       eptr = reason.p + ::std::min<size_t>(reason.n, 123);

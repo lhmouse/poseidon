@@ -31,7 +31,7 @@ main()
     header.fin = 1;
     header.opcode = 1;
     header.mask = 1;
-    header.mask_key_u32 = htobe32(0x37fa213d);
+    header.mask_key_u32 = ROCKET_HTOBE32(0x37fa213d);
     header.payload_len = 5;
     header.encode(fmt);
 
@@ -84,7 +84,7 @@ main()
     header.fin = 1;
     header.opcode = 10;
     header.mask = 1;
-    header.mask_key_u32 = htobe32(0x37fa213d);
+    header.mask_key_u32 = ROCKET_HTOBE32(0x37fa213d);
     header.payload_len = 5;
     header.encode(fmt);
 

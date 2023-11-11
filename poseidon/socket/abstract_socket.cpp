@@ -73,12 +73,12 @@ local_address() const noexcept
     ROCKET_ASSERT(sa.sin6_family == AF_INET6);
     ROCKET_ASSERT(salen == sizeof(sa));
 
-    if(sa.sin6_port == htobe16(0))
+    if(sa.sin6_port == ROCKET_HTOBE16(0))
       return ipv6_unspecified;
 
     // Cache the address.
     this->m_sockname.set_addr(sa.sin6_addr);
-    this->m_sockname.set_port(be16toh(sa.sin6_port));
+    this->m_sockname.set_port(ROCKET_BETOH16(sa.sin6_port));
     ::std::atomic_thread_fence(::std::memory_order_release);
     this->m_sockname_ready.store(true);
     return this->m_sockname;
@@ -90,7 +90,7 @@ connect(const Socket_Address& addr)
   {
     ::sockaddr_in6 sa;
     sa.sin6_family = AF_INET6;
-    sa.sin6_port = htobe16(addr.port());
+    sa.sin6_port = ROCKET_HTOBE16(addr.port());
     sa.sin6_flowinfo = 0;
     sa.sin6_addr = addr.addr();
     sa.sin6_scope_id = 0;

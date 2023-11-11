@@ -574,7 +574,7 @@ parse_frame_header_from_stream(linear_buffer& data)
 
       uint16_t belen;
       ::memcpy(&belen, bptr + ntotal - 2, 2);
-      this->m_frm_header.payload_len = be16toh(belen);
+      this->m_frm_header.payload_len = ROCKET_BETOH16(belen);
     }
     else {
       // eight-byte length
@@ -584,7 +584,7 @@ parse_frame_header_from_stream(linear_buffer& data)
 
       uint64_t belen;
       ::memcpy(&belen, bptr + ntotal - 8, 8);
-      this->m_frm_header.payload_len = be64toh(belen);
+      this->m_frm_header.payload_len = ROCKET_BETOH64(belen);
     }
 
     if(this->m_frm_header.mask) {

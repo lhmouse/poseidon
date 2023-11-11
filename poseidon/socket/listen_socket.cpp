@@ -21,7 +21,7 @@ Listen_Socket(const Socket_Address& addr)
     // Bind this socket onto `addr`.
     ::sockaddr_in6 sa;
     sa.sin6_family = AF_INET6;
-    sa.sin6_port = htobe16(addr.port());
+    sa.sin6_port = ROCKET_HTOBE16(addr.port());
     sa.sin6_flowinfo = 0;
     sa.sin6_addr = addr.addr();
     sa.sin6_scope_id = 0;
@@ -97,7 +97,7 @@ do_abstract_socket_on_readable()
         // Accept the client socket. If a null pointer is returned, the accepted
         // socket will be closed immediately.
         this->m_taddr.set_addr(sa.sin6_addr);
-        this->m_taddr.set_port(be16toh(sa.sin6_port));
+        this->m_taddr.set_port(ROCKET_BETOH16(sa.sin6_port));
 
         auto client = this->do_on_listen_new_client_opt(::std::move(this->m_taddr), ::std::move(fd));
         if(ROCKET_UNEXPECT(!client))

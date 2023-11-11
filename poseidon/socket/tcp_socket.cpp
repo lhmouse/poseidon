@@ -201,12 +201,12 @@ remote_address() const noexcept
     ROCKET_ASSERT(sa.sin6_family == AF_INET6);
     ROCKET_ASSERT(salen == sizeof(sa));
 
-    if(sa.sin6_port == htobe16(0))
+    if(sa.sin6_port == ROCKET_HTOBE16(0))
       return ipv6_unspecified;
 
     // Cache the address.
     this->m_peername.set_addr(sa.sin6_addr);
-    this->m_peername.set_port(be16toh(sa.sin6_port));
+    this->m_peername.set_port(ROCKET_BETOH16(sa.sin6_port));
     ::std::atomic_thread_fence(::std::memory_order_release);
     this->m_peername_ready.store(true);
     return this->m_peername;

@@ -21,7 +21,7 @@ UDP_Socket(const Socket_Address& addr)
     // Bind this socket onto `addr`.
     ::sockaddr_in6 sa;
     sa.sin6_family = AF_INET6;
-    sa.sin6_port = htobe16(addr.port());
+    sa.sin6_port = ROCKET_HTOBE16(addr.port());
     sa.sin6_flowinfo = 0;
     sa.sin6_addr = addr.addr();
     sa.sin6_scope_id = 0;
@@ -98,7 +98,7 @@ do_abstract_socket_on_readable()
       try {
         // Accept this incoming packet.
         this->m_taddr.set_addr(sa.sin6_addr);
-        this->m_taddr.set_port(be16toh(sa.sin6_port));
+        this->m_taddr.set_port(ROCKET_BETOH16(sa.sin6_port));
         queue.accept((size_t) io_result);
 
         this->do_on_udp_packet(::std::move(this->m_taddr), ::std::move(queue));
@@ -291,7 +291,7 @@ udp_send(const Socket_Address& addr, chars_view data)
     // This is valid because UDP packets can be transmitted out of order.
     ::sockaddr_in6 sa;
     sa.sin6_family = AF_INET6;
-    sa.sin6_port = htobe16(addr.port());
+    sa.sin6_port = ROCKET_HTOBE16(addr.port());
     sa.sin6_flowinfo = 0;
     sa.sin6_addr = addr.addr();
     sa.sin6_scope_id = 0;

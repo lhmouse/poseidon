@@ -143,12 +143,12 @@ compare(const Socket_Address& other) const noexcept
   {
     char tdata[18];
     ::memcpy(tdata, &(this->m_addr), 16);
-    uint16_t port_be = htobe16(this->m_port);
+    uint16_t port_be = ROCKET_HTOBE16(this->m_port);
     ::memcpy(tdata + 16, &port_be, 2);
 
     char odata[18];
     ::memcpy(odata, &(other.m_addr), 16);
-    port_be = htobe16(other.m_port);
+    port_be = ROCKET_HTOBE16(other.m_port);
     ::memcpy(odata + 16, &port_be, 2);
 
     return ::memcmp(tdata, odata, 18);

@@ -24,14 +24,14 @@ encode(tinyfmt& fmt) const
       // two-byte length
       ch = this->mask << 7 | 126;
       fmt.putc((char) ch);
-      uint16_t belen = htobe16((uint16_t) this->payload_len);
+      uint16_t belen = ROCKET_HTOBE16((uint16_t) this->payload_len);
       fmt.putn((const char*) &belen, 2);
     }
     else {
       // eight-byte length
       ch = this->mask << 7 | 127;
       fmt.putc((char) ch);
-      uint64_t belen = htobe64(this->payload_len);
+      uint64_t belen = ROCKET_HTOBE64(this->payload_len);
       fmt.putn((const char*) &belen, 8);
     }
 
