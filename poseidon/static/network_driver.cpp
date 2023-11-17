@@ -399,11 +399,11 @@ thread_loop()
       POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLHUP | EPOLLERR"), socket, typeid(*socket));
       try {
         socket->m_state.store(socket_closed);
-        ::socklen_t optlen = sizeof(int);
-        if(event.events & EPOLLERR)
+        errno = 0;
+        if(event.events & EPOLLERR) {
+          ::socklen_t optlen = sizeof(int);
           ::getsockopt(socket->m_fd, SOL_SOCKET, SO_ERROR, &errno, &optlen);
-        else
-          errno = 0;
+        }
         socket->do_abstract_socket_on_closed();
       }
       catch(exception& stdex) {
@@ -411,6 +411,10 @@ thread_loop()
       }
       socket->m_io_driver = (Network_Driver*) 123456789;
       POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLHUP | EPOLLERR done"), socket, typeid(*socket));
+
+      // Stop listening on the file descriptor. The socket object will be deleted
+      // upon the next rehash operation.
+      this->do_epoll_ctl(EPOLL_CTL_DEL, socket, 0);
       return;
     }
 
@@ -473,17 +477,14 @@ insert(shptrR<Abstract_Socket> socket)
       this->m_epoll_map_stor.swap(old_map_stor);
       this->m_epoll_map_used = 0;
 
-      for(size_t k = 0;  k != old_map_stor.size();  ++k) {
-        // Expired sockets are ignored.
-        if(old_map_stor[k].expired())
-          continue;
-
-        // Move this socket into the new map.
-        // HACK: Get the socket pointer without tampering with the reference
-        // counter. The pointer itself will never be dereferenced.
-        this->do_linear_probe_socket_no_lock(do_get_weak_(old_map_stor[k])).swap(old_map_stor[k]);
-        this->m_epoll_map_used ++;
-      }
+      for(size_t k = 0;  k != old_map_stor.size();  ++k)
+        if(!old_map_stor[k].expired()) {
+          // Move this socket into the new map.
+          // HACK: Get the socket pointer without tampering with the reference
+          // counter. The pointer itself will never be dereferenced.
+          this->do_linear_probe_socket_no_lock(do_get_weak_(old_map_stor[k])).swap(old_map_stor[k]);
+          this->m_epoll_map_used ++;
+        }
     }
 
     // Insert the socket.
