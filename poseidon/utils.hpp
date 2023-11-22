@@ -20,7 +20,6 @@ using ::rocket::any_of;
 using ::rocket::none_of;
 using ::asteria::format;
 using ::asteria::format_string;
-using ::asteria::weaken_enum;
 
 // Performs a syscall and retries upon interrupts.
 // Note the arguments may be evaluated more than once.
