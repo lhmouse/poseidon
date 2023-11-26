@@ -12,8 +12,8 @@ Config_File::
 Config_File(cow_stringR path)
   {
     // Resolve the path to an absolute one.
-    ::rocket::unique_ptr<char, void (void*)> abs_path(::realpath(path.safe_c_str(), nullptr), ::free);
-    if(!abs_path)
+    ::rocket::unique_ptr<char, void (void*)> abs_path(::free);
+    if(!abs_path.reset(::realpath(path.safe_c_str(), nullptr)))
       POSEIDON_THROW((
           "Could not find configuration file '$1'",
           "[`realpath()` failed: ${errno:full}]"),
@@ -21,7 +21,7 @@ Config_File(cow_stringR path)
 
     // Read the file.
     this->m_path.append(abs_path.get());
-    this->m_root = ::asteria::std_system_conf_load_file(this->m_path);
+    this->m_root = ::asteria::std_system_load_conf(this->m_path);
   }
 
 Config_File::
