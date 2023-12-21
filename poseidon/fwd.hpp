@@ -348,7 +348,7 @@ struct chars_view
     constexpr
     chars_view(const char* xs) noexcept
       :
-        p(xs), n(xs ? xstrlen(xs) : 0U)
+        p(xs), n(xs ? ::rocket::xstrlen(xs) : 0U)
       { }
 
     template<typename traitsT, typename allocT>
