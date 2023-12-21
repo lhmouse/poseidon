@@ -139,7 +139,7 @@ class HTTP_Server_Session
     http_chunked_response_send(chars_view data);
 
     bool
-    http_chunked_respnse_finish();
+    http_chunked_response_finish();
   };
 
 }  // namespace poseidon

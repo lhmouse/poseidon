@@ -298,7 +298,7 @@ https_chunked_response_send(chars_view data)
 
 bool
 HTTPS_Server_Session::
-https_chunked_respnse_finish()
+https_chunked_response_finish()
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((

@@ -143,7 +143,7 @@ class HTTPS_Server_Session
     https_chunked_response_send(chars_view data);
 
     bool
-    https_chunked_respnse_finish();
+    https_chunked_response_finish();
   };
 
 }  // namespace poseidon

@@ -286,7 +286,7 @@ http_chunked_response_send(chars_view data)
 
 bool
 HTTP_Server_Session::
-http_chunked_respnse_finish()
+http_chunked_response_finish()
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
