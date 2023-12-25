@@ -1,6 +1,3 @@
-lib_LTLIBRARIES += lib/libposeidon.la
-bin_PROGRAMS += bin/poseidon
-
 nobase_include_HEADERS +=  \
   %reldir%/version.h  \
   %reldir%/fwd.hpp  \
@@ -69,6 +66,10 @@ nobase_include_HEADERS +=  \
   %reldir%/easy/easy_wss_client.hpp  \
   ${END}
 
+lib_LTLIBRARIES += lib/libposeidon.la
+lib_libposeidon_la_CXXFLAGS = ${AM_CXXFLAGS}
+lib_libposeidon_la_LDFLAGS = -no-undefined -version-number @abi_major@:@abi_minor@
+
 lib_libposeidon_la_SOURCES =  \
   %reldir%/version.h.in  \
   %reldir%/precompiled.ipp  \
@@ -135,14 +136,16 @@ lib_libposeidon_la_SOURCES =  \
   %reldir%/easy/easy_wss_client.cpp  \
   ${END}
 
-lib_libposeidon_la_CXXFLAGS = ${AM_CXXFLAGS}
-lib_libposeidon_la_LDFLAGS = -no-undefined -version-number @abi_major@:@abi_minor@
-
 if enable_mysql
 endif
 
 if enable_mongodb
 endif
+
+bin_PROGRAMS += bin/poseidon
+bin_poseidon_CXXFLAGS = ${AM_CXXFLAGS}
+bin_poseidon_LDADD = lib/libposeidon.la
+bin_poseidon_SOURCES = %reldir%/main.cpp
 
 if enable_pch
 lib_libposeidon_la_CXXFLAGS += -include %reldir%/precompiled.xipp
@@ -163,7 +166,3 @@ endif
 
 clean-local:
 	-rm -rf %reldir%/precompiled.x*
-
-bin_poseidon_SOURCES = %reldir%/main.cpp
-bin_poseidon_CXXFLAGS = ${AM_CXXFLAGS}
-bin_poseidon_LDADD = lib/libposeidon.la
