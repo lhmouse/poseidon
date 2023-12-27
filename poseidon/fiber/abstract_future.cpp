@@ -23,7 +23,7 @@ do_set_ready(exception_ptr&& except_opt) noexcept
     this->m_once.call(
       [&] {
         // Set the exception pointer to indicate success or failure.
-        this->m_except_opt = ::std::move(except_opt);
+        this->m_except_opt = move(except_opt);
 
         // Notify all waiters.
         steady_time now = steady_clock::now();

@@ -70,13 +70,13 @@ struct Final_Fiber final : Abstract_Fiber
           }
 
           ROCKET_ASSERT(queue->fiber_active);
-          auto event = ::std::move(queue->events.front());
+          auto event = move(queue->events.front());
           queue->events.pop_front();
           lock.unlock();
 
           try {
             // Process a response.
-            this->m_thunk(session, *this, event.type, ::std::move(event.resp), ::std::move(event.data));
+            this->m_thunk(session, *this, event.type, move(event.resp), move(event.data));
 
             if(event.close_now)
               session->tcp_shut_down();
@@ -127,7 +127,7 @@ struct Final_HTTP_Client_Session final : HTTP_Client_Session
             queue->fiber_active = true;
           }
 
-          queue->events.push_back(::std::move(event));
+          queue->events.push_back(move(event));
         }
         catch(exception& stdex) {
           POSEIDON_LOG_ERROR((
@@ -144,10 +144,10 @@ struct Final_HTTP_Client_Session final : HTTP_Client_Session
       {
         Event_Queue::Event event;
         event.type = easy_socket_msg_bin;
-        event.resp = ::std::move(resp);
-        event.data = ::std::move(data);
+        event.resp = move(resp);
+        event.data = move(data);
         event.close_now = close_now;
-        this->do_push_event_common(::std::move(event));
+        this->do_push_event_common(move(event));
       }
 
     virtual
@@ -161,7 +161,7 @@ struct Final_HTTP_Client_Session final : HTTP_Client_Session
         Event_Queue::Event event;
         event.type = easy_socket_close;
         event.data.puts(err_str);
-        this->do_push_event_common(::std::move(event));
+        this->do_push_event_common(move(event));
       }
 
     void
@@ -217,9 +217,9 @@ connect(chars_view addr)
             caddr.host.str(), caddr.port_num);
 
     async_task_executor.enqueue(dns_task);
-    this->m_dns_task = ::std::move(dns_task);
-    this->m_queue = ::std::move(queue);
-    this->m_session = ::std::move(session);
+    this->m_dns_task = move(dns_task);
+    this->m_queue = move(queue);
+    this->m_session = move(session);
   }
 
 void
@@ -260,7 +260,7 @@ http_GET(HTTP_Request_Headers&& req)
 
     req.method = "GET";
     static_cast<Final_HTTP_Client_Session*>(this->m_session.get())->fix_headers(req);
-    return this->m_session->http_request(::std::move(req), "");
+    return this->m_session->http_request(move(req), "");
   }
 
 bool
@@ -272,7 +272,7 @@ http_POST(HTTP_Request_Headers&& req, chars_view data)
 
     req.method = "POST";
     static_cast<Final_HTTP_Client_Session*>(this->m_session.get())->fix_headers(req);
-    return this->m_session->http_request(::std::move(req), data);
+    return this->m_session->http_request(move(req), data);
   }
 
 bool
@@ -284,7 +284,7 @@ http_PUT(HTTP_Request_Headers&& req, chars_view data)
 
     req.method = "PUT";
     static_cast<Final_HTTP_Client_Session*>(this->m_session.get())->fix_headers(req);
-    return this->m_session->http_request(::std::move(req), data);
+    return this->m_session->http_request(move(req), data);
   }
 
 bool
@@ -296,7 +296,7 @@ http_DELETE(HTTP_Request_Headers&& req)
 
     req.method = "DELETE";
     static_cast<Final_HTTP_Client_Session*>(this->m_session.get())->fix_headers(req);
-    return this->m_session->http_request(::std::move(req), "");
+    return this->m_session->http_request(move(req), "");
   }
 
 }  // namespace poseidon

@@ -26,7 +26,7 @@ event_callback(shptrR<HTTP_Server_Session> session, Abstract_Fiber& /*fiber*/, E
         tinyfmt_ln fmt;
         fmt << "request payload length = " << data.size() << "\n";
 
-        session->http_response(::std::move(resp), fmt);
+        session->http_response(move(resp), fmt);
         break;
       }
 

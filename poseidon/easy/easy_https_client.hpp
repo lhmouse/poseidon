@@ -46,7 +46,7 @@ class Easy_HTTPS_Client
     explicit
     Easy_HTTPS_Client(CallbackT&& cb)
       :
-        m_thunk(new_sh(::std::forward<CallbackT>(cb)))
+        m_thunk(new_sh(forward<CallbackT>(cb)))
       { }
 
     Easy_HTTPS_Client(thunk_type::function_type* fptr)

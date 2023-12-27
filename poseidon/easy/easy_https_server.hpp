@@ -47,7 +47,7 @@ class Easy_HTTPS_Server
     explicit
     Easy_HTTPS_Server(CallbackT&& cb)
       :
-        m_thunk(new_sh(::std::forward<CallbackT>(cb)))
+        m_thunk(new_sh(forward<CallbackT>(cb)))
       { }
 
     explicit

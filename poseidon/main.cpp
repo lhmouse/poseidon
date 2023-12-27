@@ -192,7 +192,7 @@ do_parse_command_line(int argc, char** argv)
 
     // The default working directory is empty which means 'do not switch'.
     if(cd_here)
-      cmdline.cd_here = ::std::move(*cd_here);
+      cmdline.cd_here = move(*cd_here);
   }
 
 ROCKET_NEVER_INLINE
@@ -322,7 +322,7 @@ do_daemonize_start()
     }
 
     // The GRANDCHILD shall continue execution.
-    daemon_pipe_wfd = ::std::move(wfd);
+    daemon_pipe_wfd = move(wfd);
     return 1;
   }
 

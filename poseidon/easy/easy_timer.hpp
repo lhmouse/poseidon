@@ -35,7 +35,7 @@ class Easy_Timer
     explicit
     Easy_Timer(CallbackT&& cb)
       :
-        m_thunk(new_sh(::std::forward<CallbackT>(cb)))
+        m_thunk(new_sh(forward<CallbackT>(cb)))
       { }
 
     explicit

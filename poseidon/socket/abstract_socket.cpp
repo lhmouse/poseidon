@@ -13,7 +13,7 @@ Abstract_Socket::
 Abstract_Socket(unique_posix_fd&& fd)
   {
     // Take ownership the socket handle.
-    this->m_fd = ::std::move(fd);
+    this->m_fd = move(fd);
     if(!this->m_fd)
       POSEIDON_THROW(("Null socket handle not valid"));
 

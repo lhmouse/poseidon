@@ -61,7 +61,7 @@ timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/, stea
         HTTP_Request_Headers req;
         req.uri_path = sref("/");
         req.headers.emplace_back(sref("Connection"), sref("keep-alive"));
-        my_client.https_GET(::std::move(req));
+        my_client.https_GET(move(req));
         POSEIDON_LOG_WARN(("example HTTPS client: $1 $2"), req.method, req.uri_path);
         break;
       }
@@ -69,7 +69,7 @@ timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/, stea
       case 2: {
         HTTP_Request_Headers req;
         req.uri_path = sref("/");
-        my_client.https_POST(::std::move(req), "testdata");
+        my_client.https_POST(move(req), "testdata");
         POSEIDON_LOG_WARN(("example HTTPS client: $1 $2"), req.method, req.uri_path);
         break;
       }
@@ -77,7 +77,7 @@ timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/, stea
       case 3: {
         HTTP_Request_Headers req;
         req.uri_path = sref("/");
-        my_client.https_DELETE(::std::move(req));
+        my_client.https_DELETE(move(req));
         POSEIDON_LOG_WARN(("example HTTPS client: $1 $2"), req.method, req.uri_path);
         break;
       }

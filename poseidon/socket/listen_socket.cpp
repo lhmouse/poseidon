@@ -99,7 +99,7 @@ do_abstract_socket_on_readable()
         this->m_taddr.set_addr(sa.sin6_addr);
         this->m_taddr.set_port(ROCKET_BETOH16(sa.sin6_port));
 
-        auto client = this->do_on_listen_new_client_opt(::std::move(this->m_taddr), ::std::move(fd));
+        auto client = this->do_on_listen_new_client_opt(move(this->m_taddr), move(fd));
         if(ROCKET_UNEXPECT(!client))
           continue;
 

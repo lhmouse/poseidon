@@ -66,12 +66,12 @@ struct Final_Fiber final : Abstract_Fiber
           }
 
           ROCKET_ASSERT(queue->fiber_active);
-          auto packet = ::std::move(queue->packets.front());
+          auto packet = move(queue->packets.front());
           queue->packets.pop_front();
           lock.unlock();
 
           try {
-            this->m_thunk(socket, *this, ::std::move(packet.addr), ::std::move(packet.data));
+            this->m_thunk(socket, *this, move(packet.addr), move(packet.data));
           }
           catch(exception& stdex) {
             POSEIDON_LOG_ERROR((
@@ -136,8 +136,8 @@ open()
     queue->wsocket = socket;
 
     network_driver.insert(socket);
-    this->m_queue = ::std::move(queue);
-    this->m_socket = ::std::move(socket);
+    this->m_queue = move(queue);
+    this->m_socket = move(socket);
   }
 
 void

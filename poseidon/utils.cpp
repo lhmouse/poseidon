@@ -83,7 +83,7 @@ ascii_uppercase(cow_string text)
       if(('a' <= ch) && (ch <= 'z'))
         text.mut(k) = (char) (ch - 0x20);
     }
-    return ::std::move(text);
+    return move(text);
   }
 
 cow_string
@@ -95,7 +95,7 @@ ascii_lowercase(cow_string text)
       if(('A' <= ch) && (ch <= 'Z'))
         text.mut(k) = (char) (ch + 0x20);
     }
-    return ::std::move(text);
+    return move(text);
   }
 
 cow_string
@@ -128,7 +128,7 @@ ascii_trim(cow_string text)
     if(++k != text.size())
       text.erase(k);
 
-    return ::std::move(text);
+    return move(text);
   }
 
 size_t

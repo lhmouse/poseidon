@@ -66,7 +66,7 @@ struct Final_Fiber final : Abstract_Fiber
           }
 
           ROCKET_ASSERT(queue->fiber_active);
-          auto event = ::std::move(queue->events.front());
+          auto event = move(queue->events.front());
           queue->events.pop_front();
           lock.unlock();
 
@@ -114,7 +114,7 @@ struct Final_Timer final : Abstract_Timer
 
         Event_Queue::Event event;
         event.time = time;
-        queue->events.push_back(::std::move(event));
+        queue->events.push_back(move(event));
       }
   };
 
@@ -136,8 +136,8 @@ start(milliseconds delay, milliseconds period)
     queue->wtimer = timer;
 
     timer_driver.insert(timer, delay, period);
-    this->m_queue = ::std::move(queue);
-    this->m_timer = ::std::move(timer);
+    this->m_queue = move(queue);
+    this->m_timer = move(timer);
   }
 
 void

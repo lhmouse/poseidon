@@ -368,7 +368,7 @@ enqueue(const Log_Context& ctx, cow_stringR text)
 
     // Enqueue the element.
     plain_mutex::unique_lock lock(this->m_queue_mutex);
-    this->m_queue.emplace_back(::std::move(msg));
+    this->m_queue.emplace_back(move(msg));
     this->m_queue_avail.notify_one();
   }
 

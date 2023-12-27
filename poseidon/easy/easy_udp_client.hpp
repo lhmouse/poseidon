@@ -39,7 +39,7 @@ class Easy_UDP_Client
     explicit
     Easy_UDP_Client(CallbackT&& cb)
       :
-        m_thunk(new_sh(::std::forward<CallbackT>(cb)))
+        m_thunk(new_sh(forward<CallbackT>(cb)))
       { }
 
     explicit

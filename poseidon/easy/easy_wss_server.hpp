@@ -50,7 +50,7 @@ class Easy_WSS_Server
     explicit
     Easy_WSS_Server(CallbackT&& cb)
       :
-        m_thunk(new_sh(::std::forward<CallbackT>(cb)))
+        m_thunk(new_sh(forward<CallbackT>(cb)))
       { }
 
     explicit

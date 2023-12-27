@@ -79,7 +79,7 @@ struct Final_Fiber final : Abstract_Fiber
           auto queue = &(client_iter->second);
           ROCKET_ASSERT(queue->fiber_active);
           auto session = queue->session;
-          auto event = ::std::move(queue->events.front());
+          auto event = move(queue->events.front());
           queue->events.pop_front();
 
           if(ROCKET_UNEXPECT(event.type == easy_socket_close)) {
@@ -92,7 +92,7 @@ struct Final_Fiber final : Abstract_Fiber
 
           try {
             // Process a message.
-            this->m_thunk(session, *this, event.type, ::std::move(event.data));
+            this->m_thunk(session, *this, event.type, move(event.data));
           }
           catch(exception& stdex) {
             // Shut the connection down with a message.
@@ -115,7 +115,7 @@ struct Final_WSS_Server_Session final : WSS_Server_Session
     Final_WSS_Server_Session(unique_posix_fd&& fd,
           const Easy_WSS_Server::thunk_type& thunk, const shptr<Client_Table>& table)
       :
-        SSL_Socket(::std::move(fd)),
+        SSL_Socket(move(fd)),
         m_thunk(thunk), m_wtable(table)
       {
       }
@@ -142,7 +142,7 @@ struct Final_WSS_Server_Session final : WSS_Server_Session
             client_iter->second.fiber_active = true;
           }
 
-          client_iter->second.events.push_back(::std::move(event));
+          client_iter->second.events.push_back(move(event));
         }
         catch(exception& stdex) {
           POSEIDON_LOG_ERROR((
@@ -161,7 +161,7 @@ struct Final_WSS_Server_Session final : WSS_Server_Session
         Client_Table::Event_Queue::Event event;
         event.type = easy_socket_open;
         event.data.putn(caddr.data(), caddr.size());
-        this->do_push_event_common(::std::move(event));
+        this->do_push_event_common(move(event));
       }
 
     virtual
@@ -180,7 +180,7 @@ struct Final_WSS_Server_Session final : WSS_Server_Session
           return;
 
         event.data.swap(data);
-        this->do_push_event_common(::std::move(event));
+        this->do_push_event_common(move(event));
       }
 
     virtual
@@ -194,7 +194,7 @@ struct Final_WSS_Server_Session final : WSS_Server_Session
         fmt << status << ": " << reason;
         event.data = fmt.extract_buffer();
 
-        this->do_push_event_common(::std::move(event));
+        this->do_push_event_common(move(event));
       }
   };
 
@@ -220,7 +220,7 @@ struct Final_Listen_Socket final : Listen_Socket
         if(!table)
           return nullptr;
 
-        auto session = new_sh<Final_WSS_Server_Session>(::std::move(fd), this->m_thunk, table);
+        auto session = new_sh<Final_WSS_Server_Session>(move(fd), this->m_thunk, table);
         (void) addr;
 
         // We are in the network thread here.
@@ -250,8 +250,8 @@ start(chars_view addr)
     auto socket = new_sh<Final_Listen_Socket>(Socket_Address(addr), this->m_thunk, table);
 
     network_driver.insert(socket);
-    this->m_client_table = ::std::move(table);
-    this->m_socket = ::std::move(socket);
+    this->m_client_table = move(table);
+    this->m_socket = move(socket);
   }
 
 void

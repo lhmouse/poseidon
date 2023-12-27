@@ -78,14 +78,14 @@ do_on_http_request_headers(HTTP_Request_Headers& req, bool close_after_payload)
       if(close_after_payload)
         resp.headers.emplace_back(sref("Connection"), sref("close"));
 
-      this->http_response_headers_only(::std::move(resp));
+      this->http_response_headers_only(move(resp));
       return http_payload_normal;
     }
 
     // Send the handshake response.
     HTTP_Response_Headers resp;
     this->m_parser.accept_handshake_request(resp, req);
-    this->http_response_headers_only(::std::move(resp));
+    this->http_response_headers_only(move(resp));
 
     if(close_after_payload || !this->m_parser.is_server_mode()) {
       // The handshake failed.
@@ -130,7 +130,7 @@ do_on_http_request_error(uint32_t status)
     HTTP_Response_Headers resp;
     resp.status = status;
     resp.headers.emplace_back(sref("Connection"), sref("close"));
-    this->http_response(::std::move(resp), "");
+    this->http_response(move(resp), "");
 
     // Close the connection.
     this->do_call_on_ws_close_once(1002, "handshake failed");
@@ -207,7 +207,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
           // (potentially fragmented) data message, so combine it.
           auto opcode = static_cast<WebSocket_OpCode>(this->m_parser.message_opcode());
           ROCKET_ASSERT(is_any_of(opcode, { websocket_text, websocket_bin }));
-          this->do_on_ws_message_data_stream(opcode, splice_buffers(this->m_msg, ::std::move(payload)));
+          this->do_on_ws_message_data_stream(opcode, splice_buffers(this->m_msg, move(payload)));
         }
 
         if(!this->m_parser.frame_payload_complete())
@@ -222,7 +222,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
             case 2: {  // BINARY
               auto opcode = static_cast<WebSocket_OpCode>(this->m_parser.message_opcode());
               ROCKET_ASSERT(is_any_of(opcode, { websocket_text, websocket_bin }));
-              this->do_on_ws_message_finish(opcode, ::std::move(this->m_msg));
+              this->do_on_ws_message_finish(opcode, move(this->m_msg));
               break;
             }
 
@@ -238,7 +238,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
             case 9: {  // PING
               POSEIDON_LOG_TRACE(("WebSocket PING from `$1`: $2"), this->remote_address(), payload);
-              this->do_on_ws_message_finish(websocket_ping, ::std::move(payload));
+              this->do_on_ws_message_finish(websocket_ping, move(payload));
 
               // FIN + PONG
               this->do_ws_send_raw_frame(0b10001010, payload);
@@ -247,7 +247,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
             case 10: {  // PONG
               POSEIDON_LOG_TRACE(("WebSocket PONG from `$1`: $2"), this->remote_address(), payload);
-              this->do_on_ws_message_finish(websocket_pong, ::std::move(payload));
+              this->do_on_ws_message_finish(websocket_pong, move(payload));
               break;
             }
           }

@@ -50,7 +50,7 @@ class Easy_SSL_Server
     explicit
     Easy_SSL_Server(CallbackT&& cb)
       :
-        m_thunk(new_sh(::std::forward<CallbackT>(cb)))
+        m_thunk(new_sh(forward<CallbackT>(cb)))
       { }
 
     explicit

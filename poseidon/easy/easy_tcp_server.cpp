@@ -84,7 +84,7 @@ struct Final_Fiber final : Abstract_Fiber
           auto queue = &(client_iter->second);
           ROCKET_ASSERT(queue->fiber_active);
           auto socket = queue->socket;
-          auto event = ::std::move(queue->events.front());
+          auto event = move(queue->events.front());
           queue->events.pop_front();
 
           if(ROCKET_UNEXPECT(event.type == easy_socket_close)) {
@@ -101,7 +101,7 @@ struct Final_Fiber final : Abstract_Fiber
             // `event.data`. `data_stream` may be consumed partially by user code,
             // and shall be preserved across callbacks.
             if(event.type == easy_socket_stream)
-              this->m_thunk(socket, *this, event.type, splice_buffers(queue->data_stream, ::std::move(event.data)), event.code);
+              this->m_thunk(socket, *this, event.type, splice_buffers(queue->data_stream, move(event.data)), event.code);
             else
               this->m_thunk(socket, *this, event.type, event.data, event.code);
           }
@@ -128,7 +128,7 @@ struct Final_TCP_Socket final : TCP_Socket
     Final_TCP_Socket(unique_posix_fd&& fd,
           const Easy_TCP_Server::thunk_type& thunk, const shptr<Client_Table>& table)
       :
-        TCP_Socket(::std::move(fd)), m_thunk(thunk), m_wtable(table)
+        TCP_Socket(move(fd)), m_thunk(thunk), m_wtable(table)
       {
       }
 
@@ -154,7 +154,7 @@ struct Final_TCP_Socket final : TCP_Socket
             client_iter->second.fiber_active = true;
           }
 
-          client_iter->second.events.push_back(::std::move(event));
+          client_iter->second.events.push_back(move(event));
         }
         catch(exception& stdex) {
           POSEIDON_LOG_ERROR((
@@ -172,7 +172,7 @@ struct Final_TCP_Socket final : TCP_Socket
       {
         Client_Table::Event_Queue::Event event;
         event.type = easy_socket_open;
-        this->do_push_event_common(::std::move(event));
+        this->do_push_event_common(move(event));
       }
 
     virtual
@@ -183,7 +183,7 @@ struct Final_TCP_Socket final : TCP_Socket
         event.type = easy_socket_stream;
         event.data.swap(data);
         event.code = eof;
-        this->do_push_event_common(::std::move(event));
+        this->do_push_event_common(move(event));
       }
 
     virtual
@@ -198,7 +198,7 @@ struct Final_TCP_Socket final : TCP_Socket
         event.type = easy_socket_close;
         event.data.puts(err_str);
         event.code = err_code;
-        this->do_push_event_common(::std::move(event));
+        this->do_push_event_common(move(event));
       }
   };
 
@@ -223,7 +223,7 @@ struct Final_Listen_Socket final : Listen_Socket
         if(!table)
           return nullptr;
 
-        auto socket = new_sh<Final_TCP_Socket>(::std::move(fd), this->m_thunk, table);
+        auto socket = new_sh<Final_TCP_Socket>(move(fd), this->m_thunk, table);
         (void) addr;
 
         // We are in the network thread here.
@@ -257,8 +257,8 @@ start(chars_view addr)
     auto socket = new_sh<Final_Listen_Socket>(saddr, this->m_thunk, table);
 
     network_driver.insert(socket);
-    this->m_client_table = ::std::move(table);
-    this->m_socket = ::std::move(socket);
+    this->m_client_table = move(table);
+    this->m_socket = move(socket);
   }
 
 void

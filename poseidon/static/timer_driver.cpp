@@ -121,7 +121,7 @@ insert(shptrR<Abstract_Timer> timer, milliseconds delay, milliseconds period)
 
     // Insert the timer.
     plain_mutex::unique_lock lock(this->m_pq_mutex);
-    this->m_pq.emplace_back(::std::move(elem));
+    this->m_pq.emplace_back(move(elem));
     ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), timer_comparator);
     this->m_pq_avail.notify_one();
   }

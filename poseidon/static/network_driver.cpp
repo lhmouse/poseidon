@@ -126,7 +126,7 @@ do_alpn_callback(::SSL* ssl, const uint8_t** outp, uint8_t* outn, const uint8_t*
         POSEIDON_LOG_TRACE(("Received ALPN protocol: $1"), str);
       }
 
-      char256 alpn_resp = socket->do_on_ssl_alpn_request(::std::move(alpn_req));
+      char256 alpn_resp = socket->do_on_ssl_alpn_request(move(alpn_req));
       socket->m_alpn_proto.assign(alpn_resp);
     }
     catch(exception& stdex) {

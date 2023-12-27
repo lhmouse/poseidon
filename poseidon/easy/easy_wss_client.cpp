@@ -72,13 +72,13 @@ struct Final_Fiber final : Abstract_Fiber
           }
 
           ROCKET_ASSERT(queue->fiber_active);
-          auto event = ::std::move(queue->events.front());
+          auto event = move(queue->events.front());
           queue->events.pop_front();
           lock.unlock();
 
           try {
             // Process a message.
-            this->m_thunk(session, *this, event.type, ::std::move(event.data));
+            this->m_thunk(session, *this, event.type, move(event.data));
           }
           catch(exception& stdex) {
             // Shut the connection down with a message.
@@ -123,7 +123,7 @@ struct Final_WSS_Client_Session final : WSS_Client_Session
             queue->fiber_active = true;
           }
 
-          queue->events.push_back(::std::move(event));
+          queue->events.push_back(move(event));
         }
         catch(exception& stdex) {
           POSEIDON_LOG_ERROR((
@@ -141,7 +141,7 @@ struct Final_WSS_Client_Session final : WSS_Client_Session
         Event_Queue::Event event;
         event.type = easy_socket_open;
         event.data.putn(caddr.data(), caddr.size());
-        this->do_push_event_common(::std::move(event));
+        this->do_push_event_common(move(event));
       }
 
     virtual
@@ -160,7 +160,7 @@ struct Final_WSS_Client_Session final : WSS_Client_Session
           return;
 
         event.data.swap(data);
-        this->do_push_event_common(::std::move(event));
+        this->do_push_event_common(move(event));
       }
 
     virtual
@@ -174,7 +174,7 @@ struct Final_WSS_Client_Session final : WSS_Client_Session
         fmt << status << ": " << reason;
         event.data = fmt.extract_buffer();
 
-        this->do_push_event_common(::std::move(event));
+        this->do_push_event_common(move(event));
       }
   };
 
@@ -214,9 +214,9 @@ connect(chars_view addr)
           caddr.host.str(), caddr.port_num);
 
     async_task_executor.enqueue(dns_task);
-    this->m_dns_task = ::std::move(dns_task);
-    this->m_queue = ::std::move(queue);
-    this->m_session = ::std::move(session);
+    this->m_dns_task = move(dns_task);
+    this->m_queue = move(queue);
+    this->m_session = move(session);
   }
 
 void

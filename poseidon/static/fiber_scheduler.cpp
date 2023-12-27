@@ -452,7 +452,7 @@ launch(shptrR<Abstract_Fiber> fiber)
 
     // Insert it.
     plain_mutex::unique_lock lock(this->m_pq_mutex);
-    this->m_pq.emplace_back(::std::move(elem));
+    this->m_pq.emplace_back(move(elem));
     ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), fiber_comparator);
   }
 

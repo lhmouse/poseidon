@@ -73,7 +73,7 @@ struct Final_Fiber final : Abstract_Fiber
           }
 
           ROCKET_ASSERT(queue->fiber_active);
-          auto event = ::std::move(queue->events.front());
+          auto event = move(queue->events.front());
           queue->events.pop_front();
           lock.unlock();
 
@@ -83,7 +83,7 @@ struct Final_Fiber final : Abstract_Fiber
             // `event.data`. `data_stream` may be consumed partially by user code,
             // and shall be preserved across callbacks.
             if(event.type == easy_socket_stream)
-              this->m_thunk(socket, *this, event.type, splice_buffers(queue->data_stream, ::std::move(event.data)), event.code);
+              this->m_thunk(socket, *this, event.type, splice_buffers(queue->data_stream, move(event.data)), event.code);
             else
               this->m_thunk(socket, *this, event.type, event.data, event.code);
           }
@@ -131,7 +131,7 @@ struct Final_SSL_Socket final : SSL_Socket
             queue->fiber_active = true;
           }
 
-          queue->events.push_back(::std::move(event));
+          queue->events.push_back(move(event));
         }
         catch(exception& stdex) {
           POSEIDON_LOG_ERROR((
@@ -148,7 +148,7 @@ struct Final_SSL_Socket final : SSL_Socket
       {
         Event_Queue::Event event;
         event.type = easy_socket_open;
-        this->do_push_event_common(::std::move(event));
+        this->do_push_event_common(move(event));
       }
 
     virtual
@@ -159,7 +159,7 @@ struct Final_SSL_Socket final : SSL_Socket
         event.type = easy_socket_stream;
         event.data.swap(data);
         event.code = eof;
-        this->do_push_event_common(::std::move(event));
+        this->do_push_event_common(move(event));
       }
 
     virtual
@@ -174,7 +174,7 @@ struct Final_SSL_Socket final : SSL_Socket
         event.type = easy_socket_close;
         event.data.puts(err_str);
         event.code = err_code;
-        this->do_push_event_common(::std::move(event));
+        this->do_push_event_common(move(event));
       }
   };
 
@@ -219,9 +219,9 @@ connect(chars_view addr)
           caddr.host.str(), caddr.port_num);
 
     async_task_executor.enqueue(dns_task);
-    this->m_dns_task = ::std::move(dns_task);
-    this->m_queue = ::std::move(queue);
-    this->m_socket = ::std::move(socket);
+    this->m_dns_task = move(dns_task);
+    this->m_queue = move(queue);
+    this->m_socket = move(socket);
   }
 
 void

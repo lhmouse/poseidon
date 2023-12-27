@@ -90,8 +90,8 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
         // The message is complete now.
         uint32_t status = this->m_resp_parser->headers().status;
 
-        this->do_on_https_response_finish(::std::move(this->m_resp_parser->mut_headers()),
-                ::std::move(this->m_resp_parser->mut_payload()),
+        this->do_on_https_response_finish(move(this->m_resp_parser->mut_headers()),
+                move(this->m_resp_parser->mut_payload()),
                 this->m_resp_parser->should_close_after_payload());
 
         // For WebSocket and HTTP 2.0, this indiciates the server has switched to

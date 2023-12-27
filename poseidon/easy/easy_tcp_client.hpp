@@ -49,7 +49,7 @@ class Easy_TCP_Client
     explicit
     Easy_TCP_Client(CallbackT&& cb)
       :
-        m_thunk(new_sh(::std::forward<CallbackT>(cb)))
+        m_thunk(new_sh(forward<CallbackT>(cb)))
       { }
 
     explicit

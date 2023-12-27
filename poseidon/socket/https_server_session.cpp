@@ -90,8 +90,8 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
           return;
 
         // The message is complete now.
-        this->do_on_https_request_finish(::std::move(this->m_req_parser->mut_headers()),
-                ::std::move(this->m_req_parser->mut_payload()),
+        this->do_on_https_request_finish(move(this->m_req_parser->mut_headers()),
+                move(this->m_req_parser->mut_payload()),
                 this->m_req_parser->should_close_after_payload());
       }
 

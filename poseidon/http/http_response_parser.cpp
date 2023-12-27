@@ -60,7 +60,7 @@ HTTP_Response_Parser::s_settings[1] =
           if(hiter->second.is_null())
             hiter->second.set_string("", 0);
           else if(value.parse(hiter->second.as_string()) == hiter->second.str_length())
-            hiter->second = ::std::move(value);
+            hiter->second = move(value);
 
         // The headers are complete, so halt.
         this->m_hresp = hresp_headers_done;

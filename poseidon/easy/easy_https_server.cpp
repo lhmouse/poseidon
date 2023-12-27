@@ -82,7 +82,7 @@ struct Final_Fiber final : Abstract_Fiber
           auto queue = &(client_iter->second);
           ROCKET_ASSERT(queue->fiber_active);
           auto session = queue->session;
-          auto event = ::std::move(queue->events.front());
+          auto event = move(queue->events.front());
           queue->events.pop_front();
 
           if(ROCKET_UNEXPECT(event.type == easy_socket_close)) {
@@ -99,11 +99,11 @@ struct Final_Fiber final : Abstract_Fiber
               HTTP_Response_Headers resp;
               resp.status = event.status;
               resp.headers.emplace_back(sref("Connection"), sref("close"));
-              session->https_response(::std::move(resp), "");
+              session->https_response(move(resp), "");
             }
             else {
               // Process a request.
-              this->m_thunk(session, *this, event.type, ::std::move(event.req), ::std::move(event.data));
+              this->m_thunk(session, *this, event.type, move(event.req), move(event.data));
             }
 
             if(event.close_now)
@@ -115,7 +115,7 @@ struct Final_Fiber final : Abstract_Fiber
             HTTP_Response_Headers resp;
             resp.status = HTTP_STATUS_INTERNAL_SERVER_ERROR;
             resp.headers.emplace_back(sref("Connection"), sref("close"));
-            session->https_response(::std::move(resp), "");
+            session->https_response(move(resp), "");
 
             session->ssl_shut_down();
 
@@ -136,7 +136,7 @@ struct Final_HTTPS_Server_Session final : HTTPS_Server_Session
     Final_HTTPS_Server_Session(unique_posix_fd&& fd,
           const Easy_HTTPS_Server::thunk_type& thunk, const shptr<Client_Table>& table)
       :
-        SSL_Socket(::std::move(fd)), m_thunk(thunk), m_wtable(table)
+        SSL_Socket(move(fd)), m_thunk(thunk), m_wtable(table)
       {
       }
 
@@ -162,7 +162,7 @@ struct Final_HTTPS_Server_Session final : HTTPS_Server_Session
             client_iter->second.fiber_active = true;
           }
 
-          client_iter->second.events.push_back(::std::move(event));
+          client_iter->second.events.push_back(move(event));
         }
         catch(exception& stdex) {
           POSEIDON_LOG_ERROR((
@@ -180,10 +180,10 @@ struct Final_HTTPS_Server_Session final : HTTPS_Server_Session
       {
         Client_Table::Event_Queue::Event event;
         event.type = easy_socket_msg_bin;
-        event.req = ::std::move(req);
-        event.data = ::std::move(data);
+        event.req = move(req);
+        event.data = move(data);
         event.close_now = close_now;
-        this->do_push_event_common(::std::move(event));
+        this->do_push_event_common(move(event));
       }
 
     virtual
@@ -194,7 +194,7 @@ struct Final_HTTPS_Server_Session final : HTTPS_Server_Session
         event.type = easy_socket_pong;
         event.status = status;
         event.close_now = true;
-        this->do_push_event_common(::std::move(event));
+        this->do_push_event_common(move(event));
       }
 
     virtual
@@ -208,7 +208,7 @@ struct Final_HTTPS_Server_Session final : HTTPS_Server_Session
         Client_Table::Event_Queue::Event event;
         event.type = easy_socket_close;
         event.data.puts(err_str);
-        this->do_push_event_common(::std::move(event));
+        this->do_push_event_common(move(event));
       }
   };
 
@@ -234,7 +234,7 @@ struct Final_Listen_Socket final : Listen_Socket
         if(!table)
           return nullptr;
 
-        auto session = new_sh<Final_HTTPS_Server_Session>(::std::move(fd), this->m_thunk, table);
+        auto session = new_sh<Final_HTTPS_Server_Session>(move(fd), this->m_thunk, table);
         (void) addr;
 
         // We are in the network thread here.
@@ -264,8 +264,8 @@ start(chars_view addr)
     auto socket = new_sh<Final_Listen_Socket>(Socket_Address(addr), this->m_thunk, table);
 
     network_driver.insert(socket);
-    this->m_client_table = ::std::move(table);
-    this->m_socket = ::std::move(socket);
+    this->m_client_table = move(table);
+    this->m_socket = move(socket);
   }
 
 void

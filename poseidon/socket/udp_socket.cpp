@@ -101,7 +101,7 @@ do_abstract_socket_on_readable()
         this->m_taddr.set_port(ROCKET_BETOH16(sa.sin6_port));
         queue.accept((size_t) io_result);
 
-        this->do_on_udp_packet(::std::move(this->m_taddr), ::std::move(queue));
+        this->do_on_udp_packet(move(this->m_taddr), move(queue));
       }
       catch(exception& stdex) {
         POSEIDON_LOG_ERROR((

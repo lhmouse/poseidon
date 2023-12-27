@@ -127,9 +127,18 @@ using ::rocket::begin;
 using ::rocket::end;
 using ::rocket::swap;
 using ::rocket::xswap;
+using ::rocket::move;
+using ::rocket::forward;
+using ::rocket::forward_as_tuple;
+using ::rocket::exchange;
 using ::rocket::size;
+using ::rocket::ssize;
+using ::rocket::static_pointer_cast;
+using ::rocket::dynamic_pointer_cast;
+using ::rocket::const_pointer_cast;
 using ::rocket::sref;
 using ::rocket::nullopt;
+
 using ::rocket::xstrlen;
 using ::rocket::xstrchr;
 using ::rocket::xstrcmp;
@@ -245,7 +254,7 @@ class thunk
     explicit
     thunk(const shptr<RealT>& obj) noexcept
       {
-        this->m_func = +[](void* p, ArgsT&&... args) { (*(RealT*) p) (::std::forward<ArgsT>(args)...);  };
+        this->m_func = +[](void* p, ArgsT&&... args) { (*(RealT*) p) (forward<ArgsT>(args)...);  };
         this->m_obj = obj;
       }
 
@@ -263,9 +272,9 @@ class thunk
     operator()(ArgsT... args) const
       {
         if(this->m_func)
-          this->m_func(this->m_obj.get(), ::std::forward<ArgsT>(args)...);
+          this->m_func(this->m_obj.get(), forward<ArgsT>(args)...);
         else
-          ((function_type*)(intptr_t) this->m_obj.get()) (::std::forward<ArgsT>(args)...);
+          ((function_type*)(intptr_t) this->m_obj.get()) (forward<ArgsT>(args)...);
       }
   };
 
@@ -503,7 +512,7 @@ ROCKET_ALWAYS_INLINE
 uniptr<ValueT>
 new_uni(ArgsT&&... args)
   {
-    return ::std::make_unique<ValueT>(::std::forward<ArgsT>(args)...);
+    return ::std::make_unique<ValueT>(forward<ArgsT>(args)...);
   }
 
 template<typename ValueT>
@@ -511,7 +520,7 @@ ROCKET_ALWAYS_INLINE
 uniptr<typename ::std::decay<ValueT>::type>
 new_uni(ValueT&& value)
   {
-    return ::std::make_unique<typename ::std::decay<ValueT>::type>(::std::forward<ValueT>(value));
+    return ::std::make_unique<typename ::std::decay<ValueT>::type>(forward<ValueT>(value));
   }
 
 template<typename ValueT, typename... ArgsT>
@@ -519,7 +528,7 @@ ROCKET_ALWAYS_INLINE
 shptr<ValueT>
 new_sh(ArgsT&&... args)
   {
-    return ::std::make_shared<ValueT>(::std::forward<ArgsT>(args)...);
+    return ::std::make_shared<ValueT>(forward<ArgsT>(args)...);
   }
 
 template<typename ValueT>
@@ -527,7 +536,7 @@ ROCKET_ALWAYS_INLINE
 shptr<typename ::std::decay<ValueT>::type>
 new_sh(ValueT&& value)
   {
-    return ::std::make_shared<typename ::std::decay<ValueT>::type>(::std::forward<ValueT>(value));
+    return ::std::make_shared<typename ::std::decay<ValueT>::type>(forward<ValueT>(value));
   }
 
 // This is a generic enumeration for `Easy_*` classes.

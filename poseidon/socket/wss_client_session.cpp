@@ -59,7 +59,7 @@ do_on_ssl_connected()
     req.headers.emplace_back(sref("Host"), this->m_host);
     req.uri_path = this->m_path;
     req.uri_query = this->m_query;
-    this->https_request(::std::move(req), "");
+    this->https_request(move(req), "");
   }
 
 void
@@ -168,7 +168,7 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
           // (potentially fragmented) data message, so combine it.
           auto opcode = static_cast<WebSocket_OpCode>(this->m_parser.message_opcode());
           ROCKET_ASSERT(is_any_of(opcode, { websocket_text, websocket_bin }));
-          this->do_on_wss_message_data_stream(opcode, splice_buffers(this->m_msg, ::std::move(payload)));
+          this->do_on_wss_message_data_stream(opcode, splice_buffers(this->m_msg, move(payload)));
         }
 
         if(!this->m_parser.frame_payload_complete())
@@ -183,7 +183,7 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
             case 2: {  // BINARY
               auto opcode = static_cast<WebSocket_OpCode>(this->m_parser.message_opcode());
               ROCKET_ASSERT(is_any_of(opcode, { websocket_text, websocket_bin }));
-              this->do_on_wss_message_finish(opcode, ::std::move(this->m_msg));
+              this->do_on_wss_message_finish(opcode, move(this->m_msg));
               break;
             }
 
@@ -199,7 +199,7 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
 
             case 9: {  // PING
               POSEIDON_LOG_TRACE(("WebSocket PING from `$1`: $2"), this->remote_address(), payload);
-              this->do_on_wss_message_finish(websocket_ping, ::std::move(payload));
+              this->do_on_wss_message_finish(websocket_ping, move(payload));
 
               // FIN + PONG
               this->do_wss_send_raw_frame(0b10001010, payload);
@@ -208,7 +208,7 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
 
             case 10: {  // PONG
               POSEIDON_LOG_TRACE(("WebSocket PONG from `$1`: $2"), this->remote_address(), payload);
-              this->do_on_wss_message_finish(websocket_pong, ::std::move(payload));
+              this->do_on_wss_message_finish(websocket_pong, move(payload));
               break;
             }
           }
