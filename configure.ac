@@ -38,8 +38,8 @@ AC_CHECK_LIB([unwind], [unw_backtrace], [], [AC_MSG_WARN([libunwind not found; e
 AC_CHECK_LIB([unwind-x86_64], [_Ux86_64_init_local])
 AC_CHECK_LIB([pthread], [pthread_create], [], [AC_MSG_ERROR([pthread library not found])])
 AC_CHECK_LIB([z], [deflate], [], [AC_MSG_ERROR([zlib not found])])
-AC_CHECK_LIB([ssl], [TLS_method], [], [AC_MSG_ERROR([OpenSSL 1.1 not found])])
-AC_CHECK_LIB([crypto], [ERR_error_string], [], [AC_MSG_ERROR([OpenSSL not found])])
+AC_CHECK_LIB([ssl], [TLS_method], [], [AC_MSG_ERROR([OpenSSL not found])])
+AC_CHECK_LIB([crypto], [OSSL_LIB_CTX_new], [], [AC_MSG_ERROR([OpenSSL 3.0 not found])])
 AC_CHECK_LIB([asteria], [_ZNK7asteria5Value5printERN6rocket13basic_tinyfmtIcEE], [], [AC_MSG_ERROR([Asteria not found])])
 AC_CHECK_LIB([http_parser], [http_parser_execute], [], [AC_MSG_ERROR([http-parser library not found])])
 

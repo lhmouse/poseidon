@@ -155,16 +155,10 @@ do_abstract_socket_on_readable()
       if(::SSL_read_ex(this->ssl(), queue.mut_end(), queue.capacity_after_end(), &datalen) <= 0) {
         ssl_err = ::SSL_get_error(this->ssl(), 0);
 
-        // Check for EOF without a shutdown alert.
-        if((ssl_err == SSL_ERROR_SYSCALL) && (errno == 0))
-          ssl_err = SSL_ERROR_ZERO_RETURN;
-
-#ifdef SSL_R_UNEXPECTED_EOF_WHILE_READING
-        if((ssl_err == SSL_ERROR_SSL) && (ERR_GET_REASON(::ERR_peek_error()) == SSL_R_UNEXPECTED_EOF_WHILE_READING))
-          ssl_err = SSL_ERROR_ZERO_RETURN;
-#endif  // Open SSL 3.0
-
         if((ssl_err == SSL_ERROR_ZERO_RETURN) || (ssl_err == SSL_ERROR_WANT_READ) || (ssl_err == SSL_ERROR_WANT_WRITE))
+          break;
+
+        if((ssl_err == SSL_ERROR_SSL) && (ERR_GET_REASON(::ERR_peek_error()) == SSL_R_UNEXPECTED_EOF_WHILE_READING))
           break;
 
         POSEIDON_LOG_ERROR((
