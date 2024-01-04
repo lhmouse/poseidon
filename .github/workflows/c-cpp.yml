@@ -26,7 +26,7 @@ jobs:
 
     - name: Build and install asteria
       run: |
-           git submodule update asteria
+           git submodule update --init asteria
            pushd asteria
            autoreconf -ifv
            ./configure
@@ -38,7 +38,7 @@ jobs:
 
     - name: Build and install http-parser
       run: |
-           git submodule update http-parser
+           git submodule update --init http-parser
            pushd http-parser
            autoreconf -ifv
            ./configure
