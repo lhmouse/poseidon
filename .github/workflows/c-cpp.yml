@@ -21,7 +21,7 @@ jobs:
     - name: Install dependencies
       run: >-
            sudo apt-get install -y --no-install-recommends autoconf automake
-           libtool g++ gettext make libedit-dev libpcre2-dev libssl-dev zlib1g-dev
+           libtool g++ gettext make libpcre2-dev libssl-dev zlib1g-dev
            libmysqlclient-dev libmongoc-dev
 
     - name: Build and install asteria
@@ -29,7 +29,7 @@ jobs:
            git submodule update --init asteria
            pushd asteria
            autoreconf -ifv
-           ./configure
+           ./configure --disable-repl
            make -j$(nproc)
            rm -f *.deb
            ./makedeb.sh
