@@ -1,0 +1,52 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches:
+    - master
+    - releases/*
+
+  pull_request:
+    branches:
+    - master
+
+jobs:
+  ubuntu:
+    name: Ubuntu native build (x86-64)
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: >-
+           sudo apt-get install -y --no-install-recommends autoconf automake
+           libtool g++ gettext make libedit-dev libpcre2-dev libssl-dev zlib1g-dev
+           libmysqlclient-dev libmongoc-dev
+
+    - name: Build and install asteria
+      run: |
+           git submodule update asteria
+           pushd asteria
+           autoreconf -ifv
+           ./configure
+           make -j$(nproc) check
+           rm *.deb
+           ./makedeb.sh
+           sudo dpkg -i asteria_*.deb
+           popd
+
+    - name: Build and install http-parser
+      run: |
+           git submodule update http-parser
+           pushd http-parser
+           autoreconf -ifv
+           ./configure
+           make -j$(nproc) check
+           rm *.deb
+           ./makedeb.sh
+           sudo dpkg -i libhttp-parser_*.deb
+           popd
+
+    - name: Run tests
+      run: ./ci/build.sh
