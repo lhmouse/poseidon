@@ -31,7 +31,7 @@ jobs:
            autoreconf -ifv
            ./configure
            make -j$(nproc)
-           rm *.deb
+           rm -f *.deb
            ./makedeb.sh
            sudo dpkg -i asteria_*.deb
            popd
@@ -43,7 +43,7 @@ jobs:
            autoreconf -ifv
            ./configure
            make -j$(nproc)
-           rm *.deb
+           rm -f *.deb
            ./makedeb.sh
            sudo dpkg -i libhttp-parser_*.deb
            popd
