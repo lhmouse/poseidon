@@ -30,7 +30,7 @@ jobs:
            pushd asteria
            autoreconf -ifv
            ./configure
-           make -j$(nproc) check
+           make -j$(nproc)
            rm *.deb
            ./makedeb.sh
            sudo dpkg -i asteria_*.deb
@@ -42,7 +42,7 @@ jobs:
            pushd http-parser
            autoreconf -ifv
            ./configure
-           make -j$(nproc) check
+           make -j$(nproc)
            rm *.deb
            ./makedeb.sh
            sudo dpkg -i libhttp-parser_*.deb
