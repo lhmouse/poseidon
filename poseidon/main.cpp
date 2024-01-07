@@ -345,9 +345,6 @@ do_create_resident_thread(ObjectT& obj, const char* name)
     auto thrd_function = +[](void* ptr) noexcept
       {
         // Set thread information. Errors are ignored.
-        int oldst;
-        ::pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &oldst);
-
         ::sigset_t sigset;
         ::sigemptyset(&sigset);
         ::sigaddset(&sigset, SIGINT);
@@ -355,6 +352,7 @@ do_create_resident_thread(ObjectT& obj, const char* name)
         ::sigaddset(&sigset, SIGHUP);
         ::sigaddset(&sigset, SIGALRM);
         ::pthread_sigmask(SIG_BLOCK, &sigset, nullptr);
+        ::pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, nullptr);
 
         // Enter an infinite loop.
         for(;;)
@@ -612,7 +610,7 @@ main(int argc, char** argv)
     ::setlocale(LC_ALL, "C.UTF-8");
     ::tzset();
     ::pthread_setname_np(::pthread_self(), PACKAGE);
-    ::pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &::opterr);
+    ::pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, nullptr);
 
     // Note that this function shall not return in case of errors.
     do_parse_command_line(argc, argv);
@@ -644,7 +642,6 @@ main(int argc, char** argv)
 
     int sig = exit_signal.load();
     POSEIDON_LOG_INFO(("Shutting down (signal $1: $2)"), sig, ::strsignal(sig));
-
     do_exit_printf(exit_success, "");
   }
   catch(exception& stdex) {
