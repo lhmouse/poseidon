@@ -338,51 +338,6 @@ do_daemonize_finish()
     daemon_pipe_wfd.reset();
   }
 
-template<class ObjectT>
-void
-do_create_resident_thread(ObjectT& obj, const char* name)
-  {
-    auto thrd_function = +[](void* ptr) noexcept
-      {
-        // Set thread information. Errors are ignored.
-        ::sigset_t sigset;
-        ::sigemptyset(&sigset);
-        ::sigaddset(&sigset, SIGINT);
-        ::sigaddset(&sigset, SIGTERM);
-        ::sigaddset(&sigset, SIGHUP);
-        ::sigaddset(&sigset, SIGALRM);
-        ::pthread_sigmask(SIG_BLOCK, &sigset, nullptr);
-        ::pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, nullptr);
-
-        // Enter an infinite loop.
-        for(;;)
-          try {
-            ((ObjectT*) ptr)->thread_loop();
-          }
-          catch(exception& stdex) {
-            ::fprintf(stderr,
-                "WARNING: Caught an exception from thread loop: %s\n"
-                "[static class `%s`]\n"
-                "[exception class `%s`]\n",
-                stdex.what(), typeid(ObjectT).name(), typeid(stdex).name());
-          }
-
-        // Make the return type deducible.
-        return (void*) nullptr;
-      };
-
-    ::pthread_t thrd;
-    int err = ::pthread_create(&thrd, nullptr, thrd_function, ::std::addressof(obj));
-    if(err != 0)
-      do_exit_printf(exit_system_error,
-          "Could not create thread '%s': %s\n",
-          name, ::strerror(err));
-
-    // Name the thread and detach it. Errors are ignored.
-    ::pthread_setname_np(thrd, name);
-    ::pthread_detach(thrd);
-  }
-
 ROCKET_NEVER_INLINE
 void
 do_check_random()
@@ -396,6 +351,54 @@ do_check_random()
     // Initialize standard random functions, too.
     ::srand((unsigned) seed);
     ::srand48(seed);
+  }
+
+template<class ObjectT>
+void
+do_create_resident_thread(ObjectT& obj, const char* name)
+  {
+    static ::sigset_t s_blocked_signals[1];
+
+    // Initialize the list of signals to block. This is done only once.
+    if(::sigismember(s_blocked_signals, SIGINT) == 0)
+      for(int sig : { SIGINT, SIGTERM, SIGHUP, SIGALRM, SIGQUIT })
+        ::sigaddset(s_blocked_signals, sig);
+
+    // Create the thread now.
+    ::pthread_t thrd;
+    int err = ::pthread_create(
+      &thrd,
+      nullptr,
+      +[](void* thread_param) -> void*
+      {
+        auto& xobj = *(ObjectT*) thread_param;
+
+        ::pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, nullptr);
+        ::pthread_sigmask(SIG_BLOCK, s_blocked_signals, nullptr);
+
+        for(;;)
+          try {
+            xobj.thread_loop();
+          }
+          catch(exception& stdex) {
+            ::fprintf(stderr,
+                "WARNING: Caught an exception from thread loop: %s\n"
+                "[static class `%s`]\n"
+                "[exception class `%s`]\n",
+                stdex.what(), typeid(xobj).name(), typeid(stdex).name());
+          }
+      },
+      ::std::addressof(obj)
+    );
+
+    if(err != 0)
+      do_exit_printf(exit_system_error,
+          "Could not create thread '%s': %s\n",
+          name, ::strerror(err));
+
+    // Name the thread and detach it. Errors are ignored.
+    ::pthread_setname_np(thrd, name);
+    ::pthread_detach(thrd);
   }
 
 ROCKET_NEVER_INLINE
@@ -442,11 +445,8 @@ ROCKET_NEVER_INLINE
 void
 do_init_signal_handlers()
   {
-    struct ::sigaction sigact;
-    ::sigemptyset(&(sigact.sa_mask));
-
-    // Ignore some signals for good.
-    sigact.sa_flags = 0;
+    // Ignore certain signals for good.
+    struct ::sigaction sigact = { };
     sigact.sa_handler = SIG_IGN;
     ::sigaction(SIGPIPE, &sigact, nullptr);
     ::sigaction(SIGCHLD, &sigact, nullptr);
