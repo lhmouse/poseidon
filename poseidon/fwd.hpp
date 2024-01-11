@@ -554,8 +554,8 @@ enum Easy_Socket_Event : uint8_t
   };
 
 // Base types
-class uuid;
-using guid = uuid;
+class UUID;
+using GUID = UUID;
 
 class Config_File;
 class Abstract_Timer;

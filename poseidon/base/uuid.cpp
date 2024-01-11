@@ -6,16 +6,18 @@
 #include "../utils.hpp"
 namespace poseidon {
 
-const uuid uuid_nil = (uuid::fields) { 0x00000000,0x0000,0x0000,0x0000,0x000000000000 };
-const uuid uuid_max = (uuid::fields) { 0xFFFFFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFFFFFFFFFF };
+const UUID uuid_nil = POSEIDON_UUID_INIT(00000000,0000,0000,0000,000000000000);
+const UUID uuid_max = POSEIDON_UUID_INIT(FFFFFFFF,FFFF,FFFF,FFFF,FFFFFFFFFFFF);
 
-uuid::
-uuid(const random&)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+UUID::
+UUID(const random&)
   {
     // Get system information.
-    static atomic<uint64_t> s_count;
     ::timespec tv;
     ::clock_gettime(CLOCK_REALTIME, &tv);
+    static atomic<uint64_t> s_count;
 
     uint64_t time = (uint64_t) tv.tv_sec * 30518U + (uint32_t) tv.tv_nsec / 32768U + s_count.xadd(1U);
     uint32_t version_pid = (uint32_t) ::getpid();
@@ -26,40 +28,41 @@ uuid(const random&)
     variant_random = 0x60000000'00000000U | (variant_random >> 3);
 
     // Fill UUID fields.
-    this->m_data_1_3 = (uint8_t) (time >> 40);
-    this->m_data_1_2 = (uint8_t) (time >> 32);
-    this->m_data_1_1 = (uint8_t) (time >> 24);
-    this->m_data_1_0 = (uint8_t) (time >> 16);
-    this->m_data_2_1 = (uint8_t) (time >>  8);
-    this->m_data_2_0 = (uint8_t)  time;
-    this->m_data_3_1 = (uint8_t) (version_pid >> 8);
-    this->m_data_3_0 = (uint8_t)  version_pid;
-    this->m_data_4_1 = (uint8_t) (variant_random >> 56);
-    this->m_data_4_0 = (uint8_t) (variant_random >> 48);
-    this->m_data_5_5 = (uint8_t) (variant_random >> 40);
-    this->m_data_5_4 = (uint8_t) (variant_random >> 32);
-    this->m_data_5_3 = (uint8_t) (variant_random >> 24);
-    this->m_data_5_2 = (uint8_t) (variant_random >> 16);
-    this->m_data_5_1 = (uint8_t) (variant_random >>  8);
-    this->m_data_5_0 = (uint8_t)  variant_random;
+    this->m_data_1_3 = time >> 40;
+    this->m_data_1_2 = time >> 32;
+    this->m_data_1_1 = time >> 24;
+    this->m_data_1_0 = time >> 16;
+    this->m_data_2_1 = time >>  8;
+    this->m_data_2_0 = time;
+    this->m_data_3_1 = version_pid >> 8;
+    this->m_data_3_0 = version_pid;
+    this->m_data_4_1 = variant_random >> 56;
+    this->m_data_4_0 = variant_random >> 48;
+    this->m_data_5_5 = variant_random >> 40;
+    this->m_data_5_4 = variant_random >> 32;
+    this->m_data_5_3 = variant_random >> 24;
+    this->m_data_5_2 = variant_random >> 16;
+    this->m_data_5_1 = variant_random >>  8;
+    this->m_data_5_0 = variant_random;
   }
+#pragma GCC diagnostic pop
 
-uuid::
-uuid(chars_view str)
+UUID::
+UUID(chars_view str)
   {
     if(this->parse(str) != str.n)
       POSEIDON_THROW(("Could not parse UUID string `$1`"), str);
   }
 
 int
-uuid::
-compare(const uuid& other) const noexcept
+UUID::
+compare(const UUID& other) const noexcept
   {
     return ::memcmp(&(this->m_stor), &(other.m_stor), 16);
   }
 
 size_t
-uuid::
+UUID::
 parse_partial(const char* str) noexcept
   {
 #define do_match_xdigit_hi_(di, si)  \
@@ -129,7 +132,7 @@ parse_partial(const char* str) noexcept
   }
 
 size_t
-uuid::
+UUID::
 parse(chars_view str) noexcept
   {
     // A string with an erroneous length will not be accepted, so we just need to
@@ -142,7 +145,7 @@ parse(chars_view str) noexcept
   }
 
 size_t
-uuid::
+UUID::
 print_partial(char* str) const noexcept
   {
     // Split the higher and lower halves into two SSE registers.
@@ -180,7 +183,7 @@ print_partial(char* str) const noexcept
   }
 
 tinyfmt&
-uuid::
+UUID::
 print(tinyfmt& fmt) const
   {
     char str[64];
@@ -189,7 +192,7 @@ print(tinyfmt& fmt) const
   }
 
 cow_string
-uuid::
+UUID::
 print_to_string() const
   {
     char str[64];

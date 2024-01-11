@@ -7,9 +7,14 @@
 #include "../fwd.hpp"
 namespace poseidon {
 
-class uuid
+class UUID
   {
   public:
+    // This is a special tag type to select the random UUID constructor.
+    struct random
+      {
+      };
+
     // Fields of this structure are named according to RFC 4122 and have no
     // actual meaning. Multi-byte fields are stored in the host (native) byte
     // order.
@@ -21,11 +26,6 @@ class uuid
         uint16_t time_hi_and_version;
         uint64_t clk_seq_res : 16;
         uint64_t node : 48;
-      };
-
-    // This is a special tag type to select the random UUID constructor.
-    struct random
-      {
       };
 
   private:
@@ -56,34 +56,10 @@ class uuid
   public:
     // Constructs a nil UUID.
     constexpr
-    uuid() noexcept
+    UUID() noexcept
       :
         m_stor()
       { }
-
-    // Constructs a UUID in the RFC 4122 format.
-    constexpr
-    uuid(const fields& fs) noexcept
-      :
-        m_data_1_3()
-      {
-        this->m_data_1_3 = (uint8_t) (fs.time_low >> 24);
-        this->m_data_1_2 = (uint8_t) (fs.time_low >> 16);
-        this->m_data_1_1 = (uint8_t) (fs.time_low >>  8);
-        this->m_data_1_0 = (uint8_t)  fs.time_low;
-        this->m_data_2_1 = (uint8_t) (fs.time_mid >> 8);
-        this->m_data_2_0 = (uint8_t)  fs.time_mid;
-        this->m_data_3_1 = (uint8_t) (fs.time_hi_and_version >> 8);
-        this->m_data_3_0 = (uint8_t)  fs.time_hi_and_version;
-        this->m_data_4_1 = (uint8_t) (fs.clk_seq_res >> 8);
-        this->m_data_4_0 = (uint8_t)  fs.clk_seq_res;
-        this->m_data_5_5 = (uint8_t) (fs.node >> 40);
-        this->m_data_5_4 = (uint8_t) (fs.node >> 32);
-        this->m_data_5_3 = (uint8_t) (fs.node >> 24);
-        this->m_data_5_2 = (uint8_t) (fs.node >> 16);
-        this->m_data_5_1 = (uint8_t) (fs.node >>  8);
-        this->m_data_5_0 = (uint8_t)  fs.node;
-      }
 
     // Generates a random UUID `xxxxxxxx-xxxx-Myyy-Nzzz-zzzzzzzzzzzz`, where:
     //
@@ -98,15 +74,40 @@ class uuid
     // This function shall be cryptographically secure. An exception is thrown
     // if the system entropy source fails.
     __attribute__((__leaf__))
-    uuid(const random& unused);
+    UUID(const random& unused);
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+    // Constructs a UUID in the RFC 4122 format.
+    constexpr
+    UUID(const fields& fs) noexcept
+      :
+        m_data_1_3(fs.time_low >> 24),
+        m_data_1_2(fs.time_low >> 16),
+        m_data_1_1(fs.time_low >>  8),
+        m_data_1_0(fs.time_low),
+        m_data_2_1(fs.time_mid >> 8),
+        m_data_2_0(fs.time_mid),
+        m_data_3_1(fs.time_hi_and_version >> 8),
+        m_data_3_0(fs.time_hi_and_version),
+        m_data_4_1(fs.clk_seq_res >> 8),
+        m_data_4_0(fs.clk_seq_res),
+        m_data_5_5(fs.node >> 40),
+        m_data_5_4(fs.node >> 32),
+        m_data_5_3(fs.node >> 24),
+        m_data_5_2(fs.node >> 16),
+        m_data_5_1(fs.node >>  8),
+        m_data_5_0(fs.node)
+      { }
+#pragma GCC diagnostic pop
 
     // Parses a UUID from a string, like `parse()`.
     // An exception is thrown if the UUID string is not valid.
     explicit
-    uuid(chars_view str);
+    UUID(chars_view str);
 
-    uuid&
-    swap(uuid& other) noexcept
+    UUID&
+    swap(UUID& other) noexcept
       {
         ::std::swap(this->m_stor, other.m_stor);
         return *this;
@@ -152,24 +153,24 @@ class uuid
       {
         __m128i tval = _mm_load_si128(&(this->m_stor));
         __m128i oval = _mm_setzero_si128();
-        int cmp = _mm_movemask_epi8(_mm_cmpeq_epi8(tval, oval));  // bits := 0xFFFF if equal
+        int cmp = _mm_movemask_epi8(_mm_cmpeq_epi8(tval, oval));
         return cmp == 0xFFFF;
       }
 
     // Peforms three-way comparison.
     ROCKET_PURE
     bool
-    equals(const uuid& other) const noexcept
+    equals(const UUID& other) const noexcept
       {
         __m128i tval = _mm_load_si128(&(this->m_stor));
         __m128i oval = _mm_load_si128(&(other.m_stor));
-        int cmp = _mm_movemask_epi8(_mm_cmpeq_epi8(tval, oval));  // bits := 0xFFFF if equal
+        int cmp = _mm_movemask_epi8(_mm_cmpeq_epi8(tval, oval));
         return cmp == 0xFFFF;
       }
 
     ROCKET_PURE
     int
-    compare(const uuid& other) const noexcept;
+    compare(const UUID& other) const noexcept;
 
     // Parses a UUID from a string in the RFC 4122 format. An example is
     // `f81d4fae-7dec-11d0-a765-00a0c91e6bf6`. If a UUID has been parsed, the
@@ -196,64 +197,53 @@ class uuid
     print_to_string() const;
   };
 
-extern const uuid uuid_nil;  // 00000000-0000-0000-0000-000000000000
-extern const uuid uuid_max;  // FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF
+#define POSEIDON_UUID_RANDOM()   ((::poseidon::UUID::random) { })
+
+#define POSEIDON_UUID_INIT(a8,b4,c4,d4,e12)  \
+    ((::poseidon::UUID::fields) { 0x##a8, 0x##b4, 0x##c4, 0x##d4, 0x##e12 })
+
+extern const UUID uuid_nil;  // 00000000-0000-0000-0000-000000000000
+extern const UUID uuid_max;  // FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF
 
 inline
 void
-swap(uuid& lhs, uuid& rhs) noexcept
-  {
-    lhs.swap(rhs);
-  }
+swap(UUID& lhs, UUID& rhs) noexcept
+  { lhs.swap(rhs);  }
 
 inline
 tinyfmt&
-operator<<(tinyfmt& fmt, const uuid& value)
-  {
-    return value.print(fmt);
-  }
+operator<<(tinyfmt& fmt, const UUID& value)
+  { return value.print(fmt);  }
 
 inline
 bool
-operator==(const uuid& lhs, const uuid& rhs) noexcept
-  {
-    return lhs.equals(rhs) == true;
-  }
+operator==(const UUID& lhs, const UUID& rhs) noexcept
+  { return lhs.equals(rhs) != false;  }
 
 inline
 bool
-operator!=(const uuid& lhs, const uuid& rhs) noexcept
-  {
-    return lhs.equals(rhs) != true;
-  }
+operator!=(const UUID& lhs, const UUID& rhs) noexcept
+  { return lhs.equals(rhs) == false;  }
 
 inline
 bool
-operator<(const uuid& lhs, const uuid& rhs) noexcept
-  {
-    return lhs.compare(rhs) < 0;
-  }
+operator<(const UUID& lhs, const UUID& rhs) noexcept
+  { return lhs.compare(rhs) < 0;  }
 
 inline
 bool
-operator>(const uuid& lhs, const uuid& rhs) noexcept
-  {
-    return lhs.compare(rhs) > 0;
-  }
+operator>(const UUID& lhs, const UUID& rhs) noexcept
+  { return lhs.compare(rhs) > 0;  }
 
 inline
 bool
-operator<=(const uuid& lhs, const uuid& rhs) noexcept
-  {
-    return lhs.compare(rhs) <= 0;
-  }
+operator<=(const UUID& lhs, const UUID& rhs) noexcept
+  { return lhs.compare(rhs) <= 0;  }
 
 inline
 bool
-operator>=(const uuid& lhs, const uuid& rhs) noexcept
-  {
-    return lhs.compare(rhs) >= 0;
-  }
+operator>=(const UUID& lhs, const UUID& rhs) noexcept
+  { return lhs.compare(rhs) >= 0;  }
 
 }  // namespace poseidon
 #endif
