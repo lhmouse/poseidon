@@ -67,9 +67,7 @@ struct WebSocket_Frame_Header
 inline
 void
 swap(WebSocket_Frame_Header& lhs, WebSocket_Frame_Header& rhs) noexcept
-  {
-    lhs.swap(rhs);
-  }
+  { lhs.swap(rhs);  }
 
 }  // namespace poseidon
 #endif

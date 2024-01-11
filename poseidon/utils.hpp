@@ -79,9 +79,7 @@ template<typename StringT, typename OtherT>
 constexpr
 bool
 ascii_ci_equal(const StringT& text, const OtherT& other)
-  {
-    return ::rocket::ascii_ci_equal(text.c_str(), text.length(), other.c_str(), other.length());
-  }
+  { return ::rocket::ascii_ci_equal(text.c_str(), text.length(), other.c_str(), other.length());  }
 
 // Splits a string into a vector of tokens, and vice versa.
 size_t

@@ -304,16 +304,12 @@ class HTTP_Value
 inline
 void
 swap(HTTP_Value& lhs, HTTP_Value& rhs) noexcept
-  {
-    lhs.swap(rhs);
-  }
+  { lhs.swap(rhs);  }
 
 inline
 tinyfmt&
 operator<<(tinyfmt& fmt, const HTTP_Value& value)
-  {
-    return value.print(fmt);
-  }
+  { return value.print(fmt);  }
 
 }  // namespace poseidon
 #endif

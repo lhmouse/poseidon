@@ -155,58 +155,42 @@ extern const Socket_Address ipv4_broadcast;    // [::ffff:255.255.255.255]:0
 inline
 void
 swap(Socket_Address& lhs, Socket_Address& rhs) noexcept
-  {
-    lhs.swap(rhs);
-  }
+  { lhs.swap(rhs);  }
 
 inline
 tinyfmt&
 operator<<(tinyfmt& fmt, const Socket_Address& addr)
-  {
-    return addr.print(fmt);
-  }
+  { return addr.print(fmt);  }
 
 inline
 bool
 operator==(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
-  {
-    return lhs.equals(rhs);
-  }
+  { return lhs.equals(rhs);  }
 
 inline
 bool
 operator!=(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
-  {
-    return not lhs.equals(rhs);
-  }
+  { return not lhs.equals(rhs);  }
 
 inline
 bool
 operator<(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
-  {
-    return lhs.compare(rhs) < 0;
-  }
+  { return lhs.compare(rhs) < 0;  }
 
 inline
 bool
 operator>(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
-  {
-    return lhs.compare(rhs) > 0;
-  }
+  { return lhs.compare(rhs) > 0;  }
 
 inline
 bool
 operator<=(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
-  {
-    return lhs.compare(rhs) <= 0;
-  }
+  { return lhs.compare(rhs) <= 0;  }
 
 inline
 bool
 operator>=(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
-  {
-    return lhs.compare(rhs) >= 0;
-  }
+  { return lhs.compare(rhs) >= 0;  }
 
 }  // namespace poseidon
 #endif

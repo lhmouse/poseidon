@@ -333,9 +333,7 @@ class char256
 inline
 tinyfmt&
 operator<<(tinyfmt& fmt, const char256& cbuf)
-  {
-    return fmt.putn(cbuf.c_str(), ::rocket::xstrlen(cbuf.c_str()));
-  }
+  { return fmt.putn(cbuf.c_str(), ::rocket::xstrlen(cbuf.c_str()));  }
 
 struct chars_view
   {
@@ -503,41 +501,31 @@ struct chars_view
 inline
 tinyfmt&
 operator<<(tinyfmt& fmt, chars_view data)
-  {
-    return fmt.putn(data.p, data.n);
-  }
+  { return fmt.putn(data.p, data.n);  }
 
 template<typename ValueT, typename... ArgsT>
 ROCKET_ALWAYS_INLINE
 uniptr<ValueT>
 new_uni(ArgsT&&... args)
-  {
-    return ::std::make_unique<ValueT>(forward<ArgsT>(args)...);
-  }
+  { return ::std::make_unique<ValueT>(forward<ArgsT>(args)...);  }
 
 template<typename ValueT>
 ROCKET_ALWAYS_INLINE
 uniptr<typename ::std::decay<ValueT>::type>
 new_uni(ValueT&& value)
-  {
-    return ::std::make_unique<typename ::std::decay<ValueT>::type>(forward<ValueT>(value));
-  }
+  { return ::std::make_unique<typename ::std::decay<ValueT>::type>(forward<ValueT>(value));  }
 
 template<typename ValueT, typename... ArgsT>
 ROCKET_ALWAYS_INLINE
 shptr<ValueT>
 new_sh(ArgsT&&... args)
-  {
-    return ::std::make_shared<ValueT>(forward<ArgsT>(args)...);
-  }
+  { return ::std::make_shared<ValueT>(forward<ArgsT>(args)...);  }
 
 template<typename ValueT>
 ROCKET_ALWAYS_INLINE
 shptr<typename ::std::decay<ValueT>::type>
 new_sh(ValueT&& value)
-  {
-    return ::std::make_shared<typename ::std::decay<ValueT>::type>(forward<ValueT>(value));
-  }
+  { return ::std::make_shared<typename ::std::decay<ValueT>::type>(forward<ValueT>(value));  }
 
 // This is a generic enumeration for `Easy_*` classes.
 // * TCP   := TCP or SSL/TLS

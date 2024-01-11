@@ -48,9 +48,7 @@ struct HTTP_Response_Headers
 inline
 void
 swap(HTTP_Response_Headers& lhs, HTTP_Response_Headers& rhs) noexcept
-  {
-    lhs.swap(rhs);
-  }
+  { lhs.swap(rhs);  }
 
 }  // namespace poseidon
 #endif

@@ -135,58 +135,42 @@ extern const HTTP_DateTime http_datetime_max;  // `Fri, 01 Jan 9999 00:00:00 GMT
 constexpr
 bool
 operator==(const HTTP_DateTime& lhs, const HTTP_DateTime& rhs) noexcept
-  {
-    return lhs.as_unix_time() == rhs.as_unix_time();
-  }
+  { return lhs.as_unix_time() == rhs.as_unix_time();  }
 
 constexpr
 bool
 operator!=(const HTTP_DateTime& lhs, const HTTP_DateTime& rhs) noexcept
-  {
-    return lhs.as_unix_time() != rhs.as_unix_time();
-  }
+  { return lhs.as_unix_time() != rhs.as_unix_time();  }
 
 constexpr
 bool
 operator<(const HTTP_DateTime& lhs, const HTTP_DateTime& rhs) noexcept
-  {
-    return lhs.as_unix_time() < rhs.as_unix_time();
-  }
+  { return lhs.as_unix_time() < rhs.as_unix_time();  }
 
 constexpr
 bool
 operator>(const HTTP_DateTime& lhs, const HTTP_DateTime& rhs) noexcept
-  {
-    return lhs.as_unix_time() > rhs.as_unix_time();
-  }
+  { return lhs.as_unix_time() > rhs.as_unix_time();  }
 
 constexpr
 bool
 operator<=(const HTTP_DateTime& lhs, const HTTP_DateTime& rhs) noexcept
-  {
-    return lhs.as_unix_time() <= rhs.as_unix_time();
-  }
+  { return lhs.as_unix_time() <= rhs.as_unix_time();  }
 
 constexpr
 bool
 operator>=(const HTTP_DateTime& lhs, const HTTP_DateTime& rhs) noexcept
-  {
-    return lhs.as_unix_time() >= rhs.as_unix_time();
-  }
+  { return lhs.as_unix_time() >= rhs.as_unix_time();  }
 
 inline
 void
 swap(HTTP_DateTime& lhs, HTTP_DateTime& rhs) noexcept
-  {
-    lhs.swap(rhs);
-  }
+  { lhs.swap(rhs);  }
 
 inline
 tinyfmt&
 operator<<(tinyfmt& fmt, const HTTP_DateTime& ts)
-  {
-    return ts.print(fmt);
-  }
+  { return ts.print(fmt);  }
 
 }  // namespace poseidon
 #endif

@@ -66,9 +66,7 @@ class Config_File
 inline
 void
 swap(Config_File& lhs, Config_File& rhs) noexcept
-  {
-    lhs.swap(rhs);
-  }
+  { lhs.swap(rhs);  }
 
 }  // namespace poseidon
 #endif
