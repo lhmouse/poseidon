@@ -92,6 +92,7 @@ struct Command_Line_Options
 // They are declared here for convenience.
 Command_Line_Options cmdline;
 unique_posix_fd daemon_pipe_wfd;
+unique_posix_fd pid_file_fd;
 
 // These are process exit status codes.
 enum
@@ -514,23 +515,24 @@ do_write_pid_file()
       return;
 
     // Create the lock file and lock it in exclusive mode before overwriting.
-    unique_posix_fd pid_file(::creat(pid_file_path.safe_c_str(), 0644));
-    if(!pid_file)
+    pid_file_fd.reset(::creat(pid_file_path.safe_c_str(), 0644));
+    if(!pid_file_fd)
       do_exit_printf(exit_system_error,
           "Could not create PID file '%s': %s",
           pid_file_path.c_str(), ::strerror(errno));
 
-    if(::flock(pid_file, LOCK_EX | LOCK_NB) != 0)
+    if(::flock(pid_file_fd, LOCK_EX | LOCK_NB) != 0)
       do_exit_printf(exit_system_error,
           "Could not lock PID file '%s': %s",
           pid_file_path.c_str(), ::strerror(errno));
 
-    // Write the PID of myself.
+    // Write the PID of myself. Errors are ignored.
     POSEIDON_LOG_DEBUG(("Writing current process ID to '$1'"), pid_file_path.c_str());
-    ::dprintf(pid_file, "%d\n", (int) ::getpid());
+    ::dprintf(pid_file_fd, "%d\n", (int) ::getpid());
+    ::at_quick_exit([] { ::ftruncate(pid_file_fd, 0);  });
 
     // Downgrade the lock so the PID may be read by others.
-    ::flock(pid_file, LOCK_SH);
+    ::flock(pid_file_fd, LOCK_SH);
   }
 
 ROCKET_NEVER_INLINE
