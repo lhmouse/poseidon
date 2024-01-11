@@ -23,12 +23,12 @@ enum Easy_HTTP_Event : uint8_t
 
 enum Easy_WS_Event : uint8_t
   {
-    easy_ws_open     = 1,  // connection established
-    easy_ws_text     = 2,  // text message received
-    easy_ws_binary   = 3,  // binary message received
+    easy_ws_open     = 31,  // connection established
+    easy_ws_text     = 32,  // text message received
+    easy_ws_binary   = 33,  // binary message received
     easy_ws_ping     = easy_ws_open,
-    easy_ws_pong     = 4,  // pong notification received
-    easy_ws_close    = 5,  // closure notification closed
+    easy_ws_pong     = 34,  // pong notification received
+    easy_ws_close    = 35,  // closure notification closed
   };
 
 }  // namespace poseidon
