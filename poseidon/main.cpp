@@ -498,7 +498,7 @@ ROCKET_NEVER_INLINE
 void
 do_write_pid_file()
   {
-    cow_string pid_file_path;
+    static cow_string pid_file_path;
     const auto conf = main_config.copy();
 
     auto conf_value = conf.query("general", "pid_file_path");
@@ -531,6 +531,7 @@ do_write_pid_file()
 
     // Downgrade the lock so the PID may be read by others.
     ::flock(pid_file, LOCK_SH);
+    ::at_quick_exit(+[] { ::unlink(pid_file_path.c_str());  });
   }
 
 ROCKET_NEVER_INLINE
