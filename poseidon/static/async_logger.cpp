@@ -248,7 +248,7 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
     mtext.puts("' ");
 
     // Write the source location and enclosing function.
-    do_color(mtext, lconf, "94");  // bright blue
+    do_color(mtext, lconf, "34");  // blue
     mtext.puts("source '");
     mtext.puts(msg.ctx.file);
     mtext.putc(':');
