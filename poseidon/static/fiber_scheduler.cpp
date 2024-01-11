@@ -4,7 +4,6 @@
 #include "../precompiled.ipp"
 #include "fiber_scheduler.hpp"
 #include "../base/config_file.hpp"
-#include "../base/enums.hpp"
 #include "../fiber/abstract_fiber.hpp"
 #include "../fiber/abstract_future.hpp"
 #include "../third/asan_fwd.hpp"

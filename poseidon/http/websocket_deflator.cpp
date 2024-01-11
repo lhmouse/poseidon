@@ -4,7 +4,6 @@
 #include "../precompiled.ipp"
 #include "websocket_deflator.hpp"
 #include "websocket_frame_parser.hpp"
-#include "../base/enums.hpp"
 #include "../utils.hpp"
 namespace poseidon {
 
