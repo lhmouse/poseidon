@@ -365,7 +365,7 @@ thread_loop()
       this->m_epoll_events.reserve_after_end(event_buffer_size * sizeof(::epoll_event));
       int nevents = ::epoll_wait(this->m_epoll, (::epoll_event*) this->m_epoll_events.mut_end(), (int) event_buffer_size, 5000);
       if(nevents <= 0) {
-        POSEIDON_LOG_DEBUG(("`epoll_wait()` wait: ${errno:full}"));
+        POSEIDON_LOG_TRACE(("`epoll_wait()` wait: ${errno:full}"));
         return;
       }
 
