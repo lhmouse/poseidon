@@ -32,7 +32,7 @@ do_set_ready(exception_ptr&& except_opt) noexcept
 
         waiters.swap(this->m_waiters);
         for(uint32_t k = 0;  k != waiters.size();  ++k)
-          if(auto timep = waiters.at(k).lock())
+          if(auto timep = waiters[k].lock())
             timep->store(now + steady_clock::time_point::duration(k));
 
         POSEIDON_LOG_DEBUG(("Future `$1` ready (class `$2`)"), this, typeid(*this));
