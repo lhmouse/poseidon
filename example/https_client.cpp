@@ -4,6 +4,7 @@
 #include "../poseidon/precompiled.ipp"
 #include "../poseidon/easy/easy_https_client.hpp"
 #include "../poseidon/easy/easy_timer.hpp"
+#include "../poseidon/easy/enums.hpp"
 #include "../poseidon/utils.hpp"
 namespace {
 using namespace ::poseidon;
@@ -12,13 +13,18 @@ extern Easy_HTTPS_Client my_client;
 extern Easy_Timer my_timer;
 
 void
-event_callback(shptrR<HTTPS_Client_Session> session, Abstract_Fiber& /*fiber*/, Easy_Socket_Event event, HTTP_Response_Headers&& resp, linear_buffer&& data)
+event_callback(shptrR<HTTPS_Client_Session> session, Abstract_Fiber& /*fiber*/,
+               Easy_HTTP_Event event, HTTP_Response_Headers&& resp, linear_buffer&& data)
   {
     switch(event) {
-      case easy_socket_msg_bin: {
-        POSEIDON_LOG_WARN(("HTTPS client received response from `$1`: $2 $3"),
-            session->remote_address(), resp.status, resp.reason);
+      case easy_http_open:
+        POSEIDON_LOG_WARN(("example HTTPS client connected to server: $1"),
+                           session->remote_address());
+        break;
 
+      case easy_http_message: {
+        POSEIDON_LOG_WARN(("example HTTPS client received response: $1 $2"),
+                           resp.status, resp.reason);
         for(const auto& pair : resp.headers)
           POSEIDON_LOG_WARN(("  $1 --> $2"), pair.first, pair.second);
 
@@ -26,21 +32,18 @@ event_callback(shptrR<HTTPS_Client_Session> session, Abstract_Fiber& /*fiber*/, 
         break;
       }
 
-      case easy_socket_close:
-        POSEIDON_LOG_WARN(("example HTTPS client shut down connection: $1"), data);
+      case easy_http_close:
+        POSEIDON_LOG_WARN(("example HTTPS client shutdown: $1"), data);
         break;
 
-      case easy_socket_open:
-      case easy_socket_stream:
-      case easy_socket_msg_text:
-      case easy_socket_pong:
       default:
         ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
     }
   }
 
 void
-timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/, steady_time /*now*/)
+timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/,
+               steady_time /*now*/)
   {
     static uint32_t state;
 

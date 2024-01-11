@@ -3,7 +3,9 @@
 
 #include "../precompiled.ipp"
 #include "easy_wss_server.hpp"
+#include "enums.hpp"
 #include "../socket/listen_socket.hpp"
+#include "../socket/enums.hpp"
 #include "../static/network_driver.hpp"
 #include "../fiber/abstract_fiber.hpp"
 #include "../static/fiber_scheduler.hpp"
@@ -22,7 +24,7 @@ struct Client_Table
         // shared fields between threads
         struct Event
           {
-            Easy_Socket_Event type;
+            Easy_WS_Event type;
             linear_buffer data;
           };
 
@@ -82,7 +84,7 @@ struct Final_Fiber final : Abstract_Fiber
           auto event = move(queue->events.front());
           queue->events.pop_front();
 
-          if(ROCKET_UNEXPECT(event.type == easy_socket_close)) {
+          if(ROCKET_UNEXPECT(event.type == easy_ws_close)) {
             // This will be the last event on this session.
             queue = nullptr;
             table->client_map.erase(client_iter);
@@ -159,7 +161,7 @@ struct Final_WSS_Server_Session final : WSS_Server_Session
     do_on_wss_accepted(cow_string&& caddr) override
       {
         Client_Table::Event_Queue::Event event;
-        event.type = easy_socket_open;
+        event.type = easy_ws_open;
         event.data.putn(caddr.data(), caddr.size());
         this->do_push_event_common(move(event));
       }
@@ -171,11 +173,11 @@ struct Final_WSS_Server_Session final : WSS_Server_Session
         Client_Table::Event_Queue::Event event;
 
         if(opcode == websocket_text)
-          event.type = easy_socket_msg_text;
-        else if(opcode == websocket_bin)
-          event.type = easy_socket_msg_bin;
+          event.type = easy_ws_text;
+        else if(opcode == websocket_binary)
+          event.type = easy_ws_binary;
         else if(opcode == websocket_pong)
-          event.type = easy_socket_pong;
+          event.type = easy_ws_pong;
         else
           return;
 
@@ -188,7 +190,7 @@ struct Final_WSS_Server_Session final : WSS_Server_Session
     do_on_wss_close(uint16_t status, chars_view reason) override
       {
         Client_Table::Event_Queue::Event event;
-        event.type = easy_socket_close;
+        event.type = easy_ws_close;
 
         tinyfmt_ln fmt;
         fmt << status << ": " << reason;

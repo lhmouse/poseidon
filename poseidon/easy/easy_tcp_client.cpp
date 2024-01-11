@@ -3,6 +3,7 @@
 
 #include "../precompiled.ipp"
 #include "easy_tcp_client.hpp"
+#include "enums.hpp"
 #include "../static/network_driver.hpp"
 #include "../fiber/abstract_fiber.hpp"
 #include "../static/fiber_scheduler.hpp"
@@ -25,7 +26,7 @@ struct Event_Queue
     // shared fields between threads
     struct Event
       {
-        Easy_Socket_Event type;
+        Easy_Stream_Event type;
         linear_buffer data;
         int code = 0;
       };
@@ -78,11 +79,11 @@ struct Final_Fiber final : Abstract_Fiber
           lock.unlock();
 
           try {
-            // `easy_socket_stream` is really special. We append new data to
+            // `easy_stream_data` is really special. We append new data to
             // `data_stream` which is passed to the callback instead of
             // `event.data`. `data_stream` may be consumed partially by user code,
             // and shall be preserved across callbacks.
-            if(event.type == easy_socket_stream)
+            if(event.type == easy_stream_data)
               this->m_thunk(socket, *this, event.type, splice_buffers(queue->data_stream, move(event.data)), event.code);
             else
               this->m_thunk(socket, *this, event.type, event.data, event.code);
@@ -147,7 +148,7 @@ struct Final_TCP_Socket final : TCP_Socket
     do_on_tcp_connected() override
       {
         Event_Queue::Event event;
-        event.type = easy_socket_open;
+        event.type = easy_stream_open;
         this->do_push_event_common(move(event));
       }
 
@@ -156,7 +157,7 @@ struct Final_TCP_Socket final : TCP_Socket
     do_on_tcp_stream(linear_buffer& data, bool eof) override
       {
         Event_Queue::Event event;
-        event.type = easy_socket_stream;
+        event.type = easy_stream_data;
         event.data.swap(data);
         event.code = eof;
         this->do_push_event_common(move(event));
@@ -171,7 +172,7 @@ struct Final_TCP_Socket final : TCP_Socket
         const char* err_str = ::strerror_r(err_code, sbuf, sizeof(sbuf));
 
         Event_Queue::Event event;
-        event.type = easy_socket_close;
+        event.type = easy_stream_close;
         event.data.puts(err_str);
         event.code = err_code;
         this->do_push_event_common(move(event));

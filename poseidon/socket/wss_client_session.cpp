@@ -3,6 +3,8 @@
 
 #include "../precompiled.ipp"
 #include "wss_client_session.hpp"
+#include "enums.hpp"
+#include "../easy/enums.hpp"
 #include "../http/websocket_deflator.hpp"
 #include "../base/config_file.hpp"
 #include "../static/main_config.hpp"
@@ -167,7 +169,7 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
           // If this is a data frame or continuation, its payload is part of a
           // (potentially fragmented) data message, so combine it.
           auto opcode = static_cast<WebSocket_OpCode>(this->m_parser.message_opcode());
-          ROCKET_ASSERT(is_any_of(opcode, { websocket_text, websocket_bin }));
+          ROCKET_ASSERT(is_any_of(opcode, { websocket_text, websocket_binary }));
           this->do_on_wss_message_data_stream(opcode, splice_buffers(this->m_msg, move(payload)));
         }
 
@@ -182,7 +184,7 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
             case 1:  // TEXT
             case 2: {  // BINARY
               auto opcode = static_cast<WebSocket_OpCode>(this->m_parser.message_opcode());
-              ROCKET_ASSERT(is_any_of(opcode, { websocket_text, websocket_bin }));
+              ROCKET_ASSERT(is_any_of(opcode, { websocket_text, websocket_binary }));
               this->do_on_wss_message_finish(opcode, move(this->m_msg));
               break;
             }
@@ -254,7 +256,7 @@ do_on_wss_message_data_stream(WebSocket_OpCode /*opcode*/, linear_buffer& data)
     if(data.size() > (uint64_t) max_websocket_message_length)
       POSEIDON_THROW((
           "WebSocket text data message too large: `$3` > `$4`",
-          "[WebSocket server session `$1` (class `$2`)]"),
+          "[WebSocket client session `$1` (class `$2`)]"),
           this, typeid(*this), data.size(), max_websocket_message_length);
   }
 
@@ -296,7 +298,7 @@ wss_send(WebSocket_OpCode opcode, chars_view data)
     if(!this->do_has_upgraded())
       POSEIDON_THROW((
           "WebSocket handshake not complete yet",
-          "[WebSocket server session `$1` (class `$2`)]"),
+          "[WebSocket client session `$1` (class `$2`)]"),
           this, typeid(*this));
 
     switch(opcode) {
@@ -343,7 +345,7 @@ wss_send(WebSocket_OpCode opcode, chars_view data)
         if(data.n > 125)
           POSEIDON_THROW((
               "Control frame too large: `$3` > `125`",
-              "[WebSocket server session `$1` (class `$2`)]"),
+              "[WebSocket client session `$1` (class `$2`)]"),
               this, typeid(*this), data.n);
 
         // Control messages can't be compressed, so send it as is.
@@ -353,7 +355,7 @@ wss_send(WebSocket_OpCode opcode, chars_view data)
       default:
         POSEIDON_THROW((
             "WebSocket opcode `$3` not supported",
-            "[WebSocket server session `$1` (class `$2`)]"),
+            "[WebSocket client session `$1` (class `$2`)]"),
             this, typeid(*this), opcode);
     }
   }
@@ -388,6 +390,34 @@ wss_shut_down(uint16_t status, chars_view reason) noexcept
     }
     succ |= this->ssl_shut_down();
     return succ;
+  }
+
+bool
+WSS_Client_Session::
+wss_send(Easy_WS_Event opcode, chars_view data)
+  {
+    switch(opcode) {
+      case easy_ws_open:
+        return this->wss_send(websocket_ping, data);
+
+      case easy_ws_text:
+        return this->wss_send(websocket_text, data);
+
+      case easy_ws_binary:
+        return this->wss_send(websocket_binary, data);
+
+      case easy_ws_pong:
+        return this->wss_send(websocket_pong, data);
+
+      case easy_ws_close:
+        return this->wss_shut_down(1000, data);
+
+      default:
+        POSEIDON_THROW((
+            "Easy WebSocket event code `$3` not supported",
+            "[WebSocket client session `$1` (class `$2`)]"),
+            this, typeid(*this), opcode);
+    }
   }
 
 }  // namespace poseidon

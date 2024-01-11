@@ -4,6 +4,7 @@
 #include "../poseidon/precompiled.ipp"
 #include "../poseidon/easy/easy_ws_client.hpp"
 #include "../poseidon/easy/easy_timer.hpp"
+#include "../poseidon/easy/enums.hpp"
 #include "../poseidon/utils.hpp"
 namespace {
 using namespace ::poseidon;
@@ -12,37 +13,39 @@ extern Easy_WS_Client my_client;
 extern Easy_Timer my_timer;
 
 void
-event_callback(shptrR<WS_Client_Session> session, Abstract_Fiber& /*fiber*/, Easy_Socket_Event event, linear_buffer&& data)
+event_callback(shptrR<WS_Client_Session> session, Abstract_Fiber& /*fiber*/,
+               Easy_WS_Event event, linear_buffer&& data)
   {
     switch(event) {
-      case easy_socket_open:
-        POSEIDON_LOG_WARN(("example WS client established connection to `$1`: $2"), session->remote_address(), data);
+      case easy_ws_open:
+        POSEIDON_LOG_WARN(("example WS client established connection to `$1`: $2"),
+                          session->remote_address(), data);
         break;
 
-      case easy_socket_msg_text:
+      case easy_ws_text:
         POSEIDON_LOG_WARN(("example WS client received TEXT data: $1"), data);
         break;
 
-      case easy_socket_msg_bin:
+      case easy_ws_binary:
         POSEIDON_LOG_WARN(("example WS client received BINARY data: $1"), data);
         break;
 
-      case easy_socket_pong:
+      case easy_ws_pong:
         POSEIDON_LOG_WARN(("example WS client received PONG data: $1"), data);
         break;
 
-      case easy_socket_close:
+      case easy_ws_close:
         POSEIDON_LOG_WARN(("example WS client shut down connection: $1"), data);
         break;
 
-      case easy_socket_stream:
       default:
         ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
     }
   }
 
 void
-timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/, steady_time /*now*/)
+timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/,
+               steady_time /*now*/)
   {
     static uint32_t state;
 
@@ -61,26 +64,19 @@ timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/, stea
 
       case 1: {
         const char data[] = "some text data";
-        my_client.ws_send(websocket_text, data);
+        my_client.ws_send(easy_ws_text, data);
         POSEIDON_LOG_DEBUG(("example WS client sent TEXT frame: $1"), data);
         break;
       }
 
       case 2: {
         const char data[] = "some binary data";
-        my_client.ws_send(websocket_bin, data);
+        my_client.ws_send(easy_ws_binary, data);
         POSEIDON_LOG_DEBUG(("example WS client sent BINARY frame: $1"), data);
         break;
       }
 
       case 3: {
-        const char data[] = "some ping data";
-        my_client.ws_send(websocket_ping, data);
-        POSEIDON_LOG_DEBUG(("example WS client sent PING frame: $1"), data);
-        break;
-      }
-
-      case 4: {
         // HACKS; DO NOT PLAY WITH THESE AT HOME.
         WebSocket_Frame_Header header;
         header.mask = 1;

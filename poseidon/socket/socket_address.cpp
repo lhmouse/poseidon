@@ -3,6 +3,7 @@
 
 #include "../precompiled.ipp"
 #include "socket_address.hpp"
+#include "enums.hpp"
 #include "../utils.hpp"
 #include <arpa/inet.h>
 namespace poseidon {

@@ -33,10 +33,10 @@ class deflate_Stream
         int fmt_wbits;
         if(fmt == zlib_deflate)
           fmt_wbits = wbits;
-        else if(fmt == zlib_gzip)
-          fmt_wbits = wbits + 16;
         else if(fmt == zlib_raw)
           fmt_wbits = -wbits;
+        else if(fmt == zlib_gzip)
+          fmt_wbits = wbits + 16;
         else
           ::rocket::sprintf_and_throw<::std::invalid_argument>(
               "deflate_Stream: format `%d` not valid",
@@ -122,10 +122,10 @@ class inflate_Stream
         int fmt_wbits;
         if(fmt == zlib_deflate)
           fmt_wbits = wbits;
-        else if(fmt == zlib_gzip)
-          fmt_wbits = wbits + 16;
         else if(fmt == zlib_raw)
           fmt_wbits = -wbits;
+        else if(fmt == zlib_gzip)
+          fmt_wbits = wbits + 16;
         else
           ::rocket::sprintf_and_throw<::std::invalid_argument>(
               "inflate_Stream: format `%d` not valid",

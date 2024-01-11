@@ -174,6 +174,7 @@ template<typename... T> using vfptr = void (*)(T...);
 template<size_t Nc> using char_array = array<char, Nc>;
 template<size_t Nc> using uchar_array = array<unsigned char, Nc>;
 
+// utilities
 struct cacheline_barrier
   {
     static constexpr size_t align = alignof(max_align_t);
@@ -477,10 +478,25 @@ shptr<typename ::std::decay<ValueT>::type>
 new_sh(ValueT&& value)
   { return ::std::make_shared<typename ::std::decay<ValueT>::type>(forward<ValueT>(value));  }
 
+// Constants
+enum zlib_Format : uint8_t
+  {
+    zlib_deflate  = 0,
+    zlib_raw      = 1,
+    zlib_gzip     = 2,
+  };
+
+enum Async_State : uint8_t
+  {
+    async_pending    = 0,
+    async_suspended  = 1,
+    async_running    = 2,
+    async_finished   = 3,
+  };
+
 // Base types
 class UUID;
 using GUID = UUID;
-
 class Config_File;
 class Abstract_Timer;
 class Abstract_Async_Task;
@@ -494,6 +510,10 @@ class Read_File_Future;
 class Abstract_Fiber;
 
 // Socket types
+enum IP_Address_Class : uint8_t;
+enum Socket_State : uint8_t;
+enum HTTP_Payload_Type : uint8_t;
+enum WebSocket_OpCode : uint8_t;
 class Socket_Address;
 class Abstract_Socket;
 class Listen_Socket;
@@ -526,6 +546,9 @@ class WebSocket_Deflator;
 // Easy types
 // Being 'easy' means all callbacks are invoked in fibers and can perform
 // async/await operations. These are suitable for agile development.
+enum Easy_Stream_Event : uint8_t;  // TCP, SSL
+enum Easy_HTTP_Event : uint8_t;  // HTTP, HTTPS
+enum Easy_WS_Event : uint8_t;  // WS, WSS
 class Easy_Deflator;
 class Easy_Inflator;
 class Easy_Timer;
@@ -543,67 +566,6 @@ class Easy_WS_Server;
 class Easy_WS_Client;
 class Easy_WSS_Server;
 class Easy_WSS_Client;
-
-// Constants
-enum zlib_Format : uint8_t
-  {
-    zlib_deflate  = 0,
-    zlib_raw      = 1,
-    zlib_gzip     = 2,
-  };
-
-enum Async_State : uint8_t
-  {
-    async_pending    = 0,
-    async_suspended  = 1,
-    async_running    = 2,
-    async_finished   = 3,
-  };
-
-enum IP_Address_Class : uint8_t
-  {
-    ip_address_unspecified  = 0,  // all zeroes
-    ip_address_reserved     = 1,
-    ip_address_public       = 2,
-    ip_address_loopback     = 3,
-    ip_address_private      = 4,
-    ip_address_link_local   = 5,
-    ip_address_multicast    = 6,
-    ip_address_broadcast    = 7,  // IPv4 only
-  };
-
-enum Socket_State : uint8_t
-  {
-    socket_pending      = 0,
-    socket_established  = 1,
-    socket_closing      = 2,
-    socket_closed       = 3,
-  };
-
-enum HTTP_Payload_Type : uint8_t
-  {
-    http_payload_normal   = 0,
-    http_payload_empty    = 1,
-    http_payload_connect  = 2,
-  };
-
-enum WebSocket_OpCode : uint8_t
-  {
-    websocket_text  =  1,
-    websocket_bin   =  2,
-    websocket_ping  =  9,
-    websocket_pong  = 10,
-  };
-
-enum Easy_Socket_Event : uint8_t
-  {
-    easy_socket_open      = 0,  // TCP        WS
-    easy_socket_stream    = 1,  // TCP
-    easy_socket_close     = 2,  // TCP  HTTP  WS
-    easy_socket_msg_text  = 3,  //            WS
-    easy_socket_msg_bin   = 4,  //      HTTP  WS
-    easy_socket_pong      = 5,  //            WS
-  };
 
 // Singletons
 extern atomic_relaxed<int> exit_signal;

@@ -3,6 +3,7 @@
 
 #include "../precompiled.ipp"
 #include "https_server_session.hpp"
+#include "enums.hpp"
 #include "../http/http_header_parser.hpp"
 #include "../base/config_file.hpp"
 #include "../static/main_config.hpp"

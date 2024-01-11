@@ -3,6 +3,7 @@
 
 #include "../poseidon/precompiled.ipp"
 #include "../poseidon/easy/easy_http_server.hpp"
+#include "../poseidon/easy/enums.hpp"
 #include "../poseidon/utils.hpp"
 namespace {
 using namespace ::poseidon;
@@ -10,14 +11,22 @@ using namespace ::poseidon;
 extern Easy_HTTP_Server my_server;
 
 void
-event_callback(shptrR<HTTP_Server_Session> session, Abstract_Fiber& /*fiber*/, Easy_Socket_Event event, HTTP_Request_Headers&& req, linear_buffer&& data)
+event_callback(shptrR<HTTP_Server_Session> session, Abstract_Fiber& /*fiber*/,
+               Easy_HTTP_Event event, HTTP_Request_Headers&& req, linear_buffer&& data)
   {
     switch(event) {
-      case easy_socket_msg_bin: {
-        POSEIDON_LOG_ERROR(("HTTP request --> $1 $2: $3"), req.method, req.uri_path, req.uri_query);
+      case easy_http_open:
+        POSEIDON_LOG_ERROR(("example HTTP server accepted connection: $1"),
+                           session->remote_address());
+        break;
+
+      case easy_http_message: {
+        POSEIDON_LOG_ERROR(("HTTP request --> $1 $2: $3"),
+                           req.method, req.uri_path, req.uri_query);
         for(const auto& r : req.headers)
           POSEIDON_LOG_ERROR(("HTTP header --> $1: $2"), r.first, r.second);
 
+        // send a response
         HTTP_Response_Headers resp;
         resp.status = 200;
         resp.headers.emplace_back(sref("Date"), system_clock::now());
@@ -30,14 +39,10 @@ event_callback(shptrR<HTTP_Server_Session> session, Abstract_Fiber& /*fiber*/, E
         break;
       }
 
-      case easy_socket_close:
-        POSEIDON_LOG_ERROR(("example HTTP server shut down connection: $1"), data);
+      case easy_http_close:
+        POSEIDON_LOG_ERROR(("example HTTP server shutdown: $1"), data);
         break;
 
-      case easy_socket_open:
-      case easy_socket_stream:
-      case easy_socket_msg_text:
-      case easy_socket_pong:
       default:
         ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
     }
@@ -47,7 +52,8 @@ int
 start_server()
   {
     my_server.start(sref("[::]:3804"));
-    POSEIDON_LOG_ERROR(("example HTTP server started: bind = $1"), my_server.local_address());
+    POSEIDON_LOG_ERROR(("example HTTP server started: bind = $1"),
+                       my_server.local_address());
     return 0;
   }
 

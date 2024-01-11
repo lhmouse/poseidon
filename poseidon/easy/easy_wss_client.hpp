@@ -16,7 +16,7 @@ class Easy_WSS_Client
       thunk<
         shptrR<WSS_Client_Session>,  // client data socket
         Abstract_Fiber&,            // fiber for current callback
-        Easy_Socket_Event,          // event type; see comments above constructor
+        Easy_WS_Event,              // event type; see comments above constructor
         linear_buffer&&>;           // message payload
 
   private:
@@ -30,16 +30,16 @@ class Easy_WSS_Client
   public:
     // Constructs a client. The argument shall be an invocable object taking
     // `(shptrR<WSS_Client_Session> session, Abstract_Fiber& fiber,
-    // Easy_Socket_Event event, linear_buffer&& data)`, where `session` is a
+    // Easy_WS_Event event, linear_buffer&& data)`, where `session` is a
     // pointer to a client session object, and if `event` is
-    //  1) `easy_socket_open`, then `data` is the request URI; or
-    //  2) `easy_socket_msg_text`, then `data` is a complete text message that
-    //     has been received; or
-    //  3) `easy_socket_msg_bin`, then `data` is a complete binary message that
-    //     has been received; or
-    //  4) `easy_socket_pong`, then `data` is a PONG notification that has been
+    //  1) `easy_ws_open`, then `data` is the request URI; or
+    //  2) `easy_ws_msg_text`, then `data` is a complete text message that has
+    //     been received; or
+    //  3) `easy_ws_msg_bin`, then `data` is a complete binary message that has
+    //     been received; or
+    //  4) `easy_ws_pong`, then `data` is a PONG notification that has been
     //     received, usually a copy of a previous PING notification; or
-    //  5) `easy_socket_close`, then `data` is a string about the reason, such
+    //  5) `easy_ws_close`, then `data` is a string about the reason, such
     //     as `"1002: invalid opcode"`.
     // This client object stores a copy of the callback, which is invoked
     // accordingly in the main thread. The callback object is never copied, and
@@ -97,7 +97,7 @@ class Easy_WSS_Client
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    wss_send(WebSocket_OpCode opcode, chars_view data);
+    wss_send(Easy_WS_Event opcode, chars_view data);
 
     // Sends a CLOSE frame with an optional error message, then shuts down the
     // connection. The reason string will be truncated to 123 bytes if it's too

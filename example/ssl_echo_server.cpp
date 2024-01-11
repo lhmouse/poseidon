@@ -3,6 +3,7 @@
 
 #include "../poseidon/precompiled.ipp"
 #include "../poseidon/easy/easy_ssl_server.hpp"
+#include "../poseidon/easy/enums.hpp"
 #include "../poseidon/utils.hpp"
 namespace {
 using namespace ::poseidon;
@@ -10,26 +11,27 @@ using namespace ::poseidon;
 extern Easy_SSL_Server my_server;
 
 void
-event_callback(shptrR<SSL_Socket> socket, Abstract_Fiber& /*fiber*/, Easy_Socket_Event event, linear_buffer& data, int code)
+event_callback(shptrR<SSL_Socket> socket, Abstract_Fiber& /*fiber*/,
+               Easy_Stream_Event event, linear_buffer& data, int code)
   {
     switch(event) {
-      case easy_socket_open:
-        POSEIDON_LOG_WARN(("example SSL server accepted connection: $1"), socket->remote_address());
+      case easy_stream_open:
+        POSEIDON_LOG_WARN(("example SSL server accepted connection: $1"),
+                          socket->remote_address());
         break;
 
-      case easy_socket_stream:
-        POSEIDON_LOG_WARN(("example SSL server received data (eof = $1): $2"), code, data);
+      case easy_stream_data:
+        POSEIDON_LOG_WARN(("example SSL server received data (eof = $1): $2"),
+                          code, data);
         socket->ssl_send(data);
         data.clear();
         break;
 
-      case easy_socket_close:
-        POSEIDON_LOG_WARN(("example SSL server shut down connection: (errno = $1) $2"), code, data);
+      case easy_stream_close:
+        POSEIDON_LOG_WARN(("example SSL server shutdown: (errno = $1) $2"),
+                          code, data);
         break;
 
-      case easy_socket_msg_text:
-      case easy_socket_msg_bin:
-      case easy_socket_pong:
       default:
         ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
     }
@@ -39,7 +41,8 @@ int
 start_server()
   {
     my_server.start(sref("[::]:3803"));
-    POSEIDON_LOG_WARN(("example SSL server started: bind = $1"), my_server.local_address());
+    POSEIDON_LOG_WARN(("example SSL server started: bind = $1"),
+                      my_server.local_address());
     return 0;
   }
 

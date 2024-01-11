@@ -16,7 +16,7 @@ class Easy_SSL_Client
       thunk<
         shptrR<SSL_Socket>,  // client data socket
         Abstract_Fiber&,     // fiber for current callback
-        Easy_Socket_Event,   // event type; see comments above constructor
+        Easy_Stream_Event,   // event type; see comments above constructor
         linear_buffer&,      // accumulative data that have been received
         int>;                // event code; see comments above constructor
 
@@ -30,16 +30,16 @@ class Easy_SSL_Client
 
   public:
     // Constructs a client. The argument shall be an invocable object taking
-    // `(shptrR<SSL_Socket> socket, Abstract_Fiber& fiber, Easy_Socket_Event
+    // `(shptrR<SSL_Socket> socket, Abstract_Fiber& fiber, Easy_Stream_Event
     // event, linear_buffer& data, int code)`, where `socket` is a pointer to
     // a client socket object, and if `event` is
-    //  1) `easy_socket_open`, then `data` is empty; or
-    //  2) `easy_socket_stream`, then `data` contains all data that have been
+    //  1) `easy_stream_open`, then `data` is empty; or
+    //  2) `easy_stream_datahen `data` contains all data that have been
     //     received and have not been removed so far (this callback shall
     //     `.discard()` processed data from `data`, otherwise they will remain
     //     there for the next call); `code` is non-zero if the remote peer has
     //     closed the connection; or
-    //  3) `easy_socket_closed`, then `data` is the error description and `code`
+    //  3) `easy_stream_closed`, then `data` is the error description and `code`
     //      is the system error number.
     // This client object stores a copy of the callback, which is invoked
     // accordingly in the main thread. The callback object is never copied,

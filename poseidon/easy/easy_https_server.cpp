@@ -3,6 +3,7 @@
 
 #include "../precompiled.ipp"
 #include "easy_https_server.hpp"
+#include "enums.hpp"
 #include "../socket/listen_socket.hpp"
 #include "../static/network_driver.hpp"
 #include "../fiber/abstract_fiber.hpp"
@@ -22,7 +23,7 @@ struct Client_Table
         // shared fields between threads
         struct Event
           {
-            Easy_Socket_Event type;
+            Easy_HTTP_Event type;
             HTTP_Request_Headers req;
             linear_buffer data;
             bool close_now = false;
@@ -85,7 +86,7 @@ struct Final_Fiber final : Abstract_Fiber
           auto event = move(queue->events.front());
           queue->events.pop_front();
 
-          if(ROCKET_UNEXPECT(event.type == easy_socket_close)) {
+          if(ROCKET_UNEXPECT(event.type == easy_http_close)) {
             // This will be the last event on this session.
             queue = nullptr;
             table->client_map.erase(client_iter);
@@ -94,7 +95,7 @@ struct Final_Fiber final : Abstract_Fiber
           lock.unlock();
 
           try {
-            if(event.type == easy_socket_pong) {
+            if(event.status != 0) {
               // Send a bad request response.
               HTTP_Response_Headers resp;
               resp.status = event.status;
@@ -176,10 +177,19 @@ struct Final_HTTPS_Server_Session final : HTTPS_Server_Session
 
     virtual
     void
+    do_on_ssl_connected() override
+      {
+        Client_Table::Event_Queue::Event event;
+        event.type = easy_http_open;
+        this->do_push_event_common(move(event));
+      }
+
+    virtual
+    void
     do_on_https_request_finish(HTTP_Request_Headers&& req, linear_buffer&& data, bool close_now) override
       {
         Client_Table::Event_Queue::Event event;
-        event.type = easy_socket_msg_bin;
+        event.type = easy_http_message;
         event.req = move(req);
         event.data = move(data);
         event.close_now = close_now;
@@ -191,7 +201,6 @@ struct Final_HTTPS_Server_Session final : HTTPS_Server_Session
     do_on_https_request_error(uint32_t status) override
       {
         Client_Table::Event_Queue::Event event;
-        event.type = easy_socket_pong;
         event.status = status;
         event.close_now = true;
         this->do_push_event_common(move(event));
@@ -206,7 +215,7 @@ struct Final_HTTPS_Server_Session final : HTTPS_Server_Session
         const char* err_str = ::strerror_r(err_code, sbuf, sizeof(sbuf));
 
         Client_Table::Event_Queue::Event event;
-        event.type = easy_socket_close;
+        event.type = easy_http_close;
         event.data.puts(err_str);
         this->do_push_event_common(move(event));
       }

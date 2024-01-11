@@ -21,6 +21,7 @@ nobase_include_HEADERS +=  \
   %reldir%/fiber/dns_future.hpp  \
   %reldir%/fiber/read_file_future.hpp  \
   %reldir%/fiber/abstract_fiber.hpp  \
+  %reldir%/socket/enums.hpp  \
   %reldir%/socket/socket_address.hpp  \
   %reldir%/socket/abstract_socket.hpp  \
   %reldir%/socket/udp_socket.hpp  \
@@ -47,6 +48,7 @@ nobase_include_HEADERS +=  \
   %reldir%/http/websocket_frame_header.hpp  \
   %reldir%/http/websocket_frame_parser.hpp  \
   %reldir%/http/websocket_deflator.hpp  \
+  %reldir%/easy/enums.hpp  \
   %reldir%/easy/easy_deflator.hpp  \
   %reldir%/easy/easy_inflator.hpp  \
   %reldir%/easy/easy_timer.hpp  \

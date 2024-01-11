@@ -62,7 +62,7 @@ class WS_Client_Session
 
     // This callback is invoked by the network thread for each fragment of a data
     // message. `opcode` indicates the type of the message, which can be either
-    // `websocket_text` or `websocket_bin`; control frames are never notified via
+    // `websocket_text` or `websocket_binary`; control frames are never notified via
     // this callback. As with `TCP_Connection::do_on_tcp_stream()`, the argument
     // buffer contains all data that have been accumulated so far and callees are
     // supposed to remove bytes that have been processed.
@@ -75,7 +75,7 @@ class WS_Client_Session
     do_on_ws_message_data_stream(WebSocket_OpCode opcode, linear_buffer& data);
 
     // This callback is invoked by the network thread at the end of a data message
-    // or a control frame. `opcode` may be `websocket_text`, `websocket_bin`,
+    // or a control frame. `opcode` may be `websocket_text`, `websocket_binary`,
     // `websocket_ping` or `websocket_pong`.
     virtual
     void
@@ -112,6 +112,10 @@ class WS_Client_Session
     // This function is thread-safe.
     bool
     ws_shut_down(uint16_t status = 1000, chars_view reason = "") noexcept;
+
+    // Provides a helper function for the sake of Easy classes.
+    bool
+    ws_send(Easy_WS_Event opcode, chars_view data);
   };
 
 }  // namespace poseidon

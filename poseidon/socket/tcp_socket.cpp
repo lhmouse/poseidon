@@ -3,6 +3,7 @@
 
 #include "../precompiled.ipp"
 #include "tcp_socket.hpp"
+#include "enums.hpp"
 #include "../utils.hpp"
 #include <sys/socket.h>
 #include <netinet/tcp.h>

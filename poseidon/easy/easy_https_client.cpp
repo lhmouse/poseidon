@@ -3,6 +3,7 @@
 
 #include "../precompiled.ipp"
 #include "easy_https_client.hpp"
+#include "enums.hpp"
 #include "../static/network_driver.hpp"
 #include "../fiber/abstract_fiber.hpp"
 #include "../static/fiber_scheduler.hpp"
@@ -21,7 +22,7 @@ struct Event_Queue
     // shared fields between threads
     struct Event
       {
-        Easy_Socket_Event type;
+        Easy_HTTP_Event type;
         HTTP_Response_Headers resp;
         linear_buffer data;
         bool close_now = false;
@@ -140,10 +141,19 @@ struct Final_HTTPS_Client_Session final : HTTPS_Client_Session
 
     virtual
     void
+    do_on_ssl_connected() override
+      {
+        Event_Queue::Event event;
+        event.type = easy_http_open;
+        this->do_push_event_common(move(event));
+      }
+
+    virtual
+    void
     do_on_https_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data, bool close_now) override
       {
         Event_Queue::Event event;
-        event.type = easy_socket_msg_bin;
+        event.type = easy_http_message;
         event.resp = move(resp);
         event.data = move(data);
         event.close_now = close_now;
@@ -159,7 +169,7 @@ struct Final_HTTPS_Client_Session final : HTTPS_Client_Session
         const char* err_str = ::strerror_r(err_code, sbuf, sizeof(sbuf));
 
         Event_Queue::Event event;
-        event.type = easy_socket_close;
+        event.type = easy_http_close;
         event.data.puts(err_str);
         this->do_push_event_common(move(event));
       }

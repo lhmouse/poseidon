@@ -1,0 +1,35 @@
+// This file is part of Poseidon.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
+
+#ifndef POSEIDON_EASY_ENUMS_
+#define POSEIDON_EASY_ENUMS_
+
+#include "../fwd.hpp"
+namespace poseidon {
+
+enum Easy_Stream_Event : uint8_t
+  {
+    easy_stream_open     = 11,  // connection established
+    easy_stream_data     = 12,  // data received
+    easy_stream_close    = 13,  // connection closed
+  };
+
+enum Easy_HTTP_Event : uint8_t
+  {
+    easy_http_open     = 21,  // connection established
+    easy_http_message  = 22,  // message received
+    easy_http_close    = 23,  // connection closed
+  };
+
+enum Easy_WS_Event : uint8_t
+  {
+    easy_ws_open     = 1,  // connection established
+    easy_ws_text     = 2,  // text message received
+    easy_ws_binary   = 3,  // binary message received
+    easy_ws_ping     = easy_ws_open,
+    easy_ws_pong     = 4,  // pong notification received
+    easy_ws_close    = 5,  // closure notification closed
+  };
+
+}  // namespace poseidon
+#endif

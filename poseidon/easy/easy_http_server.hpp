@@ -16,7 +16,7 @@ class Easy_HTTP_Server
       thunk<
         shptrR<HTTP_Server_Session>,  // server data socket
         Abstract_Fiber&,              // fiber for current callback
-        Easy_Socket_Event,            // event type; see comments above constructor
+        Easy_HTTP_Event,              // event type; see comments above constructor
         HTTP_Request_Headers&&,       // request method, URI, and headers
         linear_buffer&&>;             // request payload body
 
@@ -30,12 +30,13 @@ class Easy_HTTP_Server
   public:
     // Constructs a server. The argument shall be an invocable object taking
     // `(shptrR<HTTP_Server_Session> session, Abstract_Fiber& fiber,
-    // Easy_Socket_Event event, HTTP_Request_Headers&& req, linear_buffer&&
+    // Easy_HTTP_Event event, HTTP_Request_Headers&& req, linear_buffer&&
     // data)`, where `session` is a pointer to a client session object, and if
     // `event` is
-    //  1) `easy_socket_msg_bin`, then `req` and `data` are the headers and body
+    //  1) `easy_http_open`, then `data` is empty; or
+    //  2) `easy_http_message`, then `req` and `data` are the headers and body
     //     of a request message, respectively; or
-    //  2) `easy_socket_close`, then `resp` is empty and `data` is the error
+    //  3) `easy_http_close`, then `resp` is empty and `data` is the error
     //     description.
     // The server object owns all client session objects. As a recommendation,
     // applications should store only `wkptr`s to client sessions, and call

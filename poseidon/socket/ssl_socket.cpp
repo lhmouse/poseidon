@@ -3,6 +3,7 @@
 
 #include "../precompiled.ipp"
 #include "ssl_socket.hpp"
+#include "enums.hpp"
 #include "../static/network_driver.hpp"
 #include "../utils.hpp"
 #include <sys/socket.h>

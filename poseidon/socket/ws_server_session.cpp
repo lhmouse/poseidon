@@ -3,6 +3,8 @@
 
 #include "../precompiled.ipp"
 #include "ws_server_session.hpp"
+#include "enums.hpp"
+#include "../easy/enums.hpp"
 #include "../http/websocket_deflator.hpp"
 #include "../base/config_file.hpp"
 #include "../static/main_config.hpp"
@@ -206,7 +208,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
           // If this is a data frame or continuation, its payload is part of a
           // (potentially fragmented) data message, so combine it.
           auto opcode = static_cast<WebSocket_OpCode>(this->m_parser.message_opcode());
-          ROCKET_ASSERT(is_any_of(opcode, { websocket_text, websocket_bin }));
+          ROCKET_ASSERT(is_any_of(opcode, { websocket_text, websocket_binary }));
           this->do_on_ws_message_data_stream(opcode, splice_buffers(this->m_msg, move(payload)));
         }
 
@@ -221,7 +223,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
             case 1:  // TEXT
             case 2: {  // BINARY
               auto opcode = static_cast<WebSocket_OpCode>(this->m_parser.message_opcode());
-              ROCKET_ASSERT(is_any_of(opcode, { websocket_text, websocket_bin }));
+              ROCKET_ASSERT(is_any_of(opcode, { websocket_text, websocket_binary }));
               this->do_on_ws_message_finish(opcode, move(this->m_msg));
               break;
             }
@@ -422,6 +424,34 @@ ws_shut_down(uint16_t status, chars_view reason) noexcept
     }
     succ |= this->tcp_shut_down();
     return succ;
+  }
+
+bool
+WS_Server_Session::
+ws_send(Easy_WS_Event opcode, chars_view data)
+  {
+    switch(opcode) {
+      case easy_ws_open:
+        return this->ws_send(websocket_ping, data);
+
+      case easy_ws_text:
+        return this->ws_send(websocket_text, data);
+
+      case easy_ws_binary:
+        return this->ws_send(websocket_binary, data);
+
+      case easy_ws_pong:
+        return this->ws_send(websocket_pong, data);
+
+      case easy_ws_close:
+        return this->ws_shut_down(1000, data);
+
+      default:
+        POSEIDON_THROW((
+            "Easy WebSocket event code `$3` not supported",
+            "[WebSocket server session `$1` (class `$2`)]"),
+            this, typeid(*this), opcode);
+    }
   }
 
 }  // namespace poseidon

@@ -3,10 +3,12 @@
 
 #include "../precompiled.ipp"
 #include "easy_wss_client.hpp"
+#include "enums.hpp"
 #include "../static/network_driver.hpp"
 #include "../fiber/abstract_fiber.hpp"
 #include "../static/fiber_scheduler.hpp"
 #include "../socket/async_connect.hpp"
+#include "../socket/enums.hpp"
 #include "../static/async_task_executor.hpp"
 #include "../utils.hpp"
 namespace poseidon {
@@ -25,7 +27,7 @@ struct Event_Queue
     // shared fields between threads
     struct Event
       {
-        Easy_Socket_Event type;
+        Easy_WS_Event type;
         linear_buffer data;
       };
 
@@ -139,7 +141,7 @@ struct Final_WSS_Client_Session final : WSS_Client_Session
     do_on_wss_connected(cow_string&& caddr) override
       {
         Event_Queue::Event event;
-        event.type = easy_socket_open;
+        event.type = easy_ws_open;
         event.data.putn(caddr.data(), caddr.size());
         this->do_push_event_common(move(event));
       }
@@ -151,11 +153,11 @@ struct Final_WSS_Client_Session final : WSS_Client_Session
         Event_Queue::Event event;
 
         if(opcode == websocket_text)
-          event.type = easy_socket_msg_text;
-        else if(opcode == websocket_bin)
-          event.type = easy_socket_msg_bin;
+          event.type = easy_ws_text;
+        else if(opcode == websocket_binary)
+          event.type = easy_ws_binary;
         else if(opcode == websocket_pong)
-          event.type = easy_socket_pong;
+          event.type = easy_ws_pong;
         else
           return;
 
@@ -168,7 +170,7 @@ struct Final_WSS_Client_Session final : WSS_Client_Session
     do_on_wss_close(uint16_t status, chars_view reason) override
       {
         Event_Queue::Event event;
-        event.type = easy_socket_close;
+        event.type = easy_ws_close;
 
         tinyfmt_ln fmt;
         fmt << status << ": " << reason;
@@ -250,7 +252,7 @@ remote_address() const noexcept
 
 bool
 Easy_WSS_Client::
-wss_send(WebSocket_OpCode opcode, chars_view data)
+wss_send(Easy_WS_Event opcode, chars_view data)
   {
     if(!this->m_session)
       return false;
