@@ -209,30 +209,6 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
     do_color(mtext, lconf, "0");  // reset
     mtext.putc(' ');
 
-    // Write the thread name and ID.
-    do_color(mtext, lconf, "30;1");  // grey
-    mtext.puts("THREAD ");
-    nump.put_DU(msg.thrd_lwpid);
-    mtext.putn(nump.data(), nump.size());
-    mtext.puts(" \"");
-    mtext.puts(msg.thrd_name);
-    mtext.puts("\" ");
-
-    // Write the function name.
-    do_color(mtext, lconf, "37;1");  // bright white
-    mtext.puts("FUNCTION `");
-    mtext.puts(msg.ctx.func);
-    mtext.puts("` ");
-
-    // Write the source file name and line number.
-    do_color(mtext, lconf, "34;1");  // bright blue
-    mtext.puts("SOURCE \'");
-    mtext.puts(msg.ctx.file);
-    mtext.putc(':');
-    nump.put_DU(msg.ctx.line);
-    mtext.putn(nump.data(), nump.size());
-    mtext.puts("\'" NEL_HT_);
-
     // Write the message.
     do_color(mtext, lconf, "0");  // reset
     do_color(mtext, lconf, lconf.color.c_str());
@@ -245,7 +221,7 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
         mtext.putc(seq[0]);
       }
       else if(seq[0] == '\\') {
-        // non-printable or bad
+        // non-printable
         do_color(mtext, lconf, "7");
         mtext.puts(seq);
         do_color(mtext, lconf, "27");
@@ -261,9 +237,31 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
     // Terminate the message.
     do_color(mtext, lconf, "0");  // reset
     mtext.puts(NEL_HT_);
+
+    // Write the thread name and ID.
+    do_color(mtext, lconf, "90");  // grey
+    mtext.puts("thread ");
+    nump.put_DU(msg.thrd_lwpid);
+    mtext.putn(nump.data(), nump.size());
+    mtext.puts(" '");
+    mtext.puts(msg.thrd_name);
+    mtext.puts("' ");
+
+    // Write the source location and enclosing function.
+    do_color(mtext, lconf, "94");  // bright blue
+    mtext.puts("source '");
+    mtext.puts(msg.ctx.file);
+    mtext.putc(':');
+    nump.put_DU(msg.ctx.line);
+    mtext.putn(nump.data(), nump.size());
+    mtext.puts("' inside `");
+    mtext.puts(msg.ctx.func);
+    mtext.puts("`" NEL_HT_);
+
+    // Append a genuine new line for grep'ing.
     mtext.mut_end()[-1] = '\n';
 
-    // Write it. Errors are ignored.
+    // Write the message. Errors are ignored.
     unique_posix_fd xfd;
     for(const auto& file : lconf.files)
       if(file == "/dev/stderr")
