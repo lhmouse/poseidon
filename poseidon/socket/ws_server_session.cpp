@@ -431,14 +431,14 @@ WS_Server_Session::
 ws_send(Easy_WS_Event opcode, chars_view data)
   {
     switch(opcode) {
-      case easy_ws_open:
-        return this->ws_send(websocket_ping, data);
-
       case easy_ws_text:
         return this->ws_send(websocket_text, data);
 
       case easy_ws_binary:
         return this->ws_send(websocket_binary, data);
+
+      case easy_ws_ping:
+        return this->ws_send(websocket_ping, data);
 
       case easy_ws_pong:
         return this->ws_send(websocket_pong, data);

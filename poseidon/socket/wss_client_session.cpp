@@ -397,14 +397,14 @@ WSS_Client_Session::
 wss_send(Easy_WS_Event opcode, chars_view data)
   {
     switch(opcode) {
-      case easy_ws_open:
-        return this->wss_send(websocket_ping, data);
-
       case easy_ws_text:
         return this->wss_send(websocket_text, data);
 
       case easy_ws_binary:
         return this->wss_send(websocket_binary, data);
+
+      case easy_ws_ping:
+        return this->wss_send(websocket_ping, data);
 
       case easy_ws_pong:
         return this->wss_send(websocket_pong, data);
