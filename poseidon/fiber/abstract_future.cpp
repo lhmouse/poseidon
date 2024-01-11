@@ -27,16 +27,13 @@ do_set_ready(exception_ptr&& except_opt) noexcept
 
         // Notify all waiters.
         steady_time now = steady_clock::now();
-        plain_mutex::unique_lock lock(this->m_waiters_mutex);
+        vector<wkptr<atomic_relaxed<steady_time>>> waiters;
+        plain_mutex::unique_lock waiters_lock(this->m_waiters_mutex);
 
-        while(!this->m_waiters.empty()) {
-          auto timep = this->m_waiters.back().lock();
-          if(timep)
-            timep->store(now);
-
-          now += 1ns;
-          this->m_waiters.pop_back();
-        }
+        waiters.swap(this->m_waiters);
+        for(uint32_t k = 0;  k != waiters.size();  ++k)
+          if(auto timep = waiters.at(k).lock())
+            timep->store(now + steady_clock::time_point::duration(k));
 
         POSEIDON_LOG_DEBUG(("Future `$1` ready (class `$2`)"), this, typeid(*this));
       });
