@@ -259,7 +259,8 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
     mtext.puts("`" NEL_HT_);
 
     // Append a genuine new line for grep'ing.
-    mtext.mut_end()[-1] = '\n';
+    do_color(mtext, lconf, "0");  // reset
+    mtext.putc('\n');
 
     // Write the message. Errors are ignored.
     unique_posix_fd xfd;
