@@ -259,6 +259,7 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
     mtext.puts("`" NEL_HT_);
 
     // Append a genuine new line for grep'ing.
+    mtext.unaccept(1);
     do_color(mtext, lconf, "0");  // reset
     mtext.putc('\n');
 
