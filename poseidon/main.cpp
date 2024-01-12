@@ -113,6 +113,7 @@ do_exit_printf(int code, const char* fmt, ...) noexcept
     ::va_list ap;
     va_start(ap, fmt);
     ::vfprintf(stderr, fmt, ap);
+    ::fputc('\n', stderr);
     va_end(ap);
 
     // Perform fast exit.
