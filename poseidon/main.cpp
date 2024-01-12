@@ -634,16 +634,16 @@ main(int argc, char** argv)
     POSEIDON_LOG_INFO(("Starting up: $1"), PACKAGE_STRING);
 
     ::OPENSSL_init_ssl(OPENSSL_INIT_NO_ATEXIT, nullptr);
-    POSEIDON_LOG_DEBUG(("Initialized OpenSSL $1"), ::OpenSSL_version(OPENSSL_FULL_VERSION_STRING));
+    POSEIDON_LOG_DEBUG(("Initialized $1"), ::OpenSSL_version(OPENSSL_VERSION));
 
 #ifdef HAVE_LIBMYSQLCLIENT
     ::mysql_library_init(0, nullptr, nullptr);
-    POSEIDON_LOG_DEBUG(("Initialized MySQL connector $1"), ::mysql_get_client_info());
+    POSEIDON_LOG_DEBUG(("Initialized libmysqlclient $1"), ::mysql_get_client_info());
 #endif
 
 #ifdef HAVE_LIBMONGOC_1_0
     ::mongoc_init();
-    POSEIDON_LOG_DEBUG(("Initialized MongoDB connector $1"), ::mongoc_get_version());
+    POSEIDON_LOG_DEBUG(("Initialized libmongoc $1"), ::mongoc_get_version());
 #endif
 
     fiber_scheduler.reload(main_config.copy());
