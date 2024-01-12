@@ -25,7 +25,7 @@
 #include <mysql/mysql.h>
 #endif
 #ifdef HAVE_LIBMONGOC_1_0
-#include <libmongoc-1.0/mongoc.h>
+#include <mongoc.h>
 #endif
 namespace {
 using namespace poseidon;
