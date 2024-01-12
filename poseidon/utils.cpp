@@ -5,6 +5,7 @@
 #include "utils.hpp"
 #include <openssl/rand.h>
 #ifdef HAVE_LIBUNWIND
+#define UNW_LOCAL_ONLY  1
 #include <libunwind.h>
 #endif
 namespace poseidon {

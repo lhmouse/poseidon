@@ -36,7 +36,6 @@ AS_VAR_SET([abi_suffix], [beta.0])
 AC_CHECK_LIB([dl], [dlopen], [], [AC_MSG_ERROR([dl library not found])])
 AC_CHECK_LIB([unwind], [unw_backtrace], [],
     [AC_MSG_WARN([libunwind not found; exceptions will not contain backtraces])])
-AC_CHECK_LIB([unwind-x86_64], [_Ux86_64_init_local])
 AC_CHECK_LIB([pthread], [pthread_create], [], [AC_MSG_ERROR([pthread library not found])])
 AC_CHECK_LIB([z], [deflate], [], [AC_MSG_ERROR([zlib not found])])
 AC_CHECK_LIB([ssl], [TLS_method], [], [AC_MSG_ERROR([OpenSSL not found])])
