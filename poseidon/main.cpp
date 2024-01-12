@@ -246,20 +246,20 @@ do_daemonize_start()
     if(!cmdline.daemonize)
       return 0;
 
-    // PARENT            CHILD             GRANDCHILD
-    //====================================================
-    // fork()
-    //   |   \---------> setsid()
-    //   |               pipe()
-    //   |               fork()
-    //   |                 |   \---------> initialize ...
-    //   |                 |                 |
-    //   |                 |                 v
-    //   |                 v               write(pipe)
-    //   |               read(pipe) <-----/  |
-    //   v               _Exit()             |
-    // waitpid() <------/                    v
-    // _Exit()                             loop ...
+    //  PARENT            CHILD             GRANDCHILD
+    // --------------------------------------------------
+    //  fork()
+    //    |   \---------> setsid()
+    //    |               pipe()
+    //    |               fork()
+    //    |                 |   \---------> initialize ...
+    //    |                 |                 |
+    //    |                 |                 v
+    //    |                 v               write(pipe)
+    //    |               read(pipe) <-----/  |
+    //    v               _Exit()             |
+    //  waitpid() <------/                    v
+    //  _Exit()                             loop ...
 
     ::fprintf(stderr,
         "Daemonizing process %d...\n",
