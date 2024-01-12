@@ -89,7 +89,6 @@ AM_COND_IF([enable_mysql], [
 AC_ARG_ENABLE([mongodb], AS_HELP_STRING([--disable-mongodb], [disable MongoDB support]))
 AM_CONDITIONAL([enable_mongodb], [test "${enable_mongodb}" != "no"])
 AM_COND_IF([enable_mongodb], [
-  PKG_CHECK_MODULES([libmongoc], [libbson-1.0 libmongoc-1.0])
   AC_CHECK_LIB([bson-1.0], [bson_new], [],
       [AC_MSG_ERROR([libbson-1.0 not found (pass `--disable-mongodb` to disable MongoDB)])])
   AC_CHECK_LIB([mongoc-1.0], [mongoc_uri_new_for_host_port], [],
@@ -115,7 +114,6 @@ AC_SUBST([abi_minor])
 AC_SUBST([abi_suffix])
 AC_SUBST([sanitizer_flags])
 AC_SUBST([host_asm_opt])
-AC_SUBST([libmongoc_CFLAGS])
 
 AC_CONFIG_FILES([Makefile poseidon/version.h])
 AC_OUTPUT

@@ -69,8 +69,18 @@ nobase_include_HEADERS +=  \
   ${END}
 
 lib_LTLIBRARIES += lib/libposeidon.la
-lib_libposeidon_la_CXXFLAGS = @libmongoc_CFLAGS@ ${AM_CXXFLAGS}
+lib_libposeidon_la_CXXFLAGS = ${AM_CXXFLAGS}
 lib_libposeidon_la_LDFLAGS = -no-undefined -version-number @abi_major@:@abi_minor@
+
+if enable_pch
+lib_libposeidon_la_CXXFLAGS += -include %reldir%/precompiled.xipp
+BUILT_SOURCES += %reldir%/precompiled.xipp
+endif
+
+if enable_mongodb
+lib_libposeidon_la_CXXFLAGS += -isystem /usr/include/libbson-1.0
+lib_libposeidon_la_CXXFLAGS += -isystem /usr/include/libmongoc-1.0
+endif
 
 lib_libposeidon_la_SOURCES =  \
   %reldir%/version.h.in  \
@@ -145,13 +155,13 @@ if enable_mongodb
 endif
 
 bin_PROGRAMS += bin/poseidon
-bin_poseidon_CXXFLAGS = @libmongoc_CFLAGS@ ${AM_CXXFLAGS}
+bin_poseidon_CXXFLAGS = ${AM_CXXFLAGS}
 bin_poseidon_LDADD = lib/libposeidon.la
 bin_poseidon_SOURCES = %reldir%/main.cpp
 
-if enable_pch
-lib_libposeidon_la_CXXFLAGS += -include %reldir%/precompiled.xipp
-BUILT_SOURCES += %reldir%/precompiled.xipp
+if enable_mongodb
+bin_poseidon_CXXFLAGS += -isystem /usr/include/libbson-1.0
+bin_poseidon_CXXFLAGS += -isystem /usr/include/libmongoc-1.0
 endif
 
 %.xipp: %.ipp %reldir%/version.h config.h
