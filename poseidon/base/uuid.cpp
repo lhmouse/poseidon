@@ -160,20 +160,19 @@ print_partial(char* str) const noexcept
     tval = _mm_and_si128(_mm_cmpgt_epi8(lo, _mm_set1_epi8(9)), _mm_set1_epi8(7));
     lo = _mm_add_epi8(_mm_add_epi8(lo, _mm_set1_epi8('0')), tval);
 
-    // Write digits.
-    tval = _mm_unpacklo_epi8(hi, lo);
-    _mm_storeu_si64(str, tval);
-    str[8] = '-';
-    _mm_storeu_si64(str + 9, _mm_bsrli_si128(tval, 8));
-    str[13] = '-';
-    _mm_storeu_si64(str + 14, _mm_bsrli_si128(tval, 12));
-    str[18] = '-';
-    tval = _mm_unpackhi_epi8(hi, lo);
-    _mm_storeu_si64(str + 19, tval);
-    str[23] = '-';
-    _mm_storeu_si64(str + 24, _mm_bsrli_si128(tval, 4));
-    _mm_storeu_si64(str + 28, _mm_bsrli_si128(tval, 8));
+    // Write digits from right to left.
     str[36] = 0;
+    tval = _mm_unpackhi_epi8(hi, lo);
+    _mm_storeu_si128((__m128i_u*) (str + 20), tval);
+    str[23] = '-';
+    _mm_storeu_si64(str + 15, _mm_bslli_si128(tval, 4));
+    str[18] = '-';
+    tval = _mm_unpacklo_epi8(hi, lo);
+    _mm_storeu_si64(str + 10, _mm_bsrli_si128(tval, 8));
+    str[13] = '-';
+    _mm_storeu_si64(str + 5, _mm_bsrli_si128(tval, 4));
+    str[8] = '-';
+    _mm_storeu_si64(str, tval);
 
     // Return the number of characters, not including the null terminator.
     return 36;
