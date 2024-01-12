@@ -21,6 +21,12 @@
 #include <sys/resource.h>
 #include <openssl/rand.h>
 #include <openssl/err.h>
+#ifdef HAVE_LIBMYSQLCLIENT
+#include <mysql/mysql.h>
+#endif
+#ifdef HAVE_LIBMONGOC_1_0
+#include <libmongoc-1.0/mongoc.h>
+#endif
 namespace {
 using namespace poseidon;
 
@@ -618,24 +624,37 @@ main(int argc, char** argv)
     // Note that this function shall not return in case of errors.
     do_parse_command_line(argc, argv);
     do_set_working_directory();
-    main_config.reload();
 
+    main_config.reload();
     do_check_euid();
     do_check_ulimits();
     do_daemonize_start();
-    POSEIDON_LOG_INFO(("Starting up: $1"), PACKAGE_STRING);
-
-    async_logger.reload(main_config.copy());
-    fiber_scheduler.reload(main_config.copy());
-    network_driver.reload(main_config.copy());
-
     do_init_signal_handlers();
     do_write_pid_file();
     do_check_random();
+    async_logger.reload(main_config.copy());
+    POSEIDON_LOG_INFO(("Starting up: $1"), PACKAGE_STRING);
+
+    ::OPENSSL_init_ssl(OPENSSL_INIT_NO_ATEXIT, nullptr);
+    POSEIDON_LOG_DEBUG(("Initialized OpenSSL $1"), ::OpenSSL_version(OPENSSL_FULL_VERSION_STRING));
+
+#ifdef HAVE_LIBMYSQLCLIENT
+    ::mysql_library_init(0, nullptr, nullptr);
+    POSEIDON_LOG_DEBUG(("Initialized MySQL connector $1"), ::mysql_get_client_info());
+#endif
+
+#ifdef HAVE_LIBMONGOC_1_0
+    ::mongoc_init();
+    POSEIDON_LOG_DEBUG(("Initialized MongoDB connector $1"), ::mongoc_get_version());
+#endif
+
+    fiber_scheduler.reload(main_config.copy());
+    network_driver.reload(main_config.copy());
     do_create_threads();
     do_load_addons();
 
     POSEIDON_LOG_INFO(("Startup complete: $1"), PACKAGE_STRING);
+    async_logger.synchronize();
     do_daemonize_finish();
 
     // Schedule fibers if there is something to do, or no stop signal has

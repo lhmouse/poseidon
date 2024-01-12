@@ -34,13 +34,15 @@ AS_VAR_SET([abi_suffix], [beta.0])
 
 ## Check for required libraries
 AC_CHECK_LIB([dl], [dlopen], [], [AC_MSG_ERROR([dl library not found])])
-AC_CHECK_LIB([unwind], [unw_backtrace], [], [AC_MSG_WARN([libunwind not found; exceptions will not contain backtraces])])
+AC_CHECK_LIB([unwind], [unw_backtrace], [],
+    [AC_MSG_WARN([libunwind not found; exceptions will not contain backtraces])])
 AC_CHECK_LIB([unwind-x86_64], [_Ux86_64_init_local])
 AC_CHECK_LIB([pthread], [pthread_create], [], [AC_MSG_ERROR([pthread library not found])])
 AC_CHECK_LIB([z], [deflate], [], [AC_MSG_ERROR([zlib not found])])
 AC_CHECK_LIB([ssl], [TLS_method], [], [AC_MSG_ERROR([OpenSSL not found])])
 AC_CHECK_LIB([crypto], [SSL_new], [], [AC_MSG_ERROR([OpenSSL not found])])
-AC_CHECK_LIB([asteria], [_ZNK7asteria5Value5printERN6rocket13basic_tinyfmtIcEE], [], [AC_MSG_ERROR([Asteria not found])])
+AC_CHECK_LIB([asteria], [_ZNK7asteria5Value5printERN6rocket13basic_tinyfmtIcEE], [],
+    [AC_MSG_ERROR([Asteria not found])])
 AC_CHECK_LIB([http_parser], [http_parser_execute], [], [AC_MSG_ERROR([http-parser library not found])])
 
 ## Check for assertions
@@ -62,38 +64,45 @@ AC_ARG_ENABLE([sanitizer], AS_HELP_STRING([--enable-sanitizer=address|thread],
 AS_VAR_SET([sanitizer_flags])
 AM_CONDITIONAL([enable_address_sanitizer], [test "${enable_sanitizer}" == "address"])
 AM_COND_IF([enable_address_sanitizer], [
-  AC_CHECK_LIB([asan], [__asan_report_error], [], [AC_MSG_ERROR([address sanitizer not found])])
-  AC_CHECK_LIB([ubsan], [__ubsan_on_report], [], [AC_MSG_ERROR([undefined behavior sanitizer not found])])
-  AC_DEFINE([POSEIDON_ENABLE_ADDRESS_SANITIZER], [1], [Define to 1 to enable address sanitizer.])
+  AC_CHECK_LIB([asan], [__asan_report_error], [],
+      [AC_MSG_ERROR([address sanitizer not found])])
+  AC_CHECK_LIB([ubsan], [__ubsan_on_report], [],
+      [AC_MSG_ERROR([undefined behavior sanitizer not found])])
+  AC_DEFINE([POSEIDON_ENABLE_ADDRESS_SANITIZER], [1], [-fsanitize=address])
   AS_VAR_APPEND([sanitizer_flags], [" -fsanitize=address,undefined"])
 ])
 AM_CONDITIONAL([enable_thread_sanitizer], [test "${enable_sanitizer}" == "thread"])
 AM_COND_IF([enable_thread_sanitizer], [
   AC_CHECK_LIB([tsan], [__tsan_on_report], [], [AC_MSG_ERROR([thread sanitizer not found])])
-  AC_DEFINE([POSEIDON_ENABLE_THREAD_SANITIZER], [1], [Define to 1 to enable thread sanitizer.])
+  AC_DEFINE([POSEIDON_ENABLE_THREAD_SANITIZER], [1], [-fsanitize=thread])
   AS_VAR_APPEND([sanitizer_flags], [" -fsanitize=thread"])
 ])
 
 AC_ARG_ENABLE([mysql], AS_HELP_STRING([--disable-mysql], [disable MySQL support]))
 AM_CONDITIONAL([enable_mysql], [test "${enable_mysql}" != "no"])
 AM_COND_IF([enable_mysql], [
-  AC_CHECK_LIB([mysqlclient], [mysql_real_connect], [], [AC_MSG_ERROR([libmysqlclient not found (pass `--disable-mysql` to disable MySQL)])])
-  AC_DEFINE([POSEIDON_ENABLE_MYSQL], [1], [Define to 1 to build the MySQL daemon.])
+  AC_CHECK_LIB([mysqlclient], [mysql_real_connect], [],
+      [AC_MSG_ERROR([libmysqlclient not found (pass `--disable-mysql` to disable MySQL)])])
+  AC_DEFINE([POSEIDON_ENABLE_MYSQL], [1], [libmysqlclient])
 ])
 
 AC_ARG_ENABLE([mongodb], AS_HELP_STRING([--disable-mongodb], [disable MongoDB support]))
 AM_CONDITIONAL([enable_mongodb], [test "${enable_mongodb}" != "no"])
 AM_COND_IF([enable_mongodb], [
-  AC_CHECK_LIB([bson-1.0], [bson_new], [], [AC_MSG_ERROR([libbson-1.0 not found (pass `--disable-mongodb` to disable MongoDB)])])
-  AC_CHECK_LIB([mongoc-1.0], [mongoc_uri_new_for_host_port], [], [AC_MSG_ERROR([libmongoc-1.0 not found (pass `--disable-mongodb` to disable MongoDB)])])
-  AC_DEFINE([POSEIDON_ENABLE_MONGODB], [1], [Define to 1 to build the MongoDB daemon.])
+  PKG_CHECK_MODULES([libmongoc], [libbson-1.0 libmongoc-1.0])
+  AC_CHECK_LIB([bson-1.0], [bson_new], [],
+      [AC_MSG_ERROR([libbson-1.0 not found (pass `--disable-mongodb` to disable MongoDB)])])
+  AC_CHECK_LIB([mongoc-1.0], [mongoc_uri_new_for_host_port], [],
+      [AC_MSG_ERROR([libmongoc-1.0 not found (pass `--disable-mongodb` to disable MongoDB)])])
+  AC_DEFINE([POSEIDON_ENABLE_MONGODB], [1], [libmongoc])
 ])
 
 AC_ARG_ENABLE([magic], AS_HELP_STRING([--disable-magic], [disable magic number recognition]))
 AM_CONDITIONAL([enable_magic], [test "${enable_magic}" != "no"])
 AM_COND_IF([enable_magic], [
-  AC_CHECK_LIB([magic], [magic_open], [], [AC_MSG_ERROR([libmagic not found (pass `--disable-magic` to disable libmagic)])])
-  AC_DEFINE([POSEIDON_ENABLE_MAGIC], [1], [Define to 1 to build the Magic daemon.])
+  AC_CHECK_LIB([magic], [magic_open], [],
+      [AC_MSG_ERROR([libmagic not found (pass `--disable-magic` to disable libmagic)])])
+  AC_DEFINE([POSEIDON_ENABLE_MAGIC], [1], [libmagic])
 ])
 
 # Set host-specific options
@@ -106,6 +115,7 @@ AC_SUBST([abi_minor])
 AC_SUBST([abi_suffix])
 AC_SUBST([sanitizer_flags])
 AC_SUBST([host_asm_opt])
+AC_SUBST([libmongoc_CFLAGS])
 
 AC_CONFIG_FILES([Makefile poseidon/version.h])
 AC_OUTPUT
