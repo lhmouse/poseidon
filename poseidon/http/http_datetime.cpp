@@ -290,6 +290,38 @@ parse_cookie_partial(const char* str)
 
 size_t
 HTTP_DateTime::
+parse_iso8601_partial(const char* str)
+  {
+    const char* rptr = str;
+    ::tm tm = { };
+
+    // `1994-11-06 08:49:37`
+    do_match(rptr, tm.tm_year, s_2digit, 2);
+    tm.tm_year = tm.tm_year * 100 - 1900;
+    do_match(rptr, tm.tm_year, s_2digit, 2);
+    do_match(rptr, "-", 1);
+    do_match(rptr, tm.tm_mon, s_2digit, 2);
+    tm.tm_mon -= 1;
+    do_match(rptr, "-", 1);
+    do_match(rptr, tm.tm_mday, s_2digit, 2);
+    do_match(rptr, " ", 1);
+    do_match(rptr, tm.tm_hour, s_2digit, 2);
+    do_match(rptr, ":", 1);
+    do_match(rptr, tm.tm_min, s_2digit, 2);
+    do_match(rptr, ":", 1);
+    do_match(rptr, tm.tm_sec, s_2digit, 2);
+
+    // Accept nothing if any of the operations above has failed.
+    if(rptr == nullptr)
+      return 0;
+
+    // Compose the timestamp.
+    this->m_tp = (unix_time)(seconds) ::timegm(&tm);
+    return (size_t) (rptr - str);
+  }
+
+size_t
+HTTP_DateTime::
 parse(chars_view str)
   {
     // A string with an erroneous length will not be accepted, so we just need to
@@ -308,6 +340,10 @@ parse(chars_view str)
 
     if(str.n >= 29)
       if(size_t aclen = this->parse_cookie_partial(str.p))
+        return aclen;
+
+    if(str.n >= 19)
+      if(size_t aclen = this->parse_iso8601_partial(str.p))
         return aclen;
 
     return 0;
@@ -428,6 +464,34 @@ print_cookie_partial(char* str) const noexcept
     xstrrpcpy(wptr, ":");
     xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_sec], 2);
     xstrrpcpy(wptr, " GMT");
+
+    // Return the number of characters that have been written.
+    return (size_t) (wptr - str);
+  }
+
+size_t
+HTTP_DateTime::
+print_iso8601_partial(char* str) const noexcept
+  {
+    char* wptr = str;
+    ::time_t tp = this->m_tp.time_since_epoch().count();
+    ::tm tm;
+    ::gmtime_r(&tp, &tm);
+
+    // `1994-11-06 08:49:37`
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_year / 100 + 19], 2);
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_year % 100], 2);
+    xstrrpcpy(wptr, "-");
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_mon + 1], 2);
+    xstrrpcpy(wptr, "-");
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_mday], 2);
+    xstrrpcpy(wptr, " ");
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_hour], 2);
+    xstrrpcpy(wptr, ":");
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_min], 2);
+    xstrrpcpy(wptr, ":");
+    xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_sec], 2);
+    xstrrpcpy(wptr, "");
 
     // Return the number of characters that have been written.
     return (size_t) (wptr - str);

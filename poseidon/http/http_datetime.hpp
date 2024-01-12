@@ -86,6 +86,13 @@ class HTTP_DateTime
     size_t
     parse_cookie_partial(const char* str);
 
+    // Try parsing an HTTP date/time in the ISO 8601 format. An example is
+    // `1994-11-06 08:49:37`. The date and time parts shall be separated by a
+    // space. This function returns the number of characters that have been
+    // accepted, which is 19 upon success, and 0 upon failure.
+    size_t
+    parse_iso8601_partial(const char* str);
+
     // Try parsing an HTTP date/time in any of the formats above. If a date/time
     // string has been parsed, the number of characters that have been consumed
     // is returned. If zero is returned or an exception is thrown, the contents
@@ -121,7 +128,14 @@ class HTTP_DateTime
     size_t
     print_cookie_partial(char* str) const noexcept;
 
-    // Converts this timestamp to its string form, according to RFC 1123.
+    // Converts this timestamp to its ISO 8601 format, with a null terminator.
+    // There shall be at least 20 characters in the buffer that `str` points to.
+    // This function returns the number of characters that have been written,
+    // excluding the null terminator, which is always 19.
+    size_t
+    print_iso8601_partial(char* str) const noexcept;
+
+    // Converts this timestamp to its RFC 1123 form.
     tinyfmt&
     print(tinyfmt& fmt) const;
 
