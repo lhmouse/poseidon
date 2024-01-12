@@ -566,8 +566,8 @@ void
 do_load_addons()
   {
     ::asteria::V_array addons;
-    size_t count = 0;
     const auto conf = main_config.copy();
+    bool empty = true;
 
     auto conf_value = conf.query("addons");
     if(conf_value.is_array())
@@ -593,19 +593,17 @@ do_load_addons()
         continue;
 
       POSEIDON_LOG_INFO(("Loading add-on: $1"), path);
-
       if(::dlopen(path.safe_c_str(), RTLD_NOW | RTLD_NODELETE) == nullptr)
         POSEIDON_LOG_ERROR((
             "Failed to load add-on: $1",
             "[`dlopen()` failed: $2]"),
             path, ::dlerror());
-      else
-        count ++;
 
-      POSEIDON_LOG_INFO(("Finished loading add-on: $1"), path);
+      POSEIDON_LOG_DEBUG(("Finished loading add-on: $1"), path);
+      empty = false;
     }
 
-    if(count == 0)
+    if(empty)
       POSEIDON_LOG_FATAL(("No add-on has been loaded. What's the job now?"));
   }
 
