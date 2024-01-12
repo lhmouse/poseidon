@@ -240,7 +240,7 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
 
     // Write the thread name and ID.
     do_color(mtext, lconf, "90");  // grey
-    mtext.puts("thread ");
+    mtext.puts("@@ thread ");
     nump.put_DU(msg.thrd_lwpid);
     mtext.putn(nump.data(), nump.size());
     mtext.puts(" '");
