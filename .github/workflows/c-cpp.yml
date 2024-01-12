@@ -13,7 +13,7 @@ on:
 jobs:
   ubuntu:
     name: Ubuntu native build (x86-64)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v3
@@ -21,7 +21,7 @@ jobs:
     - name: Install dependencies
       run: >-
            sudo apt-get install -y --no-install-recommends autoconf automake
-           libtool g++ gettext make libpcre2-dev libssl-dev zlib1g-dev
+           libtool g++-10 gettext make libpcre2-dev libssl-dev zlib1g-dev
            libmysqlclient-dev libmongoc-dev
 
     - name: Build and install asteria
@@ -29,7 +29,7 @@ jobs:
            git submodule update --init asteria
            pushd asteria
            autoreconf -ifv
-           ./configure --disable-repl
+           ./configure CXX='g++-10' --disable-repl
            make -j$(nproc)
            rm -f *.deb
            ./makedeb.sh
@@ -41,7 +41,7 @@ jobs:
            git submodule update --init http-parser
            pushd http-parser
            autoreconf -ifv
-           ./configure
+           ./configure CXX='g++-10'
            make -j$(nproc)
            rm -f *.deb
            ./makedeb.sh
@@ -49,4 +49,4 @@ jobs:
            popd
 
     - name: Run tests
-      run: ./ci/build.sh
+      run: CXX='g++-10' ./ci/build.sh

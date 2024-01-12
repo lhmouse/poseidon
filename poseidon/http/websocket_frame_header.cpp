@@ -46,7 +46,7 @@ mask_payload(char* data, size_t size) noexcept
     if(!this->mask)
       return 0;
 
-    __m128i exmask = _mm_set1_epi32((int32_t) this->mask_key_u32);
+    __m128i exmask = _mm_set1_epi32(this->mask_key_i32);
     char* cur = data;
     char* esdata = data + size;
 
@@ -68,7 +68,7 @@ mask_payload(char* data, size_t size) noexcept
       // bytewise
       *cur ^= this->mask_key[0];
       exmask = _mm_srli_si128(exmask, 1);
-      _mm_storeu_si32(this->mask_key, exmask);
+      this->mask_key_i32 = _mm_cvtsi128_si32(exmask);
       cur ++;
     }
 

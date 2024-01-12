@@ -27,6 +27,7 @@ struct WebSocket_Frame_Header
         union {
           char mask_key[4];
           uint32_t mask_key_u32;
+          int32_t mask_key_i32;
         };
         uint64_t payload_len;
       };

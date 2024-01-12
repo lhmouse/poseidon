@@ -157,28 +157,25 @@ print_partial(char* str) const noexcept
     //   xdigit := val + '0' + ((val > 9) ? 7 : 0)
     tval = _mm_and_si128(_mm_cmpgt_epi8(hi, _mm_set1_epi8(9)), _mm_set1_epi8(7));
     hi = _mm_add_epi8(_mm_add_epi8(hi, _mm_set1_epi8('0')), tval);
-
     tval = _mm_and_si128(_mm_cmpgt_epi8(lo, _mm_set1_epi8(9)), _mm_set1_epi8(7));
     lo = _mm_add_epi8(_mm_add_epi8(lo, _mm_set1_epi8('0')), tval);
 
-    // Insert dashes first. Instead of writing four dashes into `str[8]`,
-    // `str[13]`, `str[18]` and `str[23]`, we can overwrite that 16-byte range
-    // with a single store operation.
-    _mm_storeu_si128((__m128i*) (str + 8), _mm_set1_epi8('-'));
-
+    // Write digits.
     tval = _mm_unpacklo_epi8(hi, lo);
     _mm_storeu_si64(str, tval);
-    _mm_storeu_si32(str + 9, _mm_bsrli_si128(tval, 8));
-    _mm_storeu_si32(str + 14, _mm_bsrli_si128(tval, 12));
-
+    str[8] = '-';
+    _mm_storeu_si64(str + 9, _mm_bsrli_si128(tval, 8));
+    str[13] = '-';
+    _mm_storeu_si64(str + 14, _mm_bsrli_si128(tval, 12));
+    str[18] = '-';
     tval = _mm_unpackhi_epi8(hi, lo);
-    _mm_storeu_si32(str + 19, tval);
-    _mm_storeu_si32(str + 24, _mm_bsrli_si128(tval, 4));
+    _mm_storeu_si64(str + 19, tval);
+    str[23] = '-';
+    _mm_storeu_si64(str + 24, _mm_bsrli_si128(tval, 4));
     _mm_storeu_si64(str + 28, _mm_bsrli_si128(tval, 8));
-
-    // Return the number of characters that have been written, not including
-    // the null terminator.
     str[36] = 0;
+
+    // Return the number of characters, not including the null terminator.
     return 36;
   }
 
