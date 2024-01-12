@@ -159,8 +159,10 @@ do_abstract_socket_on_readable()
         if((ssl_err == SSL_ERROR_ZERO_RETURN) || (ssl_err == SSL_ERROR_WANT_READ) || (ssl_err == SSL_ERROR_WANT_WRITE))
           break;
 
+#ifdef SSL_R_UNEXPECTED_EOF_WHILE_READING
         if((ssl_err == SSL_ERROR_SSL) && (ERR_GET_REASON(::ERR_peek_error()) == SSL_R_UNEXPECTED_EOF_WHILE_READING))
           break;
+#endif  // OpenSSL 3.0
 
         POSEIDON_LOG_ERROR((
             "Error reading SSL socket",
