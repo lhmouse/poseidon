@@ -163,16 +163,16 @@ print_partial(char* str) const noexcept
     // Write digits from right to left.
     str[36] = 0;
     tval = _mm_unpackhi_epi8(hi, lo);
-    _mm_storeu_si128((__m128i_u*) (str + 20), tval);
+    _mm_storeu_si128((__m128i*) (str + 20), tval);
     str[23] = '-';
-    _mm_storeu_si64(str + 15, _mm_bslli_si128(tval, 4));
+    _mm_storeu_si64((int64_t*) (str + 15), _mm_bslli_si128(tval, 4));
     str[18] = '-';
     tval = _mm_unpacklo_epi8(hi, lo);
-    _mm_storeu_si128((__m128i_u*) (str + 2), tval);
+    _mm_storeu_si128((__m128i*) (str + 2), tval);
     str[13] = '-';
-    _mm_storeu_si64(str + 5, _mm_bsrli_si128(tval, 4));
+    _mm_storeu_si64((int64_t*) (str + 5), _mm_bsrli_si128(tval, 4));
     str[8] = '-';
-    _mm_storeu_si64(str, tval);
+    _mm_storeu_si64((int64_t*) str, tval);
 
     // Return the number of characters, not including the null terminator.
     return 36;
