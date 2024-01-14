@@ -615,7 +615,7 @@ async_logger_enqueue(const Log_Context& ctx, vfptr<cow_string&, void*> invoke, v
         constexpr auto invoke = +[](::rocket::cow_string& sbuf, void* vp)  \
           { (*(decltype(compose)*) vp) (sbuf);  };  \
         static const ::poseidon::Log_Context ctx =  \
-          { __FILE__, __LINE__, ::poseidon::log_level_##LEVEL, __FUNCTION__ };  \
+          { __FILE__, __LINE__, ::poseidon::log_level_##LEVEL, ROCKET_FUNCSIG };  \
         async_logger_enqueue(ctx, invoke, &compose);  \
         true;  \
       }))
@@ -631,12 +631,9 @@ async_logger_enqueue(const Log_Context& ctx, vfptr<cow_string&, void*> invoke, v
 // the exception itself is caught and ignored.
 #define POSEIDON_CATCH_ALL(...)  \
     (__extension__ ({  \
-      try {  \
-        (void) (__VA_ARGS__);  \
-      }  \
-      catch(::std::exception& zeew2aeY) {  \
-        POSEIDON_LOG_FATAL(("Ignoring exception: $1"), zeew2aeY);  \
-      }  \
+      try { (void) (__VA_ARGS__);  }  \
+      catch(::std::exception& zeew2aeY)  \
+      { POSEIDON_LOG_ERROR(("Ignoring exception: $1"), zeew2aeY);  }  \
     }))
 
 }  // namespace poseidon
