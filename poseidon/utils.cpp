@@ -7,6 +7,7 @@
 #ifdef HAVE_LIBUNWIND
 #define UNW_LOCAL_ONLY  1
 #include <libunwind.h>
+#include <cxxabi.h>
 #endif
 namespace poseidon {
 
@@ -29,6 +30,10 @@ throw_runtime_error_with_backtrace(const char* file, long line, const char* func
     ::unw_cursor_t unw_cur[1];
     char unw_name[1024];
     ::unw_word_t unw_offset;
+
+    // Prepare the buffer for `__cxa_demangle()`.
+    ::rocket::unique_ptr<char, void (void*)> fn_ptr(nullptr, ::free);
+    size_t fn_size = 0;
 
     if((::unw_getcontext(unw_ctx) == 0) && (::unw_init_local(unw_cur, unw_ctx) == 0))
       while(::unw_step(unw_cur) > 0)
@@ -57,11 +62,22 @@ throw_runtime_error_with_backtrace(const char* file, long line, const char* func
           fmt << nump << " ";
 
           // * function name and offset
-          if(::unw_get_proc_name(unw_cur, unw_name, sizeof(unw_name), &unw_offset) == 0) {
+          if(::unw_get_proc_name(unw_cur, unw_name, sizeof(unw_name), &unw_offset) != 0) {
+            // unknown function
+            fmt << "(unknown function)";
+          }
+          else if(char* fn = ::abi::__cxa_demangle(unw_name, fn_ptr, &fn_size, nullptr)) {
+            // demangled symbol; `fn_ptr` reallocated
+            fn_ptr.release();
+            fn_ptr.reset(fn);
+            nump.put_XU(unw_offset);
+            fmt << "`" << fn << "` +" << nump;
+          }
+          else {
+            // raw symbol
             nump.put_XU(unw_offset);
             fmt << "`" << unw_name << "` +" << nump;
-          } else
-            fmt << "??";
+          }
         }
 
       fmt << "\n  -- end of stack backtrace]";
