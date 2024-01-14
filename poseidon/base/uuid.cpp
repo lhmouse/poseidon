@@ -11,29 +11,26 @@ const UUID uuid_max = POSEIDON_UUID_INIT(FFFFFFFF,FFFF,FFFF,FFFF,FFFFFFFFFFFF);
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
 UUID::
 UUID(const random&)
   {
     // Get system information.
     ::timespec tv;
     ::clock_gettime(CLOCK_REALTIME, &tv);
-    static atomic<uint64_t> s_count;
+    static atomic<uint64_t> s_seq;
 
-    uint64_t time = (uint64_t) tv.tv_sec * 30518U + (uint32_t) tv.tv_nsec / 32768U + s_count.xadd(1U);
-    uint32_t version_pid = (uint32_t) ::getpid();
-    uint64_t variant_random = random_uint64();
-
-    // Set the UUID version to `4` and the UUID variant to `6`.
-    version_pid = 0x4000U | (version_pid & 0x0FFFU);
-    variant_random = 0x60000000'00000000U | (variant_random >> 3);
+    uint64_t ts_seq = tv.tv_sec * 30518ULL + tv.tv_nsec / 32768UL + s_seq.xadd(1U);
+    uint32_t version_pid = 0x4000U | (::getpid() & 0x0FFFU);
+    uint64_t variant_random = 0x6ULL << 60 | random_uint64() >> 3;
 
     // Fill UUID fields.
-    this->m_data_1_3 = time >> 40;
-    this->m_data_1_2 = time >> 32;
-    this->m_data_1_1 = time >> 24;
-    this->m_data_1_0 = time >> 16;
-    this->m_data_2_1 = time >>  8;
-    this->m_data_2_0 = time;
+    this->m_data_1_3 = ts_seq >> 40;
+    this->m_data_1_2 = ts_seq >> 32;
+    this->m_data_1_1 = ts_seq >> 24;
+    this->m_data_1_0 = ts_seq >> 16;
+    this->m_data_2_1 = ts_seq >>  8;
+    this->m_data_2_0 = ts_seq;
     this->m_data_3_1 = version_pid >> 8;
     this->m_data_3_0 = version_pid;
     this->m_data_4_1 = variant_random >> 56;
