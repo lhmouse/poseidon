@@ -35,7 +35,7 @@ event_callback(shptrR<WS_Client_Session> session, Abstract_Fiber& /*fiber*/,
         break;
 
       case easy_ws_close:
-        POSEIDON_LOG_WARN(("example WS client shut down connection: $1"), data);
+        POSEIDON_LOG_WARN(("example WS client closed connection: $1"), data);
         break;
 
       default:

@@ -40,7 +40,7 @@ event_callback(shptrR<HTTPS_Server_Session> session, Abstract_Fiber& /*fiber*/,
       }
 
       case easy_http_close:
-        POSEIDON_LOG_WARN(("example HTTPS server shut down connection: $1"), data);
+        POSEIDON_LOG_WARN(("example HTTPS server closed connection: $1"), data);
         break;
 
       default:

@@ -28,7 +28,7 @@ event_callback(shptrR<SSL_Socket> socket, Abstract_Fiber& /*fiber*/,
         break;
 
       case easy_stream_close:
-        POSEIDON_LOG_WARN(("example SSL server shutdown: (errno = $1) $2"),
+        POSEIDON_LOG_WARN(("example SSL server closed connection: (errno = $1) $2"),
                           code, data);
         break;
 
