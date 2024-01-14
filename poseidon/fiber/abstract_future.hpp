@@ -20,7 +20,7 @@ class Abstract_Future
     vector<wkptr<atomic_relaxed<steady_time>>> m_waiters;
 
   protected:
-    // Constructs an empty future that is not ready.
+    // Constructs an empty future that has not completed.
     explicit
     Abstract_Future();
 
@@ -28,13 +28,13 @@ class Abstract_Future
     // This callback is invoked by `do_abstract_future_request()` and is intended
     // to be overriden by derived classes to do the asynchronous work. If this
     // function throws an exception, it will be copied into `m_except_opt` which
-    // can be examined with `check_ready()`.
+    // can be examined with `check_result()`.
     virtual
     void
     do_on_abstract_future_execute() = 0;
 
-    // Requests the asynchronous work and sets the ready state. If the work has
-    // not been done yet, this function calls `do_on_abstract_future_execute()`
+    // Requests the asynchronous work and sets the completion state. If the work
+    // has not been done yet, this function calls `do_on_abstract_future_execute()`
     // do the work; otherwise, this function returns immediately.
     void
     do_abstract_future_request() noexcept;
@@ -42,15 +42,19 @@ class Abstract_Future
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Abstract_Future);
 
-    // Gets the ready state. This function is not a fence.
+    // Gets the completion state. If this function returns `true`, then either a
+    // result or an exception will have been set.
     bool
-    ready() const noexcept
+    completed() const noexcept
       { return this->m_once.test();  }
 
-    // Checks whether this future is ready and not exceptional. If this future is
-    // not ready or an exception has been set, an exception is thrown.
+    bool
+    successful() const noexcept
+      { return this->m_once.test() && !this->m_except_opt;  }
+
+    // Checks whether this future has completed with no exception being thrown.
     void
-    check_ready() const;
+    check_success() const;
   };
 
 }  // namespace poseidon

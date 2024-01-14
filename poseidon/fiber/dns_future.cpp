@@ -11,8 +11,8 @@ namespace poseidon {
 DNS_Future::
 DNS_Future(cow_stringR host, uint16_t port)
   {
-    this->m_result.host = host;
-    this->m_result.port = port;
+    this->m_res.host = host;
+    this->m_res.port = port;
   }
 
 DNS_Future::
@@ -28,14 +28,14 @@ do_on_abstract_future_execute()
     ::addrinfo hints = { };
     hints.ai_flags = AI_V4MAPPED | AI_ADDRCONFIG | AI_NUMERICSERV;
     ::addrinfo* res;
-    int err = ::getaddrinfo(this->m_result.host.safe_c_str(), nullptr, &hints, &res);
+    int err = ::getaddrinfo(this->m_res.host.safe_c_str(), nullptr, &hints, &res);
     if(err != 0)
       POSEIDON_THROW((
           "Could not resolve host `$1`",
           "[`getaddrinfo()` failed: $2]"),
-          this->m_result.host, ::gai_strerror(err));
+          this->m_res.host, ::gai_strerror(err));
 
-    // Copy records into `m_result`.
+    // Copy records into `m_res`.
     const ::rocket::unique_ptr<::addrinfo, void (::addrinfo*)> guard(res, ::freeaddrinfo);
 
     for(res = guard; res;  res = res->ai_next)
@@ -44,21 +44,21 @@ do_on_abstract_future_execute()
         Socket_Address addr;
         ::memcpy(addr.mut_data(), ipv4_unspecified.data(), 12);
         ::memcpy(addr.mut_data() + 12, &(((::sockaddr_in*) res->ai_addr)->sin_addr), 4);
-        addr.set_port(this->m_result.port);
+        addr.set_port(this->m_res.port);
 
         // Ignore duplicate records.
-        if(find(this->m_result.addrs, addr) == nullptr)
-          this->m_result.addrs.push_back(addr);
+        if(find(this->m_res.addrs, addr) == nullptr)
+          this->m_res.addrs.push_back(addr);
       }
       else if(res->ai_family == AF_INET6) {
         // IPv6
         Socket_Address addr;
         ::memcpy(addr.mut_data(), &(((::sockaddr_in6*) res->ai_addr)->sin6_addr), 16);
-        addr.set_port(this->m_result.port);
+        addr.set_port(this->m_res.port);
 
         // Ignore duplicate records.
-        if(find(this->m_result.addrs, addr) == nullptr)
-          this->m_result.addrs.push_back(addr);
+        if(find(this->m_res.addrs, addr) == nullptr)
+          this->m_res.addrs.push_back(addr);
       }
   }
 

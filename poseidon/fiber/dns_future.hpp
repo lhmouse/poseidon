@@ -25,7 +25,7 @@ class DNS_Future
       };
 
   private:
-    Result m_result;
+    Result m_res;
 
   public:
     // Constructs a DNS result future. This object also functions as an
@@ -47,18 +47,22 @@ class DNS_Future
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(DNS_Future);
 
+    bool
+    has_result() const noexcept
+      { return this->successful();  }
+
     const Result&
     result() const
       {
-        this->check_ready();
-        return this->m_result;
+        this->check_success();
+        return this->m_res;
       }
 
     Result&
     mut_result()
       {
-        this->check_ready();
-        return this->m_result;
+        this->check_success();
+        return this->m_res;
       }
   };
 

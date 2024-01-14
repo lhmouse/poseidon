@@ -30,7 +30,7 @@ class Read_File_Future
       };
 
   private:
-    Result m_result;
+    Result m_res;
 
   public:
     // Constructs a result future for reading a file. The file which `path` denotes
@@ -53,18 +53,22 @@ class Read_File_Future
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Read_File_Future);
 
+    bool
+    has_result() const noexcept
+      { return this->successful();  }
+
     const Result&
     result() const
       {
-        this->check_ready();
-        return this->m_result;
+        this->check_success();
+        return this->m_res;
       }
 
     Result&
     mut_result()
       {
-        this->check_ready();
-        return this->m_result;
+        this->check_success();
+        return this->m_res;
       }
   };
 

@@ -181,7 +181,7 @@ do_yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override)
       // Associate the future. If the future is already in the READY state,
       // don't block at all.
       lock.lock(futr_opt->m_waiters_mutex);
-      if(futr_opt->ready())
+      if(futr_opt->m_once.test())
         return;
 
       shptr<atomic_relaxed<steady_time>> async_time_ptr(elem, &(elem->async_time));
@@ -368,19 +368,22 @@ thread_loop()
         "Processing fiber `$1` (class `$2`): state = $3"),
         elem->fiber, typeid(*(elem->fiber)), elem->fiber->m_state.load());
 
-    if(now >= elem->yield_time + warn_timeout)
-      POSEIDON_LOG_WARN((
-          "Fiber `$1` (class `$2`) has been suspended for $3"),
-          elem->fiber, typeid(*(elem->fiber)), now - elem->yield_time);
+    if(futr && !futr->m_once.test()) {
+      // Wait for future.
+      if(now >= elem->yield_time + warn_timeout)
+        POSEIDON_LOG_WARN((
+            "Fiber `$1` (class `$2`) has been suspended for $3"),
+            elem->fiber, typeid(*(elem->fiber)), now - elem->yield_time);
 
-    if((now >= elem->fail_time) && futr && !futr->ready())
-      POSEIDON_LOG_ERROR((
-          "Fiber `$1` (class `$2`) has been suspended for $3",
-          "This circumstance looks permanent. Please check for deadlocks."),
-          elem->fiber, typeid(*(elem->fiber)), now - elem->yield_time);
+      if(now >= elem->fail_time)
+        POSEIDON_LOG_ERROR((
+            "Fiber `$1` (class `$2`) has been suspended for $3",
+            "This circumstance looks permanent. Please check for deadlocks."),
+            elem->fiber, typeid(*(elem->fiber)), now - elem->yield_time);
 
-    if((now < elem->fail_time) && (signal == 0) && futr && !futr->ready())
-      return;
+      if((signal == 0) && (now < elem->fail_time))
+        return;
+    }
 
     if(elem->fiber->m_state.load() == async_pending) {
       POSEIDON_LOG_TRACE(("Initializing fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));

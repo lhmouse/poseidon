@@ -20,7 +20,7 @@ void
 Abstract_Future::
 do_abstract_future_request() noexcept
   {
-    // The ready state can only be updated with `m_waiters_mutex` locked.
+    // The completion state can only be updated with `m_waiters_mutex` locked.
     vector<wkptr<atomic_relaxed<steady_time>>> waiters;
     plain_mutex::unique_lock waiters_lock;
 
@@ -51,17 +51,17 @@ do_abstract_future_request() noexcept
         timep->store(now + steady_clock::time_point::duration(k));
 
     waiters_lock.unlock();
-    POSEIDON_LOG_DEBUG(("Future ready: `$1` (class `$2`)"), this, typeid(*this));
+    POSEIDON_LOG_DEBUG(("Future completed: `$1` (class `$2`)"), this, typeid(*this));
   }
 
 void
 Abstract_Future::
-check_ready() const
+check_success() const
   {
     // If initialization hasn't completed yet, fail.
     this->m_once.call(
       [&] {
-        POSEIDON_THROW(("Future not ready: `$1` (class `$2`)"), this, typeid(*this));
+        POSEIDON_THROW(("Future not completed: `$1` (class `$2`)"), this, typeid(*this));
       });
 
     // If initialization has failed, rethrow the exact exception.
