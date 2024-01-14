@@ -44,6 +44,10 @@ class Read_File_Future
     // Performs the read operation.
     virtual
     void
+    do_on_abstract_future_execute() override;
+
+    virtual
+    void
     do_on_abstract_async_task_execute() override;
 
   public:

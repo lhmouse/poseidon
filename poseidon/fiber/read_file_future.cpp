@@ -22,8 +22,8 @@ Read_File_Future::
 
 void
 Read_File_Future::
-do_on_abstract_async_task_execute()
-  try {
+do_on_abstract_future_execute()
+  {
     // Open the file and get basic information.
     unique_posix_fd fd(::open(this->m_result.path.safe_c_str(), O_RDONLY | O_NOCTTY, 0));
     if(!fd)
@@ -77,15 +77,13 @@ do_on_abstract_async_task_execute()
       // Accept bytes that have been read.
       this->m_result.data.accept((size_t) step_size);
     }
-
-    // Set the future as a success.
-    this->do_set_ready(nullptr);
   }
-  catch(exception& stdex) {
-    POSEIDON_LOG_WARN(("Could not read file `$1`: $2"), this->m_result.path, stdex);
 
-    // Set the future as a failure.
-    this->do_set_ready(::std::current_exception());
+void
+Read_File_Future::
+do_on_abstract_async_task_execute()
+  {
+    this->do_abstract_future_request();
   }
 
 }  // namespace poseidon

@@ -9,9 +9,10 @@
 namespace poseidon {
 
 DNS_Future::
-DNS_Future(cow_stringR host)
+DNS_Future(cow_stringR host, uint16_t port)
   {
     this->m_result.host = host;
+    this->m_result.port = port;
   }
 
 DNS_Future::
@@ -21,11 +22,11 @@ DNS_Future::
 
 void
 DNS_Future::
-do_on_abstract_async_task_execute()
-  try {
+do_on_abstract_future_execute()
+  {
     // Perform DNS query. This will block the worker thread.
     ::addrinfo hints = { };
-    hints.ai_flags = AI_V4MAPPED | AI_ADDRCONFIG;
+    hints.ai_flags = AI_V4MAPPED | AI_ADDRCONFIG | AI_NUMERICSERV;
     ::addrinfo* res;
     int err = ::getaddrinfo(this->m_result.host.safe_c_str(), nullptr, &hints, &res);
     if(err != 0)
@@ -43,6 +44,7 @@ do_on_abstract_async_task_execute()
         Socket_Address addr;
         ::memcpy(addr.mut_data(), ipv4_unspecified.data(), 12);
         ::memcpy(addr.mut_data() + 12, &(((::sockaddr_in*) res->ai_addr)->sin_addr), 4);
+        addr.set_port(this->m_result.port);
 
         // Ignore duplicate records.
         if(find(this->m_result.addrs, addr) == nullptr)
@@ -52,20 +54,19 @@ do_on_abstract_async_task_execute()
         // IPv6
         Socket_Address addr;
         ::memcpy(addr.mut_data(), &(((::sockaddr_in6*) res->ai_addr)->sin6_addr), 16);
+        addr.set_port(this->m_result.port);
 
         // Ignore duplicate records.
         if(find(this->m_result.addrs, addr) == nullptr)
           this->m_result.addrs.push_back(addr);
       }
-
-    // Set the future as a success.
-    this->do_set_ready(nullptr);
   }
-  catch(exception& stdex) {
-    POSEIDON_LOG_WARN(("Could not resolve host `$1`: $2"), this->m_result.host, stdex);
 
-    // Set the future as a failure.
-    this->do_set_ready(::std::current_exception());
+void
+DNS_Future::
+do_on_abstract_async_task_execute()
+  {
+    this->do_abstract_future_request();
   }
 
 }  // namespace poseidon

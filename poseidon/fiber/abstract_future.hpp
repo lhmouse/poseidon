@@ -25,11 +25,19 @@ class Abstract_Future
     Abstract_Future();
 
   protected:
-    // Makes this future ready by setting an optional exception, and then notifies
-    // all waiters. If this future has already been made ready, this function does
-    // nothing.
+    // This callback is invoked by `do_abstract_future_request()` and is intended
+    // to be overriden by derived classes to do the asynchronous work. If this
+    // function throws an exception, it will be copied into `m_except_opt` which
+    // can be examined with `check_ready()`.
+    virtual
     void
-    do_set_ready(exception_ptr&& except_opt) noexcept;
+    do_on_abstract_future_execute() = 0;
+
+    // Requests the asynchronous work and sets the ready state. If the work has
+    // not been done yet, this function calls `do_on_abstract_future_execute()`
+    // do the work; otherwise, this function returns immediately.
+    void
+    do_abstract_future_request() noexcept;
 
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Abstract_Future);

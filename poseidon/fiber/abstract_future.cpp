@@ -18,39 +18,55 @@ Abstract_Future::
 
 void
 Abstract_Future::
-do_set_ready(exception_ptr&& except_opt) noexcept
+do_abstract_future_request() noexcept
   {
+    // The ready state can only be updated with `m_waiters_mutex` locked.
+    vector<wkptr<atomic_relaxed<steady_time>>> waiters;
+    plain_mutex::unique_lock waiters_lock;
+
     this->m_once.call(
       [&] {
-        // Set the exception pointer to indicate success or failure.
-        this->m_except_opt = move(except_opt);
+        try {
+          this->do_on_abstract_future_execute();
+        }
+        catch(exception& stdex) {
+          POSEIDON_LOG_WARN(("Future `$1` (class `$2`) failure: $3"), this, typeid(*this), stdex);
+          this->m_except_opt = ::std::current_exception();
+        }
 
-        // Notify all waiters.
-        steady_time now = steady_clock::now();
-        vector<wkptr<atomic_relaxed<steady_time>>> waiters;
-        plain_mutex::unique_lock waiters_lock(this->m_waiters_mutex);
-
-        waiters.swap(this->m_waiters);
-        for(uint32_t k = 0;  k != waiters.size();  ++k)
-          if(auto timep = waiters[k].lock())
-            timep->store(now + steady_clock::time_point::duration(k));
-
-        POSEIDON_LOG_DEBUG(("Future `$1` ready (class `$2`)"), this, typeid(*this));
+        // This indicates something has been done and all waiters shall be
+        // released.
+        waiters_lock.lock(this->m_waiters_mutex);
       });
+
+    if(!waiters_lock)
+      return;
+
+    // Notify all waiters.
+    steady_time now = steady_clock::now();
+    waiters.swap(this->m_waiters);
+
+    for(uint32_t k = 0;  k != waiters.size();  ++k)
+      if(auto timep = waiters[k].lock())
+        timep->store(now + steady_clock::time_point::duration(k));
+
+    waiters_lock.unlock();
+    POSEIDON_LOG_DEBUG(("Future `$1` (class `$2`) ready"), this, typeid(*this));
   }
 
 void
 Abstract_Future::
 check_ready() const
   {
+    // If initialization hasn't completed yet, fail.
     this->m_once.call(
       [&] {
-        // Throw an exception if initialization has not taken place.
-        if(this->m_except_opt)
-          ::std::rethrow_exception(this->m_except_opt);
-
-        POSEIDON_THROW(("Future `$1` not ready (class `$2`)"), this, typeid(*this));
+        POSEIDON_THROW(("Future `$1` (class `$2`) not ready"), this, typeid(*this));
       });
+
+    // If initialization has failed, rethrow the exact exception.
+    if(this->m_except_opt)
+      ::std::rethrow_exception(this->m_except_opt);
   }
 
 }  // namespace poseidon
