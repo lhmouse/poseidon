@@ -373,13 +373,13 @@ thread_loop()
       if(now >= elem->yield_time + warn_timeout)
         POSEIDON_LOG_WARN((
             "Fiber `$1` (class `$2`) has been suspended for $3"),
-            elem->fiber, typeid(*(elem->fiber)), now - elem->yield_time);
+            elem->fiber, typeid(*(elem->fiber)), duration_cast<milliseconds>(now - elem->yield_time));
 
       if(now >= elem->fail_time)
         POSEIDON_LOG_ERROR((
             "Fiber `$1` (class `$2`) has been suspended for $3",
             "This circumstance looks permanent. Please check for deadlocks."),
-            elem->fiber, typeid(*(elem->fiber)), now - elem->yield_time);
+            elem->fiber, typeid(*(elem->fiber)), duration_cast<milliseconds>(now - elem->yield_time));
 
       if((signal == 0) && (now < elem->fail_time))
         return;
