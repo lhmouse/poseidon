@@ -11,9 +11,9 @@ enum MySQL_Data_Type : uint8_t
   {
     mysql_data_varchar   = 0,  // varchar(255)
     mysql_data_boolean   = 1,  // tinyint(1)
-    mysql_data_int32     = 2,  // int(11)
-    mysql_data_int64     = 3,  // bigint(20)
-    mysql_data_auto_inc  = 4,  // bigint(20) auto_increment
+    mysql_data_int       = 2,  // int(11)
+    mysql_data_bigint    = 3,  // bigint(20)
+    mysql_data_autoinc   = 4,  // bigint(20) auto_increment
     mysql_data_double    = 5,  // double
     mysql_data_blob      = 6,  // longblob
     mysql_data_datetime  = 7,  // datetime

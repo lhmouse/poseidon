@@ -71,6 +71,7 @@ nobase_include_HEADERS +=  \
 if enable_mysql
 nobase_include_HEADERS +=  \
   %reldir%/mysql/enums.hpp  \
+  %reldir%/mysql/mysql_table.hpp  \
   ${END}
 endif
 
@@ -163,6 +164,9 @@ lib_libposeidon_la_SOURCES =  \
   ${END}
 
 if enable_mysql
+lib_libposeidon_la_SOURCES +=  \
+  %reldir%/mysql/mysql_table.cpp  \
+  ${END}
 endif
 
 if enable_mongodb
