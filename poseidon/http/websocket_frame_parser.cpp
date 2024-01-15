@@ -167,7 +167,7 @@ clear() noexcept
     this->m_frm_payload_rem = 0;
 
     this->m_state_stor = 0;
-    this->m_error_desc = "";
+    this->m_error_desc = nullptr;
   }
 
 void
@@ -322,7 +322,7 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
     // For the server, this connection has now been established.
     this->m_wshs = wshs_s_accepted;
     this->m_wsf = wsf_new;
-    this->m_error_desc = "";
+    this->m_error_desc = nullptr;
   }
 
 void
@@ -413,7 +413,7 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
     // For the client, this connection has now been established.
     this->m_wshs = wshs_c_accepted;
     this->m_wsf = wsf_new;
-    this->m_error_desc = "";
+    this->m_error_desc = nullptr;
   }
 
 void

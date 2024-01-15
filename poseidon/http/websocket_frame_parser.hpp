@@ -54,10 +54,11 @@ class WebSocket_Frame_Parser
       };
     };
 
-    const char* m_error_desc = "";
+    const char* m_error_desc = nullptr;
 
   public:
     // Constructs a parser for incoming frames.
+    constexpr
     WebSocket_Frame_Parser() noexcept
       { }
 
@@ -71,7 +72,7 @@ class WebSocket_Frame_Parser
 
     const char*
     error_description() const noexcept
-      { return this->m_error_desc;  }
+      { return this->m_error_desc ? this->m_error_desc : "success";  }
 
     // Get the operating mode.
     bool
