@@ -68,6 +68,18 @@ nobase_include_HEADERS +=  \
   %reldir%/easy/easy_wss_client.hpp  \
   ${END}
 
+if enable_mysql
+nobase_include_HEADERS +=  \
+  %reldir%/mysql/enums.hpp  \
+  ${END}
+endif
+
+if enable_mongodb
+nobase_include_HEADERS +=  \
+  %reldir%/mongodb/enums.hpp  \
+  ${END}
+endif
+
 lib_LTLIBRARIES += lib/libposeidon.la
 lib_libposeidon_la_CXXFLAGS = ${AM_CXXFLAGS}
 lib_libposeidon_la_LDFLAGS = -no-undefined -version-number @abi_major@:@abi_minor@
@@ -78,8 +90,10 @@ BUILT_SOURCES += %reldir%/precompiled.xipp
 endif
 
 if enable_mongodb
-lib_libposeidon_la_CXXFLAGS += -isystem /usr/include/libbson-1.0
-lib_libposeidon_la_CXXFLAGS += -isystem /usr/include/libmongoc-1.0
+# XXX: This just looks awkward: https://jira.mongodb.org/browse/CDRIVER-4813
+lib_libposeidon_la_CXXFLAGS += -isystem /usr/local/include/libbson-1.0  \
+  -isystem /usr/local/include/libmongoc-1.0 -isystem /usr/include/libbson-1.0  \
+  -isystem /usr/include/libmongoc-1.0
 endif
 
 lib_libposeidon_la_SOURCES =  \
