@@ -47,8 +47,7 @@ struct Final_Fiber final : Abstract_Fiber
           const shptr<Client_Table>& table, const volatile WS_Server_Session* refptr)
       :
         m_thunk(thunk), m_wtable(table), m_refptr(refptr)
-      {
-      }
+      { }
 
     virtual
     void
@@ -118,8 +117,7 @@ struct Final_WS_Server_Session final : WS_Server_Session
           const Easy_WS_Server::thunk_type& thunk, const shptr<Client_Table>& table)
       :
         TCP_Socket(move(fd)), m_thunk(thunk), m_wtable(table)
-      {
-      }
+      { }
 
     void
     do_push_event_common(Client_Table::Event_Queue::Event&& event)

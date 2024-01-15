@@ -37,8 +37,7 @@ struct Final_Fiber final : Abstract_Fiber
     Final_Fiber(const Easy_Timer::thunk_type& thunk, const shptr<Event_Queue>& queue)
       :
         m_thunk(thunk), m_wqueue(queue)
-      {
-      }
+      { }
 
     virtual
     void
@@ -91,8 +90,7 @@ struct Final_Timer final : Abstract_Timer
     Final_Timer(const Easy_Timer::thunk_type& thunk, const shptr<Event_Queue>& queue)
       :
         m_thunk(thunk), m_wqueue(queue)
-      {
-      }
+      { }
 
     virtual
     void

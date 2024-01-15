@@ -37,8 +37,7 @@ struct Final_Fiber final : Abstract_Fiber
     Final_Fiber(const Easy_UDP_Client::thunk_type& thunk, const shptr<Packet_Queue>& queue)
       :
         m_thunk(thunk), m_wqueue(queue)
-      {
-      }
+      { }
 
     virtual
     void
@@ -91,8 +90,7 @@ struct Final_UDP_Socket final : UDP_Socket
     Final_UDP_Socket(const Easy_UDP_Client::thunk_type& thunk, const shptr<Packet_Queue>& queue)
       :
         m_thunk(thunk), m_wqueue(queue)
-      {
-      }
+      { }
 
     virtual
     void
