@@ -12,12 +12,12 @@ bool
 do_is_name_valid(cow_stringR name)
   {
     return (name.size() != 0)
-      && ::std::all_of(name.begin(), name.end(),
-        [](char c) {
-          return ((c >= '0') && (c <= '9'))
-                 || ((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z'))
-                 || (c == '_') || (c == '$') || (c == '-') || (c == '~');
-        });
+      && all_of(name,
+           [](char c) {
+             return ((c >= '0') && (c <= '9'))
+                    || ((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z'))
+                    || (c == '_') || (c == '$') || (c == '-') || (c == '~');
+           });
   }
 
 template<typename elementT>
