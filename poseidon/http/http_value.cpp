@@ -46,20 +46,23 @@ size_t
 HTTP_Value::
 parse_quoted_string_partial(chars_view str)
   {
+    auto pstr = this->m_stor.mut_ptr<cow_string>();
+    if(pstr)
+      pstr->clear();
+    else
+      pstr = &(this->m_stor.emplace<cow_string>());
+
+    // Get a quoted string. Zero shall be returned in case of any errors.
     if((str.n < 2) || (str[0] != '\"'))
       return 0;
 
-    this->m_str.clear();
-    this->m_index = index_string;
-
-    // Get a quoted string. Zero shall be returned in case of any errors.
     const char* curp = str.p + 1;
     intptr_t plain = 1;
 
     while((*curp != '\"') || (plain == 0)) {
       // A previous escape character exists if `plain` equals zero.
       if((*curp != '\\') || (plain == 0))
-        this->m_str.push_back(*curp);
+        pstr->push_back(*curp);
       else
         plain = -1;
 
@@ -71,32 +74,41 @@ parse_quoted_string_partial(chars_view str)
         return 0;
     }
 
-    // Return the number of characters that have been parsed.
+    // Skip the closing quote.
     return (size_t) (curp + 1 - str.p);
-  }
-
-size_t
-HTTP_Value::
-parse_datetime_partial(chars_view str)
-  {
-    size_t aclen = this->m_dt.parse(str);
-    this->m_index = index_datetime;
-    return aclen;
   }
 
 size_t
 HTTP_Value::
 parse_number_partial(chars_view str)
   {
+    auto pnum = this->m_stor.mut_ptr<double>();
+    if(pnum)
+      *pnum = 0;
+    else
+      pnum = &(this->m_stor.emplace<double>());
+
+    // Parse a floating-point number. Do not mistake a token prefix.
     ::rocket::ascii_numget numg;
     size_t aclen = numg.parse_D(str.p, str.n);
-
-    // Do not mistake a token prefix.
     if((aclen < str.n) && !do_is_ctl_or_sep(str[aclen]))
       return 0;
 
-    numg.cast_D(this->m_num, -HUGE_VAL, +HUGE_VAL);
-    this->m_index = index_number;
+    numg.cast_D(*pnum, -HUGE_VAL, +HUGE_VAL);
+    return aclen;
+  }
+
+size_t
+HTTP_Value::
+parse_datetime_partial(chars_view str)
+  {
+    auto pdt = this->m_stor.mut_ptr<HTTP_DateTime>();
+    if(pdt)
+      pdt->set_unix_time(unix_time());
+    else
+      pdt = &(this->m_stor.emplace<HTTP_DateTime>());
+
+    size_t aclen = pdt->parse(str);
     return aclen;
   }
 
@@ -104,24 +116,30 @@ size_t
 HTTP_Value::
 parse_token_partial(chars_view str)
   {
-    auto eptr = ::std::find_if(str.p, str.p + str.n, do_is_ctl_or_sep);
-    size_t aclen = (size_t) (eptr - str.p);
+    auto pstr = this->m_stor.mut_ptr<cow_string>();
+    if(pstr)
+      pstr->clear();
+    else
+      pstr = &(this->m_stor.emplace<cow_string>());
 
-    this->m_str.assign(str.p, aclen);
-    this->m_index = index_string;
-    return aclen;
+    auto eptr = ::std::find_if(str.p, str.p + str.n, do_is_ctl_or_sep);
+    pstr->assign(str.p, eptr);
+    return (size_t) (eptr - str.p);
   }
 
 size_t
 HTTP_Value::
 parse_unquoted_partial(chars_view str)
   {
-    auto eptr = ::std::find_if(str.p, str.p + str.n, do_is_ctl_or_unquoted_sep);
-    size_t aclen = (size_t) (eptr - str.p);
+    auto pstr = this->m_stor.mut_ptr<cow_string>();
+    if(pstr)
+      pstr->clear();
+    else
+      pstr = &(this->m_stor.emplace<cow_string>());
 
-    this->m_str.assign(str.p, aclen);
-    this->m_index = index_string;
-    return aclen;
+    auto eptr = ::std::find_if(str.p, str.p + str.n, do_is_ctl_or_unquoted_sep);
+    pstr->assign(str.p, eptr);
+    return (size_t) (eptr - str.p);
   }
 
 size_t
@@ -155,62 +173,74 @@ tinyfmt&
 HTTP_Value::
 print(tinyfmt& fmt) const
   {
-    switch(this->m_index) {
-      case index_null:
-        // Don't write anything.
-        return fmt;
+    struct variant_printer
+      {
+        tinyfmt* pfmt;
 
-      case index_string: {
-        auto pos = ::std::find_if(this->m_str.begin(), this->m_str.end(), do_is_ctl_or_sep);
-        if(pos != this->m_str.end()) {
-          // Quote the string.
-          fmt.putc('\"');
-          fmt.putn(this->m_str.data(), (size_t) (pos - this->m_str.begin()));
-          do {
-            if((*pos == '\\') || (*pos == '\"')) {
-              // Escape it.
-              char seq[2] = { '\\', *pos };
-              fmt.putn(seq, 2);
-              ++ pos;
-            }
-            else if(do_is_ctl_or_ws(*pos)) {
-              // Replace this sequence of control and space characters
-              // with a single space.
-              fmt.putc(' ');
-              pos = ::std::find_if_not(pos + 1, this->m_str.end(), do_is_ctl_or_ws);
-            }
-            else {
-              // Write this sequence verbatim.
-              auto from = pos;
-              pos = ::std::find_if(pos + 1, this->m_str.end(), do_is_ctl_or_sep);
-              fmt.putn(&*from, (size_t) (pos - from));
-            }
+        void
+        operator()(nullptr_t) const
+          {
           }
-          while(pos != this->m_str.end());
-          fmt.putc('\"');
-        }
-        else {
-          // Write the string verbatim.
-          fmt << this->m_str;
-        }
-        return fmt;
-      }
 
-      case index_number:
-        // Write the number verbatim.
-        fmt << this->m_num;
-        return fmt;
+        void
+        operator()(cow_stringR str) const
+          {
+            auto pos = ::std::find_if(str.begin(), str.end(), do_is_ctl_or_sep);
+            if(pos == str.end()) {
+              // Quoting is not necessary.
+              this->pfmt->putn(str.data(), str.size());
+              return;
+            }
 
-      case index_datetime:
-        // Write the date/time verbatim.
-        fmt << this->m_dt;
-        return fmt;
+            // Quote the string. First, write the prefix that needs no quoting.
+            this->pfmt->putc('\"');
+            this->pfmt->putn(str.data(), (size_t) (pos - str.begin()));
 
-      default:
-        ASTERIA_TERMINATE((
-            "Invalid HTTP value type `$1`"),
-            this->m_index);
-    }
+            do {
+              if((*pos == '\\') || (*pos == '\"')) {
+                // Escape it.
+                char seq[2] = { '\\', *pos };
+                this->pfmt->putn(seq, 2);
+                ++ pos;
+              }
+              else if(do_is_ctl_or_ws(*pos)) {
+                // Replace this sequence of control and space characters with a
+                // single space.
+                this->pfmt->putc(' ');
+                pos = ::std::find_if_not(pos + 1, str.end(), do_is_ctl_or_ws);
+              }
+              else {
+                // Write this sequence verbatim.
+                auto from = pos;
+                pos = ::std::find_if(pos + 1, str.end(), do_is_ctl_or_sep);
+                this->pfmt->putn(&*from, (size_t) (pos - from));
+              }
+            }
+            while(pos != str.end());
+
+            this->pfmt->putc('\"');
+          }
+
+        void
+        operator()(double num) const
+          {
+            ::rocket::ascii_numput nump;
+            nump.put_DD(num);
+            this->pfmt->putn(nump.data(), nump.size());
+          }
+
+        void
+        operator()(const HTTP_DateTime& dt) const
+          {
+            char sbuf[32];
+            dt.print_rfc1123_partial(sbuf);
+            this->pfmt->putn(sbuf, 29);
+          }
+      };
+
+    variant_printer p = { &fmt };
+    this->m_stor.visit(p);
+    return fmt;
   }
 
 cow_string

@@ -11,62 +11,39 @@ namespace poseidon {
 class HTTP_Value
   {
   private:
-    enum Index : uint8_t
-      {
-        index_null,
-        index_string,
-        index_number,
-        index_datetime,
-      };
-
-    union {
-      uintptr_t m_index_stor;
-      Index m_index;
-    };
-    cow_string m_str;
-    double m_num;
-    HTTP_DateTime m_dt;
-
-  private:
-    inline
-    void
-    do_check_index(Index expect, const char* msg) const
-      {
-        if(this->m_index != expect)
-          ::rocket::sprintf_and_throw<::std::invalid_argument>(
-              "HTTP_Value: value is not %s: index `%d` != `%d`",
-              msg, this->m_index, expect);
-      }
+    variant<nullptr_t, cow_string, double, HTTP_DateTime> m_stor;
 
   public:
     // Value constructors
     constexpr
     HTTP_Value(nullptr_t = nullptr) noexcept
       :
-        m_index_stor(), m_str(), m_num(), m_dt()
+        m_stor()
       { }
 
     HTTP_Value(cow_stringR str) noexcept
       :
-        m_index(index_string), m_str(str)
+        m_stor(str)
       { }
-    HTTP_Value(int num) noexcept
-      :
-        m_index(index_number), m_num(num)
-      { }
+
     HTTP_Value(double num) noexcept
       :
-        m_index(index_number), m_num(num)
+        m_stor(num)
+      { }
+
+    HTTP_Value(int num) noexcept
+      :
+        m_stor(static_cast<double>(num))
       { }
 
     HTTP_Value(const HTTP_DateTime& dt) noexcept
       :
-        m_index(index_datetime), m_dt(dt)
+        m_stor(dt)
       { }
 
     HTTP_Value(system_time tm) noexcept
       :
-        m_index(index_datetime), m_dt(time_point_cast<seconds>(tm))
+        m_stor(HTTP_DateTime(time_point_cast<seconds>(tm)))
       { }
 
     HTTP_Value&
@@ -84,14 +61,14 @@ class HTTP_Value
       }
 
     HTTP_Value&
-    operator=(int num) & noexcept
+    operator=(double num) & noexcept
       {
         this->set_number(num);
         return *this;
       }
 
     HTTP_Value&
-    operator=(double num) & noexcept
+    operator=(int num) & noexcept
       {
         this->set_number(num);
         return *this;
@@ -114,10 +91,7 @@ class HTTP_Value
     HTTP_Value&
     swap(HTTP_Value& other) noexcept
       {
-        ::std::swap(this->m_index_stor, other.m_index_stor);
-        this->m_str.swap(other.m_str);
-        ::std::swap(this->m_num, other.m_num);
-        this->m_dt.swap(other.m_dt);
+        this->m_stor.swap(other.m_stor);
         return *this;
       }
 
@@ -127,120 +101,88 @@ class HTTP_Value
     // Accesses raw data.
     bool
     is_null() const noexcept
-      { return this->m_index == index_null;  }
+      { return this->m_stor.ptr<nullptr_t>() != nullptr;  }
 
     void
     clear() noexcept
-      { this->m_index = index_null;  }
+      { this->m_stor = nullptr;  }
 
     bool
     is_string() const noexcept
-      { return this->m_index == index_string;  }
+      { return this->m_stor.ptr<cow_string>() != nullptr;  }
 
     cow_stringR
     as_string() const
-      {
-        this->do_check_index(index_string, "a string");
-        return this->m_str;
-      }
+      { return this->m_stor.as<cow_string>();  }
 
     cow_string&
     mut_string()
-      {
-        this->do_check_index(index_string, "a string");
-        return this->m_str;
-      }
+      { return this->m_stor.mut<cow_string>();  }
 
     const char*
-    as_c_str() const
-      {
-        this->do_check_index(index_string, "a string");
-        return this->m_str.c_str();
-      }
+    str_data() const
+      { return this->m_stor.as<cow_string>().c_str();  }
 
     size_t
     str_length() const
-      {
-        this->do_check_index(index_string, "a string");
-        return this->m_str.length();
-      }
+      { return this->m_stor.as<cow_string>().length();  }
 
     void
     set_string(cow_stringR str) noexcept
-      {
-        this->m_str = str;
-        this->m_index = index_string;
-      }
+      { this->m_stor = str;  }
 
     void
-    set_string(const char* str, size_t len) noexcept
+    set_string(const char* str, size_t len)
       {
-        this->m_str.assign(str, len);
-        this->m_index = index_string;
+        if(auto ps = this->m_stor.mut_ptr<cow_string>())
+          ps->assign(str, len);
+        else
+          this->m_stor.emplace<cow_string>(str, len);
       }
 
     bool
     is_number() const noexcept
-      { return this->m_index == index_number;  }
+      { return this->m_stor.ptr<double>() != nullptr;  }
 
     double
     as_number() const
-      {
-        this->do_check_index(index_number, "a number");
-        return this->m_num;
-      }
+      { return this->m_stor.as<double>();  }
 
     double&
     mut_number()
-      {
-        this->do_check_index(index_number, "a number");
-        return this->m_num;
-      }
-
-    void
-    set_number(int num) noexcept
-      {
-        this->m_num = num;
-        this->m_index = index_number;
-      }
+      { return this->m_stor.mut<double>();  }
 
     void
     set_number(double num) noexcept
-      {
-        this->m_num = num;
-        this->m_index = index_number;
-      }
+      { this->m_stor = num;  }
+
+    void
+    set_number(int num) noexcept
+      { this->m_stor = static_cast<double>(num);  }
 
     bool
     is_datetime() const noexcept
-      { return this->m_index == index_datetime;  }
+      { return this->m_stor.ptr<HTTP_DateTime>() != nullptr;  }
 
     const HTTP_DateTime&
     as_datetime() const
-      {
-        this->do_check_index(index_datetime, "an HTTP date/time");
-        return this->m_dt;
-      }
+      { return this->m_stor.as<HTTP_DateTime>();  }
 
     HTTP_DateTime&
     mut_datetime()
-      {
-        this->do_check_index(index_datetime, "an HTTP date/time");
-        return this->m_dt;
-      }
+      { return this->m_stor.mut<HTTP_DateTime>();  }
 
     void
     set_datetime(const HTTP_DateTime& dt) noexcept
-      {
-        this->m_dt = dt;
-        this->m_index = index_datetime;
-      }
+      { this->m_stor = dt;  }
 
     void
     set_datetime(system_time tm) noexcept
       {
-        this->m_dt = time_point_cast<seconds>(tm);
-        this->m_index = index_datetime;
+        if(auto pt = this->m_stor.mut_ptr<HTTP_DateTime>())
+          pt->set_unix_time(time_point_cast<seconds>(tm));
+        else
+          this->m_stor.emplace<HTTP_DateTime>(time_point_cast<seconds>(tm));
       }
 
     // Try parsing a quoted string. Upon success, the number of characters that

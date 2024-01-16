@@ -257,7 +257,7 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
 
         // Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
         if(hpair.second.as_string().length() == 24)
-          ::memcpy(sec_ws.key_str, hpair.second.as_c_str(), 25);
+          ::memcpy(sec_ws.key_str, hpair.second.str_data(), 25);
       }
       else if(ascii_ci_equal(hpair.first, sref("Sec-WebSocket-Extensions"))) {
         if(hpair.second.is_null())
@@ -370,7 +370,7 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
 
         // Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
         if(hpair.second.as_string().length() == 28)
-          ::memcpy(sec_ws_accept_resp, hpair.second.as_c_str(), 29);
+          ::memcpy(sec_ws_accept_resp, hpair.second.str_data(), 29);
       }
       else if(ascii_ci_equal(hpair.first, sref("Sec-WebSocket-Extensions"))) {
         if(!hpair.second.is_string())
