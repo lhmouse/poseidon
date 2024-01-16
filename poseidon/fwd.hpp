@@ -544,7 +544,7 @@ class WebSocket_Frame_Parser;
 class WebSocket_Deflator;
 
 // MySQL types
-enum MySQL_Data_Type : uint8_t;
+enum MySQL_Column_Type : uint8_t;
 enum MySQL_Engine_Type : uint8_t;
 class MySQL_Table;
 

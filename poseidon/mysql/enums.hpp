@@ -7,16 +7,16 @@
 #include "../fwd.hpp"
 namespace poseidon {
 
-enum MySQL_Data_Type : uint8_t
+enum MySQL_Column_Type : uint8_t
   {
-    mysql_data_varchar   = 0,  // varchar(255)
-    mysql_data_boolean   = 1,  // tinyint(1)
-    mysql_data_int       = 2,  // int(11)
-    mysql_data_bigint    = 3,  // bigint(20)
-    mysql_data_autoinc   = 4,  // bigint(20) auto_increment
-    mysql_data_double    = 5,  // double
-    mysql_data_blob      = 6,  // longblob
-    mysql_data_datetime  = 7,  // datetime
+    mysql_column_varchar         = 0,  // varchar(255)
+    mysql_column_bool            = 1,  // tinyint(1)
+    mysql_column_int             = 2,  // int(11)
+    mysql_column_int64           = 3,  // bigint(20)
+    mysql_column_double          = 4,  // double
+    mysql_column_blob            = 5,  // longblob
+    mysql_column_datetime        = 6,  // datetime
+    mysql_column_auto_increment  = 7,  // bigint(20) auto_increment
   };
 
 enum MySQL_Engine_Type : uint8_t
