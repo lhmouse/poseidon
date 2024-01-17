@@ -31,9 +31,7 @@ void
 Async_Connect::
 do_on_abstract_async_task_execute()
   {
-    const auto socket = this->m_wsock.lock();
-    if(!socket)
-      return;
+    optional<Socket_Address> dns_result;
 
     try {
       // Perform DNS query. This will block the worker thread.
@@ -43,7 +41,7 @@ do_on_abstract_async_task_execute()
       int err = ::getaddrinfo(this->m_host.safe_c_str(), nullptr, &hints, &res);
       if(err != 0)
         POSEIDON_THROW((
-            "Could not resolve host `$1`",
+            "Could not resolve host name `$1`",
             "[`getaddrinfo()` failed: $2]"),
             this->m_host, ::gai_strerror(err));
 
@@ -52,45 +50,43 @@ do_on_abstract_async_task_execute()
       // passes.
       const ::rocket::unique_ptr<::addrinfo, void (::addrinfo*)> guard(res, ::freeaddrinfo);
 
-      for(res = guard;  res;  res = res->ai_next)
+      for(res = guard;  res && !dns_result;  res = res->ai_next)
         if(res->ai_family == AF_INET) {
           // IPv4
-          Socket_Address addr;
+          auto& addr = dns_result.emplace();
           ::memcpy(addr.mut_data(), ipv4_unspecified.data(), 12);
           ::memcpy(addr.mut_data() + 12, &(((::sockaddr_in*) res->ai_addr)->sin_addr), 4);
           addr.set_port(this->m_port);
-
-          socket->connect(addr);
-          this->m_driver->insert(socket);
-          POSEIDON_LOG_DEBUG(("Initiating new connection to `$1`"), addr);
-          return;
+          POSEIDON_LOG_DEBUG(("Using IPv4: `$1` => `$2`"), this->m_host, addr);
         }
 
-      for(res = guard;  res;  res = res->ai_next)
+      for(res = guard;  res && !dns_result;  res = res->ai_next)
         if(res->ai_family == AF_INET6) {
           // IPv6
-          Socket_Address addr;
+          auto& addr = dns_result.emplace();
           ::memcpy(addr.mut_data(), &(((::sockaddr_in6*) res->ai_addr)->sin6_addr), 16);
           addr.set_port(this->m_port);
-
-          socket->connect(addr);
-          this->m_driver->insert(socket);
-          POSEIDON_LOG_DEBUG(("Initiating new connection to `$1`"), addr);
-          return;
+          POSEIDON_LOG_DEBUG(("Using IPv6: `$1` => `$2`"), this->m_host, addr);
         }
-
-      // There is no suitable address, so fail.
-      POSEIDON_THROW((
-          "No suitable address for host `$3`",
-          "[socket `$1` (class `$2`)]"),
-          socket, typeid(*socket), this->m_host);
     }
     catch(exception& stdex) {
-      // Connection cannot be initiated, so close the socket.
-      POSEIDON_LOG_ERROR(("Could not resolve host `$1`: $2"), this->m_host, stdex);
-      socket->quick_close();
-      this->m_driver->insert(socket);
+      // Shut the connection down later.
+      POSEIDON_LOG_ERROR(("DNS lookup error: $1"), stdex);
     }
+
+    const auto socket = this->m_wsock.lock();
+    if(!socket)
+      return;
+
+    // Initiate the connection/shutdown before `insert()`; otherwise, the
+    // network driver may respond before `connect()` is called, and report an
+    // error.
+    if(dns_result)
+      socket->connect(*dns_result);
+    else
+      socket->quick_close();
+
+    this->m_driver->insert(socket);
   }
 
 }  // namespace poseidon
