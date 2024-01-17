@@ -1,13 +1,13 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
-#ifndef POSEIDON_HTTP_WEBSOCKET_FRAME_PARSER_
-#define POSEIDON_HTTP_WEBSOCKET_FRAME_PARSER_
+#ifndef POSEIDON_MYSQL_MYSQL_TABLE_STRUCTURE_
+#define POSEIDON_MYSQL_MYSQL_TABLE_STRUCTURE_
 
 #include "../fwd.hpp"
 namespace poseidon {
 
-class MySQL_Table
+class MySQL_Table_Structure
   {
   public:
     struct Column
@@ -33,11 +33,11 @@ class MySQL_Table
   public:
     // Constructs an empty table.
     constexpr
-    MySQL_Table() noexcept
+    MySQL_Table_Structure() noexcept
       { }
 
-    MySQL_Table&
-    swap(MySQL_Table& other) noexcept
+    MySQL_Table_Structure&
+    swap(MySQL_Table_Structure& other) noexcept
       {
         this->m_name.swap(other.m_name);
         this->m_columns.swap(other.m_columns);
@@ -47,7 +47,7 @@ class MySQL_Table
       }
 
   public:
-    ASTERIA_COPYABLE_DESTRUCTOR(MySQL_Table);
+    ASTERIA_COPYABLE_DESTRUCTOR(MySQL_Table_Structure);
 
     // Gets and sets the table name.
     // If the table name is not a valid identifier, an exception is thrown, and
@@ -57,7 +57,7 @@ class MySQL_Table
       { return this->m_name;  }
 
     void
-    set_name(cow_stringR engine);
+    set_name(cow_stringR name);
 
     // Gets and sets the storage engine.
     // If the storage engine is not valid, an exception is thrown, and there is
@@ -67,7 +67,7 @@ class MySQL_Table
       { return this->m_engine;  }
 
     void
-    set_engine(MySQL_Engine_Type xengine);
+    set_engine(MySQL_Engine_Type engine);
 
     // Gets a column.
     size_t
@@ -111,7 +111,7 @@ class MySQL_Table
 
 inline
 void
-swap(MySQL_Table& lhs, MySQL_Table& rhs) noexcept
+swap(MySQL_Table_Structure& lhs, MySQL_Table_Structure& rhs) noexcept
   { lhs.swap(rhs);  }
 
 }  // namespace poseidon

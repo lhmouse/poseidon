@@ -2,7 +2,7 @@
 // Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #include "utils.hpp"
-#include "../poseidon/mysql/mysql_table.hpp"
+#include "../poseidon/mysql/mysql_table_structure.hpp"
 #include "../poseidon/mysql/enums.hpp"
 using namespace ::poseidon;
 

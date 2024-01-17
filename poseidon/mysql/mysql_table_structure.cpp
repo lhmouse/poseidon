@@ -2,7 +2,7 @@
 // Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #include "../precompiled.ipp"
-#include "mysql_table.hpp"
+#include "mysql_table_structure.hpp"
 #include "enums.hpp"
 #include "../utils.hpp"
 namespace poseidon {
@@ -38,13 +38,13 @@ do_add_element(cow_vector<elementT>& container, const elementT& element)
 
 }  // namespace
 
-MySQL_Table::
-~MySQL_Table()
+MySQL_Table_Structure::
+~MySQL_Table_Structure()
   {
   }
 
 void
-MySQL_Table::
+MySQL_Table_Structure::
 set_name(cow_stringR name)
   {
     if(!do_is_name_valid(name))
@@ -54,7 +54,7 @@ set_name(cow_stringR name)
   }
 
 void
-MySQL_Table::
+MySQL_Table_Structure::
 set_engine(MySQL_Engine_Type engine)
   {
     switch(engine) {
@@ -72,7 +72,7 @@ set_engine(MySQL_Engine_Type engine)
   }
 
 size_t
-MySQL_Table::
+MySQL_Table_Structure::
 add_column(const Column& column)
   {
     if(!do_is_name_valid(column.name))
@@ -97,7 +97,7 @@ add_column(const Column& column)
   }
 
 size_t
-MySQL_Table::
+MySQL_Table_Structure::
 add_index(const Index& index)
   {
     if(!do_is_name_valid(index.name))
@@ -121,7 +121,7 @@ add_index(const Index& index)
   }
 
 void
-MySQL_Table::
+MySQL_Table_Structure::
 clear_columns() noexcept
   {
     this->m_columns.clear();
