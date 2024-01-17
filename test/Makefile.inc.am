@@ -10,7 +10,7 @@ check_PROGRAMS +=  \
   %reldir%/http_query_parser.test  \
   %reldir%/websocket_frame_header.test  \
   %reldir%/websocket_handshake.test  \
-  %reldir%/mysql_table.test  \
+  %reldir%/mysql_table_structure.test  \
   ${END}
 
 EXTRA_DIST +=  \

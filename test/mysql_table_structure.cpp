@@ -9,9 +9,9 @@ using namespace ::poseidon;
 int
 main()
   {
-    MySQL_Table table;
-    MySQL_Table::Column col;
-    MySQL_Table::Index ind;
+    MySQL_Table_Structure table;
+    MySQL_Table_Structure::Column col;
+    MySQL_Table_Structure::Index ind;
 
     POSEIDON_TEST_CHECK(table.count_columns() == 0);
     POSEIDON_TEST_CHECK(table.count_indexes() == 0);
