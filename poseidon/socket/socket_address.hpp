@@ -24,6 +24,7 @@ class Socket_Address
       :
         m_addr(), m_port(0)
       { }
+
     // Initializes an address from a foreign source.
     constexpr
     Socket_Address(const ::in6_addr& addr, uint16_t port = 0) noexcept
