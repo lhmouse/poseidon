@@ -97,9 +97,9 @@ class Socket_Address
       {
         __m128i tval = _mm_load_si128(&(this->m_addr_stor));
         __m128i oval = _mm_load_si128(&(other.m_addr_stor));
-        int cmp = _mm_movemask_epi8(_mm_cmpeq_epi8(tval, oval));  // low 16-bits := 0xFFFF if equal
-        cmp |= (int) (this->m_port ^ other.m_port) << 16;  // high 16-bits := 0 if equal
-        return cmp == 0xFFFF;
+        int mask_ne = _mm_movemask_epi8(_mm_cmpeq_epi16(tval, oval)) ^ 0xFFFF;
+        mask_ne |= this->m_port ^ other.m_port;
+        return mask_ne == 0;
       }
 
     ROCKET_PURE
@@ -118,9 +118,8 @@ class Socket_Address
       {
         __m128i tval = _mm_load_si128(&(this->m_addr_stor));
         __m128i oval = _mm_setr_epi16(0, 0, 0, 0, 0, -1, 0, 0);
-        int cmp = _mm_movemask_epi8(_mm_cmpeq_epi16(tval, oval));  // low 16-bits := 0xFFFF if equal
-        cmp &= 0x0FFF;
-        return cmp == 0x0FFF;
+        int mask_ne = _mm_movemask_epi8(_mm_cmpeq_epi16(tval, oval)) ^ 0xFFFF;
+        return (mask_ne & 0x0FFF) == 0;
       }
 
     // Parses an address from a string, which may be an IPv4 address, or
