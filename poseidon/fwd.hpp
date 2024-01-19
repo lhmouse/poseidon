@@ -545,6 +545,7 @@ class WebSocket_Deflator;
 enum MySQL_Column_Type : uint8_t;
 enum MySQL_Engine_Type : uint8_t;
 class MySQL_Table_Structure;
+class MySQL_Value;
 
 // Easy types
 // Being 'easy' means all callbacks are invoked in fibers and can perform

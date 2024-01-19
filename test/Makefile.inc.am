@@ -11,6 +11,7 @@ check_PROGRAMS +=  \
   %reldir%/websocket_frame_header.test  \
   %reldir%/websocket_handshake.test  \
   %reldir%/mysql_table_structure.test  \
+  %reldir%/mysql_value.test  \
   ${END}
 
 EXTRA_DIST +=  \
