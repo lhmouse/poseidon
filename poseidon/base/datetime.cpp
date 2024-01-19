@@ -2,7 +2,7 @@
 // Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
 
 #include "../precompiled.ipp"
-#include "http_datetime.hpp"
+#include "datetime.hpp"
 #include "../utils.hpp"
 #include <time.h>
 namespace poseidon {
@@ -144,18 +144,18 @@ do_match(const char*& rptr_out, int& add_to_value, const char (&cstrs)[N][S], in
 
 }  // namespace
 
-const HTTP_DateTime http_datetime_min = (unix_time)        0h;  // 1970-01-01
-const HTTP_DateTime http_datetime_max = (unix_time) 70380768h;  // 9999-01-01
+const DateTime datetime_min = (unix_time)        0h;  // 1970-01-01
+const DateTime datetime_max = (unix_time) 70380768h;  // 9999-01-01
 
-HTTP_DateTime::
-HTTP_DateTime(chars_view str)
+DateTime::
+DateTime(chars_view str)
   {
     if(this->parse(str) != str.n)
-      POSEIDON_THROW(("Could not parse HTTP date/time string `$1`"), str);
+      POSEIDON_THROW(("Could not parse date/time string `$1`"), str);
   }
 
 size_t
-HTTP_DateTime::
+DateTime::
 parse_rfc1123_partial(const char* str)
   {
     const char* rptr = str;
@@ -189,7 +189,7 @@ parse_rfc1123_partial(const char* str)
   }
 
 size_t
-HTTP_DateTime::
+DateTime::
 parse_rfc850_partial(const char* str)
   {
     const char* rptr = str;
@@ -222,7 +222,7 @@ parse_rfc850_partial(const char* str)
   }
 
 size_t
-HTTP_DateTime::
+DateTime::
 parse_asctime_partial(const char* str)
   {
     const char* rptr = str;
@@ -255,7 +255,7 @@ parse_asctime_partial(const char* str)
   }
 
 size_t
-HTTP_DateTime::
+DateTime::
 parse_cookie_partial(const char* str)
   {
     const char* rptr = str;
@@ -289,7 +289,7 @@ parse_cookie_partial(const char* str)
   }
 
 size_t
-HTTP_DateTime::
+DateTime::
 parse_iso8601_partial(const char* str)
   {
     const char* rptr = str;
@@ -321,7 +321,7 @@ parse_iso8601_partial(const char* str)
   }
 
 size_t
-HTTP_DateTime::
+DateTime::
 parse(chars_view str)
   {
     // A string with an erroneous length will not be accepted, so we just need to
@@ -350,7 +350,7 @@ parse(chars_view str)
   }
 
 size_t
-HTTP_DateTime::
+DateTime::
 print_rfc1123_partial(char* str) const noexcept
   {
     char* wptr = str;
@@ -380,7 +380,7 @@ print_rfc1123_partial(char* str) const noexcept
   }
 
 size_t
-HTTP_DateTime::
+DateTime::
 print_rfc850_partial(char* str) const noexcept
   {
     char* wptr = str;
@@ -410,7 +410,7 @@ print_rfc850_partial(char* str) const noexcept
   }
 
 size_t
-HTTP_DateTime::
+DateTime::
 print_asctime_partial(char* str) const noexcept
   {
     char* wptr = str;
@@ -440,7 +440,7 @@ print_asctime_partial(char* str) const noexcept
   }
 
 size_t
-HTTP_DateTime::
+DateTime::
 print_cookie_partial(char* str) const noexcept
   {
     char* wptr = str;
@@ -470,7 +470,7 @@ print_cookie_partial(char* str) const noexcept
   }
 
 size_t
-HTTP_DateTime::
+DateTime::
 print_iso8601_partial(char* str) const noexcept
   {
     char* wptr = str;
@@ -498,20 +498,20 @@ print_iso8601_partial(char* str) const noexcept
   }
 
 tinyfmt&
-HTTP_DateTime::
+DateTime::
 print(tinyfmt& fmt) const
   {
     char str[64];
-    size_t len = this->print_rfc1123_partial(str);
+    size_t len = this->print_iso8601_partial(str);
     return fmt.putn(str, len);
   }
 
 cow_string
-HTTP_DateTime::
+DateTime::
 print_to_string() const
   {
     char str[64];
-    size_t len = this->print_rfc1123_partial(str);
+    size_t len = this->print_iso8601_partial(str);
     return cow_string(str, len);
   }
 

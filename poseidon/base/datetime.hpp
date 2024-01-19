@@ -1,13 +1,13 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
 
-#ifndef POSEIDON_HTTP_HTTP_DATETIME_
-#define POSEIDON_HTTP_HTTP_DATETIME_
+#ifndef POSEIDON_BASE_DATETIME_
+#define POSEIDON_BASE_DATETIME_
 
 #include "../fwd.hpp"
 namespace poseidon {
 
-class HTTP_DateTime
+class DateTime
   {
   private:
     unix_time m_tp;
@@ -15,14 +15,14 @@ class HTTP_DateTime
   public:
     // Initializes a timestamp of `1970-01-01 00:00:00 Z`.
     constexpr
-    HTTP_DateTime() noexcept
+    DateTime() noexcept
       :
         m_tp()
       { }
 
     // Initializes a timestamp from a foreign source.
     constexpr
-    HTTP_DateTime(unix_time tp) noexcept
+    DateTime(unix_time tp) noexcept
       :
         m_tp(tp)
       { }
@@ -30,10 +30,10 @@ class HTTP_DateTime
     // Parses a timestamp from an HTTP date/time string, like `parse()`.
     // An exception is thrown if the date/time string is not valid.
     explicit
-    HTTP_DateTime(chars_view str);
+    DateTime(chars_view str);
 
-    HTTP_DateTime&
-    swap(HTTP_DateTime& other) noexcept
+    DateTime&
+    swap(DateTime& other) noexcept
       {
         ::std::swap(this->m_tp, other.m_tp);
         return *this;
@@ -86,7 +86,7 @@ class HTTP_DateTime
     size_t
     parse_cookie_partial(const char* str);
 
-    // Try parsing an HTTP date/time in the ISO 8601 format. An example is
+    // Try parsing a general date/time in the ISO 8601 format. An example is
     // `1994-11-06 08:49:37`. The date and time parts shall be separated by a
     // space. This function returns the number of characters that have been
     // accepted, which is 19 upon success, and 0 upon failure.
@@ -135,7 +135,7 @@ class HTTP_DateTime
     size_t
     print_iso8601_partial(char* str) const noexcept;
 
-    // Converts this timestamp to its RFC 1123 form.
+    // Converts this timestamp to its ISO 8601 form.
     tinyfmt&
     print(tinyfmt& fmt) const;
 
@@ -143,47 +143,47 @@ class HTTP_DateTime
     print_to_string() const;
   };
 
-extern const HTTP_DateTime http_datetime_min;  // `Thu, 01 Jan 1970 00:00:00 GMT`; UNIX time `0`
-extern const HTTP_DateTime http_datetime_max;  // `Fri, 01 Jan 9999 00:00:00 GMT`; UNIX time `253370764800`
+extern const DateTime datetime_min;  // `1970-01-01 00:00:00 UTC` (Thursday; UNIX `0`)
+extern const DateTime datetime_max;  // `9999-01-01 00:00:00 UTC` (Friday; UNIX `253370764800`)
 
 constexpr
 bool
-operator==(const HTTP_DateTime& lhs, const HTTP_DateTime& rhs) noexcept
+operator==(const DateTime& lhs, const DateTime& rhs) noexcept
   { return lhs.as_unix_time() == rhs.as_unix_time();  }
 
 constexpr
 bool
-operator!=(const HTTP_DateTime& lhs, const HTTP_DateTime& rhs) noexcept
+operator!=(const DateTime& lhs, const DateTime& rhs) noexcept
   { return lhs.as_unix_time() != rhs.as_unix_time();  }
 
 constexpr
 bool
-operator<(const HTTP_DateTime& lhs, const HTTP_DateTime& rhs) noexcept
+operator<(const DateTime& lhs, const DateTime& rhs) noexcept
   { return lhs.as_unix_time() < rhs.as_unix_time();  }
 
 constexpr
 bool
-operator>(const HTTP_DateTime& lhs, const HTTP_DateTime& rhs) noexcept
+operator>(const DateTime& lhs, const DateTime& rhs) noexcept
   { return lhs.as_unix_time() > rhs.as_unix_time();  }
 
 constexpr
 bool
-operator<=(const HTTP_DateTime& lhs, const HTTP_DateTime& rhs) noexcept
+operator<=(const DateTime& lhs, const DateTime& rhs) noexcept
   { return lhs.as_unix_time() <= rhs.as_unix_time();  }
 
 constexpr
 bool
-operator>=(const HTTP_DateTime& lhs, const HTTP_DateTime& rhs) noexcept
+operator>=(const DateTime& lhs, const DateTime& rhs) noexcept
   { return lhs.as_unix_time() >= rhs.as_unix_time();  }
 
 inline
 void
-swap(HTTP_DateTime& lhs, HTTP_DateTime& rhs) noexcept
+swap(DateTime& lhs, DateTime& rhs) noexcept
   { lhs.swap(rhs);  }
 
 inline
 tinyfmt&
-operator<<(tinyfmt& fmt, const HTTP_DateTime& ts)
+operator<<(tinyfmt& fmt, const DateTime& ts)
   { return ts.print(fmt);  }
 
 }  // namespace poseidon

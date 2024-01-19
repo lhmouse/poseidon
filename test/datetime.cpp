@@ -2,7 +2,7 @@
 // Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
 
 #include "utils.hpp"
-#include "../poseidon/http/http_datetime.hpp"
+#include "../poseidon/base/datetime.hpp"
 using namespace ::poseidon;
 
 struct test_datetime
@@ -120,8 +120,8 @@ constexpr tests[] =
 int
 main()
   {
-    HTTP_DateTime dt;
-    POSEIDON_TEST_CHECK(dt == http_datetime_min);
+    DateTime dt;
+    POSEIDON_TEST_CHECK(dt == datetime_min);
     char temp[64];
 
     for(const auto& r : tests) {
@@ -160,7 +160,7 @@ main()
 
     for(const auto& r : tests) {
       dt.set_seconds_since_epoch((seconds) r.ts);
-      POSEIDON_TEST_CHECK(dt.print_to_string() == r.rfc1123);
+      POSEIDON_TEST_CHECK(dt.print_to_string() == r.iso8601);
 
       ::memset(temp, '*', sizeof(temp));
       dt.print_rfc1123_partial(temp);

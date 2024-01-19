@@ -5,13 +5,13 @@
 #define POSEIDON_HTTP_HTTP_VALUE_
 
 #include "../fwd.hpp"
-#include "http_datetime.hpp"
+#include "../base/datetime.hpp"
 namespace poseidon {
 
 class HTTP_Value
   {
   private:
-    variant<nullptr_t, cow_string, double, HTTP_DateTime> m_stor;
+    variant<nullptr_t, cow_string, double, DateTime> m_stor;
 
   public:
     // Value constructors
@@ -36,14 +36,14 @@ class HTTP_Value
         m_stor(static_cast<double>(num))
       { }
 
-    HTTP_Value(const HTTP_DateTime& dt) noexcept
+    HTTP_Value(const DateTime& dt) noexcept
       :
         m_stor(dt)
       { }
 
     HTTP_Value(system_time tm) noexcept
       :
-        m_stor(HTTP_DateTime(time_point_cast<seconds>(tm)))
+        m_stor(DateTime(time_point_cast<seconds>(tm)))
       { }
 
     HTTP_Value&
@@ -75,7 +75,7 @@ class HTTP_Value
       }
 
     HTTP_Value&
-    operator=(const HTTP_DateTime& dt) & noexcept
+    operator=(const DateTime& dt) & noexcept
       {
         this->set_datetime(dt);
         return *this;
@@ -162,27 +162,27 @@ class HTTP_Value
 
     bool
     is_datetime() const noexcept
-      { return this->m_stor.ptr<HTTP_DateTime>() != nullptr;  }
+      { return this->m_stor.ptr<DateTime>() != nullptr;  }
 
-    const HTTP_DateTime&
+    const DateTime&
     as_datetime() const
-      { return this->m_stor.as<HTTP_DateTime>();  }
+      { return this->m_stor.as<DateTime>();  }
 
-    HTTP_DateTime&
+    DateTime&
     mut_datetime()
-      { return this->m_stor.mut<HTTP_DateTime>();  }
+      { return this->m_stor.mut<DateTime>();  }
 
     void
-    set_datetime(const HTTP_DateTime& dt) noexcept
+    set_datetime(const DateTime& dt) noexcept
       { this->m_stor = dt;  }
 
     void
     set_datetime(system_time tm) noexcept
       {
-        if(auto pt = this->m_stor.mut_ptr<HTTP_DateTime>())
+        if(auto pt = this->m_stor.mut_ptr<DateTime>())
           pt->set_unix_time(time_point_cast<seconds>(tm));
         else
-          this->m_stor.emplace<HTTP_DateTime>(time_point_cast<seconds>(tm));
+          this->m_stor.emplace<DateTime>(time_point_cast<seconds>(tm));
       }
 
     // Try parsing a quoted string. Upon success, the number of characters that

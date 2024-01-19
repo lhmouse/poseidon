@@ -4,7 +4,7 @@ check_PROGRAMS +=  \
   %reldir%/deflator.test  \
   %reldir%/inflator.test  \
   %reldir%/uuid.test  \
-  %reldir%/http_datetime.test  \
+  %reldir%/datetime.test  \
   %reldir%/http_value.test  \
   %reldir%/http_header_parser.test  \
   %reldir%/http_query_parser.test  \

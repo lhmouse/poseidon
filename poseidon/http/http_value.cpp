@@ -102,11 +102,11 @@ size_t
 HTTP_Value::
 parse_datetime_partial(chars_view str)
   {
-    auto pdt = this->m_stor.mut_ptr<HTTP_DateTime>();
+    auto pdt = this->m_stor.mut_ptr<DateTime>();
     if(pdt)
       pdt->set_unix_time(unix_time());
     else
-      pdt = &(this->m_stor.emplace<HTTP_DateTime>());
+      pdt = &(this->m_stor.emplace<DateTime>());
 
     size_t aclen = pdt->parse(str);
     return aclen;
@@ -230,7 +230,7 @@ print(tinyfmt& fmt) const
           }
 
         void
-        operator()(const HTTP_DateTime& dt) const
+        operator()(const DateTime& dt) const
           {
             char sbuf[32];
             dt.print_rfc1123_partial(sbuf);

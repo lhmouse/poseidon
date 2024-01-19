@@ -12,6 +12,7 @@ nobase_include_HEADERS +=  \
   %reldir%/static/async_task_executor.hpp  \
   %reldir%/static/network_driver.hpp  \
   %reldir%/base/uuid.hpp  \
+  %reldir%/base/datetime.hpp  \
   %reldir%/base/config_file.hpp  \
   %reldir%/base/abstract_timer.hpp  \
   %reldir%/base/abstract_async_task.hpp  \
@@ -37,7 +38,6 @@ nobase_include_HEADERS +=  \
   %reldir%/socket/wss_server_session.hpp  \
   %reldir%/socket/wss_client_session.hpp  \
   %reldir%/socket/async_connect.hpp  \
-  %reldir%/http/http_datetime.hpp  \
   %reldir%/http/http_value.hpp  \
   %reldir%/http/http_header_parser.hpp  \
   %reldir%/http/http_query_parser.hpp  \
@@ -109,6 +109,7 @@ lib_libposeidon_la_SOURCES =  \
   %reldir%/static/async_task_executor.cpp  \
   %reldir%/static/network_driver.cpp  \
   %reldir%/base/uuid.cpp  \
+  %reldir%/base/datetime.cpp  \
   %reldir%/base/config_file.cpp  \
   %reldir%/base/abstract_timer.cpp  \
   %reldir%/base/abstract_async_task.cpp  \
@@ -133,7 +134,6 @@ lib_libposeidon_la_SOURCES =  \
   %reldir%/socket/wss_server_session.cpp  \
   %reldir%/socket/wss_client_session.cpp  \
   %reldir%/socket/async_connect.cpp  \
-  %reldir%/http/http_datetime.cpp  \
   %reldir%/http/http_value.cpp  \
   %reldir%/http/http_header_parser.cpp  \
   %reldir%/http/http_query_parser.cpp  \

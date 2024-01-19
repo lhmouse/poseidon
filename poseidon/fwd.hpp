@@ -496,7 +496,7 @@ enum Async_State : uint8_t
 
 // Base types
 class UUID;
-using GUID = UUID;
+class DateTime;
 class Config_File;
 class Abstract_Timer;
 class Abstract_Async_Task;
@@ -531,7 +531,6 @@ class WSS_Client_Session;
 class Async_Connect;
 
 // HTTP types
-class HTTP_DateTime;
 class HTTP_Value;
 class HTTP_Header_Parser;
 class HTTP_Query_Parser;
