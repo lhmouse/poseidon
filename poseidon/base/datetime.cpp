@@ -310,6 +310,7 @@ parse_iso8601_partial(const char* str)
     do_match(rptr, tm.tm_min, s_2digit, 2);
     do_match(rptr, ":", 1);
     do_match(rptr, tm.tm_sec, s_2digit, 2);
+    do_match(rptr, " UTC", 4);
 
     // Accept nothing if any of the operations above has failed.
     if(rptr == nullptr)
@@ -342,7 +343,7 @@ parse(chars_view str)
       if(size_t aclen = this->parse_cookie_partial(str.p))
         return aclen;
 
-    if(str.n >= 19)
+    if(str.n >= 23)
       if(size_t aclen = this->parse_iso8601_partial(str.p))
         return aclen;
 
@@ -478,7 +479,7 @@ print_iso8601_partial(char* str) const noexcept
     ::tm tm;
     ::gmtime_r(&tp, &tm);
 
-    // `1994-11-06 08:49:37`
+    // `1994-11-06 08:49:37 UTC`
     xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_year / 100 + 19], 2);
     xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_year % 100], 2);
     xstrrpcpy(wptr, "-");
@@ -491,7 +492,7 @@ print_iso8601_partial(char* str) const noexcept
     xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_min], 2);
     xstrrpcpy(wptr, ":");
     xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_sec], 2);
-    xstrrpcpy(wptr, "");
+    xstrrpcpy(wptr, " UTC");
 
     // Return the number of characters that have been written.
     return (size_t) (wptr - str);
