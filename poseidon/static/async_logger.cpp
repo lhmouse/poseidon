@@ -166,44 +166,38 @@ do_color(linear_buffer& mtext, const Level_Config& lconf, const char* code)
 void
 do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
   try {
-    // Compose the message to write.
     linear_buffer mtext;
-    char stemp[] = "2014-09-26 00:58:26.123456789 ";
-    uint64_t date;
     ::rocket::ascii_numput nump;
 
+    // Get the local system time.
     ::timespec tv;
     ::clock_gettime(CLOCK_REALTIME, &tv);
     ::tm tm;
     ::localtime_r(&(tv.tv_sec), &tm);
 
-    date = (uint32_t) tm.tm_year + 1900;
-    date *= 1000;
-    date += (uint32_t) tm.tm_mon + 1;
-    date *= 1000;
-    date += (uint32_t) tm.tm_mday;
-    date *= 1000;
-    date += (uint32_t) tm.tm_hour;
-    date *= 1000;
-    date += (uint32_t) tm.tm_min;
-    date *= 1000;
-    date += (uint32_t) tm.tm_sec;
-
-    nump.put_DU(date, 19);
-    ::memcpy(stemp, nump.data(), 19);
-
-    stemp[4] = '-';
-    stemp[7] = '-';
-    stemp[10] = ' ';
-    stemp[13] = ':';
-    stemp[16] = ':';
-
-    nump.put_DU((uint32_t) tv.tv_nsec, 9);
-    ::memcpy(stemp + 20, nump.data(), 9);
-
     // Write the timestamp and tag.
     do_color(mtext, lconf, lconf.color.c_str());  // level color
-    mtext.putn(stemp, 30);
+    nump.put_DU((uint32_t) tm.tm_year + 1900, 4);
+    mtext.putn(nump.data(), 4);
+    mtext.putc('-');
+    nump.put_DU((uint32_t) tm.tm_mon + 1, 2);
+    mtext.putn(nump.data(), 2);
+    mtext.putc('-');
+    nump.put_DU((uint32_t) tm.tm_mday, 2);
+    mtext.putn(nump.data(), 2);
+    mtext.putc(' ');
+    nump.put_DU((uint32_t) tm.tm_hour, 2);
+    mtext.putn(nump.data(), 2);
+    mtext.putc(':');
+    nump.put_DU((uint32_t) tm.tm_min, 2);
+    mtext.putn(nump.data(), 2);
+    mtext.putc(':');
+    nump.put_DU((uint32_t) tm.tm_sec, 2);
+    mtext.putn(nump.data(), 2);
+    mtext.putc('.');
+    nump.put_DU((uint32_t) tv.tv_nsec, 9);
+    mtext.putn(nump.data(), 9);
+    mtext.putc(' ');
     do_color(mtext, lconf, "22;7");  // no bright; inverse
     mtext.puts(lconf.tag);
     do_color(mtext, lconf, "0");  // reset
@@ -213,8 +207,8 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
     do_color(mtext, lconf, "0");  // reset
     do_color(mtext, lconf, lconf.color.c_str());
 
+    // Escape non-printable characters.
     for(char ch : msg.text) {
-      // Escape harmful characters.
       const char* seq = s_escapes[(uint8_t) ch];
       if(seq[1] == 0) {
         // non-escaped
@@ -254,7 +248,7 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
     mtext.putc(':');
     nump.put_DU(msg.ctx.line);
     mtext.putn(nump.data(), nump.size());
-    mtext.puts("' inside `");
+    mtext.puts("' inside function `");
     mtext.puts(msg.ctx.func);
     mtext.puts("`" NEL_HT_);
 

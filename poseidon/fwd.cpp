@@ -27,10 +27,10 @@ async_logger_check_level(Log_Level level) noexcept
   }
 
 void
-async_logger_enqueue(const Log_Context& ctx, vfptr<cow_string&, void*> invoke, void* compose) noexcept
+async_logger_enqueue(const Log_Context& ctx, vfptr<cow_string&, void*> thunk, void* compose) noexcept
   try {
     cow_string sbuf;
-    invoke(sbuf, compose);
+    (*thunk) (sbuf, compose);
     async_logger.enqueue(ctx, sbuf);
 
     if(ctx.level <= log_level_error)

@@ -605,22 +605,22 @@ bool
 async_logger_check_level(Log_Level level) noexcept;
 
 void
-async_logger_enqueue(const Log_Context& ctx, vfptr<cow_string&, void*> invoke, void* compose) noexcept;
+async_logger_enqueue(const Log_Context& ctx, vfptr<cow_string&, void*> thunk, void* compose) noexcept;
 
 // Define helper macros that compose log messages. The `TEMPLATE` argument shall
 // be a list of string literals in parentheses. Multiple strings are joined with
-// line separators. `format()` and `async_logger_enqueue()` are found via ADL.
+// line separators. `format()` is to be found via ADL.
 #define POSEIDON_LOG_G_(LEVEL, TEMPLATE, ...)  \
     (::poseidon::async_logger_check_level(::poseidon::log_level_##LEVEL)  \
       &&  \
       __extension__ ({  \
         auto compose = [&](::rocket::cow_string& sbuf)  \
           { format(sbuf, (::asteria::make_string_template TEMPLATE), ##__VA_ARGS__);  };  \
-        constexpr auto invoke = +[](::rocket::cow_string& sbuf, void* vp)  \
-          { (*(decltype(compose)*) vp) (sbuf);  };  \
+        constexpr auto thunk = [](::rocket::cow_string& sbuf, void* vp)  \
+          { (*static_cast<decltype(compose)*>(vp)) (sbuf);  };  \
         static const ::poseidon::Log_Context ctx =  \
-          { __FILE__, __LINE__, ::poseidon::log_level_##LEVEL, ROCKET_FUNCSIG };  \
-        async_logger_enqueue(ctx, invoke, &compose);  \
+          { __FILE__, __LINE__, ::poseidon::log_level_##LEVEL, __func__ };  \
+        ::poseidon::async_logger_enqueue(ctx, thunk, &compose);  \
         true;  \
       }))
 
