@@ -70,7 +70,7 @@ nobase_include_HEADERS +=  \
 
 if enable_mysql
 nobase_include_HEADERS +=  \
-  %reldir%/third/mysql.hpp  \
+  %reldir%/third/mysql_fwd.hpp  \
   %reldir%/mysql/enums.hpp  \
   %reldir%/mysql/mysql_table_structure.hpp  \
   %reldir%/mysql/mysql_value.hpp  \
