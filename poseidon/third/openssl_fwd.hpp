@@ -123,5 +123,5 @@ POSEIDON_OPENSSL_FWD_DEFINE_PTR_(X509);     // class X509_ptr
 POSEIDON_OPENSSL_FWD_DEFINE_PTR_(SSL_CTX);  // class SSL_CTX_ptr
 POSEIDON_OPENSSL_FWD_DEFINE_PTR_(SSL);      // class SSL_ptr
 
-} // namespace poseidon
+}  // namespace poseidon
 #endif

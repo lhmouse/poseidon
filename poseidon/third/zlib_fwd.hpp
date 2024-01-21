@@ -183,5 +183,5 @@ class inflate_Stream
       }
   };
 
-} // namespace poseidon
+}  // namespace poseidon
 #endif
