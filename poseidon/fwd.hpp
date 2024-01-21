@@ -137,6 +137,15 @@ using ::rocket::dynamic_pointer_cast;
 using ::rocket::const_pointer_cast;
 using ::rocket::sref;
 using ::rocket::nullopt;
+using ::rocket::min;
+using ::rocket::max;
+using ::rocket::clamp;
+using ::rocket::clamp_cast;
+using ::rocket::is_any_of;
+using ::rocket::is_none_of;
+using ::rocket::all_of;
+using ::rocket::any_of;
+using ::rocket::none_of;
 
 using ::rocket::xstrlen;
 using ::rocket::xstrchr;
@@ -156,6 +165,9 @@ using ::rocket::nullopt_t;
 using ::rocket::optional;
 using ::rocket::variant;
 using phsh_string = ::rocket::prehashed_string;
+
+using ::asteria::format;
+using ::asteria::format_string;
 
 template<typename T, typename U> using cow_bivector = cow_vector<pair<T, U>>;
 template<typename T> using uniptr = ::std::unique_ptr<T>;  // default deleter

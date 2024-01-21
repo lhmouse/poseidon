@@ -9,18 +9,6 @@
 #include <cstdio>
 namespace poseidon {
 
-using ::rocket::min;
-using ::rocket::max;
-using ::rocket::clamp;
-using ::rocket::clamp_cast;
-using ::rocket::is_any_of;
-using ::rocket::is_none_of;
-using ::rocket::all_of;
-using ::rocket::any_of;
-using ::rocket::none_of;
-using ::asteria::format;
-using ::asteria::format_string;
-
 // Performs a syscall and retries upon interrupts.
 // Note the arguments may be evaluated more than once.
 #define POSEIDON_SYSCALL_LOOP(...)  \
