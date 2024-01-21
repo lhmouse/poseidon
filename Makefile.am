@@ -19,9 +19,10 @@ END =
 AM_CPPFLAGS = -pipe -pthread -Wall -Wextra @host_asm_opt@ -Iposeidon  \
   -D_FILE_OFFSET_BITS=64 -D_POSIX_C_SOURCE=200809 -D_GNU_SOURCE  \
   -fnon-call-exceptions -DPOSEIDON_USE_NON_CALL_EXCEPTIONS  \
-  -f{strict-{aliasing,overflow},merge-all-constants,fast-math}  \
+  -f{strict-{aliasing,overflow},merge-all-constants}  \
   -fno-{stack-protector,align-{functions,jumps,loops}}  \
   -fno-{devirtualize-speculatively,semantic-interposition,ident}  \
+  -fno-{math-errno,trapping-math}  \
   -Werror={conversion,sign-{compare,conversion},write-strings}  \
   -Werror={return-type,double-promotion,missing-declarations}  \
   -W{missing-field-initializers,suggest-attribute=noreturn,shadow}  \
