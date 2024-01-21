@@ -42,11 +42,7 @@ class WebSocket_Deflator
     // Resets the deflator state. This is used when `no_context_takeover` is in
     // effect.
     void
-    deflate_reset(plain_mutex::unique_lock& lock)
-      {
-        lock.lock(this->m_def_mtx);
-        this->m_def_strm.reset();
-      }
+    deflate_reset(plain_mutex::unique_lock& lock) noexcept;
 
     // Compresses a part of the frame payload.
     void

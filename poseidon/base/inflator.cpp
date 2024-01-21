@@ -22,7 +22,7 @@ void
 Inflator::
 reset() noexcept
   {
-    this->m_strm.reset();
+    ::inflateReset(this->m_strm);
   }
 
 size_t
@@ -43,10 +43,11 @@ inflate(chars_view data)
             out_size, out_request);
 
       char* out_end = out_ptr + out_size;
-      err = this->m_strm.inflate(out_ptr, out_end, in_ptr, in_end);
+      this->m_strm.set_buffers(out_ptr, out_end, in_ptr, in_end);
+      err = ::inflate(this->m_strm, Z_SYNC_FLUSH);
 
-      if(out_ptr != out_end)
-        this->do_on_inflate_truncate_output_buffer((size_t) (out_end - out_ptr));
+      this->m_strm.get_buffers(out_ptr, in_ptr);
+      this->do_on_inflate_truncate_output_buffer(static_cast<size_t>(out_end - out_ptr));
 
       if(is_none_of(err, { Z_OK, Z_BUF_ERROR, Z_STREAM_END }))
         this->m_strm.throw_exception(err, "inflate");
@@ -76,10 +77,11 @@ finish()
             out_size, out_request);
 
       char* out_end = out_ptr + out_size;
-      err = this->m_strm.inflate(out_ptr, out_end, in_ptr, in_end);
+      this->m_strm.set_buffers(out_ptr, out_end, in_ptr, in_end);
+      err = ::inflate(this->m_strm, Z_SYNC_FLUSH);
 
-      if(out_ptr != out_end)
-        this->do_on_inflate_truncate_output_buffer((size_t) (out_end - out_ptr));
+      this->m_strm.get_buffers(out_ptr, in_ptr);
+      this->do_on_inflate_truncate_output_buffer(static_cast<size_t>(out_end - out_ptr));
 
       if(is_none_of(err, { Z_OK, Z_BUF_ERROR, Z_STREAM_END }))
         this->m_strm.throw_exception(err, "inflate");

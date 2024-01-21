@@ -22,7 +22,7 @@ void
 Deflator::
 reset() noexcept
   {
-    this->m_strm.reset();
+    ::deflateReset(this->m_strm);
   }
 
 size_t
@@ -47,10 +47,11 @@ deflate(chars_view data)
             out_size, out_request);
 
       char* out_end = out_ptr + out_size;
-      err = this->m_strm.deflate(out_ptr, out_end, in_ptr, in_end, Z_NO_FLUSH);
+      this->m_strm.set_buffers(out_ptr, out_end, in_ptr, in_end);
+      err = ::deflate(this->m_strm, Z_NO_FLUSH);
 
-      if(out_ptr != out_end)
-        this->do_on_deflate_truncate_output_buffer((size_t) (out_end - out_ptr));
+      this->m_strm.get_buffers(out_ptr, in_ptr);
+      this->do_on_deflate_truncate_output_buffer(static_cast<size_t>(out_end - out_ptr));
 
       if(is_none_of(err, { Z_OK, Z_BUF_ERROR, Z_STREAM_ERROR }))
         this->m_strm.throw_exception(err, "deflate");
@@ -80,10 +81,11 @@ sync_flush()
             out_size, out_request);
 
       char* out_end = out_ptr + out_size;
-      err = this->m_strm.deflate(out_ptr, out_end, in_ptr, in_end, Z_SYNC_FLUSH);
+      this->m_strm.set_buffers(out_ptr, out_end, in_ptr, in_end);
+      err = ::deflate(this->m_strm, Z_SYNC_FLUSH);
 
-      if(out_ptr != out_end)
-        this->do_on_deflate_truncate_output_buffer((size_t) (out_end - out_ptr));
+      this->m_strm.get_buffers(out_ptr, in_ptr);
+      this->do_on_deflate_truncate_output_buffer(static_cast<size_t>(out_end - out_ptr));
 
       if(is_none_of(err, { Z_OK, Z_BUF_ERROR, Z_STREAM_ERROR }))
         this->m_strm.throw_exception(err, "deflate");
@@ -113,10 +115,11 @@ full_flush()
             out_size, out_request);
 
       char* out_end = out_ptr + out_size;
-      err = this->m_strm.deflate(out_ptr, out_end, in_ptr, in_end, Z_FULL_FLUSH);
+      this->m_strm.set_buffers(out_ptr, out_end, in_ptr, in_end);
+      err = ::deflate(this->m_strm, Z_FULL_FLUSH);
 
-      if(out_ptr != out_end)
-        this->do_on_deflate_truncate_output_buffer((size_t) (out_end - out_ptr));
+      this->m_strm.get_buffers(out_ptr, in_ptr);
+      this->do_on_deflate_truncate_output_buffer(static_cast<size_t>(out_end - out_ptr));
 
       if(is_none_of(err, { Z_OK, Z_BUF_ERROR, Z_STREAM_ERROR }))
         this->m_strm.throw_exception(err, "deflate");
@@ -146,10 +149,11 @@ finish()
             out_size, out_request);
 
       char* out_end = out_ptr + out_size;
-      err = this->m_strm.deflate(out_ptr, out_end, in_ptr, in_end, Z_FINISH);
+      this->m_strm.set_buffers(out_ptr, out_end, in_ptr, in_end);
+      err = ::deflate(this->m_strm, Z_FINISH);
 
-      if(out_ptr != out_end)
-        this->do_on_deflate_truncate_output_buffer((size_t) (out_end - out_ptr));
+      this->m_strm.get_buffers(out_ptr, in_ptr);
+      this->do_on_deflate_truncate_output_buffer(static_cast<size_t>(out_end - out_ptr));
 
       if(is_none_of(err, { Z_OK, Z_BUF_ERROR, Z_STREAM_END }))
         this->m_strm.throw_exception(err, "deflate");

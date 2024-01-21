@@ -57,18 +57,26 @@ class deflate_Stream
         ::deflateEnd(this->m_zstrm);
       }
 
+    constexpr operator
+    const ::z_stream*() const noexcept
+      { return this->m_zstrm;  }
+
+    operator
+    ::z_stream*() noexcept
+      { return this->m_zstrm;  }
+
     [[noreturn]]
     void
     throw_exception(int err, const char* func) const
       {
         const char* msg;
 
-        if(this->m_zstrm->msg)
-          msg = this->m_zstrm->msg;
+        if(err == Z_VERSION_ERROR)
+          msg = "zlib library version mismatch";
         else if(err == Z_MEM_ERROR)
           msg = "memory allocation failure";
-        else if(err == Z_VERSION_ERROR)
-          msg = "zlib library version mismatch";
+        else if(this->m_zstrm->msg != nullptr)
+          msg = this->m_zstrm->msg;
         else
           msg = "no error message";
 
@@ -78,24 +86,19 @@ class deflate_Stream
       }
 
     void
-    reset() noexcept
+    get_buffers(char*& ocur, const char*& icur) noexcept
       {
-        ::deflateReset(this->m_zstrm);
+        ocur = reinterpret_cast<char*>(this->m_zstrm->next_out);
+        icur = reinterpret_cast<const char*>(this->m_zstrm->next_in);
       }
 
-    int
-    deflate(char*& out_p, char* out_end, const char*& in_p, const char* in_end, int flush) noexcept
+    void
+    set_buffers(char* ocur, char* oend, const char* icur, const char* iend) noexcept
       {
-        this->m_zstrm->next_out = (::Bytef*) out_p;
-        this->m_zstrm->avail_out = (::uInt) ::rocket::min(out_end - out_p, INT_MAX);
-        this->m_zstrm->next_in = (const ::Bytef*) in_p;
-        this->m_zstrm->avail_in = (::uInt) ::rocket::min(in_end - in_p, INT_MAX);
-
-        int err = ::deflate(this->m_zstrm, flush);
-
-        out_p = (char*) this->m_zstrm->next_out;
-        in_p = (const char*) this->m_zstrm->next_in;
-        return err;
+        this->m_zstrm->next_out = reinterpret_cast<::Bytef*>(ocur);
+        this->m_zstrm->avail_out = ::rocket::clamp_cast<::uInt>(oend - ocur, 0, INT_MAX);
+        this->m_zstrm->next_in = reinterpret_cast<const ::Bytef*>(icur);
+        this->m_zstrm->avail_in = ::rocket::clamp_cast<const ::uInt>(iend - icur, 0, INT_MAX);
       }
   };
 
@@ -141,18 +144,26 @@ class inflate_Stream
         ::inflateEnd(this->m_zstrm);
       }
 
+    constexpr operator
+    const ::z_stream*() const noexcept
+      { return this->m_zstrm;  }
+
+    operator
+    ::z_stream*() noexcept
+      { return this->m_zstrm;  }
+
     [[noreturn]]
     void
     throw_exception(int err, const char* func) const
       {
         const char* msg;
 
-        if(this->m_zstrm->msg)
-          msg = this->m_zstrm->msg;
+        if(err == Z_VERSION_ERROR)
+          msg = "zlib library version mismatch";
         else if(err == Z_MEM_ERROR)
           msg = "memory allocation failure";
-        else if(err == Z_VERSION_ERROR)
-          msg = "zlib library version mismatch";
+        else if(this->m_zstrm->msg != nullptr)
+          msg = this->m_zstrm->msg;
         else
           msg = "no error message";
 
@@ -162,24 +173,19 @@ class inflate_Stream
       }
 
     void
-    reset() noexcept
+    get_buffers(char*& ocur, const char*& icur) const noexcept
       {
-        ::inflateReset(this->m_zstrm);
+        ocur = reinterpret_cast<char*>(this->m_zstrm->next_out);
+        icur = reinterpret_cast<const char*>(this->m_zstrm->next_in);
       }
 
-    int
-    inflate(char*& out_p, char* out_end, const char*& in_p, const char* in_end) noexcept
+    void
+    set_buffers(char* ocur, char* oend, const char* icur, const char* iend) noexcept
       {
-        this->m_zstrm->next_out = (::Bytef*) out_p;
-        this->m_zstrm->avail_out = (::uInt) ::rocket::min(out_end - out_p, INT_MAX);
-        this->m_zstrm->next_in = (const ::Bytef*) in_p;
-        this->m_zstrm->avail_in = (::uInt) ::rocket::min(in_end - in_p, INT_MAX);
-
-        int err = ::inflate(this->m_zstrm, Z_SYNC_FLUSH);
-
-        out_p = (char*) this->m_zstrm->next_out;
-        in_p = (const char*) this->m_zstrm->next_in;
-        return err;
+        this->m_zstrm->next_out = reinterpret_cast<::Bytef*>(ocur);
+        this->m_zstrm->avail_out = ::rocket::clamp_cast<::uInt>(oend - ocur, 0, INT_MAX);
+        this->m_zstrm->next_in = reinterpret_cast<const ::Bytef*>(icur);
+        this->m_zstrm->avail_in = ::rocket::clamp_cast<const ::uInt>(iend - icur, 0, INT_MAX);
       }
   };
 

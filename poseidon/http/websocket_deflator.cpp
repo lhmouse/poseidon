@@ -22,6 +22,14 @@ WebSocket_Deflator::
 
 void
 WebSocket_Deflator::
+deflate_reset(plain_mutex::unique_lock& lock) noexcept
+  {
+    lock.lock(this->m_def_mtx);
+    ::deflateReset(this->m_def_strm);
+  }
+
+void
+WebSocket_Deflator::
 deflate_message_stream(plain_mutex::unique_lock& lock, chars_view data)
   {
     lock.lock(this->m_def_mtx);
@@ -37,9 +45,11 @@ deflate_message_stream(plain_mutex::unique_lock& lock, chars_view data)
       // Allocate an output buffer and write compressed data there.
       size_t out_size = this->m_def_buf.reserve_after_end(1024);
       char* out_ptr = this->m_def_buf.mut_end();
+      this->m_def_strm.set_buffers(out_ptr, out_ptr + out_size, in_ptr, in_end);
+      err = ::deflate(this->m_def_strm, Z_NO_FLUSH);
 
-      err = this->m_def_strm.deflate(out_ptr, out_ptr + out_size, in_ptr, in_end, Z_NO_FLUSH);
-      this->m_def_buf.accept((size_t) (out_ptr - this->m_def_buf.mut_end()));
+      this->m_def_strm.get_buffers(out_ptr, in_ptr);
+      this->m_def_buf.accept(static_cast<size_t>(out_ptr - this->m_def_buf.mut_end()));
 
       if(is_none_of(err, { Z_OK, Z_BUF_ERROR }))
         this->m_def_strm.throw_exception(err, "deflate");
@@ -61,9 +71,11 @@ deflate_message_finish(plain_mutex::unique_lock& lock)
       // Allocate an output buffer and write compressed data there.
       size_t out_size = this->m_def_buf.reserve_after_end(16);
       char* out_ptr = this->m_def_buf.mut_end();
+      this->m_def_strm.set_buffers(out_ptr, out_ptr + out_size, in_ptr, in_end);
+      err = ::deflate(this->m_def_strm, Z_SYNC_FLUSH);
 
-      err = this->m_def_strm.deflate(out_ptr, out_ptr + out_size, in_ptr, in_end, Z_SYNC_FLUSH);
-      this->m_def_buf.accept((size_t) (out_ptr - this->m_def_buf.mut_end()));
+      this->m_def_strm.get_buffers(out_ptr, in_ptr);
+      this->m_def_buf.accept(static_cast<size_t>(out_ptr - this->m_def_buf.mut_end()));
 
       if(is_none_of(err, { Z_OK, Z_BUF_ERROR }))
         this->m_def_strm.throw_exception(err, "deflate");
@@ -91,9 +103,11 @@ inflate_message_stream(plain_mutex::unique_lock& lock, chars_view data)
       // Allocate an output buffer and write compressed data there.
       size_t out_size = this->m_inf_buf.reserve_after_end(1024);
       char* out_ptr = this->m_inf_buf.mut_end();
+      this->m_inf_strm.set_buffers(out_ptr, out_ptr + out_size, in_ptr, in_end);
+      err = ::inflate(this->m_inf_strm, Z_SYNC_FLUSH);
 
-      err = this->m_inf_strm.inflate(out_ptr, out_ptr + out_size, in_ptr, in_end);
-      this->m_inf_buf.accept((size_t) (out_ptr - this->m_inf_buf.mut_end()));
+      this->m_inf_strm.get_buffers(out_ptr, in_ptr);
+      this->m_inf_buf.accept(static_cast<size_t>(out_ptr - this->m_inf_buf.mut_end()));
 
       if(is_none_of(err, { Z_OK, Z_BUF_ERROR }))
         this->m_inf_strm.throw_exception(err, "inflate");
@@ -115,9 +129,11 @@ inflate_message_finish(plain_mutex::unique_lock& lock)
       // Allocate an output buffer and write compressed data there.
       size_t out_size = this->m_inf_buf.reserve_after_end(16);
       char* out_ptr = this->m_inf_buf.mut_end();
+      this->m_inf_strm.set_buffers(out_ptr, out_ptr + out_size, in_ptr, in_end);
+      err = ::inflate(this->m_inf_strm, Z_SYNC_FLUSH);
 
-      err = this->m_inf_strm.inflate(out_ptr, out_ptr + out_size, in_ptr, in_end);
-      this->m_inf_buf.accept((size_t) (out_ptr - this->m_inf_buf.mut_end()));
+      this->m_inf_strm.get_buffers(out_ptr, in_ptr);
+      this->m_inf_buf.accept(static_cast<size_t>(out_ptr - this->m_inf_buf.mut_end()));
 
       if(is_none_of(err, { Z_OK, Z_BUF_ERROR }))
         this->m_inf_strm.throw_exception(err, "inflate");
