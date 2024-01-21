@@ -22,15 +22,13 @@ namespace poseidon {
       OBJ##_ptr(nullptr_t = nullptr) noexcept  \
         :  \
           m_ptr(nullptr)  \
-        {  \
-        }  \
+        { }  \
   \
       explicit constexpr  \
       OBJ##_ptr(::OBJ* ptr) noexcept  \
         :  \
           m_ptr(ptr)  \
-        {  \
-        }  \
+        { }  \
   \
       OBJ##_ptr(const OBJ##_ptr& other) noexcept  \
         {  \
@@ -112,9 +110,7 @@ namespace poseidon {
   inline  \
   void  \
   swap(OBJ##_ptr& lhs, OBJ##_ptr& rhs) noexcept  \
-    {  \
-      lhs.swap(rhs);  \
-    }  \
+    { lhs.swap(rhs);  }  \
   \
   class OBJ##_ptr  // no semicolon
 
