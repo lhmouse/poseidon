@@ -115,10 +115,6 @@ class HTTP_Value
     as_string() const
       { return this->m_stor.as<cow_string>();  }
 
-    cow_string&
-    mut_string()
-      { return this->m_stor.mut<cow_string>();  }
-
     const char*
     str_data() const
       { return this->m_stor.as<cow_string>().c_str();  }
@@ -126,6 +122,10 @@ class HTTP_Value
     size_t
     str_length() const
       { return this->m_stor.as<cow_string>().length();  }
+
+    cow_string&
+    mut_string()
+      { return this->m_stor.mut<cow_string>();  }
 
     void
     set_string(cow_stringR str) noexcept
@@ -164,13 +164,13 @@ class HTTP_Value
     as_datetime() const
       { return this->m_stor.as<DateTime>();  }
 
-    DateTime&
-    mut_datetime()
-      { return this->m_stor.mut<DateTime>();  }
-
     time_t
     as_time_t() const
       { return this->m_stor.as<DateTime>().as_time_t();  }
+
+    DateTime&
+    mut_datetime()
+      { return this->m_stor.mut<DateTime>();  }
 
     void
     set_datetime(const DateTime& dt) noexcept
