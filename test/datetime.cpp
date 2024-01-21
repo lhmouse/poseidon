@@ -121,45 +121,45 @@ int
 main()
   {
     DateTime dt;
-    POSEIDON_TEST_CHECK(dt == datetime_min);
+    POSEIDON_TEST_CHECK(dt == system_time());
     char temp[64];
 
     for(const auto& r : tests) {
-      dt.set_unix_time({});
+      dt.set_system_time({});
       POSEIDON_TEST_CHECK(dt.parse_rfc1123_partial(r.rfc1123) == ::strlen(r.rfc1123));
-      POSEIDON_TEST_CHECK(dt.as_seconds_since_epoch() == (seconds) r.ts);
+      POSEIDON_TEST_CHECK(dt.as_time_t() == r.ts);
 
-      dt.set_unix_time({});
+      dt.set_system_time({});
       POSEIDON_TEST_CHECK(dt.parse_iso8601_partial(r.iso8601) == ::strlen(r.iso8601));
-      POSEIDON_TEST_CHECK(dt.as_seconds_since_epoch() == (seconds) r.ts);
+      POSEIDON_TEST_CHECK(dt.as_time_t() == r.ts);
 
-      dt.set_unix_time({});
+      dt.set_system_time({});
       POSEIDON_TEST_CHECK(dt.parse_rfc850_partial(r.rfc850) == ::strlen(r.rfc850));
-      POSEIDON_TEST_CHECK(dt.as_seconds_since_epoch() == (seconds) r.ts);
+      POSEIDON_TEST_CHECK(dt.as_time_t() == r.ts);
 
-      dt.set_unix_time({});
+      dt.set_system_time({});
       POSEIDON_TEST_CHECK(dt.parse_asctime_partial(r.asctime) == ::strlen(r.asctime));
-      POSEIDON_TEST_CHECK(dt.as_seconds_since_epoch() == (seconds) r.ts);
+      POSEIDON_TEST_CHECK(dt.as_time_t() == r.ts);
 
-      dt.set_unix_time({});
+      dt.set_system_time({});
       POSEIDON_TEST_CHECK(dt.parse(r.rfc1123) == ::strlen(r.rfc1123));
-      POSEIDON_TEST_CHECK(dt.as_seconds_since_epoch() == (seconds) r.ts);
+      POSEIDON_TEST_CHECK(dt.as_time_t() == r.ts);
 
-      dt.set_unix_time({});
+      dt.set_system_time({});
       POSEIDON_TEST_CHECK(dt.parse(r.iso8601) == ::strlen(r.iso8601));
-      POSEIDON_TEST_CHECK(dt.as_seconds_since_epoch() == (seconds) r.ts);
+      POSEIDON_TEST_CHECK(dt.as_time_t() == r.ts);
 
-      dt.set_unix_time({});
+      dt.set_system_time({});
       POSEIDON_TEST_CHECK(dt.parse(r.rfc850) == ::strlen(r.rfc850));
-      POSEIDON_TEST_CHECK(dt.as_seconds_since_epoch() == (seconds) r.ts);
+      POSEIDON_TEST_CHECK(dt.as_time_t() == r.ts);
 
-      dt.set_unix_time({});
+      dt.set_system_time({});
       POSEIDON_TEST_CHECK(dt.parse(r.asctime) == ::strlen(r.asctime));
-      POSEIDON_TEST_CHECK(dt.as_seconds_since_epoch() == (seconds) r.ts);
+      POSEIDON_TEST_CHECK(dt.as_time_t() == r.ts);
     }
 
     for(const auto& r : tests) {
-      dt.set_seconds_since_epoch((seconds) r.ts);
+      dt.set_time_t(r.ts);
       POSEIDON_TEST_CHECK(dt.print_to_string() == r.iso8601);
 
       ::memset(temp, '*', sizeof(temp));

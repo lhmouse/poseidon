@@ -10,10 +10,10 @@ namespace poseidon {
 class DateTime
   {
   private:
-    unix_time m_tp;
+    system_time m_tp;
 
   public:
-    // Initializes a timestamp of `1970-01-01 00:00:00 Z`.
+    // Initializes a timestamp of `1970-01-01 00:00:00 UTC`.
     constexpr
     DateTime() noexcept
       :
@@ -22,7 +22,7 @@ class DateTime
 
     // Initializes a timestamp from a foreign source.
     constexpr
-    DateTime(unix_time tp) noexcept
+    DateTime(system_time tp) noexcept
       :
         m_tp(tp)
       { }
@@ -42,22 +42,21 @@ class DateTime
   public:
     // Accesses raw data.
     constexpr
-    unix_time
-    as_unix_time() const noexcept
+    system_time
+    as_system_time() const noexcept
       { return this->m_tp;  }
 
     void
-    set_unix_time(unix_time tp) noexcept
+    set_system_time(system_time tp) noexcept
       { this->m_tp = tp;  }
 
-    constexpr
-    seconds
-    as_seconds_since_epoch() const noexcept
-      { return this->m_tp.time_since_epoch();  }
+    time_t
+    as_time_t() const noexcept
+      { return system_clock::to_time_t(this->m_tp);  }
 
     void
-    set_seconds_since_epoch(seconds td) noexcept
-      { this->m_tp = (unix_time) td;  }
+    set_time_t(time_t tp) noexcept
+      { this->m_tp = system_clock::from_time_t(tp);  }
 
     // Try parsing an HTTP date/time in the formal RFC 1123 format. An example
     // is `Sun, 06 Nov 1994 08:49:37 GMT`. This function returns the number of
@@ -143,38 +142,35 @@ class DateTime
     print_to_string() const;
   };
 
-extern const DateTime datetime_min;  // `1970-01-01 00:00:00 UTC` (Thursday; UNIX `0`)
-extern const DateTime datetime_max;  // `9999-01-01 00:00:00 UTC` (Friday; UNIX `253370764800`)
-
 constexpr
 bool
 operator==(const DateTime& lhs, const DateTime& rhs) noexcept
-  { return lhs.as_unix_time() == rhs.as_unix_time();  }
+  { return lhs.as_system_time() == rhs.as_system_time();  }
 
 constexpr
 bool
 operator!=(const DateTime& lhs, const DateTime& rhs) noexcept
-  { return lhs.as_unix_time() != rhs.as_unix_time();  }
+  { return lhs.as_system_time() != rhs.as_system_time();  }
 
 constexpr
 bool
 operator<(const DateTime& lhs, const DateTime& rhs) noexcept
-  { return lhs.as_unix_time() < rhs.as_unix_time();  }
+  { return lhs.as_system_time() < rhs.as_system_time();  }
 
 constexpr
 bool
 operator>(const DateTime& lhs, const DateTime& rhs) noexcept
-  { return lhs.as_unix_time() > rhs.as_unix_time();  }
+  { return lhs.as_system_time() > rhs.as_system_time();  }
 
 constexpr
 bool
 operator<=(const DateTime& lhs, const DateTime& rhs) noexcept
-  { return lhs.as_unix_time() <= rhs.as_unix_time();  }
+  { return lhs.as_system_time() <= rhs.as_system_time();  }
 
 constexpr
 bool
 operator>=(const DateTime& lhs, const DateTime& rhs) noexcept
-  { return lhs.as_unix_time() >= rhs.as_unix_time();  }
+  { return lhs.as_system_time() >= rhs.as_system_time();  }
 
 inline
 void

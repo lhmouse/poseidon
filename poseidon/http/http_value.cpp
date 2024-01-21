@@ -104,7 +104,7 @@ parse_datetime_partial(chars_view str)
   {
     auto pdt = this->m_stor.mut_ptr<DateTime>();
     if(pdt)
-      pdt->set_unix_time(unix_time());
+      pdt->set_system_time(system_time());
     else
       pdt = &(this->m_stor.emplace<DateTime>());
 

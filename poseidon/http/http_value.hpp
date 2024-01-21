@@ -156,10 +156,6 @@ class HTTP_Value
     set_number(double num) noexcept
       { this->m_stor = num;  }
 
-    void
-    set_number(int num) noexcept
-      { this->m_stor = static_cast<double>(num);  }
-
     bool
     is_datetime() const noexcept
       { return this->m_stor.ptr<DateTime>() != nullptr;  }
@@ -172,18 +168,17 @@ class HTTP_Value
     mut_datetime()
       { return this->m_stor.mut<DateTime>();  }
 
+    time_t
+    as_time_t() const
+      { return this->m_stor.as<DateTime>().as_time_t();  }
+
     void
     set_datetime(const DateTime& dt) noexcept
       { this->m_stor = dt;  }
 
     void
-    set_datetime(system_time tm) noexcept
-      {
-        if(auto pt = this->m_stor.mut_ptr<DateTime>())
-          pt->set_unix_time(time_point_cast<seconds>(tm));
-        else
-          this->m_stor.emplace<DateTime>(time_point_cast<seconds>(tm));
-      }
+    set_time_t(time_t dt) noexcept
+      { this->m_stor.emplace<DateTime>().set_time_t(dt);  }
 
     // Try parsing a quoted string. Upon success, the number of characters that
     // have been accepted is returned. Otherwise zero is returned, and the

@@ -89,7 +89,6 @@ constexpr weeks zero_duration = { };
 using ::std::chrono::time_point;
 using ::std::chrono::system_clock;
 using system_time = system_clock::time_point;
-using unix_time = time_point<system_clock, seconds>;
 using ::std::chrono::steady_clock;
 using steady_time = steady_clock::time_point;
 

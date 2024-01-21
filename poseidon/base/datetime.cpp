@@ -144,9 +144,6 @@ do_match(const char*& rptr_out, int& add_to_value, const char (&cstrs)[N][S], in
 
 }  // namespace
 
-const DateTime datetime_min = (unix_time)        0h;  // 1970-01-01
-const DateTime datetime_max = (unix_time) 70380768h;  // 9999-01-01
-
 DateTime::
 DateTime(chars_view str)
   {
@@ -184,7 +181,7 @@ parse_rfc1123_partial(const char* str)
       return 0;
 
     // Compose the timestamp.
-    this->m_tp = (unix_time)(seconds) ::timegm(&tm);
+    this->m_tp = (system_time)(seconds) ::timegm(&tm);
     return (size_t) (rptr - str);
   }
 
@@ -217,7 +214,7 @@ parse_rfc850_partial(const char* str)
       return 0;
 
     // Compose the timestamp.
-    this->m_tp = (unix_time)(seconds) ::timegm(&tm);
+    this->m_tp = (system_time)(seconds) ::timegm(&tm);
     return (size_t) (rptr - str);
   }
 
@@ -250,7 +247,7 @@ parse_asctime_partial(const char* str)
       return 0;
 
     // Compose the timestamp.
-    this->m_tp = (unix_time)(seconds) ::timegm(&tm);
+    this->m_tp = (system_time)(seconds) ::timegm(&tm);
     return (size_t) (rptr - str);
   }
 
@@ -284,7 +281,7 @@ parse_cookie_partial(const char* str)
       return 0;
 
     // Compose the timestamp.
-    this->m_tp = (unix_time)(seconds) ::timegm(&tm);
+    this->m_tp = (system_time)(seconds) ::timegm(&tm);
     return (size_t) (rptr - str);
   }
 
@@ -317,7 +314,7 @@ parse_iso8601_partial(const char* str)
       return 0;
 
     // Compose the timestamp.
-    this->m_tp = (unix_time)(seconds) ::timegm(&tm);
+    this->m_tp = (system_time)(seconds) ::timegm(&tm);
     return (size_t) (rptr - str);
   }
 
@@ -355,7 +352,7 @@ DateTime::
 print_rfc1123_partial(char* str) const noexcept
   {
     char* wptr = str;
-    ::time_t tp = this->m_tp.time_since_epoch().count();
+    ::time_t tp = system_clock::to_time_t(this->m_tp);
     ::tm tm;
     ::gmtime_r(&tp, &tm);
 
@@ -385,7 +382,7 @@ DateTime::
 print_rfc850_partial(char* str) const noexcept
   {
     char* wptr = str;
-    ::time_t tp = this->m_tp.time_since_epoch().count();
+    ::time_t tp = system_clock::to_time_t(this->m_tp);
     ::tm tm;
     ::gmtime_r(&tp, &tm);
 
@@ -415,7 +412,7 @@ DateTime::
 print_asctime_partial(char* str) const noexcept
   {
     char* wptr = str;
-    ::time_t tp = this->m_tp.time_since_epoch().count();
+    ::time_t tp = system_clock::to_time_t(this->m_tp);
     ::tm tm;
     ::gmtime_r(&tp, &tm);
 
@@ -445,7 +442,7 @@ DateTime::
 print_cookie_partial(char* str) const noexcept
   {
     char* wptr = str;
-    ::time_t tp = this->m_tp.time_since_epoch().count();
+    ::time_t tp = system_clock::to_time_t(this->m_tp);
     ::tm tm;
     ::gmtime_r(&tp, &tm);
 
@@ -475,7 +472,7 @@ DateTime::
 print_iso8601_partial(char* str) const noexcept
   {
     char* wptr = str;
-    ::time_t tp = this->m_tp.time_since_epoch().count();
+    ::time_t tp = system_clock::to_time_t(this->m_tp);
     ::tm tm;
     ::gmtime_r(&tp, &tm);
 
