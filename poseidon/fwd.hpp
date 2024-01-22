@@ -583,6 +583,16 @@ class Easy_WS_Client;
 class Easy_WSS_Server;
 class Easy_WSS_Client;
 
+// Helper types for third-party libraries
+class BIO_ptr;
+class X509_ptr;
+class SSL_CTX_ptr;
+class SSL_ptr;
+class zlib_Stream_base;
+class deflate_Stream;
+class inflate_Stream;
+class MySQL_Client;
+
 // Singletons
 extern atomic_relaxed<int> exit_signal;
 extern class Main_Config& main_config;

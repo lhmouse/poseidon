@@ -114,10 +114,10 @@ namespace poseidon {
   \
   class OBJ##_ptr  // no semicolon
 
-POSEIDON_OPENSSL_FWD_DEFINE_PTR_(BIO);      // class BIO_ptr
-POSEIDON_OPENSSL_FWD_DEFINE_PTR_(X509);     // class X509_ptr
-POSEIDON_OPENSSL_FWD_DEFINE_PTR_(SSL_CTX);  // class SSL_CTX_ptr
-POSEIDON_OPENSSL_FWD_DEFINE_PTR_(SSL);      // class SSL_ptr
+POSEIDON_OPENSSL_FWD_DEFINE_PTR_(BIO);      // class BIO_ptr;
+POSEIDON_OPENSSL_FWD_DEFINE_PTR_(X509);     // class X509_ptr;
+POSEIDON_OPENSSL_FWD_DEFINE_PTR_(SSL_CTX);  // class SSL_CTX_ptr;
+POSEIDON_OPENSSL_FWD_DEFINE_PTR_(SSL);      // class SSL_ptr;
 
 }  // namespace poseidon
 #endif

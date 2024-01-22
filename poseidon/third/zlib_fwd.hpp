@@ -10,21 +10,74 @@
 #include <zlib.h>
 namespace poseidon {
 
-class deflate_Stream
+class zlib_Stream_base
   {
-  private:
-    ::z_stream m_zstrm[1];
+  protected:
+    mutable ::z_stream m_zstrm[1];
 
-  public:
-    explicit
-    deflate_Stream(zlib_Format fmt, uint8_t wbits, int level)
+  protected:
+    zlib_Stream_base() noexcept
       {
         this->m_zstrm->zalloc = nullptr;
         this->m_zstrm->zfree = nullptr;
         this->m_zstrm->opaque = nullptr;
-        this->m_zstrm->next_in = (const ::Bytef*) "";
+        this->m_zstrm->next_in = nullptr;
         this->m_zstrm->avail_in = 0;
+      }
 
+    ASTERIA_NONCOPYABLE_DESTRUCTOR(zlib_Stream_base) = default;
+
+  public:
+    constexpr operator
+    const ::z_stream*() const noexcept
+      { return this->m_zstrm;  }
+
+    operator
+    ::z_stream*() noexcept
+      { return this->m_zstrm;  }
+
+    [[noreturn]]
+    void
+    throw_exception(int err, const char* func) const
+      {
+        const char* msg;
+
+        if(err == Z_VERSION_ERROR)
+          msg = "zlib library version mismatch";
+        else if(err == Z_MEM_ERROR)
+          msg = "memory allocation failure";
+        else if(this->m_zstrm->msg != nullptr)
+          msg = this->m_zstrm->msg;
+        else
+          msg = "no error message";
+
+        ::rocket::sprintf_and_throw<::std::runtime_error>(
+            "zlib error: %s\n[`%s()` returned `%d`]",
+            msg, func, err);
+      }
+
+    void
+    get_buffers(char*& ocur, const char*& icur) noexcept
+      {
+        ocur = reinterpret_cast<char*>(this->m_zstrm->next_out);
+        icur = reinterpret_cast<const char*>(this->m_zstrm->next_in);
+      }
+
+    void
+    set_buffers(char* ocur, char* oend, const char* icur, const char* iend) noexcept
+      {
+        this->m_zstrm->next_out = reinterpret_cast<::Bytef*>(ocur);
+        this->m_zstrm->avail_out = ::rocket::clamp_cast<::uInt>(oend - ocur, 0, INT_MAX);
+        this->m_zstrm->next_in = reinterpret_cast<const ::Bytef*>(icur);
+        this->m_zstrm->avail_in = ::rocket::clamp_cast<const ::uInt>(iend - icur, 0, INT_MAX);
+      }
+  };
+
+struct deflate_Stream : zlib_Stream_base
+  {
+    explicit
+    deflate_Stream(zlib_Format fmt, uint8_t wbits, int level)
+      {
         if((wbits < 9) || (wbits > 15))
           ::rocket::sprintf_and_throw<::std::invalid_argument>(
               "deflate_Stream: window bits `%d` not valid",
@@ -56,67 +109,13 @@ class deflate_Stream
       {
         ::deflateEnd(this->m_zstrm);
       }
-
-    constexpr operator
-    const ::z_stream*() const noexcept
-      { return this->m_zstrm;  }
-
-    operator
-    ::z_stream*() noexcept
-      { return this->m_zstrm;  }
-
-    [[noreturn]]
-    void
-    throw_exception(int err, const char* func) const
-      {
-        const char* msg;
-
-        if(err == Z_VERSION_ERROR)
-          msg = "zlib library version mismatch";
-        else if(err == Z_MEM_ERROR)
-          msg = "memory allocation failure";
-        else if(this->m_zstrm->msg != nullptr)
-          msg = this->m_zstrm->msg;
-        else
-          msg = "no error message";
-
-        ::rocket::sprintf_and_throw<::std::runtime_error>(
-            "deflate_Stream: zlib error: %s\n[`%s()` returned `%d`]",
-            msg, func, err);
-      }
-
-    void
-    get_buffers(char*& ocur, const char*& icur) noexcept
-      {
-        ocur = reinterpret_cast<char*>(this->m_zstrm->next_out);
-        icur = reinterpret_cast<const char*>(this->m_zstrm->next_in);
-      }
-
-    void
-    set_buffers(char* ocur, char* oend, const char* icur, const char* iend) noexcept
-      {
-        this->m_zstrm->next_out = reinterpret_cast<::Bytef*>(ocur);
-        this->m_zstrm->avail_out = ::rocket::clamp_cast<::uInt>(oend - ocur, 0, INT_MAX);
-        this->m_zstrm->next_in = reinterpret_cast<const ::Bytef*>(icur);
-        this->m_zstrm->avail_in = ::rocket::clamp_cast<const ::uInt>(iend - icur, 0, INT_MAX);
-      }
   };
 
-class inflate_Stream
+struct inflate_Stream : zlib_Stream_base
   {
-  private:
-    ::z_stream m_zstrm[1];
-
-  public:
     explicit
     inflate_Stream(zlib_Format fmt, uint8_t wbits)
       {
-        this->m_zstrm->zalloc = nullptr;
-        this->m_zstrm->zfree = nullptr;
-        this->m_zstrm->opaque = nullptr;
-        this->m_zstrm->next_in = (const ::Bytef*) "";
-        this->m_zstrm->avail_in = 0;
-
         if((wbits < 9) || (wbits > 15))
           ::rocket::sprintf_and_throw<::std::invalid_argument>(
               "inflate_Stream: window bits `%d` not valid",
@@ -142,50 +141,6 @@ class inflate_Stream
     ASTERIA_NONCOPYABLE_DESTRUCTOR(inflate_Stream)
       {
         ::inflateEnd(this->m_zstrm);
-      }
-
-    constexpr operator
-    const ::z_stream*() const noexcept
-      { return this->m_zstrm;  }
-
-    operator
-    ::z_stream*() noexcept
-      { return this->m_zstrm;  }
-
-    [[noreturn]]
-    void
-    throw_exception(int err, const char* func) const
-      {
-        const char* msg;
-
-        if(err == Z_VERSION_ERROR)
-          msg = "zlib library version mismatch";
-        else if(err == Z_MEM_ERROR)
-          msg = "memory allocation failure";
-        else if(this->m_zstrm->msg != nullptr)
-          msg = this->m_zstrm->msg;
-        else
-          msg = "no error message";
-
-        ::rocket::sprintf_and_throw<::std::runtime_error>(
-            "inflate_Stream: zlib error: %s\n[`%s()` returned `%d`]",
-            msg, func, err);
-      }
-
-    void
-    get_buffers(char*& ocur, const char*& icur) const noexcept
-      {
-        ocur = reinterpret_cast<char*>(this->m_zstrm->next_out);
-        icur = reinterpret_cast<const char*>(this->m_zstrm->next_in);
-      }
-
-    void
-    set_buffers(char* ocur, char* oend, const char* icur, const char* iend) noexcept
-      {
-        this->m_zstrm->next_out = reinterpret_cast<::Bytef*>(ocur);
-        this->m_zstrm->avail_out = ::rocket::clamp_cast<::uInt>(oend - ocur, 0, INT_MAX);
-        this->m_zstrm->next_in = reinterpret_cast<const ::Bytef*>(icur);
-        this->m_zstrm->avail_in = ::rocket::clamp_cast<const ::uInt>(iend - icur, 0, INT_MAX);
       }
   };
 
