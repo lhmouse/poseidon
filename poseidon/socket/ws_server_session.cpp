@@ -260,7 +260,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
       }
 
       this->m_parser.next_frame();
-      POSEIDON_LOG_TRACE(("WebSocket parser done: data.size `$1`, eof `$2`"), data.size(), eof);
+      POSEIDON_LOG_TRACE(("WebSocket parser done: data.size = $1, eof = $2"), data.size(), eof);
     }
   }
 

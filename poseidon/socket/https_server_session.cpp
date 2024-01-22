@@ -97,7 +97,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
       }
 
       this->m_req_parser->next_message();
-      POSEIDON_LOG_TRACE(("HTTP parser done: data.size `$1`, eof `$2`"), data.size(), eof);
+      POSEIDON_LOG_TRACE(("HTTP parser done: data.size = $1, eof = $2"), data.size(), eof);
     }
   }
 
