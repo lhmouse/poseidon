@@ -221,14 +221,16 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
           switch(this->m_parser.frame_header().opcode) {
             case 0:  // CONTINUATION
             case 1:  // TEXT
-            case 2: {  // BINARY
+            case 2:  // BINARY
+            {
               auto opcode = static_cast<WebSocket_OpCode>(this->m_parser.message_opcode());
               ROCKET_ASSERT(is_any_of(opcode, { websocket_text, websocket_binary }));
               this->do_on_wss_message_finish(opcode, move(this->m_msg));
               break;
             }
 
-            case 8: {  // CLOSE
+            case 8:  // CLOSE
+            {
               ROCKET_ASSERT(this->m_closure_notified == false);
               this->m_closure_notified = true;
               data.clear();
@@ -238,7 +240,8 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
               return;
             }
 
-            case 9: {  // PING
+            case 9:  // PING
+            {
               POSEIDON_LOG_TRACE(("WebSocket PING from `$1`: $2"), this->remote_address(), payload);
               this->do_on_wss_message_finish(websocket_ping, move(payload));
 
@@ -247,7 +250,8 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
               break;
             }
 
-            case 10: {  // PONG
+            case 10:  // PONG
+            {
               POSEIDON_LOG_TRACE(("WebSocket PONG from `$1`: $2"), this->remote_address(), payload);
               this->do_on_wss_message_finish(websocket_pong, move(payload));
               break;

@@ -32,9 +32,9 @@ deflate(chars_view data)
     if(data.n == 0)
       return 0;
 
+    int err;
     const char* in_ptr = data.p;
     const char* in_end = in_ptr + data.n;
-    int err;
 
     do {
       // Allocate an output buffer and write compressed data there.
@@ -66,9 +66,9 @@ bool
 Deflator::
 sync_flush()
   {
+    int err;
     const char* in_ptr = "";
     const char* in_end = in_ptr;
-    int err;
 
     do {
       // Allocate an output buffer and write compressed data there.
@@ -100,9 +100,9 @@ bool
 Deflator::
 full_flush()
   {
+    int err;
     const char* in_ptr = "";
     const char* in_end = in_ptr;
-    int err;
 
     do {
       // Allocate an output buffer and write compressed data there.
@@ -134,9 +134,9 @@ bool
 Deflator::
 finish()
   {
+    int err;
     const char* in_ptr = "";
     const char* in_end = in_ptr;
-    int err;
 
     do {
       // Allocate an output buffer and write compressed data there.

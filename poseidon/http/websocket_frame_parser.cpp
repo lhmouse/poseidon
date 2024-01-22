@@ -428,14 +428,14 @@ parse_frame_header_from_stream(linear_buffer& data)
     if(this->m_wsf >= wsf_header_done)
       return;
 
-    if(this->m_msg_fin) {
+    if(this->m_fin) {
       // If a previous message has finished, forget it before a next frame. It
-      // is important for control frames to not touch `m_msg_*` fields.
-      this->m_msg_fin = 0;
-      this->m_msg_rsv1 = 0;
-      this->m_msg_rsv2 = 0;
-      this->m_msg_rsv3 = 0;
-      this->m_msg_opcode = 0;
+      // is important for control frames to not touch `m_*` fields.
+      this->m_fin = 0;
+      this->m_rsv1 = 0;
+      this->m_rsv2 = 0;
+      this->m_rsv3 = 0;
+      this->m_opcode = 0;
     }
 
     // Calculate the length of this header.
@@ -470,7 +470,7 @@ parse_frame_header_from_stream(linear_buffer& data)
       case 1:  // text data
       case 2:  // binary data
       {
-        if(this->m_msg_opcode != 0) {
+        if(this->m_opcode != 0) {
           // The previous message must have terminated.
           this->m_wsf = wsf_error;
           this->m_error_desc = "continuation frame expected";
@@ -492,14 +492,15 @@ parse_frame_header_from_stream(linear_buffer& data)
           return;
         }
 
-        // Copy message header fields for later use.
-        this->m_msg_fin = this->m_frm_header.fin;
-        this->m_msg_rsv1 = this->m_frm_header.rsv1;
-        this->m_msg_rsv2 = this->m_frm_header.rsv2;
-        this->m_msg_rsv3 = this->m_frm_header.rsv3;
-        this->m_msg_opcode = this->m_frm_header.opcode;
+        // Copy fields for later use.
+        this->m_fin = this->m_frm_header.fin;
+        this->m_rsv1 = this->m_frm_header.rsv1;
+        this->m_rsv2 = this->m_frm_header.rsv2;
+        this->m_rsv3 = this->m_frm_header.rsv3;
+        this->m_opcode = this->m_frm_header.opcode;
+        POSEIDON_LOG_TRACE(("WebSocket data frame: opcode = $1, rsv1 = $2"), this->m_opcode, this->m_rsv1);
+        break;
       }
-      break;
 
       case 0:  // continuation
       {
@@ -510,7 +511,7 @@ parse_frame_header_from_stream(linear_buffer& data)
           return;
         }
 
-        if(this->m_msg_opcode == 0) {
+        if(this->m_opcode == 0) {
           // A continuation frame must follow a data frame.
           this->m_wsf = wsf_error;
           this->m_error_desc = "dangling continuation frame";
@@ -518,10 +519,14 @@ parse_frame_header_from_stream(linear_buffer& data)
         }
 
         // If this is a FIN frame, terminate the current message.
+        // If this is a FIN frame, terminate the current message.
         if(mask_len_rsv_opcode & 0b10000000)
-          this->m_msg_fin = 1;
+          this->m_fin = 1;
+
+        // There shall be a message payload.
+        POSEIDON_LOG_TRACE(("WebSocket data continuation: opcode = $1"), this->m_opcode);
+        break;
       }
-      break;
 
       case 8:  // close
       case 9:  // ping
@@ -552,8 +557,11 @@ parse_frame_header_from_stream(linear_buffer& data)
           this->m_error_desc = "control frame not fragmentable";
           return;
         }
+
+        // There shall be a message payload.
+        POSEIDON_LOG_TRACE(("WebSocket control frame: opcode = $1"), this->m_opcode);
+        break;
       }
-      break;
 
       default:
         // Reject this frame with an unknown opcode.

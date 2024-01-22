@@ -46,11 +46,11 @@ class WebSocket_Frame_Parser
         // 2
         WSF_State m_wsf;
         // 3
-        uint8_t m_msg_opcode : 4;
-        uint8_t m_msg_rsv3 : 1;
-        uint8_t m_msg_rsv2 : 1;
-        uint8_t m_msg_rsv1 : 1;
-        uint8_t m_msg_fin : 1;
+        uint8_t m_opcode : 4;
+        uint8_t m_rsv3 : 1;
+        uint8_t m_rsv2 : 1;
+        uint8_t m_rsv1 : 1;
+        uint8_t m_fin : 1;
       };
     };
 
@@ -179,23 +179,23 @@ class WebSocket_Frame_Parser
     // returned.
     bool
     message_fin() const noexcept
-      { return this->m_msg_fin;  }
+      { return this->m_fin;  }
 
     bool
     message_rsv1() const noexcept
-      { return this->m_msg_rsv1;  }
+      { return this->m_rsv1;  }
 
     bool
     message_rsv2() const noexcept
-      { return this->m_msg_rsv2;  }
+      { return this->m_rsv2;  }
 
     bool
     message_rsv3() const noexcept
-      { return this->m_msg_rsv3;  }
+      { return this->m_rsv3;  }
 
     uint8_t
     message_opcode() const noexcept
-      { return this->m_msg_opcode;  }
+      { return this->m_opcode;  }
 
     // Clears the current complete frame, so the parser can start the next one.
     void

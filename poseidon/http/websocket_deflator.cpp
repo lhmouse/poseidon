@@ -32,14 +32,13 @@ void
 WebSocket_Deflator::
 deflate_message_stream(plain_mutex::unique_lock& lock, chars_view data)
   {
-    lock.lock(this->m_def_mtx);
-
     if(data.n == 0)
       return;
 
+    lock.lock(this->m_def_mtx);
+    int err;
     const char* in_ptr = data.p;
     const char* in_end = in_ptr + data.n;
-    int err;
 
     do {
       // Allocate an output buffer and write compressed data there.
@@ -62,10 +61,9 @@ WebSocket_Deflator::
 deflate_message_finish(plain_mutex::unique_lock& lock)
   {
     lock.lock(this->m_def_mtx);
-
+    int err;
     const char* in_ptr = "";
     const char* in_end = in_ptr;
-    int err;
 
     do {
       // Allocate an output buffer and write compressed data there.
@@ -90,14 +88,13 @@ void
 WebSocket_Deflator::
 inflate_message_stream(plain_mutex::unique_lock& lock, chars_view data)
   {
-    lock.lock(this->m_inf_mtx);
-
     if(data.n == 0)
       return;
 
+    lock.lock(this->m_inf_mtx);
+    int err;
     const char* in_ptr = data.p;
     const char* in_end = in_ptr + data.n;
-    int err;
 
     do {
       // Allocate an output buffer and write compressed data there.
@@ -120,10 +117,9 @@ WebSocket_Deflator::
 inflate_message_finish(plain_mutex::unique_lock& lock)
   {
     lock.lock(this->m_inf_mtx);
-
+    int err;
     const char* in_ptr = "\x00\x00\xFF\xFF";
     const char* in_end = in_ptr + 4;
-    int err;
 
     do {
       // Allocate an output buffer and write compressed data there.

@@ -29,9 +29,12 @@ size_t
 Inflator::
 inflate(chars_view data)
   {
+    if(data.n == 0)
+      return 0;
+
+    int err;
     const char* in_ptr = data.p;
     const char* in_end = in_ptr + data.n;
-    int err;
 
     do {
       constexpr size_t out_request = 128;
@@ -62,9 +65,9 @@ bool
 Inflator::
 finish()
   {
+    int err;
     const char* in_ptr = "";
     const char* in_end = in_ptr;
-    int err;
 
     do {
       // Allocate an output buffer and write compressed data there.
