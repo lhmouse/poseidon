@@ -118,23 +118,21 @@ do_load_level_config(Level_Config& lconf, const Config_File& conf_file, const ch
       if(setting.empty())
         continue;
 
-      // Check for special values first.
-      if(setting == "STDERR") {
+      // Check for special values.
+      if(setting == "@stderr") {
         lconf.files.emplace_back(sref("/dev/stderr"));
         continue;
       }
-
-      if(setting == "STDOUT") {
+      else  if(setting == "@stdout") {
         lconf.files.emplace_back(sref("/dev/stdout"));
         continue;
       }
-
-      if(setting == "TRIVIAL") {
+      else if(setting == "@trivial") {
         lconf.trivial = true;
         continue;
       }
 
-      // Not special; this shall be a path to a file in `logger.files`.
+      // This shall be a path to a file in `logger.files`.
       auto file_value = files.ptr(setting);
       if(!file_value)
         continue;
