@@ -540,7 +540,7 @@ do_write_pid_file()
     // Write the PID of myself. Errors are ignored.
     POSEIDON_LOG_DEBUG(("Writing current process ID to '$1'"), pid_file_path.c_str());
     ::dprintf(pid_file_fd, "%d\n", (int) ::getpid());
-    ::at_quick_exit([] { ::ftruncate(pid_file_fd, 0);  });
+    ::at_quick_exit([] { (void)! ::ftruncate(pid_file_fd, 0);  });
 
     // Downgrade the lock so the PID may be read by others.
     ::flock(pid_file_fd, LOCK_SH);
