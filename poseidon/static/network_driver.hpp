@@ -17,8 +17,8 @@ class Network_Driver
     mutable plain_mutex m_conf_mutex;
     uint32_t m_event_buffer_size = 0;
     uint32_t m_throttle_size = 0;
-    SSL_CTX_ptr m_server_ssl_ctx;
-    SSL_CTX_ptr m_client_ssl_ctx;
+    shared_SSL_CTX m_server_ssl_ctx;
+    shared_SSL_CTX m_client_ssl_ctx;
 
     mutable plain_mutex m_epoll_event_mutex;
     linear_buffer m_epoll_events;
@@ -46,20 +46,21 @@ class Network_Driver
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Network_Driver);
 
-    // Gets the default server SSL context for incoming connections, which is
-    // available only when a certificate and a private key have been specified
-    // in 'main.conf'. The certificate is sent to clients for verfication.
-    // If the server SSL context is not available, an exception is thrown.
+    // Gets the server SSL context for incoming connections, which is available
+    // only if a certificate and a private key have been specified in 'main.conf'.
+    // The certificate is sent to clients for verfication. If the server SSL
+    // context is not available, an exception is thrown.
     // This function is thread-safe.
-    SSL_CTX_ptr
-    default_server_ssl_ctx() const;
+    shared_SSL_CTX
+    server_ssl_ctx() const;
 
-    // Gets the default client SSL context for outgoing connections, which is
-    // always available. If a path to trusted CA certificates is specified in
-    // 'main.conf', server certificate verfication is enabled; otherwise, no
-    // verfication is performed.
-    SSL_CTX_ptr
-    default_client_ssl_ctx() const;
+    // Gets the client SSL context for outgoing connections, which is always
+    // available after `reload()`. If a path to trusted CA certificates is
+    // specified in 'main.conf', server certificate verfication is enabled;
+    // otherwise, a warning is printed and no verfication is performed.
+    // This function is thread-safe.
+    shared_SSL_CTX
+    client_ssl_ctx() const;
 
     // Reloads configuration from 'main.conf'.
     // If this function fails, an exception is thrown, and there is no effect.

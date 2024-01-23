@@ -10,67 +10,67 @@
 #include <openssl/ssl.h>
 namespace poseidon {
 
-#define POSEIDON_OPENSSL_FWD_DEFINE_PTR_(OBJ)  \
+#define POSEIDON_OPENSSL_shared_(OBJ)  \
   \
-  class OBJ##_ptr  \
+  class shared_##OBJ  \
     {  \
     private:  \
       ::OBJ* m_ptr;  \
   \
     public:  \
       constexpr  \
-      OBJ##_ptr(nullptr_t = nullptr) noexcept  \
+      shared_##OBJ(nullptr_t = nullptr) noexcept  \
         :  \
           m_ptr(nullptr)  \
         { }  \
   \
       explicit constexpr  \
-      OBJ##_ptr(::OBJ* ptr) noexcept  \
+      shared_##OBJ(::OBJ* ptr) noexcept  \
         :  \
           m_ptr(ptr)  \
         { }  \
   \
-      OBJ##_ptr(const OBJ##_ptr& other) noexcept  \
+      shared_##OBJ(const shared_##OBJ& other) noexcept  \
         {  \
           if(other.m_ptr) OBJ##_up_ref(other.m_ptr);  \
           this->m_ptr = other.m_ptr;  \
         }  \
   \
-      OBJ##_ptr(OBJ##_ptr&& other) noexcept  \
+      shared_##OBJ(shared_##OBJ&& other) noexcept  \
         {  \
           this->m_ptr = other.release();  \
         }  \
   \
-      OBJ##_ptr&  \
+      shared_##OBJ&  \
       operator=(nullptr_t) & noexcept  \
         {  \
           this->reset(nullptr);  \
           return *this;  \
         }  \
   \
-      OBJ##_ptr&  \
-      operator=(const OBJ##_ptr& other) & noexcept  \
+      shared_##OBJ&  \
+      operator=(const shared_##OBJ& other) & noexcept  \
         {  \
           if(other.m_ptr) OBJ##_up_ref(other.m_ptr);  \
           this->reset(other.m_ptr);  \
           return *this;  \
         }  \
   \
-      OBJ##_ptr&  \
-      operator=(OBJ##_ptr&& other) & noexcept  \
+      shared_##OBJ&  \
+      operator=(shared_##OBJ&& other) & noexcept  \
         {  \
           this->reset(other.release());  \
           return *this;  \
         }  \
   \
-      OBJ##_ptr&  \
-      swap(OBJ##_ptr& other) noexcept  \
+      shared_##OBJ&  \
+      swap(shared_##OBJ& other) noexcept  \
         {  \
           ::std::swap(this->m_ptr, other.m_ptr);  \
           return *this;  \
         }  \
   \
-      ~OBJ##_ptr()  \
+      ~shared_##OBJ()  \
         {  \
           if(this->m_ptr) OBJ##_free(this->m_ptr);  \
           this->m_ptr = (::OBJ*) -0xDEADBEEF;  \
@@ -85,12 +85,7 @@ namespace poseidon {
       ::OBJ*() const noexcept  \
         { return this->m_ptr;  }  \
   \
-      constexpr  \
-      ::OBJ*  \
-      get() const noexcept  \
-        { return this->m_ptr;  }  \
-  \
-      OBJ##_ptr&  \
+      shared_##OBJ&  \
       reset(::OBJ* ptr = nullptr) noexcept  \
         {  \
           if(this->m_ptr) OBJ##_free(this->m_ptr);  \
@@ -109,15 +104,15 @@ namespace poseidon {
   \
   inline  \
   void  \
-  swap(OBJ##_ptr& lhs, OBJ##_ptr& rhs) noexcept  \
+  swap(shared_##OBJ& lhs, shared_##OBJ& rhs) noexcept  \
     { lhs.swap(rhs);  }  \
   \
-  class OBJ##_ptr  // no semicolon
+  class shared_##OBJ  // no semicolon
 
-POSEIDON_OPENSSL_FWD_DEFINE_PTR_(BIO);      // class BIO_ptr;
-POSEIDON_OPENSSL_FWD_DEFINE_PTR_(X509);     // class X509_ptr;
-POSEIDON_OPENSSL_FWD_DEFINE_PTR_(SSL_CTX);  // class SSL_CTX_ptr;
-POSEIDON_OPENSSL_FWD_DEFINE_PTR_(SSL);      // class SSL_ptr;
+POSEIDON_OPENSSL_shared_(SSL);  // shared_SSL
+POSEIDON_OPENSSL_shared_(BIO);  // shared_BIO
+POSEIDON_OPENSSL_shared_(X509);  // shared_X509
+POSEIDON_OPENSSL_shared_(SSL_CTX);  // shared_SSL_CTX
 
 }  // namespace poseidon
 #endif

@@ -584,10 +584,10 @@ class Easy_WSS_Server;
 class Easy_WSS_Client;
 
 // Helper types for third-party libraries
-class BIO_ptr;
-class X509_ptr;
-class SSL_CTX_ptr;
-class SSL_ptr;
+class shared_SSL;
+class shared_BIO;
+class shared_X509;
+class shared_SSL_CTX;
 class zlib_xStream;
 class deflate_Stream;
 class inflate_Stream;

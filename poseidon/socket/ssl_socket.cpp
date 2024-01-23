@@ -13,11 +13,11 @@
 namespace poseidon {
 
 SSL_Socket::
-SSL_Socket(unique_posix_fd&& fd, ::SSL_CTX* ctx_opt)
+SSL_Socket(unique_posix_fd&& fd, const Network_Driver& driver)
   :
     Abstract_Socket(move(fd))
   {
-    this->m_ssl.reset(::SSL_new(ctx_opt ? ctx_opt : network_driver.default_server_ssl_ctx().get()));
+    this->m_ssl.reset(::SSL_new(driver.server_ssl_ctx()));
     if(!this->m_ssl)
       POSEIDON_THROW((
           "Could not allocate server SSL structure",
@@ -36,11 +36,11 @@ SSL_Socket(unique_posix_fd&& fd, ::SSL_CTX* ctx_opt)
   }
 
 SSL_Socket::
-SSL_Socket(::SSL_CTX* ctx_opt)
+SSL_Socket(const Network_Driver& driver)
   :
     Abstract_Socket(SOCK_STREAM, IPPROTO_TCP)
   {
-    this->m_ssl.reset(::SSL_new(ctx_opt ? ctx_opt : network_driver.default_client_ssl_ctx().get()));
+    this->m_ssl.reset(::SSL_new(driver.client_ssl_ctx()));
     if(!this->m_ssl)
       POSEIDON_THROW((
           "Could not allocate client SSL structure",

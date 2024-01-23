@@ -146,32 +146,32 @@ do_alpn_callback(::SSL* ssl, const uint8_t** outp, uint8_t* outn, const uint8_t*
     return SSL_TLSEXT_ERR_OK;
   }
 
-SSL_CTX_ptr
+shared_SSL_CTX
 Network_Driver::
-default_server_ssl_ctx() const
+server_ssl_ctx() const
   {
     plain_mutex::unique_lock lock(this->m_conf_mutex);
+    auto ssl_ctx = this->m_server_ssl_ctx;
+    if(!ssl_ctx)
+      POSEIDON_THROW(("Server SSL not configured"));
 
-    if(!this->m_server_ssl_ctx)
-      POSEIDON_LOG_WARN((
-          "Server SSL context unavailable",
-          "[certificate not configured in 'main.conf']"));
-
-    return this->m_server_ssl_ctx;
+    // Increment the reference count of the SSL context, as configuration may
+    // be reloaded after once function returns.
+    return ssl_ctx;
   }
 
-SSL_CTX_ptr
+shared_SSL_CTX
 Network_Driver::
-default_client_ssl_ctx() const
+client_ssl_ctx() const
   {
     plain_mutex::unique_lock lock(this->m_conf_mutex);
+    auto ssl_ctx = this->m_client_ssl_ctx;
+    if(!ssl_ctx)
+      POSEIDON_THROW(("Client SSL not configured"));
 
-    if(!this->m_client_ssl_ctx)
-      POSEIDON_LOG_WARN((
-          "Client SSL context unavailable",
-          "[no configuration loaded]"));
-
-    return this->m_client_ssl_ctx;
+    // Increment the reference count of the SSL context, as configuration may
+    // be reloaded after once function returns.
+    return ssl_ctx;
   }
 
 void
@@ -182,7 +182,7 @@ reload(const Config_File& conf_file)
     int64_t event_buffer_size = 1024;
     int64_t throttle_size = 1048576;
     cow_string default_certificate, default_private_key, trusted_ca_path;
-    SSL_CTX_ptr server_ssl_ctx, client_ssl_ctx;
+    shared_SSL_CTX server_ssl_ctx, client_ssl_ctx;
 
     // Read the event buffer size from configuration.
     auto conf_value = conf_file.query("network", "poll", "event_buffer_size");

@@ -16,22 +16,22 @@ class SSL_Socket
   private:
     friend class Network_Driver;
 
-    SSL_ptr m_ssl;
+    shared_SSL m_ssl;
     cow_string m_alpn_proto;
 
     mutable atomic_relaxed<bool> m_peername_ready;
     mutable Socket_Address m_peername;
 
   protected:
-    // Takes ownership of an accepted socket. [server-side constructor]
-    // If `ctx_opt` is null, `network_driver.default_server_ssl_ctx()` is used.
+    // Takes ownership of an accepted socket, using SSL configuration from
+    // `driver`. [server-side constructor]
     explicit
-    SSL_Socket(unique_posix_fd&& fd, ::SSL_CTX* ctx_opt = nullptr);
+    SSL_Socket(unique_posix_fd&& fd, const Network_Driver& driver);
 
-    // Creates a socket for outgoing connections. [client-side constructor]
-    // If `ctx_opt` is null, `network_driver.default_client_ssl_ctx()` is used.
+    // Creates a socket for outgoing connections, using SSL configuration
+    // from `driver`. [client-side constructor]
     explicit
-    SSL_Socket(::SSL_CTX* ctx_opt = nullptr);
+    SSL_Socket(const Network_Driver& driver);
 
   protected:
     // These callbacks implement `Abstract_Socket`.
@@ -101,7 +101,7 @@ class SSL_Socket
     // Gets the SSL structure.
     ::SSL*
     ssl() noexcept
-      { return this->m_ssl.get();  }
+      { return this->m_ssl;  }
 
     // Gets the remote or connected address of this socket. In case of errors,
     // `ipv6_invalid` is returned. The result is cached and will not
