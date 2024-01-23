@@ -19,7 +19,7 @@ class MySQL_Client
       {
         if(::mysql_init(this->m_mysql) == nullptr)
           ::rocket::sprintf_and_throw<::std::runtime_error>(
-                "MySQL_Client: failed to allocate MySQL client object");
+                "MySQL_Client: insufficient memory");
 
         // Set default options.
         ::mysql_options(this->m_mysql, MYSQL_OPT_COMPRESS, "1");
