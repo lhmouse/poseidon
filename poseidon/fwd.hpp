@@ -636,13 +636,13 @@ async_logger_enqueue(const Log_Context& ctx, vfptr<cow_string&, void*> thunk, vo
     (::poseidon::async_logger_check_level(::poseidon::log_level_##LEVEL)  \
       &&  \
       __extension__ ({  \
-        auto compose = [&](::rocket::cow_string& sbuf)  \
-          { format(sbuf, (::asteria::make_string_template TEMPLATE), ##__VA_ARGS__);  };  \
-        constexpr auto thunk = [](::rocket::cow_string& sbuf, void* vp)  \
-          { (*static_cast<decltype(compose)*>(vp)) (sbuf);  };  \
-        static const ::poseidon::Log_Context ctx =  \
+        auto IuChah0u = [&](::rocket::cow_string& quu1Opae)  \
+          { format(quu1Opae, (::asteria::make_string_template TEMPLATE), ##__VA_ARGS__);  };  \
+        auto ohng0Ohh = +[](::rocket::cow_string& iughih5B, void* fi8OhNgo)  \
+          { (*static_cast<decltype(IuChah0u)*>(fi8OhNgo)) (iughih5B);  };  \
+        static const ::poseidon::Log_Context aebiF4ai =  \
           { __FILE__, __LINE__, ::poseidon::log_level_##LEVEL, __func__ };  \
-        ::poseidon::async_logger_enqueue(ctx, thunk, &compose);  \
+        ::poseidon::async_logger_enqueue(aebiF4ai, ohng0Ohh, &IuChah0u);  \
         true;  \
       }))
 

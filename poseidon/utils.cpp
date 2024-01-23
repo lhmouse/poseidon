@@ -12,7 +12,7 @@
 namespace poseidon {
 
 void
-throw_runtime_error_with_backtrace(const char* file, long line, const char* func, cow_string&& msg)
+backtrace_and_throw(const char* file, long line, const char* func, cow_string&& msg)
   {
     // Remove trailing space characters from the message.
     size_t pos = msg.rfind_not_of(" \f\n\r\t\v");
