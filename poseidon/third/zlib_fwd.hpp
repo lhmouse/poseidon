@@ -10,13 +10,13 @@
 #include <zlib.h>
 namespace poseidon {
 
-class zlib_Stream_base
+class zlib_xStream
   {
   protected:
     mutable ::z_stream m_zstrm[1];
 
   protected:
-    zlib_Stream_base() noexcept
+    zlib_xStream() noexcept
       {
         this->m_zstrm->zalloc = nullptr;
         this->m_zstrm->zfree = nullptr;
@@ -25,7 +25,7 @@ class zlib_Stream_base
         this->m_zstrm->avail_in = 0;
       }
 
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(zlib_Stream_base) = default;
+    ASTERIA_NONCOPYABLE_DESTRUCTOR(zlib_xStream) = default;
 
   public:
     constexpr operator
@@ -73,7 +73,7 @@ class zlib_Stream_base
       }
   };
 
-struct deflate_Stream : zlib_Stream_base
+struct deflate_Stream : zlib_xStream
   {
     explicit
     deflate_Stream(zlib_Format fmt, uint8_t wbits, int level)
@@ -111,7 +111,7 @@ struct deflate_Stream : zlib_Stream_base
       }
   };
 
-struct inflate_Stream : zlib_Stream_base
+struct inflate_Stream : zlib_xStream
   {
     explicit
     inflate_Stream(zlib_Format fmt, uint8_t wbits)
