@@ -36,26 +36,6 @@ class zlib_xStream
     ::z_stream*() noexcept
       { return this->m_zstrm;  }
 
-    [[noreturn]]
-    void
-    throw_exception(int err, const char* func) const
-      {
-        const char* msg;
-
-        if(err == Z_VERSION_ERROR)
-          msg = "zlib library version mismatch";
-        else if(err == Z_MEM_ERROR)
-          msg = "memory allocation failure";
-        else if(this->m_zstrm->msg != nullptr)
-          msg = this->m_zstrm->msg;
-        else
-          msg = "no error message";
-
-        ::rocket::sprintf_and_throw<::std::runtime_error>(
-            "zlib error: %s\n[`%s()` returned `%d`]",
-            msg, func, err);
-      }
-
     void
     get_buffers(char*& ocur, const char*& icur) noexcept
       {
@@ -102,12 +82,33 @@ struct deflate_Stream : zlib_xStream
 
         int err = ::deflateInit2(this->m_zstrm, level, Z_DEFLATED, fmt_wbits, 9, Z_DEFAULT_STRATEGY);
         if(err != Z_OK)
-          this->throw_exception(err, "deflateInit2");
+          ::rocket::sprintf_and_throw<::std::runtime_error>(
+                "deflate_Stream: insufficient memory");
       }
 
     ASTERIA_NONCOPYABLE_DESTRUCTOR(deflate_Stream)
       {
         ::deflateEnd(this->m_zstrm);
+      }
+
+    [[noreturn]]
+    void
+    throw_exception(int err, const char* func) const
+      {
+        const char* msg;
+
+        if(err == Z_VERSION_ERROR)
+          msg = "zlib library version mismatch";
+        else if(err == Z_MEM_ERROR)
+          msg = "memory allocation failure";
+        else if(this->m_zstrm->msg != nullptr)
+          msg = this->m_zstrm->msg;
+        else
+          msg = "no error message";
+
+        ::rocket::sprintf_and_throw<::std::runtime_error>(
+            "deflate_Stream: compression error: %s\n[`%s()` returned `%d`]",
+            msg, func, err);
       }
   };
 
@@ -135,12 +136,33 @@ struct inflate_Stream : zlib_xStream
 
         int err = ::inflateInit2(this->m_zstrm, fmt_wbits);
         if(err != Z_OK)
-          this->throw_exception(err, "inflateInit2");
+          ::rocket::sprintf_and_throw<::std::runtime_error>(
+                "sprintf_and_throw: insufficient memory");
       }
 
     ASTERIA_NONCOPYABLE_DESTRUCTOR(inflate_Stream)
       {
         ::inflateEnd(this->m_zstrm);
+      }
+
+    [[noreturn]]
+    void
+    throw_exception(int err, const char* func) const
+      {
+        const char* msg;
+
+        if(err == Z_VERSION_ERROR)
+          msg = "zlib library version mismatch";
+        else if(err == Z_MEM_ERROR)
+          msg = "memory allocation failure";
+        else if(this->m_zstrm->msg != nullptr)
+          msg = this->m_zstrm->msg;
+        else
+          msg = "no error message";
+
+        ::rocket::sprintf_and_throw<::std::runtime_error>(
+            "inflate_Stream: decompression error: %s\n[`%s()` returned `%d`]",
+            msg, func, err);
       }
   };
 
