@@ -33,12 +33,12 @@ class MySQL_Client
 
     [[noreturn]]
     void
-    throw_exception() const
+    throw_exception(const char* func) const
       {
         ::rocket::sprintf_and_throw<::std::runtime_error>(
-              "MySQL_Client: ERROR %u (%s): %s",
+              "MySQL_Client: ERROR %u (%s): %s\n[`%s()` failed]",
               ::mysql_errno(this->m_mysql), ::mysql_sqlstate(this->m_mysql),
-              ::mysql_error(this->m_mysql));
+              ::mysql_error(this->m_mysql), func);
       }
   };
 
