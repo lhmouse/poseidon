@@ -31,7 +31,7 @@ class Async_Task_Executor
     // If this function fails, an exception is thrown, and there is no effect.
     // This function is thread-safe.
     void
-    enqueue(shptrR<Abstract_Async_Task> task);
+    enqueue(shR<Abstract_Async_Task> task);
   };
 
 }  // namespace poseidon

@@ -18,7 +18,7 @@ class WS_Client_Session
     cow_string m_path;
     cow_string m_query;
     WebSocket_Frame_Parser m_parser;
-    shptr<WebSocket_Deflator> m_pmce_opt;
+    sh<WebSocket_Deflator> m_pmce_opt;
     linear_buffer m_msg;
     bool m_closure_notified = false;
 

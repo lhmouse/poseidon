@@ -19,11 +19,11 @@ class Fiber_Scheduler
     seconds m_conf_fail_timeout = zero_duration;
 
     mutable plain_mutex m_pq_mutex;
-    vector<shptr<X_Queued_Fiber>> m_pq;
+    vector<sh<X_Queued_Fiber>> m_pq;
     ::timespec m_pq_wait = { };
 
     mutable recursive_mutex m_sched_mutex;
-    shptr<X_Queued_Fiber> m_sched_elem;
+    sh<X_Queued_Fiber> m_sched_elem;
     void* m_sched_asan_save;  // private data for address sanitizer
     ::ucontext_t m_sched_outer[1];  // yield target
 
@@ -37,7 +37,7 @@ class Fiber_Scheduler
     do_fiber_function() noexcept;
 
     void
-    do_yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override);
+    do_yield(shR<Abstract_Future> futr_opt, milliseconds fail_timeout_override);
 
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Fiber_Scheduler);
@@ -63,7 +63,7 @@ class Fiber_Scheduler
     // can only be deleted after it finishes execution.
     // This function is thread-safe.
     void
-    launch(shptrR<Abstract_Fiber> fiber);
+    launch(shR<Abstract_Fiber> fiber);
   };
 
 }  // namespace poseidon

@@ -102,7 +102,7 @@ thread_loop()
 
 void
 Timer_Driver::
-insert(shptrR<Abstract_Timer> timer, milliseconds delay, milliseconds period)
+insert(shR<Abstract_Timer> timer, milliseconds delay, milliseconds period)
   {
     if(!timer)
       POSEIDON_THROW(("Null timer pointer not valid"));

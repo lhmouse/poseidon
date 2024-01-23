@@ -16,7 +16,7 @@ class SSL_Socket
   private:
     friend class Network_Driver;
 
-    shared_SSL m_ssl;
+    uni_SSL m_ssl;
     cow_string m_alpn_proto;
 
     mutable atomic_relaxed<bool> m_peername_ready;

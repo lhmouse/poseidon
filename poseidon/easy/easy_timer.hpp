@@ -13,7 +13,7 @@ class Easy_Timer
     // This is also the prototype of callbacks for the constructor.
     using thunk_type =
       thunk<
-        shptrR<Abstract_Timer>,  // timer
+        shR<Abstract_Timer>,  // timer
         Abstract_Fiber&,         // fiber for current callback
         steady_time>;            // time of trigger
 
@@ -21,12 +21,12 @@ class Easy_Timer
     thunk_type m_thunk;
 
     struct X_Event_Queue;
-    shptr<X_Event_Queue> m_queue;
-    shptr<Abstract_Timer> m_timer;
+    sh<X_Event_Queue> m_queue;
+    sh<Abstract_Timer> m_timer;
 
   public:
     // Constructs a timer. The argument shall be an invocable object taking
-    // `(shptrR<Abstract_Timer> timer, Abstract_Fiber& fiber, steady_time time)`.
+    // `(shR<Abstract_Timer> timer, Abstract_Fiber& fiber, steady_time time)`.
     // This timer stores a copy of the callback, which is invoked accordingly in
     // the main thread. The callback object is never copied, and is allowed to
     // modify itself.

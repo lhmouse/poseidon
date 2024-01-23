@@ -48,7 +48,7 @@ open(zlib_Format format)
   {
     auto infl = new_sh<Final_Inflator>(format);
     this->m_infl = infl;
-    this->m_out = shptr<linear_buffer>(infl, &(infl->m_out));
+    this->m_out = sh<linear_buffer>(infl, &(infl->m_out));
   }
 
 void

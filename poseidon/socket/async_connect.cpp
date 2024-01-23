@@ -11,7 +11,7 @@
 namespace poseidon {
 
 Async_Connect::
-Async_Connect(Network_Driver& driver, shptrR<Abstract_Socket> socket, cow_stringR host, uint16_t port)
+Async_Connect(Network_Driver& driver, shR<Abstract_Socket> socket, cow_stringR host, uint16_t port)
   {
     if(!socket)
       POSEIDON_THROW(("Null socket pointer not valid"));

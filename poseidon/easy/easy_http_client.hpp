@@ -14,7 +14,7 @@ class Easy_HTTP_Client
     // This is also the prototype of callbacks for the constructor.
     using thunk_type =
       thunk<
-        shptrR<HTTP_Client_Session>,  // client data socket
+        shR<HTTP_Client_Session>,  // client data socket
         Abstract_Fiber&,              // fiber for current callback
         Easy_HTTP_Event,              // event type; see comments above constructor
         HTTP_Response_Headers&&,      // response status code and headers
@@ -23,14 +23,14 @@ class Easy_HTTP_Client
   private:
     thunk_type m_thunk;
 
-    shptr<Async_Connect> m_dns_task;
+    sh<Async_Connect> m_dns_task;
     struct X_Event_Queue;
-    shptr<X_Event_Queue> m_queue;
-    shptr<HTTP_Client_Session> m_session;
+    sh<X_Event_Queue> m_queue;
+    sh<HTTP_Client_Session> m_session;
 
   public:
     // Constructs a client. The argument shall be an invocable object taking
-    // `(shptrR<HTTP_Client_Session> session, Abstract_Fiber& fiber,
+    // `(shR<HTTP_Client_Session> session, Abstract_Fiber& fiber,
     // Easy_HTTP_Event event, HTTP_Response_Headers&& resp, linear_buffer&&
     // data)`, where `session` is a pointer to a client socket object, and if
     // `event` is
@@ -73,7 +73,7 @@ class Easy_HTTP_Client
     close() noexcept;
 
     // Gets the connection session object.
-    shptrR<HTTP_Client_Session>
+    shR<HTTP_Client_Session>
     session_opt() const noexcept
       { return this->m_session;  }
 

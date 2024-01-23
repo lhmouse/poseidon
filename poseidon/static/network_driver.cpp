@@ -30,7 +30,7 @@ Network_Driver::
 POSEIDON_VISIBILITY_HIDDEN
 void
 Network_Driver::
-do_epoll_ctl(int op, shptrR<Abstract_Socket> socket, uint32_t events)
+do_epoll_ctl(int op, shR<Abstract_Socket> socket, uint32_t events)
   {
     ::epoll_event event;
     event.events = events;
@@ -79,7 +79,7 @@ do_linear_probe_socket_no_lock(const volatile Abstract_Socket* socket) noexcept
     // HACK: Compare the socket pointer without tampering with the reference
     // counter. The pointer itself will never be dereferenced. It [should] be
     // reasonable to assume `shared_ptr` and `weak_ptr` have identical layout.
-#define do_get_weak_(wptr)  (reinterpret_cast<const shptr<Abstract_Socket>&>(wptr).get())
+#define do_get_weak_(wptr)  (reinterpret_cast<const sh<Abstract_Socket>&>(wptr).get())
 
     // Find an element using linear probing. If the socket is not found, a
     // reference to an empty element is returned.
@@ -97,16 +97,15 @@ do_linear_probe_socket_no_lock(const volatile Abstract_Socket* socket) noexcept
 POSEIDON_VISIBILITY_HIDDEN
 int
 Network_Driver::
-do_alpn_callback(::SSL* ssl, const uint8_t** outp, uint8_t* outn, const uint8_t* inp, unsigned inn, void* arg) noexcept
+do_alpn_callback(::SSL* ssl, const uint8_t** outp, uint8_t* outn, const uint8_t* inp,
+                 unsigned int inn, void* arg) noexcept
   {
-    // Verify the socket.
-    // These errors shouldn't happen unless we have really messed things up
-    // e.g. when `arg` is a dangling pointer.
-    auto socket = dynamic_cast<SSL_Socket*>(static_cast<Abstract_Socket*>(arg));
-    if(!socket)
-      return SSL_TLSEXT_ERR_ALERT_FATAL;
+    // Verify the socket. These errors shouldn't happen unless we have really
+    // messed things up e.g. when `arg` is a dangling pointer.
+    auto ssl_socket = static_cast<SSL_Socket*>(arg);
+    ROCKET_ASSERT(ssl_socket);
 
-    if(socket->ssl() != ssl)
+    if(ssl_socket->m_ssl != ssl)
       return SSL_TLSEXT_ERR_ALERT_FATAL;
 
     try {
@@ -127,51 +126,53 @@ do_alpn_callback(::SSL* ssl, const uint8_t** outp, uint8_t* outn, const uint8_t*
         POSEIDON_LOG_TRACE(("Received ALPN protocol: $1"), str);
       }
 
-      char256 alpn_resp = socket->do_on_ssl_alpn_request(move(alpn_req));
-      socket->m_alpn_proto.assign(alpn_resp);
+      char256 alpn_resp = ssl_socket->do_on_ssl_alpn_request(move(alpn_req));
+      ssl_socket->m_alpn_proto.assign(alpn_resp);
     }
     catch(exception& stdex) {
       POSEIDON_LOG_ERROR((
           "Unhandled exception thrown from socket ALPN callback: $1",
           "[socket class `$2`]"),
-          stdex, typeid(*socket));
+          stdex, typeid(*ssl_socket));
     }
 
-    if(socket->m_alpn_proto.empty())  // no protocol
+    if(ssl_socket->m_alpn_proto.empty())  // no protocol
       return SSL_TLSEXT_ERR_NOACK;
 
-    POSEIDON_LOG_TRACE(("Responding ALPN protocol: $1"), socket->m_alpn_proto);
-    *outp = (const uint8_t*) socket->m_alpn_proto.data();
-    *outn = (uint8_t) socket->m_alpn_proto.size();
+    POSEIDON_LOG_TRACE(("Responding ALPN protocol: $1"), ssl_socket->m_alpn_proto);
+    *outp = (const uint8_t*) ssl_socket->m_alpn_proto.data();
+    *outn = (uint8_t) ssl_socket->m_alpn_proto.size();
     return SSL_TLSEXT_ERR_OK;
   }
 
-shared_SSL_CTX
+uni_SSL_CTX
 Network_Driver::
 server_ssl_ctx() const
   {
     plain_mutex::unique_lock lock(this->m_conf_mutex);
-    auto ssl_ctx = this->m_server_ssl_ctx;
-    if(!ssl_ctx)
+    auto ptr = this->m_server_ssl_ctx.get();
+    if(!ptr)
       POSEIDON_THROW(("Server SSL not configured"));
 
     // Increment the reference count of the SSL context, as configuration may
     // be reloaded after once function returns.
-    return ssl_ctx;
+    ::SSL_CTX_up_ref(ptr);
+    return uni_SSL_CTX(ptr);
   }
 
-shared_SSL_CTX
+uni_SSL_CTX
 Network_Driver::
 client_ssl_ctx() const
   {
     plain_mutex::unique_lock lock(this->m_conf_mutex);
-    auto ssl_ctx = this->m_client_ssl_ctx;
-    if(!ssl_ctx)
+    auto ptr = this->m_server_ssl_ctx.get();
+    if(!ptr)
       POSEIDON_THROW(("Client SSL not configured"));
 
     // Increment the reference count of the SSL context, as configuration may
     // be reloaded after once function returns.
-    return ssl_ctx;
+    ::SSL_CTX_up_ref(ptr);
+    return uni_SSL_CTX(ptr);
   }
 
 void
@@ -182,7 +183,7 @@ reload(const Config_File& conf_file)
     int64_t event_buffer_size = 1024;
     int64_t throttle_size = 1048576;
     cow_string default_certificate, default_private_key, trusted_ca_path;
-    shared_SSL_CTX server_ssl_ctx, client_ssl_ctx;
+    uni_SSL_CTX server_ssl_ctx, client_ssl_ctx;
 
     // Read the event buffer size from configuration.
     auto conf_value = conf_file.query("network", "poll", "event_buffer_size");
@@ -354,7 +355,6 @@ thread_loop()
     plain_mutex::unique_lock lock(this->m_conf_mutex);
     const uint32_t event_buffer_size = this->m_event_buffer_size;
     const uint32_t throttle_size = this->m_throttle_size;
-    const auto server_ssl_ctx = this->m_server_ssl_ctx;
     lock.unlock();
 
     // Get an event from the queue.
@@ -393,9 +393,6 @@ thread_loop()
     socket->m_io_driver = this;
     lock.unlock();
 
-    if(server_ssl_ctx)
-      ::SSL_CTX_set_alpn_select_cb(server_ssl_ctx, do_alpn_callback, static_cast<Abstract_Socket*>(socket.get()));
-
     if(event.events & (EPOLLHUP | EPOLLERR)) {
       POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLHUP | EPOLLERR"), socket, typeid(*socket));
       try {
@@ -418,6 +415,11 @@ thread_loop()
       this->do_epoll_ctl(EPOLL_CTL_DEL, socket, 0);
       return;
     }
+
+    auto ssl_socket = dynamic_cast<SSL_Socket*>(socket.get());
+    if(ssl_socket && ssl_socket->m_ssl)
+      if(auto ssl_ctx = ::SSL_get_SSL_CTX(ssl_socket->m_ssl))
+        ::SSL_CTX_set_alpn_select_cb(ssl_ctx, do_alpn_callback, ssl_socket);
 
 #define do_handle_epoll_event_(EPOLL_EVENT, target_function)  \
     if(event.events & EPOLL_EVENT) {  \
@@ -458,7 +460,7 @@ thread_loop()
 
 void
 Network_Driver::
-insert(shptrR<Abstract_Socket> socket)
+insert(shR<Abstract_Socket> socket)
   {
     if(!socket)
       POSEIDON_THROW(("Null socket pointer not valid"));

@@ -18,7 +18,7 @@ struct Client_Table
     struct Event_Queue
       {
         // read-only fields; no locking needed
-        shptr<WSS_Server_Session> session;
+        sh<WSS_Server_Session> session;
         cacheline_barrier xcb_1;
 
         // shared fields between threads
@@ -43,7 +43,7 @@ struct Final_Fiber final : Abstract_Fiber
     const volatile WSS_Server_Session* m_refptr;
 
     explicit
-    Final_Fiber(const Easy_WSS_Server::thunk_type& thunk, shptrR<Client_Table> table,
+    Final_Fiber(const Easy_WSS_Server::thunk_type& thunk, shR<Client_Table> table,
                 const volatile WSS_Server_Session* refptr)
       :
         m_thunk(thunk), m_wtable(table), m_refptr(refptr)
@@ -114,7 +114,7 @@ struct FInal_Server_Session final : WSS_Server_Session
 
     explicit
     FInal_Server_Session(unique_posix_fd&& fd,
-          const Easy_WSS_Server::thunk_type& thunk, shptrR<Client_Table> table)
+          const Easy_WSS_Server::thunk_type& thunk, shR<Client_Table> table)
       :
         SSL_Socket(move(fd), network_driver), m_thunk(thunk), m_wtable(table)
       { }
@@ -204,7 +204,7 @@ struct Final_Listen_Socket final : Listen_Socket
 
     explicit
     Final_Listen_Socket(const Easy_WSS_Server::thunk_type& thunk,
-                        const Socket_Address& addr, shptrR<Client_Table> table)
+                        const Socket_Address& addr, shR<Client_Table> table)
       :
         Listen_Socket(addr), m_thunk(thunk), m_wtable(table)
       {
@@ -212,7 +212,7 @@ struct Final_Listen_Socket final : Listen_Socket
       }
 
     virtual
-    shptr<Abstract_Socket>
+    sh<Abstract_Socket>
     do_on_listen_new_client_opt(Socket_Address&& addr, unique_posix_fd&& fd) override
       {
         auto table = this->m_wtable.lock();

@@ -42,7 +42,7 @@ struct Final_Fiber final : Abstract_Fiber
     wkptr<Event_Queue> m_wqueue;
 
     explicit
-    Final_Fiber(const Easy_WSS_Client::thunk_type& thunk, shptrR<Event_Queue> queue)
+    Final_Fiber(const Easy_WSS_Client::thunk_type& thunk, shR<Event_Queue> queue)
       :
         m_thunk(thunk), m_wqueue(queue)
       { }
@@ -100,7 +100,7 @@ struct FInal_Client_Session final : WSS_Client_Session
 
     explicit
     FInal_Client_Session(const Easy_WSS_Client::thunk_type& thunk,
-          shptrR<Event_Queue> queue, cow_stringR host, cow_stringR path,
+          shR<Event_Queue> queue, cow_stringR host, cow_stringR path,
           cow_stringR query)
       :
         SSL_Socket(network_driver), WSS_Client_Session(host, path, query),

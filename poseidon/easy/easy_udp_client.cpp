@@ -34,7 +34,7 @@ struct Final_Fiber final : Abstract_Fiber
     wkptr<Packet_Queue> m_wqueue;
 
     explicit
-    Final_Fiber(const Easy_UDP_Client::thunk_type& thunk, shptrR<Packet_Queue> queue)
+    Final_Fiber(const Easy_UDP_Client::thunk_type& thunk, shR<Packet_Queue> queue)
       :
         m_thunk(thunk), m_wqueue(queue)
       { }
@@ -87,7 +87,7 @@ struct Final_Socket final : UDP_Socket
     wkptr<Packet_Queue> m_wqueue;
 
     explicit
-    Final_Socket(const Easy_UDP_Client::thunk_type& thunk, shptrR<Packet_Queue> queue)
+    Final_Socket(const Easy_UDP_Client::thunk_type& thunk, shR<Packet_Queue> queue)
       :
         m_thunk(thunk), m_wqueue(queue)
       { }

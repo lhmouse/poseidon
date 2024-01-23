@@ -14,7 +14,7 @@ class Easy_TCP_Server
     // This is also the prototype of callbacks for the constructor.
     using thunk_type =
       thunk<
-        shptrR<TCP_Socket>,  // server data socket
+        shR<TCP_Socket>,  // server data socket
         Abstract_Fiber&,     // fiber for current callback
         Easy_Stream_Event,   // event type; see comments above constructor
         linear_buffer&,      // accumulative data that have been received
@@ -24,12 +24,12 @@ class Easy_TCP_Server
     thunk_type m_thunk;
 
     struct X_Client_Table;
-    shptr<X_Client_Table> m_client_table;
-    shptr<Listen_Socket> m_socket;
+    sh<X_Client_Table> m_client_table;
+    sh<Listen_Socket> m_socket;
 
   public:
     // Constructs a server. The argument shall be an invocable object taking
-    // `(shptrR<TCP_Socket> socket, Abstract_Fiber& fiber, Easy_Stream_Event
+    // `(shR<TCP_Socket> socket, Abstract_Fiber& fiber, Easy_Stream_Event
     // event, linear_buffer& data, int code)`, where `socket` is a pointer to
     // a client socket object, and if `event` is
     //  1) `easy_stream_open`, then `data` is empty; or

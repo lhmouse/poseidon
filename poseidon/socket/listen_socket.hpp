@@ -45,7 +45,7 @@ class Listen_Socket
     // received, and is intended to be overriden by derived classes. This function
     // should return a pointer to a socket object, constructed from the given FD.
     virtual
-    shptr<Abstract_Socket>
+    sh<Abstract_Socket>
     do_on_listen_new_client_opt(Socket_Address&& addr, unique_posix_fd&& fd) = 0;
 
   public:

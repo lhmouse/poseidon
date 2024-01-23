@@ -13,7 +13,7 @@ extern Easy_HTTP_Client my_client;
 extern Easy_Timer my_timer;
 
 void
-event_callback(shptrR<HTTP_Client_Session> session, Abstract_Fiber& /*fiber*/,
+event_callback(shR<HTTP_Client_Session> session, Abstract_Fiber& /*fiber*/,
                Easy_HTTP_Event event, HTTP_Response_Headers&& resp, linear_buffer&& data)
   {
     switch(event) {
@@ -42,7 +42,7 @@ event_callback(shptrR<HTTP_Client_Session> session, Abstract_Fiber& /*fiber*/,
   }
 
 void
-timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/,
+timer_callback(shR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/,
                steady_time /*now*/)
   {
     static uint32_t state;

@@ -8,17 +8,30 @@
 #include <mysql/mysql.h>
 namespace poseidon {
 
-// class unique_MYSQL
-using ::MYSQL;
-POSEIDON_DEFINE_unique(MYSQL, ::mysql_close);
+struct MYSQL_deleter
+  {
+    void
+    operator()(::MYSQL* p) const noexcept
+      { ::mysql_close(p);  }
+  };
 
-// class unique_MYSQL_STMT
-using ::MYSQL_STMT;
-POSEIDON_DEFINE_unique(MYSQL_STMT, ::mysql_stmt_close);
+struct MYSQL_RES_deleter
+  {
+    void
+    operator()(::MYSQL_RES* p) const noexcept
+      { ::mysql_free_result(p);  }
+  };
 
-// class unique_MYSQL_RES
-using ::MYSQL_RES;
-POSEIDON_DEFINE_unique(MYSQL_RES, ::mysql_free_result);
+struct MYSQL_STMT_deleter
+  {
+    void
+    operator()(::MYSQL_STMT* p) const noexcept
+      { ::mysql_stmt_close(p);  }
+  };
+
+using uni_MYSQL = ::rocket::unique_ptr<::MYSQL, MYSQL_deleter>;
+using uni_MYSQL_RES = ::rocket::unique_ptr<::MYSQL_RES, MYSQL_RES_deleter>;
+using uni_MYSQL_STMT = ::rocket::unique_ptr<::MYSQL_STMT, MYSQL_STMT_deleter>;
 
 }  // namespace poseidon
 #endif

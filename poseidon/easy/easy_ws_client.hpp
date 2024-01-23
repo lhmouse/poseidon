@@ -14,7 +14,7 @@ class Easy_WS_Client
     // This is also the prototype of callbacks for the constructor.
     using thunk_type =
       thunk<
-        shptrR<WS_Client_Session>,  // client data socket
+        shR<WS_Client_Session>,  // client data socket
         Abstract_Fiber&,            // fiber for current callback
         Easy_WS_Event,              // event type; see comments above constructor
         linear_buffer&&>;           // message payload
@@ -22,14 +22,14 @@ class Easy_WS_Client
   private:
     thunk_type m_thunk;
 
-    shptr<Async_Connect> m_dns_task;
+    sh<Async_Connect> m_dns_task;
     struct X_Event_Queue;
-    shptr<X_Event_Queue> m_queue;
-    shptr<WS_Client_Session> m_session;
+    sh<X_Event_Queue> m_queue;
+    sh<WS_Client_Session> m_session;
 
   public:
     // Constructs a client. The argument shall be an invocable object taking
-    // `(shptrR<WS_Client_Session> session, Abstract_Fiber& fiber,
+    // `(shR<WS_Client_Session> session, Abstract_Fiber& fiber,
     // Easy_WS_Event event, linear_buffer&& data)`, where `session` is a
     // pointer to a client session object, and if `event` is
     //  1) `easy_ws_open`, then `data` is the request URI; or
@@ -76,7 +76,7 @@ class Easy_WS_Client
     close() noexcept;
 
     // Gets the connection session object.
-    shptrR<WS_Client_Session>
+    shR<WS_Client_Session>
     session_opt() const noexcept
       { return this->m_session;  }
 

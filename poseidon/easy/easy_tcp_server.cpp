@@ -17,7 +17,7 @@ struct Client_Table
     struct Event_Queue
       {
         // read-only fields; no locking needed
-        shptr<TCP_Socket> socket;
+        sh<TCP_Socket> socket;
         cacheline_barrier xcb_1;
 
         // fiber-private fields; no locking needed
@@ -48,7 +48,7 @@ struct Final_Fiber final : Abstract_Fiber
 
     explicit
     Final_Fiber(const Easy_TCP_Server::thunk_type& thunk,
-                shptrR<Client_Table> table, const volatile TCP_Socket* refptr)
+                shR<Client_Table> table, const volatile TCP_Socket* refptr)
       :
         m_thunk(thunk), m_wtable(table), m_refptr(refptr)
       { }
@@ -127,7 +127,7 @@ struct Final_Socket final : TCP_Socket
 
     explicit
     Final_Socket(const Easy_TCP_Server::thunk_type& thunk,
-                 unique_posix_fd&& fd, shptrR<Client_Table> table)
+                 unique_posix_fd&& fd, shR<Client_Table> table)
       :
         TCP_Socket(move(fd)), m_thunk(thunk), m_wtable(table)
       { }
@@ -209,13 +209,13 @@ struct Final_Listen_Socket final : Listen_Socket
 
     explicit
     Final_Listen_Socket(const Easy_TCP_Server::thunk_type& thunk,
-                        const Socket_Address& addr, shptrR<Client_Table> table)
+                        const Socket_Address& addr, shR<Client_Table> table)
       :
         Listen_Socket(addr), m_thunk(thunk), m_wtable(table)
       { }
 
     virtual
-    shptr<Abstract_Socket>
+    sh<Abstract_Socket>
     do_on_listen_new_client_opt(Socket_Address&& addr, unique_posix_fd&& fd) override
       {
         auto table = this->m_wtable.lock();

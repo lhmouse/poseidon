@@ -29,201 +29,11 @@ namespace noadl = poseidon;
 
 // Macros
 #define POSEIDON_HIDDEN_X_STRUCT(C, S)  \
-  struct __attribute__((__visibility__("hidden"))) C::X_##S : S  \
-    {  \
-      using S::S;  \
-      using S::operator=;  \
-    }  \
-    // no semicolon
+  struct __attribute__((__visibility__("hidden"))) C::X_##S  \
+    : S { using S::S, S::operator=;  }  // no semicolon
 
 #define POSEIDON_VISIBILITY_HIDDEN   \
   __attribute__((__visibility__("hidden"))) inline
-
-// Defines the `unique_OBJ` type.
-#define POSEIDON_DEFINE_unique(OBJ, xfree)  \
-  \
-  class unique_##OBJ  \
-    {  \
-    private:  \
-      OBJ* m_ptr;  \
-  \
-    public:  \
-      constexpr  \
-      unique_##OBJ(nullptr_t = nullptr) noexcept  \
-        :  \
-          m_ptr(nullptr)  \
-        { }  \
-  \
-      explicit constexpr  \
-      unique_##OBJ(OBJ* ptr) noexcept  \
-        :  \
-          m_ptr(ptr)  \
-        { }  \
-  \
-      unique_##OBJ(unique_##OBJ&& other) noexcept  \
-        {  \
-          this->m_ptr = other.release();  \
-        }  \
-  \
-      unique_##OBJ&  \
-      operator=(nullptr_t) & noexcept  \
-        {  \
-          this->reset(nullptr);  \
-          return *this;  \
-        }  \
-  \
-      unique_##OBJ&  \
-      operator=(unique_##OBJ&& other) & noexcept  \
-        {  \
-          this->reset(other.release());  \
-          return *this;  \
-        }  \
-  \
-      unique_##OBJ&  \
-      swap(unique_##OBJ& other) noexcept  \
-        {  \
-          ::std::swap(this->m_ptr, other.m_ptr);  \
-          return *this;  \
-        }  \
-  \
-      ~unique_##OBJ()  \
-        {  \
-          if(this->m_ptr) xfree(this->m_ptr);  \
-          this->m_ptr = (OBJ*) -0xDEADBEEF;  \
-        }  \
-  \
-    public:  \
-      explicit constexpr operator  \
-      bool() const noexcept  \
-        { return this->m_ptr != nullptr;  }  \
-  \
-      constexpr operator  \
-      OBJ*() const noexcept  \
-        { return this->m_ptr;  }  \
-  \
-      unique_##OBJ&  \
-      reset(OBJ* ptr = nullptr) noexcept  \
-        {  \
-          if(this->m_ptr) xfree(this->m_ptr);  \
-          this->m_ptr = ptr;  \
-          return *this;  \
-        }  \
-  \
-      OBJ*  \
-      release() noexcept  \
-        {  \
-          OBJ* old_ptr = this->m_ptr;  \
-          this->m_ptr = nullptr;  \
-          return old_ptr;  \
-        }  \
-    };  \
-  \
-  inline  \
-  void  \
-  swap(unique_##OBJ& lhs, unique_##OBJ& rhs) noexcept  \
-    { lhs.swap(rhs);  }  \
-  \
-  class unique_##OBJ  // no semicolon
-
-// Defines the `shared_OBJ` type.
-#define POSEIDON_DEFINE_shared(OBJ, add_ref, drop_ref)  \
-  \
-  class shared_##OBJ  \
-    {  \
-    private:  \
-      OBJ* m_ptr;  \
-  \
-    public:  \
-      constexpr  \
-      shared_##OBJ(nullptr_t = nullptr) noexcept  \
-        :  \
-          m_ptr(nullptr)  \
-        { }  \
-  \
-      explicit constexpr  \
-      shared_##OBJ(OBJ* ptr) noexcept  \
-        :  \
-          m_ptr(ptr)  \
-        { }  \
-  \
-      shared_##OBJ(const shared_##OBJ& other) noexcept  \
-        {  \
-          if(other.m_ptr) add_ref(other.m_ptr);  \
-          this->m_ptr = other.m_ptr;  \
-        }  \
-  \
-      shared_##OBJ(shared_##OBJ&& other) noexcept  \
-        {  \
-          this->m_ptr = other.release();  \
-        }  \
-  \
-      shared_##OBJ&  \
-      operator=(nullptr_t) & noexcept  \
-        {  \
-          this->reset(nullptr);  \
-          return *this;  \
-        }  \
-  \
-      shared_##OBJ&  \
-      operator=(const shared_##OBJ& other) & noexcept  \
-        {  \
-          if(other.m_ptr) add_ref(other.m_ptr);  \
-          this->reset(other.m_ptr);  \
-          return *this;  \
-        }  \
-  \
-      shared_##OBJ&  \
-      operator=(shared_##OBJ&& other) & noexcept  \
-        {  \
-          this->reset(other.release());  \
-          return *this;  \
-        }  \
-  \
-      shared_##OBJ&  \
-      swap(shared_##OBJ& other) noexcept  \
-        {  \
-          ::std::swap(this->m_ptr, other.m_ptr);  \
-          return *this;  \
-        }  \
-  \
-      ~shared_##OBJ()  \
-        {  \
-          if(this->m_ptr) drop_ref(this->m_ptr);  \
-          this->m_ptr = (OBJ*) -0xDEADBEEF;  \
-        }  \
-  \
-    public:  \
-      explicit constexpr operator  \
-      bool() const noexcept  \
-        { return this->m_ptr != nullptr;  }  \
-  \
-      constexpr operator  \
-      OBJ*() const noexcept  \
-        { return this->m_ptr;  }  \
-  \
-      shared_##OBJ&  \
-      reset(OBJ* ptr = nullptr) noexcept  \
-        {  \
-          if(this->m_ptr) drop_ref(this->m_ptr);  \
-          this->m_ptr = ptr;  \
-          return *this;  \
-        }  \
-  \
-      OBJ*  \
-      release() noexcept  \
-        {  \
-          OBJ* old_ptr = this->m_ptr;  \
-          this->m_ptr = nullptr;  \
-          return old_ptr;  \
-        }  \
-    };  \
-  \
-  inline  \
-  void  \
-  swap(shared_##OBJ& lhs, shared_##OBJ& rhs) noexcept  \
-    { lhs.swap(rhs);  }  \
-  \
-  class shared_##OBJ  // no semicolon
 
 // Aliases
 using ::std::initializer_list;
@@ -356,13 +166,13 @@ using ::asteria::format;
 using ::asteria::format_string;
 
 template<typename T, typename U> using cow_bivector = cow_vector<pair<T, U>>;
-template<typename T> using uniptr = ::std::unique_ptr<T>;  // default deleter
-template<typename T> using shptr = ::std::shared_ptr<T>;
+template<typename T> using uni = ::std::unique_ptr<T>;  // default deleter
+template<typename T> using sh = ::std::shared_ptr<T>;
 template<typename T> using wkptr = ::std::weak_ptr<T>;
 
 using cow_stringR = const cow_string&;
 using phsh_stringR = const phsh_string&;
-template<typename T> using shptrR = const shptr<T>&;
+template<typename T> using shR = const sh<T>&;
 template<typename T> using wkptrR = const wkptr<T>&;
 
 template<typename T> using ptr = T*;
@@ -393,14 +203,14 @@ class thunk
 
   private:
     vfptr<void*, ArgsT&&...> m_func;
-    shptr<void> m_obj;
+    sh<void> m_obj;
 
   public:
     // Points this callback to a target object, with its type erased.
     template<typename RealT,
     ROCKET_ENABLE_IF(is_invocable<RealT>::value)>
     explicit
-    thunk(const shptr<RealT>& obj) noexcept
+    thunk(const sh<RealT>& obj) noexcept
       {
         this->m_func = +[](void* p, ArgsT&&... args) { (*(RealT*) p) (forward<ArgsT>(args)...);  };
         this->m_obj = obj;
@@ -412,7 +222,7 @@ class thunk
     thunk(function_type* fptr) noexcept
       {
         this->m_func = nullptr;
-        this->m_obj = shptr<void>(shptr<int>(), (void*)(intptr_t) fptr);
+        this->m_obj = sh<void>(sh<int>(), (void*)(intptr_t) fptr);
       }
 
     // Performs a virtual call to the target object.
@@ -653,25 +463,25 @@ operator<<(tinyfmt& fmt, chars_view data)
 
 template<typename ValueT, typename... ArgsT>
 ROCKET_ALWAYS_INLINE
-uniptr<ValueT>
+uni<ValueT>
 new_uni(ArgsT&&... args)
   { return ::std::make_unique<ValueT>(forward<ArgsT>(args)...);  }
 
 template<typename ValueT>
 ROCKET_ALWAYS_INLINE
-uniptr<typename ::std::decay<ValueT>::type>
+uni<typename ::std::decay<ValueT>::type>
 new_uni(ValueT&& value)
   { return ::std::make_unique<typename ::std::decay<ValueT>::type>(forward<ValueT>(value));  }
 
 template<typename ValueT, typename... ArgsT>
 ROCKET_ALWAYS_INLINE
-shptr<ValueT>
+sh<ValueT>
 new_sh(ArgsT&&... args)
   { return ::std::make_shared<ValueT>(forward<ArgsT>(args)...);  }
 
 template<typename ValueT>
 ROCKET_ALWAYS_INLINE
-shptr<typename ::std::decay<ValueT>::type>
+sh<typename ::std::decay<ValueT>::type>
 new_sh(ValueT&& value)
   { return ::std::make_shared<typename ::std::decay<ValueT>::type>(forward<ValueT>(value));  }
 
@@ -829,17 +639,6 @@ class Easy_WS_Server;
 class Easy_WS_Client;
 class Easy_WSS_Server;
 class Easy_WSS_Client;
-
-// Helper types for third-party libraries
-class shared_SSL;
-class shared_BIO;
-class shared_SSL_CTX;
-class zlib_xStream;
-class deflate_Stream;
-class inflate_Stream;
-class unique_MYSQL;
-class unique_MYSQL_STMT;
-class unique_MYSQL_RES;
 
 // Singletons
 extern atomic_relaxed<int> exit_signal;

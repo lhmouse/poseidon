@@ -39,7 +39,7 @@ struct Final_Fiber final : Abstract_Fiber
     wkptr<Event_Queue> m_wqueue;
 
     explicit
-    Final_Fiber(const Easy_HTTPS_Client::thunk_type& thunk, shptrR<Event_Queue> queue)
+    Final_Fiber(const Easy_HTTPS_Client::thunk_type& thunk, shR<Event_Queue> queue)
       :
         m_thunk(thunk), m_wqueue(queue)
       { }
@@ -103,7 +103,7 @@ struct Final_Client_Session final : HTTPS_Client_Session
 
     explicit
     Final_Client_Session(const Easy_HTTPS_Client::thunk_type& thunk,
-                         shptrR<Event_Queue> queue, cow_stringR host)
+                         shR<Event_Queue> queue, cow_stringR host)
       :
         SSL_Socket(network_driver), m_thunk(thunk), m_wqueue(queue), m_host(host)
       { }

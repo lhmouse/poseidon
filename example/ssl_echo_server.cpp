@@ -11,7 +11,7 @@ using namespace ::poseidon;
 extern Easy_SSL_Server my_server;
 
 void
-event_callback(shptrR<SSL_Socket> socket, Abstract_Fiber& /*fiber*/,
+event_callback(shR<SSL_Socket> socket, Abstract_Fiber& /*fiber*/,
                Easy_Stream_Event event, linear_buffer& data, int code)
   {
     switch(event) {
