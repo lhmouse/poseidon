@@ -20,7 +20,7 @@ struct Final_Inflator final : Inflator
 
     virtual
     char*
-    do_on_inflate_get_output_buffer(size_t& size) override
+    do_on_inflate_resize_output_buffer(size_t& size) override
       {
         size = this->m_out.reserve_after_end(size);
         this->m_out.accept(size);

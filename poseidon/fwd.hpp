@@ -591,7 +591,7 @@ class shared_SSL_CTX;
 class zlib_xStream;
 class deflate_Stream;
 class inflate_Stream;
-class MySQL_Client;
+class unique_MYSQL;
 
 // Singletons
 extern atomic_relaxed<int> exit_signal;

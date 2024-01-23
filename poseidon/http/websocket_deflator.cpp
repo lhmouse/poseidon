@@ -51,7 +51,10 @@ deflate_message_stream(plain_mutex::unique_lock& lock, chars_view data)
       this->m_def_buf.accept(static_cast<size_t>(out_ptr - this->m_def_buf.mut_end()));
 
       if(is_none_of(err, { Z_OK, Z_BUF_ERROR }))
-        this->m_def_strm.throw_exception(err, "deflate");
+        POSEIDON_THROW((
+            "Failed to compress WebSocket message; zlib error: $1",
+            "[`deflate()` returned `$2`]"),
+            this->m_def_strm.msg(), err);
     }
     while((in_ptr != in_end) && (err == Z_OK));
   }
@@ -76,7 +79,10 @@ deflate_message_finish(plain_mutex::unique_lock& lock)
       this->m_def_buf.accept(static_cast<size_t>(out_ptr - this->m_def_buf.mut_end()));
 
       if(is_none_of(err, { Z_OK, Z_BUF_ERROR }))
-        this->m_def_strm.throw_exception(err, "deflate");
+        POSEIDON_THROW((
+            "Failed to compress WebSocket message; zlib error: $1",
+            "[`deflate()` returned `$2`]"),
+            this->m_def_strm.msg(), err);
     }
     while(err == Z_OK);
 
@@ -107,7 +113,10 @@ inflate_message_stream(plain_mutex::unique_lock& lock, chars_view data)
       this->m_inf_buf.accept(static_cast<size_t>(out_ptr - this->m_inf_buf.mut_end()));
 
       if(is_none_of(err, { Z_OK, Z_BUF_ERROR }))
-        this->m_inf_strm.throw_exception(err, "inflate");
+        POSEIDON_THROW((
+            "Failed to decompress WebSocket message; zlib error: $1",
+            "[`inflate()` returned `$2`]"),
+            this->m_inf_strm.msg(), err);
     }
     while((in_ptr != in_end) && (err == Z_OK));
   }
@@ -132,7 +141,10 @@ inflate_message_finish(plain_mutex::unique_lock& lock)
       this->m_inf_buf.accept(static_cast<size_t>(out_ptr - this->m_inf_buf.mut_end()));
 
       if(is_none_of(err, { Z_OK, Z_BUF_ERROR }))
-        this->m_inf_strm.throw_exception(err, "inflate");
+        POSEIDON_THROW((
+            "Failed to decompress WebSocket message; zlib error: $1",
+            "[`inflate()` returned `$2`]"),
+            this->m_inf_strm.msg(), err);
     }
     while(err == Z_OK);
   }

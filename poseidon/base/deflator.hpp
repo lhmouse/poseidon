@@ -28,7 +28,7 @@ class Deflator
     // If an exception is thrown, the state of this stream is unspecified.
     virtual
     char*
-    do_on_deflate_get_output_buffer(size_t& size) = 0;
+    do_on_deflate_resize_output_buffer(size_t& size) = 0;
 
     // This callback is invoked to inform derived classes that all input data
     // have been compressed but the output buffer is not full. `backup` is the

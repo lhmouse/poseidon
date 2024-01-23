@@ -39,10 +39,10 @@ inflate(chars_view data)
     do {
       constexpr size_t out_request = 128;
       size_t out_size = out_request;
-      char* out_ptr = this->do_on_inflate_get_output_buffer(out_size);
+      char* out_ptr = this->do_on_inflate_resize_output_buffer(out_size);
       if(out_size < out_request)
         POSEIDON_THROW((
-            "`do_on_inflate_get_output_buffer()` shall not return smaller buffers (`$1` < `$2`)"),
+            "Output buffer too small (`$1` < `$2`)"),
             out_size, out_request);
 
       char* out_end = out_ptr + out_size;
@@ -54,7 +54,10 @@ inflate(chars_view data)
         this->do_on_inflate_truncate_output_buffer(static_cast<size_t>(out_end - out_ptr));
 
       if(is_none_of(err, { Z_OK, Z_BUF_ERROR, Z_STREAM_END }))
-        this->m_strm.throw_exception(err, "inflate");
+        POSEIDON_THROW((
+            "Failed to decompress data; zlib error: $1",
+            "[`inflate()` returned `$2`]"),
+            this->m_strm.msg(), err);
     }
     while((in_ptr != in_end) && (err == Z_OK));
 
@@ -74,10 +77,10 @@ finish()
       // Allocate an output buffer and write compressed data there.
       constexpr size_t out_request = 16;
       size_t out_size = out_request;
-      char* out_ptr = this->do_on_inflate_get_output_buffer(out_size);
+      char* out_ptr = this->do_on_inflate_resize_output_buffer(out_size);
       if(out_size < out_request)
         POSEIDON_THROW((
-            "`do_on_inflate_get_output_buffer()` shall not return smaller buffers (`$1` < `$2`)"),
+            "Output buffer too small (`$1` < `$2`)"),
             out_size, out_request);
 
       char* out_end = out_ptr + out_size;
@@ -89,7 +92,10 @@ finish()
         this->do_on_inflate_truncate_output_buffer(static_cast<size_t>(out_end - out_ptr));
 
       if(is_none_of(err, { Z_OK, Z_BUF_ERROR, Z_STREAM_END }))
-        this->m_strm.throw_exception(err, "inflate");
+        POSEIDON_THROW((
+            "Failed to decompress data; zlib error: $1",
+            "[`inflate()` returned `$2`]"),
+            this->m_strm.msg(), err);
     }
     while(err == Z_OK);
 
