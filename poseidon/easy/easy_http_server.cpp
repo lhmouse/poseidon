@@ -45,8 +45,8 @@ struct Final_Fiber final : Abstract_Fiber
     const volatile HTTP_Server_Session* m_refptr;
 
     explicit
-    Final_Fiber(const Easy_HTTP_Server::thunk_type& thunk,
-          const shptr<Client_Table>& table, const volatile HTTP_Server_Session* refptr)
+    Final_Fiber(const Easy_HTTP_Server::thunk_type& thunk, shptrR<Client_Table> table,
+                const volatile HTTP_Server_Session* refptr)
       :
         m_thunk(thunk), m_wtable(table), m_refptr(refptr)
       { }
@@ -127,14 +127,14 @@ struct Final_Fiber final : Abstract_Fiber
       }
   };
 
-struct Final_HTTP_Server_Session final : HTTP_Server_Session
+struct Final_Server_Session final : HTTP_Server_Session
   {
     Easy_HTTP_Server::thunk_type m_thunk;
     wkptr<Client_Table> m_wtable;
 
     explicit
-    Final_HTTP_Server_Session(unique_posix_fd&& fd,
-          const Easy_HTTP_Server::thunk_type& thunk, const shptr<Client_Table>& table)
+    Final_Server_Session(const Easy_HTTP_Server::thunk_type& thunk,
+                         unique_posix_fd&& fd, shptrR<Client_Table> table)
       :
         TCP_Socket(move(fd)), m_thunk(thunk), m_wtable(table)
       { }
@@ -184,7 +184,8 @@ struct Final_HTTP_Server_Session final : HTTP_Server_Session
 
     virtual
     void
-    do_on_http_request_finish(HTTP_Request_Headers&& req, linear_buffer&& data, bool close_now) override
+    do_on_http_request_finish(HTTP_Request_Headers&& req, linear_buffer&& data,
+                              bool close_now) override
       {
         Client_Table::Event_Queue::Event event;
         event.type = easy_http_message;
@@ -225,8 +226,8 @@ struct Final_Listen_Socket final : Listen_Socket
     wkptr<Client_Table> m_wtable;
 
     explicit
-    Final_Listen_Socket(const Socket_Address& addr,
-          const Easy_HTTP_Server::thunk_type& thunk, const shptr<Client_Table>& table)
+    Final_Listen_Socket(const Easy_HTTP_Server::thunk_type& thunk,
+                        const Socket_Address& addr, shptrR<Client_Table> table)
       :
         Listen_Socket(addr), m_thunk(thunk), m_wtable(table)
       {
@@ -241,7 +242,7 @@ struct Final_Listen_Socket final : Listen_Socket
         if(!table)
           return nullptr;
 
-        auto session = new_sh<Final_HTTP_Server_Session>(move(fd), this->m_thunk, table);
+        auto session = new_sh<Final_Server_Session>(this->m_thunk, move(fd), table);
         (void) addr;
 
         // We are in the network thread here.
@@ -267,8 +268,9 @@ void
 Easy_HTTP_Server::
 start(chars_view addr)
   {
+    Socket_Address saddr(addr);
     auto table = new_sh<X_Client_Table>();
-    auto socket = new_sh<Final_Listen_Socket>(Socket_Address(addr), this->m_thunk, table);
+    auto socket = new_sh<Final_Listen_Socket>(this->m_thunk, saddr, table);
 
     network_driver.insert(socket);
     this->m_client_table = move(table);

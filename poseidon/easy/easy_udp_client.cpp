@@ -34,7 +34,7 @@ struct Final_Fiber final : Abstract_Fiber
     wkptr<Packet_Queue> m_wqueue;
 
     explicit
-    Final_Fiber(const Easy_UDP_Client::thunk_type& thunk, const shptr<Packet_Queue>& queue)
+    Final_Fiber(const Easy_UDP_Client::thunk_type& thunk, shptrR<Packet_Queue> queue)
       :
         m_thunk(thunk), m_wqueue(queue)
       { }
@@ -81,13 +81,13 @@ struct Final_Fiber final : Abstract_Fiber
       }
   };
 
-struct Final_UDP_Socket final : UDP_Socket
+struct Final_Socket final : UDP_Socket
   {
     Easy_UDP_Client::thunk_type m_thunk;
     wkptr<Packet_Queue> m_wqueue;
 
     explicit
-    Final_UDP_Socket(const Easy_UDP_Client::thunk_type& thunk, const shptr<Packet_Queue>& queue)
+    Final_Socket(const Easy_UDP_Client::thunk_type& thunk, shptrR<Packet_Queue> queue)
       :
         m_thunk(thunk), m_wqueue(queue)
       { }
@@ -130,7 +130,7 @@ Easy_UDP_Client::
 open()
   {
     auto queue = new_sh<X_Packet_Queue>();
-    auto socket = new_sh<Final_UDP_Socket>(this->m_thunk, queue);
+    auto socket = new_sh<Final_Socket>(this->m_thunk, queue);
     queue->wsocket = socket;
 
     network_driver.insert(socket);

@@ -39,7 +39,7 @@ struct Final_Fiber final : Abstract_Fiber
     wkptr<Event_Queue> m_wqueue;
 
     explicit
-    Final_Fiber(const Easy_HTTPS_Client::thunk_type& thunk, const shptr<Event_Queue>& queue)
+    Final_Fiber(const Easy_HTTPS_Client::thunk_type& thunk, shptrR<Event_Queue> queue)
       :
         m_thunk(thunk), m_wqueue(queue)
       { }
@@ -95,17 +95,17 @@ struct Final_Fiber final : Abstract_Fiber
       }
   };
 
-struct Final_HTTPS_Client_Session final : HTTPS_Client_Session
+struct Final_Client_Session final : HTTPS_Client_Session
   {
     Easy_HTTPS_Client::thunk_type m_thunk;
     wkptr<Event_Queue> m_wqueue;
-    cow_string m_host_header;
+    cow_string m_host;
 
     explicit
-    Final_HTTPS_Client_Session(const Easy_HTTPS_Client::thunk_type& thunk, const shptr<Event_Queue>& queue,
-          cow_stringR host_header)
+    Final_Client_Session(const Easy_HTTPS_Client::thunk_type& thunk,
+                         shptrR<Event_Queue> queue, cow_stringR host)
       :
-        m_thunk(thunk), m_wqueue(queue), m_host_header(host_header)
+        SSL_Socket(network_driver), m_thunk(thunk), m_wqueue(queue), m_host(host)
       { }
 
     void
@@ -148,7 +148,8 @@ struct Final_HTTPS_Client_Session final : HTTPS_Client_Session
 
     virtual
     void
-    do_on_https_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data, bool close_now) override
+    do_on_https_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data,
+                                bool close_now) override
       {
         Event_Queue::Event event;
         event.type = easy_http_message;
@@ -181,7 +182,7 @@ struct Final_HTTPS_Client_Session final : HTTPS_Client_Session
             req.headers.erase(hindex --);
 
         // Add required headers.
-        req.headers.emplace_back(sref("Host"), this->m_host_header);
+        req.headers.emplace_back(sref("Host"), this->m_host);
       }
   };
 
@@ -217,7 +218,7 @@ connect(chars_view addr)
 
     // Initiate the connection.
     auto queue = new_sh<X_Event_Queue>();
-    auto session = new_sh<Final_HTTPS_Client_Session>(this->m_thunk, queue,
+    auto session = new_sh<Final_Client_Session>(this->m_thunk, queue,
           format_string("$1:$2", caddr.host, caddr.port_num));
 
     queue->wsession = session;
@@ -267,7 +268,7 @@ https_GET(HTTP_Request_Headers&& req)
       return false;
 
     req.method = "GET";
-    static_cast<Final_HTTPS_Client_Session*>(this->m_session.get())->fix_headers(req);
+    static_cast<Final_Client_Session*>(this->m_session.get())->fix_headers(req);
     return this->m_session->https_request(move(req), "");
   }
 
@@ -279,7 +280,7 @@ https_POST(HTTP_Request_Headers&& req, chars_view data)
       return false;
 
     req.method = "POST";
-    static_cast<Final_HTTPS_Client_Session*>(this->m_session.get())->fix_headers(req);
+    static_cast<Final_Client_Session*>(this->m_session.get())->fix_headers(req);
     return this->m_session->https_request(move(req), data);
   }
 
@@ -291,7 +292,7 @@ https_PUT(HTTP_Request_Headers&& req, chars_view data)
       return false;
 
     req.method = "PUT";
-    static_cast<Final_HTTPS_Client_Session*>(this->m_session.get())->fix_headers(req);
+    static_cast<Final_Client_Session*>(this->m_session.get())->fix_headers(req);
     return this->m_session->https_request(move(req), data);
   }
 
@@ -303,7 +304,7 @@ https_DELETE(HTTP_Request_Headers&& req)
       return false;
 
     req.method = "DELETE";
-    static_cast<Final_HTTPS_Client_Session*>(this->m_session.get())->fix_headers(req);
+    static_cast<Final_Client_Session*>(this->m_session.get())->fix_headers(req);
     return this->m_session->https_request(move(req), "");
   }
 

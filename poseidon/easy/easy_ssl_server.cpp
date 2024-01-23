@@ -47,8 +47,8 @@ struct Final_Fiber final : Abstract_Fiber
     const volatile SSL_Socket* m_refptr;
 
     explicit
-    Final_Fiber(const Easy_SSL_Server::thunk_type& thunk,
-          const shptr<Client_Table>& table, const volatile SSL_Socket* refptr)
+    Final_Fiber(const Easy_SSL_Server::thunk_type& thunk, shptrR<Client_Table> table,
+                const volatile SSL_Socket* refptr)
       :
         m_thunk(thunk), m_wtable(table), m_refptr(refptr)
       { }
@@ -101,7 +101,8 @@ struct Final_Fiber final : Abstract_Fiber
             // `event.data`. `data_stream` may be consumed partially by user code,
             // and shall be preserved across callbacks.
             if(event.type == easy_stream_data)
-              this->m_thunk(socket, *this, event.type, splice_buffers(queue->data_stream, move(event.data)), event.code);
+              this->m_thunk(socket, *this, event.type,
+                        splice_buffers(queue->data_stream, move(event.data)), event.code);
             else
               this->m_thunk(socket, *this, event.type, event.data, event.code);
           }
@@ -119,16 +120,16 @@ struct Final_Fiber final : Abstract_Fiber
       }
   };
 
-struct Final_SSL_Socket final : SSL_Socket
+struct Final_Socket final : SSL_Socket
   {
     Easy_SSL_Server::thunk_type m_thunk;
     wkptr<Client_Table> m_wtable;
 
     explicit
-    Final_SSL_Socket(unique_posix_fd&& fd,
-          const Easy_SSL_Server::thunk_type& thunk, const shptr<Client_Table>& table)
+    Final_Socket(const Easy_SSL_Server::thunk_type& thunk, unique_posix_fd&& fd,
+                 shptrR<Client_Table> table)
       :
-        SSL_Socket(move(fd)), m_thunk(thunk), m_wtable(table)
+        SSL_Socket(move(fd), network_driver), m_thunk(thunk), m_wtable(table)
       { }
 
     void
@@ -207,7 +208,8 @@ struct Final_Listen_Socket final : Listen_Socket
     wkptr<Client_Table> m_wtable;
 
     explicit
-    Final_Listen_Socket(const Socket_Address& addr, const Easy_SSL_Server::thunk_type& thunk, const shptr<Client_Table>& table)
+    Final_Listen_Socket(const Easy_SSL_Server::thunk_type& thunk,
+                        const Socket_Address& addr, shptrR<Client_Table> table)
       :
         Listen_Socket(addr), m_thunk(thunk), m_wtable(table)
       { }
@@ -220,7 +222,7 @@ struct Final_Listen_Socket final : Listen_Socket
         if(!table)
           return nullptr;
 
-        auto socket = new_sh<Final_SSL_Socket>(move(fd), this->m_thunk, table);
+        auto socket = new_sh<Final_Socket>(this->m_thunk, move(fd), table);
         (void) addr;
 
         // We are in the network thread here.
@@ -251,7 +253,7 @@ start(chars_view addr)
 
     // Initiate the server.
     auto table = new_sh<X_Client_Table>();
-    auto socket = new_sh<Final_Listen_Socket>(saddr, this->m_thunk, table);
+    auto socket = new_sh<Final_Listen_Socket>(this->m_thunk, saddr, table);
 
     network_driver.insert(socket);
     this->m_client_table = move(table);

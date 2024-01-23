@@ -42,7 +42,7 @@ struct Final_Fiber final : Abstract_Fiber
     wkptr<Event_Queue> m_wqueue;
 
     explicit
-    Final_Fiber(const Easy_SSL_Client::thunk_type& thunk, const shptr<Event_Queue>& queue)
+    Final_Fiber(const Easy_SSL_Client::thunk_type& thunk, shptrR<Event_Queue> queue)
       :
         m_thunk(thunk), m_wqueue(queue)
       { }
@@ -83,7 +83,8 @@ struct Final_Fiber final : Abstract_Fiber
             // `event.data`. `data_stream` may be consumed partially by user code,
             // and shall be preserved across callbacks.
             if(event.type == easy_stream_data)
-              this->m_thunk(socket, *this, event.type, splice_buffers(queue->data_stream, move(event.data)), event.code);
+              this->m_thunk(socket, *this, event.type,
+                        splice_buffers(queue->data_stream, move(event.data)), event.code);
             else
               this->m_thunk(socket, *this, event.type, event.data, event.code);
           }
@@ -101,15 +102,15 @@ struct Final_Fiber final : Abstract_Fiber
       }
   };
 
-struct Final_SSL_Socket final : SSL_Socket
+struct Final_Socket final : SSL_Socket
   {
     Easy_SSL_Client::thunk_type m_thunk;
     wkptr<Event_Queue> m_wqueue;
 
     explicit
-    Final_SSL_Socket(const Easy_SSL_Client::thunk_type& thunk, const shptr<Event_Queue>& queue)
+    Final_Socket(const Easy_SSL_Client::thunk_type& thunk, shptrR<Event_Queue> queue)
       :
-        m_thunk(thunk), m_wqueue(queue)
+        SSL_Socket(network_driver), m_thunk(thunk), m_wqueue(queue)
       { }
 
     void
@@ -211,7 +212,7 @@ connect(chars_view addr)
 
     // Initiate the connection.
     auto queue = new_sh<X_Event_Queue>();
-    auto socket = new_sh<Final_SSL_Socket>(this->m_thunk, queue);
+    auto socket = new_sh<Final_Socket>(this->m_thunk, queue);
 
     queue->wsocket = socket;
     auto dns_task = new_sh<Async_Connect>(network_driver, socket,
