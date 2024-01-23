@@ -13,7 +13,7 @@ namespace poseidon {
 class zlib_xStream
   {
   protected:
-    mutable ::z_stream m_zstrm[1];
+    ::z_stream m_zstrm[1];
 
   protected:
     zlib_xStream() noexcept
