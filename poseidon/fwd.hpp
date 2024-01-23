@@ -39,6 +39,192 @@ namespace noadl = poseidon;
 #define POSEIDON_VISIBILITY_HIDDEN   \
   __attribute__((__visibility__("hidden"))) inline
 
+// Defines the `unique_OBJ` type.
+#define POSEIDON_DEFINE_unique(OBJ, xfree)  \
+  \
+  class unique_##OBJ  \
+    {  \
+    private:  \
+      OBJ* m_ptr;  \
+  \
+    public:  \
+      constexpr  \
+      unique_##OBJ(nullptr_t = nullptr) noexcept  \
+        :  \
+          m_ptr(nullptr)  \
+        { }  \
+  \
+      explicit constexpr  \
+      unique_##OBJ(OBJ* ptr) noexcept  \
+        :  \
+          m_ptr(ptr)  \
+        { }  \
+  \
+      unique_##OBJ(unique_##OBJ&& other) noexcept  \
+        {  \
+          this->m_ptr = other.release();  \
+        }  \
+  \
+      unique_##OBJ&  \
+      operator=(nullptr_t) & noexcept  \
+        {  \
+          this->reset(nullptr);  \
+          return *this;  \
+        }  \
+  \
+      unique_##OBJ&  \
+      operator=(unique_##OBJ&& other) & noexcept  \
+        {  \
+          this->reset(other.release());  \
+          return *this;  \
+        }  \
+  \
+      unique_##OBJ&  \
+      swap(unique_##OBJ& other) noexcept  \
+        {  \
+          ::std::swap(this->m_ptr, other.m_ptr);  \
+          return *this;  \
+        }  \
+  \
+      ~unique_##OBJ()  \
+        {  \
+          if(this->m_ptr) xfree(this->m_ptr);  \
+          this->m_ptr = (OBJ*) -0xDEADBEEF;  \
+        }  \
+  \
+    public:  \
+      explicit constexpr operator  \
+      bool() const noexcept  \
+        { return this->m_ptr != nullptr;  }  \
+  \
+      constexpr operator  \
+      OBJ*() const noexcept  \
+        { return this->m_ptr;  }  \
+  \
+      unique_##OBJ&  \
+      reset(OBJ* ptr = nullptr) noexcept  \
+        {  \
+          if(this->m_ptr) xfree(this->m_ptr);  \
+          this->m_ptr = ptr;  \
+          return *this;  \
+        }  \
+  \
+      OBJ*  \
+      release() noexcept  \
+        {  \
+          OBJ* old_ptr = this->m_ptr;  \
+          this->m_ptr = nullptr;  \
+          return old_ptr;  \
+        }  \
+    };  \
+  \
+  inline  \
+  void  \
+  swap(unique_##OBJ& lhs, unique_##OBJ& rhs) noexcept  \
+    { lhs.swap(rhs);  }  \
+  \
+  class unique_##OBJ  // no semicolon
+
+// Defines the `shared_OBJ` type.
+#define POSEIDON_DEFINE_shared(OBJ, add_ref, drop_ref)  \
+  \
+  class shared_##OBJ  \
+    {  \
+    private:  \
+      OBJ* m_ptr;  \
+  \
+    public:  \
+      constexpr  \
+      shared_##OBJ(nullptr_t = nullptr) noexcept  \
+        :  \
+          m_ptr(nullptr)  \
+        { }  \
+  \
+      explicit constexpr  \
+      shared_##OBJ(OBJ* ptr) noexcept  \
+        :  \
+          m_ptr(ptr)  \
+        { }  \
+  \
+      shared_##OBJ(const shared_##OBJ& other) noexcept  \
+        {  \
+          if(other.m_ptr) add_ref(other.m_ptr);  \
+          this->m_ptr = other.m_ptr;  \
+        }  \
+  \
+      shared_##OBJ(shared_##OBJ&& other) noexcept  \
+        {  \
+          this->m_ptr = other.release();  \
+        }  \
+  \
+      shared_##OBJ&  \
+      operator=(nullptr_t) & noexcept  \
+        {  \
+          this->reset(nullptr);  \
+          return *this;  \
+        }  \
+  \
+      shared_##OBJ&  \
+      operator=(const shared_##OBJ& other) & noexcept  \
+        {  \
+          if(other.m_ptr) add_ref(other.m_ptr);  \
+          this->reset(other.m_ptr);  \
+          return *this;  \
+        }  \
+  \
+      shared_##OBJ&  \
+      operator=(shared_##OBJ&& other) & noexcept  \
+        {  \
+          this->reset(other.release());  \
+          return *this;  \
+        }  \
+  \
+      shared_##OBJ&  \
+      swap(shared_##OBJ& other) noexcept  \
+        {  \
+          ::std::swap(this->m_ptr, other.m_ptr);  \
+          return *this;  \
+        }  \
+  \
+      ~shared_##OBJ()  \
+        {  \
+          if(this->m_ptr) drop_ref(this->m_ptr);  \
+          this->m_ptr = (OBJ*) -0xDEADBEEF;  \
+        }  \
+  \
+    public:  \
+      explicit constexpr operator  \
+      bool() const noexcept  \
+        { return this->m_ptr != nullptr;  }  \
+  \
+      constexpr operator  \
+      OBJ*() const noexcept  \
+        { return this->m_ptr;  }  \
+  \
+      shared_##OBJ&  \
+      reset(OBJ* ptr = nullptr) noexcept  \
+        {  \
+          if(this->m_ptr) drop_ref(this->m_ptr);  \
+          this->m_ptr = ptr;  \
+          return *this;  \
+        }  \
+  \
+      OBJ*  \
+      release() noexcept  \
+        {  \
+          OBJ* old_ptr = this->m_ptr;  \
+          this->m_ptr = nullptr;  \
+          return old_ptr;  \
+        }  \
+    };  \
+  \
+  inline  \
+  void  \
+  swap(shared_##OBJ& lhs, shared_##OBJ& rhs) noexcept  \
+    { lhs.swap(rhs);  }  \
+  \
+  class shared_##OBJ  // no semicolon
+
 // Aliases
 using ::std::initializer_list;
 using ::std::nullptr_t;
@@ -489,6 +675,65 @@ shptr<typename ::std::decay<ValueT>::type>
 new_sh(ValueT&& value)
   { return ::std::make_shared<typename ::std::decay<ValueT>::type>(forward<ValueT>(value));  }
 
+// Logging with prettification
+enum Log_Level : uint8_t
+  {
+    log_level_fatal  = 0,
+    log_level_error  = 1,
+    log_level_warn   = 2,
+    log_level_info   = 3,
+    log_level_debug  = 4,
+    log_level_trace  = 5,
+  };
+
+struct Log_Context
+  {
+    const char* file;
+    uint32_t line;
+    Log_Level level;
+    const char* func;
+  };
+
+ROCKET_CONST
+bool
+async_logger_check_level(Log_Level level) noexcept;
+
+void
+async_logger_enqueue(const Log_Context& ctx, vfptr<cow_string&, void*> thunk, void* compose) noexcept;
+
+// Define helper macros that compose log messages. The `TEMPLATE` argument shall
+// be a list of string literals in parentheses. Multiple strings are joined with
+// line separators. `format()` is to be found via ADL.
+#define POSEIDON_LOG_G_(LEVEL, TEMPLATE, ...)  \
+    (::poseidon::async_logger_check_level(::poseidon::log_level_##LEVEL)  \
+      &&  \
+      __extension__ ({  \
+        auto IuChah0u = [&](::rocket::cow_string& quu1Opae)  \
+          { format(quu1Opae, (::asteria::make_string_template TEMPLATE), ##__VA_ARGS__);  };  \
+        auto ohng0Ohh = +[](::rocket::cow_string& iughih5B, void* fi8OhNgo)  \
+          { (*static_cast<decltype(IuChah0u)*>(fi8OhNgo)) (iughih5B);  };  \
+        static const ::poseidon::Log_Context aebiF4ai =  \
+          { __FILE__, __LINE__, ::poseidon::log_level_##LEVEL, __func__ };  \
+        ::poseidon::async_logger_enqueue(aebiF4ai, ohng0Ohh, &IuChah0u);  \
+        true;  \
+      }))
+
+#define POSEIDON_LOG_FATAL(...)   POSEIDON_LOG_G_(fatal, __VA_ARGS__)
+#define POSEIDON_LOG_ERROR(...)   POSEIDON_LOG_G_(error, __VA_ARGS__)
+#define POSEIDON_LOG_WARN(...)    POSEIDON_LOG_G_(warn,  __VA_ARGS__)
+#define POSEIDON_LOG_INFO(...)    POSEIDON_LOG_G_(info,  __VA_ARGS__)
+#define POSEIDON_LOG_DEBUG(...)   POSEIDON_LOG_G_(debug, __VA_ARGS__)
+#define POSEIDON_LOG_TRACE(...)   POSEIDON_LOG_G_(trace, __VA_ARGS__)
+
+// Evaluates an expression. If an exception is thrown, a message is printed but
+// the exception itself is caught and ignored.
+#define POSEIDON_CATCH_ALL(...)  \
+    (__extension__ ({  \
+      try { (void) (__VA_ARGS__);  }  \
+      catch(::std::exception& zeew2aeY)  \
+      { POSEIDON_LOG_ERROR(("Ignoring exception: $1"), zeew2aeY);  }  \
+    }))
+
 // Constants
 enum zlib_Format : uint8_t
   {
@@ -586,12 +831,13 @@ class Easy_WSS_Client;
 // Helper types for third-party libraries
 class shared_SSL;
 class shared_BIO;
-class shared_X509;
 class shared_SSL_CTX;
 class zlib_xStream;
 class deflate_Stream;
 class inflate_Stream;
 class unique_MYSQL;
+class unique_MYSQL_STMT;
+class unique_MYSQL_RES;
 
 // Singletons
 extern atomic_relaxed<int> exit_signal;
@@ -602,65 +848,6 @@ extern class Async_Logger& async_logger;
 extern class Timer_Driver& timer_driver;
 extern class Async_Task_Executor& async_task_executor;
 extern class Network_Driver& network_driver;
-
-// Logging with prettification
-enum Log_Level : uint8_t
-  {
-    log_level_fatal  = 0,
-    log_level_error  = 1,
-    log_level_warn   = 2,
-    log_level_info   = 3,
-    log_level_debug  = 4,
-    log_level_trace  = 5,
-  };
-
-struct Log_Context
-  {
-    const char* file;
-    uint32_t line;
-    Log_Level level;
-    const char* func;
-  };
-
-ROCKET_CONST
-bool
-async_logger_check_level(Log_Level level) noexcept;
-
-void
-async_logger_enqueue(const Log_Context& ctx, vfptr<cow_string&, void*> thunk, void* compose) noexcept;
-
-// Define helper macros that compose log messages. The `TEMPLATE` argument shall
-// be a list of string literals in parentheses. Multiple strings are joined with
-// line separators. `format()` is to be found via ADL.
-#define POSEIDON_LOG_G_(LEVEL, TEMPLATE, ...)  \
-    (::poseidon::async_logger_check_level(::poseidon::log_level_##LEVEL)  \
-      &&  \
-      __extension__ ({  \
-        auto IuChah0u = [&](::rocket::cow_string& quu1Opae)  \
-          { format(quu1Opae, (::asteria::make_string_template TEMPLATE), ##__VA_ARGS__);  };  \
-        auto ohng0Ohh = +[](::rocket::cow_string& iughih5B, void* fi8OhNgo)  \
-          { (*static_cast<decltype(IuChah0u)*>(fi8OhNgo)) (iughih5B);  };  \
-        static const ::poseidon::Log_Context aebiF4ai =  \
-          { __FILE__, __LINE__, ::poseidon::log_level_##LEVEL, __func__ };  \
-        ::poseidon::async_logger_enqueue(aebiF4ai, ohng0Ohh, &IuChah0u);  \
-        true;  \
-      }))
-
-#define POSEIDON_LOG_FATAL(...)   POSEIDON_LOG_G_(fatal, __VA_ARGS__)
-#define POSEIDON_LOG_ERROR(...)   POSEIDON_LOG_G_(error, __VA_ARGS__)
-#define POSEIDON_LOG_WARN(...)    POSEIDON_LOG_G_(warn,  __VA_ARGS__)
-#define POSEIDON_LOG_INFO(...)    POSEIDON_LOG_G_(info,  __VA_ARGS__)
-#define POSEIDON_LOG_DEBUG(...)   POSEIDON_LOG_G_(debug, __VA_ARGS__)
-#define POSEIDON_LOG_TRACE(...)   POSEIDON_LOG_G_(trace, __VA_ARGS__)
-
-// Evaluates an expression. If an exception is thrown, a message is printed but
-// the exception itself is caught and ignored.
-#define POSEIDON_CATCH_ALL(...)  \
-    (__extension__ ({  \
-      try { (void) (__VA_ARGS__);  }  \
-      catch(::std::exception& zeew2aeY)  \
-      { POSEIDON_LOG_ERROR(("Ignoring exception: $1"), zeew2aeY);  }  \
-    }))
 
 }  // namespace poseidon
 #endif

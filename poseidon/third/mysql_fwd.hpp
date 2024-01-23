@@ -8,39 +8,17 @@
 #include <mysql/mysql.h>
 namespace poseidon {
 
-class MySQL_Client
-  {
-  private:
-    mutable ::MYSQL m_mysql[1];
+// class unique_MYSQL
+using ::MYSQL;
+POSEIDON_DEFINE_unique(MYSQL, ::mysql_close);
 
-  public:
-    explicit
-    MySQL_Client()
-      {
-        if(::mysql_init(this->m_mysql) == nullptr)
-          ::rocket::sprintf_and_throw<::std::runtime_error>(
-                "MySQL_Client: insufficient memory");
+// class unique_MYSQL_STMT
+using ::MYSQL_STMT;
+POSEIDON_DEFINE_unique(MYSQL_STMT, ::mysql_stmt_close);
 
-        // Set default options.
-        ::mysql_options(this->m_mysql, MYSQL_OPT_COMPRESS, "1");
-        ::mysql_options(this->m_mysql, MYSQL_SET_CHARSET_NAME , "utf8mb4");
-      }
-
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(MySQL_Client)
-      {
-        ::mysql_close(this->m_mysql);
-      }
-
-    [[noreturn]]
-    void
-    throw_exception(const char* func) const
-      {
-        ::rocket::sprintf_and_throw<::std::runtime_error>(
-              "MySQL_Client: ERROR %u (%s): %s\n[`%s()` failed]",
-              ::mysql_errno(this->m_mysql), ::mysql_sqlstate(this->m_mysql),
-              ::mysql_error(this->m_mysql), func);
-      }
-  };
+// class unique_MYSQL_RES
+using ::MYSQL_RES;
+POSEIDON_DEFINE_unique(MYSQL_RES, ::mysql_free_result);
 
 }  // namespace poseidon
 #endif
