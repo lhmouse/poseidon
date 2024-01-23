@@ -804,6 +804,8 @@ enum MySQL_Engine_Type : uint8_t;
 class MySQL_Table_Structure;
 class MySQL_Value;
 
+// MongoDB types
+
 // Easy types
 // Being 'easy' means all callbacks are invoked in fibers and can perform
 // async/await operations. These are suitable for agile development.
@@ -848,6 +850,8 @@ extern class Async_Logger& async_logger;
 extern class Timer_Driver& timer_driver;
 extern class Async_Task_Executor& async_task_executor;
 extern class Network_Driver& network_driver;
+extern class MySQL_Connector& mysql_connector;
+extern class MongoDB_Connector& mongodb_connector;
 
 }  // namespace poseidon
 #endif

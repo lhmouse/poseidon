@@ -74,11 +74,13 @@ nobase_include_HEADERS +=  \
   %reldir%/mysql/enums.hpp  \
   %reldir%/mysql/mysql_table_structure.hpp  \
   %reldir%/mysql/mysql_value.hpp  \
+  %reldir%/static/mysql_connector.hpp  \
   ${END}
 endif
 
 if enable_mongodb
 nobase_include_HEADERS +=  \
+  %reldir%/third/mongodb_fwd.hpp  \
   %reldir%/mongodb/enums.hpp  \
   ${END}
 endif
@@ -169,10 +171,14 @@ if enable_mysql
 lib_libposeidon_la_SOURCES +=  \
   %reldir%/mysql/mysql_table_structure.cpp  \
   %reldir%/mysql/mysql_value.cpp  \
+  %reldir%/static/mysql_connector.cpp  \
   ${END}
 endif
 
 if enable_mongodb
+lib_libposeidon_la_SOURCES +=  \
+  %reldir%/static/mongodb_connector.cpp  \
+  ${END}
 endif
 
 bin_PROGRAMS += bin/poseidon

@@ -21,10 +21,14 @@
 #include <sys/resource.h>
 #include <openssl/rand.h>
 #include <openssl/err.h>
-#ifdef HAVE_LIBMYSQLCLIENT
+#ifdef POSEIDON_ENABLE_MYSQL
+#include "static/mysql_connector.hpp"
+#include "third/mysql_fwd.hpp"
 #include <mysql/mysql.h>
 #endif
-#ifdef HAVE_LIBMONGOC_1_0
+#ifdef POSEIDON_ENABLE_MONGODB
+#include "static/mongodb_connector.hpp"
+#include "third/mongodb_fwd.hpp"
 #include <mongoc/mongoc.h>
 #endif
 namespace {
@@ -636,12 +640,12 @@ main(int argc, char** argv)
     ::OPENSSL_init_ssl(OPENSSL_INIT_NO_ATEXIT, nullptr);
     POSEIDON_LOG_DEBUG(("Initialized $1"), ::OpenSSL_version(OPENSSL_VERSION));
 
-#ifdef HAVE_LIBMYSQLCLIENT
+#ifdef POSEIDON_ENABLE_MYSQL
     ::mysql_library_init(0, nullptr, nullptr);
     POSEIDON_LOG_DEBUG(("Initialized libmysqlclient $1"), ::mysql_get_client_info());
 #endif
 
-#ifdef HAVE_LIBMONGOC_1_0
+#ifdef POSEIDON_ENABLE_MONGODB
     ::mongoc_init();
     POSEIDON_LOG_DEBUG(("Initialized libmongoc $1"), ::mongoc_get_version());
 #endif
