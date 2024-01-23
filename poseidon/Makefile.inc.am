@@ -82,6 +82,7 @@ if enable_mongodb
 nobase_include_HEADERS +=  \
   %reldir%/third/mongodb_fwd.hpp  \
   %reldir%/mongodb/enums.hpp  \
+  %reldir%/static/mongodb_connector.hpp  \
   ${END}
 endif
 
