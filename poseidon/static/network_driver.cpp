@@ -97,8 +97,8 @@ do_linear_probe_socket_no_lock(const volatile Abstract_Socket* socket) noexcept
 POSEIDON_VISIBILITY_HIDDEN
 int
 Network_Driver::
-do_alpn_callback(::SSL* ssl, const uint8_t** outp, uint8_t* outn, const uint8_t* inp,
-                 unsigned int inn, void* arg) noexcept
+do_alpn_callback(::SSL* ssl, const uint8_t** out, uint8_t* outlen, const uint8_t* in,
+                 unsigned int inlen, void* arg) noexcept
   {
     // Verify the socket. These errors shouldn't happen unless we have really
     // messed things up e.g. when `arg` is a dangling pointer.
@@ -110,19 +110,11 @@ do_alpn_callback(::SSL* ssl, const uint8_t** outp, uint8_t* outn, const uint8_t*
 
     try {
       cow_vector<char256> alpn_req;
-      auto bp = inp;
-      const auto ep = inp + inn;
-
-      while(bp != ep) {
-        size_t len = *bp;
-        ++ bp;
-        if((size_t) (ep - bp) < len)
-          return SSL_TLSEXT_ERR_ALERT_FATAL;  // malformed
-
+      for(auto p = in;  (p != in + inlen) && (in + inlen - p >= 1U + *p);  p += 1U + *p) {
+        // Copy a protocol name and append a zero terminator.
         char* str = alpn_req.emplace_back();
-        ::memcpy(str, bp, len);
-        str[len] = 0;
-        bp += len;
+        ::memcpy(str, p + 1, *p);
+        str[*p] = 0;
         POSEIDON_LOG_TRACE(("Received ALPN protocol: $1"), str);
       }
 
@@ -140,8 +132,8 @@ do_alpn_callback(::SSL* ssl, const uint8_t** outp, uint8_t* outn, const uint8_t*
       return SSL_TLSEXT_ERR_NOACK;
 
     POSEIDON_LOG_TRACE(("Responding ALPN protocol: $1"), ssl_socket->m_alpn_proto);
-    *outp = (const uint8_t*) ssl_socket->m_alpn_proto.data();
-    *outn = (uint8_t) ssl_socket->m_alpn_proto.size();
+    *out = reinterpret_cast<const uint8_t*>(ssl_socket->m_alpn_proto.data());
+    *outlen = ::rocket::clamp_cast<uint8_t>(ssl_socket->m_alpn_proto.size(), 0U, 0xFFU);
     return SSL_TLSEXT_ERR_OK;
   }
 
@@ -384,10 +376,13 @@ thread_loop()
       return;
 
     auto socket = this->do_linear_probe_socket_no_lock(static_cast<Abstract_Socket*>(event.data.ptr)).lock();
-    if(!socket) {
-      POSEIDON_LOG_TRACE(("Socket expired: $1"), event.data.ptr);
+    if(!socket)
       return;
-    }
+
+    auto ssl_socket = dynamic_cast<SSL_Socket*>(socket.get());
+    if(ssl_socket && ssl_socket->m_ssl)
+      if(auto ssl_ctx = ::SSL_get_SSL_CTX(ssl_socket->m_ssl))
+        ::SSL_CTX_set_alpn_select_cb(ssl_ctx, do_alpn_callback, ssl_socket);
 
     recursive_mutex::unique_lock io_lock(socket->m_io_mutex);
     socket->m_io_driver = this;
@@ -415,11 +410,6 @@ thread_loop()
       this->do_epoll_ctl(EPOLL_CTL_DEL, socket, 0);
       return;
     }
-
-    auto ssl_socket = dynamic_cast<SSL_Socket*>(socket.get());
-    if(ssl_socket && ssl_socket->m_ssl)
-      if(auto ssl_ctx = ::SSL_get_SSL_CTX(ssl_socket->m_ssl))
-        ::SSL_CTX_set_alpn_select_cb(ssl_ctx, do_alpn_callback, ssl_socket);
 
 #define do_handle_epoll_event_(EPOLL_EVENT, target_function)  \
     if(event.events & EPOLL_EVENT) {  \
