@@ -370,7 +370,7 @@ thread_loop()
         return;
       }
 
-      POSEIDON_LOG_DEBUG(("Collected $1$2 from epoll"), r, ROCKET_TINYFMT_NOUN_REGULAR(r, "socket event"));
+      POSEIDON_LOG_TRACE(("Collected $1$2 from epoll"), r, ROCKET_TINYFMT_NOUN_REGULAR(r, "socket event"));
       evbuf.accept(static_cast<uint32_t>(r) * sizeof(event));
 
       lock.lock(this->m_epoll_mutex);
