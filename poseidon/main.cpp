@@ -473,14 +473,13 @@ do_init_signal_handlers()
 
         switch(sig) {
 #define do_signal_case_(name, desc)  \
-          case (name):  sig_name = #name;  sig_desc = desc;  break;
+          case (name):  sig_name = #name;  sig_desc = desc;  break  // no semicolon
 
-          do_signal_case_(SIGABRT, "Abortion")
-          do_signal_case_(SIGTRAP, "Breakpoint")
-          do_signal_case_(SIGBUS, "Alignment fault")
-          do_signal_case_(SIGFPE, "Arithmetic exception")
-          do_signal_case_(SIGILL, "Illegal instruction")
-          do_signal_case_(SIGSEGV, "General protection fault")
+          do_signal_case_(SIGTRAP, "Breakpoint");
+          do_signal_case_(SIGBUS, "Alignment fault");
+          do_signal_case_(SIGFPE, "Arithmetic exception");
+          do_signal_case_(SIGILL, "Illegal instruction");
+          do_signal_case_(SIGSEGV, "General protection fault");
         };
 
         POSEIDON_THROW((
@@ -488,7 +487,6 @@ do_init_signal_handlers()
             sig, sig_name, sig_desc, info->si_addr);
       };
 
-    ::sigaction(SIGABRT, &sigact, nullptr);
     ::sigaction(SIGTRAP, &sigact, nullptr);
     ::sigaction(SIGBUS, &sigact, nullptr);
     ::sigaction(SIGFPE, &sigact, nullptr);
