@@ -10,9 +10,19 @@ check_PROGRAMS +=  \
   %reldir%/http_query_parser.test  \
   %reldir%/websocket_frame_header.test  \
   %reldir%/websocket_handshake.test  \
+  ${END}
+
+if enable_mysql
+check_PROGRAMS +=  \
   %reldir%/mysql_table_structure.test  \
   %reldir%/mysql_value.test  \
   ${END}
+endif
+
+if enable_mongodb
+check_PROGRAMS +=  \
+  ${END}
+endif
 
 EXTRA_DIST +=  \
   %reldir%/utils.hpp  \
