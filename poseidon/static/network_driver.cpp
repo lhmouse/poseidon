@@ -16,10 +16,6 @@ namespace poseidon {
 Network_Driver::
 Network_Driver() noexcept
   {
-    if(!this->m_epoll.reset(::epoll_create1(0)))
-      POSEIDON_THROW((
-          "Could not create epoll object",
-          "[`epoll_create1()` failed: ${errno:full}]"));
   }
 
 Network_Driver::
@@ -35,7 +31,11 @@ do_epoll_ctl(int op, shR<Abstract_Socket> socket, uint32_t events)
     ::epoll_event event;
     event.events = events;
     event.data.ptr = socket.get();
-    if(::epoll_ctl(this->m_epoll, op, socket->fd(), &event) != 0) {
+
+    if(!this->m_epoll_fd)
+      return;
+
+    if(::epoll_ctl(this->m_epoll_fd, op, socket->fd(), &event) != 0) {
       // When adding a socket, if the operation has failed, an exception shall be
       // thrown. For the other operations, errors are ignored.
       if(op == EPOLL_CTL_ADD)
@@ -349,29 +349,38 @@ thread_loop()
     const uint32_t throttle_size = this->m_throttle_size;
     lock.unlock();
 
-    // Get an event from the queue.
-    lock.lock(this->m_epoll_event_mutex);
+    // Get an epoll event from the queue.
+    lock.lock(this->m_epoll_mutex);
+    ::epoll_event event;
     if(this->m_epoll_events.empty()) {
-      // If the queue is empty, populate it with more events from the epoll.
-      // Errors are ignored.
-      this->m_epoll_events.reserve_after_end(event_buffer_size * sizeof(::epoll_event));
-      int nevents = ::epoll_wait(this->m_epoll, (::epoll_event*) this->m_epoll_events.mut_end(), (int) event_buffer_size, 5000);
-      if(nevents <= 0) {
+      int efd = this->m_epoll_fd;
+      linear_buffer evbuf = move(this->m_epoll_events);
+      lock.unlock();
+
+      if(ROCKET_UNEXPECT(efd == -1)) {
+        ::sleep(1);
+        return;
+      }
+
+      // Collect more events from the epoll.
+      size_t cap = evbuf.reserve_after_end(event_buffer_size * sizeof(event));
+      int r = ::epoll_wait(efd, reinterpret_cast<::epoll_event*>(evbuf.mut_end()), static_cast<int>(cap), 5000);
+      if(r <= 0) {
         POSEIDON_LOG_TRACE(("`epoll_wait()` wait: ${errno:full}"));
         return;
       }
 
-      POSEIDON_LOG_TRACE(("Collected `$1` socket event(s) from epoll"), (uint32_t) nevents);
-      this->m_epoll_events.accept((uint32_t) nevents * sizeof(::epoll_event));
+      POSEIDON_LOG_DEBUG(("Collected $1$2 from epoll"), r, ROCKET_TINYFMT_NOUN_REGULAR(r, "socket event"));
+      evbuf.accept(static_cast<uint32_t>(r) * sizeof(event));
+
+      lock.lock(this->m_epoll_mutex);
+      splice_buffers(this->m_epoll_events, move(evbuf));
     }
 
-    ::epoll_event event;
     ROCKET_ASSERT(this->m_epoll_events.size() >= sizeof(event));
     this->m_epoll_events.getn((char*) &event, sizeof(event));
-    lock.unlock();
 
-    // Lock the socket.
-    lock.lock(this->m_epoll_map_mutex);
+    // Find the socket.
     if(this->m_epoll_map_stor.size() == 0)
       return;
 
@@ -456,7 +465,7 @@ insert(shR<Abstract_Socket> socket)
       POSEIDON_THROW(("Null socket pointer not valid"));
 
     // Register the socket. Note exception safety.
-    plain_mutex::unique_lock lock(this->m_epoll_map_mutex);
+    plain_mutex::unique_lock lock(this->m_epoll_mutex);
 
     if(this->m_epoll_map_used >= this->m_epoll_map_stor.size() / 2) {
       // When the map is empty or the load factor would exceed 0.5, allocate a
@@ -479,6 +488,12 @@ insert(shR<Abstract_Socket> socket)
           this->m_epoll_map_used ++;
         }
     }
+
+    // Allocate the static epoll object.
+    if(!this->m_epoll_fd && !this->m_epoll_fd.reset(::epoll_create(100)))
+      POSEIDON_THROW((
+          "Could not allocate epoll object",
+          "[`epoll_create()` failed: ${errno:full}]"));
 
     // Insert the socket.
     this->do_epoll_ctl(EPOLL_CTL_ADD, socket, EPOLLIN | EPOLLPRI | EPOLLOUT | EPOLLET);

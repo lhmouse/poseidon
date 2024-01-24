@@ -12,20 +12,17 @@ namespace poseidon {
 class Network_Driver
   {
   private:
-    unique_posix_fd m_epoll;
-
     mutable plain_mutex m_conf_mutex;
     uint32_t m_event_buffer_size = 0;
     uint32_t m_throttle_size = 0;
     uni_SSL_CTX m_server_ssl_ctx;
     uni_SSL_CTX m_client_ssl_ctx;
 
-    mutable plain_mutex m_epoll_event_mutex;
+    mutable plain_mutex m_epoll_mutex;
     linear_buffer m_epoll_events;
-
-    mutable plain_mutex m_epoll_map_mutex;
-    ::std::valarray<wkptr<Abstract_Socket>> m_epoll_map_stor;
+    unique_posix_fd m_epoll_fd;
     uint32_t m_epoll_map_used = 0;
+    ::std::valarray<wkptr<Abstract_Socket>> m_epoll_map_stor;
 
   public:
     // Constructs an empty driver.
