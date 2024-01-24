@@ -96,10 +96,9 @@ BUILT_SOURCES += %reldir%/precompiled.xipp
 endif
 
 if enable_mongodb
-# XXX: This just looks awkward: https://jira.mongodb.org/browse/CDRIVER-4813
-lib_libposeidon_la_CXXFLAGS += -isystem /usr/local/include/libbson-1.0  \
-  -isystem /usr/local/include/libmongoc-1.0 -isystem /usr/include/libbson-1.0  \
-  -isystem /usr/include/libmongoc-1.0
+# XXX: https://jira.mongodb.org/browse/CDRIVER-4813
+libmongoc_include = -Wp,-isystem,{@includedir@,@oldincludedir@}/lib{mongoc,bson}-1.0
+lib_libposeidon_la_CXXFLAGS += $(libmongoc_include)
 endif
 
 lib_libposeidon_la_SOURCES =  \
@@ -188,8 +187,7 @@ bin_poseidon_LDADD = lib/libposeidon.la
 bin_poseidon_SOURCES = %reldir%/main.cpp
 
 if enable_mongodb
-bin_poseidon_CXXFLAGS += -isystem /usr/include/libbson-1.0
-bin_poseidon_CXXFLAGS += -isystem /usr/include/libmongoc-1.0
+bin_poseidon_CXXFLAGS += $(libmongoc_include)
 endif
 
 %.xipp: %.ipp %reldir%/version.h config.h
