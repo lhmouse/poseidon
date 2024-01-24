@@ -98,7 +98,7 @@ POSEIDON_VISIBILITY_HIDDEN
 int
 Network_Driver::
 do_alpn_callback(::SSL* ssl, const uint8_t** out, uint8_t* outlen, const uint8_t* in,
-                 unsigned int inlen, void* arg) noexcept
+                 unsigned int inlen, void* arg)
   {
     // Verify the socket. These errors shouldn't happen unless we have really
     // messed things up e.g. when `arg` is a dangling pointer.
