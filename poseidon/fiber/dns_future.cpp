@@ -37,26 +37,23 @@ do_on_abstract_future_execute()
 
     // Copy records into `m_res`.
     const ::rocket::unique_ptr<::addrinfo, void (::addrinfo*)> guard(res, ::freeaddrinfo);
+    Socket_Address addr;
 
     for(res = guard; res;  res = res->ai_next)
       if(res->ai_family == AF_INET) {
         // IPv4
-        Socket_Address addr;
         ::memcpy(addr.mut_data(), ipv4_unspecified.data(), 12);
         ::memcpy(addr.mut_data() + 12, &(((::sockaddr_in*) res->ai_addr)->sin_addr), 4);
         addr.set_port(this->m_res.port);
 
-        // Ignore duplicate records.
         if(find(this->m_res.addrs, addr) == nullptr)
           this->m_res.addrs.push_back(addr);
       }
       else if(res->ai_family == AF_INET6) {
         // IPv6
-        Socket_Address addr;
         ::memcpy(addr.mut_data(), &(((::sockaddr_in6*) res->ai_addr)->sin6_addr), 16);
         addr.set_port(this->m_res.port);
 
-        // Ignore duplicate records.
         if(find(this->m_res.addrs, addr) == nullptr)
           this->m_res.addrs.push_back(addr);
       }

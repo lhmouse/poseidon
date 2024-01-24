@@ -15,7 +15,7 @@ class HTTPS_Server_Session
     public virtual SSL_Socket
   {
   private:
-    optional<HTTP_Request_Parser> m_req_parser;
+    opt<HTTP_Request_Parser> m_req_parser;
     atomic_relaxed<bool> m_upgrade_ack;
 
   public:

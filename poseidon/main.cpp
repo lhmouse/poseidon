@@ -138,9 +138,9 @@ do_parse_command_line(int argc, char** argv)
     bool help = false;
     bool version = false;
 
-    optional<bool> daemonize;
-    optional<bool> verbose;
-    optional<cow_string> cd_here;
+    opt<bool> daemonize;
+    opt<bool> verbose;
+    opt<cow_string> cd_here;
 
     if(argc > 1) {
       // Check for common long options before calling `getopt()`.

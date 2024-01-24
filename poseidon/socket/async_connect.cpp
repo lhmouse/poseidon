@@ -31,7 +31,9 @@ void
 Async_Connect::
 do_on_abstract_async_task_execute()
   {
-    optional<Socket_Address> dns_result;
+    const auto socket = this->m_wsock.lock();
+    if(!socket)
+      return;
 
     try {
       // Perform DNS query. This will block the worker thread.
@@ -45,11 +47,12 @@ do_on_abstract_async_task_execute()
             "[`getaddrinfo()` failed: $2]"),
             this->m_host, ::gai_strerror(err));
 
+      const ::rocket::unique_ptr<::addrinfo, void (::addrinfo*)> guard(res, ::freeaddrinfo);
+      opt<Socket_Address> dns_result;
+
       // Iterate over the list and find a suitable address to connect. IPv4
       // addresses are preferred to IPv6 ones, so this has to be done as two
       // passes.
-      const ::rocket::unique_ptr<::addrinfo, void (::addrinfo*)> guard(res, ::freeaddrinfo);
-
       for(res = guard;  res && !dns_result;  res = res->ai_next)
         if(res->ai_family == AF_INET) {
           // IPv4
@@ -68,25 +71,22 @@ do_on_abstract_async_task_execute()
           addr.set_port(this->m_port);
           POSEIDON_LOG_DEBUG(("Using IPv6: `$1` => `$2`"), this->m_host, addr);
         }
+
+
+      if(dns_result)
+        socket->connect(*dns_result);
+      else
+        socket->quick_close();
+
+      // Insert the socket. Even in case of a failure, a closure notification
+      // shall be delivered.
+      this->m_driver->insert(socket);
     }
     catch(exception& stdex) {
       // Shut the connection down later.
       POSEIDON_LOG_ERROR(("DNS lookup error: $1"), stdex);
-    }
-
-    const auto socket = this->m_wsock.lock();
-    if(!socket)
-      return;
-
-    // Initiate the connection/shutdown before `insert()`; otherwise, the
-    // network driver may respond before `connect()` is called, and report an
-    // error.
-    if(dns_result)
-      socket->connect(*dns_result);
-    else
       socket->quick_close();
-
-    this->m_driver->insert(socket);
+    }
   }
 
 }  // namespace poseidon
