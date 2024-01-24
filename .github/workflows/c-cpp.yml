@@ -48,5 +48,10 @@ jobs:
            sudo dpkg -i libhttp-parser_*.deb
            popd
 
-    - name: Run tests
+    - name: Run tests (minimal)
+      run: >-
+           CONFIGURE_OPTS='--disable-mysql --disable-mongodb --disable-magic'
+           CXX='g++-10' ./ci/build.sh
+
+    - name: Run tests (full)
       run: CXX='g++-10' ./ci/build.sh
