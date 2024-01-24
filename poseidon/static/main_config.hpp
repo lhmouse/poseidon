@@ -17,7 +17,7 @@ class Main_Config
   public:
     // Constructs an empty configuration file.
     explicit
-    Main_Config();
+    Main_Config() noexcept;
 
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Main_Config);

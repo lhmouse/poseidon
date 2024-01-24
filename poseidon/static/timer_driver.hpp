@@ -10,16 +10,15 @@ namespace poseidon {
 class Timer_Driver
   {
   private:
-    struct X_Queued_Timer;
-
     mutable plain_mutex m_pq_mutex;
     condition_variable m_pq_avail;
+    struct X_Queued_Timer;
     vector<X_Queued_Timer> m_pq;
 
   public:
     // Constructs an empty driver.
     explicit
-    Timer_Driver();
+    Timer_Driver() noexcept;
 
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Timer_Driver);

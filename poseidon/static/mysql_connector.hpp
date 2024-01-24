@@ -11,8 +11,6 @@ namespace poseidon {
 class MySQL_Connector
   {
   private:
-    unique_posix_fd m_epoll;
-
     mutable plain_mutex m_conf_mutex;
 
     mutable plain_mutex m_pool_mutex;
@@ -20,7 +18,7 @@ class MySQL_Connector
   public:
     // Constructs an empty connector.
     explicit
-    MySQL_Connector();
+    MySQL_Connector() noexcept;
 
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(MySQL_Connector);

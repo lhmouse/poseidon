@@ -6,7 +6,7 @@
 namespace poseidon {
 
 Main_Config::
-Main_Config()
+Main_Config() noexcept
   {
   }
 

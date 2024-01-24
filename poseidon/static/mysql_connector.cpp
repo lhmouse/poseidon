@@ -9,7 +9,7 @@
 namespace poseidon {
 
 MySQL_Connector::
-MySQL_Connector()
+MySQL_Connector() noexcept
   {
   }
 

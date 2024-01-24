@@ -11,7 +11,6 @@
 #include <time.h>  // clock_gettime()
 #include <sys/resource.h>  // getrlimit()
 #include <sys/mman.h>  // mmap(), munmap()
-
 namespace poseidon {
 namespace {
 
@@ -113,7 +112,7 @@ struct Fiber_Comparator
 POSEIDON_HIDDEN_X_STRUCT(Fiber_Scheduler, Queued_Fiber);
 
 Fiber_Scheduler::
-Fiber_Scheduler()
+Fiber_Scheduler() noexcept
   {
   }
 

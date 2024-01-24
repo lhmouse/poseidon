@@ -278,7 +278,7 @@ POSEIDON_HIDDEN_X_STRUCT(Async_Logger, Level_Config);
 POSEIDON_HIDDEN_X_STRUCT(Async_Logger, Log_Message);
 
 Async_Logger::
-Async_Logger()
+Async_Logger() noexcept
   {
   }
 

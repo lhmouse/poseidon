@@ -17,7 +17,7 @@ class Async_Task_Executor
   public:
     // Creates an empty task executor.
     explicit
-    Async_Task_Executor();
+    Async_Task_Executor() noexcept;
 
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(Async_Task_Executor);

@@ -9,6 +9,10 @@
 #include "static/timer_driver.hpp"
 #include "static/async_task_executor.hpp"
 #include "static/network_driver.hpp"
+#ifdef POSEIDON_ENABLE_MYSQL
+#include "static/mysql_connector.hpp"
+#endif
+
 namespace poseidon {
 
 atomic_relaxed<int> exit_signal;
@@ -19,6 +23,9 @@ Async_Logger& async_logger = *new Async_Logger;
 Timer_Driver& timer_driver = *new Timer_Driver;
 Async_Task_Executor& async_task_executor = *new Async_Task_Executor;
 Network_Driver& network_driver = *new Network_Driver;
+#ifdef POSEIDON_ENABLE_MYSQL
+MySQL_Connector& mysql_connector = *new MySQL_Connector;
+#endif
 
 bool
 async_logger_check_level(Log_Level level) noexcept

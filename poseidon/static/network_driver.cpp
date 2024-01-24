@@ -14,7 +14,7 @@
 namespace poseidon {
 
 Network_Driver::
-Network_Driver()
+Network_Driver() noexcept
   {
     if(!this->m_epoll.reset(::epoll_create1(0)))
       POSEIDON_THROW((

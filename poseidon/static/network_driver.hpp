@@ -30,7 +30,7 @@ class Network_Driver
   public:
     // Constructs an empty driver.
     explicit
-    Network_Driver();
+    Network_Driver() noexcept;
 
   private:
     void

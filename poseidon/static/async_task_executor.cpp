@@ -8,7 +8,7 @@
 namespace poseidon {
 
 Async_Task_Executor::
-Async_Task_Executor()
+Async_Task_Executor() noexcept
   {
   }
 
