@@ -74,6 +74,7 @@ nobase_include_HEADERS +=  \
   %reldir%/mysql/enums.hpp  \
   %reldir%/mysql/mysql_table_structure.hpp  \
   %reldir%/mysql/mysql_value.hpp  \
+  %reldir%/mysql/mysql_connection.hpp  \
   %reldir%/static/mysql_connector.hpp  \
   ${END}
 endif
@@ -171,6 +172,7 @@ if enable_mysql
 lib_libposeidon_la_SOURCES +=  \
   %reldir%/mysql/mysql_table_structure.cpp  \
   %reldir%/mysql/mysql_value.cpp  \
+  %reldir%/mysql/mysql_connection.cpp  \
   %reldir%/static/mysql_connector.cpp  \
   ${END}
 endif
