@@ -39,7 +39,7 @@ class Easy_HTTP_Server
     //  3) `easy_http_close`, then `resp` is empty and `data` is the error
     //     description.
     // The server object owns all client session objects. As a recommendation,
-    // applications should store only `wkptr`s to client sessions, and call
+    // applications should store only `weak`s to client sessions, and call
     // `.lock()` as needed. This server object stores a copy of the callback
     // object, which is invoked accordingly in the main thread. The callback
     // object is never copied, and is allowed to modify itself.

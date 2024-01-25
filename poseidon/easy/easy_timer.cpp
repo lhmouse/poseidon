@@ -14,7 +14,7 @@ namespace {
 struct Event_Queue
   {
     // read-only fields; no locking needed
-    wkptr<Abstract_Timer> wtimer;
+    weak<Abstract_Timer> wtimer;
     cacheline_barrier xcb_1;
 
     // shared fields between threads
@@ -31,7 +31,7 @@ struct Event_Queue
 struct Final_Fiber final : Abstract_Fiber
   {
     Easy_Timer::thunk_type m_thunk;
-    wkptr<Event_Queue> m_wqueue;
+    weak<Event_Queue> m_wqueue;
 
     explicit
     Final_Fiber(const Easy_Timer::thunk_type& thunk, shR<Event_Queue> queue)
@@ -84,7 +84,7 @@ struct Final_Fiber final : Abstract_Fiber
 struct Final_Timer final : Abstract_Timer
   {
     Easy_Timer::thunk_type m_thunk;
-    wkptr<Event_Queue> m_wqueue;
+    weak<Event_Queue> m_wqueue;
 
     explicit
     Final_Timer(const Easy_Timer::thunk_type& thunk, shR<Event_Queue> queue)
@@ -106,7 +106,7 @@ struct Final_Timer final : Abstract_Timer
         if(!queue->fiber_active) {
           // Create a new fiber, if none is active. The fiber shall only reset
           // `m_fiber_active` if no packet is pending.
-          fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, queue));
+          fiber_scheduler.launch(new_uni<Final_Fiber>(this->m_thunk, queue));
           queue->fiber_active = true;
         }
 

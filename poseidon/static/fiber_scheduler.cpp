@@ -83,7 +83,7 @@ struct Queued_Fiber
     sh<Abstract_Fiber> fiber;
     atomic_relaxed<steady_time> async_time;  // volatile
 
-    wkptr<Abstract_Future> wfutr;
+    weak<Abstract_Future> wfutr;
     steady_time yield_time;
     steady_time check_time;
     steady_time fail_time;
@@ -440,14 +440,14 @@ size() const noexcept
 
 void
 Fiber_Scheduler::
-launch(shR<Abstract_Fiber> fiber)
+launch(uni<Abstract_Fiber>&& fiber)
   {
     if(!fiber)
       POSEIDON_THROW(("Null fiber pointer not valid"));
 
     // Create the management node.
     auto elem = new_sh<X_Queued_Fiber>();
-    elem->fiber = fiber;
+    elem->fiber = move(fiber);
     elem->yield_time = steady_clock::now();
     elem->check_time = elem->yield_time;
     elem->async_time.store(elem->yield_time);

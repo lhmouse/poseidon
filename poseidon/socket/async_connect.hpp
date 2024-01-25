@@ -14,7 +14,7 @@ class Async_Connect
   {
   private:
     Network_Driver* m_driver;
-    wkptr<Abstract_Socket> m_wsock;
+    weak<Abstract_Socket> m_wsock;
     cow_string m_host;
     uint16_t m_port;
 

@@ -21,7 +21,7 @@ Abstract_Future::
 do_abstract_future_request() noexcept
   {
     // The completion state can only be updated with `m_waiters_mutex` locked.
-    vector<wkptr<atomic_relaxed<steady_time>>> waiters;
+    vector<weak<atomic_relaxed<steady_time>>> waiters;
     plain_mutex::unique_lock waiters_lock;
 
     this->m_once.call(

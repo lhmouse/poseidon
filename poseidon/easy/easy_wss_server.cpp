@@ -39,7 +39,7 @@ struct Client_Table
 struct Final_Fiber final : Abstract_Fiber
   {
     Easy_WSS_Server::thunk_type m_thunk;
-    wkptr<Client_Table> m_wtable;
+    weak<Client_Table> m_wtable;
     const volatile WSS_Server_Session* m_refptr;
 
     explicit
@@ -110,7 +110,7 @@ struct Final_Fiber final : Abstract_Fiber
 struct FInal_Server_Session final : WSS_Server_Session
   {
     Easy_WSS_Server::thunk_type m_thunk;
-    wkptr<Client_Table> m_wtable;
+    weak<Client_Table> m_wtable;
 
     explicit
     FInal_Server_Session(unique_posix_fd&& fd,
@@ -137,7 +137,7 @@ struct FInal_Server_Session final : WSS_Server_Session
           if(!client_iter->second.fiber_active) {
             // Create a new fiber, if none is active. The fiber shall only reset
             // `m_fiber_private_buffer` if no event is pending.
-            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, table, this));
+            fiber_scheduler.launch(new_uni<Final_Fiber>(this->m_thunk, table, this));
             client_iter->second.fiber_active = true;
           }
 
@@ -200,7 +200,7 @@ struct FInal_Server_Session final : WSS_Server_Session
 struct Final_Listen_Socket final : Listen_Socket
   {
     Easy_WSS_Server::thunk_type m_thunk;
-    wkptr<Client_Table> m_wtable;
+    weak<Client_Table> m_wtable;
 
     explicit
     Final_Listen_Socket(const Easy_WSS_Server::thunk_type& thunk,

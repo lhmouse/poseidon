@@ -16,7 +16,7 @@ namespace {
 struct Event_Queue
   {
     // read-only fields; no locking needed
-    wkptr<SSL_Socket> wsocket;
+    weak<SSL_Socket> wsocket;
     cacheline_barrier xcb_1;
 
     // fiber-private fields; no locking needed
@@ -39,7 +39,7 @@ struct Event_Queue
 struct Final_Fiber final : Abstract_Fiber
   {
     Easy_SSL_Client::thunk_type m_thunk;
-    wkptr<Event_Queue> m_wqueue;
+    weak<Event_Queue> m_wqueue;
 
     explicit
     Final_Fiber(const Easy_SSL_Client::thunk_type& thunk, shR<Event_Queue> queue)
@@ -105,7 +105,7 @@ struct Final_Fiber final : Abstract_Fiber
 struct Final_Socket final : SSL_Socket
   {
     Easy_SSL_Client::thunk_type m_thunk;
-    wkptr<Event_Queue> m_wqueue;
+    weak<Event_Queue> m_wqueue;
 
     explicit
     Final_Socket(const Easy_SSL_Client::thunk_type& thunk, shR<Event_Queue> queue)
@@ -127,7 +127,7 @@ struct Final_Socket final : SSL_Socket
           if(!queue->fiber_active) {
             // Create a new fiber, if none is active. The fiber shall only reset
             // `m_fiber_private_buffer` if no event is pending.
-            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, queue));
+            fiber_scheduler.launch(new_uni<Final_Fiber>(this->m_thunk, queue));
             queue->fiber_active = true;
           }
 

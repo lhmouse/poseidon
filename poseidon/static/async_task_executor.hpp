@@ -12,7 +12,7 @@ class Async_Task_Executor
   private:
     mutable plain_mutex m_queue_mutex;
     condition_variable m_queue_avail;
-    deque<wkptr<Abstract_Async_Task>> m_queue;
+    deque<weak<Abstract_Async_Task>> m_queue;
 
   public:
     // Creates an empty task executor.

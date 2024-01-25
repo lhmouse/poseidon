@@ -10,7 +10,7 @@ namespace {
 
 struct Queued_Timer
   {
-    wkptr<Abstract_Timer> wtimer;
+    weak<Abstract_Timer> wtimer;
     steady_time next;
     milliseconds period;
   };

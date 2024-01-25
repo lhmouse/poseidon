@@ -43,7 +43,7 @@ struct Client_Table
 struct Final_Fiber final : Abstract_Fiber
   {
     Easy_TCP_Server::thunk_type m_thunk;
-    wkptr<Client_Table> m_wtable;
+    weak<Client_Table> m_wtable;
     const volatile TCP_Socket* m_refptr;
 
     explicit
@@ -123,7 +123,7 @@ struct Final_Fiber final : Abstract_Fiber
 struct Final_Socket final : TCP_Socket
   {
     Easy_TCP_Server::thunk_type m_thunk;
-    wkptr<Client_Table> m_wtable;
+    weak<Client_Table> m_wtable;
 
     explicit
     Final_Socket(const Easy_TCP_Server::thunk_type& thunk,
@@ -150,7 +150,7 @@ struct Final_Socket final : TCP_Socket
           if(!client_iter->second.fiber_active) {
             // Create a new fiber, if none is active. The fiber shall only reset
             // `m_fiber_private_buffer` if no event is pending.
-            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, table, this));
+            fiber_scheduler.launch(new_uni<Final_Fiber>(this->m_thunk, table, this));
             client_iter->second.fiber_active = true;
           }
 
@@ -205,7 +205,7 @@ struct Final_Socket final : TCP_Socket
 struct Final_Listen_Socket final : Listen_Socket
   {
     Easy_TCP_Server::thunk_type m_thunk;
-    wkptr<Client_Table> m_wtable;
+    weak<Client_Table> m_wtable;
 
     explicit
     Final_Listen_Socket(const Easy_TCP_Server::thunk_type& thunk,

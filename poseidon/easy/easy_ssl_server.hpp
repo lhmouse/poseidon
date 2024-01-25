@@ -41,7 +41,7 @@ class Easy_SSL_Server
     //  3) `easy_stream_closed`, then `data` is the error description and `code`
     //     is the system error number.
     // The server object owns all client socket objects. As a recommendation,
-    // applications should store only `wkptr`s to client sockets, and call
+    // applications should store only `weak`s to client sockets, and call
     // `.lock()` as needed. This server object stores a copy of the callback,
     // which is invoked accordingly in the main thread. The callback object is
     // never copied, and is allowed to modify itself.

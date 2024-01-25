@@ -58,7 +58,7 @@ do_epoll_ctl(int op, shR<Abstract_Socket> socket, uint32_t events)
   }
 
 POSEIDON_VISIBILITY_HIDDEN
-wkptr<Abstract_Socket>&
+weak<Abstract_Socket>&
 Network_Driver::
 do_linear_probe_socket_no_lock(const volatile Abstract_Socket* socket) noexcept
   {
@@ -475,7 +475,7 @@ insert(shR<Abstract_Socket> socket)
         if(!this->m_epoll_map_stor[k].expired())
           new_capacity += 3;
 
-      ::std::valarray<wkptr<Abstract_Socket>> old_map_stor(new_capacity);
+      ::std::valarray<weak<Abstract_Socket>> old_map_stor(new_capacity);
       this->m_epoll_map_stor.swap(old_map_stor);
       this->m_epoll_map_used = 0;
 

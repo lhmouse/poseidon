@@ -63,7 +63,7 @@ class Fiber_Scheduler
     // can only be deleted after it finishes execution.
     // This function is thread-safe.
     void
-    launch(shR<Abstract_Fiber> fiber);
+    launch(uni<Abstract_Fiber>&& fiber);
   };
 
 }  // namespace poseidon

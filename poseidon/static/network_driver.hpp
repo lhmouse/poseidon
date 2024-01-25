@@ -22,7 +22,7 @@ class Network_Driver
     linear_buffer m_epoll_events;
     unique_posix_fd m_epoll_fd;
     uint32_t m_epoll_map_used = 0;
-    ::std::valarray<wkptr<Abstract_Socket>> m_epoll_map_stor;
+    ::std::valarray<weak<Abstract_Socket>> m_epoll_map_stor;
 
   public:
     // Constructs an empty driver.
@@ -33,7 +33,7 @@ class Network_Driver
     void
     do_epoll_ctl(int op, shR<Abstract_Socket> socket, uint32_t events);
 
-    wkptr<Abstract_Socket>&
+    weak<Abstract_Socket>&
     do_linear_probe_socket_no_lock(const volatile Abstract_Socket* socket) noexcept;
 
     static

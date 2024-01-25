@@ -41,7 +41,7 @@ class Easy_WSS_Server
     //  5) `easy_ws_close`, then `data` is a string about the reason, such as
     //     `"1002: invalid opcode"`.
     // The server object owns all client socket objects. As a recommendation,
-    // applications should store only `wkptr`s to client sockets, and call
+    // applications should store only `weak`s to client sockets, and call
     // `.lock()` as needed. This server object stores a copy of the callback,
     // which is invoked accordingly in the main thread. The callback object is
     // never copied, and is allowed to modify itself.

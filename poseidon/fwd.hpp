@@ -171,12 +171,12 @@ template<typename T, typename U> using cow_bivector = cow_vector<pair<T, U>>;
 template<typename T> using opt = optional<T>;
 template<typename T> using uni = ::std::unique_ptr<T>;  // default deleter
 template<typename T> using sh = ::std::shared_ptr<T>;
-template<typename T> using wkptr = ::std::weak_ptr<T>;
+template<typename T> using weak = ::std::weak_ptr<T>;
 
 using cow_stringR = const cow_string&;
 using phsh_stringR = const phsh_string&;
 template<typename T> using shR = const sh<T>&;
-template<typename T> using wkptrR = const wkptr<T>&;
+template<typename T> using weakR = const weak<T>&;
 
 template<size_t Nc> using char_array = array<char, Nc>;
 template<size_t Nc> using uchar_array = array<unsigned char, Nc>;
