@@ -230,7 +230,7 @@ class char256
   {
   private:
     union {
-      char m_data[8];
+      char m_data[4];
       ::std::aligned_storage<256>::type m_stor;
     };
 
