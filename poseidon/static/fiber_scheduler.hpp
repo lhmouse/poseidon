@@ -29,7 +29,6 @@ class Fiber_Scheduler
 
   public:
     // Constructs an empty scheduler.
-    explicit
     Fiber_Scheduler() noexcept;
 
   private:

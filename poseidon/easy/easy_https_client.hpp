@@ -44,8 +44,7 @@ class Easy_HTTPS_Client
     // is allowed to modify itself.
     template<typename CallbackT,
     ROCKET_ENABLE_IF(thunk_type::is_invocable<CallbackT>::value)>
-    explicit
-    Easy_HTTPS_Client(CallbackT&& cb)
+    explicit Easy_HTTPS_Client(CallbackT&& cb)
       :
         m_thunk(new_sh(forward<CallbackT>(cb)))
       { }

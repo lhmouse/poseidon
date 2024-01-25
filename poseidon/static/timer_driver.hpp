@@ -17,7 +17,6 @@ class Timer_Driver
 
   public:
     // Constructs an empty driver.
-    explicit
     Timer_Driver() noexcept;
 
   public:

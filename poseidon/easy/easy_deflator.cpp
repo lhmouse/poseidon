@@ -12,7 +12,6 @@ struct Final_Deflator final : Deflator
   {
     linear_buffer m_out;
 
-    explicit
     Final_Deflator(zlib_Format format, int level)
       :
         Deflator(format, level)

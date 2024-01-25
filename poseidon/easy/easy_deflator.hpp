@@ -15,7 +15,6 @@ class Easy_Deflator
 
   public:
     // Constructs an empty data compressor.
-    explicit
     Easy_Deflator() noexcept
       :
         m_defl(), m_out()

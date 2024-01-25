@@ -38,7 +38,6 @@ struct Final_Fiber final : Abstract_Fiber
     Easy_HTTP_Client::thunk_type m_thunk;
     wkptr<Event_Queue> m_wqueue;
 
-    explicit
     Final_Fiber(const Easy_HTTP_Client::thunk_type& thunk, shptrR<Event_Queue> queue)
       :
         m_thunk(thunk), m_wqueue(queue)
@@ -101,7 +100,6 @@ struct Final_Client_Session final : HTTP_Client_Session
     wkptr<Event_Queue> m_wqueue;
     cow_string m_host;
 
-    explicit
     Final_Client_Session(const Easy_HTTP_Client::thunk_type& thunk,
                          shptrR<Event_Queue> queue, cow_stringR host)
       :

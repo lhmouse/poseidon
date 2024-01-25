@@ -24,8 +24,7 @@ class WSS_Client_Session
 
   public:
     // Constructs a socket for outgoing connections.
-    explicit
-    WSS_Client_Session(cow_stringR host, cow_stringR path, cow_stringR query);
+    explicit WSS_Client_Session(cow_stringR host, cow_stringR path, cow_stringR query);
 
   private:
     void

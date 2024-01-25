@@ -25,13 +25,11 @@ class SSL_Socket
   protected:
     // Takes ownership of an accepted socket, using SSL configuration from
     // `driver`. [server-side constructor]
-    explicit
-    SSL_Socket(unique_posix_fd&& fd, const Network_Driver& driver);
+    explicit SSL_Socket(unique_posix_fd&& fd, const Network_Driver& driver);
 
     // Creates a socket for outgoing connections, using SSL configuration
     // from `driver`. [client-side constructor]
-    explicit
-    SSL_Socket(const Network_Driver& driver);
+    explicit SSL_Socket(const Network_Driver& driver);
 
   protected:
     // These callbacks implement `Abstract_Socket`.

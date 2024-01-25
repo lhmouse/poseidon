@@ -31,8 +31,7 @@ class DNS_Future
     // Constructs a DNS result future. This object also functions as an
     // asynchronous task, which can be enqueued into an `Async_Task_Executor`.
     // This future will become ready once the DNS query is complete.
-    explicit
-    DNS_Future(cow_stringR host, uint16_t port = 0);
+    explicit DNS_Future(cow_stringR host, uint16_t port = 0);
 
   private:
     // Performs DNS lookup.

@@ -199,8 +199,7 @@ class thunk
     // Points this callback to a target object, with its type erased.
     template<typename RealT,
     ROCKET_ENABLE_IF(is_invocable<RealT>::value)>
-    explicit
-    thunk(shptrR<RealT> obj) noexcept
+    explicit thunk(shptrR<RealT> obj) noexcept
       {
         this->m_func = [](void* p, ArgsT&&... args) { (*(RealT*) p) (forward<ArgsT>(args)...);  };
         this->m_obj = obj;
@@ -208,8 +207,7 @@ class thunk
 
     // And this is an optimized overload if the target object is a plain
     // function pointer, which can be stored into `m_obj` directly.
-    explicit
-    thunk(function_type* fptr) noexcept
+    explicit thunk(function_type* fptr) noexcept
       {
         this->m_func = nullptr;
         this->m_obj = shptr<void>(shptr<int>(), (void*)(intptr_t) fptr);
@@ -264,12 +262,11 @@ class char256
   public:
     // Returns a pointer to internal storage so a buffer can be passed as
     // an argument for `char*`.
-    constexpr operator
-    const char*() const noexcept
+    constexpr
+    operator const char*() const noexcept
       { return this->m_data;  }
 
-    operator
-    char*() noexcept
+    operator char*() noexcept
       { return this->m_data;  }
 
     constexpr

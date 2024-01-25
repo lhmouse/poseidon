@@ -28,8 +28,7 @@ class zlib_xStream
     ASTERIA_NONCOPYABLE_DESTRUCTOR(zlib_xStream) = default;
 
   public:
-    operator
-    ::z_stream*() const noexcept
+    operator ::z_stream*() const noexcept
       { return this->m_zstrm;  }
 
     const char*
@@ -55,8 +54,7 @@ class zlib_xStream
 
 struct deflate_Stream : zlib_xStream
   {
-    explicit
-    deflate_Stream(zlib_Format fmt, uint8_t wbits, int level)
+    explicit deflate_Stream(zlib_Format fmt, uint8_t wbits, int level)
       {
         if((wbits < 9) || (wbits > 15))
           ::rocket::sprintf_and_throw<::std::invalid_argument>(
@@ -94,8 +92,7 @@ struct deflate_Stream : zlib_xStream
 
 struct inflate_Stream : zlib_xStream
   {
-    explicit
-    inflate_Stream(zlib_Format fmt, uint8_t wbits)
+    explicit inflate_Stream(zlib_Format fmt, uint8_t wbits)
       {
         if((wbits < 9) || (wbits > 15))
           ::rocket::sprintf_and_throw<::std::invalid_argument>(

@@ -12,8 +12,7 @@ struct Final_Inflator final : Inflator
   {
     linear_buffer m_out;
 
-    explicit
-    Final_Inflator(zlib_Format format)
+    explicit Final_Inflator(zlib_Format format)
       :
         Inflator(format)
       { }

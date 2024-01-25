@@ -21,7 +21,6 @@ class WS_Server_Session
 
   public:
     // Constructs a socket for incoming connections.
-    explicit
     WS_Server_Session();
 
   private:

@@ -41,7 +41,6 @@ struct Final_Fiber final : Abstract_Fiber
     Easy_SSL_Client::thunk_type m_thunk;
     wkptr<Event_Queue> m_wqueue;
 
-    explicit
     Final_Fiber(const Easy_SSL_Client::thunk_type& thunk, shptrR<Event_Queue> queue)
       :
         m_thunk(thunk), m_wqueue(queue)
@@ -107,7 +106,6 @@ struct Final_Socket final : SSL_Socket
     Easy_SSL_Client::thunk_type m_thunk;
     wkptr<Event_Queue> m_wqueue;
 
-    explicit
     Final_Socket(const Easy_SSL_Client::thunk_type& thunk, shptrR<Event_Queue> queue)
       :
         SSL_Socket(network_driver), m_thunk(thunk), m_wqueue(queue)

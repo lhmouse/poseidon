@@ -46,14 +46,12 @@ class Easy_WS_Client
     // is allowed to modify itself.
     template<typename CallbackT,
     ROCKET_ENABLE_IF(thunk_type::is_invocable<CallbackT>::value)>
-    explicit
-    Easy_WS_Client(CallbackT&& cb)
+    explicit Easy_WS_Client(CallbackT&& cb)
       :
         m_thunk(new_sh(forward<CallbackT>(cb)))
       { }
 
-    explicit
-    Easy_WS_Client(thunk_type::function_type* fptr)
+    explicit Easy_WS_Client(thunk_type::function_type* fptr)
       :
         m_thunk(fptr)
       { }

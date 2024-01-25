@@ -16,7 +16,6 @@ class Abstract_Async_Task
 
   protected:
     // Constructs an asynchronous task.
-    explicit
     Abstract_Async_Task();
 
   protected:

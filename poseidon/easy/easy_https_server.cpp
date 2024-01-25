@@ -44,7 +44,6 @@ struct Final_Fiber final : Abstract_Fiber
     wkptr<Client_Table> m_wtable;
     const volatile HTTPS_Server_Session* m_refptr;
 
-    explicit
     Final_Fiber(const Easy_HTTPS_Server::thunk_type& thunk, shptrR<Client_Table> table,
                 const volatile HTTPS_Server_Session* refptr)
       :
@@ -132,7 +131,6 @@ struct Final_Server_Session final : HTTPS_Server_Session
     Easy_HTTPS_Server::thunk_type m_thunk;
     wkptr<Client_Table> m_wtable;
 
-    explicit
     Final_Server_Session(const Easy_HTTPS_Server::thunk_type& thunk,
                          unique_posix_fd&& fd, shptrR<Client_Table> table)
       :
@@ -225,7 +223,6 @@ struct Final_Listen_Socket final : Listen_Socket
     Easy_HTTPS_Server::thunk_type m_thunk;
     wkptr<Client_Table> m_wtable;
 
-    explicit
     Final_Listen_Socket(const Easy_HTTPS_Server::thunk_type& thunk,
                         const Socket_Address& addr, shptrR<Client_Table> table)
       :

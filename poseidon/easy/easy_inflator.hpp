@@ -15,7 +15,6 @@ class Easy_Inflator
 
   public:
     // Constructs an empty data decompressor.
-    explicit
     Easy_Inflator() noexcept
       :
         m_infl(), m_out()

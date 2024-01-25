@@ -15,8 +15,7 @@ class Inflator
 
   public:
     // Constructs a data decompressor.
-    explicit
-    Inflator(zlib_Format format);
+    explicit Inflator(zlib_Format format);
 
   protected:
     // This callback is invoked to request an output buffer if none has been

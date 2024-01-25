@@ -42,7 +42,6 @@ struct Final_Fiber final : Abstract_Fiber
     wkptr<Client_Table> m_wtable;
     const volatile WS_Server_Session* m_refptr;
 
-    explicit
     Final_Fiber(const Easy_WS_Server::thunk_type& thunk, shptrR<Client_Table> table,
                 const volatile WS_Server_Session* refptr)
       :
@@ -107,14 +106,13 @@ struct Final_Fiber final : Abstract_Fiber
       }
   };
 
-struct FInal_Server_Session final : WS_Server_Session
+struct Final_Server_Session final : WS_Server_Session
   {
     Easy_WS_Server::thunk_type m_thunk;
     wkptr<Client_Table> m_wtable;
 
-    explicit
-    FInal_Server_Session(unique_posix_fd&& fd,
-          const Easy_WS_Server::thunk_type& thunk, shptrR<Client_Table> table)
+    Final_Server_Session(const Easy_WS_Server::thunk_type& thunk,
+                         unique_posix_fd&& fd, shptrR<Client_Table> table)
       :
         TCP_Socket(move(fd)), m_thunk(thunk), m_wtable(table)
       { }
@@ -202,7 +200,6 @@ struct Final_Listen_Socket final : Listen_Socket
     Easy_WS_Server::thunk_type m_thunk;
     wkptr<Client_Table> m_wtable;
 
-    explicit
     Final_Listen_Socket(const Easy_WS_Server::thunk_type& thunk,
                         const Socket_Address& addr, shptrR<Client_Table> table)
       :
@@ -219,7 +216,7 @@ struct Final_Listen_Socket final : Listen_Socket
         if(!table)
           return nullptr;
 
-        auto session = new_sh<FInal_Server_Session>(move(fd), this->m_thunk, table);
+        auto session = new_sh<Final_Server_Session>(this->m_thunk, move(fd), table);
         (void) addr;
 
         // We are in the network thread here.

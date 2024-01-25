@@ -17,7 +17,6 @@ class MySQL_Connector
 
   public:
     // Constructs an empty connector.
-    explicit
     MySQL_Connector() noexcept;
 
   public:
