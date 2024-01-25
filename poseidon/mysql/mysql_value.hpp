@@ -11,7 +11,7 @@ namespace poseidon {
 class MySQL_Value
   {
   private:
-    variant<nullptr_t, int64_t, double, cow_string, DateTime> m_stor;
+    ::rocket::variant<nullptr_t, int64_t, double, cow_string, DateTime> m_stor;
 
   public:
     // Value constructors

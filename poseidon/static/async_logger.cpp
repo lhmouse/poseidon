@@ -106,7 +106,7 @@ do_load_level_config(Level_Config& lconf, const Config_File& conf_file, const ch
           name, conf_value, conf_file.path());
 
     for(size_t k = 0;  k < settings.size();  ++k) {
-      phsh_string setting;
+      cow_string setting;
       if(settings.at(k).is_string())
         setting = settings.at(k).as_string();
       else if(!settings.at(k).is_null())

@@ -11,7 +11,7 @@ using namespace ::poseidon;
 extern Easy_TCP_Server my_server;
 
 void
-event_callback(shR<TCP_Socket> socket, Abstract_Fiber& /*fiber*/,
+event_callback(shptrR<TCP_Socket> socket, Abstract_Fiber& /*fiber*/,
                Easy_Stream_Event event, linear_buffer& data, int code)
   {
     switch(event) {

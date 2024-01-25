@@ -67,22 +67,34 @@ cow_string
 ascii_trim(cow_string text);
 
 // Checks whether two strings equal.
-template<typename StringT, typename OtherT>
+template<typename xstrT, typename ystrT>
 constexpr
 bool
-ascii_ci_equal(const StringT& text, const OtherT& other)
-  { return ::rocket::ascii_ci_equal(text.c_str(), text.length(), other.c_str(), other.length());  }
+ascii_ci_equal(const xstrT& x, const ystrT& y)
+  { return ::rocket::ascii_ci_equal(x.c_str(), x.length(), y.c_str(), y.length());  }
 
 // Splits a string into a vector of tokens, and vice versa.
-size_t
+void
 explode(cow_vector<cow_string>& segments, cow_stringR text, char delim = ',', size_t limit = SIZE_MAX);
 
-size_t
+cow_vector<cow_string>
+explode(cow_stringR text, char delim = ',', size_t limit = SIZE_MAX);
+
+void
+implode(cow_string& text, const cow_string* segment_ptr, size_t segment_count, char delim = ',');
+
+cow_string
+implode(const cow_string* segment_ptr, size_t segment_count, char delim = ',');
+
+void
 implode(cow_string& text, const cow_vector<cow_string>& segments, char delim = ',');
 
+cow_string
+implode(const cow_vector<cow_string>& segments, char delim = ',');
+
 // Converts 16 bytes into a hexadecimal string. Exactly 33 characters will be
-// written. A null terminator will always be appended.
-char*
+// written, including a null terminator.
+void
 hex_encode_16_partial(char* str, const void* data) noexcept;
 
 // Generates a cryptographically secure random integer in [0,UINT32_MAX].

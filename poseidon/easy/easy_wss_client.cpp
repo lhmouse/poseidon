@@ -17,7 +17,7 @@ namespace {
 struct Event_Queue
   {
     // read-only fields; no locking needed
-    weak<WSS_Client_Session> wsession;
+    wkptr<WSS_Client_Session> wsession;
     cacheline_barrier xcb_1;
 
     // fiber-private fields; no locking needed
@@ -39,10 +39,10 @@ struct Event_Queue
 struct Final_Fiber final : Abstract_Fiber
   {
     Easy_WSS_Client::thunk_type m_thunk;
-    weak<Event_Queue> m_wqueue;
+    wkptr<Event_Queue> m_wqueue;
 
     explicit
-    Final_Fiber(const Easy_WSS_Client::thunk_type& thunk, shR<Event_Queue> queue)
+    Final_Fiber(const Easy_WSS_Client::thunk_type& thunk, shptrR<Event_Queue> queue)
       :
         m_thunk(thunk), m_wqueue(queue)
       { }
@@ -96,11 +96,11 @@ struct Final_Fiber final : Abstract_Fiber
 struct FInal_Client_Session final : WSS_Client_Session
   {
     Easy_WSS_Client::thunk_type m_thunk;
-    weak<Event_Queue> m_wqueue;
+    wkptr<Event_Queue> m_wqueue;
 
     explicit
     FInal_Client_Session(const Easy_WSS_Client::thunk_type& thunk,
-          shR<Event_Queue> queue, cow_stringR host, cow_stringR path,
+          shptrR<Event_Queue> queue, cow_stringR host, cow_stringR path,
           cow_stringR query)
       :
         SSL_Socket(network_driver), WSS_Client_Session(host, path, query),

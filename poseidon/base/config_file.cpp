@@ -31,39 +31,32 @@ Config_File::
 
 const ::asteria::Value&
 Config_File::
-query(initializer_list<phsh_string> path) const
+query(initializer_list<cow_string> path) const
   {
     // We would like to return a `Value`, so the path shall not be empty.
-    auto pcur = path.begin();
-    if(pcur == path.end())
+    auto cur = path.begin();
+    if(cur == path.end())
       POSEIDON_THROW(("Empty value path not valid"));
 
     // Resolve the first segment.
     auto parent = &(this->m_root);
-    auto value = parent->ptr(*pcur);
+    auto value = parent->ptr(*cur);
 
     // Resolve all remaining segments.
-    while(value && (++pcur != path.end())) {
+    while(value && (++cur != path.end())) {
       if(value->is_null())
         return ::asteria::null_value;
 
-      if(!value->is_object()) {
-        // Fail.
-        cow_string vpstr;
-        auto pbak = path.begin();
-        vpstr << pbak->rdstr();
-        while(++pbak != pcur)
-          vpstr << '.' << pbak->rdstr();
-
+      if(!value->is_object())
         POSEIDON_THROW((
             "Unexpected type of `$1` (expecting an `object`, got `$2`)",
             "[in configuration file '$3']"),
-            vpstr, *value, this->m_path);
-      }
+            implode(path.begin(), (size_t) (cur - path.begin), '.'), *value,
+            this->m_path);
 
       // Descend into this child object.
       parent = &(value->as_object());
-      value = parent->ptr(*pcur);
+      value = parent->ptr(*cur);
     }
 
     if(!value)

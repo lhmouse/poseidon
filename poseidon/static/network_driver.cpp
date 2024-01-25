@@ -26,7 +26,7 @@ Network_Driver::
 POSEIDON_VISIBILITY_HIDDEN
 void
 Network_Driver::
-do_epoll_ctl(int op, shR<Abstract_Socket> socket, uint32_t events)
+do_epoll_ctl(int op, shptrR<Abstract_Socket> socket, uint32_t events)
   {
     ::epoll_event event;
     event.events = events;
@@ -58,7 +58,7 @@ do_epoll_ctl(int op, shR<Abstract_Socket> socket, uint32_t events)
   }
 
 POSEIDON_VISIBILITY_HIDDEN
-weak<Abstract_Socket>&
+wkptr<Abstract_Socket>&
 Network_Driver::
 do_linear_probe_socket_no_lock(const volatile Abstract_Socket* socket) noexcept
   {
@@ -79,7 +79,7 @@ do_linear_probe_socket_no_lock(const volatile Abstract_Socket* socket) noexcept
     // HACK: Compare the socket pointer without tampering with the reference
     // counter. The pointer itself will never be dereferenced. It [should] be
     // reasonable to assume `shared_ptr` and `weak_ptr` have identical layout.
-#define do_get_weak_(wptr)  (reinterpret_cast<const sh<Abstract_Socket>&>(wptr).get())
+#define do_get_weak_(wptr)  (reinterpret_cast<const shptr<Abstract_Socket>&>(wptr).get())
 
     // Find an element using linear probing. If the socket is not found, a
     // reference to an empty element is returned.
@@ -459,7 +459,7 @@ thread_loop()
 
 void
 Network_Driver::
-insert(shR<Abstract_Socket> socket)
+insert(shptrR<Abstract_Socket> socket)
   {
     if(!socket)
       POSEIDON_THROW(("Null socket pointer not valid"));
@@ -475,7 +475,7 @@ insert(shR<Abstract_Socket> socket)
         if(!this->m_epoll_map_stor[k].expired())
           new_capacity += 3;
 
-      ::std::valarray<weak<Abstract_Socket>> old_map_stor(new_capacity);
+      ::std::valarray<wkptr<Abstract_Socket>> old_map_stor(new_capacity);
       this->m_epoll_map_stor.swap(old_map_stor);
       this->m_epoll_map_used = 0;
 

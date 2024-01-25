@@ -38,7 +38,7 @@ do_on_abstract_fiber_suspended()
 
 void
 Abstract_Fiber::
-yield(shR<Abstract_Future> futr_opt, milliseconds fail_timeout_override) const
+yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override) const
   {
     if(!this->m_yield)
       POSEIDON_THROW(("Fiber not executing"));

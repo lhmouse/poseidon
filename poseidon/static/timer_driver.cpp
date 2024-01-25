@@ -10,7 +10,7 @@ namespace {
 
 struct Queued_Timer
   {
-    weak<Abstract_Timer> wtimer;
+    wkptr<Abstract_Timer> wtimer;
     steady_time next;
     milliseconds period;
   };
@@ -102,7 +102,7 @@ thread_loop()
 
 void
 Timer_Driver::
-insert(shR<Abstract_Timer> timer, milliseconds delay, milliseconds period)
+insert(shptrR<Abstract_Timer> timer, milliseconds delay, milliseconds period)
   {
     if(!timer)
       POSEIDON_THROW(("Null timer pointer not valid"));

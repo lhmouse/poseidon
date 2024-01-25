@@ -80,10 +80,10 @@ do_free_stack(::stack_t ss) noexcept
 
 struct Queued_Fiber
   {
-    sh<Abstract_Fiber> fiber;
+    shptr<Abstract_Fiber> fiber;
     atomic_relaxed<steady_time> async_time;  // volatile
 
-    weak<Abstract_Future> wfutr;
+    wkptr<Abstract_Future> wfutr;
     steady_time yield_time;
     steady_time check_time;
     steady_time fail_time;
@@ -94,15 +94,15 @@ struct Fiber_Comparator
   {
     // We have to build a minheap here.
     bool
-    operator()(shR<Queued_Fiber> lhs, shR<Queued_Fiber> rhs) noexcept
+    operator()(shptrR<Queued_Fiber> lhs, shptrR<Queued_Fiber> rhs) noexcept
       { return lhs->check_time > rhs->check_time;  }
 
     bool
-    operator()(shR<Queued_Fiber> lhs, steady_time rhs) noexcept
+    operator()(shptrR<Queued_Fiber> lhs, steady_time rhs) noexcept
       { return lhs->check_time > rhs;  }
 
     bool
-    operator()(steady_time lhs, shR<Queued_Fiber> rhs) noexcept
+    operator()(steady_time lhs, shptrR<Queued_Fiber> rhs) noexcept
       { return lhs > rhs->check_time;  }
   }
   constexpr fiber_comparator;
@@ -160,7 +160,7 @@ do_fiber_function() noexcept
 POSEIDON_VISIBILITY_HIDDEN
 void
 Fiber_Scheduler::
-do_yield(shR<Abstract_Future> futr_opt, milliseconds fail_timeout_override)
+do_yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override)
   {
     const auto& elem = this->m_sched_elem;
     ROCKET_ASSERT(elem);
@@ -183,7 +183,7 @@ do_yield(shR<Abstract_Future> futr_opt, milliseconds fail_timeout_override)
       if(futr_opt->m_once.test())
         return;
 
-      sh<atomic_relaxed<steady_time>> async_time_ptr(elem, &(elem->async_time));
+      shptr<atomic_relaxed<steady_time>> async_time_ptr(elem, &(elem->async_time));
       milliseconds real_fail_timeout = fail_timeout;
 
       // Clamp the timeout for safety.
@@ -410,7 +410,7 @@ thread_loop()
           xargs[0], xargs[1]);
 
       elem->fiber->m_yield =
-          +[](Fiber_Scheduler* ythis, shR<Abstract_Future> yfutr, milliseconds ytimeout)
+          +[](Fiber_Scheduler* ythis, shptrR<Abstract_Future> yfutr, milliseconds ytimeout)
             {
               ythis->do_yield(yfutr, ytimeout);
             };
@@ -440,7 +440,7 @@ size() const noexcept
 
 void
 Fiber_Scheduler::
-launch(uni<Abstract_Fiber>&& fiber)
+launch(uniptr<Abstract_Fiber>&& fiber)
   {
     if(!fiber)
       POSEIDON_THROW(("Null fiber pointer not valid"));

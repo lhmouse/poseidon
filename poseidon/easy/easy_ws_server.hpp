@@ -14,7 +14,7 @@ class Easy_WS_Server
     // This is also the prototype of callbacks for the constructor.
     using thunk_type =
       thunk<
-        shR<WS_Server_Session>,  // server data socket
+        shptrR<WS_Server_Session>,  // server data socket
         Abstract_Fiber&,            // fiber for current callback
         Easy_WS_Event,              // event type; see comments above constructor
         linear_buffer&&>;           // message payload
@@ -23,12 +23,12 @@ class Easy_WS_Server
     thunk_type m_thunk;
 
     struct X_Client_Table;
-    sh<X_Client_Table> m_client_table;
-    sh<Listen_Socket> m_socket;
+    shptr<X_Client_Table> m_client_table;
+    shptr<Listen_Socket> m_socket;
 
   public:
     // Constructs a server. The argument shall be an invocable object taking
-    // `(shR<WS_Server_Session> session, Abstract_Fiber& fiber,
+    // `(shptrR<WS_Server_Session> session, Abstract_Fiber& fiber,
     // Easy_WS_Event event, linear_buffer&& data)`, where `session` is a
     // pointer to a client session object, and if `event` is
     //  1) `easy_ws_open`, then `data` is the request URI; or

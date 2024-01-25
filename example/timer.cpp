@@ -10,7 +10,7 @@ using namespace ::poseidon;
 extern Easy_Timer my_timer;
 
 void
-timer_callback(shR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/,
+timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/,
                steady_time now)
   {
     POSEIDON_LOG_WARN(("example timer: now = $1"), now.time_since_epoch());

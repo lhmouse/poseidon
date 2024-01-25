@@ -11,7 +11,7 @@ using namespace ::poseidon;
 extern Easy_WS_Server my_server;
 
 void
-event_callback(shR<WS_Server_Session> session, Abstract_Fiber& /*fiber*/,
+event_callback(shptrR<WS_Server_Session> session, Abstract_Fiber& /*fiber*/,
                Easy_WS_Event event, linear_buffer&& data)
   {
     switch(event) {

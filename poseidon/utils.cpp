@@ -148,7 +148,7 @@ ascii_trim(cow_string text)
     return move(text);
   }
 
-size_t
+void
 explode(cow_vector<cow_string>& segments, cow_stringR text, char delim, size_t limit)
   {
     segments.clear();
@@ -169,25 +169,53 @@ explode(cow_vector<cow_string>& segments, cow_stringR text, char delim, size_t l
       // Skip the delimiter and blank characters that follow it.
       bpos = text.find_not_of(epos + 1, " \t");
     }
-    return segments.size();
   }
 
-size_t
-implode(cow_string& text, const cow_vector<cow_string>& segments, char delim)
+cow_vector<cow_string>
+explode(cow_stringR text, char delim, size_t limit)
+  {
+    cow_vector<cow_string> segments;
+    explode(segments, text, delim, limit);
+    return segments;
+  }
+
+void
+implode(cow_string& text, const cow_string* segment_ptr, size_t segment_count, char delim)
   {
     text.clear();
-    if(segments.size()) {
+    if(segment_count != 0) {
       // Write the first token.
-      text << segments[0];
+      text << segment_ptr[0];
 
       // Write the other tokens, each of which is preceded by a delimiter.
-      for(size_t k = 1;  k < segments.size();  ++k)
-        text << delim << ' ' << segments[k];
+      for(size_t k = 1;  k != segment_count;  ++k)
+        text << delim << segment_ptr[k];
     }
-    return segments.size();
   }
 
-char*
+cow_string
+implode(const cow_string* segment_ptr, size_t segment_count, char delim)
+  {
+    cow_string text;
+    implode(text, segment_ptr, segment_count, delim);
+    return text;
+  }
+
+void
+implode(cow_string& text, const cow_vector<cow_string>& segments, char delim)
+  {
+    implode(text, segments.data(), segments.size(), delim);
+  }
+
+cow_string
+implode(const cow_vector<cow_string>& segments, char delim)
+  {
+    cow_string text;
+    implode(text, segments, delim);
+    return text;
+  }
+
+void
 hex_encode_16_partial(char* str, const void* data) noexcept
   {
     // Split the higher and lower halves into two SSE registers.
@@ -199,7 +227,6 @@ hex_encode_16_partial(char* str, const void* data) noexcept
     //   xdigit := val + '0' + ((val > 9) ? 7 : 0)
     tval = _mm_and_si128(_mm_cmpgt_epi8(hi, _mm_set1_epi8(9)), _mm_set1_epi8(39));
     hi = _mm_add_epi8(_mm_add_epi8(hi, _mm_set1_epi8('0')), tval);
-
     tval = _mm_and_si128(_mm_cmpgt_epi8(lo, _mm_set1_epi8(9)), _mm_set1_epi8(39));
     lo = _mm_add_epi8(_mm_add_epi8(lo, _mm_set1_epi8('0')), tval);
 
@@ -207,7 +234,6 @@ hex_encode_16_partial(char* str, const void* data) noexcept
     _mm_storeu_si128((__m128i*) str, _mm_unpacklo_epi8(hi, lo));
     _mm_storeu_si128((__m128i*) (str + 16), _mm_unpackhi_epi8(hi, lo));
     str[32] = 0;
-    return str;
   }
 
 uint32_t

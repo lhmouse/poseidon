@@ -48,7 +48,7 @@ open(zlib_Format format, int level)
   {
     auto defl = new_sh<Final_Deflator>(format, level);
     this->m_defl = defl;
-    this->m_out = sh<linear_buffer>(defl, &(defl->m_out));
+    this->m_out = shptr<linear_buffer>(defl, &(defl->m_out));
   }
 
 void

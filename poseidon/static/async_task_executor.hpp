@@ -12,7 +12,7 @@ class Async_Task_Executor
   private:
     mutable plain_mutex m_queue_mutex;
     condition_variable m_queue_avail;
-    deque<weak<Abstract_Async_Task>> m_queue;
+    deque<wkptr<Abstract_Async_Task>> m_queue;
 
   public:
     // Creates an empty task executor.
@@ -31,7 +31,7 @@ class Async_Task_Executor
     // If this function fails, an exception is thrown, and there is no effect.
     // This function is thread-safe.
     void
-    enqueue(shR<Abstract_Async_Task> task);
+    enqueue(shptrR<Abstract_Async_Task> task);
   };
 
 }  // namespace poseidon

@@ -14,7 +14,7 @@ class Easy_UDP_Client
     // This is also the prototype of callbacks for the constructor.
     using thunk_type =
       thunk<
-        shR<UDP_Socket>,  // client data socket
+        shptrR<UDP_Socket>,  // client data socket
         Abstract_Fiber&,     // fiber for current callback
         Socket_Address&&,    // address of incoming packet
         linear_buffer&&>;    // data of incoming packet
@@ -23,12 +23,12 @@ class Easy_UDP_Client
     thunk_type m_thunk;
 
     struct X_Packet_Queue;
-    sh<X_Packet_Queue> m_queue;
-    sh<UDP_Socket> m_socket;
+    shptr<X_Packet_Queue> m_queue;
+    shptr<UDP_Socket> m_socket;
 
   public:
     // Constructs a client. The argument shall be an invocable object taking
-    // `(shR<UDP_Socket> socket, Abstract_Fiber& fiber, Socket_Address&& addr,
+    // `(shptrR<UDP_Socket> socket, Abstract_Fiber& fiber, Socket_Address&& addr,
     // linear_buffer&& data)`, where `socket` is a pointer to the client socket,
     // and `addr` and `data` are the source address and payload of the current
     // UDP packet, respectively. This client object stores a copy of the
@@ -60,7 +60,7 @@ class Easy_UDP_Client
     close() noexcept;
 
     // Gets the socket object.
-    shR<UDP_Socket>
+    shptrR<UDP_Socket>
     socket_opt() const noexcept
       { return this->m_socket;  }
 

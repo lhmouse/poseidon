@@ -17,7 +17,7 @@ struct Client_Table
     struct Event_Queue
       {
         // read-only fields; no locking needed
-        sh<TCP_Socket> socket;
+        shptr<TCP_Socket> socket;
         cacheline_barrier xcb_1;
 
         // fiber-private fields; no locking needed
@@ -43,12 +43,12 @@ struct Client_Table
 struct Final_Fiber final : Abstract_Fiber
   {
     Easy_TCP_Server::thunk_type m_thunk;
-    weak<Client_Table> m_wtable;
+    wkptr<Client_Table> m_wtable;
     const volatile TCP_Socket* m_refptr;
 
     explicit
     Final_Fiber(const Easy_TCP_Server::thunk_type& thunk,
-                shR<Client_Table> table, const volatile TCP_Socket* refptr)
+                shptrR<Client_Table> table, const volatile TCP_Socket* refptr)
       :
         m_thunk(thunk), m_wtable(table), m_refptr(refptr)
       { }
@@ -123,11 +123,11 @@ struct Final_Fiber final : Abstract_Fiber
 struct Final_Socket final : TCP_Socket
   {
     Easy_TCP_Server::thunk_type m_thunk;
-    weak<Client_Table> m_wtable;
+    wkptr<Client_Table> m_wtable;
 
     explicit
     Final_Socket(const Easy_TCP_Server::thunk_type& thunk,
-                 unique_posix_fd&& fd, shR<Client_Table> table)
+                 unique_posix_fd&& fd, shptrR<Client_Table> table)
       :
         TCP_Socket(move(fd)), m_thunk(thunk), m_wtable(table)
       { }
@@ -205,17 +205,17 @@ struct Final_Socket final : TCP_Socket
 struct Final_Listen_Socket final : Listen_Socket
   {
     Easy_TCP_Server::thunk_type m_thunk;
-    weak<Client_Table> m_wtable;
+    wkptr<Client_Table> m_wtable;
 
     explicit
     Final_Listen_Socket(const Easy_TCP_Server::thunk_type& thunk,
-                        const Socket_Address& addr, shR<Client_Table> table)
+                        const Socket_Address& addr, shptrR<Client_Table> table)
       :
         Listen_Socket(addr), m_thunk(thunk), m_wtable(table)
       { }
 
     virtual
-    sh<Abstract_Socket>
+    shptr<Abstract_Socket>
     do_on_listen_new_client_opt(Socket_Address&& addr, unique_posix_fd&& fd) override
       {
         auto table = this->m_wtable.lock();

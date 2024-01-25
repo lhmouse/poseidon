@@ -18,7 +18,7 @@ struct Client_Table
     struct Event_Queue
       {
         // read-only fields; no locking needed
-        sh<WSS_Server_Session> session;
+        shptr<WSS_Server_Session> session;
         cacheline_barrier xcb_1;
 
         // shared fields between threads
@@ -39,11 +39,11 @@ struct Client_Table
 struct Final_Fiber final : Abstract_Fiber
   {
     Easy_WSS_Server::thunk_type m_thunk;
-    weak<Client_Table> m_wtable;
+    wkptr<Client_Table> m_wtable;
     const volatile WSS_Server_Session* m_refptr;
 
     explicit
-    Final_Fiber(const Easy_WSS_Server::thunk_type& thunk, shR<Client_Table> table,
+    Final_Fiber(const Easy_WSS_Server::thunk_type& thunk, shptrR<Client_Table> table,
                 const volatile WSS_Server_Session* refptr)
       :
         m_thunk(thunk), m_wtable(table), m_refptr(refptr)
@@ -110,11 +110,11 @@ struct Final_Fiber final : Abstract_Fiber
 struct FInal_Server_Session final : WSS_Server_Session
   {
     Easy_WSS_Server::thunk_type m_thunk;
-    weak<Client_Table> m_wtable;
+    wkptr<Client_Table> m_wtable;
 
     explicit
     FInal_Server_Session(unique_posix_fd&& fd,
-          const Easy_WSS_Server::thunk_type& thunk, shR<Client_Table> table)
+          const Easy_WSS_Server::thunk_type& thunk, shptrR<Client_Table> table)
       :
         SSL_Socket(move(fd), network_driver), m_thunk(thunk), m_wtable(table)
       { }
@@ -200,11 +200,11 @@ struct FInal_Server_Session final : WSS_Server_Session
 struct Final_Listen_Socket final : Listen_Socket
   {
     Easy_WSS_Server::thunk_type m_thunk;
-    weak<Client_Table> m_wtable;
+    wkptr<Client_Table> m_wtable;
 
     explicit
     Final_Listen_Socket(const Easy_WSS_Server::thunk_type& thunk,
-                        const Socket_Address& addr, shR<Client_Table> table)
+                        const Socket_Address& addr, shptrR<Client_Table> table)
       :
         Listen_Socket(addr), m_thunk(thunk), m_wtable(table)
       {
@@ -212,7 +212,7 @@ struct Final_Listen_Socket final : Listen_Socket
       }
 
     virtual
-    sh<Abstract_Socket>
+    shptr<Abstract_Socket>
     do_on_listen_new_client_opt(Socket_Address&& addr, unique_posix_fd&& fd) override
       {
         auto table = this->m_wtable.lock();

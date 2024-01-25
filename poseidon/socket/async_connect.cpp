@@ -11,7 +11,7 @@
 namespace poseidon {
 
 Async_Connect::
-Async_Connect(Network_Driver& driver, shR<Abstract_Socket> socket, cow_stringR host, uint16_t port)
+Async_Connect(Network_Driver& driver, shptrR<Abstract_Socket> socket, cow_stringR host, uint16_t port)
   {
     if(!socket)
       POSEIDON_THROW(("Null socket pointer not valid"));
@@ -32,7 +32,7 @@ Async_Connect::
 do_on_abstract_async_task_execute()
   {
     opt<Socket_Address> dns_result;
-    sh<Abstract_Socket> socket;
+    shptr<Abstract_Socket> socket;
 
     try {
       // Perform DNS query. This will block the worker thread.

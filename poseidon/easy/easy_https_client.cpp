@@ -16,7 +16,7 @@ namespace {
 struct Event_Queue
   {
     // read-only fields; no locking needed
-    weak<HTTPS_Client_Session> wsession;
+    wkptr<HTTPS_Client_Session> wsession;
     cacheline_barrier xcb_1;
 
     // shared fields between threads
@@ -36,10 +36,10 @@ struct Event_Queue
 struct Final_Fiber final : Abstract_Fiber
   {
     Easy_HTTPS_Client::thunk_type m_thunk;
-    weak<Event_Queue> m_wqueue;
+    wkptr<Event_Queue> m_wqueue;
 
     explicit
-    Final_Fiber(const Easy_HTTPS_Client::thunk_type& thunk, shR<Event_Queue> queue)
+    Final_Fiber(const Easy_HTTPS_Client::thunk_type& thunk, shptrR<Event_Queue> queue)
       :
         m_thunk(thunk), m_wqueue(queue)
       { }
@@ -98,12 +98,12 @@ struct Final_Fiber final : Abstract_Fiber
 struct Final_Client_Session final : HTTPS_Client_Session
   {
     Easy_HTTPS_Client::thunk_type m_thunk;
-    weak<Event_Queue> m_wqueue;
+    wkptr<Event_Queue> m_wqueue;
     cow_string m_host;
 
     explicit
     Final_Client_Session(const Easy_HTTPS_Client::thunk_type& thunk,
-                         shR<Event_Queue> queue, cow_stringR host)
+                         shptrR<Event_Queue> queue, cow_stringR host)
       :
         SSL_Socket(network_driver), m_thunk(thunk), m_wqueue(queue), m_host(host)
       { }

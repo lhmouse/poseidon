@@ -13,7 +13,7 @@ namespace {
 struct Packet_Queue
   {
     // read-only fields; no locking needed
-    weak<UDP_Socket> wsocket;
+    wkptr<UDP_Socket> wsocket;
     cacheline_barrier xcb_1;
 
     // shared fields between threads
@@ -31,10 +31,10 @@ struct Packet_Queue
 struct Final_Fiber final : Abstract_Fiber
   {
     Easy_UDP_Server::thunk_type m_thunk;
-    weak<Packet_Queue> m_wqueue;
+    wkptr<Packet_Queue> m_wqueue;
 
     explicit
-    Final_Fiber(const Easy_UDP_Server::thunk_type& thunk, shR<Packet_Queue> queue)
+    Final_Fiber(const Easy_UDP_Server::thunk_type& thunk, shptrR<Packet_Queue> queue)
       :
         m_thunk(thunk), m_wqueue(queue)
       { }
@@ -84,11 +84,11 @@ struct Final_Fiber final : Abstract_Fiber
 struct Final_Socket final : UDP_Socket
   {
     Easy_UDP_Server::thunk_type m_thunk;
-    weak<Packet_Queue> m_wqueue;
+    wkptr<Packet_Queue> m_wqueue;
 
     explicit
     Final_Socket(const Easy_UDP_Server::thunk_type& thunk,
-                 const Socket_Address& addr, shR<Packet_Queue> queue)
+                 const Socket_Address& addr, shptrR<Packet_Queue> queue)
       :
         UDP_Socket(addr), m_thunk(thunk), m_wqueue(queue)
       { }

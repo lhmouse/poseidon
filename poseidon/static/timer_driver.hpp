@@ -34,7 +34,7 @@ class Timer_Driver
     // denote a one-shot timer.
     // This function is thread-safe.
     void
-    insert(shR<Abstract_Timer> timer, milliseconds delay, milliseconds period);
+    insert(shptrR<Abstract_Timer> timer, milliseconds delay, milliseconds period);
   };
 
 }  // namespace poseidon

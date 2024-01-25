@@ -14,7 +14,7 @@ class Async_Connect
   {
   private:
     Network_Driver* m_driver;
-    weak<Abstract_Socket> m_wsock;
+    wkptr<Abstract_Socket> m_wsock;
     cow_string m_host;
     uint16_t m_port;
 
@@ -24,7 +24,7 @@ class Async_Connect
     // found, an IPv4 address is preferred to an IPv6 address. If no address can
     // be found, the socket is closed immediately.
     explicit
-    Async_Connect(Network_Driver& driver, shR<Abstract_Socket> socket, cow_stringR host, uint16_t port);
+    Async_Connect(Network_Driver& driver, shptrR<Abstract_Socket> socket, cow_stringR host, uint16_t port);
 
   protected:
     // This class implements `Abstract_Async_Task`.
@@ -35,7 +35,7 @@ class Async_Connect
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Async_Connect);
 
-    sh<Abstract_Socket>
+    shptr<Abstract_Socket>
     socket_opt() const noexcept
       { return this->m_wsock.lock();  }
 

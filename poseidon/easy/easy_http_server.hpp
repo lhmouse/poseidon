@@ -14,7 +14,7 @@ class Easy_HTTP_Server
     // This is also the prototype of callbacks for the constructor.
     using thunk_type =
       thunk<
-        shR<HTTP_Server_Session>,  // server data socket
+        shptrR<HTTP_Server_Session>,  // server data socket
         Abstract_Fiber&,              // fiber for current callback
         Easy_HTTP_Event,              // event type; see comments above constructor
         HTTP_Request_Headers&&,       // request method, URI, and headers
@@ -24,12 +24,12 @@ class Easy_HTTP_Server
     thunk_type m_thunk;
 
     struct X_Client_Table;
-    sh<X_Client_Table> m_client_table;
-    sh<Listen_Socket> m_socket;
+    shptr<X_Client_Table> m_client_table;
+    shptr<Listen_Socket> m_socket;
 
   public:
     // Constructs a server. The argument shall be an invocable object taking
-    // `(shR<HTTP_Server_Session> session, Abstract_Fiber& fiber,
+    // `(shptrR<HTTP_Server_Session> session, Abstract_Fiber& fiber,
     // Easy_HTTP_Event event, HTTP_Request_Headers&& req, linear_buffer&&
     // data)`, where `session` is a pointer to a client session object, and if
     // `event` is

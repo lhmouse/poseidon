@@ -11,7 +11,7 @@ namespace poseidon {
 class HTTP_Value
   {
   private:
-    variant<nullptr_t, cow_string, double, DateTime> m_stor;
+    ::rocket::variant<nullptr_t, cow_string, double, DateTime> m_stor;
 
   public:
     // Value constructors

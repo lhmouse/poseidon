@@ -11,7 +11,7 @@ using namespace ::poseidon;
 extern Easy_HTTPS_Server my_server;
 
 void
-event_callback(shR<HTTPS_Server_Session> session, Abstract_Fiber& /*fiber*/,
+event_callback(shptrR<HTTPS_Server_Session> session, Abstract_Fiber& /*fiber*/,
                Easy_HTTP_Event event,HTTP_Request_Headers&& req, linear_buffer&& data)
   {
     switch(event) {

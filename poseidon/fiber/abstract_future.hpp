@@ -17,7 +17,7 @@ class Abstract_Future
     exception_ptr m_except_opt;
 
     mutable plain_mutex m_waiters_mutex;
-    vector<weak<atomic_relaxed<steady_time>>> m_waiters;
+    vector<wkptr<atomic_relaxed<steady_time>>> m_waiters;
 
   protected:
     // Constructs an empty future that has not completed.

@@ -10,8 +10,8 @@ namespace poseidon {
 class Easy_Deflator
   {
   private:
-    sh<Deflator> m_defl;
-    sh<linear_buffer> m_out;
+    shptr<Deflator> m_defl;
+    shptr<linear_buffer> m_out;
 
   public:
     // Constructs an empty data compressor.

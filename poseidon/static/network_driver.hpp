@@ -22,7 +22,7 @@ class Network_Driver
     linear_buffer m_epoll_events;
     unique_posix_fd m_epoll_fd;
     uint32_t m_epoll_map_used = 0;
-    ::std::valarray<weak<Abstract_Socket>> m_epoll_map_stor;
+    ::std::valarray<wkptr<Abstract_Socket>> m_epoll_map_stor;
 
   public:
     // Constructs an empty driver.
@@ -31,9 +31,9 @@ class Network_Driver
 
   private:
     void
-    do_epoll_ctl(int op, shR<Abstract_Socket> socket, uint32_t events);
+    do_epoll_ctl(int op, shptrR<Abstract_Socket> socket, uint32_t events);
 
-    weak<Abstract_Socket>&
+    wkptr<Abstract_Socket>&
     do_linear_probe_socket_no_lock(const volatile Abstract_Socket* socket) noexcept;
 
     static
@@ -75,7 +75,7 @@ class Network_Driver
     // to this socket.
     // This function is thread-safe.
     void
-    insert(shR<Abstract_Socket> socket);
+    insert(shptrR<Abstract_Socket> socket);
   };
 
 }  // namespace poseidon

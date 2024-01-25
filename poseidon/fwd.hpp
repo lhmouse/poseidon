@@ -35,6 +35,8 @@ namespace noadl = poseidon;
 #define POSEIDON_VISIBILITY_HIDDEN   \
   __attribute__((__visibility__("hidden"))) inline
 
+#define POSEIDON_USING    template<typename... Ts> using
+
 // Aliases
 using ::std::initializer_list;
 using ::std::nullptr_t;
@@ -105,6 +107,7 @@ using ::rocket::cow_vector;
 using ::rocket::cow_hashmap;
 using ::rocket::static_vector;
 using ::rocket::cow_string;
+using cow_stringR = const ::rocket::cow_string&;
 using ::rocket::cow_u16string;
 using ::rocket::cow_u32string;
 using ::rocket::linear_buffer;
@@ -117,6 +120,14 @@ using ::rocket::tinyfmt_ln;
 using ::rocket::unique_posix_fd;
 using ::rocket::unique_posix_file;
 using ::rocket::unique_posix_dir;
+
+POSEIDON_USING vfptr = void (*)(Ts...);
+POSEIDON_USING cow_bivector = ::rocket::cow_vector<::std::pair<Ts...>>;
+POSEIDON_USING opt = ::rocket::optional<Ts...>;
+POSEIDON_USING uniptr = ::std::unique_ptr<Ts...>;
+POSEIDON_USING shptr = ::std::shared_ptr<Ts...>;
+POSEIDON_USING wkptr = ::std::weak_ptr<Ts...>;
+POSEIDON_USING shptrR = const ::std::shared_ptr<Ts...>&;
 
 using ::rocket::begin;
 using ::rocket::end;
@@ -157,39 +168,18 @@ using ::rocket::xmemrpset;
 using ::rocket::xmempcpy;
 using ::rocket::xmemrpcpy;
 
-using ::rocket::nullopt_t;
-using ::rocket::optional;
-using ::rocket::variant;
-using phsh_string = ::rocket::prehashed_string;
-
 using ::asteria::format;
 using ::asteria::format_string;
-
-template<typename T> using ptr = T*;
-template<typename... T> using vfptr = void (*)(T...);
-template<typename T, typename U> using cow_bivector = cow_vector<pair<T, U>>;
-template<typename T> using opt = optional<T>;
-template<typename T> using uni = ::std::unique_ptr<T>;  // default deleter
-template<typename T> using sh = ::std::shared_ptr<T>;
-template<typename T> using weak = ::std::weak_ptr<T>;
-
-using cow_stringR = const cow_string&;
-using phsh_stringR = const phsh_string&;
-template<typename T> using shR = const sh<T>&;
-template<typename T> using weakR = const weak<T>&;
-
-template<size_t Nc> using char_array = array<char, Nc>;
-template<size_t Nc> using uchar_array = array<unsigned char, Nc>;
 
 // utilities
 struct cacheline_barrier
   {
     static constexpr size_t align = alignof(max_align_t);
     static constexpr size_t size = 64UL - alignof(max_align_t);
-    alignas(align) uchar_array<size> bytes;
 
-    // All contents are padding, so these functions do nothing.
-    cacheline_barrier() noexcept { }
+    alignas(align) char bytes[size];
+
+    cacheline_barrier() noexcept = default;
     cacheline_barrier(const cacheline_barrier&) { }
     cacheline_barrier& operator=(const cacheline_barrier&) { return *this;  }
   };
@@ -203,16 +193,16 @@ class thunk
 
   private:
     vfptr<void*, ArgsT&&...> m_func;
-    sh<void> m_obj;
+    shptr<void> m_obj;
 
   public:
     // Points this callback to a target object, with its type erased.
     template<typename RealT,
     ROCKET_ENABLE_IF(is_invocable<RealT>::value)>
     explicit
-    thunk(const sh<RealT>& obj) noexcept
+    thunk(shptrR<RealT> obj) noexcept
       {
-        this->m_func = +[](void* p, ArgsT&&... args) { (*(RealT*) p) (forward<ArgsT>(args)...);  };
+        this->m_func = [](void* p, ArgsT&&... args) { (*(RealT*) p) (forward<ArgsT>(args)...);  };
         this->m_obj = obj;
       }
 
@@ -222,7 +212,7 @@ class thunk
     thunk(function_type* fptr) noexcept
       {
         this->m_func = nullptr;
-        this->m_obj = sh<void>(sh<int>(), (void*)(intptr_t) fptr);
+        this->m_obj = shptr<void>(shptr<int>(), (void*)(intptr_t) fptr);
       }
 
     // Performs a virtual call to the target object.
@@ -463,25 +453,25 @@ operator<<(tinyfmt& fmt, chars_view data)
 
 template<typename ValueT, typename... ArgsT>
 ROCKET_ALWAYS_INLINE
-uni<ValueT>
+uniptr<ValueT>
 new_uni(ArgsT&&... args)
   { return ::std::make_unique<ValueT>(forward<ArgsT>(args)...);  }
 
 template<typename ValueT>
 ROCKET_ALWAYS_INLINE
-uni<typename ::std::decay<ValueT>::type>
+uniptr<typename ::std::decay<ValueT>::type>
 new_uni(ValueT&& value)
   { return ::std::make_unique<typename ::std::decay<ValueT>::type>(forward<ValueT>(value));  }
 
 template<typename ValueT, typename... ArgsT>
 ROCKET_ALWAYS_INLINE
-sh<ValueT>
+shptr<ValueT>
 new_sh(ArgsT&&... args)
   { return ::std::make_shared<ValueT>(forward<ArgsT>(args)...);  }
 
 template<typename ValueT>
 ROCKET_ALWAYS_INLINE
-sh<typename ::std::decay<ValueT>::type>
+shptr<typename ::std::decay<ValueT>::type>
 new_sh(ValueT&& value)
   { return ::std::make_shared<typename ::std::decay<ValueT>::type>(forward<ValueT>(value));  }
 
