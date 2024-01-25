@@ -23,12 +23,10 @@
 #include <openssl/err.h>
 #ifdef POSEIDON_ENABLE_MYSQL
 #include "static/mysql_connector.hpp"
-#include "third/mysql_fwd.hpp"
 #include <mysql/mysql.h>
 #endif
 #ifdef POSEIDON_ENABLE_MONGODB
 #include "static/mongodb_connector.hpp"
-#include "third/mongodb_fwd.hpp"
 #include <mongoc/mongoc.h>
 #endif
 namespace {
