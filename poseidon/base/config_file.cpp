@@ -51,7 +51,7 @@ query(initializer_list<cow_string> path) const
         POSEIDON_THROW((
             "Unexpected type of `$1` (expecting an `object`, got `$2`)",
             "[in configuration file '$3']"),
-            implode(path.begin(), (size_t) (cur - path.begin), '.'), *value,
+            implode(path.begin(), (size_t) (cur - path.begin()), '.'), *value,
             this->m_path);
 
       // Descend into this child object.
