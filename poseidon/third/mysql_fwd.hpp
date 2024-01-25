@@ -8,11 +8,32 @@
 #include <mysql/mysql.h>
 namespace poseidon {
 
-struct MYSQL_deleter
+class mysql_Client
   {
-    void
-    operator()(::MYSQL* p) const noexcept
-      { ::mysql_close(p);  }
+  private:
+    mutable ::MYSQL m_mysql[1];
+
+  public:
+    mysql_Client()
+      {
+        if(::mysql_init(this->m_mysql) == nullptr)
+          ::rocket::sprintf_and_throw<::std::runtime_error>(
+                "mysql_Client: insufficient memory");
+
+        // Set default options.
+        ::mysql_options(this->m_mysql, MYSQL_OPT_COMPRESS, "1");
+        ::mysql_options(this->m_mysql, MYSQL_SET_CHARSET_NAME , "utf8mb4");
+      }
+
+    ASTERIA_NONCOPYABLE_DESTRUCTOR(mysql_Client)
+      {
+        ::mysql_close(this->m_mysql);
+      }
+
+  public:
+    operator
+    ::MYSQL*() const noexcept
+      { return this->m_mysql;  }
   };
 
 struct MYSQL_RES_deleter
@@ -29,7 +50,6 @@ struct MYSQL_STMT_deleter
       { ::mysql_stmt_close(p);  }
   };
 
-using uni_MYSQL = ::rocket::unique_ptr<::MYSQL, MYSQL_deleter>;
 using uni_MYSQL_RES = ::rocket::unique_ptr<::MYSQL_RES, MYSQL_RES_deleter>;
 using uni_MYSQL_STMT = ::rocket::unique_ptr<::MYSQL_STMT, MYSQL_STMT_deleter>;
 

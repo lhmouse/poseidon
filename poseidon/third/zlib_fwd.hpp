@@ -13,7 +13,7 @@ namespace poseidon {
 class zlib_xStream
   {
   protected:
-    ::z_stream m_zstrm[1];
+    mutable ::z_stream m_zstrm[1];
 
   protected:
     zlib_xStream() noexcept
@@ -29,11 +29,7 @@ class zlib_xStream
 
   public:
     operator
-    const ::z_stream*() const noexcept
-      { return this->m_zstrm;  }
-
-    operator
-    ::z_stream*() noexcept
+    ::z_stream*() const noexcept
       { return this->m_zstrm;  }
 
     const char*
