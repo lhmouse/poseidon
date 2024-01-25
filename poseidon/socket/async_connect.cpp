@@ -31,9 +31,8 @@ void
 Async_Connect::
 do_on_abstract_async_task_execute()
   {
-    const auto socket = this->m_wsock.lock();
-    if(!socket)
-      return;
+    opt<Socket_Address> dns_result;
+    sh<Abstract_Socket> socket;
 
     try {
       // Perform DNS query. This will block the worker thread.
@@ -47,8 +46,7 @@ do_on_abstract_async_task_execute()
             "[`getaddrinfo()` failed: $2]"),
             this->m_host, ::gai_strerror(err));
 
-      const ::rocket::unique_ptr<::addrinfo, void (::addrinfo*)> guard(res, ::freeaddrinfo);
-      opt<Socket_Address> dns_result;
+      const auto guard = ::rocket::make_unique_handle(res, ::freeaddrinfo);
 
       // Iterate over the list and find a suitable address to connect. IPv4
       // addresses are preferred to IPv6 ones, so this has to be done as two
@@ -56,37 +54,48 @@ do_on_abstract_async_task_execute()
       for(res = guard;  res && !dns_result;  res = res->ai_next)
         if(res->ai_family == AF_INET) {
           // IPv4
-          auto& addr = dns_result.emplace();
-          ::memcpy(addr.mut_data(), ipv4_unspecified.data(), 12);
-          ::memcpy(addr.mut_data() + 12, &(((::sockaddr_in*) res->ai_addr)->sin_addr), 4);
-          addr.set_port(this->m_port);
-          POSEIDON_LOG_DEBUG(("Using IPv4: `$1` => `$2`"), this->m_host, addr);
+          auto& saddr = dns_result.value_or_emplace();
+          ::memcpy(saddr.mut_data(), ipv4_unspecified.data(), 12);
+          ::memcpy(saddr.mut_data() + 12, &(((::sockaddr_in*) res->ai_addr)->sin_addr), 4);
+          saddr.set_port(this->m_port);
+          POSEIDON_LOG_DEBUG(("Using IPv4: `$1` => `$2`"), this->m_host, saddr);
         }
 
       for(res = guard;  res && !dns_result;  res = res->ai_next)
         if(res->ai_family == AF_INET6) {
           // IPv6
-          auto& addr = dns_result.emplace();
-          ::memcpy(addr.mut_data(), &(((::sockaddr_in6*) res->ai_addr)->sin6_addr), 16);
-          addr.set_port(this->m_port);
-          POSEIDON_LOG_DEBUG(("Using IPv6: `$1` => `$2`"), this->m_host, addr);
+          auto& saddr = dns_result.value_or_emplace();
+          ::memcpy(saddr.mut_data(), &(((::sockaddr_in6*) res->ai_addr)->sin6_addr), 16);
+          saddr.set_port(this->m_port);
+          POSEIDON_LOG_DEBUG(("Using IPv6: `$1` => `$2`"), this->m_host, saddr);
         }
-
-
-      if(dns_result)
-        socket->connect(*dns_result);
-      else
-        socket->quick_close();
-
-      // Insert the socket. Even in case of a failure, a closure notification
-      // shall be delivered.
-      this->m_driver->insert(socket);
     }
     catch(exception& stdex) {
       // Shut the connection down later.
-      POSEIDON_LOG_ERROR(("DNS lookup error: $1"), stdex);
-      socket->quick_close();
+      POSEIDON_LOG_ERROR(("Could not resolve host name: $1"), stdex);
+      dns_result.reset();
     }
+
+    socket = this->m_wsock.lock();
+    if(!socket)
+      return;
+
+    try {
+      if(dns_result)
+        socket->connect(*dns_result);
+    }
+    catch(exception& stdex) {
+      // Shut the connection down later.
+      POSEIDON_LOG_ERROR(("Could not initiate connection: $1"), stdex);
+      dns_result.reset();
+    }
+
+    if(!dns_result)
+      socket->quick_close();
+
+    // Insert the socket. Even in case of a failure, a closure notification
+    // shall be delivered.
+    this->m_driver->insert(socket);
   }
 
 }  // namespace poseidon

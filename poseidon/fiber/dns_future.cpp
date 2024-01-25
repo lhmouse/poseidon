@@ -36,26 +36,28 @@ do_on_abstract_future_execute()
           this->m_res.host, ::gai_strerror(err));
 
     // Copy records into `m_res`.
-    const ::rocket::unique_ptr<::addrinfo, void (::addrinfo*)> guard(res, ::freeaddrinfo);
-    Socket_Address addr;
+    const auto guard = ::rocket::make_unique_handle(res, ::freeaddrinfo);
+    Socket_Address saddr;
 
     for(res = guard; res;  res = res->ai_next)
       if(res->ai_family == AF_INET) {
         // IPv4
-        ::memcpy(addr.mut_data(), ipv4_unspecified.data(), 12);
-        ::memcpy(addr.mut_data() + 12, &(((::sockaddr_in*) res->ai_addr)->sin_addr), 4);
-        addr.set_port(this->m_res.port);
+        ::memcpy(saddr.mut_data(), ipv4_unspecified.data(), 12);
+        ::memcpy(saddr.mut_data() + 12, &(((::sockaddr_in*) res->ai_addr)->sin_addr), 4);
+        saddr.set_port(this->m_res.port);
+        POSEIDON_LOG_DEBUG(("Using IPv4: `$1` => `$2`"), m_res.host, saddr);
 
-        if(find(this->m_res.addrs, addr) == nullptr)
-          this->m_res.addrs.push_back(addr);
+        if(find(this->m_res.addrs, saddr) == nullptr)
+          this->m_res.addrs.push_back(saddr);
       }
       else if(res->ai_family == AF_INET6) {
         // IPv6
-        ::memcpy(addr.mut_data(), &(((::sockaddr_in6*) res->ai_addr)->sin6_addr), 16);
-        addr.set_port(this->m_res.port);
+        ::memcpy(saddr.mut_data(), &(((::sockaddr_in6*) res->ai_addr)->sin6_addr), 16);
+        saddr.set_port(this->m_res.port);
+        POSEIDON_LOG_DEBUG(("Using IPv6: `$1` => `$2`"), this->m_res.host, saddr);
 
-        if(find(this->m_res.addrs, addr) == nullptr)
-          this->m_res.addrs.push_back(addr);
+        if(find(this->m_res.addrs, saddr) == nullptr)
+          this->m_res.addrs.push_back(saddr);
       }
   }
 
