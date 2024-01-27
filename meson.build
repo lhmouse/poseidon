@@ -324,7 +324,7 @@ dep_libmagic = dependency('libmagic')
 dep_mysqlclient = dependency('mysqlclient', required: false)
 dep_mongoc = dependency('libmongoc-1.0', required: false)
 
-lib_poseidon = both_libraries('poseidon',
+lib_poseidon = shared_library('poseidon',
       cpp_pch: 'poseidon/precompiled.hpp',
       sources: [ poseidon_src ],
       dependencies: [ dep_libunwind, dep_openssl, dep_http_parser, dep_zlib,
