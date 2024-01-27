@@ -21,6 +21,7 @@ class WSS_Server_Session
 
   public:
     // Constructs a socket for incoming connections.
+    explicit
     WSS_Server_Session();
 
   private:

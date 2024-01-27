@@ -40,7 +40,8 @@ class Socket_Address
 
     // Parses an address from a string, like `parse()`.
     // An exception is thrown if the address string is not valid.
-    explicit Socket_Address(chars_view str);
+    explicit
+    Socket_Address(chars_view str);
 
     Socket_Address&
     swap(Socket_Address& other) noexcept

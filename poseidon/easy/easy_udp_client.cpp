@@ -1,7 +1,7 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
 
-#include "../precompiled.ipp"
+#include "../precompiled.hpp"
 #include "easy_udp_client.hpp"
 #include "../static/network_driver.hpp"
 #include "../fiber/abstract_fiber.hpp"
@@ -33,6 +33,7 @@ struct Final_Fiber final : Abstract_Fiber
     Easy_UDP_Client::thunk_type m_thunk;
     wkptr<Packet_Queue> m_wqueue;
 
+    explicit
     Final_Fiber(const Easy_UDP_Client::thunk_type& thunk, shptrR<Packet_Queue> queue)
       :
         m_thunk(thunk), m_wqueue(queue)
@@ -85,6 +86,7 @@ struct Final_Socket final : UDP_Socket
     Easy_UDP_Client::thunk_type m_thunk;
     wkptr<Packet_Queue> m_wqueue;
 
+    explicit
     Final_Socket(const Easy_UDP_Client::thunk_type& thunk, shptrR<Packet_Queue> queue)
       :
         m_thunk(thunk), m_wqueue(queue)

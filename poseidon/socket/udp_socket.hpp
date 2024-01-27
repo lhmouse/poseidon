@@ -19,9 +19,11 @@ class UDP_Socket
 
   protected:
     // Creates a socket that is bound onto `addr`. [server-side constructor]
-    explicit UDP_Socket(const Socket_Address& addr);
+    explicit
+    UDP_Socket(const Socket_Address& addr);
 
     // Creates an unbound socket. [client-side constructor]
+    explicit
     UDP_Socket();
 
   protected:

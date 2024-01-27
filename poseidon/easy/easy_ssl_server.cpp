@@ -1,7 +1,7 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
 
-#include "../precompiled.ipp"
+#include "../precompiled.hpp"
 #include "easy_ssl_server.hpp"
 #include "enums.hpp"
 #include "../socket/listen_socket.hpp"
@@ -46,6 +46,7 @@ struct Final_Fiber final : Abstract_Fiber
     wkptr<Client_Table> m_wtable;
     const volatile SSL_Socket* m_refptr;
 
+    explicit
     Final_Fiber(const Easy_SSL_Server::thunk_type& thunk, shptrR<Client_Table> table,
                 const volatile SSL_Socket* refptr)
       :
@@ -124,6 +125,7 @@ struct Final_Socket final : SSL_Socket
     Easy_SSL_Server::thunk_type m_thunk;
     wkptr<Client_Table> m_wtable;
 
+    explicit
     Final_Socket(const Easy_SSL_Server::thunk_type& thunk, unique_posix_fd&& fd,
                  shptrR<Client_Table> table)
       :
@@ -205,6 +207,7 @@ struct Final_Listen_Socket final : Listen_Socket
     Easy_SSL_Server::thunk_type m_thunk;
     wkptr<Client_Table> m_wtable;
 
+    explicit
     Final_Listen_Socket(const Easy_SSL_Server::thunk_type& thunk,
                         const Socket_Address& addr, shptrR<Client_Table> table)
       :

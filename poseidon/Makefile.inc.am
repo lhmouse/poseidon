@@ -104,7 +104,7 @@ endif
 
 lib_libposeidon_la_SOURCES =  \
   %reldir%/version.h.in  \
-  %reldir%/precompiled.ipp  \
+  %reldir%/precompiled.hpp  \
   %reldir%/fwd.cpp  \
   %reldir%/utils.cpp  \
   %reldir%/static/main_config.cpp  \

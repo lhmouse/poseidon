@@ -1,7 +1,7 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
 
-#include "../precompiled.ipp"
+#include "../precompiled.hpp"
 #include "easy_tcp_client.hpp"
 #include "enums.hpp"
 #include "../static/network_driver.hpp"
@@ -41,6 +41,7 @@ struct Final_Fiber final : Abstract_Fiber
     Easy_TCP_Client::thunk_type m_thunk;
     wkptr<Event_Queue> m_wqueue;
 
+    explicit
     Final_Fiber(const Easy_TCP_Client::thunk_type& thunk, shptrR<Event_Queue> queue)
       :
         m_thunk(thunk), m_wqueue(queue)
@@ -106,6 +107,7 @@ struct Final_Socket final : TCP_Socket
     Easy_TCP_Client::thunk_type m_thunk;
     wkptr<Event_Queue> m_wqueue;
 
+    explicit
     Final_Socket(const Easy_TCP_Client::thunk_type& thunk, shptrR<Event_Queue> queue)
       :
         m_thunk(thunk), m_wqueue(queue)

@@ -31,7 +31,8 @@ class mysql_Client
       }
 
   public:
-    operator ::MYSQL*() const noexcept
+    operator
+    ::MYSQL*() const noexcept
       { return this->m_mysql;  }
   };
 

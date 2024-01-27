@@ -23,7 +23,8 @@ class Async_Connect
     // `connect()` is called on `socket`. If both IPv4 and IPv6 addresses are
     // found, an IPv4 address is preferred to an IPv6 address. If no address can
     // be found, the socket is closed immediately.
-    explicit Async_Connect(Network_Driver& driver, shptrR<Abstract_Socket> socket, cow_stringR host, uint16_t port);
+    explicit
+    Async_Connect(Network_Driver& driver, shptrR<Abstract_Socket> socket, cow_stringR host, uint16_t port);
 
   protected:
     // This class implements `Abstract_Async_Task`.

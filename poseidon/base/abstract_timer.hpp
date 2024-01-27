@@ -16,6 +16,7 @@ class Abstract_Timer
 
   protected:
     // Constructs an inactive timer.
+    explicit
     Abstract_Timer();
 
   protected:

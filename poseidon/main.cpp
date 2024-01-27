@@ -1,7 +1,7 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
 
-#include "precompiled.ipp"
+#include "precompiled.hpp"
 #include "base/config_file.hpp"
 #include "static/main_config.hpp"
 #include "static/fiber_scheduler.hpp"

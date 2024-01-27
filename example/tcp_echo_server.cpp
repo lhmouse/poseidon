@@ -1,7 +1,7 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
 
-#include "../poseidon/precompiled.ipp"
+#include "../poseidon/precompiled.hpp"
 #include "../poseidon/easy/easy_tcp_server.hpp"
 #include "../poseidon/easy/enums.hpp"
 #include "../poseidon/utils.hpp"

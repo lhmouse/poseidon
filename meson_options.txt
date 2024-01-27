@@ -1,0 +1,19 @@
+option('enable-debug-checks',
+       type: 'boolean', value: false,
+       description: 'enable run-time assertions')
+
+option('enable-sanitizer',
+       type: 'combo', choices: [ 'none', 'address', 'thread' ],
+       description: 'enable sanitizer library')
+
+option('enable-mysql',
+       type: 'boolean', value: true,
+       description: 'enable access to MySQL servers')
+
+option('enable-mongodb',
+       type: 'boolean', value: true,
+       description: 'enable access to MongoDB servers')
+
+option('enable-avx',
+       type: 'boolean', value: true,
+       description: 'enable AVX instruction set on x86 and x86-64')

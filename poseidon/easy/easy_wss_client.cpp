@@ -1,7 +1,7 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
 
-#include "../precompiled.ipp"
+#include "../precompiled.hpp"
 #include "easy_wss_client.hpp"
 #include "enums.hpp"
 #include "../static/network_driver.hpp"
@@ -41,6 +41,7 @@ struct Final_Fiber final : Abstract_Fiber
     Easy_WSS_Client::thunk_type m_thunk;
     wkptr<Event_Queue> m_wqueue;
 
+    explicit
     Final_Fiber(const Easy_WSS_Client::thunk_type& thunk, shptrR<Event_Queue> queue)
       :
         m_thunk(thunk), m_wqueue(queue)
@@ -92,13 +93,15 @@ struct Final_Fiber final : Abstract_Fiber
       }
   };
 
-struct Final_Client_Session final : WSS_Client_Session
+struct FInal_Client_Session final : WSS_Client_Session
   {
     Easy_WSS_Client::thunk_type m_thunk;
     wkptr<Event_Queue> m_wqueue;
 
-    Final_Client_Session(const Easy_WSS_Client::thunk_type& thunk, shptrR<Event_Queue> queue,
-                         cow_stringR host, cow_stringR path, cow_stringR query)
+    explicit
+    FInal_Client_Session(const Easy_WSS_Client::thunk_type& thunk,
+          shptrR<Event_Queue> queue, cow_stringR host, cow_stringR path,
+          cow_stringR query)
       :
         SSL_Socket(network_driver), WSS_Client_Session(host, path, query),
         m_thunk(thunk), m_wqueue(queue)
@@ -204,7 +207,7 @@ connect(chars_view addr)
 
     // Initiate the connection.
     auto queue = new_sh<X_Event_Queue>();
-    auto session = new_sh<Final_Client_Session>(this->m_thunk, queue,
+    auto session = new_sh<FInal_Client_Session>(this->m_thunk, queue,
           format_string("$1:$2", caddr.host, caddr.port_num),
           caddr.path.str(), caddr.query.str());
 

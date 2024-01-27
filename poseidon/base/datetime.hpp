@@ -29,7 +29,8 @@ class DateTime
 
     // Parses a timestamp from an HTTP date/time string, like `parse()`.
     // An exception is thrown if the date/time string is not valid.
-    explicit DateTime(chars_view str);
+    explicit
+    DateTime(chars_view str);
 
     DateTime&
     swap(DateTime& other) noexcept

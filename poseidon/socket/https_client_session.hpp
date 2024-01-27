@@ -20,6 +20,7 @@ class HTTPS_Client_Session
 
   public:
     // Constructs a socket for outgoing connections.
+    explicit
     HTTPS_Client_Session();
 
   protected:

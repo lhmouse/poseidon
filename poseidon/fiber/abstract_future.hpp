@@ -21,6 +21,7 @@ class Abstract_Future
 
   protected:
     // Constructs an empty future that has not completed.
+    explicit
     Abstract_Future();
 
   protected:

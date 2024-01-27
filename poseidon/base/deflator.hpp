@@ -15,7 +15,8 @@ class Deflator
 
   public:
     // Constructs a data compressor.
-    explicit Deflator(zlib_Format format, int level = -1);
+    explicit
+    Deflator(zlib_Format format, int level = -1);
 
   protected:
     // This callback is invoked to request an output buffer if none has been

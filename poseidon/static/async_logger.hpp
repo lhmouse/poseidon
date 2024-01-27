@@ -26,6 +26,7 @@ class Async_Logger
 
   public:
     // Creates a logger that outputs to nowhere.
+    explicit
     Async_Logger() noexcept;
 
   public:

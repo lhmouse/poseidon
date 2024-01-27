@@ -20,6 +20,7 @@ class HTTP_Server_Session
 
   public:
     // Constructs a socket for incoming connections.
+    explicit
     HTTP_Server_Session();
 
   protected:

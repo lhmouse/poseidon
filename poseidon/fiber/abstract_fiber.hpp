@@ -20,6 +20,7 @@ class Abstract_Fiber
 
   protected:
     // Constructs an empty fiber.
+    explicit
     Abstract_Fiber();
 
   protected:

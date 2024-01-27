@@ -23,7 +23,8 @@ class Config_File
       { }
 
     // Loads the file denoted by `path`.
-    explicit Config_File(cow_stringR path);
+    explicit
+    Config_File(cow_stringR path);
 
     Config_File&
     swap(Config_File& other) noexcept

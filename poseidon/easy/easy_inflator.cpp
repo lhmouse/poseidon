@@ -1,7 +1,7 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
 
-#include "../precompiled.ipp"
+#include "../precompiled.hpp"
 #include "easy_inflator.hpp"
 #include "../base/inflator.hpp"
 #include "../utils.hpp"
@@ -12,7 +12,8 @@ struct Final_Inflator final : Inflator
   {
     linear_buffer m_out;
 
-    explicit Final_Inflator(zlib_Format format)
+    explicit
+    Final_Inflator(zlib_Format format)
       :
         Inflator(format)
       { }

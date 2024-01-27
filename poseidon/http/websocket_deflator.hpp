@@ -25,7 +25,8 @@ class WebSocket_Deflator
   public:
     // Initializes a new deflator/inflator with PMCE arguments from `parser`. A
     // previous WebSocket handshake shall have completed.
-    explicit WebSocket_Deflator(const WebSocket_Frame_Parser& parser);
+    explicit
+    WebSocket_Deflator(const WebSocket_Frame_Parser& parser);
 
   public:
     ASTERIA_NONCOPYABLE_DESTRUCTOR(WebSocket_Deflator);

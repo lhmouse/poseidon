@@ -20,7 +20,8 @@ class Listen_Socket
   protected:
     // Creates a TCP socket that is bound onto the given address, that accepts
     // either TCP or SSL connections. [server-side constructor]
-    explicit Listen_Socket(const Socket_Address& addr);
+    explicit
+    Listen_Socket(const Socket_Address& addr);
 
   protected:
     // These callbacks implement `Abstract_Socket`.

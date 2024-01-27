@@ -103,7 +103,8 @@ class UUID
 
     // Parses a UUID from a string, like `parse()`.
     // An exception is thrown if the UUID string is not valid.
-    explicit UUID(chars_view str);
+    explicit
+    UUID(chars_view str);
 
     UUID&
     swap(UUID& other) noexcept
@@ -147,8 +148,8 @@ class UUID
       { return this->m_bytes + 16;  }
 
     // Checks whether this UUID is the nil UUID.
-    ROCKET_PURE
-    operator bool() const noexcept
+    ROCKET_PURE operator
+    bool() const noexcept
       {
         __m128i tval = _mm_load_si128(&(this->m_stor));
         __m128i oval = _mm_setzero_si128();

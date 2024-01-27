@@ -26,10 +26,12 @@ class Abstract_Socket
 
   protected:
     // Takes ownership of an existent IPv6 socket.
-    explicit Abstract_Socket(unique_posix_fd&& fd);
+    explicit
+    Abstract_Socket(unique_posix_fd&& fd);
 
     // Creates a new non-blocking IPv6 socket.
-    explicit Abstract_Socket(int type, int protocol);
+    explicit
+    Abstract_Socket(int type, int protocol);
 
   protected:
     // Gets the file descriptor.

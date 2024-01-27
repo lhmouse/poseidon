@@ -22,15 +22,9 @@
 #### Prerequisite
 
 ```sh
-# For Ubuntu Focal
-sudo aptitude install zlib1g-dev  \
-   lib{edit,pcre2,ssl,magic,mongoc,http-parser,unwind}-dev  \
-   libmysqlclient-dev
-
-# For Debian Buster
-sudo aptitude install zlib1g-dev  \
-   lib{edit,pcre2,ssl,magic,mongoc,http-parser,unwind}-dev  \
-   libmariadb-dev-compat
+sudo aptitude install --no-install-recommends  \
+   zlib1g-dev lib{pcre2,ssl,magic,http-parser,unwind}-dev  \
+   lib{mysqlclient,mongoc}-dev
 ```
 
 #### Build and install Asteria
@@ -38,11 +32,7 @@ sudo aptitude install zlib1g-dev  \
 ```sh
 git submodule update --init
 cd asteria/
-git checkout master
-git pull
-autoreconf -i
-./configure --disable-static
-make -j$(nproc)
+git checkout origin/master -B master
 ./makedeb.sh
 sudo dpkg -i asteria_*.deb
 cd ..
@@ -51,42 +41,17 @@ cd ..
 #### Build Poseidon
 
 ```sh
-autoreconf -i
-./configure --disable-static
-make -j$(nproc)
+meson setup build_dir
+cd build_dir
+ninja
+cd ..
 ```
 
-#### Start Poseidon in build tree
+#### Start Poseidon in build directory
 
 ```sh
-./run.sh
+./build_dir/poseidon ./etc/poseidon
 ```
-
-#### Start Poseidon within **GDB**
-
-```sh
-./run.sh gdb --args
-```
-
-#### Install Poseidon and create default configuration file
-
-```sh
-./makedeb.sh
-sudo cp /usr/local/etc/poseidon/main.default.conf  \
-        /usr/local/etc/poseidon/main.conf
-```
-
-#### Start installed Poseidon
-
-```sh
-poseidon /usr/local/etc/poseidon
-```
-
-# Notes
-
-1. **C++14** is required by **Asteria**.
-2. Only **Linux** is supported.
-3. **OpenSSL 1.1** is required.
 
 # License
 

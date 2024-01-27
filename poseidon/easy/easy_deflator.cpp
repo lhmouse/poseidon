@@ -1,7 +1,7 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
 
-#include "../precompiled.ipp"
+#include "../precompiled.hpp"
 #include "easy_deflator.hpp"
 #include "../base/deflator.hpp"
 #include "../utils.hpp"
@@ -12,6 +12,7 @@ struct Final_Deflator final : Deflator
   {
     linear_buffer m_out;
 
+    explicit
     Final_Deflator(zlib_Format format, int level)
       :
         Deflator(format, level)

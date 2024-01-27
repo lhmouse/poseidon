@@ -20,18 +20,17 @@ jobs:
 
     - name: Install dependencies
       run: >-
-           sudo apt-get install -y --no-install-recommends autoconf automake
-           libtool g++-10 gettext make libpcre2-dev libssl-dev zlib1g-dev
-           libmysqlclient-dev libmongoc-dev
+           sudo apt-get install -y --no-install-recommends g++-10 python3
+           pkg-config libedit-dev libpcre2-dev libssl-dev zlib1g-dev
+           ninja-build python3-pip libmysqlclient-dev libmongoc-dev
+
+    - name: Install newest meson
+      run: sudo pip3 install meson  # --break-system-packages
 
     - name: Build and install asteria
       run: |
            git submodule update --init asteria
            pushd asteria
-           autoreconf -ifv
-           ./configure CXX='g++-10' --disable-repl
-           make -j$(nproc)
-           rm -f *.deb
            ./makedeb.sh
            sudo dpkg -i asteria_*.deb
            popd
@@ -40,18 +39,20 @@ jobs:
       run: |
            git submodule update --init http-parser
            pushd http-parser
-           autoreconf -ifv
-           ./configure CXX='g++-10'
-           make -j$(nproc)
-           rm -f *.deb
            ./makedeb.sh
            sudo dpkg -i libhttp-parser_*.deb
            popd
 
     - name: Run tests (minimal)
-      run: >-
-           CONFIGURE_OPTS='--disable-mysql --disable-mongodb --disable-magic'
-           CXX='g++-10' ./ci/build.sh
+      run: |
+           CXX='g++-10' meson setup -Denable-debug-checks=true  \
+                           -Denable-{mysql,mongodb,libmagic}=false  \
+                                 build_ci_minimal
+           cd build_ci_minimal
+           ninja -v test
 
     - name: Run tests (full)
-      run: CXX='g++-10' ./ci/build.sh
+      run: |
+           CXX='g++-10' meson setup -Denable-debug-checks=true build_ci_full
+           cd build_ci_full
+           ninja -v test
