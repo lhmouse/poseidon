@@ -1,11 +1,11 @@
 // This file is part of Poseidon.
 // Copyleft 2018 - 2023, LH_Mouse. All wrongs reserved.
 
-#ifndef POSEIDO_VERSION_
-#define POSEIDO_VERSION_
+#ifndef POSEIDON_VERSION_
+#define POSEIDON_VERSION_
 
-#define POSEIDO_ABI_VERSION_MAJOR    @abi_major@
-#define POSEIDO_ABI_VERSION_MINOR    @abi_minor@
-#define POSEIDO_ABI_VERSION_STRING   @abi_string@
+#define POSEIDON_ABI_VERSION_MAJOR    @abi_major@
+#define POSEIDON_ABI_VERSION_MINOR    @abi_minor@
+#define POSEIDON_ABI_VERSION_STRING   @abi_string@
 
 #endif

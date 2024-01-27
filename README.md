@@ -38,19 +38,29 @@ sudo dpkg -i asteria_*.deb
 cd ..
 ```
 
+#### Build and install http-parser
+
+```sh
+git submodule update --init
+cd http-parser/
+git checkout origin/master -B master
+./makedeb.sh
+sudo dpkg -i http-parser_*.deb
+cd ..
+```
+
 #### Build Poseidon
 
 ```sh
 meson setup build_dir
 cd build_dir
 ninja
-cd ..
 ```
 
-#### Start Poseidon in build directory
+#### Start Poseidon in _build_dir_
 
 ```sh
-./build_dir/poseidon ./etc/poseidon
+./poseidon ../etc/poseidon
 ```
 
 # License

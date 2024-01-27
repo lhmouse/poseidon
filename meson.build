@@ -288,54 +288,48 @@ add_project_arguments(
     language: [ 'cpp' ])
 
 #===========================================================
+# Global dependencies
+#===========================================================
+dep_pthread = dependency('threads')
+dep_asteria = dependency('asteria')
+
+add_project_dependencies(
+      dep_pthread, dep_asteria,
+      language: 'cpp')
+
+#===========================================================
 # Rules for headers
 #===========================================================
-install_headers(poseidon_include, preserve_path: true)
+version_h = configuration_data()
+version_h.set('abi_major', meson.project_version().split('.')[0])
+version_h.set('abi_minor', meson.project_version().split('.')[1])
+version_h.set_quoted('abi_string', meson.project_version())
 
-conf = configuration_data()
-conf.set('abi_major', meson.project_version().split('.')[0])
-conf.set('abi_minor', meson.project_version().split('.')[1])
-conf.set_quoted('abi_string', meson.project_version())
-configure_file(input: 'poseidon/version.h.in', configuration: conf, output: 'version.h')
+configure_file(input: 'poseidon/version.h.in',
+               configuration: version_h,
+               output: 'version.h',
+               install: false)
+
+install_headers(poseidon_include, preserve_path: true)
 install_headers(meson.current_build_dir() + '/version.h', subdir: 'poseidon')
 
 #===========================================================
 # Rules for 'lib/libposeidon.so'
 #===========================================================
-dep_pthread = dependency('threads')
-dep_libunwind = dependency('libunwind-generic')
-dep_libmagic = dependency('libmagic')
-dep_zlib = dependency('zlib', version: '>= 1.2.9')
+dep_libunwind = dependency('libunwind')
 dep_openssl = dependency('openssl', version: '>= 3.0.0')
-dep_asteria = dependency('asteria')
 dep_http_parser = cxx.find_library('http_parser')
+dep_zlib = dependency('zlib', version: '>= 1.2.9')
+dep_libmagic = dependency('libmagic')
+dep_mysqlclient = dependency('mysqlclient', required: false)
+dep_mongoc = dependency('libmongoc-1.0', required: false)
 
-deps_lib_poseidon_all = [
-  dep_pthread, dep_libunwind, dep_libmagic, dep_zlib, dep_openssl,
-  dep_asteria, dep_http_parser,
-]
-
-if get_option('enable-mysql')
-  dep_mysqlclient = dependency('mysqlclient')
-  deps_lib_poseidon_all += [ dep_mysqlclient ]
-endif
-
-if get_option('enable-mongodb')
-  dep_mongoc = dependency('libmongoc-1.0')
-  deps_lib_poseidon_all += [ dep_mongoc ]
-endif
-
-lib_poseidon_a = static_library('poseidon',
+lib_poseidon = both_libraries('poseidon',
       cpp_pch: 'poseidon/precompiled.hpp',
       sources: [ poseidon_src ],
-      dependencies: deps_lib_poseidon_all,
-      install: true)
-
-lib_poseidon_so = shared_library('poseidon',
-      cpp_pch: 'poseidon/precompiled.hpp',
-      sources: [ poseidon_src ],
-      dependencies: deps_lib_poseidon_all,
-      soversion: conf.get('abi_major') + '.' + conf.get('abi_minor') + '.0',
+      dependencies: [ dep_libunwind, dep_openssl, dep_http_parser, dep_zlib,
+                      dep_libmagic, dep_mysqlclient, dep_mongoc ],
+      soversion: version_h.get('abi_major') + '.' + version_h.get('abi_minor') + '.0',
       install: true)
 
 #===========================================================
@@ -346,23 +340,30 @@ dep_dl = dependency('dl')
 executable('poseidon',
            cpp_pch: 'poseidon/precompiled.hpp',
            sources: [ 'poseidon/main.cpp' ],
-           dependencies: [ dep_dl ],
-           link_with: lib_poseidon_so,
+           dependencies: [ dep_dl, dep_openssl, dep_mysqlclient, dep_mongoc ],
+           link_with: lib_poseidon,
            install: true)
 
-install_data(etc_poseidon, install_dir: 'etc', preserve_path: true)
+#===========================================================
+# Rules for default configuration files
+#===========================================================
+install_data(etc_poseidon, install_dir: '.', preserve_path: true)
 
 #===========================================================
 # Rules for example libraries
 #===========================================================
 foreach src: example_src
-  shared_module(src.underscorify(), src, link_with: lib_poseidon_so, install: true)
+  name = src.replace('.cpp', '').underscorify()
+  shared_module('poseidon-' + name, src,
+                link_with: lib_poseidon,
+                install: true)
 endforeach
 
 #===========================================================
 # Rules for tests
 #===========================================================
 foreach src: test_src
-  test = executable(src.underscorify(), src, link_with: lib_poseidon_a)
-  test(src.underscorify(), test)
+  name = src.replace('.cpp', '').underscorify()
+  test = executable(name, src, link_with: lib_poseidon)
+  test(name, test)
 endforeach

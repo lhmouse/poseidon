@@ -6,10 +6,6 @@
 
 #include "version.h"
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #include <rocket/cow_string.hpp>
 #include <rocket/cow_vector.hpp>
 #include <rocket/cow_hashmap.hpp>

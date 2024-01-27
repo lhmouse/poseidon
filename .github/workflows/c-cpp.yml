@@ -21,8 +21,9 @@ jobs:
     - name: Install dependencies
       run: >-
            sudo apt-get install -y --no-install-recommends g++-10 python3
-           pkg-config libedit-dev libpcre2-dev libssl-dev zlib1g-dev
-           ninja-build python3-pip libmysqlclient-dev libmongoc-dev
+           ninja-build python3-pip pkg-config libedit-dev libpcre2-dev
+           libssl-dev zlib1g-dev libunwind-dev libmysqlclient-dev
+           libmongoc-dev
 
     - name: Install newest meson
       run: >-

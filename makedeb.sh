@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-_pkgname=asteria
+_pkgname=poseidon
 _pkgversion=$(printf "0.%u.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)")
 _pkgarch=$(dpkg --print-architecture)
 
@@ -20,5 +20,8 @@ popd
 sed -i "s/{_pkgname}/${_pkgname}/" ${_debiandir}/control
 sed -i "s/{_pkgversion}/${_pkgversion}/" ${_debiandir}/control
 sed -i "s/{_pkgarch}/${_pkgarch}/" ${_debiandir}/control
+
+_etcdir=$(find ${_tempdir} -name "etc" -type d)
+find ${_etcdir} -type f | sed 's|^.*\.makedeb/|/|' > ${_debiandir}/conffiles
 
 dpkg-deb --root-owner-group --build .makedeb "${_pkgname}_${_pkgversion}_${_pkgarch}.deb"

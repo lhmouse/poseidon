@@ -4,11 +4,9 @@
 #include "precompiled.hpp"
 #include "utils.hpp"
 #include <openssl/rand.h>
-#ifdef HAVE_LIBUNWIND
 #define UNW_LOCAL_ONLY  1
 #include <libunwind.h>
 #include <cxxabi.h>
-#endif
 namespace poseidon {
 
 void
@@ -23,7 +21,6 @@ backtrace_and_throw(const char* file, long line, const char* func, cow_string&& 
     fmt << func << ": " << msg;
     fmt << "\n[thrown from '" << file << ':' << line << "']";
 
-#ifdef HAVE_LIBUNWIND
     // Calculate the number of stack frames.
     size_t nframes = 0;
     ::unw_context_t unw_ctx[1];
@@ -82,9 +79,6 @@ backtrace_and_throw(const char* file, long line, const char* func, cow_string&& 
 
       fmt << "\n  -- end of stack backtrace]";
     }
-    else
-#endif  // HAVE_LIBUNWIND
-      fmt << "\n[no stack backtrace available]";
 
     // Throw it.
     fmt << '\0';

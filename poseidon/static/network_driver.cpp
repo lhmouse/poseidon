@@ -351,7 +351,7 @@ thread_loop()
 
     // Get an epoll event from the queue.
     lock.lock(this->m_epoll_mutex);
-    ::epoll_event event;
+    ::epoll_event event = { };
     if(this->m_epoll_events.empty()) {
       int efd = this->m_epoll_fd;
       linear_buffer evbuf = move(this->m_epoll_events);

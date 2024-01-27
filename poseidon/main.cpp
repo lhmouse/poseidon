@@ -27,10 +27,14 @@
 #endif
 #ifdef POSEIDON_ENABLE_MONGODB
 #include "static/mongodb_connector.hpp"
-#include <mongoc/mongoc.h>
+#include <libmongoc-1.0/mongoc/mongoc.h>
 #endif
 namespace {
 using namespace poseidon;
+
+#define PACKAGE_STRING      "poseidon master"
+#define PACKAGE_URL         "https://github.com/lhmouse/poseidon"
+#define PACKAGE_BUGREPORT   "lh_mouse@126.com"
 
 [[noreturn]]
 int
@@ -594,7 +598,7 @@ do_load_addons()
 
       POSEIDON_LOG_INFO(("Loading add-on: $1"), path);
       if(::dlopen(path.safe_c_str(), RTLD_NOW | RTLD_NODELETE) == nullptr)
-        POSEIDON_LOG_ERROR((
+        POSEIDON_THROW((
             "Failed to load add-on: $1",
             "[`dlopen()` failed: $2]"),
             path, ::dlerror());
@@ -616,7 +620,7 @@ main(int argc, char** argv)
     // UTF-8 is required for wide-oriented standard streams.
     ::setlocale(LC_ALL, "C.UTF-8");
     ::tzset();
-    ::pthread_setname_np(::pthread_self(), PACKAGE);
+    ::pthread_setname_np(::pthread_self(), "poseidon");
     ::pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, nullptr);
 
     // Note that this function shall not return in case of errors.
