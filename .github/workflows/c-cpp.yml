@@ -25,34 +25,27 @@ jobs:
            ninja-build python3-pip libmysqlclient-dev libmongoc-dev
 
     - name: Install newest meson
-      run: sudo pip3 install meson  # --break-system-packages
+      run: >-
+           sudo pip3 install meson  # --break-system-packages
 
     - name: Build and install asteria
-      run: |
+      run: >-
            git submodule update --init asteria
-           pushd asteria
-           ./makedeb.sh
-           sudo dpkg -i asteria_*.deb
-           popd
+           && (cd asteria && ./makedeb.sh && sudo dpkg -i *.deb)
 
     - name: Build and install http-parser
-      run: |
+      run: >-
            git submodule update --init http-parser
-           pushd http-parser
-           ./makedeb.sh
-           sudo dpkg -i libhttp-parser_*.deb
-           popd
+           && (cd http-parser && ./makedeb.sh && sudo dpkg -i *.deb)
 
     - name: Run tests (minimal)
-      run: |
-           CXX='g++-10' meson setup -Denable-debug-checks=true  \
-                           -Denable-{mysql,mongodb,libmagic}=false  \
-                                 build_ci_minimal
-           cd build_ci_minimal
-           ninja -v test
+      run: >-
+           CXX='g++-10' meson setup -Denable-debug-checks=true
+           -Denable-{mysql,mongodb,libmagic}=false build_ci_minimal
+           && (cd build_ci_minimal && ninja -v test)
 
     - name: Run tests (full)
-      run: |
-           CXX='g++-10' meson setup -Denable-debug-checks=true build_ci_full
-           cd build_ci_full
-           ninja -v test
+      run: >-
+           CXX='g++-10' meson setup -Denable-debug-checks=true
+           build_ci_minimal
+           && (cd build_ci_minimal && ninja -v test)
