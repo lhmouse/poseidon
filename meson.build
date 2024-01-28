@@ -338,6 +338,14 @@ lib_poseidon = shared_library('poseidon',
       soversion: version_h.get('abi_major') + '.' + version_h.get('abi_minor') + '.0',
       install: true)
 
+import('pkgconfig').generate(lib_poseidon,
+      name: 'poseidon',
+      url: 'https://github.com/lhmouse/poseidon',
+      description: 'The Poseidon Server Framework is a modern framework for game '
+                   + 'server development, with support for plain TCP, TCP over TLS, '
+                   + 'UDP, HTTP, WebSocket (with permessage-deflate), MySQL, MongoDB, '
+                   + 'and coroutines.')
+
 #===========================================================
 # Rules for 'bin/poseidon'
 #===========================================================
