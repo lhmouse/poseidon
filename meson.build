@@ -233,6 +233,11 @@ endif
 #===========================================================
 # Global configuration
 #===========================================================
+ver = configuration_data()
+ver.set('abi_major', meson.project_version().split('.')[0])
+ver.set('abi_minor', meson.project_version().split('.')[1])
+ver.set_quoted('abi_string', meson.project_version())
+
 cxx = meson.get_compiler('cpp')
 cxx_is_i386 = cxx.compiles('int foo = __i386__;')
 cxx_is_amd64 = cxx.compiles('int foo = __amd64__;')
@@ -314,13 +319,8 @@ add_project_dependencies(
 #===========================================================
 # Rules for headers
 #===========================================================
-version_h = configuration_data()
-version_h.set('abi_major', meson.project_version().split('.')[0])
-version_h.set('abi_minor', meson.project_version().split('.')[1])
-version_h.set_quoted('abi_string', meson.project_version())
-
 configure_file(input: 'poseidon/version.h.in',
-               configuration: version_h,
+               configuration: ver,
                output: 'version.h',
                install: false)
 
@@ -335,7 +335,8 @@ lib_poseidon = shared_library('poseidon',
       sources: [ poseidon_src ],
       dependencies: [ dep_libunwind, dep_openssl, dep_http_parser, dep_zlib,
                       dep_libmagic, dep_mysqlclient, dep_mongoc ],
-      soversion: version_h.get('abi_major') + '.' + version_h.get('abi_minor') + '.0',
+      soversion: ver.get('abi_major'),
+      version: '@0@.@1@.@2@'.format(ver.get('abi_major'), ver.get('abi_minor'), 0),
       install: true)
 
 import('pkgconfig').generate(lib_poseidon,
