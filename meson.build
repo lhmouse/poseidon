@@ -187,11 +187,9 @@ test_src = [
 ]
 
 #===========================================================
-# List of optional features: MySQL
+# List of files for MySQL
 #===========================================================
 if get_option('enable-mysql')
-  add_project_arguments('-DPOSEIDON_ENABLE_MYSQL', language: [ 'c', 'cpp' ])
-
   poseidon_include += [
     'poseidon/third/mysql_fwd.hpp',
     'poseidon/mysql/enums.hpp',
@@ -215,11 +213,9 @@ if get_option('enable-mysql')
 endif
 
 #===========================================================
-# List of optional features: MongoDB
+# List of files for MongoDB
 #===========================================================
 if get_option('enable-mongodb')
-  add_project_arguments('-DPOSEIDON_ENABLE_MONGODB', language: [ 'c', 'cpp' ])
-
   poseidon_include += [
     'poseidon/third/mongodb_fwd.hpp',
     'poseidon/mongodb/enums.hpp',
@@ -288,10 +284,28 @@ add_project_arguments(
     language: [ 'cpp' ])
 
 #===========================================================
-# Global dependencies
+# Dependencies
 #===========================================================
 dep_pthread = dependency('threads')
+dep_libunwind = dependency('libunwind')
+dep_openssl = dependency('openssl', version: '>= 3.0.0')
+dep_zlib = dependency('zlib', version: '>= 1.2.9')
+dep_libmagic = dependency('libmagic')
 dep_asteria = dependency('asteria')
+dep_http_parser = cxx.find_library('http_parser')
+dep_dl = dependency('dl')
+dep_mysqlclient = disabler()
+dep_mongoc = disabler()
+
+if get_option('enable-mysql')
+  add_project_arguments('-DPOSEIDON_ENABLE_MYSQL', language: [ 'c', 'cpp' ])
+  dep_mysqlclient = dependency('mysqlclient')
+endif
+
+if get_option('enable-mongodb')
+  add_project_arguments('-DPOSEIDON_ENABLE_MONGODB', language: [ 'c', 'cpp' ])
+  dep_mongoc = dependency('libmongoc-1.0')
+endif
 
 add_project_dependencies(
       dep_pthread, dep_asteria,
@@ -316,14 +330,6 @@ install_headers(meson.current_build_dir() + '/version.h', subdir: 'poseidon')
 #===========================================================
 # Rules for 'lib/libposeidon.so'
 #===========================================================
-dep_libunwind = dependency('libunwind')
-dep_openssl = dependency('openssl', version: '>= 3.0.0')
-dep_http_parser = cxx.find_library('http_parser')
-dep_zlib = dependency('zlib', version: '>= 1.2.9')
-dep_libmagic = dependency('libmagic')
-dep_mysqlclient = dependency('mysqlclient', required: false)
-dep_mongoc = dependency('libmongoc-1.0', required: false)
-
 lib_poseidon = shared_library('poseidon',
       cpp_pch: 'poseidon/precompiled.hpp',
       sources: [ poseidon_src ],
@@ -335,8 +341,6 @@ lib_poseidon = shared_library('poseidon',
 #===========================================================
 # Rules for 'bin/poseidon'
 #===========================================================
-dep_dl = dependency('dl')
-
 executable('poseidon',
            cpp_pch: 'poseidon/precompiled.hpp',
            sources: [ 'poseidon/main.cpp' ],
