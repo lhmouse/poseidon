@@ -325,7 +325,7 @@ configure_file(input: 'poseidon/version.h.in',
                install: false)
 
 install_headers(poseidon_include, preserve_path: true)
-install_headers(meson.current_build_dir() + '/version.h', subdir: 'poseidon')
+install_headers(meson.current_build_dir() / 'version.h', subdir: 'poseidon')
 
 #===========================================================
 # Rules for 'lib/libposeidon.so'
