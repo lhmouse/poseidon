@@ -53,14 +53,13 @@ cd ..
 
 ```sh
 meson setup build_dir
-cd build_dir
-ninja
+meson compile -Cbuild_dir
 ```
 
 #### Start Poseidon in _build_dir_
 
 ```sh
-./poseidon ../etc/poseidon
+./build_dir/poseidon ./etc/poseidon
 ```
 
 # License

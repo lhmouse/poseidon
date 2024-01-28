@@ -41,12 +41,11 @@ jobs:
 
     - name: Run tests (minimal)
       run: >-
-           CXX='g++-10' meson setup -Denable-debug-checks=true
-           -Denable-{mysql,mongodb}=false build_ci_minimal
-           && (cd build_ci_minimal && ninja -v test)
+           CXX='g++-10' meson setup -Denable-debug-checks=true build_ci
+           -Denable-{mysql,mongodb}=false
+           && meson test -Cbuild_ci
 
     - name: Run tests (full)
       run: >-
-           CXX='g++-10' meson setup -Denable-debug-checks=true
-           build_ci_minimal
-           && (cd build_ci_minimal && ninja -v test)
+           CXX='g++-10' meson setup -Denable-debug-checks=true build_ci
+           && meson test -Cbuild_ci
