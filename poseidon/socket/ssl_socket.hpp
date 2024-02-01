@@ -98,11 +98,6 @@ class SSL_Socket
   public:
     ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(SSL_Socket);
 
-    // Gets the SSL structure.
-    ::SSL*
-    ssl() noexcept
-      { return this->m_ssl;  }
-
     // Gets the remote or connected address of this socket. In case of errors,
     // `ipv6_invalid` is returned. The result is cached and will not
     // reflect changes that other APIs may have made.

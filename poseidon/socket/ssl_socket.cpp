@@ -25,14 +25,14 @@ SSL_Socket(unique_posix_fd&& fd, const Network_Driver& driver)
           "[SSL socket `$1` (class `$2`)]"),
           this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
 
-    if(!::SSL_set_fd(this->ssl(), this->do_get_fd()))
+    if(!::SSL_set_fd(this->m_ssl, this->do_get_fd()))
       POSEIDON_THROW((
           "Could not allocate SSL BIO for incoming connection",
           "[`SSL_set_fd()` failed: $3]",
           "[SSL socket `$1` (class `$2`)]"),
           this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
 
-    ::SSL_set_accept_state(this->ssl());
+    ::SSL_set_accept_state(this->m_ssl);
   }
 
 SSL_Socket::
@@ -48,14 +48,14 @@ SSL_Socket(const Network_Driver& driver)
           "[SSL socket `$1` (class `$2`)]"),
           this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
 
-    if(!::SSL_set_fd(this->ssl(), this->do_get_fd()))
+    if(!::SSL_set_fd(this->m_ssl, this->do_get_fd()))
       POSEIDON_THROW((
           "Could not allocate SSL BIO for outgoing connection",
           "[`SSL_set_fd()` failed: $3]",
           "[SSL socket `$1` (class `$2`)]"),
           this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
 
-    ::SSL_set_connect_state(this->ssl());
+    ::SSL_set_connect_state(this->m_ssl);
   }
 
 SSL_Socket::
@@ -99,7 +99,7 @@ do_ssl_alpn_request(const char256* protos_opt, size_t protos_size)
       }
     }
 
-    if(::SSL_set_alpn_protos(this->ssl(), pbuf.data(), (uint32_t) pbuf.size()) != 0)
+    if(::SSL_set_alpn_protos(this->m_ssl, pbuf.data(), (uint32_t) pbuf.size()) != 0)
       POSEIDON_THROW((
           "Failed to set ALPN protocol list",
           "[`SSL_set_alpn_protos()` failed]",
@@ -122,7 +122,7 @@ do_ssl_alpn_request(const char256& proto)
       pbuf.insert(pbuf.end(), str, str + len);
     }
 
-    if(::SSL_set_alpn_protos(this->ssl(), pbuf.data(), (uint32_t) pbuf.size()) != 0)
+    if(::SSL_set_alpn_protos(this->m_ssl, pbuf.data(), (uint32_t) pbuf.size()) != 0)
       POSEIDON_THROW((
           "Failed to set ALPN protocol list",
           "[`SSL_set_alpn_protos()` failed]",
@@ -153,8 +153,8 @@ do_abstract_socket_on_readable()
       queue.reserve_after_end(0xFFFFU);
       ssl_err = 0;
       size_t datalen;
-      if(::SSL_read_ex(this->ssl(), queue.mut_end(), queue.capacity_after_end(), &datalen) <= 0) {
-        ssl_err = ::SSL_get_error(this->ssl(), 0);
+      if(::SSL_read_ex(this->m_ssl, queue.mut_end(), queue.capacity_after_end(), &datalen) <= 0) {
+        ssl_err = ::SSL_get_error(this->m_ssl, 0);
 
         if((ssl_err == SSL_ERROR_ZERO_RETURN) || (ssl_err == SSL_ERROR_WANT_READ) || (ssl_err == SSL_ERROR_WANT_WRITE))
           break;
@@ -185,7 +185,7 @@ do_abstract_socket_on_readable()
     if(ssl_err == SSL_ERROR_ZERO_RETURN) {
       // If the end of stream has been reached, shut the connection down anyway.
       // Half-open connections are not supported.
-      int alerted = ::SSL_shutdown(this->ssl());
+      int alerted = ::SSL_shutdown(this->m_ssl);
       POSEIDON_LOG_INFO(("Closing SSL connection: remote = $1, alerted = $2"), this->remote_address(), alerted);
       ::shutdown(this->do_get_fd(), SHUT_RDWR);
     }
@@ -225,8 +225,8 @@ do_abstract_socket_on_writable()
     auto& queue = this->do_abstract_socket_lock_write_queue(io_lock);
     int ssl_err = 0;
 
-    if(::SSL_do_handshake(this->ssl()) <= 0) {
-      ssl_err = ::SSL_get_error(this->ssl(), 0);
+    if(::SSL_do_handshake(this->m_ssl) <= 0) {
+      ssl_err = ::SSL_get_error(this->m_ssl, 0);
 
       if((ssl_err == SSL_ERROR_WANT_READ) || (ssl_err == SSL_ERROR_WANT_WRITE))
         return;
@@ -249,8 +249,8 @@ do_abstract_socket_on_writable()
 
       ssl_err = 0;
       size_t datalen;
-      if(::SSL_write_ex(this->ssl(), queue.begin(), queue.size(), &datalen) <= 0) {
-        ssl_err = ::SSL_get_error(this->ssl(), 0);
+      if(::SSL_write_ex(this->m_ssl, queue.begin(), queue.size(), &datalen) <= 0) {
+        ssl_err = ::SSL_get_error(this->m_ssl, 0);
 
         if((ssl_err == SSL_ERROR_WANT_READ) || (ssl_err == SSL_ERROR_WANT_WRITE))
           break;
@@ -275,7 +275,7 @@ do_abstract_socket_on_writable()
       // set in the ALPN callback.
       const uint8_t* alpn_str;
       unsigned alpn_len;
-      ::SSL_get0_alpn_selected(this->ssl(), &alpn_str, &alpn_len);
+      ::SSL_get0_alpn_selected(this->m_ssl, &alpn_str, &alpn_len);
 
       this->m_alpn_proto.clear();
       this->m_alpn_proto.append((const char*) alpn_str, alpn_len);
@@ -288,7 +288,7 @@ do_abstract_socket_on_writable()
     if(queue.empty() && this->do_abstract_socket_change_state(socket_closing, socket_closed)) {
       // If the socket has been marked closing and there are no more data, perform
       // complete shutdown.
-      int alerted = ::SSL_shutdown(this->ssl());
+      int alerted = ::SSL_shutdown(this->m_ssl);
       POSEIDON_LOG_INFO(("Closing SSL connection: remote = $1, alerted = $2"), this->remote_address(), alerted);
       ::shutdown(this->do_get_fd(), SHUT_RDWR);
     }
@@ -405,10 +405,10 @@ ssl_send(chars_view data)
 
       ssl_err = 0;
       size_t datalen;
-      int ret = ::SSL_write_ex(this->ssl(), data.p + nskip, data.n - nskip, &datalen);
+      int ret = ::SSL_write_ex(this->m_ssl, data.p + nskip, data.n - nskip, &datalen);
 
       if(ret == 0) {
-        ssl_err = ::SSL_get_error(this->ssl(), ret);
+        ssl_err = ::SSL_get_error(this->m_ssl, ret);
 
         if((ssl_err == SSL_ERROR_WANT_READ) || (ssl_err == SSL_ERROR_WANT_WRITE))
           break;
@@ -461,7 +461,7 @@ ssl_shut_down() noexcept
 
     // If there are no data pending, close it immediately.
     this->do_abstract_socket_set_state(socket_closed);
-    ::SSL_shutdown(this->ssl());
+    ::SSL_shutdown(this->m_ssl);
     return ::shutdown(this->do_get_fd(), SHUT_RDWR) == 0;
   }
 
