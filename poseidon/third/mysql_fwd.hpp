@@ -36,13 +36,6 @@ class mysql_Client
       { return this->m_mysql;  }
   };
 
-struct MYSQL_RES_deleter
-  {
-    void
-    operator()(::MYSQL_RES* p) const noexcept
-      { ::mysql_free_result(p);  }
-  };
-
 struct MYSQL_STMT_deleter
   {
     void
@@ -50,8 +43,15 @@ struct MYSQL_STMT_deleter
       { ::mysql_stmt_close(p);  }
   };
 
-using uni_MYSQL_RES = ::rocket::unique_ptr<::MYSQL_RES, MYSQL_RES_deleter>;
+struct MYSQL_RES_deleter
+  {
+    void
+    operator()(::MYSQL_RES* p) const noexcept
+      { ::mysql_free_result(p);  }
+  };
+
 using uni_MYSQL_STMT = ::rocket::unique_ptr<::MYSQL_STMT, MYSQL_STMT_deleter>;
+using uni_MYSQL_RES = ::rocket::unique_ptr<::MYSQL_RES, MYSQL_RES_deleter>;
 
 }  // namespace poseidon
 #endif
