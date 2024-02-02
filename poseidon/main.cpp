@@ -23,11 +23,11 @@
 #include <openssl/err.h>
 #ifdef POSEIDON_ENABLE_MYSQL
 #include "static/mysql_connector.hpp"
-#include <mysql/mysql.h>
+#include "third/mysql_fwd.hpp"
 #endif
 #ifdef POSEIDON_ENABLE_MONGODB
 #include "static/mongodb_connector.hpp"
-#include <libmongoc-1.0/mongoc/mongoc.h>
+#include "third/mongodb_fwd.hpp"
 #endif
 namespace {
 using namespace poseidon;
