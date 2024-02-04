@@ -160,9 +160,10 @@ do_metadata_for_field_opt(unsigned col) noexcept
     if(!this->m_meta)
       this->m_meta.reset(::mysql_stmt_result_metadata(this->m_stmt));
 
-    return this->m_meta
-             ? ::mysql_fetch_field_direct(this->m_meta, col)
-             : nullptr;
+    if(!this->m_meta)
+      return nullptr;
+
+    return ::mysql_fetch_field_direct(this->m_meta, col);
   }
 
 bool
