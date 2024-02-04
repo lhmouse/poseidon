@@ -175,25 +175,25 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
 
     // Write the timestamp and tag.
     do_color(mtext, lconf, lconf.color.c_str());  // level color
-    nump.put_DU((uint32_t) tm.tm_year + 1900, 4);
+    nump.put_DU(static_cast<uint32_t>(tm.tm_year + 1900), 4);
     mtext.putn(nump.data(), 4);
     mtext.putc('-');
-    nump.put_DU((uint32_t) tm.tm_mon + 1, 2);
+    nump.put_DU(static_cast<uint32_t>(tm.tm_mon + 1), 2);
     mtext.putn(nump.data(), 2);
     mtext.putc('-');
-    nump.put_DU((uint32_t) tm.tm_mday, 2);
+    nump.put_DU(static_cast<uint32_t>(tm.tm_mday), 2);
     mtext.putn(nump.data(), 2);
     mtext.putc(' ');
-    nump.put_DU((uint32_t) tm.tm_hour, 2);
+    nump.put_DU(static_cast<uint32_t>(tm.tm_hour), 2);
     mtext.putn(nump.data(), 2);
     mtext.putc(':');
-    nump.put_DU((uint32_t) tm.tm_min, 2);
+    nump.put_DU(static_cast<uint32_t>(tm.tm_min), 2);
     mtext.putn(nump.data(), 2);
     mtext.putc(':');
-    nump.put_DU((uint32_t) tm.tm_sec, 2);
+    nump.put_DU(static_cast<uint32_t>(tm.tm_sec), 2);
     mtext.putn(nump.data(), 2);
     mtext.putc('.');
-    nump.put_DU((uint32_t) tv.tv_nsec, 9);
+    nump.put_DU(static_cast<uint32_t>(tv.tv_nsec), 9);
     mtext.putn(nump.data(), 9);
     mtext.putc(' ');
     do_color(mtext, lconf, "22;7");  // no bright; inverse
@@ -205,19 +205,19 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
     do_color(mtext, lconf, "0");  // reset
     do_color(mtext, lconf, lconf.color.c_str());
 
-    // Escape non-printable characters.
-    for(char ch : msg.text) {
-      const char* seq = s_escapes[(uint8_t) ch];
-      if(seq[1] == 0) {
-        // non-escaped
-        mtext.putc(seq[0]);
-      }
-      else if(seq[0] == '\\') {
+    for(size_t k = 0;  k != msg.text.size();  ++k) {
+      // Get the replacement sequence.
+      uint32_t uch = static_cast<uint8_t>(msg.text[k]);
+      const char* seq = s_escapes[uch];
+
+      if(seq[0] == '\\') {
         // non-printable
         do_color(mtext, lconf, "7");
         mtext.puts(seq);
         do_color(mtext, lconf, "27");
       }
+      else if(ROCKET_EXPECT(seq[1] == 0))
+        mtext.putc(seq[0]);
       else
         mtext.puts(seq);
     }
@@ -355,7 +355,7 @@ enqueue(const Log_Context& ctx, cow_stringR text)
     X_Log_Message msg;
     msg.ctx = ctx;
     ::pthread_getname_np(::pthread_self(), msg.thrd_name, sizeof(msg.thrd_name));
-    msg.thrd_lwpid = (uint32_t) ::syscall(SYS_gettid);
+    msg.thrd_lwpid = static_cast<uint32_t>(::syscall(SYS_gettid));
     msg.text = text;
 
     // Enqueue the element.
