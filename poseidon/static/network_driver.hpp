@@ -15,8 +15,8 @@ class Network_Driver
     mutable plain_mutex m_conf_mutex;
     uint32_t m_event_buffer_size = 0;
     uint32_t m_throttle_size = 0;
-    uni_SSL_CTX m_server_ssl_ctx;
-    uni_SSL_CTX m_client_ssl_ctx;
+    uniptr_SSL_CTX m_server_ssl_ctx;
+    uniptr_SSL_CTX m_client_ssl_ctx;
 
     mutable plain_mutex m_epoll_mutex;
     linear_buffer m_epoll_events;
@@ -49,7 +49,7 @@ class Network_Driver
     // The certificate is sent to clients for verfication. If the server SSL
     // context is not available, an exception is thrown.
     // This function is thread-safe.
-    uni_SSL_CTX
+    uniptr_SSL_CTX
     server_ssl_ctx() const;
 
     // Gets the client SSL context for outgoing connections, which is always
@@ -57,7 +57,7 @@ class Network_Driver
     // specified in 'main.conf', server certificate verfication is enabled;
     // otherwise, a warning is printed and no verfication is performed.
     // This function is thread-safe.
-    uni_SSL_CTX
+    uniptr_SSL_CTX
     client_ssl_ctx() const;
 
     // Reloads configuration from 'main.conf'.

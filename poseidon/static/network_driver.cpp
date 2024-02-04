@@ -137,7 +137,7 @@ do_alpn_callback(::SSL* ssl, const uint8_t** out, uint8_t* outlen, const uint8_t
     return SSL_TLSEXT_ERR_OK;
   }
 
-uni_SSL_CTX
+uniptr_SSL_CTX
 Network_Driver::
 server_ssl_ctx() const
   {
@@ -149,10 +149,10 @@ server_ssl_ctx() const
     // Increment the reference count of the SSL context, as configuration may
     // be reloaded after once function returns.
     ::SSL_CTX_up_ref(ptr);
-    return uni_SSL_CTX(ptr);
+    return uniptr_SSL_CTX(ptr);
   }
 
-uni_SSL_CTX
+uniptr_SSL_CTX
 Network_Driver::
 client_ssl_ctx() const
   {
@@ -164,7 +164,7 @@ client_ssl_ctx() const
     // Increment the reference count of the SSL context, as configuration may
     // be reloaded after once function returns.
     ::SSL_CTX_up_ref(ptr);
-    return uni_SSL_CTX(ptr);
+    return uniptr_SSL_CTX(ptr);
   }
 
 void
@@ -175,7 +175,7 @@ reload(const Config_File& conf_file)
     int64_t event_buffer_size = 1024;
     int64_t throttle_size = 1048576;
     cow_string default_certificate, default_private_key, trusted_ca_path;
-    uni_SSL_CTX server_ssl_ctx, client_ssl_ctx;
+    uniptr_SSL_CTX server_ssl_ctx, client_ssl_ctx;
 
     // Read the event buffer size from configuration.
     auto conf_value = conf_file.query("network", "poll", "event_buffer_size");
