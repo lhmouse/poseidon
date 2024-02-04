@@ -144,7 +144,7 @@ class HTTP_Value
     is_number() const noexcept
       { return this->m_stor.ptr<double>() != nullptr;  }
 
-    double
+    const double&
     as_number() const
       { return this->m_stor.as<double>();  }
 
