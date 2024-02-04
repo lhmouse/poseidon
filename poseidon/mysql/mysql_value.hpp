@@ -96,7 +96,7 @@ class MySQL_Value
     MySQL_Value&
     operator=(const ::MYSQL_TIME& myt) & noexcept
       {
-        this->set_datetime(myt);
+        this->set_mysql_time(myt);
         return *this;
       }
 
@@ -192,6 +192,10 @@ class MySQL_Value
     as_mysql_time() const
       { return this->m_stor.as<::MYSQL_TIME>();  }
 
+    ::MYSQL_TIME&
+    mut_mysql_time()
+      { return this->m_stor.mut<::MYSQL_TIME>();  }
+
     void
     set_mysql_time(const ::MYSQL_TIME& myt) noexcept
       { this->m_stor = myt;  }
@@ -210,14 +214,6 @@ class MySQL_Value
         myt.time_type = MYSQL_TIMESTAMP_DATETIME;
         this->m_stor = myt;
       }
-
-    ::MYSQL_TIME&
-    mut_mysql_time()
-      { return this->m_stor.mut<::MYSQL_TIME>();  }
-
-    void
-    set_datetime(const ::MYSQL_TIME& myt) noexcept
-      { this->m_stor = myt;  }
 
     // Converts this value to its string form. The result will be suitable
     // for immediate use in an SQL statement. Strings are quoted as necessary.
