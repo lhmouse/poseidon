@@ -33,10 +33,9 @@ main()
     POSEIDON_TEST_CHECK(hval.as_string() == "meowMEOW");
     POSEIDON_TEST_CHECK(hval.print_to_string() == "\'meowMEOW\'");
 
-    hval.set_datetime(DateTime("Thu, 21 Jul 2016 16:26:51 GMT"));
-    POSEIDON_TEST_CHECK(hval.is_datetime());
-    POSEIDON_TEST_CHECK(hval.as_time_t() == 1469118411);
-    POSEIDON_TEST_CHECK(hval.print_to_string() == "\'2016-07-21 16:26:51\'");
+    hval.set_mysql_datetime(2016,7,21, 16,26,51,678);
+    POSEIDON_TEST_CHECK(hval.is_mysql_time());
+    POSEIDON_TEST_CHECK(hval.print_to_string() == "\'2016-07-21 16:26:51.678\'");
 
     hval.clear();
     POSEIDON_TEST_CHECK(hval.is_null());

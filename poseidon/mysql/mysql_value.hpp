@@ -5,13 +5,13 @@
 #define POSEIDON_MYSQL_MYSQL_VALUE_
 
 #include "../fwd.hpp"
-#include "../base/datetime.hpp"
+#include "../third/mysql_fwd.hpp"
 namespace poseidon {
 
 class MySQL_Value
   {
   private:
-    ::rocket::variant<nullptr_t, int64_t, double, cow_string, DateTime> m_stor;
+    ::rocket::variant<nullptr_t, int64_t, double, cow_string, ::MYSQL_TIME> m_stor;
 
   public:
     // Value constructors
@@ -46,14 +46,9 @@ class MySQL_Value
         m_stor(str)
       { }
 
-    MySQL_Value(const DateTime& dt) noexcept
+    MySQL_Value(const ::MYSQL_TIME& myt) noexcept
       :
-        m_stor(dt)
-      { }
-
-    MySQL_Value(system_time tm) noexcept
-      :
-        m_stor(DateTime(time_point_cast<seconds>(tm)))
+        m_stor(myt)
       { }
 
     MySQL_Value&
@@ -99,16 +94,9 @@ class MySQL_Value
       }
 
     MySQL_Value&
-    operator=(const DateTime& dt) & noexcept
+    operator=(const ::MYSQL_TIME& myt) & noexcept
       {
-        this->set_datetime(dt);
-        return *this;
-      }
-
-    MySQL_Value&
-    operator=(system_time tm) & noexcept
-      {
-        this->set_datetime(tm);
+        this->set_datetime(myt);
         return *this;
       }
 
@@ -135,7 +123,7 @@ class MySQL_Value
     is_integer() const noexcept
       { return this->m_stor.ptr<int64_t>() != nullptr;  }
 
-    int64_t
+    const int64_t&
     as_integer() const
       { return this->m_stor.as<int64_t>();  }
 
@@ -151,7 +139,7 @@ class MySQL_Value
     is_double() const noexcept
       { return this->m_stor.ptr<double>() != nullptr;  }
 
-    double
+    const double&
     as_double() const
       { return this->m_stor.as<double>();  }
 
@@ -197,28 +185,39 @@ class MySQL_Value
       }
 
     bool
-    is_datetime() const noexcept
-      { return this->m_stor.ptr<DateTime>() != nullptr;  }
+    is_mysql_time() const noexcept
+      { return this->m_stor.ptr<::MYSQL_TIME>() != nullptr;  }
 
-    const DateTime&
-    as_datetime() const
-      { return this->m_stor.as<DateTime>();  }
-
-    time_t
-    as_time_t() const
-      { return this->m_stor.as<DateTime>().as_time_t();  }
-
-    DateTime&
-    mut_datetime()
-      { return this->m_stor.mut<DateTime>();  }
+    const ::MYSQL_TIME&
+    as_mysql_time() const
+      { return this->m_stor.as<::MYSQL_TIME>();  }
 
     void
-    set_datetime(const DateTime& dt) noexcept
-      { this->m_stor = dt;  }
+    set_mysql_time(const ::MYSQL_TIME& myt) noexcept
+      { this->m_stor = myt;  }
 
     void
-    set_time_t(time_t dt) noexcept
-      { this->m_stor.emplace<DateTime>().set_time_t(dt);  }
+    set_mysql_datetime(uint32_t y, uint32_t m, uint32_t d, uint32_t H = 0, uint32_t M = 0, uint32_t S = 0, uint32_t ms = 0) noexcept
+      {
+        ::MYSQL_TIME myt = { };
+        myt.year = y;
+        myt.month = m;
+        myt.day = d;
+        myt.hour = H;
+        myt.minute = M;
+        myt.second = S;
+        myt.second_part = ms;
+        myt.time_type = MYSQL_TIMESTAMP_DATETIME;
+        this->m_stor = myt;
+      }
+
+    ::MYSQL_TIME&
+    mut_mysql_time()
+      { return this->m_stor.mut<::MYSQL_TIME>();  }
+
+    void
+    set_datetime(const ::MYSQL_TIME& myt) noexcept
+      { this->m_stor = myt;  }
 
     // Converts this value to its string form. The result will be suitable
     // for immediate use in an SQL statement. Strings are quoted as necessary.

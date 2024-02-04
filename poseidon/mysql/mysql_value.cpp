@@ -63,9 +63,9 @@ print(tinyfmt& fmt) const
         void
         operator()(cow_stringR str) const
           {
-            // First, write the prefix that needs no quoting.
-            auto pos = ::std::find_if(str.begin(), str.end(), do_needs_escape);
             this->pfmt->putc('\'');
+
+            auto pos = ::std::find_if(str.begin(), str.end(), do_needs_escape);
             this->pfmt->putn(str.data(), (size_t) (pos - str.begin()));
 
             while(pos != str.end()) {
@@ -107,13 +107,39 @@ print(tinyfmt& fmt) const
           }
 
         void
-        operator()(const DateTime& dt) const
+        operator()(const ::MYSQL_TIME& myt) const
           {
-            char sbuf[32];
-            sbuf[0] = '\'';
-            dt.print_iso8601_partial(sbuf + 1);
-            sbuf[20] = '\'';
-            this->pfmt->putn(sbuf, 21);
+            this->pfmt->putc('\'');
+
+            ::rocket::ascii_numput nump;
+            nump.put_DU(myt.year, 4);
+            this->pfmt->putn(nump.data(), nump.size());
+
+            this->pfmt->putc('-');
+            nump.put_DU(myt.month, 2);
+            this->pfmt->putn(nump.data(), nump.size());
+
+            this->pfmt->putc('-');
+            nump.put_DU(myt.day, 2);
+            this->pfmt->putn(nump.data(), nump.size());
+
+            this->pfmt->putc(' ');
+            nump.put_DU(myt.hour, 2);
+            this->pfmt->putn(nump.data(), nump.size());
+
+            this->pfmt->putc(':');
+            nump.put_DU(myt.minute, 2);
+            this->pfmt->putn(nump.data(), nump.size());
+
+            this->pfmt->putc(':');
+            nump.put_DU(myt.second, 2);
+            this->pfmt->putn(nump.data(), nump.size());
+
+            this->pfmt->putc('.');
+            nump.put_DU(myt.second_part, 3);
+            this->pfmt->putn(nump.data(), nump.size());
+
+            this->pfmt->putc('\'');
           }
       };
 
