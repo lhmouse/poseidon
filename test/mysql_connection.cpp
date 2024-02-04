@@ -1,0 +1,37 @@
+// This file is part of Poseidon.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
+
+#include "utils.hpp"
+#include "../poseidon/mysql/mysql_connection.hpp"
+#include "../poseidon/mysql/mysql_value.hpp"
+#include <rocket/tinyfmt_file.hpp>
+using namespace ::poseidon;
+
+int
+main()
+  {
+    // Try connecting to localhost. If the server is offline, skip the test.
+    MySQL_Connection conn(sref("localhost"), 3306, sref("root"), sref("123456"), sref("mysql"));
+    try {
+      conn.execute(sref("select * from `engine_cost`"));
+    }
+    catch(exception& e) {
+      ::fprintf(stderr, "could not connect to server: %s\n", e.what());
+      if(::strstr(e.what(), "ERROR 2002:") != nullptr)
+        return 77;
+    }
+
+    vector<cow_string> fields;
+    conn.fetch_fields(fields);
+
+    vector<MySQL_Value> values;
+    int row = 0;
+    ::rocket::tinyfmt_file fmt(stderr, nullptr);
+
+    while(conn.fetch_row(values)) {
+      POSEIDON_TEST_CHECK(fields.size() == values.size());
+      format(fmt, "[$1] --->\n", ++row);
+      for(size_t k = 0;  k != fields.size();  ++k)
+        format(fmt, "  $1 = $2\n", fields.at(k), values.at(k));
+    }
+  }

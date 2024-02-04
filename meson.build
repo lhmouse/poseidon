@@ -209,6 +209,7 @@ if get_option('enable-mysql')
   test_src += [
     'test/mysql_table_structure.cpp',
     'test/mysql_value.cpp',
+    'test/mysql_connection.cpp',
   ]
 endif
 
