@@ -558,6 +558,7 @@ backtrace_and_throw(const Log_Context& ctx, vfptr<cow_string&, void*> thunk, voi
     (__extension__ ({  \
       try { (void) (__VA_ARGS__);  }  \
       catch(::std::exception&) { }  \
+      (void) 0;  \
     }))
 
 // Constants

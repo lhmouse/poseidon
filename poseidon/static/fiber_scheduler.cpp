@@ -291,9 +291,9 @@ reload(const Config_File& conf_file)
 
     // Set up new data.
     plain_mutex::unique_lock lock(this->m_conf_mutex);
-    this->m_conf_stack_vm_size = (uint32_t) stack_vm_size;
-    this->m_conf_warn_timeout = (seconds) warn_timeout;
-    this->m_conf_fail_timeout = (seconds) fail_timeout;
+    this->m_conf_stack_vm_size = static_cast<uint32_t>(stack_vm_size);
+    this->m_conf_warn_timeout = static_cast<seconds>(warn_timeout);
+    this->m_conf_fail_timeout = static_cast<seconds>(fail_timeout);
   }
 
 void

@@ -11,6 +11,8 @@ namespace poseidon {
 class MySQL_Connection
   {
   private:
+    friend class MySQL_Connector;
+
     cow_string m_server;
     cow_string m_user;
     cow_string m_passwd;
