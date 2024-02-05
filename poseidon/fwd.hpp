@@ -82,7 +82,6 @@ using ::std::chrono::minutes;
 using ::std::chrono::hours;
 using days = ::std::chrono::duration<int64_t, ::std::ratio<86400>>;
 using weeks = ::std::chrono::duration<int64_t, ::std::ratio<604800>>;
-constexpr weeks zero_duration = { };
 
 using ::std::chrono::time_point;
 using ::std::chrono::system_clock;

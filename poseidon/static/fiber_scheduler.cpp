@@ -187,7 +187,7 @@ do_yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override)
       milliseconds real_fail_timeout = fail_timeout;
 
       // Clamp the timeout for safety.
-      if(fail_timeout_override != zero_duration)
+      if(fail_timeout_override != 0s)
         real_fail_timeout = clamp(fail_timeout_override, 0h, 1h);
 
       elem->fail_time = elem->yield_time + real_fail_timeout;

@@ -71,7 +71,7 @@ class Abstract_Fiber
     // `fail_timeout_override` is not zero, it specifies the maximum timeout
     // that the current fiber can be suspended.
     void
-    yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override = zero_duration) const;
+    yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override = 0ms) const;
   };
 
 }  // namespace poseidon
