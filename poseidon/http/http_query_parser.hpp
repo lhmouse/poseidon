@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_HTTP_HTTP_QUERY_PARSER_
 #define POSEIDON_HTTP_HTTP_QUERY_PARSER_
@@ -24,11 +24,12 @@ class HTTP_Query_Parser
     // Constructs a parser for a single HTTP query string, suitable for parsing
     // the query component of a URI or URL, or the body of an HTTP request whose
     // `Content-Type:` equals `application/x-www-form-urlencoded`.
-    HTTP_Query_Parser() noexcept
-      { }
+    HTTP_Query_Parser() noexcept = default;
 
   public:
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(HTTP_Query_Parser);
+    HTTP_Query_Parser(const HTTP_Query_Parser&) = delete;
+    HTTP_Query_Parser& operator=(const HTTP_Query_Parser&) & = delete;
+    ~HTTP_Query_Parser();
 
     // Has an error occurred?
     bool

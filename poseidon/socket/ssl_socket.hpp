@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_SOCKET_SSL_SOCKET_
 #define POSEIDON_SOCKET_SSL_SOCKET_
@@ -25,13 +25,11 @@ class SSL_Socket
   protected:
     // Takes ownership of an accepted socket, using SSL configuration from
     // `driver`. [server-side constructor]
-    explicit
     SSL_Socket(unique_posix_fd&& fd, const Network_Driver& driver);
 
     // Creates a socket for outgoing connections, using SSL configuration
     // from `driver`. [client-side constructor]
-    explicit
-    SSL_Socket(const Network_Driver& driver);
+    explicit SSL_Socket(const Network_Driver& driver);
 
   protected:
     // These callbacks implement `Abstract_Socket`.
@@ -96,7 +94,9 @@ class SSL_Socket
     do_ssl_alpn_request(const char256& proto);
 
   public:
-    ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(SSL_Socket);
+    SSL_Socket(const SSL_Socket&) = delete;
+    SSL_Socket& operator=(const SSL_Socket&) & = delete;
+    virtual ~SSL_Socket();
 
     // Gets the remote or connected address of this socket. In case of errors,
     // `ipv6_invalid` is returned. The result is cached and will not

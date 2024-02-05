@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_FIBER_ABSTRACT_FUTURE_
 #define POSEIDON_FIBER_ABSTRACT_FUTURE_
@@ -21,8 +21,7 @@ class Abstract_Future
 
   protected:
     // Constructs an empty future that has not completed.
-    explicit
-    Abstract_Future();
+    Abstract_Future() noexcept;
 
   protected:
     // This callback is invoked by `do_abstract_future_request()` and is intended
@@ -40,7 +39,9 @@ class Abstract_Future
     do_abstract_future_request() noexcept;
 
   public:
-    ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Abstract_Future);
+    Abstract_Future(const Abstract_Future&) = delete;
+    Abstract_Future& operator=(const Abstract_Future&) & = delete;
+    virtual ~Abstract_Future();
 
     // Gets the completion state. If this function returns `true`, then either a
     // result or an exception will have been set.

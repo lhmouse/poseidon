@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_STATIC_TIMER_DRIVER_
 #define POSEIDON_STATIC_TIMER_DRIVER_
@@ -17,11 +17,12 @@ class Timer_Driver
 
   public:
     // Constructs an empty driver.
-    explicit
     Timer_Driver() noexcept;
 
   public:
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(Timer_Driver);
+    Timer_Driver(const Timer_Driver&) = delete;
+    Timer_Driver& operator=(const Timer_Driver&) & = delete;
+    ~Timer_Driver();
 
     // Schedules timers.
     // This function should be called by the timer thread repeatedly.

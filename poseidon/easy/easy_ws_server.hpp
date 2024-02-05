@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_EASY_EASY_WS_SERVER_
 #define POSEIDON_EASY_EASY_WS_SERVER_
@@ -47,20 +47,20 @@ class Easy_WS_Server
     // never copied, and is allowed to modify itself.
     template<typename CallbackT,
     ROCKET_ENABLE_IF(thunk_type::is_invocable<CallbackT>::value)>
-    explicit
-    Easy_WS_Server(CallbackT&& cb)
+    explicit Easy_WS_Server(CallbackT&& cb)
       :
         m_thunk(new_sh(forward<CallbackT>(cb)))
       { }
 
-    explicit
-    Easy_WS_Server(thunk_type::function_type* fptr)
+    explicit Easy_WS_Server(thunk_type::function_type* fptr)
       :
         m_thunk(fptr)
       { }
 
   public:
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_WS_Server);
+    Easy_WS_Server(const Easy_WS_Server&) = delete;
+    Easy_WS_Server& operator=(const Easy_WS_Server&) & = delete;
+    ~Easy_WS_Server();
 
     // Starts listening the given address and port for incoming connections.
     void

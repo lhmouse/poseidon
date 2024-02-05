@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_SOCKET_LISTEN_SOCKET_
 #define POSEIDON_SOCKET_LISTEN_SOCKET_
@@ -19,9 +19,8 @@ class Listen_Socket
 
   protected:
     // Creates a TCP socket that is bound onto the given address, that accepts
-    // either TCP or SSL connections. [server-side constructor]
-    explicit
-    Listen_Socket(const Socket_Address& addr);
+    // either TCP or SSL connections.
+    explicit Listen_Socket(const Socket_Address& addr);
 
   protected:
     // These callbacks implement `Abstract_Socket`.
@@ -49,7 +48,9 @@ class Listen_Socket
     do_on_listen_new_client_opt(Socket_Address&& addr, unique_posix_fd&& fd) = 0;
 
   public:
-    ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Listen_Socket);
+    Listen_Socket(const Listen_Socket&) = delete;
+    Listen_Socket& operator=(const Listen_Socket&) & = delete;
+    virtual ~Listen_Socket();
 
     // Defers connection establishment until the given timeout.
     void

@@ -34,7 +34,9 @@ class MySQL_Connection
     do_metadata_for_field_opt(unsigned col) noexcept;
 
   public:
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(MySQL_Connection);
+    MySQL_Connection(const MySQL_Connection&) = delete;
+    MySQL_Connection& operator=(const MySQL_Connection&) & = delete;
+    ~MySQL_Connection();
 
     // Get connection parameters.
     cow_stringR

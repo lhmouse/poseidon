@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_HTTP_WEBSOCKET_FRAME_PARSER_
 #define POSEIDON_HTTP_WEBSOCKET_FRAME_PARSER_
@@ -30,6 +30,7 @@ class WebSocket_Frame_Parser
     WebSocket_Frame_Header m_frm_header;
     linear_buffer m_frm_payload;
     uint64_t m_frm_payload_rem = 0;
+    const char* m_error_desc = nullptr;
 
     union {
       uint32_t m_state_stor = 0;
@@ -54,16 +55,15 @@ class WebSocket_Frame_Parser
       };
     };
 
-    const char* m_error_desc = nullptr;
-
   public:
     // Constructs a parser for incoming frames.
     constexpr
-    WebSocket_Frame_Parser() noexcept
-      { }
+    WebSocket_Frame_Parser() noexcept = default;
 
   public:
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(WebSocket_Frame_Parser);
+    WebSocket_Frame_Parser(const WebSocket_Frame_Parser&) = delete;
+    WebSocket_Frame_Parser& operator=(const WebSocket_Frame_Parser&) & = delete;
+    ~WebSocket_Frame_Parser();
 
     // Has an error occurred?
     bool

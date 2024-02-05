@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_STATIC_MYSQL_CONNECTOR_
 #define POSEIDON_STATIC_MYSQL_CONNECTOR_
@@ -17,11 +17,12 @@ class MySQL_Connector
 
   public:
     // Constructs an empty connector.
-    explicit
     MySQL_Connector() noexcept;
 
   public:
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(MySQL_Connector);
+    MySQL_Connector(const MySQL_Connector&) = delete;
+    MySQL_Connector& operator=(const MySQL_Connector&) & = delete;
+    ~MySQL_Connector();
 
     // Reloads configuration from 'main.conf'.
     // If this function fails, an exception is thrown, and there is no effect.

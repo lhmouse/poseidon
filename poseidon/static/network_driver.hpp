@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_STATIC_NETWORK_DRIVER_
 #define POSEIDON_STATIC_NETWORK_DRIVER_
@@ -26,7 +26,6 @@ class Network_Driver
 
   public:
     // Constructs an empty driver.
-    explicit
     Network_Driver() noexcept;
 
   private:
@@ -42,7 +41,9 @@ class Network_Driver
                      unsigned int inlen, void* arg);
 
   public:
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(Network_Driver);
+    Network_Driver(const Network_Driver&) = delete;
+    Network_Driver& operator=(const Network_Driver&) & = delete;
+    ~Network_Driver();
 
     // Gets the server SSL context for incoming connections, which is available
     // only if a certificate and a private key have been specified in 'main.conf'.

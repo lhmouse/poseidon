@@ -1,32 +1,32 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #include "../precompiled.hpp"
-#include "deflator.hpp"
+#include "abstract_deflator.hpp"
 #include "../utils.hpp"
 namespace poseidon {
 
-Deflator::
-Deflator(zlib_Format format, int level)
+Abstract_Deflator::
+Abstract_Deflator(zlib_Format format, int level)
   :
     m_strm(format, 15, level)
   {
   }
 
-Deflator::
-~Deflator()
+Abstract_Deflator::
+~Abstract_Deflator()
   {
   }
 
 void
-Deflator::
+Abstract_Deflator::
 reset() noexcept
   {
     ::deflateReset(this->m_strm);
   }
 
 size_t
-Deflator::
+Abstract_Deflator::
 deflate(chars_view data)
   {
     if(data.n == 0)
@@ -67,7 +67,7 @@ deflate(chars_view data)
   }
 
 bool
-Deflator::
+Abstract_Deflator::
 sync_flush()
   {
     int err;
@@ -105,7 +105,7 @@ sync_flush()
   }
 
 bool
-Deflator::
+Abstract_Deflator::
 full_flush()
   {
     int err;
@@ -143,7 +143,7 @@ full_flush()
   }
 
 bool
-Deflator::
+Abstract_Deflator::
 finish()
   {
     int err;

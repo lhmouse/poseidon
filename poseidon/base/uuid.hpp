@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_BASE_UUID_
 #define POSEIDON_BASE_UUID_
@@ -103,8 +103,7 @@ class UUID
 
     // Parses a UUID from a string, like `parse()`.
     // An exception is thrown if the UUID string is not valid.
-    explicit
-    UUID(chars_view str);
+    explicit UUID(chars_view str);
 
     UUID&
     swap(UUID& other) noexcept

@@ -1,32 +1,32 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #include "../precompiled.hpp"
-#include "inflator.hpp"
+#include "abstract_inflator.hpp"
 #include "../utils.hpp"
 namespace poseidon {
 
-Inflator::
-Inflator(zlib_Format format)
+Abstract_Inflator::
+Abstract_Inflator(zlib_Format format)
   :
     m_strm(format, 15)
   {
   }
 
-Inflator::
-~Inflator()
+Abstract_Inflator::
+~Abstract_Inflator()
   {
   }
 
 void
-Inflator::
+Abstract_Inflator::
 reset() noexcept
   {
     ::inflateReset(this->m_strm);
   }
 
 size_t
-Inflator::
+Abstract_Inflator::
 inflate(chars_view data)
   {
     if(data.n == 0)
@@ -66,7 +66,7 @@ inflate(chars_view data)
   }
 
 bool
-Inflator::
+Abstract_Inflator::
 finish()
   {
     int err;

@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_BASE_ABSTRACT_TIMER_
 #define POSEIDON_BASE_ABSTRACT_TIMER_
@@ -16,8 +16,7 @@ class Abstract_Timer
 
   protected:
     // Constructs an inactive timer.
-    explicit
-    Abstract_Timer();
+    Abstract_Timer() noexcept;
 
   protected:
     // This callback is invoked by the timer thread and is intended to be
@@ -27,7 +26,7 @@ class Abstract_Timer
     do_abstract_timer_on_tick(steady_time now) = 0;
 
   public:
-    ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Abstract_Timer);
+    virtual ~Abstract_Timer();
 
     // Gets the schedule state.
     Async_State

@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_THIRD_ZLIB_FWD_
 #define POSEIDON_THIRD_ZLIB_FWD_
@@ -25,7 +25,8 @@ class zlib_xStream
         this->m_zstrm->avail_in = 0;
       }
 
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(zlib_xStream) = default;
+    zlib_xStream(const zlib_xStream&) = delete;
+    zlib_xStream& operator=(const zlib_xStream&) & = delete;
 
   public:
     operator
@@ -55,7 +56,6 @@ class zlib_xStream
 
 struct deflate_Stream : zlib_xStream
   {
-    explicit
     deflate_Stream(zlib_Format fmt, uint8_t wbits, int level)
       {
         if((wbits < 9) || (wbits > 15))
@@ -86,7 +86,7 @@ struct deflate_Stream : zlib_xStream
                 "deflate_Stream: insufficient memory");
       }
 
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(deflate_Stream)
+    ~deflate_Stream()
       {
         ::deflateEnd(this->m_zstrm);
       }
@@ -94,7 +94,6 @@ struct deflate_Stream : zlib_xStream
 
 struct inflate_Stream : zlib_xStream
   {
-    explicit
     inflate_Stream(zlib_Format fmt, uint8_t wbits)
       {
         if((wbits < 9) || (wbits > 15))
@@ -120,7 +119,7 @@ struct inflate_Stream : zlib_xStream
                 "sprintf_and_throw: insufficient memory");
       }
 
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(inflate_Stream)
+    ~inflate_Stream()
       {
         ::inflateEnd(this->m_zstrm);
       }

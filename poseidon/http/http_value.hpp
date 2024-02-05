@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_HTTP_HTTP_VALUE_
 #define POSEIDON_HTTP_HTTP_VALUE_
@@ -96,9 +96,13 @@ class HTTP_Value
       }
 
   public:
-    ASTERIA_COPYABLE_DESTRUCTOR(HTTP_Value);
+    HTTP_Value(const HTTP_Value&) = default;
+    HTTP_Value(HTTP_Value&&) = default;
+    HTTP_Value& operator=(const HTTP_Value&) & = default;
+    HTTP_Value& operator=(HTTP_Value&&) & = default;
+    ~HTTP_Value();
 
-    // Accesses raw data.
+    // Access raw data.
     bool
     is_null() const noexcept
       { return this->m_stor.ptr<nullptr_t>() != nullptr;  }

@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_EASY_EASY_UDP_CLIENT_
 #define POSEIDON_EASY_EASY_UDP_CLIENT_
@@ -36,20 +36,20 @@ class Easy_UDP_Client
     // object is never copied, and is allowed to modify itself.
     template<typename CallbackT,
     ROCKET_ENABLE_IF(thunk_type::is_invocable<CallbackT>::value)>
-    explicit
-    Easy_UDP_Client(CallbackT&& cb)
+    explicit Easy_UDP_Client(CallbackT&& cb)
       :
         m_thunk(new_sh(forward<CallbackT>(cb)))
       { }
 
-    explicit
-    Easy_UDP_Client(thunk_type::function_type* fptr)
+    explicit Easy_UDP_Client(thunk_type::function_type* fptr)
       :
         m_thunk(fptr)
       { }
 
   public:
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_UDP_Client);
+    Easy_UDP_Client(const Easy_UDP_Client&) = delete;
+    Easy_UDP_Client& operator=(const Easy_UDP_Client&) & = delete;
+    ~Easy_UDP_Client();
 
     // Creates a socket for sending data.
     void

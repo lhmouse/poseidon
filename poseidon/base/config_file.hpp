@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_BASE_CONFIG_FILE_
 #define POSEIDON_BASE_CONFIG_FILE_
@@ -16,15 +16,10 @@ class Config_File
 
   public:
     // Constructs an empty file.
-    constexpr
-    Config_File() noexcept
-      :
-        m_path(), m_root()
-      { }
+    Config_File() noexcept;
 
     // Loads the file denoted by `path`.
-    explicit
-    Config_File(cow_stringR path);
+    explicit Config_File(cow_stringR path);
 
     Config_File&
     swap(Config_File& other) noexcept
@@ -35,7 +30,11 @@ class Config_File
       }
 
   public:
-    ASTERIA_COPYABLE_DESTRUCTOR(Config_File);
+    Config_File(const Config_File&) noexcept = default;
+    Config_File(Config_File&&) noexcept = default;
+    Config_File& operator=(const Config_File&) & noexcept = default;
+    Config_File& operator=(Config_File&&) & noexcept = default;
+    ~Config_File();
 
     // Returns the absolute file path.
     // If no file has been loaded, an empty string is returned.

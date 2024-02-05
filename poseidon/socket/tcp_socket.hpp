@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_SOCKET_TCP_SOCKET_
 #define POSEIDON_SOCKET_TCP_SOCKET_
@@ -20,11 +20,9 @@ class TCP_Socket
 
   protected:
     // Takes ownership of an accepted socket. [server-side constructor]
-    explicit
-    TCP_Socket(unique_posix_fd&& fd);
+    explicit TCP_Socket(unique_posix_fd&& fd);
 
     // Creates a socket for outgoing connections. [client-side constructor]
-    explicit
     TCP_Socket();
 
   protected:
@@ -68,7 +66,9 @@ class TCP_Socket
     do_on_tcp_oob_byte(char data);
 
   public:
-    ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(TCP_Socket);
+    TCP_Socket(const TCP_Socket&) = delete;
+    TCP_Socket& operator=(const TCP_Socket&) & = delete;
+    virtual ~TCP_Socket();
 
     // Gets the remote or connected address of this socket. In case of errors,
     // `ipv6_invalid` is returned. The result is cached and will not

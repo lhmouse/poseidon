@@ -1,22 +1,21 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
-#ifndef POSEIDON_BASE_DEFLATOR_
-#define POSEIDON_BASE_DEFLATOR_
+#ifndef POSEIDON_BASE_ABSTRACT_DEFLATOR_
+#define POSEIDON_BASE_ABSTRACT_DEFLATOR_
 
 #include "../fwd.hpp"
 #include "../third/zlib_fwd.hpp"
 namespace poseidon {
 
-class Deflator
+class Abstract_Deflator
   {
   private:
     deflate_Stream m_strm;
 
   public:
     // Constructs a data compressor.
-    explicit
-    Deflator(zlib_Format format, int level = -1);
+    explicit Abstract_Deflator(zlib_Format format, int level = -1);
 
   protected:
     // This callback is invoked to request an output buffer if none has been
@@ -41,7 +40,9 @@ class Deflator
     do_on_deflate_truncate_output_buffer(size_t backup) = 0;
 
   public:
-    ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Deflator);
+    Abstract_Deflator(const Abstract_Deflator&) noexcept = delete;
+    Abstract_Deflator& operator=(const Abstract_Deflator&) & noexcept = delete;
+    virtual ~Abstract_Deflator();
 
     // Resets internal states. Pending data are discarded.
     void

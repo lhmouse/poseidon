@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_SOCKET_UDP_SOCKET_
 #define POSEIDON_SOCKET_UDP_SOCKET_
@@ -19,11 +19,9 @@ class UDP_Socket
 
   protected:
     // Creates a socket that is bound onto `addr`. [server-side constructor]
-    explicit
-    UDP_Socket(const Socket_Address& addr);
+    explicit UDP_Socket(const Socket_Address& addr);
 
     // Creates an unbound socket. [client-side constructor]
-    explicit
     UDP_Socket();
 
   protected:
@@ -53,7 +51,9 @@ class UDP_Socket
     do_on_udp_packet(Socket_Address&& addr, linear_buffer&& data) = 0;
 
   public:
-    ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(UDP_Socket);
+    UDP_Socket(const UDP_Socket&) = delete;
+    UDP_Socket& operator=(const UDP_Socket&) & = delete;
+    virtual ~UDP_Socket();
 
     // Joins/leaves a multicast group.
     // `maddr` is the multicast group to join/leave, and must be a valid multicast

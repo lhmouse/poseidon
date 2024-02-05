@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_STATIC_ASYNC_TASK_EXECUTOR_
 #define POSEIDON_STATIC_ASYNC_TASK_EXECUTOR_
@@ -16,11 +16,12 @@ class Async_Task_Executor
 
   public:
     // Creates an empty task executor.
-    explicit
     Async_Task_Executor() noexcept;
 
   public:
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(Async_Task_Executor);
+    Async_Task_Executor(const Async_Task_Executor&) = delete;
+    Async_Task_Executor& operator=(const Async_Task_Executor&) & = delete;
+    ~Async_Task_Executor();
 
     // Pops and executes a task.
     // This function should be called by the task thread repeatedly.

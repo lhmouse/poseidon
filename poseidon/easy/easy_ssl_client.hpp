@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_EASY_EASY_SSL_CLIENT_
 #define POSEIDON_EASY_EASY_SSL_CLIENT_
@@ -46,20 +46,20 @@ class Easy_SSL_Client
     // and is allowed to modify itself.
     template<typename CallbackT,
     ROCKET_ENABLE_IF(thunk_type::is_invocable<CallbackT>::value)>
-    explicit
-    Easy_SSL_Client(CallbackT&& cb)
+    explicit Easy_SSL_Client(CallbackT&& cb)
       :
         m_thunk(new_sh(forward<CallbackT>(cb)))
       { }
 
-    explicit
-    Easy_SSL_Client(thunk_type::function_type* fptr)
+    explicit Easy_SSL_Client(thunk_type::function_type* fptr)
       :
         m_thunk(fptr)
       { }
 
   public:
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_SSL_Client);
+    Easy_SSL_Client(const Easy_SSL_Client&) = delete;
+    Easy_SSL_Client& operator=(const Easy_SSL_Client&) & = delete;
+    ~Easy_SSL_Client();
 
     // Initiates a new connection to the given address. `addr` shall specify the
     // host and port to connect, such as `localhost:12345`.

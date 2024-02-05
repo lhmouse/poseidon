@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_FIBER_ABSTRACT_FIBER_
 #define POSEIDON_FIBER_ABSTRACT_FIBER_
@@ -20,8 +20,7 @@ class Abstract_Fiber
 
   protected:
     // Constructs an empty fiber.
-    explicit
-    Abstract_Fiber();
+    Abstract_Fiber() noexcept;
 
   protected:
     // Gets the scheduler instance inside one of the fiber callbacks.
@@ -59,7 +58,9 @@ class Abstract_Fiber
     do_on_abstract_fiber_suspended();
 
   public:
-    ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Abstract_Fiber);
+    Abstract_Fiber(const Abstract_Fiber&) = delete;
+    Abstract_Fiber& operator=(const Abstract_Fiber&) & = delete;
+    virtual ~Abstract_Fiber();
 
     // Gets the schedule state.
     Async_State

@@ -25,10 +25,13 @@ class mysql_Client
         ::mysql_options(this->m_mysql, MYSQL_SET_CHARSET_NAME , "utf8mb4");
       }
 
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(mysql_Client)
+    ~mysql_Client()
       {
         ::mysql_close(this->m_mysql);
       }
+
+    mysql_Client(const mysql_Client&) = delete;
+    mysql_Client& operator=(const mysql_Client&) & = delete;
 
   public:
     operator

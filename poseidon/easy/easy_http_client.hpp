@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_EASY_EASY_HTTP_CLIENT_
 #define POSEIDON_EASY_EASY_HTTP_CLIENT_
@@ -44,19 +44,20 @@ class Easy_HTTP_Client
     // is allowed to modify itself.
     template<typename CallbackT,
     ROCKET_ENABLE_IF(thunk_type::is_invocable<CallbackT>::value)>
-    explicit
-    Easy_HTTP_Client(CallbackT&& cb)
+    explicit Easy_HTTP_Client(CallbackT&& cb)
       :
         m_thunk(new_sh(forward<CallbackT>(cb)))
       { }
 
-    Easy_HTTP_Client(thunk_type::function_type* fptr)
+    explicit Easy_HTTP_Client(thunk_type::function_type* fptr)
       :
         m_thunk(fptr)
       { }
 
   public:
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_HTTP_Client);
+    Easy_HTTP_Client(const Easy_HTTP_Client&) = delete;
+    Easy_HTTP_Client& operator=(const Easy_HTTP_Client&) & = delete;
+    ~Easy_HTTP_Client();
 
     // Initiates a new connection to the given address. `addr` shall specify the
     // host name and (optional) port number. User names, paths, query parameters

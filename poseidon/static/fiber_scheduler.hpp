@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_STATIC_FIBER_SCHEDULER_
 #define POSEIDON_STATIC_FIBER_SCHEDULER_
@@ -29,7 +29,6 @@ class Fiber_Scheduler
 
   public:
     // Constructs an empty scheduler.
-    explicit
     Fiber_Scheduler() noexcept;
 
   private:
@@ -40,7 +39,9 @@ class Fiber_Scheduler
     do_yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override);
 
   public:
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(Fiber_Scheduler);
+    Fiber_Scheduler(const Fiber_Scheduler&) = delete;
+    Fiber_Scheduler& operator=(const Fiber_Scheduler&) & = delete;
+    ~Fiber_Scheduler();
 
     // Reloads configuration from 'main.conf'.
     // If this function fails, an exception is thrown, and there is no effect.

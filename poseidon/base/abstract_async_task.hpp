@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_BASE_ABSTRACT_ASYNC_TASK_
 #define POSEIDON_BASE_ABSTRACT_ASYNC_TASK_
@@ -16,8 +16,7 @@ class Abstract_Async_Task
 
   protected:
     // Constructs an asynchronous task.
-    explicit
-    Abstract_Async_Task();
+    Abstract_Async_Task() noexcept;
 
   protected:
     // This callback is invoked by the task executor thread and is intended to
@@ -27,7 +26,7 @@ class Abstract_Async_Task
     do_on_abstract_async_task_execute() = 0;
 
   public:
-    ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Abstract_Async_Task);
+    virtual ~Abstract_Async_Task();
 
     // Gets the schedule state.
     Async_State

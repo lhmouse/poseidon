@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #include "../precompiled.hpp"
 #include "config_file.hpp"
@@ -7,6 +7,11 @@
 #include <stdlib.h>
 #include <asteria/library/system.hpp>
 namespace poseidon {
+
+Config_File::
+Config_File() noexcept
+  {
+  }
 
 Config_File::
 Config_File(cow_stringR path)
@@ -19,7 +24,6 @@ Config_File(cow_stringR path)
           "[`realpath()` failed: ${errno:full}]"),
           path);
 
-    // Read the file.
     this->m_path.append(abs_path.get());
     this->m_root = ::asteria::std_system_load_conf(this->m_path);
   }

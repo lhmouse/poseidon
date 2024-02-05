@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_STATIC_ASYNC_LOGGER_
 #define POSEIDON_STATIC_ASYNC_LOGGER_
@@ -26,11 +26,12 @@ class Async_Logger
 
   public:
     // Creates a logger that outputs to nowhere.
-    explicit
     Async_Logger() noexcept;
 
   public:
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(Async_Logger);
+    Async_Logger(const Async_Logger&) = delete;
+    Async_Logger& operator=(const Async_Logger&) & = delete;
+    ~Async_Logger();
 
     // Reloads configuration from 'main.conf'.
     // If this function fails, an exception is thrown, and there is no effect.

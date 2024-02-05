@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_SOCKET_HTTPS_SERVER_SESSION_
 #define POSEIDON_SOCKET_HTTPS_SERVER_SESSION_
@@ -20,7 +20,6 @@ class HTTPS_Server_Session
 
   public:
     // Constructs a socket for incoming connections.
-    explicit
     HTTPS_Server_Session();
 
   protected:
@@ -104,7 +103,9 @@ class HTTPS_Server_Session
     do_https_raw_response(const HTTP_Response_Headers& resp, chars_view data);
 
   public:
-    ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(HTTPS_Server_Session);
+    HTTPS_Server_Session(const HTTPS_Server_Session&) = delete;
+    HTTPS_Server_Session& operator=(const HTTPS_Server_Session&) & = delete;
+    virtual ~HTTPS_Server_Session();
 
     // Sends a headers-only response. This can be used to respond to a HEAD or
     // CONNECT request, or to indicate that the message payload terminates until

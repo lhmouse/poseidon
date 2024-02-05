@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_FWD_
 #define POSEIDON_FWD_
@@ -198,8 +198,7 @@ class thunk
     // Points this callback to a target object, with its type erased.
     template<typename RealT,
     ROCKET_ENABLE_IF(is_invocable<RealT>::value)>
-    explicit
-    thunk(shptrR<RealT> obj) noexcept
+    explicit thunk(shptrR<RealT> obj) noexcept
       {
         this->m_func = [](void* p, ArgsT&&... args) { (*(RealT*) p) (forward<ArgsT>(args)...);  };
         this->m_obj = obj;
@@ -207,8 +206,7 @@ class thunk
 
     // And this is an optimized overload if the target object is a plain
     // function pointer, which can be stored into `m_obj` directly.
-    explicit
-    thunk(function_type* fptr) noexcept
+    explicit thunk(function_type* fptr) noexcept
       {
         this->m_func = nullptr;
         this->m_obj = shptr<void>(shptr<int>(), (void*)(intptr_t) fptr);
@@ -555,8 +553,8 @@ class DateTime;
 class Config_File;
 class Abstract_Timer;
 class Abstract_Async_Task;
-class Deflator;
-class Inflator;
+class Abstract_Deflator;
+class Abstract_Inflator;
 
 // Fiber types
 class Abstract_Future;
@@ -612,8 +610,6 @@ class MySQL_Connection;
 enum Easy_Stream_Event : uint8_t;  // TCP, SSL
 enum Easy_HTTP_Event : uint8_t;  // HTTP, HTTPS
 enum Easy_WS_Event : uint8_t;  // WS, WSS
-class Easy_Deflator;
-class Easy_Inflator;
 class Easy_Timer;
 class Easy_UDP_Server;
 class Easy_UDP_Client;

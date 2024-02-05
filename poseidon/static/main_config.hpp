@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_STATIC_MAIN_CONFIG_
 #define POSEIDON_STATIC_MAIN_CONFIG_
@@ -16,11 +16,12 @@ class Main_Config
 
   public:
     // Constructs an empty configuration file.
-    explicit
     Main_Config() noexcept;
 
   public:
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(Main_Config);
+    Main_Config(const Main_Config&) = delete;
+    Main_Config& operator=(const Main_Config&) & = delete;
+    ~Main_Config();
 
     // Reloads 'main.conf'.
     // If this function fails, an exception is thrown, and there is no effect.

@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_EASY_EASY_TIMER_
 #define POSEIDON_EASY_EASY_TIMER_
@@ -32,20 +32,20 @@ class Easy_Timer
     // modify itself.
     template<typename CallbackT,
     ROCKET_ENABLE_IF(thunk_type::is_invocable<CallbackT>::value)>
-    explicit
-    Easy_Timer(CallbackT&& cb)
+    explicit Easy_Timer(CallbackT&& cb)
       :
         m_thunk(new_sh(forward<CallbackT>(cb)))
       { }
 
-    explicit
-    Easy_Timer(thunk_type::function_type* fptr)
+    explicit Easy_Timer(thunk_type::function_type* fptr)
       :
         m_thunk(fptr)
       { }
 
   public:
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(Easy_Timer);
+    Easy_Timer(const Easy_Timer&) = delete;
+    Easy_Timer& operator=(const Easy_Timer&) & = delete;
+    ~Easy_Timer();
 
     // Starts a timer if none is running, or resets the running one. The timer
     // callback will be called after `delay` milliseconds, and then, if `period`

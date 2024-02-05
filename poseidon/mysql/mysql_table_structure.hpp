@@ -33,8 +33,7 @@ class MySQL_Table_Structure
   public:
     // Constructs an empty table.
     constexpr
-    MySQL_Table_Structure() noexcept
-      { }
+    MySQL_Table_Structure() noexcept = default;
 
     MySQL_Table_Structure&
     swap(MySQL_Table_Structure& other) noexcept
@@ -47,7 +46,11 @@ class MySQL_Table_Structure
       }
 
   public:
-    ASTERIA_COPYABLE_DESTRUCTOR(MySQL_Table_Structure);
+    MySQL_Table_Structure(const MySQL_Table_Structure&) = default;
+    MySQL_Table_Structure(MySQL_Table_Structure&&) = default;
+    MySQL_Table_Structure& operator=(const MySQL_Table_Structure&) & = default;
+    MySQL_Table_Structure& operator=(MySQL_Table_Structure&&) & = default;
+    ~MySQL_Table_Structure();
 
     // Gets and sets the table name.
     // If the table name is not a valid identifier, an exception is thrown, and

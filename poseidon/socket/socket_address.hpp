@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_SOCKET_SOCKET_ADDRESS_
 #define POSEIDON_SOCKET_SOCKET_ADDRESS_
@@ -12,22 +12,19 @@ class Socket_Address
   {
   private:
     union {
-      ::in6_addr m_addr;
+      ::in6_addr m_addr = { };
       __m128i m_addr_stor;
     };
-    uint16_t m_port;
+    uint16_t m_port = 0;
 
   public:
     // Initializes an unspecified (all-zero) address.
     constexpr
-    Socket_Address() noexcept
-      :
-        m_addr(), m_port(0)
-      { }
+    Socket_Address() noexcept = default;
 
     // Initializes an address from a foreign source.
     constexpr
-    Socket_Address(const ::in6_addr& addr, uint16_t port = 0) noexcept
+    Socket_Address(const ::in6_addr& addr, uint16_t port) noexcept
       :
         m_addr(addr), m_port(port)
       { }
@@ -40,8 +37,7 @@ class Socket_Address
 
     // Parses an address from a string, like `parse()`.
     // An exception is thrown if the address string is not valid.
-    explicit
-    Socket_Address(chars_view str);
+    explicit Socket_Address(chars_view str);
 
     Socket_Address&
     swap(Socket_Address& other) noexcept

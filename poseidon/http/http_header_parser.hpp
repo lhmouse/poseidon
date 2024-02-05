@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_HTTP_HTTP_HEADER_PARSER_
 #define POSEIDON_HTTP_HTTP_HEADER_PARSER_
@@ -24,15 +24,16 @@ class HTTP_Header_Parser
     // Constructs a parser for a single HTTP header, suitable for parsing
     // various HTTP headers in the semicolon-inside-comma-separated format,
     // such as `Cookie` and `Accept-Encoding`.
-    HTTP_Header_Parser() noexcept
-      { }
+    HTTP_Header_Parser() noexcept = default;
 
   private:
     int
     do_next_attribute_from_separator();
 
   public:
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(HTTP_Header_Parser);
+    HTTP_Header_Parser(const HTTP_Header_Parser&) = delete;
+    HTTP_Header_Parser& operator=(const HTTP_Header_Parser&) & = delete;
+    ~HTTP_Header_Parser();
 
     // Has an error occurred?
     bool

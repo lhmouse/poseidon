@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_HTTP_WEBSOCKET_FRAME_HEADER_
 #define POSEIDON_HTTP_WEBSOCKET_FRAME_HEADER_

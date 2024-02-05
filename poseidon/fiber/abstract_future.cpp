@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #include "../precompiled.hpp"
 #include "abstract_future.hpp"
@@ -7,7 +7,7 @@
 namespace poseidon {
 
 Abstract_Future::
-Abstract_Future()
+Abstract_Future() noexcept
   {
   }
 

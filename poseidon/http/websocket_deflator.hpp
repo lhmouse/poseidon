@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_HTTP_WEBSOCKET_DEFLATOR_
 #define POSEIDON_HTTP_WEBSOCKET_DEFLATOR_
@@ -25,11 +25,12 @@ class WebSocket_Deflator
   public:
     // Initializes a new deflator/inflator with PMCE arguments from `parser`. A
     // previous WebSocket handshake shall have completed.
-    explicit
-    WebSocket_Deflator(const WebSocket_Frame_Parser& parser);
+    explicit WebSocket_Deflator(const WebSocket_Frame_Parser& parser);
 
   public:
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(WebSocket_Deflator);
+    WebSocket_Deflator(const WebSocket_Deflator&) = delete;
+    WebSocket_Deflator& operator=(const WebSocket_Deflator&) & = delete;
+    ~WebSocket_Deflator();
 
     // Get the deflator output buffer.
     linear_buffer&

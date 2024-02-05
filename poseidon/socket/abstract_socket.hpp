@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_SOCKET_ABSTRACT_SOCKET_
 #define POSEIDON_SOCKET_ABSTRACT_SOCKET_
@@ -25,12 +25,10 @@ class Abstract_Socket
     linear_buffer m_io_write_queue;
 
   protected:
-    // Takes ownership of an existent IPv6 socket.
-    explicit
-    Abstract_Socket(unique_posix_fd&& fd);
+    // Takes ownership of an existent IPv6 socket. [server-side constructor]
+    explicit Abstract_Socket(unique_posix_fd&& fd);
 
-    // Creates a new non-blocking IPv6 socket.
-    explicit
+    // Creates a new non-blocking IPv6 socket. [client-side constructor]
     Abstract_Socket(int type, int protocol);
 
   protected:
@@ -110,7 +108,9 @@ class Abstract_Socket
     do_abstract_socket_on_writable() = 0;
 
   public:
-    ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Abstract_Socket);
+    Abstract_Socket(const Abstract_Socket&) = delete;
+    Abstract_Socket& operator=(const Abstract_Socket&) & = delete;
+    virtual ~Abstract_Socket();
 
     // Gets the file descriptor.
     int

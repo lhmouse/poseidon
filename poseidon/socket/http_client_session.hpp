@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_SOCKET_HTTP_CLIENT_SESSION_
 #define POSEIDON_SOCKET_HTTP_CLIENT_SESSION_
@@ -20,7 +20,6 @@ class HTTP_Client_Session
 
   public:
     // Constructs a socket for outgoing connections.
-    explicit
     HTTP_Client_Session();
 
   protected:
@@ -86,7 +85,9 @@ class HTTP_Client_Session
     do_http_raw_request(const HTTP_Request_Headers& req, chars_view data);
 
   public:
-    ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(HTTP_Client_Session);
+    HTTP_Client_Session(const HTTP_Client_Session&) = delete;
+    HTTP_Client_Session& operator=(const HTTP_Client_Session&) & = delete;
+    virtual ~HTTP_Client_Session();
 
     // Sends a simple request, possibly with a complete payload. Callers should
     // not supply `Content-Length` or `Transfer-Encoding` headers, as they

@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_SOCKET_WSS_SERVER_SESSION_
 #define POSEIDON_SOCKET_WSS_SERVER_SESSION_
@@ -21,7 +21,6 @@ class WSS_Server_Session
 
   public:
     // Constructs a socket for incoming connections.
-    explicit
     WSS_Server_Session();
 
   private:
@@ -97,7 +96,9 @@ class WSS_Server_Session
     do_wss_send_raw_frame(int rsv_opcode, chars_view data);
 
   public:
-    ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(WSS_Server_Session);
+    WSS_Server_Session(const WSS_Server_Session&) = delete;
+    WSS_Server_Session& operator=(const WSS_Server_Session&) & = delete;
+    virtual ~WSS_Server_Session();
 
     // Sends a data message or control frame to the other peer. `opcode` indicates
     // the type of the message.

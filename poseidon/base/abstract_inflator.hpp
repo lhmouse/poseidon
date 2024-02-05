@@ -1,22 +1,21 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
-#ifndef POSEIDON_BASE_INFLATOR_
-#define POSEIDON_BASE_INFLATOR_
+#ifndef POSEIDON_BASE_ABSTRACT_INFLATOR_
+#define POSEIDON_BASE_ABSTRACT_INFLATOR_
 
 #include "../fwd.hpp"
 #include "../third/zlib_fwd.hpp"
 namespace poseidon {
 
-class Inflator
+class Abstract_Inflator
   {
   private:
     inflate_Stream m_strm;
 
   public:
     // Constructs a data decompressor.
-    explicit
-    Inflator(zlib_Format format);
+    explicit Abstract_Inflator(zlib_Format format);
 
   protected:
     // This callback is invoked to request an output buffer if none has been
@@ -41,7 +40,9 @@ class Inflator
     do_on_inflate_truncate_output_buffer(size_t backup) = 0;
 
   public:
-    ASTERIA_NONCOPYABLE_VIRTUAL_DESTRUCTOR(Inflator);
+    Abstract_Inflator(const Abstract_Inflator&) noexcept = delete;
+    Abstract_Inflator& operator=(const Abstract_Inflator&) & noexcept = delete;
+    virtual ~Abstract_Inflator();
 
     // Resets internal states. Pending data are discarded.
     void

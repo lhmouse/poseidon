@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2023, LH_Mouse. All wrongs reserved.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_HTTP_HTTP_RESPONSE_PARSER_
 #define POSEIDON_HTTP_HTTP_RESPONSE_PARSER_
@@ -40,7 +40,9 @@ class HTTP_Response_Parser
       }
 
   public:
-    ASTERIA_NONCOPYABLE_DESTRUCTOR(HTTP_Response_Parser);
+    HTTP_Response_Parser(const HTTP_Response_Parser&) = delete;
+    HTTP_Response_Parser& operator=(const HTTP_Response_Parser&) & = delete;
+    ~HTTP_Response_Parser();
 
     // Has an error occurred?
     bool

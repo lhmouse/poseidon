@@ -108,9 +108,13 @@ class MySQL_Value
       }
 
   public:
-    ASTERIA_COPYABLE_DESTRUCTOR(MySQL_Value);
+    MySQL_Value(const MySQL_Value&) = default;
+    MySQL_Value(MySQL_Value&&) = default;
+    MySQL_Value& operator=(const MySQL_Value&) & = default;
+    MySQL_Value& operator=(MySQL_Value&&) & = default;
+    ~MySQL_Value();
 
-    // Accesses raw data.
+    // Access raw data.
     bool
     is_null() const noexcept
       { return this->m_stor.ptr<nullptr_t>() != nullptr;  }
