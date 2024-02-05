@@ -147,7 +147,7 @@ server_ssl_ctx() const
       POSEIDON_THROW(("Server SSL not configured"));
 
     // Increment the reference count of the SSL context, as configuration may
-    // be reloaded after once function returns.
+    // be reloaded after once this function returns.
     ::SSL_CTX_up_ref(ptr);
     return uniptr_SSL_CTX(ptr);
   }
@@ -162,7 +162,7 @@ client_ssl_ctx() const
       POSEIDON_THROW(("Client SSL not configured"));
 
     // Increment the reference count of the SSL context, as configuration may
-    // be reloaded after once function returns.
+    // be reloaded after once this function returns.
     ::SSL_CTX_up_ref(ptr);
     return uniptr_SSL_CTX(ptr);
   }
