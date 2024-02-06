@@ -28,7 +28,7 @@ Network_Driver& network_driver = *new Network_Driver;
 #ifdef POSEIDON_ENABLE_MYSQL
 MySQL_Connector& mysql_connector = *new MySQL_Connector;
 #endif  // MySQL
-#ifdef POSEIDON_ENABLE_MYSQL
+#ifdef POSEIDON_ENABLE_MONGODB
 MongoDB_Connector& mongodb_connector = *new MongoDB_Connector;
 #endif  // MongoDB
 
