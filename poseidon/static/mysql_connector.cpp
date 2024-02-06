@@ -288,8 +288,10 @@ pool_connection(uniptr<MySQL_Connection>&& conn) noexcept
       return false;
 
     // Move the connection into this element.
-    target->conn = move(conn);
+    target->conn.swap(conn);
     target->pooled_since = steady_clock::now();
+    lock.unlock();
+    conn.reset();
     return true;
   }
 
