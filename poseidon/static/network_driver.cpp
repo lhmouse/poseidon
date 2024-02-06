@@ -109,7 +109,9 @@ do_alpn_callback(::SSL* ssl, const uint8_t** out, uint8_t* outlen, const uint8_t
       return SSL_TLSEXT_ERR_ALERT_FATAL;
 
     try {
-      cow_vector<char256> alpn_req;
+      vector<char256> alpn_req;
+      char256 alpn_resp;
+
       for(auto p = in;  (p != in + inlen) && (in + inlen - p >= 1U + *p);  p += 1U + *p) {
         // Copy a protocol name and append a zero terminator.
         char* str = alpn_req.emplace_back();
@@ -118,7 +120,7 @@ do_alpn_callback(::SSL* ssl, const uint8_t** out, uint8_t* outlen, const uint8_t
         POSEIDON_LOG_TRACE(("Received ALPN protocol: $1"), str);
       }
 
-      char256 alpn_resp = ssl_socket->do_on_ssl_alpn_request(move(alpn_req));
+      alpn_resp = ssl_socket->do_on_ssl_alpn_request(move(alpn_req));
       ssl_socket->m_alpn_proto.assign(alpn_resp);
     }
     catch(exception& stdex) {

@@ -79,7 +79,7 @@ class SSL_Socket
     // The default implemention returns an empty string.
     virtual
     char256
-    do_on_ssl_alpn_request(cow_vector<char256>&& protos);
+    do_on_ssl_alpn_request(vector<char256>&& protos);
 
     // For a client-side socket, this function offers a list of protocols to the
     // server. This function must be called before SSL negotiation, for example

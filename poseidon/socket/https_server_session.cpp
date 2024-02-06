@@ -103,7 +103,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
 
 char256
 HTTPS_Server_Session::
-do_on_ssl_alpn_request(cow_vector<char256>&& protos)
+do_on_ssl_alpn_request(vector<char256>&& protos)
   {
     for(const auto& proto : protos)
       if(::strcmp(proto.c_str(), "http/1.1") == 0)

@@ -66,7 +66,7 @@ SSL_Socket::
 
 char256
 SSL_Socket::
-do_on_ssl_alpn_request(cow_vector<char256>&& protos)
+do_on_ssl_alpn_request(vector<char256>&& protos)
   {
     for(const char* proto : protos)
       POSEIDON_LOG_DEBUG((

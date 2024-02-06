@@ -51,9 +51,9 @@ ascii_ci_equal(const xstrT& x, const ystrT& y)
 
 // Splits a string into a vector of tokens, and vice versa.
 void
-explode(cow_vector<cow_string>& segments, cow_stringR text, char delim = ',', size_t limit = SIZE_MAX);
+explode(vector<cow_string>& segments, cow_stringR text, char delim = ',', size_t limit = SIZE_MAX);
 
-cow_vector<cow_string>
+vector<cow_string>
 explode(cow_stringR text, char delim = ',', size_t limit = SIZE_MAX);
 
 void
@@ -63,10 +63,10 @@ cow_string
 implode(const cow_string* segment_ptr, size_t segment_count, char delim = ',');
 
 void
-implode(cow_string& text, const cow_vector<cow_string>& segments, char delim = ',');
+implode(cow_string& text, const vector<cow_string>& segments, char delim = ',');
 
 cow_string
-implode(const cow_vector<cow_string>& segments, char delim = ',');
+implode(const vector<cow_string>& segments, char delim = ',');
 
 // Converts 16 bytes into a hexadecimal string. Exactly 33 characters will be
 // written, including a null terminator.
