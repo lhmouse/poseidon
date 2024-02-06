@@ -1,7 +1,7 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
-#include "../poseidon/precompiled.hpp"
+#include "../poseidon/xprecompiled.hpp"
 #include "../poseidon/easy/easy_udp_server.hpp"
 #include "../poseidon/utils.hpp"
 namespace {

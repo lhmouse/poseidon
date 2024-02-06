@@ -18,7 +18,6 @@ project('poseidon', 'cpp', version: '1.0.alpha-0')
 # List of files
 #===========================================================
 poseidon_include = [
-  'poseidon/precompiled.hpp',
   'poseidon/fwd.hpp',
   'poseidon/utils.hpp',
   'poseidon/third/openssl_fwd.hpp',
@@ -85,6 +84,21 @@ poseidon_include = [
   'poseidon/easy/easy_wss_client.hpp',
 ]
 
+poseidon_include_mysql = [
+  'poseidon/third/mysql_fwd.hpp',
+  'poseidon/mysql/enums.hpp',
+  'poseidon/mysql/mysql_table_structure.hpp',
+  'poseidon/mysql/mysql_value.hpp',
+  'poseidon/mysql/mysql_connection.hpp',
+  'poseidon/static/mysql_connector.hpp',
+]
+
+poseidon_include_mongodb = [
+  'poseidon/third/mongodb_fwd.hpp',
+  'poseidon/mongodb/enums.hpp',
+  'poseidon/static/mongodb_connector.hpp',
+]
+
 poseidon_src = [
   'poseidon/fwd.cpp',
   'poseidon/utils.cpp',
@@ -147,6 +161,17 @@ poseidon_src = [
   'poseidon/easy/easy_wss_client.cpp',
 ]
 
+poseidon_src_mysql = [
+  'poseidon/mysql/mysql_table_structure.cpp',
+  'poseidon/mysql/mysql_value.cpp',
+  'poseidon/mysql/mysql_connection.cpp',
+  'poseidon/static/mysql_connector.cpp',
+]
+
+poseidon_src_mongodb = [
+  'poseidon/static/mongodb_connector.cpp',
+]
+
 etc_poseidon = [
   'etc/poseidon/main.conf',
   'etc/poseidon/ssl/test.crt',
@@ -180,50 +205,14 @@ test_src = [
   'test/websocket_handshake.cpp',
 ]
 
-#===========================================================
-# List of files for MySQL
-#===========================================================
-if get_option('enable-mysql')
-  poseidon_include += [
-    'poseidon/third/mysql_fwd.hpp',
-    'poseidon/mysql/enums.hpp',
-    'poseidon/mysql/mysql_table_structure.hpp',
-    'poseidon/mysql/mysql_value.hpp',
-    'poseidon/mysql/mysql_connection.hpp',
-    'poseidon/static/mysql_connector.hpp',
-  ]
+test_src_mysql = [
+  'test/mysql_table_structure.cpp',
+  'test/mysql_value.cpp',
+  'test/mysql_connection.cpp',
+]
 
-  poseidon_src += [
-    'poseidon/mysql/mysql_table_structure.cpp',
-    'poseidon/mysql/mysql_value.cpp',
-    'poseidon/mysql/mysql_connection.cpp',
-    'poseidon/static/mysql_connector.cpp',
-  ]
-
-  test_src += [
-    'test/mysql_table_structure.cpp',
-    'test/mysql_value.cpp',
-    'test/mysql_connection.cpp',
-  ]
-endif
-
-#===========================================================
-# List of files for MongoDB
-#===========================================================
-if get_option('enable-mongodb')
-  poseidon_include += [
-    'poseidon/third/mongodb_fwd.hpp',
-    'poseidon/mongodb/enums.hpp',
-    'poseidon/static/mongodb_connector.hpp',
-  ]
-
-  poseidon_src += [
-    'poseidon/static/mongodb_connector.cpp',
-  ]
-
-  test_src += [
-  ]
-endif
+test_src_mongodb = [
+]
 
 #===========================================================
 # Global configuration
@@ -287,29 +276,40 @@ add_project_arguments(
 # Dependencies
 #===========================================================
 dep_pthread = dependency('threads')
+dep_asteria = dependency('asteria')
+
 dep_libunwind = dependency('libunwind')
+dep_dl = dependency('dl')
 dep_openssl = dependency('openssl', version: '>= 3.0.0')
 dep_zlib = dependency('zlib', version: '>= 1.2.9')
 dep_libmagic = dependency('libmagic')
-dep_asteria = dependency('asteria')
 dep_http_parser = cxx.find_library('http_parser')
-dep_dl = dependency('dl')
+
+add_project_dependencies(dep_pthread, dep_asteria, language: 'cpp')
+
+#===========================================================
+# Optional dependencies
+#===========================================================
 dep_mysqlclient = disabler()
 dep_mongoc = disabler()
 
 if get_option('enable-mysql')
-  add_project_arguments('-DPOSEIDON_ENABLE_MYSQL', language: [ 'c', 'cpp' ])
   dep_mysqlclient = dependency('mysqlclient')
+  add_project_arguments('-DPOSEIDON_ENABLE_MYSQL', language: [ 'c', 'cpp' ])
+
+  poseidon_include += poseidon_include_mysql
+  poseidon_src += poseidon_src_mysql
+  test_src += test_src_mysql
 endif
 
 if get_option('enable-mongodb')
-  add_project_arguments('-DPOSEIDON_ENABLE_MONGODB', language: [ 'c', 'cpp' ])
   dep_mongoc = dependency('libmongoc-1.0')
-endif
+  add_project_arguments('-DPOSEIDON_ENABLE_MONGODB', language: [ 'c', 'cpp' ])
 
-add_project_dependencies(
-      dep_pthread, dep_asteria,
-      language: 'cpp')
+  poseidon_include += poseidon_include_mongodb
+  poseidon_src += poseidon_src_mongodb
+  test_src += test_src_mongodb
+endif
 
 #===========================================================
 # Rules for headers
@@ -326,7 +326,7 @@ install_headers(meson.current_build_dir() / 'version.h', subdir: 'poseidon')
 # Rules for 'lib/libposeidon.so'
 #===========================================================
 lib_poseidon = shared_library('poseidon',
-      cpp_pch: 'poseidon/precompiled.hpp',
+      cpp_pch: 'poseidon/xprecompiled.hpp',
       sources: [ poseidon_src ],
       dependencies: [ dep_libunwind, dep_openssl, dep_http_parser, dep_zlib,
                       dep_libmagic, dep_mysqlclient, dep_mongoc ],
@@ -346,7 +346,7 @@ import('pkgconfig').generate(lib_poseidon,
 # Rules for 'bin/poseidon'
 #===========================================================
 executable('poseidon',
-           cpp_pch: 'poseidon/precompiled.hpp',
+           cpp_pch: 'poseidon/xprecompiled.hpp',
            sources: [ 'poseidon/main.cpp' ],
            dependencies: [ dep_dl, dep_openssl, dep_mysqlclient, dep_mongoc ],
            link_with: lib_poseidon,

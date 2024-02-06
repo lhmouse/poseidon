@@ -1,7 +1,7 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
-#include "../precompiled.hpp"
+#include "../xprecompiled.hpp"
 #include "mysql_connection.hpp"
 #include "mysql_value.hpp"
 #include "enums.hpp"
