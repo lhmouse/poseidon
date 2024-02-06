@@ -75,19 +75,19 @@ using ::std::unordered_multiset;
 
 using namespace ::std::literals;
 using ::std::chrono::duration;
-using ::std::chrono::nanoseconds;
-using ::std::chrono::milliseconds;
-using ::std::chrono::seconds;
-using ::std::chrono::minutes;
-using ::std::chrono::hours;
-using days = ::std::chrono::duration<int64_t, ::std::ratio<86400>>;
-using weeks = ::std::chrono::duration<int64_t, ::std::ratio<604800>>;
-
 using ::std::chrono::time_point;
 using ::std::chrono::system_clock;
 using system_time = system_clock::time_point;
 using ::std::chrono::steady_clock;
 using steady_time = steady_clock::time_point;
+
+using nanoseconds = ::std::chrono::duration<int64_t, ::std::nano>;
+using milliseconds = ::std::chrono::duration<int64_t, ::std::milli>;
+using seconds = ::std::chrono::duration<int, ::std::ratio<1>>;
+using minutes = ::std::chrono::duration<int, ::std::ratio<60>>;
+using hours = ::std::chrono::duration<int, ::std::ratio<3600>>;
+using days = ::std::chrono::duration<int, ::std::ratio<86400>>;
+using weeks = ::std::chrono::duration<int, ::std::ratio<604800>>;
 
 using ::std::static_pointer_cast;
 using ::std::dynamic_pointer_cast;
