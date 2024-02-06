@@ -86,11 +86,13 @@ poseidon_include = [
 
 poseidon_include_mysql = [
   'poseidon/third/mysql_fwd.hpp',
+  'poseidon/static/mysql_connector.hpp',
   'poseidon/mysql/enums.hpp',
   'poseidon/mysql/mysql_table_structure.hpp',
   'poseidon/mysql/mysql_value.hpp',
   'poseidon/mysql/mysql_connection.hpp',
-  'poseidon/static/mysql_connector.hpp',
+  'poseidon/fiber/mysql_query_future.hpp',
+  'poseidon/fiber/mysql_check_table_future.hpp',
 ]
 
 poseidon_include_mongodb = [
@@ -162,10 +164,12 @@ poseidon_src = [
 ]
 
 poseidon_src_mysql = [
+  'poseidon/static/mysql_connector.cpp',
   'poseidon/mysql/mysql_table_structure.cpp',
   'poseidon/mysql/mysql_value.cpp',
   'poseidon/mysql/mysql_connection.cpp',
-  'poseidon/static/mysql_connector.cpp',
+  'poseidon/fiber/mysql_query_future.cpp',
+  'poseidon/fiber/mysql_check_table_future.cpp',
 ]
 
 poseidon_src_mongodb = [

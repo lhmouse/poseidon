@@ -32,8 +32,14 @@ reset() noexcept
     this->m_res.reset();
     this->m_meta.reset();
     this->m_stmt.reset();
-    this->m_reset_clear = ::mysql_reset_connection(this->m_mysql) == 0;
-    return this->m_reset_clear;
+    this->m_reset_clear = false;
+
+    // Reset the connection on the server. This is a blocking function.
+    if(::mysql_reset_connection(this->m_mysql) != 0)
+      return false;
+
+    this->m_reset_clear = true;
+    return true;
   }
 
 void
@@ -42,9 +48,10 @@ execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)
   {
     if(!this->m_connected) {
       // Try connecting to the server now.
-      if(!::mysql_real_connect(this->m_mysql, this->m_server.safe_c_str(), this->m_user.safe_c_str(),
-                               this->m_passwd.safe_c_str(), this->m_db.safe_c_str(), this->m_port,
-                               nullptr, CLIENT_IGNORE_SIGPIPE | CLIENT_REMEMBER_OPTIONS))
+      if(!::mysql_real_connect(this->m_mysql, this->m_server.safe_c_str(),
+                               this->m_user.safe_c_str(), this->m_passwd.safe_c_str(),
+                               this->m_db.safe_c_str(), this->m_port, nullptr,
+                               CLIENT_IGNORE_SIGPIPE | CLIENT_REMEMBER_OPTIONS))
         POSEIDON_THROW((
             "Could not connect to MySQL server: ERROR $1: $2",
             "[`mysql_real_connect()` failed]"),

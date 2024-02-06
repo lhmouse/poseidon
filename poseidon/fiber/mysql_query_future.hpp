@@ -1,0 +1,80 @@
+// This file is part of Poseidon.
+// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
+
+#ifndef POSEIDON_FIBER_MYSQL_QUERY_FUTURE_
+#define POSEIDON_FIBER_MYSQL_QUERY_FUTURE_
+
+#include "../fwd.hpp"
+#include "abstract_future.hpp"
+#include "../base/abstract_async_task.hpp"
+#include "../mysql/mysql_value.hpp"
+namespace poseidon {
+
+class MySQL_Query_Future
+  :
+    public Abstract_Future,
+    public Abstract_Async_Task
+  {
+  public:
+    // This is actually an input/output type.
+    struct Result
+      {
+        cow_string stmt;
+        vector<MySQL_Value> stmt_args;
+
+        uint64_t affected_rows;
+        uint64_t insert_id;
+        vector<cow_string> result_fields;
+        vector<vector<MySQL_Value>> result_rows;
+      };
+
+  private:
+    MySQL_Connector* m_connector;
+    Result m_res;
+
+  public:
+    // Constructs a future for a single MySQL statement. This object also functions
+    // as an asynchronous task, which can be enqueued into an `Async_Task_Executor`.
+    // This future will become ready once the query is complete.
+    MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt);
+
+    MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt, const vector<MySQL_Value>& stmt_args);
+
+    MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt, vector<MySQL_Value>&& stmt_args);
+
+  private:
+    // Performs the SQL query.
+    virtual
+    void
+    do_on_abstract_future_execute() override;
+
+    virtual
+    void
+    do_on_abstract_async_task_execute() override;
+
+  public:
+    MySQL_Query_Future(const MySQL_Query_Future&) = delete;
+    MySQL_Query_Future& operator=(const MySQL_Query_Future&) & = delete;
+    virtual ~MySQL_Query_Future();
+
+    bool
+    has_result() const noexcept
+      { return this->successful();  }
+
+    const Result&
+    result() const
+      {
+        this->check_success();
+        return this->m_res;
+      }
+
+    Result&
+    mut_result()
+      {
+        this->check_success();
+        return this->m_res;
+      }
+  };
+
+}  // namespace poseidon
+#endif

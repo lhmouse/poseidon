@@ -582,6 +582,8 @@ class Abstract_Fiber;
 class Abstract_Future;
 class DNS_Query_Future;
 class Read_File_Future;
+class MySQL_Query_Future;
+class MySQL_Check_Table_Future;
 
 // Socket types
 enum IP_Address_Class : uint8_t;
