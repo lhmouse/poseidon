@@ -7,6 +7,11 @@
 namespace poseidon {
 
 HTTP_Query_Parser::
+HTTP_Query_Parser() noexcept
+  {
+  }
+
+HTTP_Query_Parser::
 ~HTTP_Query_Parser()
   {
   }

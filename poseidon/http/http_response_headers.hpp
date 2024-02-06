@@ -10,16 +10,9 @@ namespace poseidon {
 
 struct HTTP_Response_Headers
   {
-    uint32_t status;
+    uint32_t status = 0;
     cow_string reason;
     cow_bivector<cow_string, HTTP_Value> headers;
-
-    // Define some helper functions.
-    constexpr
-    HTTP_Response_Headers() noexcept
-      :
-        status(), reason(), headers()
-      { }
 
     HTTP_Response_Headers&
     swap(HTTP_Response_Headers& other) noexcept

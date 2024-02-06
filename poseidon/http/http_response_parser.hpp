@@ -32,12 +32,7 @@ class HTTP_Response_Parser
 
   public:
     // Constructs a parser for incoming responses.
-    HTTP_Response_Parser() noexcept
-      {
-        ::http_parser_init(this->m_parser, HTTP_RESPONSE);
-        this->m_parser->data = this;
-        this->m_parser->allow_chunked_length = true;
-      }
+    HTTP_Response_Parser() noexcept;
 
   public:
     HTTP_Response_Parser(const HTTP_Response_Parser&) = delete;

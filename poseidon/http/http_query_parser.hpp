@@ -24,7 +24,7 @@ class HTTP_Query_Parser
     // Constructs a parser for a single HTTP query string, suitable for parsing
     // the query component of a URI or URL, or the body of an HTTP request whose
     // `Content-Type:` equals `application/x-www-form-urlencoded`.
-    HTTP_Query_Parser() noexcept = default;
+    HTTP_Query_Parser() noexcept;
 
   public:
     HTTP_Query_Parser(const HTTP_Query_Parser&) = delete;

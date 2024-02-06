@@ -7,6 +7,11 @@
 namespace poseidon {
 
 HTTP_Header_Parser::
+HTTP_Header_Parser() noexcept
+  {
+  }
+
+HTTP_Header_Parser::
 ~HTTP_Header_Parser()
   {
   }

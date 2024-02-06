@@ -19,18 +19,15 @@ class Socket_Address
 
   public:
     // Initializes an unspecified (all-zero) address.
-    constexpr
-    Socket_Address() noexcept = default;
+    constexpr Socket_Address() noexcept = default;
 
     // Initializes an address from a foreign source.
-    constexpr
-    Socket_Address(const ::in6_addr& addr, uint16_t port) noexcept
+    constexpr Socket_Address(const ::in6_addr& addr, uint16_t port) noexcept
       :
         m_addr(addr), m_port(port)
       { }
 
-    constexpr
-    Socket_Address(const Socket_Address& other, uint16_t port) noexcept
+    constexpr Socket_Address(const Socket_Address& other, uint16_t port) noexcept
       :
         m_addr(other.m_addr), m_port(port)
       { }

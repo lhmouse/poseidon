@@ -15,8 +15,7 @@ class HTTP_Value
 
   public:
     // Value constructors
-    constexpr
-    HTTP_Value(nullptr_t = nullptr) noexcept
+    constexpr HTTP_Value(nullptr_t = nullptr) noexcept
       :
         m_stor()
       { }

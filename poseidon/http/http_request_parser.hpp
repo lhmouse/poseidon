@@ -32,11 +32,7 @@ class HTTP_Request_Parser
 
   public:
     // Constructs a parser for incoming requests.
-    HTTP_Request_Parser() noexcept
-      {
-        ::http_parser_init(this->m_parser, HTTP_REQUEST);
-        this->m_parser->data = this;
-      }
+    HTTP_Request_Parser() noexcept;
 
   public:
     HTTP_Request_Parser(const HTTP_Request_Parser&) = delete;

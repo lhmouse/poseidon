@@ -94,6 +94,14 @@ HTTP_Response_Parser::s_settings[1] =
 #undef this
 
 HTTP_Response_Parser::
+HTTP_Response_Parser() noexcept
+  {
+    ::http_parser_init(this->m_parser, HTTP_RESPONSE);
+    this->m_parser->data = this;
+    this->m_parser->allow_chunked_length = true;
+  }
+
+HTTP_Response_Parser::
 ~HTTP_Response_Parser()
   {
   }

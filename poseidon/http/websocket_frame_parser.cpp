@@ -154,6 +154,11 @@ struct PerMessage_Deflate
 }  // namespace
 
 WebSocket_Frame_Parser::
+WebSocket_Frame_Parser() noexcept
+  {
+  }
+
+WebSocket_Frame_Parser::
 ~WebSocket_Frame_Parser()
   {
   }

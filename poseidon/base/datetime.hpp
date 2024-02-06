@@ -14,15 +14,13 @@ class DateTime
 
   public:
     // Initializes a timestamp of `1970-01-01 00:00:00 UTC`.
-    constexpr
-    DateTime() noexcept
+    constexpr DateTime() noexcept
       :
         m_tp()
       { }
 
     // Initializes a timestamp from a foreign source.
-    constexpr
-    DateTime(system_time tp) noexcept
+    constexpr DateTime(system_time tp) noexcept
       :
         m_tp(tp)
       { }

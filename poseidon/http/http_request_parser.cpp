@@ -165,6 +165,13 @@ HTTP_Request_Parser::s_settings[1] =
 #undef this
 
 HTTP_Request_Parser::
+HTTP_Request_Parser() noexcept
+  {
+    ::http_parser_init(this->m_parser, HTTP_REQUEST);
+    this->m_parser->data = this;
+  }
+
+HTTP_Request_Parser::
 ~HTTP_Request_Parser()
   {
   }

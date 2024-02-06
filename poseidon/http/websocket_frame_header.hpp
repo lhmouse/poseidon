@@ -10,7 +10,7 @@ namespace poseidon {
 struct WebSocket_Frame_Header
   {
     union {
-      __m128i m_stor;
+      __m128i m_stor = { };
 
       struct {
         // The payload length is always stored as an `uint64_t`. The `encode()`
@@ -32,13 +32,6 @@ struct WebSocket_Frame_Header
         uint64_t payload_len;
       };
     };
-
-    // Define some helper functions.
-    constexpr
-    WebSocket_Frame_Header() noexcept
-      :
-        m_stor()
-      { }
 
     WebSocket_Frame_Header&
     swap(WebSocket_Frame_Header& other) noexcept

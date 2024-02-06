@@ -57,8 +57,7 @@ class WebSocket_Frame_Parser
 
   public:
     // Constructs a parser for incoming frames.
-    constexpr
-    WebSocket_Frame_Parser() noexcept = default;
+    WebSocket_Frame_Parser() noexcept;
 
   public:
     WebSocket_Frame_Parser(const WebSocket_Frame_Parser&) = delete;

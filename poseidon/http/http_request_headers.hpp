@@ -10,22 +10,15 @@ namespace poseidon {
 
 struct HTTP_Request_Headers
   {
-    const char* method;  // null implies `GET`
+    const char* method = nullptr;  // null implies `GET`
     cow_string uri_host;
     uint16_t uri_port;  // zero implies `80` or `443`, basing on `is_ssl`
-    bool is_proxy;
-    bool is_ssl;
+    bool is_proxy = false;
+    bool is_ssl = false;
     cow_string uri_userinfo;
     cow_string uri_path;
     cow_string uri_query;
     cow_bivector<cow_string, HTTP_Value> headers;
-
-    // Define some helper functions.
-    constexpr
-    HTTP_Request_Headers() noexcept
-      :
-        method(), uri_host(), uri_port(), is_proxy(), is_ssl(), headers()
-      { }
 
     HTTP_Request_Headers&
     swap(HTTP_Request_Headers& other) noexcept
