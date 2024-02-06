@@ -2,26 +2,26 @@
 // Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #include "../xprecompiled.hpp"
-#include "dns_future.hpp"
+#include "dns_query_future.hpp"
 #include "../utils.hpp"
 #include <sys/socket.h>
 #include <netdb.h>
 namespace poseidon {
 
-DNS_Future::
-DNS_Future(cow_stringR host, uint16_t port)
+DNS_Query_Future::
+DNS_Query_Future(cow_stringR host, uint16_t port)
   {
     this->m_res.host = host;
     this->m_res.port = port;
   }
 
-DNS_Future::
-~DNS_Future()
+DNS_Query_Future::
+~DNS_Query_Future()
   {
   }
 
 void
-DNS_Future::
+DNS_Query_Future::
 do_on_abstract_future_execute()
   {
     // Perform DNS query. This will block the worker thread.
@@ -62,7 +62,7 @@ do_on_abstract_future_execute()
   }
 
 void
-DNS_Future::
+DNS_Query_Future::
 do_on_abstract_async_task_execute()
   {
     this->do_abstract_future_request();

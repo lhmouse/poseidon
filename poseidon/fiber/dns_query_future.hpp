@@ -1,8 +1,8 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
-#ifndef POSEIDON_FIBER_DNS_FUTURE_
-#define POSEIDON_FIBER_DNS_FUTURE_
+#ifndef POSEIDON_FIBER_DNS_QUERY_FUTURE_
+#define POSEIDON_FIBER_DNS_QUERY_FUTURE_
 
 #include "../fwd.hpp"
 #include "abstract_future.hpp"
@@ -10,7 +10,7 @@
 #include "../socket/socket_address.hpp"
 namespace poseidon {
 
-class DNS_Future
+class DNS_Query_Future
   :
     public Abstract_Future,
     public Abstract_Async_Task
@@ -31,7 +31,7 @@ class DNS_Future
     // Constructs a DNS result future. This object also functions as an
     // asynchronous task, which can be enqueued into an `Async_Task_Executor`.
     // This future will become ready once the DNS query is complete.
-    DNS_Future(cow_stringR host, uint16_t port);
+    DNS_Query_Future(cow_stringR host, uint16_t port);
 
   private:
     // Performs DNS lookup.
@@ -44,9 +44,9 @@ class DNS_Future
     do_on_abstract_async_task_execute() override;
 
   public:
-    DNS_Future(const DNS_Future&) = delete;
-    DNS_Future& operator=(const DNS_Future&) & = delete;
-    virtual ~DNS_Future();
+    DNS_Query_Future(const DNS_Query_Future&) = delete;
+    DNS_Query_Future& operator=(const DNS_Query_Future&) & = delete;
+    virtual ~DNS_Query_Future();
 
     bool
     has_result() const noexcept

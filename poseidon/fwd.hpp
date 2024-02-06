@@ -589,7 +589,7 @@ class Abstract_Inflator;
 // Fiber types
 class Abstract_Fiber;
 class Abstract_Future;
-class DNS_Future;
+class DNS_Query_Future;
 class Read_File_Future;
 
 // Socket types
