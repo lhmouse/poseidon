@@ -5,6 +5,7 @@
 #define POSEIDON_THIRD_MONGODB_FWD_
 
 #include "../fwd.hpp"
+#include <libbson-1.0/bson/bson.h>
 #include <libmongoc-1.0/mongoc/mongoc.h>
 namespace poseidon {
 

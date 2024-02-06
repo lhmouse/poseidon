@@ -12,8 +12,17 @@ class MySQL_Connector
   {
   private:
     mutable plain_mutex m_conf_mutex;
+    cow_string m_conf_server;
+    cow_string m_conf_user;
+    cow_string m_conf_passwd;
+    cow_string m_conf_db;
+    uint16_t m_conf_port = 0;
+    uint16_t m_conf_connection_pool_size = 0;
+    seconds m_conf_connection_idle_timeout = 0s;
 
     mutable plain_mutex m_pool_mutex;
+    struct X_Pooled_Connection;
+    vector<X_Pooled_Connection> m_pool;
 
   public:
     // Constructs an empty connector.

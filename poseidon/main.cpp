@@ -356,15 +356,15 @@ ROCKET_NEVER_INLINE
 void
 do_check_random()
   {
-    long seed;
-    if(::RAND_priv_bytes((uint8_t*) &seed, sizeof(seed)) != 1)
+    uint8_t seed[8];
+    if(::RAND_priv_bytes(seed, sizeof(seed)) != 1)
       do_exit_printf(exit_system_error,
           "Could not initialize OpenSSL random number generator: %s\n",
           ::ERR_reason_error_string(::ERR_peek_error()));
 
-    // Initialize standard random functions, too.
-    ::srand((unsigned) seed);
-    ::srand48(seed);
+    // Initialize standard functions, too.
+    ::srand(reinterpret_cast<const unsigned int&>(seed));
+    ::srand48(reinterpret_cast<const long&>(seed));
   }
 
 template<class ObjectT>
@@ -624,34 +624,37 @@ main(int argc, char** argv)
     ::pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, nullptr);
 
     // Note that this function shall not return in case of errors.
-    do_parse_command_line(argc, argv);
-    do_set_working_directory();
-
-    main_config.reload();
     do_check_euid();
     do_check_ulimits();
+
+    do_parse_command_line(argc, argv);
+    do_set_working_directory();
+    main_config.reload();
     do_daemonize_start();
     do_init_signal_handlers();
     do_write_pid_file();
-    do_check_random();
+
     async_logger.reload(main_config.copy());
     POSEIDON_LOG_INFO(("Starting up: $1"), PACKAGE_STRING);
 
     ::OPENSSL_init_ssl(OPENSSL_INIT_NO_ATEXIT, nullptr);
     POSEIDON_LOG_DEBUG(("Initialized $1"), ::OpenSSL_version(OPENSSL_VERSION));
+    do_check_random();
+    network_driver.reload(main_config.copy());
 
 #ifdef POSEIDON_ENABLE_MYSQL
     ::mysql_library_init(0, nullptr, nullptr);
     POSEIDON_LOG_DEBUG(("Initialized libmysqlclient $1"), ::mysql_get_client_info());
+    mysql_connector.reload(main_config.copy());
 #endif
 
 #ifdef POSEIDON_ENABLE_MONGODB
     ::mongoc_init();
     POSEIDON_LOG_DEBUG(("Initialized libmongoc $1"), ::mongoc_get_version());
+    mongodb_connector.reload(main_config.copy());
 #endif
 
     fiber_scheduler.reload(main_config.copy());
-    network_driver.reload(main_config.copy());
     do_create_threads();
     do_load_addons();
 

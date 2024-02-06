@@ -11,8 +11,10 @@
 #include "static/network_driver.hpp"
 #ifdef POSEIDON_ENABLE_MYSQL
 #include "static/mysql_connector.hpp"
-#endif
-
+#endif  // MySQL
+#ifdef POSEIDON_ENABLE_MONGODB
+#include "static/mongodb_connector.hpp"
+#endif  // MongoDB
 namespace poseidon {
 
 atomic_relaxed<int> exit_signal;
@@ -25,7 +27,10 @@ Async_Task_Executor& async_task_executor = *new Async_Task_Executor;
 Network_Driver& network_driver = *new Network_Driver;
 #ifdef POSEIDON_ENABLE_MYSQL
 MySQL_Connector& mysql_connector = *new MySQL_Connector;
-#endif
+#endif  // MySQL
+#ifdef POSEIDON_ENABLE_MYSQL
+MongoDB_Connector& mongodb_connector = *new MongoDB_Connector;
+#endif  // MongoDB
 
 bool
 async_logger_check_level(Log_Level level) noexcept

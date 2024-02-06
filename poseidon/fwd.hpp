@@ -603,6 +603,7 @@ class MySQL_Value;
 class MySQL_Connection;
 
 // MongoDB types
+class MongoDB_Connection;
 
 // Easy types
 // Being 'easy' means all callbacks are invoked in fibers and can perform
