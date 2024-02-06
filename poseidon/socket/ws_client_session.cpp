@@ -246,8 +246,8 @@ do_on_ws_message_data_stream(WebSocket_OpCode /*opcode*/, linear_buffer& data)
     if(conf_value.is_integer())
       max_websocket_message_length = conf_value.as_integer();
     else if(!conf_value.is_null())
-      POSEIDON_LOG_WARN((
-          "Ignoring `network.http.max_websocket_message_length`: expecting an `integer`, got `$1`",
+      POSEIDON_THROW((
+          "Invalid `network.http.max_websocket_message_length`: expecting an `integer`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
 

@@ -218,8 +218,8 @@ do_set_working_directory()
 
     if(::chdir(cmdline.cd_here.safe_c_str()) != 0)
       do_exit_printf(exit_system_error,
-          "Could not set working directory to '%s': %s",
-          cmdline.cd_here.c_str(), ::strerror(errno));
+          "Could not set working directory to '%s': %m",
+          cmdline.cd_here.c_str());
   }
 
 [[noreturn]]
@@ -227,16 +227,12 @@ int
 do_await_child_process_and_exit(::pid_t cpid)
   {
     for(;;) {
-      ::fprintf(stderr,
-          "Awaiting child process %d...\n",
-          (int) cpid);
+      ::fprintf(stderr, "Awaiting child process %d...\n", (int) cpid);
 
       int wstat = 0;
       ::pid_t r = POSEIDON_SYSCALL_LOOP(::waitpid(cpid, &wstat, 0));
       if(r < 0)
-        do_exit_printf(exit_system_error,
-            "Failed to get exit status of child process %d: %s",
-            (int) cpid, ::strerror(errno));
+        do_exit_printf(exit_system_error, "Failed to await child process: %m");
 
       if(r != cpid)
         continue;
@@ -246,8 +242,8 @@ do_await_child_process_and_exit(::pid_t cpid)
 
       if(WIFSIGNALED(wstat))
         do_exit_printf(128 + WTERMSIG(wstat),
-            "Child process %d terminated by signal %d: %s\n",
-            (int) cpid, WTERMSIG(wstat), ::strsignal(WTERMSIG(wstat)));
+              "Child process %d terminated by signal %d: %s\n",
+              (int) cpid, WTERMSIG(wstat), ::strsignal(WTERMSIG(wstat)));
     }
   }
 
@@ -272,17 +268,12 @@ do_daemonize_start()
     //    v               _Exit()             |
     //  waitpid() <------/                    v
     //  _Exit()                             loop ...
-
-    ::fprintf(stderr,
-        "Daemonizing process %d...\n",
-        (int) ::getpid());
+    ::fprintf(stderr, "Daemonizing process %d...\n", (int) ::getpid());
 
     // Create the CHILD and wait.
     ::pid_t cpid = ::fork();
     if(cpid == -1)
-      do_exit_printf(exit_system_error,
-          "Could not create child process: %s\n",
-          ::strerror(errno));
+      do_exit_printf(exit_system_error, "Could not spawn child process: %m\n");
 
     if(cpid != 0) {
       // The PARENT shall wait for CHILD and forward its exit status.
@@ -296,9 +287,7 @@ do_daemonize_start()
 
     int pipefds[2];
     if(::pipe(pipefds) != 0)
-      do_exit_printf(exit_system_error,
-          "Could not create pipe: %s",
-          ::strerror(errno));
+      do_exit_printf(exit_system_error, "Could not create pipe: %m");
 
     unique_posix_fd rfd(pipefds[0]);
     unique_posix_fd wfd(pipefds[1]);
@@ -306,23 +295,19 @@ do_daemonize_start()
     // Create the GRANDCHILD.
     cpid = ::fork();
     if(cpid == -1)
-      do_exit_printf(exit_system_error,
-          "Could not create grandchild process: %s\n",
-          ::strerror(errno));
+      do_exit_printf(exit_system_error, "Could not spawn grandchild process: %m\n");
 
     if(cpid != 0) {
-      wfd.reset();
-
       // The CHILD shall wait for notification from the GRANDCHILD. If no
       // notification is received or an error occurs, the GRANDCHILD will
       // terminate and has to be reaped.
       char text[16];
-      if(POSEIDON_SYSCALL_LOOP(::read(pipefds[0], text, sizeof(text))) <= 0)
-        do_await_child_process_and_exit(cpid);
+      if(POSEIDON_SYSCALL_LOOP(::read(pipefds[0], text, sizeof(text))) > 0)
+        ::_Exit(0);
 
-      do_exit_printf(exit_success,
-          "Detached grandchild process %d successfully.\n",
-          (int) cpid);
+      // The GRANDCHILD has not exited normally, so wait and forward its
+      // exit status.
+      do_await_child_process_and_exit(cpid);
     }
 
     // Close standard streams in the GRANDCHILD. Errors are ignored.
@@ -358,8 +343,9 @@ do_check_random()
   {
     uint8_t seed[8];
     if(::RAND_priv_bytes(seed, sizeof(seed)) != 1)
-      do_exit_printf(exit_system_error,
-          "Could not initialize OpenSSL random number generator: %s\n",
+      POSEIDON_THROW((
+          "Could not initialize OpenSSL random number generator",
+          "[`RAND_priv_bytes()` failed: $1]"),
           ::ERR_reason_error_string(::ERR_peek_error()));
 
     // Initialize standard functions, too.
@@ -406,9 +392,7 @@ do_create_resident_thread(ObjectT& obj, const char* name)
     );
 
     if(err != 0)
-      do_exit_printf(exit_system_error,
-          "Could not create thread '%s': %s\n",
-          name, ::strerror(err));
+      do_exit_printf(exit_system_error, "Could not spawn thread '%s': %m\n", name);
 
     // Name the thread and detach it. Errors are ignored.
     ::pthread_setname_np(thrd, name);
@@ -427,32 +411,6 @@ do_create_threads()
     do_create_resident_thread(async_task_executor, "task_3");
     do_create_resident_thread(async_task_executor, "task_4");
     do_create_resident_thread(network_driver, "network");
-  }
-
-ROCKET_NEVER_INLINE
-void
-do_check_euid()
-  {
-    bool permit_root_startup = false;
-    const auto conf = main_config.copy();
-
-    auto conf_value = conf.query("general", "permit_root_startup");
-    if(conf_value.is_boolean())
-      permit_root_startup = conf_value.as_boolean();
-    else if(!conf_value.is_null())
-      POSEIDON_LOG_WARN((
-          "Ignoring `general.permit_root_startup`: expecting a `boolean`, got `$1`",
-          "[in configuration file '$2']"),
-          conf_value, conf.path());
-
-    if(!permit_root_startup && (::geteuid() == 0))
-      do_exit_printf(exit_invalid_argument,
-          "Please do not start this program as root. If you insist, you may "
-          "set `general.permit_root_startup` in '%s' to `true` to bypass this "
-          "check. Note that starting as root should be considered insecure. An "
-          "unprivileged user should have been created for this service. You "
-          "have been warned.",
-          conf.path().c_str());
   }
 
 ROCKET_NEVER_INLINE
@@ -517,8 +475,8 @@ do_write_pid_file()
     if(conf_value.is_string())
       pid_file_path = conf_value.as_string();
     else if(!conf_value.is_null())
-      POSEIDON_LOG_WARN((
-          "Ignoring `general.permit_root_startup`: expecting a `string`, got `$1`",
+      POSEIDON_THROW((
+          "Invalid `general.pid_file_path`: expecting a `string`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf.path());
 
@@ -526,16 +484,17 @@ do_write_pid_file()
       return;
 
     // Create the lock file and lock it in exclusive mode before overwriting.
-    pid_file_fd.reset(::creat(pid_file_path.safe_c_str(), 0644));
-    if(!pid_file_fd)
-      do_exit_printf(exit_system_error,
-          "Could not create PID file '%s': %s",
-          pid_file_path.c_str(), ::strerror(errno));
+    if(!pid_file_fd.reset(::creat(pid_file_path.safe_c_str(), 0644)))
+      POSEIDON_THROW((
+          "Could not create PID file '$1'",
+          "[`creat()` failed: ${errno:full}]"),
+          pid_file_path);
 
     if(::flock(pid_file_fd, LOCK_EX | LOCK_NB) != 0)
-      do_exit_printf(exit_system_error,
-          "Could not lock PID file '%s': %s",
-          pid_file_path.c_str(), ::strerror(errno));
+      POSEIDON_THROW((
+          "Could not lock PID file '$1'",
+          "[`flock()` failed: ${errno:full}]"),
+          pid_file_path);
 
     // Write the PID of myself. Errors are ignored.
     POSEIDON_LOG_DEBUG(("Writing current process ID to '$1'"), pid_file_path.c_str());
@@ -577,8 +536,8 @@ do_load_addons()
     if(conf_value.is_array())
       addons = conf_value.as_array();
     else if(!conf_value.is_null())
-      POSEIDON_LOG_WARN((
-          "Ignoring `addons`: expecting an `array`, got `$1`",
+      POSEIDON_THROW((
+          "Invalid `addons`: expecting an `array`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf.path());
 
@@ -588,8 +547,8 @@ do_load_addons()
       if(addon.is_string())
         path = addon.as_string();
       else if(!addon.is_null())
-        POSEIDON_LOG_WARN((
-            "Ignoring invalid path to add-on: $1",
+        POSEIDON_THROW((
+            "Invalid path to add-on: expecting a `string`, got `$1`",
             "[in configuration file '$2']"),
             addon, conf.path());
 
@@ -624,18 +583,16 @@ main(int argc, char** argv)
     ::pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, nullptr);
 
     // Note that this function shall not return in case of errors.
-    do_check_euid();
-    do_check_ulimits();
-
     do_parse_command_line(argc, argv);
     do_set_working_directory();
     main_config.reload();
+    async_logger.reload(main_config.copy());
+    POSEIDON_LOG_INFO(("Starting up: $1"), PACKAGE_STRING);
+
+    do_check_ulimits();
     do_daemonize_start();
     do_init_signal_handlers();
     do_write_pid_file();
-
-    async_logger.reload(main_config.copy());
-    POSEIDON_LOG_INFO(("Starting up: $1"), PACKAGE_STRING);
 
     ::OPENSSL_init_ssl(OPENSSL_INIT_NO_ATEXIT, nullptr);
     POSEIDON_LOG_DEBUG(("Initialized $1"), ::OpenSSL_version(OPENSSL_VERSION));

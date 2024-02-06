@@ -472,8 +472,10 @@ shptr<typename ::std::decay<ValueT>::type>
 new_sh(ValueT&& value)
   { return ::std::make_shared<typename ::std::decay<ValueT>::type>(forward<ValueT>(value));  }
 
-// Logging with prettification
-enum Log_Level : uint8_t
+// Logging and error reporting (diagnostics)
+// Each level corresponds to an element in `logger.colors` in 'main.conf'. It
+// determines how messages are colorized and where to write them,
+enum Log_Level
   {
     log_level_fatal  = 0,
     log_level_error  = 1,
@@ -493,16 +495,20 @@ struct Log_Context
 
 ROCKET_CONST
 bool
-async_logger_check_level(Log_Level level) noexcept;
+check_log_level(Log_Level level) noexcept;
 
 void
-async_logger_enqueue(const Log_Context& ctx, vfptr<cow_string&, void*> thunk, void* compose) noexcept;
+enqueue_log_message(const Log_Context& ctx, vfptr<cow_string&, void*> thunk, void* compose) noexcept;
 
-// Define helper macros that compose log messages. The `TEMPLATE` argument shall
-// be a list of string literals in parentheses. Multiple strings are joined with
-// line separators. `format()` is to be found via ADL.
+[[noreturn]]
+void
+backtrace_and_throw(const Log_Context& ctx, vfptr<cow_string&, void*> thunk, void* compose);
+
+// Compose a log message. The `TEMPLATE` argument shall be a list of string
+// literals in parentheses. Multiple strings are joined with line separators.
+// `format()` is to be found via ADL.
 #define POSEIDON_LOG_G_(LEVEL, TEMPLATE, ...)  \
-    (::poseidon::async_logger_check_level(::poseidon::log_level_##LEVEL)  \
+    (::poseidon::check_log_level(::poseidon::log_level_##LEVEL)  \
       &&  \
       __extension__ ({  \
         auto IuChah0u = [&](::rocket::cow_string& quu1Opae)  \
@@ -511,7 +517,7 @@ async_logger_enqueue(const Log_Context& ctx, vfptr<cow_string&, void*> thunk, vo
           { (*static_cast<decltype(IuChah0u)*>(fi8OhNgo)) (iughih5B);  };  \
         static const ::poseidon::Log_Context aebiF4ai =  \
           { __FILE__, __LINE__, ::poseidon::log_level_##LEVEL, __func__ };  \
-        ::poseidon::async_logger_enqueue(aebiF4ai, ohng0Ohh, &IuChah0u);  \
+        ::poseidon::enqueue_log_message(aebiF4ai, ohng0Ohh, &IuChah0u);  \
         true;  \
       }))
 
@@ -522,13 +528,36 @@ async_logger_enqueue(const Log_Context& ctx, vfptr<cow_string&, void*> thunk, vo
 #define POSEIDON_LOG_DEBUG(...)   POSEIDON_LOG_G_(debug, __VA_ARGS__)
 #define POSEIDON_LOG_TRACE(...)   POSEIDON_LOG_G_(trace, __VA_ARGS__)
 
-// Evaluates an expression. If an exception is thrown, a message is printed but
-// the exception itself is caught and ignored.
+// Throws an `std::runtime_error` object. The `TEMPLATE` argument shall be a
+// list of string literals in parentheses. Multiple strings are joined with
+// line separators. `format()` is to be found via ADL.
+#define POSEIDON_THROW(TEMPLATE, ...)  \
+    __extension__ ({  \
+      auto eTho2Ebu = [&](::rocket::cow_string& Xouc9rie)  \
+        { format(Xouc9rie, (::asteria::make_string_template TEMPLATE), ##__VA_ARGS__);  };  \
+      auto Uc3zohpa = +[](::rocket::cow_string& iughih5B, void* aiQu7aiL)  \
+        { (*static_cast<decltype(eTho2Ebu)*>(aiQu7aiL)) (iughih5B);  };  \
+      static const ::poseidon::Log_Context Muu3lei1 =  \
+        { __FILE__, __LINE__, ::poseidon::log_level_warn, __func__ };  \
+      ::poseidon::backtrace_and_throw(Muu3lei1, Uc3zohpa, &eTho2Ebu);  \
+      true;  \
+    })
+
+// Performs a syscall, retrying upon interrupts. The arguments may be evaluated
+// more than once.
+#define POSEIDON_SYSCALL_LOOP(...)  \
+    __extension__ ({  \
+      auto wdLAlUiJ = (__VA_ARGS__);  \
+      while(ROCKET_UNEXPECT(wdLAlUiJ < 0) && (errno == EINTR))  \
+        /* retry */ wdLAlUiJ = (__VA_ARGS__);  \
+      wdLAlUiJ;  \
+    })
+
+// Evaluates an expression, catching and ignoring exceptions.
 #define POSEIDON_CATCH_ALL(...)  \
     (__extension__ ({  \
       try { (void) (__VA_ARGS__);  }  \
-      catch(::std::exception& zeew2aeY)  \
-      { POSEIDON_LOG_ERROR(("Ignoring exception: $1"), zeew2aeY);  }  \
+      catch(::std::exception&) { }  \
     }))
 
 // Constants

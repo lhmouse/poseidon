@@ -71,8 +71,8 @@ struct PerMessage_Deflate
         if(conf_value.is_integer())
           default_compression_level = conf_value.as_integer();
         else if(!conf_value.is_null())
-          POSEIDON_LOG_WARN((
-              "Ignoring `general.default_compression_level`: expecting an `integer`, got `$1`",
+          POSEIDON_THROW((
+              "Invalid `general.default_compression_level`: expecting an `integer`, got `$1`",
               "[in configuration file '$2']"),
               conf_value, conf_file.path());
 

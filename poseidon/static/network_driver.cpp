@@ -182,8 +182,8 @@ reload(const Config_File& conf_file)
     if(conf_value.is_integer())
       event_buffer_size = conf_value.as_integer();
     else if(!conf_value.is_null())
-      POSEIDON_LOG_WARN((
-          "Ignoring `network.poll.event_buffer_size`: expecting an `integer`, got `$1`",
+      POSEIDON_THROW((
+          "Invalid `network.poll.event_buffer_size`: expecting an `integer`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
 
@@ -198,8 +198,8 @@ reload(const Config_File& conf_file)
     if(conf_value.is_integer())
       throttle_size = conf_value.as_integer();
     else if(!conf_value.is_null())
-      POSEIDON_LOG_WARN((
-          "Ignoring `network.poll.throttle_size`: expecting an `integer`, got `$1`",
+      POSEIDON_THROW((
+          "Invalid `network.poll.throttle_size`: expecting an `integer`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
 
@@ -214,8 +214,8 @@ reload(const Config_File& conf_file)
     if(conf_value.is_string())
       default_certificate = conf_value.as_string();
     else if(!conf_value.is_null())
-      POSEIDON_LOG_WARN((
-          "Ignoring `network.ssl.default_certificate`: expecting a `string`, got `$1`",
+      POSEIDON_THROW((
+          "Invalid `network.ssl.default_certificate`: expecting a `string`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
 
@@ -223,8 +223,8 @@ reload(const Config_File& conf_file)
     if(conf_value.is_string())
       default_private_key = conf_value.as_string();
     else if(!conf_value.is_null())
-      POSEIDON_LOG_WARN((
-          "Ignoring `network.ssl.default_private_key`: expecting a `string`, got `$1`",
+      POSEIDON_THROW((
+          "Invalid `network.ssl.default_private_key`: expecting a `string`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
 
@@ -305,8 +305,8 @@ reload(const Config_File& conf_file)
     if(conf_value.is_string())
       trusted_ca_path = conf_value.as_string();
     else if(!conf_value.is_null())
-      POSEIDON_LOG_WARN((
-          "Ignoring `network.ssl.trusted_ca_path`: expecting a `string`, got `$1`",
+      POSEIDON_THROW((
+          "Invalid `network.ssl.trusted_ca_path`: expecting a `string`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
 

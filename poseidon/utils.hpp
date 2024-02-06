@@ -9,30 +9,6 @@
 #include <cstdio>
 namespace poseidon {
 
-// Performs a syscall and retries upon interrupts.
-// Note the arguments may be evaluated more than once.
-#define POSEIDON_SYSCALL_LOOP(...)  \
-    __extension__ ({  \
-      auto wdLAlUiJ = (__VA_ARGS__);  \
-      while(ROCKET_UNEXPECT(wdLAlUiJ < 0) && (errno == EINTR))  \
-        /* retry */ wdLAlUiJ = (__VA_ARGS__);  \
-      wdLAlUiJ;  \
-    })
-
-// Throws an exception, with backtraces.
-[[noreturn]]
-void
-backtrace_and_throw(const char* file, long line, const char* func, cow_string&& msg);
-
-#define POSEIDON_THROW(TEMPLATE, ...)  \
-    __extension__ ({  \
-      ::rocket::cow_string iegh0Ohy;  \
-      format(iegh0Ohy, (::asteria::make_string_template TEMPLATE), ##__VA_ARGS__);  \
-      ::poseidon::backtrace_and_throw(__FILE__, __LINE__, __func__,  \
-           static_cast<::rocket::cow_string&&>(iegh0Ohy));  \
-      __builtin_unreachable();  \
-    })
-
 // Splices two buffers. After this function returns, `in` will be empty.
 inline
 linear_buffer&

@@ -79,8 +79,8 @@ do_load_level_config(Level_Config& lconf, const Config_File& conf_file, const ch
     if(conf_value.is_string())
       lconf.color = conf_value.as_string();
     else if(!conf_value.is_null())
-      POSEIDON_LOG_WARN((
-          "Ignoring `logger.colors.$1`: expecting a `string`, got `$2`",
+      POSEIDON_THROW((
+          "Invalid `logger.colors.$1`: expecting a `string`, got `$2`",
           "[in configuration file '$3']"),
           name, conf_value, conf_file.path());
 
@@ -90,8 +90,8 @@ do_load_level_config(Level_Config& lconf, const Config_File& conf_file, const ch
     if(conf_value.is_object())
       files = conf_value.as_object();
     else if(!conf_value.is_null())
-      POSEIDON_LOG_WARN((
-          "Ignoring `logger.files`: expecting an `object`, got `$1`",
+      POSEIDON_THROW((
+          "Invalid `logger.files`: expecting an `object`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
 
@@ -100,8 +100,8 @@ do_load_level_config(Level_Config& lconf, const Config_File& conf_file, const ch
     if(conf_value.is_array())
       settings = conf_value.as_array();
     else if(!conf_value.is_null())
-      POSEIDON_LOG_WARN((
-          "Ignoring `logger.$1`: expecting an `array`, got `$2`",
+      POSEIDON_THROW((
+          "Invalid `logger.$1`: expecting an `array`, got `$2`",
           "[in configuration file '$3']"),
           name, conf_value, conf_file.path());
 
@@ -110,8 +110,8 @@ do_load_level_config(Level_Config& lconf, const Config_File& conf_file, const ch
       if(settings.at(k).is_string())
         setting = settings.at(k).as_string();
       else if(!settings.at(k).is_null())
-        POSEIDON_LOG_WARN((
-            "Ignoring invalid element in `logger.$1`: expecting a `string`, got `$2`",
+        POSEIDON_THROW((
+            "Invalid invalid element in `logger.$1`: expecting a `string`, got `$2`",
             "[in configuration file '$3']"),
             name, settings.at(k), conf_file.path());
 
@@ -140,8 +140,8 @@ do_load_level_config(Level_Config& lconf, const Config_File& conf_file, const ch
       if(file_value->is_string())
         lconf.files.emplace_back(file_value->as_string());
       else if(!file_value->is_null())
-        POSEIDON_LOG_WARN((
-            "Ignoring `logger.files.$1`: expecting a `string`, got `$2`",
+        POSEIDON_THROW((
+            "Invalid `logger.files.$1`: expecting a `string`, got `$2`",
             "[in configuration file '$3']"),
             setting, *file_value, conf_file.path());
     }
@@ -223,7 +223,7 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
     }
 
     // Remove trailing space characters.
-    while(::asteria::is_cmask(mtext.end()[-1], ::asteria::cmask_space))
+    while(is_any_of(mtext.end()[-1], {' ','\t','\r','\n'}))
       mtext.unaccept(1);
 
     // Terminate the message.
@@ -267,7 +267,7 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
   }
   catch(exception& stdex) {
     ::fprintf(stderr,
-        "WARNING: Failed to write log text: %s\n"
+        "WARNING: Failed to write log message: %s\n"
         "[exception class `%s`]\n",
         stdex.what(), typeid(stdex).name());
   }
@@ -311,7 +311,7 @@ reload(const Config_File& conf_file)
         level_bits |= 1U << k;
 
     if(level_bits == 0)
-      ::fprintf(stderr, "WARNING: Logger disabled\n");
+      ::fputs("WARNING: Logger disabled\n", stderr);
 
     // Set up new data.
     plain_mutex::unique_lock lock(this->m_conf_mutex);

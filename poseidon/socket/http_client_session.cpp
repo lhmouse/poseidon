@@ -133,8 +133,8 @@ do_on_http_response_payload_stream(linear_buffer& data)
     if(conf_value.is_integer())
       max_response_content_length = conf_value.as_integer();
     else if(!conf_value.is_null())
-      POSEIDON_LOG_WARN((
-          "Ignoring `network.http.max_response_content_length`: expecting an `integer`, got `$1`",
+      POSEIDON_THROW((
+          "Invalid `network.http.max_response_content_length`: expecting an `integer`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
 

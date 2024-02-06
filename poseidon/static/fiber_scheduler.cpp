@@ -229,8 +229,8 @@ reload(const Config_File& conf_file)
     if(conf_value.is_integer())
       stack_vm_size = conf_value.as_integer();
     else if(!conf_value.is_null())
-      POSEIDON_LOG_WARN((
-          "Ignoring `fiber.stack_vm_size`: expecting an `integer`, got `$1`",
+      POSEIDON_THROW((
+          "Invalid `fiber.stack_vm_size`: expecting an `integer`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
 
@@ -263,8 +263,8 @@ reload(const Config_File& conf_file)
     if(conf_value.is_integer())
       warn_timeout = conf_value.as_integer();
     else if(!conf_value.is_null())
-      POSEIDON_LOG_WARN((
-          "Ignoring `fiber.warn_timeout`: expecting an `integer`, got `$1`",
+      POSEIDON_THROW((
+          "Invalid `fiber.warn_timeout`: expecting an `integer`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
 
@@ -278,8 +278,8 @@ reload(const Config_File& conf_file)
     if(conf_value.is_integer())
       fail_timeout = conf_value.as_integer();
     else if(!conf_value.is_null())
-      POSEIDON_LOG_WARN((
-          "Ignoring `fiber.fail_timeout`: expecting an `integer`, got `$1`",
+      POSEIDON_THROW((
+          "Invalid `fiber.fail_timeout`: expecting an `integer`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
 
