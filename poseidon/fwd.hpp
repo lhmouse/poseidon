@@ -448,6 +448,14 @@ tinyfmt&
 operator<<(tinyfmt& fmt, chars_view data)
   { return fmt.putn(data.p, data.n);  }
 
+// utilities
+ROCKET_ALWAYS_INLINE
+system_time
+system_time_from_timespec(const struct ::timespec& ts) noexcept
+  {
+    return system_clock::from_time_t(ts.tv_sec) + nanoseconds(ts.tv_nsec);
+  }
+
 template<typename ValueT, typename... ArgsT>
 ROCKET_ALWAYS_INLINE
 uniptr<ValueT>

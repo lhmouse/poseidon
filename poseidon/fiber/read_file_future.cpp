@@ -44,8 +44,8 @@ do_on_abstract_future_execute()
           "Reading non-regular file `$1` not allowed"),
           this->m_res.path);
 
-    this->m_res.accessed_on = (system_time)(seconds) st.st_atim.tv_sec + (nanoseconds) st.st_atim.tv_nsec;
-    this->m_res.modified_on = (system_time)(seconds) st.st_mtim.tv_sec + (nanoseconds) st.st_mtim.tv_nsec;
+    this->m_res.accessed_on = system_time_from_timespec(st.st_atim);
+    this->m_res.modified_on = system_time_from_timespec(st.st_mtim);
     this->m_res.file_size = st.st_size;
 
     if(this->m_res.offset != 0) {
@@ -63,19 +63,19 @@ do_on_abstract_future_execute()
 
     while(this->m_res.data.size() < this->m_res.limit) {
       // Read bytes and append them to `m_res.data`.
-      uint32_t step_limit = (uint32_t) ::std::min<size_t>(this->m_res.limit - this->m_res.data.size(), INT_MAX);
-      this->m_res.data.reserve_after_end(step_limit);
-      ::ssize_t step_size = POSEIDON_SYSCALL_LOOP(::read(fd, this->m_res.data.mut_end(), step_limit));
-      if(step_size == 0)
+      uint32_t rlimit = clamp_cast<uint32_t>(this->m_res.limit - this->m_res.data.size(), 0, INT_MAX);
+      this->m_res.data.reserve_after_end(rlimit);
+      ::ssize_t nread = POSEIDON_SYSCALL_LOOP(::read(fd, this->m_res.data.mut_end(), rlimit));
+      if(nread == 0)
         break;
-      else if(step_size < 0)
+      else if(nread < 0)
         POSEIDON_THROW((
             "Could not read file `$1`",
             "[`read()` failed: ${errno:full}]"),
             this->m_res.path);
 
       // Accept bytes that have been read.
-      this->m_res.data.accept((size_t) step_size);
+      this->m_res.data.accept(static_cast<size_t>(nread));
     }
   }
 

@@ -47,7 +47,7 @@ do_on_abstract_future_execute()
         saddr.set_port(this->m_res.port);
         POSEIDON_LOG_DEBUG(("Using IPv4: `$1` => `$2`"), m_res.host, saddr);
 
-        if(find(this->m_res.addrs, saddr) == nullptr)
+        if(::rocket::none_of(this->m_res.addrs, [&](const auto& r) { return r == saddr;  }))
           this->m_res.addrs.push_back(saddr);
       }
       else if(res->ai_family == AF_INET6) {
@@ -56,7 +56,7 @@ do_on_abstract_future_execute()
         saddr.set_port(this->m_res.port);
         POSEIDON_LOG_DEBUG(("Using IPv6: `$1` => `$2`"), this->m_res.host, saddr);
 
-        if(find(this->m_res.addrs, saddr) == nullptr)
+        if(::rocket::none_of(this->m_res.addrs, [&](const auto& r) { return r == saddr;  }))
           this->m_res.addrs.push_back(saddr);
       }
   }

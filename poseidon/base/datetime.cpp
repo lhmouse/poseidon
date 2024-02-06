@@ -181,8 +181,8 @@ parse_rfc1123_partial(const char* str)
       return 0;
 
     // Compose the timestamp.
-    this->m_tp = (system_time)(seconds) ::timegm(&tm);
-    return (size_t) (rptr - str);
+    this->m_tp = system_clock::from_time_t(::timegm(&tm));
+    return static_cast<size_t>(rptr - str);
   }
 
 size_t
@@ -214,8 +214,8 @@ parse_rfc850_partial(const char* str)
       return 0;
 
     // Compose the timestamp.
-    this->m_tp = (system_time)(seconds) ::timegm(&tm);
-    return (size_t) (rptr - str);
+    this->m_tp = system_clock::from_time_t(::timegm(&tm));
+    return static_cast<size_t>(rptr - str);
   }
 
 size_t
@@ -247,8 +247,8 @@ parse_asctime_partial(const char* str)
       return 0;
 
     // Compose the timestamp.
-    this->m_tp = (system_time)(seconds) ::timegm(&tm);
-    return (size_t) (rptr - str);
+    this->m_tp = system_clock::from_time_t(::timegm(&tm));
+    return static_cast<size_t>(rptr - str);
   }
 
 size_t
@@ -281,8 +281,8 @@ parse_cookie_partial(const char* str)
       return 0;
 
     // Compose the timestamp.
-    this->m_tp = (system_time)(seconds) ::timegm(&tm);
-    return (size_t) (rptr - str);
+    this->m_tp = system_clock::from_time_t(::timegm(&tm));
+    return static_cast<size_t>(rptr - str);
   }
 
 size_t
@@ -314,8 +314,8 @@ parse_iso8601_partial(const char* str)
       return 0;
 
     // Compose the timestamp.
-    this->m_tp = (system_time)(seconds) ::timegm(&tm);
-    return (size_t) (rptr - str);
+    this->m_tp = system_clock::from_time_t(::timegm(&tm));
+    return static_cast<size_t>(rptr - str);
   }
 
 size_t
@@ -374,7 +374,7 @@ print_rfc1123_partial(char* str) const noexcept
     xstrrpcpy(wptr, " GMT");
 
     // Return the number of characters that have been written.
-    return (size_t) (wptr - str);
+    return static_cast<size_t>(wptr - str);
   }
 
 size_t
@@ -404,7 +404,7 @@ print_rfc850_partial(char* str) const noexcept
     xstrrpcpy(wptr, " GMT");
 
     // Return the number of characters that have been written.
-    return (size_t) (wptr - str);
+    return static_cast<size_t>(wptr - str);
   }
 
 size_t
@@ -434,7 +434,7 @@ print_asctime_partial(char* str) const noexcept
     xstrrpcpy(wptr, "");
 
     // Return the number of characters that have been written.
-    return (size_t) (wptr - str);
+    return static_cast<size_t>(wptr - str);
   }
 
 size_t
@@ -464,7 +464,7 @@ print_cookie_partial(char* str) const noexcept
     xstrrpcpy(wptr, " GMT");
 
     // Return the number of characters that have been written.
-    return (size_t) (wptr - str);
+    return static_cast<size_t>(wptr - str);
   }
 
 size_t
@@ -492,7 +492,7 @@ print_iso8601_partial(char* str) const noexcept
     xstrrpcpy(wptr, " UTC");
 
     // Return the number of characters that have been written.
-    return (size_t) (wptr - str);
+    return static_cast<size_t>(wptr - str);
   }
 
 tinyfmt&

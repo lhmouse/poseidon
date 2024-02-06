@@ -21,7 +21,7 @@ class DNS_Query_Future
       {
         cow_string host;
         uint16_t port;
-        cow_vector<Socket_Address> addrs;
+        vector<Socket_Address> addrs;
       };
 
   private:
