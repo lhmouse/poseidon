@@ -8,3 +8,5 @@
 /build_*
 /profiling/*
 /var
+/asteria
+/http-parser
