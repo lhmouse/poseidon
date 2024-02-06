@@ -28,9 +28,9 @@ class DNS_Query_Future
     Result m_res;
 
   public:
-    // Constructs a DNS result future. This object also functions as an
-    // asynchronous task, which can be enqueued into an `Async_Task_Executor`.
-    // This future will become ready once the DNS query is complete.
+    // Constructs a DNS query future. This object also functions as an asynchronous
+    // task, which can be enqueued into an `Async_Task_Executor`. This future will
+    // become ready once the DNS query is complete.
     DNS_Query_Future(cow_stringR host, uint16_t port);
 
   private:
