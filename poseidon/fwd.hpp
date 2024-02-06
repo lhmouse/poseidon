@@ -587,10 +587,10 @@ class Abstract_Deflator;
 class Abstract_Inflator;
 
 // Fiber types
+class Abstract_Fiber;
 class Abstract_Future;
 class DNS_Future;
 class Read_File_Future;
-class Abstract_Fiber;
 
 // Socket types
 enum IP_Address_Class : uint8_t;
@@ -660,12 +660,13 @@ class Easy_WSS_Client;
 // Singletons
 extern atomic_relaxed<int> exit_signal;
 extern class Main_Config& main_config;
-extern class Fiber_Scheduler& fiber_scheduler;
-
 extern class Async_Logger& async_logger;
+
 extern class Timer_Driver& timer_driver;
 extern class Async_Task_Executor& async_task_executor;
 extern class Network_Driver& network_driver;
+extern class Fiber_Scheduler& fiber_scheduler;
+
 extern class MySQL_Connector& mysql_connector;
 extern class MongoDB_Connector& mongodb_connector;
 

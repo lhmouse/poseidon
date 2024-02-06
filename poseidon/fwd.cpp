@@ -22,12 +22,13 @@ namespace poseidon {
 
 atomic_relaxed<int> exit_signal;
 Main_Config& main_config = *new Main_Config;
-Fiber_Scheduler& fiber_scheduler = *new Fiber_Scheduler;
-
 Async_Logger& async_logger = *new Async_Logger;
+
 Timer_Driver& timer_driver = *new Timer_Driver;
 Async_Task_Executor& async_task_executor = *new Async_Task_Executor;
 Network_Driver& network_driver = *new Network_Driver;
+Fiber_Scheduler& fiber_scheduler = *new Fiber_Scheduler;
+
 #ifdef POSEIDON_ENABLE_MYSQL
 MySQL_Connector& mysql_connector = *new MySQL_Connector;
 #endif  // MySQL
