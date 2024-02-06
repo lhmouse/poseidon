@@ -291,6 +291,8 @@ pool_connection(uniptr<MySQL_Connection>&& conn) noexcept
     target->conn.swap(conn);
     target->pooled_since = steady_clock::now();
     lock.unlock();
+
+    // Free the replaced connection before returning, if any.
     conn.reset();
     return true;
   }
