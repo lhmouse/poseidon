@@ -103,7 +103,8 @@ backtrace_and_throw(const Log_Context& ctx, vfptr<cow_string&, void*> thunk, voi
 
       char* fn_ptr = nullptr;
       size_t fn_size = 0;
-      const auto fn_guard = ::rocket::make_unique_handle(&fn_ptr, [](char** p) { ::free(*p);  });
+      const auto fn_guard = ::rocket::make_unique_handle(&fn_ptr,
+                                [](char** p) { if(*p) ::free(*p);  });
 
       char unw_name[1024];
       ::unw_word_t unw_offset;
