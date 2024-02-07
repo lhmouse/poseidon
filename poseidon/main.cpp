@@ -116,20 +116,22 @@ enum
 
 [[noreturn]] ROCKET_NEVER_INLINE
 int
-do_exit_printf(int code, const char* fmt, ...) noexcept
+do_exit_printf(int code, const char* fmt = nullptr, ...) noexcept
   {
     // Wait for pending logs to be flushed.
     async_logger.synchronize();
+    ::fflush(nullptr);
 
-    // Output the string to standard error.
-    ::va_list ap;
-    va_start(ap, fmt);
-    ::vfprintf(stderr, fmt, ap);
-    ::fputc('\n', stderr);
-    va_end(ap);
+    if(fmt) {
+      // Output the string to standard error.
+      ::va_list ap;
+      va_start(ap, fmt);
+      ::vfprintf(stderr, fmt, ap);
+      va_end(ap);
+    }
 
     // Perform fast exit.
-    ::fflush(nullptr);
+    ::fputc('\n', stderr);
     ::quick_exit(code);
   }
 
@@ -626,7 +628,7 @@ main(int argc, char** argv)
 
     int sig = exit_signal.load();
     POSEIDON_LOG_INFO(("Shutting down (signal $1: $2)"), sig, ::strsignal(sig));
-    do_exit_printf(exit_success, "");
+    do_exit_printf(exit_success);
   }
   catch(exception& stdex) {
     // Print the message in `stdex`. There isn't much we can do.
