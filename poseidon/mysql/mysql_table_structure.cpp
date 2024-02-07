@@ -11,12 +11,12 @@ bool
 do_is_name_valid(cow_stringR name)
   {
     return (name.size() != 0)
-      && all_of(name,
-           [](char c) {
-             return ((c >= '0') && (c <= '9'))
-                    || ((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z'))
-                    || (c == '_') || (c == '$') || (c == '-') || (c == '~');
-           });
+        && all_of(name,
+             [](char c) {
+               return ((c >= '0') && (c <= '9'))
+                      || ((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z'))
+                      || (c == '_') || (c == '$') || (c == '-') || (c == '~');
+             });
   }
 
 template<typename elementT>
@@ -102,19 +102,31 @@ add_index(const Index& index)
     if(!do_is_name_valid(index.name))
       POSEIDON_THROW(("Invalid MySQL index name `$1`"), index.name);
 
-    if(!index.unique && ascii_ci_equal(index.name, "PRIMARY"))
-      POSEIDON_THROW(("Primary indexes must also be unique"));
-
     if(index.columns.empty())
       POSEIDON_THROW(("MySQL index `$1` contains no column"), index.name);
 
-    for(const auto& index_column : index.columns)
-      if(none_of(this->m_columns,
-           [&](const Column& my_column) {
-             return ascii_ci_equal(my_column.name, index_column);
-           }))
+    bool primary = ascii_ci_equal(index.name, "PRIMARY");
+    if(primary && !index.unique)
+      POSEIDON_THROW(("Primary key must also be unique"));
+
+    // Verify columns.
+    for(const auto& index_column_name : index.columns) {
+      const Column* col = nullptr;
+
+      for(size_t k = 0;  k != this->m_columns.size();  ++k)
+        if(ascii_ci_equal(this->m_columns[k].name, index_column_name)) {
+          col = &this->m_columns[k];
+          break;
+        }
+
+      if(!col)
         POSEIDON_THROW(("MySQL index `$1` contains non-existent column `$2`"),
-                       index.name, index_column);
+                       index.name, index_column_name);
+
+      if(primary && col->nullable)
+        POSEIDON_THROW(("Primary key shall not contain nullable column `$1`"),
+                       index_column_name);
+    }
 
     return do_add_element(this->m_indexes, index);
   }
