@@ -118,11 +118,11 @@ add_index(const Index& index)
       POSEIDON_THROW(("Primary key must also be unique"));
 
     // Verify columns.
-    for(const auto& index_column_name : index.columns) {
+    for(size_t icol = 0;  icol != index.columns.size();  ++icol) {
       const Column* col = nullptr;
 
       for(size_t k = 0;  k != this->m_columns.size();  ++k)
-        if(ascii_ci_equal(this->m_columns[k].name, index_column_name)) {
+        if(ascii_ci_equal(this->m_columns[k].name, index.columns[icol])) {
           col = &this->m_columns[k];
           break;
         }
@@ -130,12 +130,18 @@ add_index(const Index& index)
       if(!col)
         POSEIDON_THROW((
             "MySQL index `$1` contains non-existent column `$2`"),
-            index.name, index_column_name);
+            index.name, index.columns[icol]);
 
       if(primary && col->nullable)
         POSEIDON_THROW((
             "Primary key shall not contain nullable column `$1`"),
-            index_column_name);
+            index.columns[icol]);
+
+      for(size_t t = 0;  t != icol;  ++t)
+        if(ascii_ci_equal(index.columns[t], index.columns[icol]))
+          POSEIDON_THROW((
+              "MySQL index `$1` contains duplicate column `$2`"),
+              index.name, index.columns[icol]);
     }
 
     return do_add_element(this->m_indexes, index);
