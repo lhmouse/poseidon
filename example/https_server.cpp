@@ -29,8 +29,8 @@ static Easy_HTTPS_Server my_server(
         // send a response
         HTTP_Response_Headers resp;
         resp.status = 200;
-        resp.headers.emplace_back(sref("Date"), system_clock::now());
-        resp.headers.emplace_back(sref("Content-Type"), sref("text/plain"));
+        resp.headers.emplace_back(&"Date", system_clock::now());
+        resp.headers.emplace_back(&"Content-Type", &"text/plain");
 
         tinyfmt_ln fmt;
         fmt << "request payload length = " << data.size() << "\n";
@@ -51,6 +51,6 @@ static Easy_HTTPS_Server my_server(
 void
 poseidon_addon_main()
   {
-    my_server.start(sref("[::]:3805"));
+    my_server.start(&"[::]:3805");
     POSEIDON_LOG_WARN(("example HTTPS server started: $1"), my_server.local_address());
   }

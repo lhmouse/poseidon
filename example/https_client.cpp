@@ -56,7 +56,7 @@ static Easy_Timer my_timer(
 
     switch(state) {
       case 0: {
-        cow_string addr = sref("www.example.org");
+        cow_string addr = &"www.example.org";
         my_client.connect(addr);
         POSEIDON_LOG_WARN(("example HTTPS client connecting: addr = $1"), addr);
         break;
@@ -64,8 +64,8 @@ static Easy_Timer my_timer(
 
       case 1: {
         HTTP_Request_Headers req;
-        req.uri_path = sref("/");
-        req.headers.emplace_back(sref("Connection"), sref("keep-alive"));
+        req.uri_path = &"/";
+        req.headers.emplace_back(&"Connection", &"keep-alive");
         my_client.https_GET(move(req));
         POSEIDON_LOG_WARN(("example HTTPS client: $1 $2"), req.method, req.uri_path);
         break;
@@ -73,7 +73,7 @@ static Easy_Timer my_timer(
 
       case 2: {
         HTTP_Request_Headers req;
-        req.uri_path = sref("/");
+        req.uri_path = &"/";
         my_client.https_POST(move(req), "testdata");
         POSEIDON_LOG_WARN(("example HTTPS client: $1 $2"), req.method, req.uri_path);
         break;
@@ -81,7 +81,7 @@ static Easy_Timer my_timer(
 
       case 3: {
         HTTP_Request_Headers req;
-        req.uri_path = sref("/");
+        req.uri_path = &"/";
         my_client.https_DELETE(move(req));
         POSEIDON_LOG_WARN(("example HTTPS client: $1 $2"), req.method, req.uri_path);
         break;

@@ -189,14 +189,14 @@ http_request(HTTP_Request_Headers&& req, chars_view data)
 
     // Erase bad headers.
     for(size_t hindex = 0;  hindex < req.headers.size();  hindex ++)
-      if(ascii_ci_equal(req.headers.at(hindex).first, sref("Content-Length"))
-          || ascii_ci_equal(req.headers.at(hindex).first, sref("Transfer-Encoding")))
+      if(ascii_ci_equal(req.headers.at(hindex).first, "Content-Length")
+          || ascii_ci_equal(req.headers.at(hindex).first, "Transfer-Encoding"))
         req.headers.erase(hindex --);
 
     // By default, request messages do not have payload bodies. Hence the length
     // is only necessary if the payload is non-empty.
     if(data.n != 0)
-      req.headers.emplace_back(sref("Content-Length"), (double)(int64_t) data.n);
+      req.headers.emplace_back(&"Content-Length", (double)(int64_t) data.n);
 
     return this->do_http_raw_request(req, data);
   }
@@ -213,11 +213,11 @@ http_chunked_request_start(HTTP_Request_Headers&& req)
 
     // Erase bad headers.
     for(size_t hindex = 0;  hindex < req.headers.size();  hindex ++)
-      if(ascii_ci_equal(req.headers.at(hindex).first, sref("Transfer-Encoding")))
+      if(ascii_ci_equal(req.headers.at(hindex).first, "Transfer-Encoding"))
         req.headers.erase(hindex --);
 
     // Write a chunked header.
-    req.headers.emplace_back(sref("Transfer-Encoding"), sref("chunked"));
+    req.headers.emplace_back(&"Transfer-Encoding", &"chunked");
 
     return this->do_http_raw_request(req, "");
   }

@@ -147,8 +147,6 @@ using ::rocket::ssize;
 using ::rocket::static_pointer_cast;
 using ::rocket::dynamic_pointer_cast;
 using ::rocket::const_pointer_cast;
-using ::rocket::sref;
-using ::rocket::nullopt;
 using ::rocket::min;
 using ::rocket::max;
 using ::rocket::clamp;
@@ -158,6 +156,7 @@ using ::rocket::is_none_of;
 using ::rocket::all_of;
 using ::rocket::any_of;
 using ::rocket::none_of;
+using ::rocket::nullopt;
 
 using ::rocket::xstrlen;
 using ::rocket::xstrchr;
@@ -327,6 +326,12 @@ struct chars_view
     constexpr chars_view(const ::rocket::shallow_string rs) noexcept
       :
         p(rs.data()), n(rs.size())
+      { }
+
+    template<size_t N>
+    constexpr chars_view(const char (*ps)[N]) noexcept
+      :
+        p(*ps), n(::rocket::xstrlen(*ps))
       { }
 
     template<typename allocT>

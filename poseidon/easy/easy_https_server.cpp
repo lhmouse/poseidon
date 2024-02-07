@@ -97,7 +97,7 @@ struct Final_Fiber final : Abstract_Fiber
               // Send a bad request response.
               HTTP_Response_Headers resp;
               resp.status = event.status;
-              resp.headers.emplace_back(sref("Connection"), sref("close"));
+              resp.headers.emplace_back(&"Connection", &"close");
               session->https_response(move(resp), "");
             }
             else {
@@ -113,7 +113,7 @@ struct Final_Fiber final : Abstract_Fiber
             // XXX: The user-defined callback may have sent a response...?
             HTTP_Response_Headers resp;
             resp.status = HTTP_STATUS_INTERNAL_SERVER_ERROR;
-            resp.headers.emplace_back(sref("Connection"), sref("close"));
+            resp.headers.emplace_back(&"Connection", &"close");
             session->https_response(move(resp), "");
 
             session->ssl_shut_down();

@@ -14,7 +14,7 @@ main()
 
     POSEIDON_TEST_CHECK(parser.next_element() == false);
 
-    parser.reload(sref("key1=value1&key2=42&empty=&novalue&%41%42C=a%62c"));
+    parser.reload(&"key1=value1&key2=42&empty=&novalue&%41%42C=a%62c");
     POSEIDON_TEST_CHECK(parser.current_name() == "");
     POSEIDON_TEST_CHECK(parser.current_value().is_null());
 

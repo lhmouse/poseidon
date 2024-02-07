@@ -40,6 +40,6 @@ static Easy_TCP_Server my_server(
 void
 poseidon_addon_main()
   {
-    my_server.start(sref("[::]:3802"));
+    my_server.start(&"[::]:3802");
     POSEIDON_LOG_ERROR(("example TCP server started: $1"), my_server.local_address());
   }

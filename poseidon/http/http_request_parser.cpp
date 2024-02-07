@@ -106,7 +106,7 @@ HTTP_Request_Parser::s_settings[1] =
           bool host_header_found = false;
 
           for(const auto& hpair : this->m_headers.headers)
-            if(ascii_ci_equal(hpair.first, sref("Host"))) {
+            if(ascii_ci_equal(hpair.first, "Host")) {
               if(hpair.second.is_string() && !host_header_found) {
                 host_header_found = true;
                 this->m_headers.uri_host = hpair.second.as_string();

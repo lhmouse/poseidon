@@ -120,11 +120,11 @@ do_load_level_config(Level_Config& lconf, const Config_File& conf_file, const ch
 
       // Check for special values.
       if(setting == "@stderr") {
-        lconf.files.emplace_back(sref("/dev/stderr"));
+        lconf.files.emplace_back(&"/dev/stderr");
         continue;
       }
       else  if(setting == "@stdout") {
-        lconf.files.emplace_back(sref("/dev/stdout"));
+        lconf.files.emplace_back(&"/dev/stdout");
         continue;
       }
       else if(setting == "@trivial") {

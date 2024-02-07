@@ -63,22 +63,22 @@ do_on_http_request_headers(HTTP_Request_Headers& req, bool close_after_payload)
       HTTP_Response_Headers resp;
       resp.status = 204;
       resp.headers.reserve(8);
-      resp.headers.emplace_back(sref("Date"), system_clock::now());
+      resp.headers.emplace_back(&"Date", system_clock::now());
 
       if(is_cors) {
-        resp.headers.emplace_back(sref("Access-Control-Allow-Origin"), sref("*"));
-        resp.headers.emplace_back(sref("Access-Control-Allow-Methods"), sref("GET"));
+        resp.headers.emplace_back(&"Access-Control-Allow-Origin", &"*");
+        resp.headers.emplace_back(&"Access-Control-Allow-Methods", &"GET");
 
         // Allow all headers in RFC 6455.
-        resp.headers.emplace_back(sref("Access-Control-Allow-Headers"),
-                sref("Upgrade, Origin, Sec-WebSocket-Version, Sec-WebSocket-Key, "
-                     "Sec-WebSocket-Extensions, Sec-WebSocket-Protocol"));
+        resp.headers.emplace_back(&"Access-Control-Allow-Headers",
+                        &"Upgrade, Origin, Sec-WebSocket-Version, Sec-WebSocket-Key, "
+                         "Sec-WebSocket-Extensions, Sec-WebSocket-Protocol");
       }
       else
-        resp.headers.emplace_back(sref("Allow"), sref("GET"));
+        resp.headers.emplace_back(&"Allow", &"GET");
 
       if(close_after_payload)
-        resp.headers.emplace_back(sref("Connection"), sref("close"));
+        resp.headers.emplace_back(&"Connection", &"close");
 
       this->http_response_headers_only(move(resp));
       return http_payload_normal;
@@ -131,7 +131,7 @@ do_on_http_request_error(uint32_t status)
     // This error can be reported synchronously.
     HTTP_Response_Headers resp;
     resp.status = status;
-    resp.headers.emplace_back(sref("Connection"), sref("close"));
+    resp.headers.emplace_back(&"Connection", &"close");
     this->http_response(move(resp), "");
 
     // Close the connection.

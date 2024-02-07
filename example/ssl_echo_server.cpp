@@ -40,6 +40,6 @@ static Easy_SSL_Server my_server(
 void
 poseidon_addon_main()
   {
-    my_server.start(sref("[::]:3803"));
+    my_server.start(&"[::]:3803");
     POSEIDON_LOG_WARN(("example SSL server started: $1"), my_server.local_address());
   }

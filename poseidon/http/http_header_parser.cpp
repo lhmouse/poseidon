@@ -86,7 +86,7 @@ do_next_attribute_from_separator()
       // Ensure the value is not null in this case, so it's distinguishable
       // from not having a value.
       if(tlen == 0)
-        this->m_value.set_string(sref(""));
+        this->m_value.set_string(&"");
     }
 
     // Skip trailing whitespace.

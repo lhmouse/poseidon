@@ -176,11 +176,11 @@ struct Final_Session final : HTTP_Client_Session
       {
         // Erase bad headers.
         for(size_t hindex = 0;  hindex < req.headers.size();  hindex ++)
-          if(ascii_ci_equal(req.headers.at(hindex).first, sref("Host")))
+          if(ascii_ci_equal(req.headers.at(hindex).first, "Host"))
             req.headers.erase(hindex --);
 
         // Add required headers.
-        req.headers.emplace_back(sref("Host"), this->m_host);
+        req.headers.emplace_back(&"Host", this->m_host);
       }
   };
 

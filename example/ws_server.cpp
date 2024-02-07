@@ -46,6 +46,6 @@ static Easy_WS_Server my_server(
 void
 poseidon_addon_main()
   {
-    my_server.start(sref("[::]:3806"));
+    my_server.start(&"[::]:3806");
     POSEIDON_LOG_ERROR(("example WS server started: $1"), my_server.local_address());
   }

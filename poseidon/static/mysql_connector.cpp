@@ -46,9 +46,9 @@ MySQL_Connector::
 reload(const Config_File& conf_file)
   {
     // Parse new configuration. Default ones are defined here.
-    cow_string default_server = sref("localhost");
+    cow_string default_server = &"localhost";
     int64_t default_port = 3306;
-    cow_string default_user = sref("root");
+    cow_string default_user = &"root";
     cow_string default_password;
     uint32_t password_mask = 0;
     cow_string default_database;

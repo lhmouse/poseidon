@@ -58,7 +58,7 @@ do_on_tcp_connected()
     HTTP_Request_Headers req;
     this->m_parser.create_handshake_request(req);
     req.is_ssl = false;
-    req.headers.emplace_back(sref("Host"), this->m_host);
+    req.headers.emplace_back(&"Host", this->m_host);
     req.uri_path = this->m_path;
     req.uri_query = this->m_query;
     this->http_request(move(req), "");

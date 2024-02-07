@@ -13,14 +13,14 @@ main()
     // https://datatracker.ietf.org/doc/html/rfc6455#section-1.3
     HTTP_Request_Headers req;
     req.method = "GET";
-    req.uri_path = sref("/chat");
-    req.headers.emplace_back(sref("Host"), sref("server.example.com"));
-    req.headers.emplace_back(sref("Upgrade"), sref("websocket"));
-    req.headers.emplace_back(sref("Connection"), sref("Upgrade"));
-    req.headers.emplace_back(sref("Sec-WebSocket-Key"), sref("dGhlIHNhbXBsZSBub25jZQ=="));
-    req.headers.emplace_back(sref("Origin"), sref("http://example.com"));
-    req.headers.emplace_back(sref("Sec-WebSocket-Protocol"), sref("chat, superchat"));
-    req.headers.emplace_back(sref("Sec-WebSocket-Version"), 13);
+    req.uri_path = &"/chat";
+    req.headers.emplace_back(&"Host", &"server.example.com");
+    req.headers.emplace_back(&"Upgrade", &"websocket");
+    req.headers.emplace_back(&"Connection", &"Upgrade");
+    req.headers.emplace_back(&"Sec-WebSocket-Key", &"dGhlIHNhbXBsZSBub25jZQ==");
+    req.headers.emplace_back(&"Origin", &"http://example.com");
+    req.headers.emplace_back(&"Sec-WebSocket-Protocol", &"chat, superchat");
+    req.headers.emplace_back(&"Sec-WebSocket-Version", 13);
 
     WebSocket_Frame_Parser parser;
     HTTP_Response_Headers resp;
@@ -30,12 +30,12 @@ main()
     POSEIDON_TEST_CHECK(resp.status == 101);
 
     for(const auto& hr : resp.headers)
-      if(ascii_ci_equal(hr.first, sref("Upgrade")))
-        POSEIDON_TEST_CHECK(ascii_ci_equal(hr.second.as_string(), sref("websocket")));
-      else if(ascii_ci_equal(hr.first, sref("Connection")))
-        POSEIDON_TEST_CHECK(ascii_ci_equal(hr.second.as_string(), sref("Upgrade")));
-      else if(ascii_ci_equal(hr.first, sref("Sec-WebSocket-Accept")))
-        POSEIDON_TEST_CHECK(hr.second.as_string() == sref("s3pPLMBiTxaQ9kYGzzhZRbK+xOo="));
+      if(ascii_ci_equal(hr.first, "Upgrade"))
+        POSEIDON_TEST_CHECK(ascii_ci_equal(hr.second.as_string(), "websocket"));
+      else if(ascii_ci_equal(hr.first, "Connection"))
+        POSEIDON_TEST_CHECK(ascii_ci_equal(hr.second.as_string(), "Upgrade"));
+      else if(ascii_ci_equal(hr.first, "Sec-WebSocket-Accept"))
+        POSEIDON_TEST_CHECK(hr.second.as_string() == "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=");
 
     // self
     req.clear();

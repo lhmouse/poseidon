@@ -16,7 +16,7 @@ main()
     POSEIDON_TEST_CHECK(parser.next_attribute() == false);
 
     // `Alt-Svc`; attributes
-    parser.reload(sref("h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592001"));
+    parser.reload(&"h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592001");
     POSEIDON_TEST_CHECK(parser.current_name() == "");
     POSEIDON_TEST_CHECK(parser.current_value().is_null());
 
@@ -46,7 +46,7 @@ main()
     POSEIDON_TEST_CHECK(parser.next_attribute() == false);
 
     // `Alt-Svc`; multiple sections
-    parser.reload(sref("h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"));
+    parser.reload(&"h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000");
     POSEIDON_TEST_CHECK(parser.current_name() == "");
     POSEIDON_TEST_CHECK(parser.current_value().is_null());
 
@@ -64,7 +64,7 @@ main()
     POSEIDON_TEST_CHECK(parser.next_attribute() == false);
 
     // `Alt-Svc`; attributes with bad whitespace
-    parser.reload(sref("h3 = \":443\" ; ma = 2592000 , h3-29 = \":443\" ; ma = 2592001"));
+    parser.reload(&"h3 = \":443\" ; ma = 2592000 , h3-29 = \":443\" ; ma = 2592001");
     POSEIDON_TEST_CHECK(parser.current_name() == "");
     POSEIDON_TEST_CHECK(parser.current_value().is_null());
 
@@ -94,7 +94,7 @@ main()
     POSEIDON_TEST_CHECK(parser.next_attribute() == false);
 
     // `Alt-Svc`; multiple sections with bad whitespace
-    parser.reload(sref("h3 = \":443\" ; ma = 2592000 , h3-29 = \":443\" ; ma = 2592001"));
+    parser.reload(&"h3 = \":443\" ; ma = 2592000 , h3-29 = \":443\" ; ma = 2592001");
     POSEIDON_TEST_CHECK(parser.current_name() == "");
     POSEIDON_TEST_CHECK(parser.current_value().is_null());
 
@@ -112,7 +112,7 @@ main()
     POSEIDON_TEST_CHECK(parser.next_attribute() == false);
 
     // `Set-Cookie`; unquoted date/time
-    parser.reload(sref("1P_JAR=2023-06-30-10; expires=Sun, 30-Jul-2023 10:00:45 GMT; path=/; domain=.google.com; Secure"));
+    parser.reload(&"1P_JAR=2023-06-30-10; expires=Sun, 30-Jul-2023 10:00:45 GMT; path=/; domain=.google.com; Secure");
     POSEIDON_TEST_CHECK(parser.current_name() == "");
     POSEIDON_TEST_CHECK(parser.current_value().is_null());
 
@@ -144,7 +144,7 @@ main()
     POSEIDON_TEST_CHECK(parser.next_attribute() == false);
 
     // `Cache-Control`
-    parser.reload(sref("private, no-cache, proxy-revalidate"));
+    parser.reload(&"private, no-cache, proxy-revalidate");
     POSEIDON_TEST_CHECK(parser.current_name() == "");
     POSEIDON_TEST_CHECK(parser.current_value().is_null());
 

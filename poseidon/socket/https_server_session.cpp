@@ -194,13 +194,13 @@ do_https_raw_response(const HTTP_Response_Headers& resp, chars_view data)
     // If `Connection:` contains `close`, the connection should be closed.
     HTTP_Header_Parser hparser;
     for(const auto& hpair : resp.headers)
-      if(ascii_ci_equal(hpair.first, sref("Connection"))) {
+      if(ascii_ci_equal(hpair.first, "Connection")) {
         if(!hpair.second.is_string())
           continue;
 
         hparser.reload(hpair.second.as_string());
         while(hparser.next_element())
-          if(ascii_ci_equal(hparser.current_name(), sref("close")))
+          if(ascii_ci_equal(hparser.current_name(), "close"))
             this->ssl_shut_down();
       }
 
@@ -234,8 +234,8 @@ https_response(HTTP_Response_Headers&& resp, chars_view data)
 
     // Erase bad headers.
     for(size_t hindex = 0;  hindex < resp.headers.size();  hindex ++)
-      if(ascii_ci_equal(resp.headers.at(hindex).first, sref("Content-Length"))
-         || ascii_ci_equal(resp.headers.at(hindex).first, sref("Transfer-Encoding")))
+      if(ascii_ci_equal(resp.headers.at(hindex).first, "Content-Length")
+         || ascii_ci_equal(resp.headers.at(hindex).first, "Transfer-Encoding"))
         resp.headers.erase(hindex --);
 
     // Some responses are required to have no payload payload and require no
@@ -245,7 +245,7 @@ https_response(HTTP_Response_Headers&& resp, chars_view data)
 
     // Otherwise, a `Content-Length` is required; otherwise the response would
     // be interpreted as terminating by closure ofthe connection.
-    resp.headers.emplace_back(sref("Content-Length"), (double)(int64_t) data.n);
+    resp.headers.emplace_back(&"Content-Length", (double)(int64_t) data.n);
 
     return this->do_https_raw_response(resp, data);
   }
@@ -262,11 +262,11 @@ https_chunked_response_start(HTTP_Response_Headers&& resp)
 
     // Erase bad headers.
     for(size_t hindex = 0;  hindex < resp.headers.size();  hindex ++)
-      if(ascii_ci_equal(resp.headers.at(hindex).first, sref("Transfer-Encoding")))
+      if(ascii_ci_equal(resp.headers.at(hindex).first, "Transfer-Encoding"))
         resp.headers.erase(hindex --);
 
     // Write a chunked header.
-    resp.headers.emplace_back(sref("Transfer-Encoding"), sref("chunked"));
+    resp.headers.emplace_back(&"Transfer-Encoding", &"chunked");
 
     return this->do_https_raw_response(resp, "");
   }

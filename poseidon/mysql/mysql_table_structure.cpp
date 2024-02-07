@@ -103,7 +103,7 @@ add_index(const Index& index)
     if(!do_is_name_valid(index.name))
       POSEIDON_THROW(("Invalid MySQL index name `$1`"), index.name);
 
-    if(!index.unique && ascii_ci_equal(index.name, sref("PRIMARY")))
+    if(!index.unique && ascii_ci_equal(index.name, "PRIMARY"))
       POSEIDON_THROW(("Primary indexes must also be unique"));
 
     if(index.columns.empty())
