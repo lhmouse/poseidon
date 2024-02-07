@@ -5,15 +5,15 @@
 #include "../poseidon/easy/easy_wss_server.hpp"
 #include "../poseidon/easy/enums.hpp"
 #include "../poseidon/utils.hpp"
-namespace {
 using namespace ::poseidon;
 
-extern Easy_WSS_Server my_server;
-
-void
-event_callback(shptrR<WSS_Server_Session> session, Abstract_Fiber& /*fiber*/,
-               Easy_WS_Event event, linear_buffer&& data)
+static Easy_WSS_Server my_server(
+  // callback
+  *[](shptrR<WSS_Server_Session> session, Abstract_Fiber& fiber, Easy_WS_Event event,
+      linear_buffer&& data)
   {
+    (void) fiber;
+
     switch(event) {
       case easy_ws_open:
         POSEIDON_LOG_ERROR(("example WSS server accepted connection from `$1`: $2"),
@@ -41,19 +41,11 @@ event_callback(shptrR<WSS_Server_Session> session, Abstract_Fiber& /*fiber*/,
       default:
         ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
     }
-  }
+  });
 
-int
-start_server()
+void
+poseidon_addon_main()
   {
     my_server.start(sref("[::]:3807"));
-    POSEIDON_LOG_ERROR(("example WSS server started: bind = $1"),
-                       my_server.local_address());
-    return 0;
+    POSEIDON_LOG_ERROR(("example WSS server started: $1"), my_server.local_address());
   }
-
-// Start the server when this shared library is being loaded.
-Easy_WSS_Server my_server(event_callback);
-int dummy = start_server();
-
-}  // namespace

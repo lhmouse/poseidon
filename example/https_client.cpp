@@ -6,16 +6,15 @@
 #include "../poseidon/easy/easy_timer.hpp"
 #include "../poseidon/easy/enums.hpp"
 #include "../poseidon/utils.hpp"
-namespace {
 using namespace ::poseidon;
 
-extern Easy_HTTPS_Client my_client;
-extern Easy_Timer my_timer;
-
-void
-event_callback(shptrR<HTTPS_Client_Session> session, Abstract_Fiber& /*fiber*/,
-               Easy_HTTP_Event event, HTTP_Response_Headers&& resp, linear_buffer&& data)
+static Easy_HTTPS_Client my_client(
+  // callback
+  *[](shptrR<HTTPS_Client_Session> session, Abstract_Fiber& fiber, Easy_HTTP_Event event,
+      HTTP_Response_Headers&& resp, linear_buffer&& data)
   {
+    (void) fiber;
+
     switch(event) {
       case easy_http_open:
         POSEIDON_LOG_WARN(("example HTTPS client connected to server: $1"),
@@ -39,12 +38,15 @@ event_callback(shptrR<HTTPS_Client_Session> session, Abstract_Fiber& /*fiber*/,
       default:
         ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
     }
-  }
+  });
 
-void
-timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/,
-               steady_time /*now*/)
+static Easy_Timer my_timer(
+  // callback
+  *[](shptrR<Abstract_Timer> timer, Abstract_Fiber& fiber, steady_time now)
   {
+    (void) timer;
+    (void) fiber;
+    (void) now;
     static uint32_t state;
 
     if(my_client.session_opt() == nullptr)
@@ -90,18 +92,10 @@ timer_callback(shptrR<Abstract_Timer> /*timer*/, Abstract_Fiber& /*fiber*/,
         my_client.close();
         break;
     }
-  }
+  });
 
-int
-start_timer()
+void
+poseidon_addon_main()
   {
     my_timer.start(1s, 2s);
-    return 0;
   }
-
-// Start the client when this shared library is being loaded.
-Easy_HTTPS_Client my_client(event_callback);
-Easy_Timer my_timer(timer_callback);
-int dummy = start_timer();
-
-}  // namespace

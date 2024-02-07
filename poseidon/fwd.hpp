@@ -24,8 +24,14 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <chrono>
+extern "C++" void poseidon_addon_main(void);  // see below
 namespace poseidon {
 namespace noadl = poseidon;
+
+// Entry point procedure for add-ons
+// This function is to be defined by users. It will be called after an add-on
+// is loaded.
+using ::poseidon_addon_main;
 
 // Macros
 #define POSEIDON_HIDDEN_X_STRUCT(C, S)  \

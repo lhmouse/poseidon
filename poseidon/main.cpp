@@ -557,12 +557,22 @@ do_load_addons()
       if(path.empty())
         continue;
 
+      // Load the shared library.
       POSEIDON_LOG_INFO(("Loading add-on: $1"), path);
-      if(::dlopen(path.safe_c_str(), RTLD_NOW | RTLD_NODELETE) == nullptr)
+      void* so_handle = ::dlopen(path.safe_c_str(), RTLD_NOW | RTLD_NODELETE);
+      if(!so_handle)
         POSEIDON_THROW((
             "Failed to load add-on: $1",
             "[`dlopen()` failed: $2]"),
             path, ::dlerror());
+
+      for(const char* fn_name : { "_Z19poseidon_addon_mainv", "poseidon_addon_main" })
+        if(void* fn = ::dlsym(so_handle, fn_name)) {
+          // Check whether it is a function...?
+          POSEIDON_LOG_INFO(("Invoking `poseidon_addon_main()` in add-on: $1"), path);
+          reinterpret_cast<decltype(poseidon_addon_main)*>(fn) ();
+          break;
+        }
 
       POSEIDON_LOG_DEBUG(("Finished loading add-on: $1"), path);
       empty = false;

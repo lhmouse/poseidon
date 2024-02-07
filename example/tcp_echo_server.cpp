@@ -5,15 +5,15 @@
 #include "../poseidon/easy/easy_tcp_server.hpp"
 #include "../poseidon/easy/enums.hpp"
 #include "../poseidon/utils.hpp"
-namespace {
 using namespace ::poseidon;
 
-extern Easy_TCP_Server my_server;
-
-void
-event_callback(shptrR<TCP_Socket> socket, Abstract_Fiber& /*fiber*/,
-               Easy_Stream_Event event, linear_buffer& data, int code)
+static Easy_TCP_Server my_server(
+  // callback
+  *[](shptrR<TCP_Socket> socket, Abstract_Fiber& fiber, Easy_Stream_Event event,
+      linear_buffer& data, int code)
   {
+    (void) fiber;
+
     switch(event) {
       case easy_stream_open:
         POSEIDON_LOG_ERROR(("example SSL server accepted connection: $1"),
@@ -35,19 +35,11 @@ event_callback(shptrR<TCP_Socket> socket, Abstract_Fiber& /*fiber*/,
       default:
         ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
     }
-  }
+  });
 
-int
-start_server()
+void
+poseidon_addon_main()
   {
     my_server.start(sref("[::]:3802"));
-    POSEIDON_LOG_ERROR(("example TCP server started: bind = $1"),
-                       my_server.local_address());
-    return 0;
+    POSEIDON_LOG_ERROR(("example TCP server started: $1"), my_server.local_address());
   }
-
-// Start the server when this shared library is being loaded.
-Easy_TCP_Server my_server(event_callback);
-int dummy = start_server();
-
-}  // namespace

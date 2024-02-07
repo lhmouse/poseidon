@@ -5,15 +5,15 @@
 #include "../poseidon/easy/easy_http_server.hpp"
 #include "../poseidon/easy/enums.hpp"
 #include "../poseidon/utils.hpp"
-namespace {
 using namespace ::poseidon;
 
-extern Easy_HTTP_Server my_server;
-
-void
-event_callback(shptrR<HTTP_Server_Session> session, Abstract_Fiber& /*fiber*/,
-               Easy_HTTP_Event event, HTTP_Request_Headers&& req, linear_buffer&& data)
+static Easy_HTTP_Server my_server(
+  // callback
+  *[](shptrR<HTTP_Server_Session> session, Abstract_Fiber& fiber, Easy_HTTP_Event event,
+      HTTP_Request_Headers&& req, linear_buffer&& data)
   {
+    (void) fiber;
+
     switch(event) {
       case easy_http_open:
         POSEIDON_LOG_ERROR(("example HTTP server accepted connection: $1"),
@@ -40,25 +40,17 @@ event_callback(shptrR<HTTP_Server_Session> session, Abstract_Fiber& /*fiber*/,
       }
 
       case easy_http_close:
-        POSEIDON_LOG_ERROR(("example HTTP server closed connection : $1"), data);
+        POSEIDON_LOG_ERROR(("example HTTP server closed connection: $1"), data);
         break;
 
       default:
         ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
     }
-  }
+  });
 
-int
-start_server()
+void
+poseidon_addon_main(void)
   {
     my_server.start(sref("[::]:3804"));
-    POSEIDON_LOG_ERROR(("example HTTP server started: bind = $1"),
-                       my_server.local_address());
-    return 0;
+    POSEIDON_LOG_ERROR(("example HTTP server started: $1"), my_server.local_address());
   }
-
-// Start the server when this shared library is being loaded.
-Easy_HTTP_Server my_server(event_callback);
-int dummy = start_server();
-
-}  // namespace

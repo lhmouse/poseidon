@@ -183,7 +183,6 @@ etc_poseidon = [
 ]
 
 example_src = [
-  'example/timer.cpp',
   'example/udp_echo_server.cpp',
   'example/tcp_echo_server.cpp',
   'example/ssl_echo_server.cpp',
