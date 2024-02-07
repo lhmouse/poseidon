@@ -53,6 +53,7 @@ do_on_abstract_future_execute()
     conn->execute(this->m_res.stmt, this->m_res.stmt_args);
 
     // Fetch result metadata.
+    this->m_res.warning_count = conn->warning_count();
     this->m_res.affected_rows = conn->affected_rows();
     this->m_res.insert_id = conn->insert_id();
     conn->fetch_fields(this->m_res.result_fields);

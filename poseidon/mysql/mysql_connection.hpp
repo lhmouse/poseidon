@@ -64,6 +64,11 @@ class MySQL_Connection
     bool
     reset() noexcept;
 
+    // Gets the number of warnings from the last operation. This function is
+    // primarily useful for statements that produce warnings upon success.
+    uint32_t
+    warning_count() const noexcept;
+
     // Executes a query. `stmt` shall be a SQL statement with placeholders, like
     // `INSERT INTO test_table(col1,col2,col3) VALUES(?,?,?)"`. `args` supplies
     // values for those placeholders. If a connection to the server has not been

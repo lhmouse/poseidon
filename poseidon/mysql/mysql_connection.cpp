@@ -42,6 +42,13 @@ reset() noexcept
     return true;
   }
 
+uint32_t
+MySQL_Connection::
+warning_count() const noexcept
+  {
+    return ::mysql_warning_count(this->m_mysql);
+  }
+
 void
 MySQL_Connection::
 execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)

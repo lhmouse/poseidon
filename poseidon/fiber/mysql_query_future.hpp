@@ -19,9 +19,9 @@ class MySQL_Query_Future
     // This is actually an input/output type.
     struct Result
       {
-        cow_string stmt;
-        vector<MySQL_Value> stmt_args;
-
+        cow_string stmt;  // input
+        vector<MySQL_Value> stmt_args;  // input
+        uint32_t warning_count;
         uint64_t affected_rows;
         uint64_t insert_id;
         vector<cow_string> result_fields;
