@@ -403,7 +403,7 @@ struct chars_view
         return chars_view(this->p - dist, this->n + dist);
       }
 
-    chars_view
+    chars_view&
     operator<<=(size_t dist) & noexcept
       {
         return *this = *this << dist;
@@ -418,15 +418,14 @@ struct chars_view
         return chars_view(this->p + dist, this->n - dist);
       }
 
-    chars_view
+    chars_view&
     operator>>=(size_t dist) & noexcept
       {
         return *this = *this >> dist;
       }
 
     // Makes a copy.
-    cow_string
-    str() const
+    explicit operator cow_string() const
       {
         return cow_string(this->p, this->n);
       }

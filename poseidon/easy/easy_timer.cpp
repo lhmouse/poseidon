@@ -33,7 +33,6 @@ struct Final_Fiber final : Abstract_Fiber
     Easy_Timer::thunk_type m_thunk;
     wkptr<Event_Queue> m_wqueue;
 
-    explicit
     Final_Fiber(const Easy_Timer::thunk_type& thunk, shptrR<Event_Queue> queue)
       :
         m_thunk(thunk), m_wqueue(queue)
@@ -86,7 +85,6 @@ struct Final_Timer final : Abstract_Timer
     Easy_Timer::thunk_type m_thunk;
     wkptr<Event_Queue> m_wqueue;
 
-    explicit
     Final_Timer(const Easy_Timer::thunk_type& thunk, shptrR<Event_Queue> queue)
       :
         m_thunk(thunk), m_wqueue(queue)

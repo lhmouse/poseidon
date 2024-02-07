@@ -41,7 +41,6 @@ struct Final_Fiber final : Abstract_Fiber
     Easy_WSS_Client::thunk_type m_thunk;
     wkptr<Event_Queue> m_wqueue;
 
-    explicit
     Final_Fiber(const Easy_WSS_Client::thunk_type& thunk, shptrR<Event_Queue> queue)
       :
         m_thunk(thunk), m_wqueue(queue)
@@ -93,15 +92,13 @@ struct Final_Fiber final : Abstract_Fiber
       }
   };
 
-struct FInal_Client_Session final : WSS_Client_Session
+struct Final_Session final : WSS_Client_Session
   {
     Easy_WSS_Client::thunk_type m_thunk;
     wkptr<Event_Queue> m_wqueue;
 
-    explicit
-    FInal_Client_Session(const Easy_WSS_Client::thunk_type& thunk,
-          shptrR<Event_Queue> queue, cow_stringR host, cow_stringR path,
-          cow_stringR query)
+    Final_Session(const Easy_WSS_Client::thunk_type& thunk, shptrR<Event_Queue> queue,
+                  cow_stringR host, cow_stringR path, cow_stringR query)
       :
         SSL_Socket(network_driver), WSS_Client_Session(host, path, query),
         m_thunk(thunk), m_wqueue(queue)
@@ -207,13 +204,13 @@ connect(chars_view addr)
 
     // Initiate the connection.
     auto queue = new_sh<X_Event_Queue>();
-    auto session = new_sh<FInal_Client_Session>(this->m_thunk, queue,
-          format_string("$1:$2", caddr.host, caddr.port_num),
-          caddr.path.str(), caddr.query.str());
+    auto session = new_sh<Final_Session>(this->m_thunk, queue,
+                      format_string("$1:$2", caddr.host, caddr.port_num),
+                      cow_string(caddr.path), cow_string(caddr.query));
 
     queue->wsession = session;
     auto dns_task = new_sh<Async_Connect>(network_driver, session,
-          caddr.host.str(), caddr.port_num);
+                       cow_string(caddr.host), caddr.port_num);
 
     async_task_executor.enqueue(dns_task);
     this->m_dns_task = move(dns_task);

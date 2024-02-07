@@ -46,7 +46,6 @@ struct Final_Fiber final : Abstract_Fiber
     wkptr<Client_Table> m_wtable;
     const volatile SSL_Socket* m_refptr;
 
-    explicit
     Final_Fiber(const Easy_SSL_Server::thunk_type& thunk, shptrR<Client_Table> table,
                 const volatile SSL_Socket* refptr)
       :
@@ -125,7 +124,6 @@ struct Final_Socket final : SSL_Socket
     Easy_SSL_Server::thunk_type m_thunk;
     wkptr<Client_Table> m_wtable;
 
-    explicit
     Final_Socket(const Easy_SSL_Server::thunk_type& thunk, unique_posix_fd&& fd,
                  shptrR<Client_Table> table)
       :
@@ -202,14 +200,13 @@ struct Final_Socket final : SSL_Socket
       }
   };
 
-struct Final_Listen_Socket final : Listen_Socket
+struct Final_Listener final : Listen_Socket
   {
     Easy_SSL_Server::thunk_type m_thunk;
     wkptr<Client_Table> m_wtable;
 
-    explicit
-    Final_Listen_Socket(const Easy_SSL_Server::thunk_type& thunk,
-                        const Socket_Address& addr, shptrR<Client_Table> table)
+    Final_Listener(const Easy_SSL_Server::thunk_type& thunk, const Socket_Address& addr,
+                   shptrR<Client_Table> table)
       :
         Listen_Socket(addr), m_thunk(thunk), m_wtable(table)
       { }
@@ -253,7 +250,7 @@ start(chars_view addr)
 
     // Initiate the server.
     auto table = new_sh<X_Client_Table>();
-    auto socket = new_sh<Final_Listen_Socket>(this->m_thunk, saddr, table);
+    auto socket = new_sh<Final_Listener>(this->m_thunk, saddr, table);
 
     network_driver.insert(socket);
     this->m_client_table = move(table);

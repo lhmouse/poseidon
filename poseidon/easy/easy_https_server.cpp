@@ -44,7 +44,6 @@ struct Final_Fiber final : Abstract_Fiber
     wkptr<Client_Table> m_wtable;
     const volatile HTTPS_Server_Session* m_refptr;
 
-    explicit
     Final_Fiber(const Easy_HTTPS_Server::thunk_type& thunk, shptrR<Client_Table> table,
                 const volatile HTTPS_Server_Session* refptr)
       :
@@ -127,14 +126,13 @@ struct Final_Fiber final : Abstract_Fiber
       }
   };
 
-struct Final_Server_Session final : HTTPS_Server_Session
+struct Final_Session final : HTTPS_Server_Session
   {
     Easy_HTTPS_Server::thunk_type m_thunk;
     wkptr<Client_Table> m_wtable;
 
-    explicit
-    Final_Server_Session(const Easy_HTTPS_Server::thunk_type& thunk,
-                         unique_posix_fd&& fd, shptrR<Client_Table> table)
+    Final_Session(const Easy_HTTPS_Server::thunk_type& thunk, unique_posix_fd&& fd,
+                  shptrR<Client_Table> table)
       :
         SSL_Socket(move(fd), network_driver), m_thunk(thunk), m_wtable(table)
       { }
@@ -220,14 +218,13 @@ struct Final_Server_Session final : HTTPS_Server_Session
       }
   };
 
-struct Final_Listen_Socket final : Listen_Socket
+struct Final_Listener final : Listen_Socket
   {
     Easy_HTTPS_Server::thunk_type m_thunk;
     wkptr<Client_Table> m_wtable;
 
-    explicit
-    Final_Listen_Socket(const Easy_HTTPS_Server::thunk_type& thunk,
-                        const Socket_Address& addr, shptrR<Client_Table> table)
+    Final_Listener(const Easy_HTTPS_Server::thunk_type& thunk, const Socket_Address& addr,
+                   shptrR<Client_Table> table)
       :
         Listen_Socket(addr), m_thunk(thunk), m_wtable(table)
       {
@@ -242,7 +239,7 @@ struct Final_Listen_Socket final : Listen_Socket
         if(!table)
           return nullptr;
 
-        auto session = new_sh<Final_Server_Session>(this->m_thunk, move(fd), table);
+        auto session = new_sh<Final_Session>(this->m_thunk, move(fd), table);
         (void) addr;
 
         // We are in the network thread here.
@@ -270,7 +267,7 @@ start(chars_view addr)
   {
     Socket_Address saddr(addr);
     auto table = new_sh<X_Client_Table>();
-    auto socket = new_sh<Final_Listen_Socket>(this->m_thunk, saddr, table);
+    auto socket = new_sh<Final_Listener>(this->m_thunk, saddr, table);
 
     network_driver.insert(socket);
     this->m_client_table = move(table);

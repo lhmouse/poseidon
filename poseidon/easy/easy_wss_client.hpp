@@ -51,7 +51,6 @@ class Easy_WSS_Client
         m_thunk(new_sh(forward<CallbackT>(cb)))
       { }
 
-    explicit
     Easy_WSS_Client(thunk_type::function_type* fptr) :
         m_thunk(fptr)
       { }
