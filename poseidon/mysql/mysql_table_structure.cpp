@@ -92,6 +92,14 @@ add_column(const Column& column)
         POSEIDON_THROW(("Invalid MySQL data type `$1`"), column.type);
     }
 
+    if(column.type == mysql_column_auto_increment)
+      for(const auto& other_column : this->m_columns) {
+        if(other_column.type == mysql_column_auto_increment)
+          POSEIDON_THROW((
+              "Another auto-increment column `$1` already exists"),
+              other_column.name);
+      }
+
     return do_add_element(this->m_columns, column);
   }
 
@@ -120,12 +128,14 @@ add_index(const Index& index)
         }
 
       if(!col)
-        POSEIDON_THROW(("MySQL index `$1` contains non-existent column `$2`"),
-                       index.name, index_column_name);
+        POSEIDON_THROW((
+            "MySQL index `$1` contains non-existent column `$2`"),
+            index.name, index_column_name);
 
       if(primary && col->nullable)
-        POSEIDON_THROW(("Primary key shall not contain nullable column `$1`"),
-                       index_column_name);
+        POSEIDON_THROW((
+            "Primary key shall not contain nullable column `$1`"),
+            index_column_name);
     }
 
     return do_add_element(this->m_indexes, index);
