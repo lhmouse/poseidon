@@ -5,6 +5,7 @@
 #define POSEIDON_EASY_EASY_WSS_CLIENT_
 
 #include "../fwd.hpp"
+#include "enums.hpp"
 #include "../socket/wss_client_session.hpp"
 namespace poseidon {
 

@@ -3,7 +3,6 @@
 
 #include "../xprecompiled.hpp"
 #include "mongodb_connector.hpp"
-#include "../mongodb/enums.hpp"
 #include "../base/config_file.hpp"
 #include "../utils.hpp"
 namespace poseidon {

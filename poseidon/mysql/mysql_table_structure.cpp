@@ -3,7 +3,6 @@
 
 #include "../xprecompiled.hpp"
 #include "mysql_table_structure.hpp"
-#include "enums.hpp"
 #include "../utils.hpp"
 namespace poseidon {
 namespace {

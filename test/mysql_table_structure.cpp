@@ -3,7 +3,6 @@
 
 #include "utils.hpp"
 #include "../poseidon/mysql/mysql_table_structure.hpp"
-#include "../poseidon/mysql/enums.hpp"
 using namespace ::poseidon;
 
 int

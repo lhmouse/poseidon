@@ -5,6 +5,7 @@
 #define POSEIDON_EASY_EASY_UDP_CLIENT_
 
 #include "../fwd.hpp"
+#include "enums.hpp"
 #include "../socket/udp_socket.hpp"
 namespace poseidon {
 

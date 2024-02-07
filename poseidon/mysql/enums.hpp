@@ -5,6 +5,7 @@
 #define POSEIDON_MYSQL_ENUMS_
 
 #include "../fwd.hpp"
+#include "enums.hpp"
 namespace poseidon {
 
 enum MySQL_Column_Type : uint8_t

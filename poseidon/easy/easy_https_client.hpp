@@ -5,6 +5,7 @@
 #define POSEIDON_EASY_EASY_HTTPS_CLIENT_
 
 #include "../fwd.hpp"
+#include "enums.hpp"
 #include "../socket/https_client_session.hpp"
 namespace poseidon {
 

@@ -5,7 +5,9 @@
 #define POSEIDON_MYSQL_MYSQL_CONNECTION_
 
 #include "../fwd.hpp"
+#include "enums.hpp"
 #include "../third/mysql_fwd.hpp"
+#include "enums.hpp"
 namespace poseidon {
 
 class MySQL_Connection

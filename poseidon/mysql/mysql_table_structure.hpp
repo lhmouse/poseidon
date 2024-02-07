@@ -5,6 +5,7 @@
 #define POSEIDON_MYSQL_MYSQL_TABLE_STRUCTURE_
 
 #include "../fwd.hpp"
+#include "enums.hpp"
 namespace poseidon {
 
 class MySQL_Table_Structure
@@ -13,7 +14,7 @@ class MySQL_Table_Structure
     struct Column
       {
         cow_string name;
-        MySQL_Column_Type type = { };
+        MySQL_Column_Type type = mysql_column_varchar;
         bool nullable = false;
       };
 
@@ -26,7 +27,7 @@ class MySQL_Table_Structure
 
   private:
     cow_string m_name;
-    MySQL_Engine_Type m_engine = { };
+    MySQL_Engine_Type m_engine = mysql_engine_innodb;
     cow_vector<Column> m_columns;
     cow_vector<Index> m_indexes;
 

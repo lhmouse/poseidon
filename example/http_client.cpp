@@ -4,7 +4,6 @@
 #include "../poseidon/xprecompiled.hpp"
 #include "../poseidon/easy/easy_http_client.hpp"
 #include "../poseidon/easy/easy_timer.hpp"
-#include "../poseidon/easy/enums.hpp"
 #include "../poseidon/utils.hpp"
 using namespace ::poseidon;
 

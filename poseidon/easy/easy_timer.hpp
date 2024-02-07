@@ -5,6 +5,7 @@
 #define POSEIDON_EASY_EASY_TIMER_
 
 #include "../fwd.hpp"
+#include "enums.hpp"
 namespace poseidon {
 
 class Easy_Timer

@@ -3,7 +3,6 @@
 
 #include "../xprecompiled.hpp"
 #include "easy_http_client.hpp"
-#include "enums.hpp"
 #include "../static/network_driver.hpp"
 #include "../fiber/abstract_fiber.hpp"
 #include "../static/fiber_scheduler.hpp"

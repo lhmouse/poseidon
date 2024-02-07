@@ -3,12 +3,10 @@
 
 #include "../xprecompiled.hpp"
 #include "easy_ws_client.hpp"
-#include "enums.hpp"
 #include "../static/network_driver.hpp"
 #include "../fiber/abstract_fiber.hpp"
 #include "../static/fiber_scheduler.hpp"
 #include "../socket/async_connect.hpp"
-#include "../socket/enums.hpp"
 #include "../static/async_task_executor.hpp"
 #include "../utils.hpp"
 namespace poseidon {

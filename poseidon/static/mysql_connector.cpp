@@ -4,7 +4,6 @@
 #include "../xprecompiled.hpp"
 #include "mysql_connector.hpp"
 #include "../mysql/mysql_connection.hpp"
-#include "../mysql/enums.hpp"
 #include "../base/config_file.hpp"
 #include "../utils.hpp"
 namespace poseidon {

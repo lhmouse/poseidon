@@ -5,6 +5,7 @@
 #define POSEIDON_SOCKET_SOCKET_ADDRESS_
 
 #include "../fwd.hpp"
+#include "enums.hpp"
 #include <netinet/in.h>
 namespace poseidon {
 

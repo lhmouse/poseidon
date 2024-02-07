@@ -3,11 +3,10 @@
 
 #include "../xprecompiled.hpp"
 #include "wss_server_session.hpp"
-#include "enums.hpp"
-#include "../easy/enums.hpp"
 #include "../http/websocket_deflator.hpp"
 #include "../base/config_file.hpp"
 #include "../static/main_config.hpp"
+#include "../easy/enums.hpp"
 #include "../utils.hpp"
 namespace poseidon {
 

@@ -5,6 +5,7 @@
 #define POSEIDON_SOCKET_WS_SERVER_SESSION_
 
 #include "../fwd.hpp"
+#include "enums.hpp"
 #include "http_server_session.hpp"
 #include "../http/websocket_frame_parser.hpp"
 namespace poseidon {

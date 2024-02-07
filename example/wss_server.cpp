@@ -3,7 +3,6 @@
 
 #include "../poseidon/xprecompiled.hpp"
 #include "../poseidon/easy/easy_wss_server.hpp"
-#include "../poseidon/easy/enums.hpp"
 #include "../poseidon/utils.hpp"
 using namespace ::poseidon;
 

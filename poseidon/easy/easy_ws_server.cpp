@@ -3,9 +3,7 @@
 
 #include "../xprecompiled.hpp"
 #include "easy_ws_server.hpp"
-#include "enums.hpp"
 #include "../socket/listen_socket.hpp"
-#include "../socket/enums.hpp"
 #include "../static/network_driver.hpp"
 #include "../fiber/abstract_fiber.hpp"
 #include "../static/fiber_scheduler.hpp"

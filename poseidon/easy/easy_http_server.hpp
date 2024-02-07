@@ -5,6 +5,7 @@
 #define POSEIDON_EASY_EASY_HTTP_SERVER_
 
 #include "../fwd.hpp"
+#include "enums.hpp"
 #include "../socket/http_server_session.hpp"
 namespace poseidon {
 

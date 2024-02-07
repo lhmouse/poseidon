@@ -5,6 +5,7 @@
 #define POSEIDON_SOCKET_HTTPS_CLIENT_SESSION_
 
 #include "../fwd.hpp"
+#include "enums.hpp"
 #include "ssl_socket.hpp"
 #include "../http/http_response_parser.hpp"
 #include "../http/http_request_headers.hpp"

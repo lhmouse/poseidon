@@ -5,6 +5,7 @@
 #define POSEIDON_SOCKET_ASYNC_CONNECT_
 
 #include "../fwd.hpp"
+#include "enums.hpp"
 #include "../base/abstract_async_task.hpp"
 namespace poseidon {
 
