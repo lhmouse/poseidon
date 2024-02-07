@@ -34,11 +34,11 @@ class Easy_UDP_Client
     // UDP packet, respectively. This client object stores a copy of the
     // callback, which is invoked accordingly in the main thread. The callback
     // object is never copied, and is allowed to modify itself.
-    template<typename CallbackT,
-    ROCKET_ENABLE_IF(thunk_type::is_invocable<CallbackT>::value)>
-    explicit Easy_UDP_Client(CallbackT&& cb)
+    template<typename xCallback,
+    ROCKET_ENABLE_IF(thunk_type::is_invocable<xCallback>::value)>
+    explicit Easy_UDP_Client(xCallback&& cb)
       :
-        m_thunk(new_sh(forward<CallbackT>(cb)))
+        m_thunk(new_sh(forward<xCallback>(cb)))
       { }
 
     explicit Easy_UDP_Client(thunk_type::function_type* fptr)

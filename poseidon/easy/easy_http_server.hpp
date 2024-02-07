@@ -43,11 +43,11 @@ class Easy_HTTP_Server
     // `.lock()` as needed. This server object stores a copy of the callback
     // object, which is invoked accordingly in the main thread. The callback
     // object is never copied, and is allowed to modify itself.
-    template<typename CallbackT,
-    ROCKET_ENABLE_IF(thunk_type::is_invocable<CallbackT>::value)>
-    explicit Easy_HTTP_Server(CallbackT&& cb)
+    template<typename xCallback,
+    ROCKET_ENABLE_IF(thunk_type::is_invocable<xCallback>::value)>
+    explicit Easy_HTTP_Server(xCallback&& cb)
       :
-        m_thunk(new_sh(forward<CallbackT>(cb)))
+        m_thunk(new_sh(forward<xCallback>(cb)))
       { }
 
     explicit Easy_HTTP_Server(thunk_type::function_type* fptr)

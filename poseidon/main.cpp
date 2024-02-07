@@ -355,9 +355,9 @@ do_check_random()
     ::srand48(reinterpret_cast<const long&>(seed));
   }
 
-template<class ObjectT>
+template<class xObject>
 void
-do_create_resident_thread(ObjectT& obj, const char* name)
+do_create_resident_thread(xObject& obj, const char* name)
   {
     static ::sigset_t s_blocked_signals[1];
 
@@ -373,7 +373,7 @@ do_create_resident_thread(ObjectT& obj, const char* name)
       nullptr,
       +[](void* thread_param) -> void*
       {
-        auto& xobj = *(ObjectT*) thread_param;
+        auto& xobj = *(xObject*) thread_param;
 
         ::pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, nullptr);
         ::pthread_sigmask(SIG_BLOCK, s_blocked_signals, nullptr);

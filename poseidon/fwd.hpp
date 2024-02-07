@@ -188,24 +188,24 @@ struct cacheline_barrier
     cacheline_barrier& operator=(const cacheline_barrier&) { return *this;  }
   };
 
-template<typename... ArgsT>
+template<typename... xArgs>
 class thunk
   {
   public:
-    using function_type = void (ArgsT...);
-    template<typename T> using is_invocable = ::std::is_invocable<T&, ArgsT&&...>;
+    using function_type = void (xArgs...);
+    template<typename T> using is_invocable = ::std::is_invocable<T&, xArgs&&...>;
 
   private:
-    vfptr<void*, ArgsT&&...> m_func;
+    vfptr<void*, xArgs&&...> m_func;
     shptr<void> m_obj;
 
   public:
     // Points this callback to a target object, with its type erased.
-    template<typename RealT,
-    ROCKET_ENABLE_IF(is_invocable<RealT>::value)>
-    explicit thunk(shptrR<RealT> obj) noexcept
+    template<typename xReal,
+    ROCKET_ENABLE_IF(is_invocable<xReal>::value)>
+    explicit thunk(shptrR<xReal> obj) noexcept
       {
-        this->m_func = [](void* p, ArgsT&&... args) { (*(RealT*) p) (forward<ArgsT>(args)...);  };
+        this->m_func = [](void* p, xArgs&&... args) { (*(xReal*) p) (forward<xArgs>(args)...);  };
         this->m_obj = obj;
       }
 
@@ -219,12 +219,12 @@ class thunk
 
     // Performs a virtual call to the target object.
     void
-    operator()(ArgsT... args) const
+    operator()(xArgs... args) const
       {
         if(this->m_func)
-          this->m_func(this->m_obj.get(), forward<ArgsT>(args)...);
+          this->m_func(this->m_obj.get(), forward<xArgs>(args)...);
         else
-          ((function_type*)(intptr_t) this->m_obj.get()) (forward<ArgsT>(args)...);
+          ((function_type*)(intptr_t) this->m_obj.get()) (forward<xArgs>(args)...);
       }
   };
 
@@ -449,29 +449,29 @@ system_time_from_timespec(const struct ::timespec& ts) noexcept
     return system_clock::from_time_t(ts.tv_sec) + nanoseconds(ts.tv_nsec);
   }
 
-template<typename ValueT, typename... ArgsT>
+template<typename xValue, typename... xArgs>
 ROCKET_ALWAYS_INLINE
-uniptr<ValueT>
-new_uni(ArgsT&&... args)
-  { return ::std::make_unique<ValueT>(forward<ArgsT>(args)...);  }
+uniptr<xValue>
+new_uni(xArgs&&... args)
+  { return ::std::make_unique<xValue>(forward<xArgs>(args)...);  }
 
-template<typename ValueT>
+template<typename xValue>
 ROCKET_ALWAYS_INLINE
-uniptr<typename ::std::decay<ValueT>::type>
-new_uni(ValueT&& value)
-  { return ::std::make_unique<typename ::std::decay<ValueT>::type>(forward<ValueT>(value));  }
+uniptr<typename ::std::decay<xValue>::type>
+new_uni(xValue&& value)
+  { return ::std::make_unique<typename ::std::decay<xValue>::type>(forward<xValue>(value));  }
 
-template<typename ValueT, typename... ArgsT>
+template<typename xValue, typename... xArgs>
 ROCKET_ALWAYS_INLINE
-shptr<ValueT>
-new_sh(ArgsT&&... args)
-  { return ::std::make_shared<ValueT>(forward<ArgsT>(args)...);  }
+shptr<xValue>
+new_sh(xArgs&&... args)
+  { return ::std::make_shared<xValue>(forward<xArgs>(args)...);  }
 
-template<typename ValueT>
+template<typename xValue>
 ROCKET_ALWAYS_INLINE
-shptr<typename ::std::decay<ValueT>::type>
-new_sh(ValueT&& value)
-  { return ::std::make_shared<typename ::std::decay<ValueT>::type>(forward<ValueT>(value));  }
+shptr<typename ::std::decay<xValue>::type>
+new_sh(xValue&& value)
+  { return ::std::make_shared<typename ::std::decay<xValue>::type>(forward<xValue>(value));  }
 
 // Logging and error reporting (diagnostics)
 // Each level corresponds to an element in `logger.colors` in 'main.conf'. It
