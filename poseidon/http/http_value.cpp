@@ -169,19 +169,6 @@ parse(chars_view str)
     return 0;
   }
 
-bool
-HTTP_Value::
-equals(const HTTP_Value& other) const noexcept
-  {
-    bool eq = false;
-    this->m_stor.visit(
-      [&](const auto& val) {
-        auto p = other.m_stor.ptr<typename ::std::decay<decltype(val)>::type>();
-        eq = p && (*p == val);
-      });
-    return eq;
-  }
-
 tinyfmt&
 HTTP_Value::
 print(tinyfmt& fmt) const

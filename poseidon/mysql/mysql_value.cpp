@@ -23,19 +23,6 @@ MySQL_Value::
   {
   }
 
-bool
-MySQL_Value::
-equals(const MySQL_Value& other) const noexcept
-  {
-    bool eq = false;
-    this->m_stor.visit(
-      [&](const auto& val) {
-        auto p = other.m_stor.ptr<typename ::std::decay<decltype(val)>::type>();
-        eq = p && (*p == val);
-      });
-    return eq;
-  }
-
 tinyfmt&
 MySQL_Value::
 print(tinyfmt& fmt) const

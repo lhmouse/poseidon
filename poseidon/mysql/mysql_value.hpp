@@ -220,11 +220,6 @@ class MySQL_Value
         this->m_stor = myt;
       }
 
-    // Check whether two values are of the same type and compare equal.
-    ROCKET_PURE
-    bool
-    equals(const MySQL_Value& other) const noexcept;
-
     // Converts this value to its string form. The result will be suitable
     // for immediate use in an SQL statement. Strings are quoted as necessary.
     tinyfmt&
@@ -243,16 +238,6 @@ inline
 tinyfmt&
 operator<<(tinyfmt& fmt, const MySQL_Value& value)
   { return value.print(fmt);  }
-
-inline
-bool
-operator==(const MySQL_Value& lhs, const MySQL_Value& rhs) noexcept
-  { return lhs.equals(rhs);  }
-
-inline
-bool
-operator!=(const MySQL_Value& lhs, const MySQL_Value& rhs) noexcept
-  { return !lhs.equals(rhs);  }
 
 }  // namespace poseidon
 #endif

@@ -41,9 +41,9 @@ class HTTP_Value
       { }
 
     HTTP_Value(system_time tm) noexcept
-      {
-        this->m_stor.emplace<DateTime>(time_point_cast<seconds>(tm));
-      }
+      :
+        m_stor(DateTime(time_point_cast<seconds>(tm)))
+      { }
 
     HTTP_Value&
     operator=(nullptr_t) & noexcept
@@ -183,11 +183,6 @@ class HTTP_Value
     set_time_t(time_t dt) noexcept
       { this->m_stor.emplace<DateTime>().set_time_t(dt);  }
 
-    // Check whether two values are of the same type and compare equal.
-    ROCKET_PURE
-    bool
-    equals(const HTTP_Value& other) const noexcept;
-
     // Try parsing a quoted string. Upon success, the number of characters that
     // have been accepted is returned. Otherwise zero is returned, and the
     // contents of this object is indeterminate.
@@ -255,16 +250,6 @@ inline
 tinyfmt&
 operator<<(tinyfmt& fmt, const HTTP_Value& value)
   { return value.print(fmt);  }
-
-inline
-bool
-operator==(const HTTP_Value& lhs, const HTTP_Value& rhs) noexcept
-  { return lhs.equals(rhs);  }
-
-inline
-bool
-operator!=(const HTTP_Value& lhs, const HTTP_Value& rhs) noexcept
-  { return !lhs.equals(rhs);  }
 
 }  // namespace poseidon
 #endif
