@@ -11,9 +11,9 @@ namespace poseidon {
 enum MySQL_Column_Type : uint8_t
   {
     mysql_column_varchar         = 0,  // varchar(255)
-    mysql_column_bool            = 1,  // tinyint
-    mysql_column_int             = 2,  // int
-    mysql_column_int64           = 3,  // bigint
+    mysql_column_bool            = 1,  // tinyint(1)
+    mysql_column_int             = 2,  // int(11)
+    mysql_column_int64           = 3,  // bigint(20)
     mysql_column_double          = 4,  // double
     mysql_column_blob            = 5,  // longblob
     mysql_column_datetime        = 6,  // datetime
