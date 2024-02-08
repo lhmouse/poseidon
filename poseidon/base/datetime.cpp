@@ -292,7 +292,7 @@ parse_iso8601_partial(const char* str)
     const char* rptr = str;
     ::tm tm = { };
 
-    // `1994-11-06 08:49:37`
+    // `1994-11-06 08:49:37 UTC`
     do_match(rptr, tm.tm_year, s_2digit, 2);
     tm.tm_year = tm.tm_year * 100 - 1900;
     do_match(rptr, tm.tm_year, s_2digit, 2);
