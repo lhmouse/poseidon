@@ -472,8 +472,8 @@ parse_frame_header_from_stream(linear_buffer& data)
     }
 
     switch(this->m_frm_header.opcode) {
-      case 1:  // text data
-      case 2:  // binary data
+    case 1:  // text data
+    case 2:  // binary data
       {
         if(this->m_opcode != 0) {
           // The previous message must have terminated.
@@ -503,11 +503,13 @@ parse_frame_header_from_stream(linear_buffer& data)
         this->m_rsv2 = this->m_frm_header.rsv2;
         this->m_rsv3 = this->m_frm_header.rsv3;
         this->m_opcode = this->m_frm_header.opcode;
-        POSEIDON_LOG_TRACE(("WebSocket data frame: opcode = $1, rsv1 = $2"), this->m_opcode, this->m_rsv1);
-        break;
       }
 
-      case 0:  // continuation
+      // There shall be a message payload.
+      POSEIDON_LOG_TRACE(("WebSocket data frame: opcode = $1, rsv1 = $2"), this->m_opcode, this->m_rsv1);
+      break;
+
+    case 0:  // continuation
       {
         if(mask_len_rsv_opcode & 0b01110000) {
           // RSV bits shall only be set in the first data frame.
@@ -527,15 +529,15 @@ parse_frame_header_from_stream(linear_buffer& data)
         // If this is a FIN frame, terminate the current message.
         if(mask_len_rsv_opcode & 0b10000000)
           this->m_fin = 1;
-
-        // There shall be a message payload.
-        POSEIDON_LOG_TRACE(("WebSocket data continuation: opcode = $1"), this->m_opcode);
-        break;
       }
 
-      case 8:  // close
-      case 9:  // ping
-      case 10:  // pong
+      // There shall be a message payload.
+      POSEIDON_LOG_TRACE(("WebSocket data continuation: opcode = $1"), this->m_opcode);
+      break;
+
+    case 8:  // close
+    case 9:  // ping
+    case 10:  // pong
       {
         if(mask_len_rsv_opcode & 0b01110000) {
           // RSV bits shall only be set in a data frame.
@@ -562,17 +564,17 @@ parse_frame_header_from_stream(linear_buffer& data)
           this->m_error_desc = "control frame not fragmentable";
           return;
         }
-
-        // There shall be a message payload.
-        POSEIDON_LOG_TRACE(("WebSocket control frame: opcode = $1"), this->m_opcode);
-        break;
       }
 
-      default:
-        // Reject this frame with an unknown opcode.
-        this->m_wsf = wsf_error;
-        this->m_error_desc = "unknown opcode";
-        return;
+      // There shall be a message payload.
+      POSEIDON_LOG_TRACE(("WebSocket control frame: opcode = $1"), this->m_opcode);
+      break;
+
+    default:
+      // Reject this frame with an unknown opcode.
+      this->m_wsf = wsf_error;
+      this->m_error_desc = "unknown opcode";
+      return;
     }
 
     if(this->m_frm_header.reserved_1 <= 125) {

@@ -15,27 +15,28 @@ static Easy_HTTP_Client my_client(
     (void) fiber;
 
     switch(event) {
-      case easy_http_open:
-        POSEIDON_LOG_ERROR(("example HTTP client connected to server: $1"),
-                           session->remote_address());
-        break;
+    case easy_http_open:
+      POSEIDON_LOG_ERROR(("example HTTP client connected to server: $1"),
+                         session->remote_address());
+      break;
 
-      case easy_http_message: {
+    case easy_http_message:
+      {
         POSEIDON_LOG_ERROR(("example HTTP client received response: $1 $2"),
                            resp.status, resp.reason);
         for(const auto& pair : resp.headers)
           POSEIDON_LOG_ERROR(("  $1 --> $2"), pair.first, pair.second);
 
         POSEIDON_LOG_ERROR(("    payload ($1 bytes):\n$2"), data.size(), data);
-        break;
       }
+      break;
 
-      case easy_http_close:
-        POSEIDON_LOG_ERROR(("example HTTP client shutdown: $1"), data);
-        break;
+    case easy_http_close:
+      POSEIDON_LOG_ERROR(("example HTTP client shutdown: $1"), data);
+      break;
 
-      default:
-        ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
+    default:
+      ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
     }
   });
 
@@ -54,42 +55,45 @@ static Easy_Timer my_timer(
       state ++;
 
     switch(state) {
-      case 0: {
+    case 0:
+      {
         cow_string addr = &"www.example.org";
         my_client.connect(addr);
         POSEIDON_LOG_ERROR(("example HTTP client connecting: addr = $1"), addr);
-        break;
       }
+      break;
 
-      case 1: {
+    case 1:
+      {
         HTTP_Request_Headers req;
         req.uri_path = &"/";
         req.headers.emplace_back(&"Connection", &"keep-alive");
         my_client.http_GET(move(req));
         POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method, req.uri_path);
-        break;
       }
+      break;
 
-      case 2: {
+    case 2:
+      {
         HTTP_Request_Headers req;
         req.uri_path = &"/";
         my_client.http_POST(move(req), "testdata");
         POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method, req.uri_path);
-        break;
       }
+      break;
 
-      case 3: {
+    case 3:
+      {
         HTTP_Request_Headers req;
         req.uri_path = &"/";
         my_client.http_DELETE(move(req));
         POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method, req.uri_path);
-        break;
       }
+      break;
 
-      default:
-        POSEIDON_LOG_ERROR(("example HTTP client shutting down"));
-        my_client.close();
-        break;
+    default:
+      POSEIDON_LOG_ERROR(("example HTTP client shutting down"));
+      my_client.close();
     }
   });
 

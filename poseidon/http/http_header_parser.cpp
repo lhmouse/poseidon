@@ -121,17 +121,17 @@ next_attribute()
     }
     else
       switch(this->m_hstr.at(this->m_hpos)) {
-        case ',':
-          // Stop at this element separator.
-          return false;
+      case ',':
+        // Stop at this element separator.
+        return false;
 
-        case ';':
-          // Move past this attribute separator.
-          return this->do_next_attribute_from_separator() >= 0;
+      case ';':
+        // Move past this attribute separator.
+        return this->do_next_attribute_from_separator() >= 0;
 
-        default:
-          this->m_hpos = error_hpos;
-          return false;
+      default:
+        this->m_hpos = error_hpos;
+        return false;
       }
   }
 
@@ -152,18 +152,18 @@ next_element()
       }
       else
         switch(this->m_hstr.at(this->m_hpos)) {
-          case ',':
-            // Move past this element separator.
-            return this->do_next_attribute_from_separator() >= 0;
+        case ',':
+          // Move past this element separator.
+          return this->do_next_attribute_from_separator() >= 0;
 
-          case ';':
-            // Move past this attribute separator.
-            this->do_next_attribute_from_separator();
-            continue;
+        case ';':
+          // Move past this attribute separator.
+          this->do_next_attribute_from_separator();
+          continue;
 
-          default:
-            this->m_hpos = error_hpos;
-            return false;
+        default:
+          this->m_hpos = error_hpos;
+          return false;
         }
   }
 

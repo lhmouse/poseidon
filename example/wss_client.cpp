@@ -15,29 +15,29 @@ static Easy_WSS_Client my_client(
     (void) fiber;
 
     switch(event) {
-      case easy_ws_open:
-        POSEIDON_LOG_WARN(("example WSS client established connection to `$1`: $2"),
-                          session->remote_address(), data);
-        break;
+    case easy_ws_open:
+      POSEIDON_LOG_WARN(("example WSS client established connection to `$1`: $2"),
+                        session->remote_address(), data);
+      break;
 
-      case easy_ws_text:
-        POSEIDON_LOG_WARN(("example WSS client received TEXT data: $1"), data);
-        break;
+    case easy_ws_text:
+      POSEIDON_LOG_WARN(("example WSS client received TEXT data: $1"), data);
+      break;
 
-      case easy_ws_binary:
-        POSEIDON_LOG_WARN(("example WSS client received BINARY data: $1"), data);
-        break;
+    case easy_ws_binary:
+      POSEIDON_LOG_WARN(("example WSS client received BINARY data: $1"), data);
+      break;
 
-      case easy_ws_pong:
-        POSEIDON_LOG_WARN(("example WSS client received PONG data: $1"), data);
-        break;
+    case easy_ws_pong:
+      POSEIDON_LOG_WARN(("example WSS client received PONG data: $1"), data);
+      break;
 
-      case easy_ws_close:
-        POSEIDON_LOG_WARN(("example WSS client closed connection: $1"), data);
-        break;
+    case easy_ws_close:
+      POSEIDON_LOG_WARN(("example WSS client closed connection: $1"), data);
+      break;
 
-      default:
-        ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
+    default:
+      ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
     }
   });
 
@@ -56,28 +56,32 @@ static Easy_Timer my_timer(
       state ++;
 
     switch(state) {
-      case 0: {
+    case 0:
+      {
         cow_string addr = &"localhost:3807/some/caddr";
         my_client.connect(addr);
         POSEIDON_LOG_WARN(("example WSS client connecting: addr = $1"), addr);
-        break;
       }
+      break;
 
-      case 1: {
+    case 1:
+      {
         const char data[] = "some text data";
         my_client.wss_send(easy_ws_text, data);
         POSEIDON_LOG_DEBUG(("example WS client sent TEXT frame: $1"), data);
-        break;
       }
+      break;
 
-      case 2: {
+    case 2:
+      {
         const char data[] = "some binary data";
         my_client.wss_send(easy_ws_binary, data);
         POSEIDON_LOG_DEBUG(("example WS client sent BINARY frame: $1"), data);
-        break;
       }
+      break;
 
-      case 3: {
+    case 3:
+      {
         // HACKS; DO NOT PLAY WITH THESE AT HOME.
         WebSocket_Frame_Header header;
         header.mask = 1;
@@ -130,10 +134,11 @@ static Easy_Timer my_timer(
         header.mask_payload(data3, sizeof(data3) - 1);
         fmt.putn(data3, sizeof(data3) - 1);
         my_client.session_opt()->ssl_send(fmt);
-        break;
       }
+      break;
 
-      case 5: {
+    case 5:
+      {
         // HACKS; DO NOT PLAY WITH THESE AT HOME.
         WebSocket_Frame_Header header;
         header.mask = 1;
@@ -186,14 +191,13 @@ static Easy_Timer my_timer(
         header.mask_payload(data3, sizeof(data3) - 1);
         fmt.putn(data3, sizeof(data3) - 1);
         my_client.session_opt()->ssl_send(fmt);
-        break;
       }
+      break;
 
-      default:
-        POSEIDON_LOG_DEBUG(("example WSS client shutting down"));
-        my_client.wss_shut_down(3456, "bye");
-        my_client.close();
-        break;
+    default:
+      POSEIDON_LOG_DEBUG(("example WSS client shutting down"));
+      my_client.wss_shut_down(3456, "bye");
+      my_client.close();
     }
   });
 

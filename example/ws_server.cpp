@@ -14,31 +14,31 @@ static Easy_WS_Server my_server(
     (void) fiber;
 
     switch(event) {
-      case easy_ws_open:
-        POSEIDON_LOG_ERROR(("example WS server accepted connection from `$1`: $2"),
-                           session->remote_address(), data);
-        break;
+    case easy_ws_open:
+      POSEIDON_LOG_ERROR(("example WS server accepted connection from `$1`: $2"),
+                         session->remote_address(), data);
+      break;
 
-      case easy_ws_text:
-        POSEIDON_LOG_ERROR(("example WS server received TEXT data: $1"), data);
-        session->ws_send(easy_ws_text, data);
-        break;
+    case easy_ws_text:
+      POSEIDON_LOG_ERROR(("example WS server received TEXT data: $1"), data);
+      session->ws_send(easy_ws_text, data);
+      break;
 
-      case easy_ws_binary:
-        POSEIDON_LOG_ERROR(("example WS server received BINARY data: $1"), data);
-        session->ws_send(easy_ws_binary, data);
-        break;
+    case easy_ws_binary:
+      POSEIDON_LOG_ERROR(("example WS server received BINARY data: $1"), data);
+      session->ws_send(easy_ws_binary, data);
+      break;
 
-      case easy_ws_pong:
-        POSEIDON_LOG_ERROR(("example WS server received PONG data: $1"), data);
-        break;
+    case easy_ws_pong:
+      POSEIDON_LOG_ERROR(("example WS server received PONG data: $1"), data);
+      break;
 
-      case easy_ws_close:
-        POSEIDON_LOG_ERROR(("example WS server closed connection: $1"), data);
-        break;
+    case easy_ws_close:
+      POSEIDON_LOG_ERROR(("example WS server closed connection: $1"), data);
+      break;
 
-      default:
-        ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
+    default:
+      ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
     }
   });
 

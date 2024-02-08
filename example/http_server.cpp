@@ -14,12 +14,13 @@ static Easy_HTTP_Server my_server(
     (void) fiber;
 
     switch(event) {
-      case easy_http_open:
-        POSEIDON_LOG_ERROR(("example HTTP server accepted connection: $1"),
-                           session->remote_address());
-        break;
+    case easy_http_open:
+      POSEIDON_LOG_ERROR(("example HTTP server accepted connection: $1"),
+                         session->remote_address());
+      break;
 
-      case easy_http_message: {
+    case easy_http_message:
+      {
         POSEIDON_LOG_ERROR(("HTTP request --> $1 $2: $3"),
                            req.method, req.uri_path, req.uri_query);
         for(const auto& r : req.headers)
@@ -35,15 +36,15 @@ static Easy_HTTP_Server my_server(
         fmt << "request payload length = " << data.size() << "\n";
 
         session->http_response(move(resp), fmt);
-        break;
       }
+      break;
 
-      case easy_http_close:
-        POSEIDON_LOG_ERROR(("example HTTP server closed connection: $1"), data);
-        break;
+    case easy_http_close:
+      POSEIDON_LOG_ERROR(("example HTTP server closed connection: $1"), data);
+      break;
 
-      default:
-        ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
+    default:
+      ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
     }
   });
 
