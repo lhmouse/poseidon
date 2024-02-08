@@ -6,6 +6,7 @@
 
 #include "../fwd.hpp"
 #include "enums.hpp"
+#include "mysql_value.hpp"
 namespace poseidon {
 
 class MySQL_Table_Structure
@@ -16,6 +17,7 @@ class MySQL_Table_Structure
         cow_string name;
         MySQL_Column_Type type = mysql_column_varchar;
         bool nullable = false;
+        MySQL_Value default_value;
       };
 
     struct Index
