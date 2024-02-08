@@ -57,14 +57,14 @@ MySQL_Table_Structure::
 set_engine(MySQL_Engine_Type engine)
   {
     switch(engine) {
-      case mysql_engine_innodb:
-      case mysql_engine_myisam:
-      case mysql_engine_memory:
-      case mysql_engine_archive:
-        break;
+    case mysql_engine_innodb:
+    case mysql_engine_myisam:
+    case mysql_engine_memory:
+    case mysql_engine_archive:
+      break;
 
-      default:
-        POSEIDON_THROW(("Invalid MySQL storage engine `$1`"), engine);
+    default:
+      POSEIDON_THROW(("Invalid MySQL storage engine `$1`"), engine);
     }
 
     this->m_engine = engine;
@@ -86,37 +86,149 @@ add_column(const Column& column)
       POSEIDON_THROW(("Invalid MySQL column name `$1`"), column.name);
 
     switch(column.type) {
-      case mysql_column_varchar:
-      case mysql_column_bool:
-      case mysql_column_int:
-      case mysql_column_int64:
-      case mysql_column_double:
-      case mysql_column_blob:
-      case mysql_column_datetime:
-      case mysql_column_auto_increment:
-        break;
+    case mysql_column_varchar:
+      {
+        if(column.default_value.is_null())
+          break;
 
-      default:
-        POSEIDON_THROW(("Invalid MySQL data type `$1`"), column.type);
-    }
-
-    if(column.type == mysql_column_auto_increment) {
-      // More constraints exist.
-      if(column.nullable)
-        POSEIDON_THROW((
-            "Auto-increment column `$1` is not nullable"),
-            column.name);
-
-      if(!column.default_value.is_null())
-        POSEIDON_THROW((
-            "Auto-increment column `$1` shall not have a default value"),
-            column.name);
-
-      for(const auto& other_column : this->m_columns)
-        if(other_column.type == mysql_column_auto_increment)
+        if(!column.default_value.is_string())
           POSEIDON_THROW((
-              "Another auto-increment column `$1` already exists"),
-              other_column.name);
+              "Invalid default value for column `$1`"),
+              column.name);
+
+        const cow_string& val = column.default_value.as_string();
+
+        size_t offset = 0, count = 0;;
+        char32_t cp;
+        while(::asteria::utf8_decode(cp, val, offset))
+          count ++;
+
+        if(count > 255)
+          POSEIDON_THROW((
+              "Default string for column `$1` is too long"),
+              column.name);
+      }
+      break;
+
+    case mysql_column_bool:
+      {
+        if(column.default_value.is_null())
+          break;
+
+        if(!column.default_value.is_integer())
+          POSEIDON_THROW((
+              "Invalid default value for column `$1`"),
+              column.name);
+
+        const int64_t val = column.default_value.as_integer();
+
+        if((val != 0) && (val != 1))
+          POSEIDON_THROW((
+              "Default value for column `$1` is out of range"),
+              column.name);
+      }
+      break;
+
+    case mysql_column_int:
+      {
+        if(column.default_value.is_null())
+          break;
+
+        if(!column.default_value.is_integer())
+          POSEIDON_THROW((
+              "Invalid default value for column `$1`"),
+              column.name);
+
+        const int64_t val = column.default_value.as_integer();
+
+        if((val < INT32_MIN) && (val > INT32_MAX))
+          POSEIDON_THROW((
+              "Default value for column `$1` is out of range"),
+              column.name);
+      }
+      break;
+
+    case mysql_column_int64:
+      {
+        if(column.default_value.is_null())
+          break;
+
+        if(!column.default_value.is_integer())
+          POSEIDON_THROW((
+              "Invalid default value for column `$1`"),
+              column.name);
+      }
+      break;
+
+    case mysql_column_double:
+      {
+        if(column.default_value.is_null())
+          break;
+
+        if(!column.default_value.is_double())
+          POSEIDON_THROW((
+              "Invalid default value for column `$1`"),
+              column.name);
+
+        const double val = column.default_value.as_double();
+
+        if(!::std::isfinite(val))
+          POSEIDON_THROW((
+              "Default value for column `$1` shall be finite"),
+              column.name);
+      }
+      break;
+
+    case mysql_column_blob:
+      {
+        if(!column.default_value.is_null())
+          POSEIDON_THROW((
+              "BLOB column `$1` shall not have a default value"),
+              column.name);
+      }
+      break;
+
+    case mysql_column_datetime:
+      {
+        if(column.default_value.is_null())
+          break;
+
+        if(!column.default_value.is_mysql_time())
+          POSEIDON_THROW((
+              "Invalid default value for column `$1`"),
+              column.name);
+
+        const ::MYSQL_TIME& val = column.default_value.as_mysql_time();
+
+        if(val.time_type != MYSQL_TIMESTAMP_DATETIME)
+          POSEIDON_THROW((
+              "Default value for column `$1` must be `MYSQL_TIMESTAMP_DATETIME`"),
+              column.name);
+      }
+      break;
+
+    case mysql_column_auto_increment:
+      {
+        if(!column.default_value.is_null())
+          POSEIDON_THROW((
+              "Auto-increment column `$1` shall not have a default value"),
+              column.name);
+
+        if(column.nullable)
+          POSEIDON_THROW((
+              "Auto-increment column `$1` is not nullable"),
+              column.name);
+
+        for(const auto& other_column : this->m_columns)
+          if(other_column.type == mysql_column_auto_increment)
+            POSEIDON_THROW((
+                "Another auto-increment column `$1` already exists"),
+                other_column.name);
+      }
+      break;
+
+    default:
+      POSEIDON_THROW(("Invalid MySQL data type `$1`"), column.type);
     }
 
     return do_add_element(this->m_columns, column);
