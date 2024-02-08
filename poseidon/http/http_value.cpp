@@ -169,6 +169,19 @@ parse(chars_view str)
     return 0;
   }
 
+bool
+HTTP_Value::
+equals(const HTTP_Value& other) const noexcept
+  {
+    bool eq = false;
+    this->m_stor.visit(
+      [&](const auto& val) {
+        auto p = other.m_stor.ptr<typename ::std::decay<decltype(val)>::type>();
+        eq = p && (*p == val);
+      });
+    return eq;
+  }
+
 tinyfmt&
 HTTP_Value::
 print(tinyfmt& fmt) const
@@ -178,12 +191,12 @@ print(tinyfmt& fmt) const
         tinyfmt* pfmt;
 
         void
-        operator()(nullptr_t) const
+        operator()(nullptr_t)
           {
           }
 
         void
-        operator()(cow_stringR str) const
+        operator()(cow_stringR str)
           {
             auto pos = ::std::find_if(str.begin(), str.end(), do_is_ctl_or_sep);
             if(pos == str.end()) {
@@ -222,7 +235,7 @@ print(tinyfmt& fmt) const
           }
 
         void
-        operator()(double num) const
+        operator()(double num)
           {
             ::rocket::ascii_numput nump;
             nump.put_DD(num);
@@ -230,7 +243,7 @@ print(tinyfmt& fmt) const
           }
 
         void
-        operator()(const DateTime& dt) const
+        operator()(const DateTime& dt)
           {
             char sbuf[32];
             dt.print_rfc1123_partial(sbuf);
