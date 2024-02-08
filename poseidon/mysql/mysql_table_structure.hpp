@@ -74,6 +74,11 @@ class MySQL_Table_Structure
     void
     set_engine(MySQL_Engine_Type engine);
 
+    // Gets all columns.
+    const cow_vector<Column>&
+    columns() const noexcept
+      { return this->m_columns;  }
+
     // Gets a column.
     size_t
     count_columns() const noexcept
@@ -83,6 +88,9 @@ class MySQL_Table_Structure
     column(size_t pos) const
       { return this->m_columns.at(pos);  }
 
+    const Column*
+    find_column_opt(cow_stringR name) const noexcept;
+
     // Adds a column. If a column with the same name already exists, it will be
     // updated in place.
     // Returns the  subscript of the updated column.
@@ -90,6 +98,11 @@ class MySQL_Table_Structure
     // an exception is thrown, and there is no effect.
     size_t
     add_column(const Column& column);
+
+    // Gets all indexes.
+    const cow_vector<Index>&
+    indexes() const noexcept
+      { return this->m_indexes;  }
 
     // Gets an index.
     size_t
@@ -99,6 +112,9 @@ class MySQL_Table_Structure
     const Index&
     index(size_t pos) const
       { return this->m_indexes.at(pos);  }
+
+    const Index*
+    find_index_opt(cow_stringR name) const noexcept;
 
     // Adds an index. If an index with the same name already exists, it will be
     // updated in place. If `index.name` equals `"primary"`, it denotes the

@@ -11,7 +11,7 @@ bool
 do_is_name_valid(cow_stringR name)
   {
     return (name.size() != 0)
-        && all_of(name,
+        && ::rocket::all_of(name,
              [](char c) {
                return ((c >= '0') && (c <= '9'))
                       || ((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z'))
@@ -70,6 +70,14 @@ set_engine(MySQL_Engine_Type engine)
     this->m_engine = engine;
   }
 
+const MySQL_Table_Structure::Column*
+MySQL_Table_Structure::
+find_column_opt(cow_stringR name) const noexcept
+  {
+    return ::rocket::find_if(this->m_columns,
+             [&](const Column& r) { return ascii_ci_equal(r.name, name);  });
+  }
+
 size_t
 MySQL_Table_Structure::
 add_column(const Column& column)
@@ -92,15 +100,34 @@ add_column(const Column& column)
         POSEIDON_THROW(("Invalid MySQL data type `$1`"), column.type);
     }
 
-    if(column.type == mysql_column_auto_increment)
-      for(const auto& other_column : this->m_columns) {
+    if(column.type == mysql_column_auto_increment) {
+      // More constraints exist.
+      if(column.nullable)
+        POSEIDON_THROW((
+            "Auto-increment column `$1` is not nullable"),
+            column.name);
+
+      if(!column.default_value.is_null())
+        POSEIDON_THROW((
+            "Auto-increment column `$1` shall not have a default value"),
+            column.name);
+
+      for(const auto& other_column : this->m_columns)
         if(other_column.type == mysql_column_auto_increment)
           POSEIDON_THROW((
               "Another auto-increment column `$1` already exists"),
               other_column.name);
-      }
+    }
 
     return do_add_element(this->m_columns, column);
+  }
+
+const MySQL_Table_Structure::Index*
+MySQL_Table_Structure::
+find_index_opt(cow_stringR name) const noexcept
+  {
+    return ::rocket::find_if(this->m_indexes,
+             [&](const Index& r) { return ascii_ci_equal(r.name, name);  });
   }
 
 size_t
@@ -117,16 +144,9 @@ add_index(const Index& index)
     if(primary && !index.unique)
       POSEIDON_THROW(("Primary key must also be unique"));
 
-    // Verify columns.
     for(size_t icol = 0;  icol != index.columns.size();  ++icol) {
-      const Column* col = nullptr;
-
-      for(size_t k = 0;  k != this->m_columns.size();  ++k)
-        if(ascii_ci_equal(this->m_columns[k].name, index.columns[icol])) {
-          col = &this->m_columns[k];
-          break;
-        }
-
+      // Verify this column.
+      auto col = this->find_column_opt(index.columns[icol]);
       if(!col)
         POSEIDON_THROW((
             "MySQL index `$1` contains non-existent column `$2`"),
