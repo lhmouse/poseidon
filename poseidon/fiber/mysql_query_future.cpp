@@ -16,15 +16,7 @@ MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt)
   }
 
 MySQL_Query_Future::
-MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt, const vector<MySQL_Value>& stmt_args)
-  {
-    this->m_connector = &connector;
-    this->m_res.stmt = stmt;
-    this->m_res.stmt_args = stmt_args;
-  }
-
-MySQL_Query_Future::
-MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt, vector<MySQL_Value>&& stmt_args)
+MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt, vector<MySQL_Value> stmt_args)
   {
     this->m_connector = &connector;
     this->m_res.stmt = stmt;

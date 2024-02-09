@@ -131,17 +131,16 @@ struct exIndex
 }  // namespace
 
 MySQL_Check_Table_Future::
-MySQL_Check_Table_Future(MySQL_Connector& connector, const MySQL_Table_Structure& table)
+MySQL_Check_Table_Future(MySQL_Connector& connector, MySQL_Table_Structure table)
   {
-    this->m_connector = &connector;
-    this->m_res.table = table;
-
-    // Validate the table structure.
     if(table.name() == "")
       POSEIDON_THROW(("MySQL table has no name"));
 
     if(table.count_columns() == 0)
       POSEIDON_THROW(("MySQL table has no column"));
+
+    this->m_connector = &connector;
+    this->m_res.table = table;
   }
 
 MySQL_Check_Table_Future::

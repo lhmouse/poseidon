@@ -38,9 +38,7 @@ class MySQL_Query_Future
     // This future will become ready once the query is complete.
     MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt);
 
-    MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt, const vector<MySQL_Value>& stmt_args);
-
-    MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt, vector<MySQL_Value>&& stmt_args);
+    MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt, vector<MySQL_Value> stmt_args);
 
   private:
     // Performs the SQL query.
