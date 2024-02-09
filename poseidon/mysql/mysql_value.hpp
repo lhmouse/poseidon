@@ -168,6 +168,10 @@ class MySQL_Value
     str_data() const
       { return this->m_stor.as<cow_string>().c_str();  }
 
+    char*
+    mut_str_data()
+      { return this->m_stor.mut<cow_string>().mut_data();  }
+
     size_t
     str_length() const
       { return this->m_stor.as<cow_string>().length();  }
