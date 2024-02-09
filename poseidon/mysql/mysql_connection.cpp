@@ -216,49 +216,68 @@ fetch_row(vector<MySQL_Value>& output)
     output.resize(nfields);
 
     for(unsigned col = 0;  col != nfields;  ++col) {
-      // This is the omnipotent type for all values, used either when there is
-      // no metadata so we can't know the type of this field, or when the MySQL
-      // documentation says a `char[]` shall be used.
-      binds[col].buffer_type = MYSQL_TYPE_BLOB;
+      // Prepare output buffers. When there is no metadata o we can't know the
+      // type of this field, the output is written as an omnipotent string.
+      ::MYSQL_FIELD* field = this->do_metadata_for_field_opt(col);
+      uint32_t type = field ? field->type : MYSQL_TYPE_BLOB;
+      switch(type) {
+      case MYSQL_TYPE_NULL:
+        {
+          binds[col].buffer_type = MYSQL_TYPE_NULL;
+          binds[col].buffer = nullptr;
+          binds[col].buffer_length = 0;
+        }
+        break;
+
+      case MYSQL_TYPE_TINY:
+      case MYSQL_TYPE_SHORT:
+      case MYSQL_TYPE_INT24:
+      case MYSQL_TYPE_LONG:
+      case MYSQL_TYPE_LONGLONG:
+        {
+          output[col].set_integer(0);
+          binds[col].buffer_type = MYSQL_TYPE_LONGLONG;
+          binds[col].buffer = &(output[col].mut_integer());
+          binds[col].buffer_length = sizeof(int64_t);
+        }
+        break;
+
+      case MYSQL_TYPE_FLOAT:
+      case MYSQL_TYPE_DOUBLE:
+        {
+          output[col].set_double(0);
+          binds[col].buffer_type = MYSQL_TYPE_DOUBLE;
+          binds[col].buffer = &(output[col].mut_double());
+          binds[col].buffer_length = sizeof(double);
+        }
+        break;
+
+      case MYSQL_TYPE_TIMESTAMP:
+      case MYSQL_TYPE_DATETIME:
+      case MYSQL_TYPE_DATE:
+      case MYSQL_TYPE_TIME:
+        {
+          output[col].set_mysql_datetime(0, 0, 0);
+          binds[col].buffer_type = MYSQL_TYPE_DATETIME;
+          binds[col].buffer = &(output[col].mut_mysql_time());
+          binds[col].buffer_length = sizeof(::MYSQL_TIME);
+        }
+        break;
+
+      default:
+        {
+          output[col].set_string(&".......+.......+.......+.......+.......+");
+          binds[col].buffer_type = MYSQL_TYPE_LONG_BLOB;
+          binds[col].buffer = output[col].mut_str_data();
+          binds[col].buffer_length = output[col].str_length();
+        }
+        break;
+      }
 
       // XXX: What are these fields used for? Why aren't they used by default?
       binds[col].length = &(binds[col].length_value);
       binds[col].error = &(binds[col].error_value);
       binds[col].is_null = &(binds[col].is_null_value);
-
-      ::MYSQL_FIELD* field = this->do_metadata_for_field_opt(col);
-      if(!field)
-        continue;
-
-      if(field->type == MYSQL_TYPE_NULL) {
-        // no output
-        binds[col].buffer_type = MYSQL_TYPE_NULL;
-      }
-      else if(is_any_of(field->type, { MYSQL_TYPE_TINY, MYSQL_TYPE_SHORT, MYSQL_TYPE_INT24,
-                                       MYSQL_TYPE_LONG, MYSQL_TYPE_LONGLONG })) {
-        // `BIGINT`
-        binds[col].buffer_type = MYSQL_TYPE_LONGLONG;
-        output[col].set_integer(0);
-        binds[col].buffer = &(output[col].mut_integer());
-        binds[col].buffer_length = sizeof(int64_t);
-      }
-      else if(is_any_of(field->type, { MYSQL_TYPE_FLOAT, MYSQL_TYPE_DOUBLE })) {
-        // `DOUBLE`
-        binds[col].buffer_type = MYSQL_TYPE_DOUBLE;
-        output[col].set_double(0);
-        binds[col].buffer = &(output[col].mut_double());
-        binds[col].buffer_length = sizeof(double);
-      }
-      else if(is_any_of(field->type, { MYSQL_TYPE_TIME, MYSQL_TYPE_DATE, MYSQL_TYPE_DATETIME,
-                                       MYSQL_TYPE_TIMESTAMP })) {
-        // `DATETIME`
-        binds[col].buffer_type = MYSQL_TYPE_DATETIME;
-        output[col].set_mysql_datetime(0, 0, 0, 0, 0, 0, 0);
-        binds[col].buffer = &(output[col].mut_mysql_time());
-        binds[col].buffer_length = sizeof(::MYSQL_TIME);
-      }
-      else
-        binds[col].buffer_type = MYSQL_TYPE_BLOB;
     }
 
     if(::mysql_stmt_bind_result(this->m_stmt, binds.data()) != 0)
@@ -282,14 +301,15 @@ fetch_row(vector<MySQL_Value>& output)
         // Set it to an explicit `NULL`.
         output[col].clear();
       }
-      else if(ROCKET_UNEXPECT(binds[col].buffer_type == MYSQL_TYPE_BLOB)) {
-        // Only its length has been fetched, so fetch its data now.
-        output[col].set_string("", 0);
-        auto& outs = output[col].mut_string();
-        outs.resize(binds[col].length_value, '*');
-        binds[col].buffer = outs.mut_data();
-        binds[col].buffer_length = outs.size();
-        ::mysql_stmt_fetch_column(this->m_stmt, &(binds[col]), col, 0);
+      else if(binds[col].buffer_type == MYSQL_TYPE_LONG_BLOB) {
+        // If the value has been truncated, fetch more.
+        size_t rlen = output[col].str_length();
+        output[col].mut_string().resize(binds[col].length_value);
+        if(rlen < binds[col].length_value) {
+          binds[col].buffer = output[col].mut_str_data();
+          binds[col].buffer_length = output[col].str_length();
+          ::mysql_stmt_fetch_column(this->m_stmt, &(binds[col]), col, 0);
+        }
       }
     }
     return true;
