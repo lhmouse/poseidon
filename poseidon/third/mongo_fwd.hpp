@@ -84,13 +84,6 @@ operator<<(tinyfmt& fmt, const BSON& bson)
     return fmt << (str ? str : "(invalid BSON)");
   }
 
-inline
-tinyfmt&
-operator<<(tinyfmt& fmt, const ::bson_error_t& err)
-  {
-    return format(fmt, "ERROR $1.$2: $3", err.domain, err.code, err.message);
-  }
-
 struct mongoc_uri_deleter
   {
     void
@@ -105,13 +98,6 @@ struct mongoc_client_deleter
       { ::mongoc_client_destroy(p);  }
   };
 
-struct mongoc_collection_deleter
-  {
-    void
-    operator()(::mongoc_collection_t* p) const noexcept
-      { ::mongoc_collection_destroy(p);  }
-  };
-
 struct mongoc_cursor_deleter
   {
     void
@@ -121,7 +107,6 @@ struct mongoc_cursor_deleter
 
 using uniptr_mongoc_uri = ::rocket::unique_ptr<::mongoc_uri_t, mongoc_uri_deleter>;
 using uniptr_mongoc_client = ::rocket::unique_ptr<::mongoc_client_t, mongoc_client_deleter>;
-using uniptr_mongoc_collection = ::rocket::unique_ptr<::mongoc_collection_t, mongoc_collection_deleter>;
 using uniptr_mongoc_cursor = ::rocket::unique_ptr<::mongoc_cursor_t, mongoc_cursor_deleter>;
 
 }  // namespace poseidon

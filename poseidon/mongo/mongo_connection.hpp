@@ -19,8 +19,9 @@ class Mongo_Connection
     cow_string m_user;
     uint16_t m_port;
 
-    bool m_connected;
-    bool m_reset_clear;
+    uniptr_mongoc_client m_mongo;
+    BSON m_reply;
+    uniptr_mongoc_cursor m_cursor;
 
   public:
     // Sets connection parameters. This function does not attempt to connect
@@ -48,6 +49,27 @@ class Mongo_Connection
     cow_stringR
     user() const noexcept
       { return this->m_user;  }
+
+    // Resets the connection so it can be reused by another thread. This is a
+    // blocking functions. DO NOT ATTEMPT TO REUSE THE CONNECTION IF THIS
+    // FUNCTION RETURNS `false`.
+    // Returns whether the connection may be safely reused.
+    bool
+    reset() noexcept;
+
+    // Executes a command in BSON syntax with no options. The command is run
+    // on the default database.
+    // Reference: https://www.mongodb.com/docs/manual/reference/command/nav-crud/
+    void
+    execute(const BSON& cmd);
+
+    // Fetches an object from the reply to the last command. This function must
+    // be called after `execute()`. `output` is cleared before fetching any data.
+    // If the query has produced a result and an object has been successfully
+    // fetched, `true` is returned. If there is no result or the end of result
+    // has been reached, `false` is returned.
+    bool
+    fetch_reply(BSON& output);
   };
 
 }  // namespace poseidon

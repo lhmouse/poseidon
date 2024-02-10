@@ -217,6 +217,7 @@ test_src_mysql = [
 ]
 
 test_src_mongo = [
+  'test/mongo_connection.cpp',
 ]
 
 #===========================================================

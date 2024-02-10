@@ -245,14 +245,14 @@ pool_connection(uniptr<Mongo_Connection>&& conn) noexcept
   {
     if(!conn)
       return false;
-
+/*
     if(!conn->m_reset_clear) {
       // If `.reset()` has not been called or has failed, the connection cannot
       // be reused safely, so ignore the request.
       POSEIDON_LOG_ERROR(("MongoDB connection not reset properly"));
       return false;
     }
-
+*/
     plain_mutex::unique_lock lock(this->m_conf_mutex);
     const seconds idle_timeout = this->m_conf_connection_idle_timeout;
     lock.unlock();
