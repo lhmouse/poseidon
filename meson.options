@@ -10,7 +10,7 @@ option('enable-mysql',
        type: 'boolean', value: true,
        description: 'enable access to MySQL servers')
 
-option('enable-mongodb',
+option('enable-mongo',
        type: 'boolean', value: true,
        description: 'enable access to MongoDB servers')
 

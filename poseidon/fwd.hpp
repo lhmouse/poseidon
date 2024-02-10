@@ -637,7 +637,7 @@ class MySQL_Value;
 class MySQL_Connection;
 
 // MongoDB types
-class MongoDB_Connection;
+class Mongo_Connection;
 
 // Easy types
 // Being 'easy' means all callbacks are invoked in fibers and can perform
@@ -672,7 +672,7 @@ extern class Network_Driver& network_driver;
 extern class Fiber_Scheduler& fiber_scheduler;
 
 extern class MySQL_Connector& mysql_connector;
-extern class MongoDB_Connector& mongodb_connector;
+extern class Mongo_Connector& mongo_connector;
 
 }  // namespace poseidon
 #endif

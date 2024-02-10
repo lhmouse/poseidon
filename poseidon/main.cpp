@@ -25,9 +25,9 @@
 #include "static/mysql_connector.hpp"
 #include "third/mysql_fwd.hpp"
 #endif
-#ifdef POSEIDON_ENABLE_MONGODB
-#include "static/mongodb_connector.hpp"
-#include "third/mongodb_fwd.hpp"
+#ifdef POSEIDON_ENABLE_MONGO
+#include "static/mongo_connector.hpp"
+#include "third/mongo_fwd.hpp"
 #endif
 namespace {
 using namespace poseidon;
@@ -617,10 +617,10 @@ main(int argc, char** argv)
     mysql_connector.reload(main_config.copy());
 #endif
 
-#ifdef POSEIDON_ENABLE_MONGODB
+#ifdef POSEIDON_ENABLE_MONGO
     ::mongoc_init();
     POSEIDON_LOG_DEBUG(("Initialized libmongoc $1"), ::mongoc_get_version());
-    mongodb_connector.reload(main_config.copy());
+    mongo_connector.reload(main_config.copy());
 #endif
 
     fiber_scheduler.reload(main_config.copy());

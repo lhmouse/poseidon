@@ -95,11 +95,11 @@ poseidon_include_mysql = [
   'poseidon/fiber/mysql_check_table_future.hpp',
 ]
 
-poseidon_include_mongodb = [
-  'poseidon/third/mongodb_fwd.hpp',
-  'poseidon/static/mongodb_connector.hpp',
-  'poseidon/mongodb/enums.hpp',
-  'poseidon/mongodb/mongodb_connection.hpp',
+poseidon_include_mongo = [
+  'poseidon/third/mongo_fwd.hpp',
+  'poseidon/static/mongo_connector.hpp',
+  'poseidon/mongo/enums.hpp',
+  'poseidon/mongo/mongo_connection.hpp',
 ]
 
 poseidon_src = [
@@ -173,9 +173,9 @@ poseidon_src_mysql = [
   'poseidon/fiber/mysql_check_table_future.cpp',
 ]
 
-poseidon_src_mongodb = [
-  'poseidon/static/mongodb_connector.cpp',
-  'poseidon/mongodb/mongodb_connection.cpp',
+poseidon_src_mongo = [
+  'poseidon/static/mongo_connector.cpp',
+  'poseidon/mongo/mongo_connection.cpp',
 ]
 
 etc_poseidon = [
@@ -216,7 +216,7 @@ test_src_mysql = [
   'test/mysql_connection.cpp',
 ]
 
-test_src_mongodb = [
+test_src_mongo = [
 ]
 
 #===========================================================
@@ -307,13 +307,13 @@ if get_option('enable-mysql')
   test_src += test_src_mysql
 endif
 
-if get_option('enable-mongodb')
+if get_option('enable-mongo')
   dep_mongoc = dependency('libmongoc-1.0')
-  add_project_arguments('-DPOSEIDON_ENABLE_MONGODB', language: [ 'c', 'cpp' ])
+  add_project_arguments('-DPOSEIDON_ENABLE_MONGO', language: [ 'c', 'cpp' ])
 
-  poseidon_include += poseidon_include_mongodb
-  poseidon_src += poseidon_src_mongodb
-  test_src += test_src_mongodb
+  poseidon_include += poseidon_include_mongo
+  poseidon_src += poseidon_src_mongo
+  test_src += test_src_mongo
 endif
 
 #===========================================================
@@ -344,7 +344,7 @@ import('pkgconfig').generate(lib_poseidon,
       url: 'https://github.com/lhmouse/poseidon',
       description: 'The Poseidon Server Framework is a modern framework for game '
                    + 'server development, with support for plain TCP, TCP over TLS, '
-                   + 'UDP, HTTP, WebSocket (with permessage-deflate), MySQL, MongoDB, '
+                   + 'UDP, HTTP, WebSocket (with permessage-deflate), MySQL, Mongo, '
                    + 'and coroutines.')
 
 #===========================================================

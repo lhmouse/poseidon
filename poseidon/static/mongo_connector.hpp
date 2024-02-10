@@ -1,14 +1,14 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
-#ifndef POSEIDON_STATIC_MONGODB_CONNECTOR_
-#define POSEIDON_STATIC_MONGODB_CONNECTOR_
+#ifndef POSEIDON_STATIC_MONGO_CONNECTOR_
+#define POSEIDON_STATIC_MONGO_CONNECTOR_
 
 #include "../fwd.hpp"
-#include "../third/mongodb_fwd.hpp"
+#include "../third/mongo_fwd.hpp"
 namespace poseidon {
 
-class MongoDB_Connector
+class Mongo_Connector
   {
   private:
     mutable plain_mutex m_conf_mutex;
@@ -27,12 +27,12 @@ class MongoDB_Connector
 
   public:
     // Constructs an empty connector.
-    MongoDB_Connector() noexcept;
+    Mongo_Connector() noexcept;
 
   public:
-    MongoDB_Connector(const MongoDB_Connector&) = delete;
-    MongoDB_Connector& operator=(const MongoDB_Connector&) & = delete;
-    ~MongoDB_Connector();
+    Mongo_Connector(const Mongo_Connector&) = delete;
+    Mongo_Connector& operator=(const Mongo_Connector&) & = delete;
+    ~Mongo_Connector();
 
     // Reloads configuration from 'main.conf'.
     // If this function fails, an exception is thrown, and there is no effect.
@@ -43,12 +43,12 @@ class MongoDB_Connector
     // Allocates a connection to `server:port` as `user`, and sets the default
     // database to `db`. If a matching idle connection exists in the pool, it is
     // returned; otherwise a new connection is created.
-    uniptr<MongoDB_Connection>
+    uniptr<Mongo_Connection>
     allocate_connection(cow_stringR server, uint16_t port, cow_stringR user, cow_stringR passwd, cow_stringR db);
 
     // Allocates a connection using arguments from 'main.conf'. This function
     // is otherwise the same as `allocate_connection_explicit()`.
-    uniptr<MongoDB_Connection>
+    uniptr<Mongo_Connection>
     allocate_default_connection();
 
     // Puts a connection back into the pool. It is required to `.reset()` a
@@ -57,7 +57,7 @@ class MongoDB_Connector
     // reset, a warning is printed, and the request is ignored, and `false` is
     // returned.
     bool
-    pool_connection(uniptr<MongoDB_Connection>&& conn) noexcept;
+    pool_connection(uniptr<Mongo_Connection>&& conn) noexcept;
   };
 
 }  // namespace poseidon

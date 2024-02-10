@@ -11,10 +11,10 @@
 #include "static/network_driver.hpp"
 #ifdef POSEIDON_ENABLE_MYSQL
 #include "static/mysql_connector.hpp"
-#endif  // MySQL
-#ifdef POSEIDON_ENABLE_MONGODB
-#include "static/mongodb_connector.hpp"
-#endif  // MongoDB
+#endif
+#ifdef POSEIDON_ENABLE_MONGO
+#include "static/mongo_connector.hpp"
+#endif
 #define UNW_LOCAL_ONLY  1
 #include <libunwind.h>
 #include <cxxabi.h>
@@ -31,10 +31,10 @@ Fiber_Scheduler& fiber_scheduler = *new Fiber_Scheduler;
 
 #ifdef POSEIDON_ENABLE_MYSQL
 MySQL_Connector& mysql_connector = *new MySQL_Connector;
-#endif  // MySQL
-#ifdef POSEIDON_ENABLE_MONGODB
-MongoDB_Connector& mongodb_connector = *new MongoDB_Connector;
-#endif  // MongoDB
+#endif
+#ifdef POSEIDON_ENABLE_MONGO
+Mongo_Connector& mongo_connector = *new Mongo_Connector;
+#endif
 
 bool
 check_log_level(Log_Level level) noexcept

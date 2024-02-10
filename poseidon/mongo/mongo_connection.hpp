@@ -1,19 +1,19 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
-#ifndef POSEIDON_MONGODB_MONGODB_CONNECTION_
-#define POSEIDON_MONGODB_MONGODB_CONNECTION_
+#ifndef POSEIDON_MONGO_MONGO_CONNECTION_
+#define POSEIDON_MONGO_MONGO_CONNECTION_
 
 #include "../fwd.hpp"
 #include "enums.hpp"
-#include "../third/mongodb_fwd.hpp"
+#include "../third/mongo_fwd.hpp"
 #include "enums.hpp"
 namespace poseidon {
 
-class MongoDB_Connection
+class Mongo_Connection
   {
   private:
-    friend class MongoDB_Connector;
+    friend class Mongo_Connector;
 
     cow_string m_server;
     cow_string m_user;
@@ -26,12 +26,12 @@ class MongoDB_Connection
   public:
     // Sets connection parameters. This function does not attempt to connect
     // to the server, and is not blocking.
-    MongoDB_Connection(cow_stringR server, uint16_t port, cow_stringR user, cow_stringR passwd, cow_stringR db);
+    Mongo_Connection(cow_stringR server, uint16_t port, cow_stringR user, cow_stringR passwd, cow_stringR db);
 
   public:
-    MongoDB_Connection(const MongoDB_Connection&) = delete;
-    MongoDB_Connection& operator=(const MongoDB_Connection&) & = delete;
-    ~MongoDB_Connection();
+    Mongo_Connection(const Mongo_Connection&) = delete;
+    Mongo_Connection& operator=(const Mongo_Connection&) & = delete;
+    ~Mongo_Connection();
 
     // Get connection parameters.
     cow_stringR

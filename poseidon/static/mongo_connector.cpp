@@ -2,8 +2,8 @@
 // Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #include "../xprecompiled.hpp"
-#include "mongodb_connector.hpp"
-#include "../mongodb/mongodb_connection.hpp"
+#include "mongo_connector.hpp"
+#include "../mongo/mongo_connection.hpp"
 #include "../base/config_file.hpp"
 #include "../utils.hpp"
 namespace poseidon {
@@ -11,7 +11,7 @@ namespace {
 
 struct Pooled_Connection
   {
-    uniptr<MongoDB_Connection> conn;
+    uniptr<Mongo_Connection> conn;
     steady_time pooled_since = steady_time::max();
   };
 
@@ -28,20 +28,20 @@ do_mask_password(cow_string& password, uint32_t mask)
 
 }  // namespace
 
-POSEIDON_HIDDEN_X_STRUCT(MongoDB_Connector, Pooled_Connection);
+POSEIDON_HIDDEN_X_STRUCT(Mongo_Connector, Pooled_Connection);
 
-MongoDB_Connector::
-MongoDB_Connector() noexcept
+Mongo_Connector::
+Mongo_Connector() noexcept
   {
   }
 
-MongoDB_Connector::
-~MongoDB_Connector()
+Mongo_Connector::
+~Mongo_Connector()
   {
   }
 
 void
-MongoDB_Connector::
+Mongo_Connector::
 reload(const Config_File& conf_file)
   {
     // Parse new configuration. Default ones are defined here.
@@ -54,52 +54,52 @@ reload(const Config_File& conf_file)
     int64_t connection_pool_size = 0;
     int64_t connection_idle_timeout = 60;
 
-    // Read the server name from configuration. The MongoDB client library is able
+    // Read the server name from configuration. The Mongo client library is able
     // to perform DNS lookup as necessary, so this need not be an IP address.
-    auto conf_value = conf_file.query("mongodb", "default_server");
+    auto conf_value = conf_file.query("mongo", "default_server");
     if(conf_value.is_string())
       default_server = conf_value.as_string();
     else if(!conf_value.is_null())
       POSEIDON_THROW((
-          "Invalid `mongodb.default_server`: expecting a `string`, got `$1`",
+          "Invalid `mongo.default_server`: expecting a `string`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
 
     // Read the port number from configuration. 0 is allowed as it has a special
     // meaning. 65535 is not allowed.
-    conf_value = conf_file.query("mongodb", "default_port");
+    conf_value = conf_file.query("mongo", "default_port");
     if(conf_value.is_integer())
       default_port = conf_value.as_integer();
     else if(!conf_value.is_null())
       POSEIDON_THROW((
-          "Invalid `mongodb.default_port`: expecting an `integer`, got `$1`",
+          "Invalid `mongo.default_port`: expecting an `integer`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
 
     if((default_port < 0) || (default_port > 65534))
       POSEIDON_THROW((
-          "`mongodb.default_port` value `$1` out of range",
+          "`mongo.default_port` value `$1` out of range",
           "[in configuration file '$2']"),
           default_port, conf_file.path());
 
     // Read the user name from configuration.
-    conf_value = conf_file.query("mongodb", "default_user");
+    conf_value = conf_file.query("mongo", "default_user");
     if(conf_value.is_string())
       default_user = conf_value.as_string();
     else if(!conf_value.is_null())
       POSEIDON_THROW((
-          "Invalid `mongodb.default_user`: expecting a `string`, got `$1`",
+          "Invalid `mongo.default_user`: expecting a `string`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
 
     // Read the password from configuration. The password is not to be stored
     // as plaintext in memory.
-    conf_value = conf_file.query("mongodb", "default_password");
+    conf_value = conf_file.query("mongo", "default_password");
     if(conf_value.is_string())
       default_password = conf_value.as_string();
     else if(!conf_value.is_null())
       POSEIDON_THROW((
-          "Invalid `mongodb.default_password`: expecting a `string`, got `$1`",
+          "Invalid `mongo.default_password`: expecting a `string`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
 
@@ -107,44 +107,44 @@ reload(const Config_File& conf_file)
     do_mask_password(default_password, password_mask);
 
     // Read the default database from configuration.
-    conf_value = conf_file.query("mongodb", "default_database");
+    conf_value = conf_file.query("mongo", "default_database");
     if(conf_value.is_string())
       default_database = conf_value.as_string();
     else if(!conf_value.is_null())
       POSEIDON_THROW((
-          "Invalid `mongodb.default_database`: expecting a `string`, got `$1`",
+          "Invalid `mongo.default_database`: expecting a `string`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
 
     // Read the connection pool size from configuration.
-    conf_value = conf_file.query("mongodb", "connection_pool_size");
+    conf_value = conf_file.query("mongo", "connection_pool_size");
     if(conf_value.is_integer())
       connection_pool_size = conf_value.as_integer();
     else if(!conf_value.is_null())
       POSEIDON_THROW((
-          "Invalid `mongodb.connection_pool_size`: expecting an `integer`, got `$1`",
+          "Invalid `mongo.connection_pool_size`: expecting an `integer`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
 
     if((connection_pool_size < 0) || (connection_pool_size > 100))
       POSEIDON_THROW((
-          "`mongodb.connection_pool_size` value `$1` out of range",
+          "`mongo.connection_pool_size` value `$1` out of range",
           "[in configuration file '$2']"),
           connection_pool_size, conf_file.path());
 
     // Read the idle timeout from configuration, as the number of seconds.
-    conf_value = conf_file.query("mongodb", "connection_idle_timeout");
+    conf_value = conf_file.query("mongo", "connection_idle_timeout");
     if(conf_value.is_integer())
       connection_idle_timeout = conf_value.as_integer();
     else if(!conf_value.is_null())
       POSEIDON_THROW((
-          "Invalid `mongodb.connection_idle_timeout`: expecting an `integer`, got `$1`",
+          "Invalid `mongo.connection_idle_timeout`: expecting an `integer`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
 
     if((connection_idle_timeout < 0) || (connection_idle_timeout > 8640000))
       POSEIDON_THROW((
-          "`mongodb.connection_idle_timeout` value `$1` out of range",
+          "`mongo.connection_idle_timeout` value `$1` out of range",
           "[in configuration file '$2']"),
           connection_idle_timeout, conf_file.path());
 
@@ -160,8 +160,8 @@ reload(const Config_File& conf_file)
     this->m_conf_connection_idle_timeout = static_cast<seconds>(connection_idle_timeout);
   }
 
-uniptr<MongoDB_Connection>
-MongoDB_Connector::
+uniptr<Mongo_Connection>
+Mongo_Connector::
 allocate_connection(cow_stringR server, uint16_t port, cow_stringR user, cow_stringR passwd, cow_stringR db)
   {
     plain_mutex::unique_lock lock(this->m_conf_mutex);
@@ -192,7 +192,7 @@ allocate_connection(cow_stringR server, uint16_t port, cow_stringR user, cow_str
       lock.unlock();
 
       // Create a new connection.
-      return new_uni<MongoDB_Connection>(server, port, user, passwd, db);
+      return new_uni<Mongo_Connection>(server, port, user, passwd, db);
     }
 
     // Pop this connection from the pool.
@@ -201,8 +201,8 @@ allocate_connection(cow_stringR server, uint16_t port, cow_stringR user, cow_str
     return conn;
   }
 
-uniptr<MongoDB_Connection>
-MongoDB_Connector::
+uniptr<Mongo_Connection>
+Mongo_Connector::
 allocate_default_connection()
   {
     plain_mutex::unique_lock lock(this->m_conf_mutex);
@@ -242,7 +242,7 @@ allocate_default_connection()
       cow_string passwd;
       passwd.assign(xpasswd.begin(), xpasswd.end());
       do_mask_password(passwd, passwd_mask);
-      return new_uni<MongoDB_Connection>(server, port, user, passwd, db);
+      return new_uni<Mongo_Connection>(server, port, user, passwd, db);
     }
 
     // Pop this connection from the pool.
@@ -252,8 +252,8 @@ allocate_default_connection()
   }
 
 bool
-MongoDB_Connector::
-pool_connection(uniptr<MongoDB_Connection>&& conn) noexcept
+Mongo_Connector::
+pool_connection(uniptr<Mongo_Connection>&& conn) noexcept
   {
     if(!conn)
       return false;

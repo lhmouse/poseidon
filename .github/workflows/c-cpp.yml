@@ -41,7 +41,7 @@ jobs:
     - name: Run tests (minimal)
       run: >-
            meson setup -Denable-debug-checks=true build_ci
-           -Denable-{mysql,mongodb}=false
+           -Denable-{mysql,mongo}=false
            && meson test -Cbuild_ci
 
     - name: Run tests (full)
