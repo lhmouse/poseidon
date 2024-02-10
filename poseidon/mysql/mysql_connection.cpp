@@ -15,6 +15,11 @@ MySQL_Connection(cow_stringR server, uint16_t port, cow_stringR db, cow_stringR 
     this->m_db = db;
     this->m_user = user;
 
+    server.safe_c_str();
+    db.safe_c_str();
+    user.safe_c_str();
+    passwd.safe_c_str();
+
     this->m_connected = false;
     this->m_reset_clear = true;
     this->m_passwd_mask = 0x80000000U | random_uint32();
