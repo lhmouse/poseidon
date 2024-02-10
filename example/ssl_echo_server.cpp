@@ -13,27 +13,28 @@ static Easy_SSL_Server my_server(
   {
     (void) fiber;
 
-    switch(event) {
-    case easy_stream_open:
-      POSEIDON_LOG_WARN(("example SSL server accepted connection: $1"),
-                        socket->remote_address());
-      break;
+    switch(event)
+      {
+      case easy_stream_open:
+        POSEIDON_LOG_WARN(("example SSL server accepted connection: $1"),
+                          socket->remote_address());
+        break;
 
-    case easy_stream_data:
-      POSEIDON_LOG_WARN(("example SSL server received data (eof = $1): $2"),
-                        code, data);
-      socket->ssl_send(data);
-      data.clear();
-      break;
+      case easy_stream_data:
+        POSEIDON_LOG_WARN(("example SSL server received data (eof = $1): $2"),
+                          code, data);
+        socket->ssl_send(data);
+        data.clear();
+        break;
 
-    case easy_stream_close:
-      POSEIDON_LOG_WARN(("example SSL server closed connection: (errno = $1) $2"),
-                        code, data);
-      break;
+      case easy_stream_close:
+        POSEIDON_LOG_WARN(("example SSL server closed connection: (errno = $1) $2"),
+                          code, data);
+        break;
 
-    default:
-      ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
-    }
+      default:
+        ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
+      }
   });
 
 void

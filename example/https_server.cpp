@@ -13,39 +13,40 @@ static Easy_HTTPS_Server my_server(
   {
     (void) fiber;
 
-    switch(event) {
-    case easy_http_open:
-      POSEIDON_LOG_WARN(("example HTTPS server accepted connection: $1"),
-                         session->remote_address());
-      break;
-
-    case easy_http_message:
+    switch(event)
       {
-        POSEIDON_LOG_WARN(("HTTPS request --> $1 $2: $3"),
-                          req.method, req.uri_path, req.uri_query);
-        for(const auto& r : req.headers)
-          POSEIDON_LOG_WARN(("HTTPS header --> $1: $2"), r.first, r.second);
+      case easy_http_open:
+        POSEIDON_LOG_WARN(("example HTTPS server accepted connection: $1"),
+                           session->remote_address());
+        break;
 
-        // send a response
-        HTTP_Response_Headers resp;
-        resp.status = 200;
-        resp.headers.emplace_back(&"Date", system_clock::now());
-        resp.headers.emplace_back(&"Content-Type", &"text/plain");
+      case easy_http_message:
+        {
+          POSEIDON_LOG_WARN(("HTTPS request --> $1 $2: $3"),
+                            req.method, req.uri_path, req.uri_query);
+          for(const auto& r : req.headers)
+            POSEIDON_LOG_WARN(("HTTPS header --> $1: $2"), r.first, r.second);
 
-        tinyfmt_ln fmt;
-        fmt << "request payload length = " << data.size() << "\n";
+          // send a response
+          HTTP_Response_Headers resp;
+          resp.status = 200;
+          resp.headers.emplace_back(&"Date", system_clock::now());
+          resp.headers.emplace_back(&"Content-Type", &"text/plain");
 
-        session->https_response(move(resp), fmt);
+          tinyfmt_ln fmt;
+          fmt << "request payload length = " << data.size() << "\n";
+
+          session->https_response(move(resp), fmt);
+        }
+        break;
+
+      case easy_http_close:
+        POSEIDON_LOG_WARN(("example HTTPS server closed connection: $1"), data);
+        break;
+
+      default:
+        ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
       }
-      break;
-
-    case easy_http_close:
-      POSEIDON_LOG_WARN(("example HTTPS server closed connection: $1"), data);
-      break;
-
-    default:
-      ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
-    }
   });
 
 void

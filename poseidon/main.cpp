@@ -158,28 +158,29 @@ do_parse_command_line(int argc, char** argv)
     // Parse command-line options.
     int ch;
     while((ch = ::getopt(argc, argv, "dhVv")) != -1)
-      switch(ch) {
-      case 'd':
-        daemonize = true;
-        break;
+      switch(ch)
+        {
+        case 'd':
+          daemonize = true;
+          break;
 
-      case 'h':
-        help = true;
-        break;
+        case 'h':
+          help = true;
+          break;
 
-      case 'V':
-        version = true;
-        break;
+        case 'V':
+          version = true;
+          break;
 
-      case 'v':
-        verbose = true;
-        break;
+        case 'v':
+          verbose = true;
+          break;
 
-      default:
-        do_exit_printf(exit_invalid_argument,
-            "%s: invalid argument -- '%c'\nTry `%s -h` for help.\n",
-            argv[0], ::optopt, argv[0]);
-      }
+        default:
+          do_exit_printf(exit_invalid_argument,
+              "%s: invalid argument -- '%c'\nTry `%s -h` for help.\n",
+              argv[0], ::optopt, argv[0]);
+        }
 
     // Check for early exit conditions.
     if(help)

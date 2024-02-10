@@ -220,59 +220,60 @@ fetch_row(vector<MySQL_Value>& output)
       // type of this field, the output is written as an omnipotent string.
       ::MYSQL_FIELD* field = this->do_metadata_for_field_opt(col);
       uint32_t type = field ? field->type : MYSQL_TYPE_BLOB;
-      switch(type) {
-      case MYSQL_TYPE_NULL:
+      switch(type)
         {
-          binds[col].buffer_type = MYSQL_TYPE_NULL;
-          binds[col].buffer = nullptr;
-          binds[col].buffer_length = 0;
-        }
-        break;
+        case MYSQL_TYPE_NULL:
+          {
+            binds[col].buffer_type = MYSQL_TYPE_NULL;
+            binds[col].buffer = nullptr;
+            binds[col].buffer_length = 0;
+          }
+          break;
 
-      case MYSQL_TYPE_TINY:
-      case MYSQL_TYPE_SHORT:
-      case MYSQL_TYPE_INT24:
-      case MYSQL_TYPE_LONG:
-      case MYSQL_TYPE_LONGLONG:
-        {
-          output[col].set_integer(0);
-          binds[col].buffer_type = MYSQL_TYPE_LONGLONG;
-          binds[col].buffer = &(output[col].mut_integer());
-          binds[col].buffer_length = sizeof(int64_t);
-        }
-        break;
+        case MYSQL_TYPE_TINY:
+        case MYSQL_TYPE_SHORT:
+        case MYSQL_TYPE_INT24:
+        case MYSQL_TYPE_LONG:
+        case MYSQL_TYPE_LONGLONG:
+          {
+            output[col].set_integer(0);
+            binds[col].buffer_type = MYSQL_TYPE_LONGLONG;
+            binds[col].buffer = &(output[col].mut_integer());
+            binds[col].buffer_length = sizeof(int64_t);
+          }
+          break;
 
-      case MYSQL_TYPE_FLOAT:
-      case MYSQL_TYPE_DOUBLE:
-        {
-          output[col].set_double(0);
-          binds[col].buffer_type = MYSQL_TYPE_DOUBLE;
-          binds[col].buffer = &(output[col].mut_double());
-          binds[col].buffer_length = sizeof(double);
-        }
-        break;
+        case MYSQL_TYPE_FLOAT:
+        case MYSQL_TYPE_DOUBLE:
+          {
+            output[col].set_double(0);
+            binds[col].buffer_type = MYSQL_TYPE_DOUBLE;
+            binds[col].buffer = &(output[col].mut_double());
+            binds[col].buffer_length = sizeof(double);
+          }
+          break;
 
-      case MYSQL_TYPE_TIMESTAMP:
-      case MYSQL_TYPE_DATETIME:
-      case MYSQL_TYPE_DATE:
-      case MYSQL_TYPE_TIME:
-        {
-          output[col].set_mysql_datetime(0, 0, 0);
-          binds[col].buffer_type = MYSQL_TYPE_DATETIME;
-          binds[col].buffer = &(output[col].mut_mysql_time());
-          binds[col].buffer_length = sizeof(::MYSQL_TIME);
-        }
-        break;
+        case MYSQL_TYPE_TIMESTAMP:
+        case MYSQL_TYPE_DATETIME:
+        case MYSQL_TYPE_DATE:
+        case MYSQL_TYPE_TIME:
+          {
+            output[col].set_mysql_datetime(0, 0, 0);
+            binds[col].buffer_type = MYSQL_TYPE_DATETIME;
+            binds[col].buffer = &(output[col].mut_mysql_time());
+            binds[col].buffer_length = sizeof(::MYSQL_TIME);
+          }
+          break;
 
-      default:
-        {
-          output[col].set_string(&".......+.......+.......+.......+.......+");
-          binds[col].buffer_type = MYSQL_TYPE_LONG_BLOB;
-          binds[col].buffer = output[col].mut_str_data();
-          binds[col].buffer_length = output[col].str_length();
+        default:
+          {
+            output[col].set_string(&".......+.......+.......+.......+.......+");
+            binds[col].buffer_type = MYSQL_TYPE_LONG_BLOB;
+            binds[col].buffer = output[col].mut_str_data();
+            binds[col].buffer_length = output[col].str_length();
+          }
+          break;
         }
-        break;
-      }
 
       // XXX: What are these fields used for? Why aren't they used by default?
       binds[col].length = &(binds[col].length_value);

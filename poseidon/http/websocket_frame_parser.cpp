@@ -471,111 +471,112 @@ parse_frame_header_from_stream(linear_buffer& data)
       return;
     }
 
-    switch(this->m_frm_header.opcode) {
-    case 1:  // text data
-    case 2:  // binary data
+    switch(this->m_frm_header.opcode)
       {
-        if(this->m_opcode != 0) {
-          // The previous message must have terminated.
-          this->m_wsf = wsf_error;
-          this->m_error_desc = "continuation frame expected";
-          return;
+      case 1:  // text data
+      case 2:  // binary data
+        {
+          if(this->m_opcode != 0) {
+            // The previous message must have terminated.
+            this->m_wsf = wsf_error;
+            this->m_error_desc = "continuation frame expected";
+            return;
+          }
+
+          // Check for extension bits. At the moment only the per-message compression
+          // extension (PMCE) is supported, which uses the RSV1 bit to indicate a
+          // compressed message.
+          int rsv_mask = 0b01110000;
+
+          if(this->m_pmce_send_max_window_bits != 0)
+            rsv_mask &= 0b00110000;
+
+          if(mask_len_rsv_opcode & rsv_mask) {
+            // Reject unknown RSV bits.
+            this->m_wsf = wsf_error;
+            this->m_error_desc = "invalid RSV bits in data frame";
+            return;
+          }
+
+          // Copy fields for later use.
+          this->m_fin = this->m_frm_header.fin;
+          this->m_rsv1 = this->m_frm_header.rsv1;
+          this->m_rsv2 = this->m_frm_header.rsv2;
+          this->m_rsv3 = this->m_frm_header.rsv3;
+          this->m_opcode = this->m_frm_header.opcode;
         }
 
-        // Check for extension bits. At the moment only the per-message compression
-        // extension (PMCE) is supported, which uses the RSV1 bit to indicate a
-        // compressed message.
-        int rsv_mask = 0b01110000;
+        // There shall be a message payload.
+        POSEIDON_LOG_TRACE(("WebSocket data frame: opcode = $1, rsv1 = $2"), this->m_opcode, this->m_rsv1);
+        break;
 
-        if(this->m_pmce_send_max_window_bits != 0)
-          rsv_mask &= 0b00110000;
+      case 0:  // continuation
+        {
+          if(mask_len_rsv_opcode & 0b01110000) {
+            // RSV bits shall only be set in the first data frame.
+            this->m_wsf = wsf_error;
+            this->m_error_desc = "invalid RSV bits in continuation frame";
+            return;
+          }
 
-        if(mask_len_rsv_opcode & rsv_mask) {
-          // Reject unknown RSV bits.
-          this->m_wsf = wsf_error;
-          this->m_error_desc = "invalid RSV bits in data frame";
-          return;
+          if(this->m_opcode == 0) {
+            // A continuation frame must follow a data frame.
+            this->m_wsf = wsf_error;
+            this->m_error_desc = "dangling continuation frame";
+            return;
+          }
+
+          // If this is a FIN frame, terminate the current message.
+          // If this is a FIN frame, terminate the current message.
+          if(mask_len_rsv_opcode & 0b10000000)
+            this->m_fin = 1;
         }
 
-        // Copy fields for later use.
-        this->m_fin = this->m_frm_header.fin;
-        this->m_rsv1 = this->m_frm_header.rsv1;
-        this->m_rsv2 = this->m_frm_header.rsv2;
-        this->m_rsv3 = this->m_frm_header.rsv3;
-        this->m_opcode = this->m_frm_header.opcode;
+        // There shall be a message payload.
+        POSEIDON_LOG_TRACE(("WebSocket data continuation: opcode = $1"), this->m_opcode);
+        break;
+
+      case 8:  // close
+      case 9:  // ping
+      case 10:  // pong
+        {
+          if(mask_len_rsv_opcode & 0b01110000) {
+            // RSV bits shall only be set in a data frame.
+            this->m_wsf = wsf_error;
+            this->m_error_desc = "invalid RSV bits in control frame";
+            return;
+          }
+
+          if(this->m_frm_header.payload_len > 125) {
+            // RFC 6455
+            // 5.5. Control Frames
+            // All control frames MUST have a payload length of 125 bytes or less
+            // and ...
+            this->m_wsf = wsf_error;
+            this->m_error_desc = "control frame length not valid";
+            return;
+          }
+
+          if(this->m_frm_header.fin == 0) {
+            // RFC 6455
+            // 5.5. Control Frames
+            // ... MUST NOT be fragmented.
+            this->m_wsf = wsf_error;
+            this->m_error_desc = "control frame not fragmentable";
+            return;
+          }
+        }
+
+        // There shall be a message payload.
+        POSEIDON_LOG_TRACE(("WebSocket control frame: opcode = $1"), this->m_opcode);
+        break;
+
+      default:
+        // Reject this frame with an unknown opcode.
+        this->m_wsf = wsf_error;
+        this->m_error_desc = "unknown opcode";
+        return;
       }
-
-      // There shall be a message payload.
-      POSEIDON_LOG_TRACE(("WebSocket data frame: opcode = $1, rsv1 = $2"), this->m_opcode, this->m_rsv1);
-      break;
-
-    case 0:  // continuation
-      {
-        if(mask_len_rsv_opcode & 0b01110000) {
-          // RSV bits shall only be set in the first data frame.
-          this->m_wsf = wsf_error;
-          this->m_error_desc = "invalid RSV bits in continuation frame";
-          return;
-        }
-
-        if(this->m_opcode == 0) {
-          // A continuation frame must follow a data frame.
-          this->m_wsf = wsf_error;
-          this->m_error_desc = "dangling continuation frame";
-          return;
-        }
-
-        // If this is a FIN frame, terminate the current message.
-        // If this is a FIN frame, terminate the current message.
-        if(mask_len_rsv_opcode & 0b10000000)
-          this->m_fin = 1;
-      }
-
-      // There shall be a message payload.
-      POSEIDON_LOG_TRACE(("WebSocket data continuation: opcode = $1"), this->m_opcode);
-      break;
-
-    case 8:  // close
-    case 9:  // ping
-    case 10:  // pong
-      {
-        if(mask_len_rsv_opcode & 0b01110000) {
-          // RSV bits shall only be set in a data frame.
-          this->m_wsf = wsf_error;
-          this->m_error_desc = "invalid RSV bits in control frame";
-          return;
-        }
-
-        if(this->m_frm_header.payload_len > 125) {
-          // RFC 6455
-          // 5.5. Control Frames
-          // All control frames MUST have a payload length of 125 bytes or less
-          // and ...
-          this->m_wsf = wsf_error;
-          this->m_error_desc = "control frame length not valid";
-          return;
-        }
-
-        if(this->m_frm_header.fin == 0) {
-          // RFC 6455
-          // 5.5. Control Frames
-          // ... MUST NOT be fragmented.
-          this->m_wsf = wsf_error;
-          this->m_error_desc = "control frame not fragmentable";
-          return;
-        }
-      }
-
-      // There shall be a message payload.
-      POSEIDON_LOG_TRACE(("WebSocket control frame: opcode = $1"), this->m_opcode);
-      break;
-
-    default:
-      // Reject this frame with an unknown opcode.
-      this->m_wsf = wsf_error;
-      this->m_error_desc = "unknown opcode";
-      return;
-    }
 
     if(this->m_frm_header.reserved_1 <= 125) {
       // one-byte length

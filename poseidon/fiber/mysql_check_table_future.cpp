@@ -14,42 +14,43 @@ do_append_column_definition(tinyfmt_str& sql, const MySQL_Table_Structure::Colum
   {
     sql << "`" << column.name << "` ";
 
-    switch(column.type) {
-    case mysql_column_varchar:
-      sql << "varchar(255)";
-      break;
+    switch(column.type)
+      {
+      case mysql_column_varchar:
+        sql << "varchar(255)";
+        break;
 
-    case mysql_column_bool:
-      sql << "tinyint";
-      break;
+      case mysql_column_bool:
+        sql << "tinyint";
+        break;
 
-    case mysql_column_int:
-      sql << "int";
-      break;
+      case mysql_column_int:
+        sql << "int";
+        break;
 
-    case mysql_column_int64:
-      sql << "bigint";
-      break;
+      case mysql_column_int64:
+        sql << "bigint";
+        break;
 
-    case mysql_column_double:
-      sql << "double";
-      break;
+      case mysql_column_double:
+        sql << "double";
+        break;
 
-    case mysql_column_blob:
-      sql << "longblob";
-      break;
+      case mysql_column_blob:
+        sql << "longblob";
+        break;
 
-    case mysql_column_datetime:
-      sql << "datetime";
-      break;
+      case mysql_column_datetime:
+        sql << "datetime";
+        break;
 
-    case mysql_column_auto_increment:
-      sql << "bigint AUTO_INCREMENT";
-      break;
+      case mysql_column_auto_increment:
+        sql << "bigint AUTO_INCREMENT";
+        break;
 
-    default:
-      POSEIDON_THROW(("Invalid MySQL data type `$1`"), column.type);
-    }
+      default:
+        POSEIDON_THROW(("Invalid MySQL data type `$1`"), column.type);
+      }
 
     if(column.nullable == false)
       sql << " NOT NULL";
@@ -90,26 +91,27 @@ do_append_engine(tinyfmt_str& sql, MySQL_Engine_Type engine)
   {
     sql << "ENGINE = '";
 
-    switch(engine) {
-    case mysql_engine_innodb:
-      sql << "InnoDB";
-      break;
+    switch(engine)
+      {
+      case mysql_engine_innodb:
+        sql << "InnoDB";
+        break;
 
-    case mysql_engine_myisam:
-      sql << "MyISAM";
-      break;
+      case mysql_engine_myisam:
+        sql << "MyISAM";
+        break;
 
-    case mysql_engine_memory:
-      sql << "MEMORY";
-      break;
+      case mysql_engine_memory:
+        sql << "MEMORY";
+        break;
 
-    case mysql_engine_archive:
-      sql << "ARCHIVE";
-      break;
+      case mysql_engine_archive:
+        sql << "ARCHIVE";
+        break;
 
-    default:
-      POSEIDON_THROW(("Invalid MySQL engine `$1`"), engine);
-    }
+      default:
+        POSEIDON_THROW(("Invalid MySQL engine `$1`"), engine);
+      }
 
     sql << "'";
   }
@@ -271,205 +273,206 @@ do_on_abstract_future_execute()
       if(ex != excolumns.end()) {
         const auto& r = ex->second;
 
-        switch(column.type) {
-        case mysql_column_varchar:
+        switch(column.type)
           {
-            // The type shall be an exact match.
-            if(!ascii_ci_equal(r.type, "varchar(255)"))
-              goto do_alter_column_;
-
-            if(!column.default_value.is_null()) {
-              // The default value is a string and shall be an exact match of
-              // the configuration.
-              if(!r.default_value.is_string())
+          case mysql_column_varchar:
+            {
+              // The type shall be an exact match.
+              if(!ascii_ci_equal(r.type, "varchar(255)"))
                 goto do_alter_column_;
 
-              if(r.default_value.as_string() != column.default_value.as_string())
+              if(!column.default_value.is_null()) {
+                // The default value is a string and shall be an exact match of
+                // the configuration.
+                if(!r.default_value.is_string())
+                  goto do_alter_column_;
+
+                if(r.default_value.as_string() != column.default_value.as_string())
+                  goto do_alter_column_;
+              }
+
+              if(!ascii_ci_equal(r.extra, ""))
                 goto do_alter_column_;
             }
+            break;
 
-            if(!ascii_ci_equal(r.extra, ""))
-              goto do_alter_column_;
-          }
-          break;
-
-        case mysql_column_bool:
-          {
-            // MySQL does not have a real boolean type, so we use an integer.
-            // Some old MySQL versions include a display width in the type,
-            // which is deprecated since 8.0 anyway. Both forms are accepted.
-            if(!ascii_ci_equal(r.type, "tinyint(1)") && !ascii_ci_equal(r.type, "tinyint"))
-              goto do_alter_column_;
-
-            if(!column.default_value.is_null()) {
-              // The default value is an integer and shall be an exact match
-              // of the configuration. The MySQL server returns the default as
-              // a generic string, so parse it first.
-              if(!r.default_value.is_string())
+          case mysql_column_bool:
+            {
+              // MySQL does not have a real boolean type, so we use an integer.
+              // Some old MySQL versions include a display width in the type,
+              // which is deprecated since 8.0 anyway. Both forms are accepted.
+              if(!ascii_ci_equal(r.type, "tinyint(1)") && !ascii_ci_equal(r.type, "tinyint"))
                 goto do_alter_column_;
 
-              int64_t def_value;
-              ::rocket::ascii_numget numg;
-              numg.parse_DI(r.default_value.str_data(), r.default_value.str_length());
-              numg.cast_I(def_value, INT64_MIN, INT64_MAX);
+              if(!column.default_value.is_null()) {
+                // The default value is an integer and shall be an exact match
+                // of the configuration. The MySQL server returns the default as
+                // a generic string, so parse it first.
+                if(!r.default_value.is_string())
+                  goto do_alter_column_;
 
-              if(def_value != column.default_value.as_integer())
-                goto do_alter_column_;
-            }
+                int64_t def_value;
+                ::rocket::ascii_numget numg;
+                numg.parse_DI(r.default_value.str_data(), r.default_value.str_length());
+                numg.cast_I(def_value, INT64_MIN, INT64_MAX);
 
-            if(!ascii_ci_equal(r.extra, ""))
-              goto do_alter_column_;
-          }
-          break;
+                if(def_value != column.default_value.as_integer())
+                  goto do_alter_column_;
+              }
 
-        case mysql_column_int:
-          {
-            // Some old MySQL versions include a display width in the type,
-            // which is deprecated since 8.0 anyway. Both forms are accepted.
-            if(!ascii_ci_equal(r.type, "int(11)") && !ascii_ci_equal(r.type, "int"))
-              goto do_alter_column_;
-
-            if(!column.default_value.is_null()) {
-              // The default value is an integer and shall be an exact match
-              // of the configuration. The MySQL server returns the default as
-              // a generic string, so parse it first.
-              if(!r.default_value.is_string())
-                goto do_alter_column_;
-
-              int64_t def_value;
-              ::rocket::ascii_numget numg;
-              numg.parse_DI(r.default_value.str_data(), r.default_value.str_length());
-              numg.cast_I(def_value, INT64_MIN, INT64_MAX);
-
-              if(def_value != column.default_value.as_integer())
+              if(!ascii_ci_equal(r.extra, ""))
                 goto do_alter_column_;
             }
+            break;
 
-            if(!ascii_ci_equal(r.extra, ""))
-              goto do_alter_column_;
-          }
-          break;
-
-        case mysql_column_int64:
-          {
-            // Some old MySQL versions include a display width in the type,
-            // which is deprecated since 8.0 anyway. Both forms are accepted.
-            if(!ascii_ci_equal(r.type, "bigint(20)") && !ascii_ci_equal(r.type, "bigint"))
-              goto do_alter_column_;
-
-            if(!column.default_value.is_null()) {
-              // The default value is an integer and shall be an exact match
-              // of the configuration. The MySQL server returns the default as
-              // a generic string, so parse it first.
-              if(!r.default_value.is_string())
+          case mysql_column_int:
+            {
+              // Some old MySQL versions include a display width in the type,
+              // which is deprecated since 8.0 anyway. Both forms are accepted.
+              if(!ascii_ci_equal(r.type, "int(11)") && !ascii_ci_equal(r.type, "int"))
                 goto do_alter_column_;
 
-              int64_t def_value;
-              ::rocket::ascii_numget numg;
-              numg.parse_DI(r.default_value.str_data(), r.default_value.str_length());
-              numg.cast_I(def_value, INT64_MIN, INT64_MAX);
+              if(!column.default_value.is_null()) {
+                // The default value is an integer and shall be an exact match
+                // of the configuration. The MySQL server returns the default as
+                // a generic string, so parse it first.
+                if(!r.default_value.is_string())
+                  goto do_alter_column_;
 
-              if(def_value != column.default_value.as_integer())
-                goto do_alter_column_;
-            }
+                int64_t def_value;
+                ::rocket::ascii_numget numg;
+                numg.parse_DI(r.default_value.str_data(), r.default_value.str_length());
+                numg.cast_I(def_value, INT64_MIN, INT64_MAX);
 
-            if(!ascii_ci_equal(r.extra, ""))
-              goto do_alter_column_;
-          }
-          break;
+                if(def_value != column.default_value.as_integer())
+                  goto do_alter_column_;
+              }
 
-        case mysql_column_double:
-          {
-            // The type shall be an exact match.
-            if(!ascii_ci_equal(r.type, "double"))
-              goto do_alter_column_;
-
-            if(!column.default_value.is_null()) {
-              // The default value is a double and shall be an exact match of
-              // the configuration. The MySQL server returns the default as a
-              // generic string, so parse it first.
-              if(!r.default_value.is_string())
-                goto do_alter_column_;
-
-              double def_value;
-              ::rocket::ascii_numget numg;
-              numg.parse_DD(r.default_value.str_data(), r.default_value.str_length());
-              numg.cast_D(def_value, -DBL_MAX, DBL_MAX);
-
-              if(def_value != column.default_value.as_double())
+              if(!ascii_ci_equal(r.extra, ""))
                 goto do_alter_column_;
             }
+            break;
 
-            if(!ascii_ci_equal(r.extra, ""))
-              goto do_alter_column_;
-          }
-          break;
-
-        case mysql_column_blob:
-          {
-            // The type shall be an exact match. BLOB and TEXT fields cannot
-            // have a default value, so there is no need to check it.
-            if(!ascii_ci_equal(r.type, "longblob"))
-              goto do_alter_column_;
-
-            if(!ascii_ci_equal(r.extra, ""))
-              goto do_alter_column_;
-          }
-          break;
-
-        case mysql_column_datetime:
-          {
-            // The type shall be an exact match.
-            if(!ascii_ci_equal(r.type, "datetime"))
-              goto do_alter_column_;
-
-            if(!column.default_value.is_null()) {
-              // The default value is a broken-down date/time and shall be an
-              // exact match of the configuration. The MySQL server returns
-              // the default as a generic string, so parse it first.
-              if(!r.default_value.is_string())
+          case mysql_column_int64:
+            {
+              // Some old MySQL versions include a display width in the type,
+              // which is deprecated since 8.0 anyway. Both forms are accepted.
+              if(!ascii_ci_equal(r.type, "bigint(20)") && !ascii_ci_equal(r.type, "bigint"))
                 goto do_alter_column_;
 
-              struct ::tm rtm = { };
-              ::strptime(r.default_value.str_data(), "%Y-%m-%d %H:%M:%S", &rtm);
-              rtm.tm_isdst = -1;
+              if(!column.default_value.is_null()) {
+                // The default value is an integer and shall be an exact match
+                // of the configuration. The MySQL server returns the default as
+                // a generic string, so parse it first.
+                if(!r.default_value.is_string())
+                  goto do_alter_column_;
 
-              struct ::tm ctm = { };
-              const auto& cmyt = column.default_value.as_mysql_time();
-              ctm.tm_year = static_cast<int>(cmyt.year) - 1900;
-              ctm.tm_mon = static_cast<int>(cmyt.month) - 1;
-              ctm.tm_mday = static_cast<int>(cmyt.day);
-              ctm.tm_hour = static_cast<int>(cmyt.hour);
-              ctm.tm_min = static_cast<int>(cmyt.minute);
-              ctm.tm_sec = static_cast<int>(cmyt.second);
-              rtm.tm_isdst = -1;
+                int64_t def_value;
+                ::rocket::ascii_numget numg;
+                numg.parse_DI(r.default_value.str_data(), r.default_value.str_length());
+                numg.cast_I(def_value, INT64_MIN, INT64_MAX);
 
-              if(::timegm(&rtm) != ::timegm(&ctm))
+                if(def_value != column.default_value.as_integer())
+                  goto do_alter_column_;
+              }
+
+              if(!ascii_ci_equal(r.extra, ""))
                 goto do_alter_column_;
             }
+            break;
 
-            if(!ascii_ci_equal(r.extra, ""))
-              goto do_alter_column_;
+          case mysql_column_double:
+            {
+              // The type shall be an exact match.
+              if(!ascii_ci_equal(r.type, "double"))
+                goto do_alter_column_;
+
+              if(!column.default_value.is_null()) {
+                // The default value is a double and shall be an exact match of
+                // the configuration. The MySQL server returns the default as a
+                // generic string, so parse it first.
+                if(!r.default_value.is_string())
+                  goto do_alter_column_;
+
+                double def_value;
+                ::rocket::ascii_numget numg;
+                numg.parse_DD(r.default_value.str_data(), r.default_value.str_length());
+                numg.cast_D(def_value, -DBL_MAX, DBL_MAX);
+
+                if(def_value != column.default_value.as_double())
+                  goto do_alter_column_;
+              }
+
+              if(!ascii_ci_equal(r.extra, ""))
+                goto do_alter_column_;
+            }
+            break;
+
+          case mysql_column_blob:
+            {
+              // The type shall be an exact match. BLOB and TEXT fields cannot
+              // have a default value, so there is no need to check it.
+              if(!ascii_ci_equal(r.type, "longblob"))
+                goto do_alter_column_;
+
+              if(!ascii_ci_equal(r.extra, ""))
+                goto do_alter_column_;
+            }
+            break;
+
+          case mysql_column_datetime:
+            {
+              // The type shall be an exact match.
+              if(!ascii_ci_equal(r.type, "datetime"))
+                goto do_alter_column_;
+
+              if(!column.default_value.is_null()) {
+                // The default value is a broken-down date/time and shall be an
+                // exact match of the configuration. The MySQL server returns
+                // the default as a generic string, so parse it first.
+                if(!r.default_value.is_string())
+                  goto do_alter_column_;
+
+                struct ::tm rtm = { };
+                ::strptime(r.default_value.str_data(), "%Y-%m-%d %H:%M:%S", &rtm);
+                rtm.tm_isdst = -1;
+
+                struct ::tm ctm = { };
+                const auto& cmyt = column.default_value.as_mysql_time();
+                ctm.tm_year = static_cast<int>(cmyt.year) - 1900;
+                ctm.tm_mon = static_cast<int>(cmyt.month) - 1;
+                ctm.tm_mday = static_cast<int>(cmyt.day);
+                ctm.tm_hour = static_cast<int>(cmyt.hour);
+                ctm.tm_min = static_cast<int>(cmyt.minute);
+                ctm.tm_sec = static_cast<int>(cmyt.second);
+                rtm.tm_isdst = -1;
+
+                if(::timegm(&rtm) != ::timegm(&ctm))
+                  goto do_alter_column_;
+              }
+
+              if(!ascii_ci_equal(r.extra, ""))
+                goto do_alter_column_;
+            }
+            break;
+
+          case mysql_column_auto_increment:
+            {
+              // Some old MySQL versions include a display width in the type,
+              // which is deprecated since 8.0 anyway. Both forms are accepted.
+              // Auto-increment fields cannot have a default value, so there is
+              // no need to check it.
+              if(!ascii_ci_equal(r.type, "bigint(20)") && !ascii_ci_equal(r.type, "bigint"))
+                goto do_alter_column_;
+
+              if(!ascii_ci_equal(r.extra, "AUTO_INCREMENT"))
+                goto do_alter_column_;
+            }
+            break;
+
+          default:
+            POSEIDON_THROW(("Invalid MySQL data type `$1`"), column.type);
           }
-          break;
-
-        case mysql_column_auto_increment:
-          {
-            // Some old MySQL versions include a display width in the type,
-            // which is deprecated since 8.0 anyway. Both forms are accepted.
-            // Auto-increment fields cannot have a default value, so there is
-            // no need to check it.
-            if(!ascii_ci_equal(r.type, "bigint(20)") && !ascii_ci_equal(r.type, "bigint"))
-              goto do_alter_column_;
-
-            if(!ascii_ci_equal(r.extra, "AUTO_INCREMENT"))
-              goto do_alter_column_;
-          }
-          break;
-
-        default:
-          POSEIDON_THROW(("Invalid MySQL data type `$1`"), column.type);
-        }
 
         if(r.nullable != column.nullable)
           goto do_alter_column_;

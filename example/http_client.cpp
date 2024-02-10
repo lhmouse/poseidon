@@ -14,30 +14,31 @@ static Easy_HTTP_Client my_client(
   {
     (void) fiber;
 
-    switch(event) {
-    case easy_http_open:
-      POSEIDON_LOG_ERROR(("example HTTP client connected to server: $1"),
-                         session->remote_address());
-      break;
-
-    case easy_http_message:
+    switch(event)
       {
-        POSEIDON_LOG_ERROR(("example HTTP client received response: $1 $2"),
-                           resp.status, resp.reason);
-        for(const auto& pair : resp.headers)
-          POSEIDON_LOG_ERROR(("  $1 --> $2"), pair.first, pair.second);
+      case easy_http_open:
+        POSEIDON_LOG_ERROR(("example HTTP client connected to server: $1"),
+                           session->remote_address());
+        break;
 
-        POSEIDON_LOG_ERROR(("    payload ($1 bytes):\n$2"), data.size(), data);
+      case easy_http_message:
+        {
+          POSEIDON_LOG_ERROR(("example HTTP client received response: $1 $2"),
+                             resp.status, resp.reason);
+          for(const auto& pair : resp.headers)
+            POSEIDON_LOG_ERROR(("  $1 --> $2"), pair.first, pair.second);
+
+          POSEIDON_LOG_ERROR(("    payload ($1 bytes):\n$2"), data.size(), data);
+        }
+        break;
+
+      case easy_http_close:
+        POSEIDON_LOG_ERROR(("example HTTP client shutdown: $1"), data);
+        break;
+
+      default:
+        ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
       }
-      break;
-
-    case easy_http_close:
-      POSEIDON_LOG_ERROR(("example HTTP client shutdown: $1"), data);
-      break;
-
-    default:
-      ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
-    }
   });
 
 static Easy_Timer my_timer(
@@ -54,47 +55,48 @@ static Easy_Timer my_timer(
     else
       state ++;
 
-    switch(state) {
-    case 0:
+    switch(state)
       {
-        cow_string addr = &"www.example.org";
-        my_client.connect(addr);
-        POSEIDON_LOG_ERROR(("example HTTP client connecting: addr = $1"), addr);
-      }
-      break;
+      case 0:
+        {
+          cow_string addr = &"www.example.org";
+          my_client.connect(addr);
+          POSEIDON_LOG_ERROR(("example HTTP client connecting: addr = $1"), addr);
+        }
+        break;
 
-    case 1:
-      {
-        HTTP_Request_Headers req;
-        req.uri_path = &"/";
-        req.headers.emplace_back(&"Connection", &"keep-alive");
-        my_client.http_GET(move(req));
-        POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method, req.uri_path);
-      }
-      break;
+      case 1:
+        {
+          HTTP_Request_Headers req;
+          req.uri_path = &"/";
+          req.headers.emplace_back(&"Connection", &"keep-alive");
+          my_client.http_GET(move(req));
+          POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method, req.uri_path);
+        }
+        break;
 
-    case 2:
-      {
-        HTTP_Request_Headers req;
-        req.uri_path = &"/";
-        my_client.http_POST(move(req), "testdata");
-        POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method, req.uri_path);
-      }
-      break;
+      case 2:
+        {
+          HTTP_Request_Headers req;
+          req.uri_path = &"/";
+          my_client.http_POST(move(req), "testdata");
+          POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method, req.uri_path);
+        }
+        break;
 
-    case 3:
-      {
-        HTTP_Request_Headers req;
-        req.uri_path = &"/";
-        my_client.http_DELETE(move(req));
-        POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method, req.uri_path);
-      }
-      break;
+      case 3:
+        {
+          HTTP_Request_Headers req;
+          req.uri_path = &"/";
+          my_client.http_DELETE(move(req));
+          POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method, req.uri_path);
+        }
+        break;
 
-    default:
-      POSEIDON_LOG_ERROR(("example HTTP client shutting down"));
-      my_client.close();
-    }
+      default:
+        POSEIDON_LOG_ERROR(("example HTTP client shutting down"));
+        my_client.close();
+      }
   });
 
 void

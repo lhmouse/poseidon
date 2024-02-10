@@ -52,25 +52,26 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
 
         // Check response headers.
         auto payload_type = this->do_on_https_response_headers(this->m_resp_parser->mut_headers());
-        switch(payload_type) {
-        case http_payload_normal:
-          break;
+        switch(payload_type)
+          {
+          case http_payload_normal:
+            break;
 
-        case http_payload_empty:
-          this->m_resp_parser->set_no_payload();
-          break;
+          case http_payload_empty:
+            this->m_resp_parser->set_no_payload();
+            break;
 
-        case http_payload_connect:
-          this->m_resp_parser.reset();
-          this->m_upgrade_ack.store(true);
-          return this->do_on_https_upgraded_stream(data, eof);
+          case http_payload_connect:
+            this->m_resp_parser.reset();
+            this->m_upgrade_ack.store(true);
+            return this->do_on_https_upgraded_stream(data, eof);
 
-        default:
-          POSEIDON_THROW((
-              "Invalid payload type `$3` returned from `do_http_parser_on_headers_complete()`",
-              "[HTTPS client session `$1` (class `$2`)]"),
-              this, typeid(*this), payload_type);
-        }
+          default:
+            POSEIDON_THROW((
+                "Invalid payload type `$3` returned from `do_http_parser_on_headers_complete()`",
+                "[HTTPS client session `$1` (class `$2`)]"),
+                this, typeid(*this), payload_type);
+          }
       }
 
       if(!this->m_resp_parser->payload_complete()) {

@@ -180,26 +180,27 @@ uint32_t
 HTTP_Request_Parser::
 http_status_from_error() const noexcept
   {
-    switch(this->m_parser->http_errno) {
-    case HPE_OK:
-    case HPE_PAUSED:
-      return HTTP_STATUS_OK;
+    switch(this->m_parser->http_errno)
+      {
+      case HPE_OK:
+      case HPE_PAUSED:
+        return HTTP_STATUS_OK;
 
-    case HPE_INVALID_METHOD:
-      return HTTP_STATUS_METHOD_NOT_ALLOWED;
+      case HPE_INVALID_METHOD:
+        return HTTP_STATUS_METHOD_NOT_ALLOWED;
 
-    case HPE_INVALID_VERSION:
-      return HTTP_STATUS_HTTP_VERSION_NOT_SUPPORTED;
+      case HPE_INVALID_VERSION:
+        return HTTP_STATUS_HTTP_VERSION_NOT_SUPPORTED;
 
-    case HPE_HEADER_OVERFLOW:
-      return HTTP_STATUS_REQUEST_HEADER_FIELDS_TOO_LARGE;
+      case HPE_HEADER_OVERFLOW:
+        return HTTP_STATUS_REQUEST_HEADER_FIELDS_TOO_LARGE;
 
-    case HPE_INVALID_TRANSFER_ENCODING:
-      return HTTP_STATUS_LENGTH_REQUIRED;
+      case HPE_INVALID_TRANSFER_ENCODING:
+        return HTTP_STATUS_LENGTH_REQUIRED;
 
-    default:
-      return HTTP_STATUS_BAD_REQUEST;
-    }
+      default:
+        return HTTP_STATUS_BAD_REQUEST;
+      }
   }
 
 void

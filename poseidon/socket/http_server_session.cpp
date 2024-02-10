@@ -57,22 +57,23 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
         auto payload_type = this->do_on_http_request_headers(this->m_req_parser->mut_headers(),
                 this->m_req_parser->should_close_after_payload());
 
-        switch(payload_type) {
-        case http_payload_normal:
-        case http_payload_empty:
-          break;
+        switch(payload_type)
+          {
+          case http_payload_normal:
+          case http_payload_empty:
+            break;
 
-        case http_payload_connect:
-          this->m_req_parser.reset();
-          this->m_upgrade_ack.store(true);
-          return this->do_on_http_upgraded_stream(data, eof);
+          case http_payload_connect:
+            this->m_req_parser.reset();
+            this->m_upgrade_ack.store(true);
+            return this->do_on_http_upgraded_stream(data, eof);
 
-        default:
-          POSEIDON_THROW((
-              "Invalid payload type `$3` returned from `do_http_parser_on_headers_complete()`",
-              "[HTTP server session `$1` (class `$2`)]"),
-              this, typeid(*this), payload_type);
-        }
+          default:
+            POSEIDON_THROW((
+                "Invalid payload type `$3` returned from `do_http_parser_on_headers_complete()`",
+                "[HTTP server session `$1` (class `$2`)]"),
+                this, typeid(*this), payload_type);
+          }
       }
 
       if(!this->m_req_parser->payload_complete()) {

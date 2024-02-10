@@ -113,26 +113,23 @@ next_attribute()
     if(this->m_hpos == SIZE_MAX)
       return this->do_next_attribute_from_separator() >= 0;
 
-    if(this->m_hpos >= this->m_hstr.size()) {
-      // If `m_hpos` equals `m_hstr.size()` then the end of the input
-      // string has been reached; otherwise it indicates an error, so
-      // don't touch it.
+    if(this->m_hpos >= this->m_hstr.size())
       return false;
-    }
     else
-      switch(this->m_hstr.at(this->m_hpos)) {
-      case ',':
-        // Stop at this element separator.
-        return false;
+      switch(this->m_hstr.at(this->m_hpos))
+        {
+        case ',':
+          // Stop at this element separator.
+          return false;
 
-      case ';':
-        // Move past this attribute separator.
-        return this->do_next_attribute_from_separator() >= 0;
+        case ';':
+          // Move past this attribute separator.
+          return this->do_next_attribute_from_separator() >= 0;
 
-      default:
-        this->m_hpos = error_hpos;
-        return false;
-      }
+        default:
+          this->m_hpos = error_hpos;
+          return false;
+        }
   }
 
 bool
@@ -144,27 +141,24 @@ next_element()
       return this->do_next_attribute_from_separator() >= 0;
 
     for(;;)
-      if(this->m_hpos >= this->m_hstr.size()) {
-        // If `m_hpos` equals `m_hstr.size()` then the end of the input
-        // string has been reached; otherwise it indicates an error, so
-        // don't touch it.
+      if(this->m_hpos >= this->m_hstr.size())
         return false;
-      }
       else
-        switch(this->m_hstr.at(this->m_hpos)) {
-        case ',':
-          // Move past this element separator.
-          return this->do_next_attribute_from_separator() >= 0;
+        switch(this->m_hstr.at(this->m_hpos))
+          {
+          case ',':
+            // Move past this element separator.
+            return this->do_next_attribute_from_separator() >= 0;
 
-        case ';':
-          // Move past this attribute separator.
-          this->do_next_attribute_from_separator();
-          continue;
+          case ';':
+            // Move past this attribute separator.
+            this->do_next_attribute_from_separator();
+            continue;
 
-        default:
-          this->m_hpos = error_hpos;
-          return false;
-        }
+          default:
+            this->m_hpos = error_hpos;
+            return false;
+          }
   }
 
 }  // namespace poseidon
