@@ -16,8 +16,8 @@ class MySQL_Connection
     friend class MySQL_Connector;
 
     cow_string m_server;
-    cow_string m_user;
     cow_string m_db;
+    cow_string m_user;
     uint16_t m_port;
 
     bool m_connected;
