@@ -16,6 +16,9 @@ do_append_column_definition(tinyfmt_str& sql, const MySQL_Table_Structure::Colum
 
     switch(column.type)
       {
+      case mysql_column_dropped:
+        ROCKET_UNREACHABLE();
+
       case mysql_column_varchar:
         sql << "varchar(255)";
         break;
@@ -49,7 +52,7 @@ do_append_column_definition(tinyfmt_str& sql, const MySQL_Table_Structure::Colum
         break;
 
       default:
-        POSEIDON_THROW(("Invalid MySQL data type `$1`"), column.type);
+        POSEIDON_THROW(("Invalid MySQL column type `$1`"), column.type);
       }
 
     if(column.nullable == false)
@@ -60,28 +63,36 @@ do_append_column_definition(tinyfmt_str& sql, const MySQL_Table_Structure::Colum
   }
 
 void
-do_append_index_name(tinyfmt_str& sql, const MySQL_Table_Structure::Index& index)
-  {
-    if(ascii_ci_equal(index.name, "PRIMARY"))
-      sql << "PRIMARY KEY";
-    else
-      sql << "INDEX `" << index.name << "`";
-  }
-
-void
 do_append_index_definition(tinyfmt_str& sql, const MySQL_Table_Structure::Index& index)
   {
     if(ascii_ci_equal(index.name, "PRIMARY"))
       sql << "PRIMARY KEY";
-    else if(index.unique)
-      sql << "UNIQUE INDEX `" << index.name << "`";
     else
-      sql << "INDEX `" << index.name << "`";
+      switch(index.type)
+        {
+        case mysql_index_dropped:
+          ROCKET_UNREACHABLE();
 
+        case mysql_index_unique:
+          sql << "UNIQUE INDEX `" << index.name << "`";
+          break;
+
+        case mysql_index_multi:
+          sql << "INDEX `" << index.name << "`";
+          break;
+
+        default:
+          POSEIDON_THROW(("Invalid MySQL index type `$1`"), index.type);
+        }
+
+    size_t ncolumns = 0;
     sql << " (";
 
-    for(uint32_t t = 0;  t != index.columns.size();  ++t)
-      sql << ((t == 0) ? "`" : ", `") << index.columns[t] << "`";
+    for(const auto& col_name : index.columns) {
+      if(++ ncolumns != 1)
+        sql << ", ";
+      sql << "`" << col_name << "`";
+    }
 
     sql << ")";
   }
@@ -126,7 +137,7 @@ struct exColumn
 
 struct exIndex
   {
-    bool unique;
+    bool multi;
     vector<cow_string> columns;
   };
 
@@ -135,12 +146,6 @@ struct exIndex
 MySQL_Check_Table_Future::
 MySQL_Check_Table_Future(MySQL_Connector& connector, MySQL_Table_Structure table)
   {
-    if(table.name() == "")
-      POSEIDON_THROW(("MySQL table has no name"));
-
-    if(table.count_columns() == 0)
-      POSEIDON_THROW(("MySQL table has no column"));
-
     this->m_connector = &connector;
     this->m_res.table = table;
   }
@@ -166,26 +171,34 @@ do_on_abstract_future_execute()
     // Compose a `CREATE TABLE` statement and execute it first. This ensures
     // the table exists for all operations later.
     const auto& table_name = this->m_res.table.name();
+    if(table_name.empty())
+      POSEIDON_THROW(("Table has no name"));
+
     tinyfmt_str sql;
-    sql << "CREATE TABLE IF NOT EXISTS `" << table_name << "`";
+    sql << "CREATE TABLE IF NOT EXISTS `" << table_name << "`\n  (";
+    size_t ncolumns = 0;
+    size_t nindexes = 0;
 
-    for(uint32_t k = 0;  k != this->m_res.table.count_columns();  ++k) {
-      const auto& column = this->m_res.table.column(k);
+    for(const auto& column : this->m_res.table.columns())
+      if(column.type != mysql_column_dropped) {
+        if(++ ncolumns != 1)
+          sql << ",\n   ";
+        do_append_column_definition(sql, column);
+      }
 
-      sql << ((k == 0) ? "\n  (" : ",\n   ");
-      do_append_column_definition(sql, column);
-    }
+    if(ncolumns == 0)
+      POSEIDON_THROW(("Table `$1` contains no column"), table_name);
 
-    for(uint32_t k = 0;  k != this->m_res.table.count_indexes();  ++k) {
-      const auto& index = this->m_res.table.index(k);
-
-      sql << ",\n   ";
-      do_append_index_definition(sql, index);
-    }
+    for(const auto& index : this->m_res.table.indexes())
+      if(index.type != mysql_index_dropped) {
+        ++ nindexes;
+        sql << ",\n   ";
+        do_append_index_definition(sql, index);
+      }
 
     sql << ")\n  ";
     do_append_engine(sql, this->m_res.table.engine());
-    sql << ", CHARSET = 'utf8mb4'";
+    sql << ",\n  CHARSET = 'utf8mb4'";
 
     POSEIDON_LOG_INFO(("Checking MySQL table:\n$1"), sql.get_string());
     conn->execute(sql.get_string());
@@ -235,7 +248,7 @@ do_on_abstract_future_execute()
     conn->fetch_fields(fields);
 
     map<cow_string, exIndex> exindexes;
-    opt<uint32_t> ix_non_unique, ix_column_name, ix_column_seq;
+    opt<uint32_t> ix_non_unique, ix_column_name, ix_seq_in_index;
 
     for(uint32_t t = 0;  t != fields.size();  ++t)
       if(ascii_ci_equal(fields[t], "key_name"))
@@ -245,7 +258,7 @@ do_on_abstract_future_execute()
       else if(ascii_ci_equal(fields[t], "column_name"))
         ix_column_name = t;
       else if(ascii_ci_equal(fields[t], "seq_in_index"))
-        ix_column_seq = t;
+        ix_seq_in_index = t;
 
     while(conn->fetch_row(row)) {
       cow_string& name = row.at(ix_name.value()).mut_string();
@@ -254,8 +267,8 @@ do_on_abstract_future_execute()
 
       // Save this index.
       exIndex& r = exindexes[name];
-      r.unique = row.at(ix_non_unique.value()).as_integer() == 0;
-      size_t column_seq = static_cast<size_t>(row.at(ix_column_seq.value()).as_integer());
+      r.multi = row.at(ix_non_unique.value()).as_integer() != 0;
+      size_t column_seq = static_cast<size_t>(row.at(ix_seq_in_index.value()).as_integer());
       r.columns.resize(::std::max(r.columns.size(), column_seq));
       r.columns.at(column_seq - 1) = row.at(ix_column_name.value()).as_string();
     }
@@ -263,36 +276,40 @@ do_on_abstract_future_execute()
     // Compare the existent columns and indexes with the requested ones,
     // altering the table as necessary.
     sql.clear_string();
-    sql << "ALTER TABLE `" << table_name << "`";
-    size_t alt_count = 0;
+    sql << "ALTER TABLE `" << table_name << "`\n  ";
+    size_t nalters = 0;
 
-    for(uint32_t k = 0;  k != this->m_res.table.count_columns();  ++k) {
-      const auto& column = this->m_res.table.column(k);
-
+    for(const auto& column : this->m_res.table.columns()) {
       auto ex = excolumns.find(column.name);
-      if(ex != excolumns.end()) {
-        const auto& r = ex->second;
 
+      if((column.type == mysql_column_dropped) && (ex == excolumns.end()))
+        continue;
+
+      if(ex != excolumns.end()) {
         switch(column.type)
           {
+          case mysql_column_dropped:
+            // Drop the column.
+            goto do_alter_table_column_;
+
           case mysql_column_varchar:
             {
               // The type shall be an exact match.
-              if(!ascii_ci_equal(r.type, "varchar(255)"))
-                goto do_alter_column_;
+              if(!ascii_ci_equal(ex->second.type, "varchar(255)"))
+                goto do_alter_table_column_;
 
               if(!column.default_value.is_null()) {
                 // The default value is a string and shall be an exact match of
                 // the configuration.
-                if(!r.default_value.is_string())
-                  goto do_alter_column_;
+                if(!ex->second.default_value.is_string())
+                  goto do_alter_table_column_;
 
-                if(r.default_value.as_string() != column.default_value.as_string())
-                  goto do_alter_column_;
+                if(ex->second.default_value.as_string() != column.default_value.as_string())
+                  goto do_alter_table_column_;
               }
 
-              if(!ascii_ci_equal(r.extra, ""))
-                goto do_alter_column_;
+              if(!ascii_ci_equal(ex->second.extra, ""))
+                goto do_alter_table_column_;
             }
             break;
 
@@ -301,27 +318,27 @@ do_on_abstract_future_execute()
               // MySQL does not have a real boolean type, so we use an integer.
               // Some old MySQL versions include a display width in the type,
               // which is deprecated since 8.0 anyway. Both forms are accepted.
-              if(!ascii_ci_equal(r.type, "tinyint(1)") && !ascii_ci_equal(r.type, "tinyint"))
-                goto do_alter_column_;
+              if(!ascii_ci_equal(ex->second.type, "tinyint(1)") && !ascii_ci_equal(ex->second.type, "tinyint"))
+                goto do_alter_table_column_;
 
               if(!column.default_value.is_null()) {
                 // The default value is an integer and shall be an exact match
                 // of the configuration. The MySQL server returns the default as
                 // a generic string, so parse it first.
-                if(!r.default_value.is_string())
-                  goto do_alter_column_;
+                if(!ex->second.default_value.is_string())
+                  goto do_alter_table_column_;
 
                 int64_t def_value;
                 ::rocket::ascii_numget numg;
-                numg.parse_DI(r.default_value.str_data(), r.default_value.str_length());
+                numg.parse_DI(ex->second.default_value.str_data(), ex->second.default_value.str_length());
                 numg.cast_I(def_value, INT64_MIN, INT64_MAX);
 
                 if(def_value != column.default_value.as_integer())
-                  goto do_alter_column_;
+                  goto do_alter_table_column_;
               }
 
-              if(!ascii_ci_equal(r.extra, ""))
-                goto do_alter_column_;
+              if(!ascii_ci_equal(ex->second.extra, ""))
+                goto do_alter_table_column_;
             }
             break;
 
@@ -329,27 +346,27 @@ do_on_abstract_future_execute()
             {
               // Some old MySQL versions include a display width in the type,
               // which is deprecated since 8.0 anyway. Both forms are accepted.
-              if(!ascii_ci_equal(r.type, "int(11)") && !ascii_ci_equal(r.type, "int"))
-                goto do_alter_column_;
+              if(!ascii_ci_equal(ex->second.type, "int(11)") && !ascii_ci_equal(ex->second.type, "int"))
+                goto do_alter_table_column_;
 
               if(!column.default_value.is_null()) {
                 // The default value is an integer and shall be an exact match
                 // of the configuration. The MySQL server returns the default as
                 // a generic string, so parse it first.
-                if(!r.default_value.is_string())
-                  goto do_alter_column_;
+                if(!ex->second.default_value.is_string())
+                  goto do_alter_table_column_;
 
                 int64_t def_value;
                 ::rocket::ascii_numget numg;
-                numg.parse_DI(r.default_value.str_data(), r.default_value.str_length());
+                numg.parse_DI(ex->second.default_value.str_data(), ex->second.default_value.str_length());
                 numg.cast_I(def_value, INT64_MIN, INT64_MAX);
 
                 if(def_value != column.default_value.as_integer())
-                  goto do_alter_column_;
+                  goto do_alter_table_column_;
               }
 
-              if(!ascii_ci_equal(r.extra, ""))
-                goto do_alter_column_;
+              if(!ascii_ci_equal(ex->second.extra, ""))
+                goto do_alter_table_column_;
             }
             break;
 
@@ -357,54 +374,54 @@ do_on_abstract_future_execute()
             {
               // Some old MySQL versions include a display width in the type,
               // which is deprecated since 8.0 anyway. Both forms are accepted.
-              if(!ascii_ci_equal(r.type, "bigint(20)") && !ascii_ci_equal(r.type, "bigint"))
-                goto do_alter_column_;
+              if(!ascii_ci_equal(ex->second.type, "bigint(20)") && !ascii_ci_equal(ex->second.type, "bigint"))
+                goto do_alter_table_column_;
 
               if(!column.default_value.is_null()) {
                 // The default value is an integer and shall be an exact match
                 // of the configuration. The MySQL server returns the default as
                 // a generic string, so parse it first.
-                if(!r.default_value.is_string())
-                  goto do_alter_column_;
+                if(!ex->second.default_value.is_string())
+                  goto do_alter_table_column_;
 
                 int64_t def_value;
                 ::rocket::ascii_numget numg;
-                numg.parse_DI(r.default_value.str_data(), r.default_value.str_length());
+                numg.parse_DI(ex->second.default_value.str_data(), ex->second.default_value.str_length());
                 numg.cast_I(def_value, INT64_MIN, INT64_MAX);
 
                 if(def_value != column.default_value.as_integer())
-                  goto do_alter_column_;
+                  goto do_alter_table_column_;
               }
 
-              if(!ascii_ci_equal(r.extra, ""))
-                goto do_alter_column_;
+              if(!ascii_ci_equal(ex->second.extra, ""))
+                goto do_alter_table_column_;
             }
             break;
 
           case mysql_column_double:
             {
               // The type shall be an exact match.
-              if(!ascii_ci_equal(r.type, "double"))
-                goto do_alter_column_;
+              if(!ascii_ci_equal(ex->second.type, "double"))
+                goto do_alter_table_column_;
 
               if(!column.default_value.is_null()) {
                 // The default value is a double and shall be an exact match of
                 // the configuration. The MySQL server returns the default as a
                 // generic string, so parse it first.
-                if(!r.default_value.is_string())
-                  goto do_alter_column_;
+                if(!ex->second.default_value.is_string())
+                  goto do_alter_table_column_;
 
                 double def_value;
                 ::rocket::ascii_numget numg;
-                numg.parse_DD(r.default_value.str_data(), r.default_value.str_length());
-                numg.cast_D(def_value, -DBL_MAX, DBL_MAX);
+                numg.parse_DD(ex->second.default_value.str_data(), ex->second.default_value.str_length());
+                numg.cast_D(def_value, -HUGE_VAL, HUGE_VAL);
 
                 if(def_value != column.default_value.as_double())
-                  goto do_alter_column_;
+                  goto do_alter_table_column_;
               }
 
-              if(!ascii_ci_equal(r.extra, ""))
-                goto do_alter_column_;
+              if(!ascii_ci_equal(ex->second.extra, ""))
+                goto do_alter_table_column_;
             }
             break;
 
@@ -412,47 +429,41 @@ do_on_abstract_future_execute()
             {
               // The type shall be an exact match. BLOB and TEXT fields cannot
               // have a default value, so there is no need to check it.
-              if(!ascii_ci_equal(r.type, "longblob"))
-                goto do_alter_column_;
+              if(!ascii_ci_equal(ex->second.type, "longblob"))
+                goto do_alter_table_column_;
 
-              if(!ascii_ci_equal(r.extra, ""))
-                goto do_alter_column_;
+              if(!ascii_ci_equal(ex->second.extra, ""))
+                goto do_alter_table_column_;
             }
             break;
 
           case mysql_column_datetime:
             {
               // The type shall be an exact match.
-              if(!ascii_ci_equal(r.type, "datetime"))
-                goto do_alter_column_;
+              if(!ascii_ci_equal(ex->second.type, "datetime"))
+                goto do_alter_table_column_;
 
               if(!column.default_value.is_null()) {
                 // The default value is a broken-down date/time and shall be an
                 // exact match of the configuration. The MySQL server returns
                 // the default as a generic string, so parse it first.
-                if(!r.default_value.is_string())
-                  goto do_alter_column_;
+                if(!ex->second.default_value.is_string())
+                  goto do_alter_table_column_;
 
-                struct ::tm rtm = { };
-                ::strptime(r.default_value.str_data(), "%Y-%m-%d %H:%M:%S", &rtm);
-                rtm.tm_isdst = -1;
+                struct ::tm tm;
+                set_tm_from_mysql_time(tm, column.default_value.as_mysql_time());
+                ::time_t def_tp = ::mktime(&tm);
 
-                struct ::tm ctm = { };
-                const auto& cmyt = column.default_value.as_mysql_time();
-                ctm.tm_year = static_cast<int>(cmyt.year) - 1900;
-                ctm.tm_mon = static_cast<int>(cmyt.month) - 1;
-                ctm.tm_mday = static_cast<int>(cmyt.day);
-                ctm.tm_hour = static_cast<int>(cmyt.hour);
-                ctm.tm_min = static_cast<int>(cmyt.minute);
-                ctm.tm_sec = static_cast<int>(cmyt.second);
-                rtm.tm_isdst = -1;
+                ::strptime(ex->second.default_value.str_data(), "%Y-%m-%d %H:%M:%S", &tm);
+                tm.tm_isdst = -1;
+                ::time_t ex_tp = ::mktime(&tm);
 
-                if(::timegm(&rtm) != ::timegm(&ctm))
-                  goto do_alter_column_;
+                if(ex_tp != def_tp)
+                  goto do_alter_table_column_;
               }
 
-              if(!ascii_ci_equal(r.extra, ""))
-                goto do_alter_column_;
+              if(!ascii_ci_equal(ex->second.extra, ""))
+                goto do_alter_table_column_;
             }
             break;
 
@@ -462,72 +473,110 @@ do_on_abstract_future_execute()
               // which is deprecated since 8.0 anyway. Both forms are accepted.
               // Auto-increment fields cannot have a default value, so there is
               // no need to check it.
-              if(!ascii_ci_equal(r.type, "bigint(20)") && !ascii_ci_equal(r.type, "bigint"))
-                goto do_alter_column_;
+              if(!ascii_ci_equal(ex->second.type, "bigint(20)") && !ascii_ci_equal(ex->second.type, "bigint"))
+                goto do_alter_table_column_;
 
-              if(!ascii_ci_equal(r.extra, "AUTO_INCREMENT"))
-                goto do_alter_column_;
+              if(!ascii_ci_equal(ex->second.extra, "AUTO_INCREMENT"))
+                goto do_alter_table_column_;
             }
             break;
 
           default:
-            POSEIDON_THROW(("Invalid MySQL data type `$1`"), column.type);
+            POSEIDON_THROW(("Invalid MySQL column type `$1`"), column.type);
           }
 
-        if(r.nullable != column.nullable)
-          goto do_alter_column_;
+        if(ex->second.nullable != column.nullable)
+          goto do_alter_table_column_;
 
-        if(r.default_value.is_null() != column.default_value.is_null())
-          goto do_alter_column_;
+        if(ex->second.default_value.is_null() != column.default_value.is_null())
+          goto do_alter_table_column_;
 
         POSEIDON_LOG_DEBUG(("Verified: table `$1` column `$2`"), table_name, column.name);
         continue;
       }
 
+  do_alter_table_column_:
       // The column does not match the definition, so modify it.
-  do_alter_column_:
-      sql << ((alt_count ++ == 0) ? "\n  " : ",\n  ");
+      if(++ nalters != 1)
+        sql << ",\n  ";
 
-      sql << ((ex == excolumns.end()) ? "ADD" : "MODIFY") << " COLUMN ";
-      do_append_column_definition(sql, column);
+      if(ex == excolumns.end()) {
+        sql << "ADD COLUMN";
+        do_append_column_definition(sql, column);
+      }
+      else if(column.type != mysql_column_dropped) {
+        sql << "MODIFY COLUMN";
+        do_append_column_definition(sql, column);
+      }
+      else
+        sql << "DROP COLUMN `" << column.name << "`";
     }
 
-    for(uint32_t k = 0;  k != this->m_res.table.count_indexes();  ++k) {
-      const auto& index = this->m_res.table.index(k);
-
+    for(const auto& index : this->m_res.table.indexes()) {
       auto ex = exindexes.find(index.name);
-      if(ex != exindexes.end()) {
-        const auto& r = ex->second;
 
-        if(r.columns.size() != index.columns.size())
-          goto do_alter_index_;
+      if((index.type == mysql_index_dropped) && (ex == exindexes.end()))
+        continue;
+
+      if(ex != exindexes.end()) {
+        switch(index.type)
+          {
+          case mysql_index_dropped:
+            // Drop the index.
+            goto do_alter_table_index_;
+
+          case mysql_index_unique:
+            {
+              if(ex->second.multi)
+                goto do_alter_table_index_;
+            }
+            break;
+
+          case mysql_index_multi:
+            {
+              if(!ex->second.multi)
+                goto do_alter_table_index_;
+            }
+            break;
+
+          default:
+            POSEIDON_THROW(("Invalid MySQL index type `$1`"), index.type);
+          }
+
+        if(ex->second.columns.size() != index.columns.size())
+          goto do_alter_table_index_;
 
         for(uint32_t t = 0;  t != index.columns.size();  ++t)
-          if(r.columns[t] != index.columns[t])
-            goto do_alter_index_;
-
-        if(r.unique != index.unique)
-          goto do_alter_index_;
+          if(ex->second.columns[t] != index.columns[t])
+            goto do_alter_table_index_;
 
         POSEIDON_LOG_DEBUG(("Verified: table `$1` index `$2`"), table_name, index.name);
         continue;
       }
 
+  do_alter_table_index_:
       // The index does not match the definition, so modify it.
-  do_alter_index_:
-      sql << ((alt_count ++ == 0) ? "\n  " : ",\n  ");
-
-      if(ex != exindexes.end()) {
-        sql << "DROP ";
-        do_append_index_name(sql, index);
+      if(++ nalters != 1)
         sql << ",\n  ";
-      }
 
-      sql << "ADD ";
-      do_append_index_definition(sql, index);
+      if(ex == exindexes.end()) {
+        sql << "ADD";
+        do_append_index_definition(sql, index);
+      }
+      else {
+        if(ascii_ci_equal(index.name, "PRIMARY"))
+          sql << "DROP PRIMARY KEY";
+        else
+          sql << "DROP INDEX `" << index.name << "`";
+
+        if(index.type != mysql_index_dropped) {
+          sql << ",\n   ADD";
+          do_append_index_definition(sql, index);
+        }
+      }
     }
 
-    if(alt_count == 0)
+    if(nalters == 0)
       return;
 
     POSEIDON_LOG_WARN(("Updating MySQL table structure:", "$1"), sql.get_string());

@@ -23,8 +23,8 @@ class MySQL_Table_Structure
     struct Index
       {
         cow_string name;
+        MySQL_Index_Type type = mysql_index_multi;
         cow_vector<cow_string> columns;
-        bool unique = false;
       };
 
   private:
@@ -92,7 +92,8 @@ class MySQL_Table_Structure
     find_column_opt(cow_stringR name) const noexcept;
 
     // Adds a column. If a column with the same name already exists, it will be
-    // updated in place.
+    // updated in place. Setting a column to `mysql_column_dropped` automatically
+    // drops all indexes which contain the column.
     // Returns the  subscript of the updated column.
     // If `column` references an invalid column, such as an invalid name or type,
     // an exception is thrown, and there is no effect.

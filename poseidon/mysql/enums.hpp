@@ -10,14 +10,22 @@ namespace poseidon {
 
 enum MySQL_Column_Type : uint8_t
   {
-    mysql_column_varchar         = 0,  // varchar(255)
-    mysql_column_bool            = 1,  // tinyint
-    mysql_column_int             = 2,  // int
-    mysql_column_int64           = 3,  // bigint
-    mysql_column_double          = 4,  // double
-    mysql_column_blob            = 5,  // longblob
-    mysql_column_datetime        = 6,  // datetime
-    mysql_column_auto_increment  = 7,  // bigint auto_increment
+    mysql_column_dropped         = 0,  // [deleted]
+    mysql_column_varchar         = 1,  // varchar(255)
+    mysql_column_bool            = 2,  // tinyint
+    mysql_column_int             = 3,  // int
+    mysql_column_int64           = 4,  // bigint
+    mysql_column_double          = 5,  // double
+    mysql_column_blob            = 6,  // longblob
+    mysql_column_datetime        = 7,  // datetime
+    mysql_column_auto_increment  = 8,  // bigint auto_increment
+  };
+
+enum MySQL_Index_Type : uint8_t
+  {
+    mysql_index_dropped   = 0,  // [deleted]
+    mysql_index_unique    = 1,  // unique index
+    mysql_index_multi     = 2,  // index
   };
 
 enum MySQL_Engine_Type : uint8_t

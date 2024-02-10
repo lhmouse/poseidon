@@ -88,6 +88,23 @@ add_column(const Column& column)
 
     switch(column.type)
       {
+      case mysql_column_dropped:
+        {
+          if(!column.default_value.is_null())
+            POSEIDON_THROW((
+                "Dropped column `$1` shall not have a default value"),
+                column.name);
+
+          // Drop all indexes that contain this column.
+          for(size_t t = 0;  t != this->m_indexes.size();  ++t)
+            for(const auto& col_name : this->m_indexes[t].columns)
+              if(ascii_ci_equal(col_name, column.name)) {
+                this->m_indexes.mut(t).type = mysql_index_dropped;
+                break;
+              }
+        }
+        break;
+
       case mysql_column_varchar:
         {
           if(column.default_value.is_null())
@@ -98,6 +115,8 @@ add_column(const Column& column)
                 "Invalid default value for column `$1`"),
                 column.name);
 
+          // Verify the default value. MySQL store a VARCHAR value as a series
+          // of UTF characters, so count them.
           const cow_string& val = column.default_value.as_string();
 
           size_t offset = 0, count = 0;;
@@ -122,6 +141,8 @@ add_column(const Column& column)
                 "Invalid default value for column `$1`"),
                 column.name);
 
+          // Verify the default value, which shall be an integer of zero for
+          // `false` and one for `true`.
           const int64_t val = column.default_value.as_integer();
 
           if((val != 0) && (val != 1))
@@ -141,6 +162,7 @@ add_column(const Column& column)
                 "Invalid default value for column `$1`"),
                 column.name);
 
+          // Verify the default value, which shall be a 32-bit signed integer.
           const int64_t val = column.default_value.as_integer();
 
           if((val < INT32_MIN) && (val > INT32_MAX))
@@ -172,6 +194,8 @@ add_column(const Column& column)
                 "Invalid default value for column `$1`"),
                 column.name);
 
+          // Verify the default value, which shall be a finite double value.
+          // MySQL does not support infinities or NaNs.
           const double val = column.default_value.as_double();
 
           if(!::std::isfinite(val))
@@ -200,12 +224,61 @@ add_column(const Column& column)
                 "Invalid default value for column `$1`"),
                 column.name);
 
+          // Verify the default value, which shall be a normalized date/time
+          // value.
           const ::MYSQL_TIME& val = column.default_value.as_mysql_time();
 
           if(val.time_type != MYSQL_TIMESTAMP_DATETIME)
             POSEIDON_THROW((
                 "Default value for column `$1` must be `MYSQL_TIMESTAMP_DATETIME`"),
                 column.name);
+
+          if(val.year | val.month | val.day | val.hour | val.minute | val.second | val.second_part) {
+            // The value shall be normalized.
+            if((val.year < 1000) || (val.year > 9999))
+              POSEIDON_THROW((
+                  "Default value for column `$1` contains invalid year `$2`"),
+                  column.name, val.year);
+
+            struct ::tm tm;
+            set_tm_from_mysql_time(tm, val);
+            ::mktime(&tm);
+
+            if(val.year != static_cast<unsigned>(tm.tm_year) + 1900)
+              POSEIDON_THROW((
+                  "Default value for column `$1` contains invalid year `$2`"),
+                  column.name, val.year);
+
+            if(val.month != static_cast<unsigned>(tm.tm_mon) + 1)
+              POSEIDON_THROW((
+                  "Default value for column `$1` contains invalid month `$2`"),
+                  column.name, val.month);
+
+            if(val.day != static_cast<unsigned>(tm.tm_mday))
+              POSEIDON_THROW((
+                  "Default value for column `$1` contains invalid day of month `$2`"),
+                  column.name, val.day);
+
+            if(val.hour != static_cast<unsigned>(tm.tm_hour))
+              POSEIDON_THROW((
+                  "Default value for column `$1` contains invalid hour `$2`"),
+                  column.name, val.hour);
+
+            if(val.minute != static_cast<unsigned>(tm.tm_min))
+              POSEIDON_THROW((
+                  "Default value for column `$1` contains invalid minute `$2`"),
+                  column.name, val.minute);
+
+            if(val.second != static_cast<unsigned>(tm.tm_sec))
+              POSEIDON_THROW((
+                  "Default value for column `$1` contains invalid second `$2`"),
+                  column.name, val.second);
+
+            if(val.second_part > 999)
+              POSEIDON_THROW((
+                  "Default value for column `$1` contains invalid millisecond `$2`"),
+                  column.name, val.second_part);
+          }
         }
         break;
 
@@ -218,19 +291,20 @@ add_column(const Column& column)
 
           if(column.nullable)
             POSEIDON_THROW((
-                "Auto-increment column `$1` is not nullable"),
+                "Auto-increment column `$1` shall not be nullable"),
                 column.name);
 
-          for(const auto& other_column : this->m_columns)
-            if(other_column.type == mysql_column_auto_increment)
+          // There shall be no more than one auto-increment column.
+          for(const auto& other : this->m_columns)
+            if((other.type == mysql_column_auto_increment) && !ascii_ci_equal(other.name, column.name))
               POSEIDON_THROW((
                   "Another auto-increment column `$1` already exists"),
-                  other_column.name);
+                  other.name);
         }
         break;
 
       default:
-        POSEIDON_THROW(("Invalid MySQL data type `$1`"), column.type);
+        POSEIDON_THROW(("Invalid MySQL column type `$1`"), column.type);
       }
 
     return do_add_element(this->m_columns, column);
@@ -251,31 +325,61 @@ add_index(const Index& index)
     if(!do_is_name_valid(index.name))
       POSEIDON_THROW(("Invalid MySQL index name `$1`"), index.name);
 
-    if(index.columns.empty())
-      POSEIDON_THROW(("MySQL index `$1` contains no column"), index.name);
+    switch(index.type)
+      {
+      case mysql_index_dropped:
+        {
+          if(!index.columns.empty())
+            POSEIDON_THROW((
+                "Dropped index `$1` shall comprise no column"),
+                index.name);
+        }
+        break;
 
-    bool primary = ascii_ci_equal(index.name, "PRIMARY");
-    if(primary && !index.unique)
-      POSEIDON_THROW(("Primary key must also be unique"));
+      case mysql_index_unique:
+        {
+          if(index.columns.empty())
+            POSEIDON_THROW((
+                "Unique index `$1` shall comprise at least one column"),
+                index.name);
+        }
+        break;
 
-    for(size_t icol = 0;  icol != index.columns.size();  ++icol) {
-      // Verify this column.
-      auto col = this->find_column_opt(index.columns[icol]);
+      case mysql_index_multi:
+        {
+          if(index.columns.empty())
+            POSEIDON_THROW((
+                "Non-unique index `$1` shall comprise at least one column"),
+                index.name);
+
+          if(ascii_ci_equal(index.name, "PRIMARY"))
+            POSEIDON_THROW((
+                "A primary key must be unique"));
+        }
+        break;
+
+      default:
+        POSEIDON_THROW(("Invalid MySQL index type `$1`"), index.type);
+      }
+
+    // Check all columns.
+    for(const auto& col_name : index.columns) {
+      auto col = this->find_column_opt(col_name);
       if(!col)
         POSEIDON_THROW((
-            "MySQL index `$1` contains non-existent column `$2`"),
-            index.name, index.columns[icol]);
+            "Index `$1` references non-existent column `$2`"),
+            index.name, col_name);
 
-      if(primary && col->nullable)
+      if(col->nullable && ascii_ci_equal(index.name, "PRIMARY"))
         POSEIDON_THROW((
             "Primary key shall not contain nullable column `$1`"),
-            index.columns[icol]);
+            col_name);
 
-      for(size_t t = 0;  t != icol;  ++t)
-        if(ascii_ci_equal(index.columns[t], index.columns[icol]))
+      for(const auto& other : index.columns)
+        if((&other < &col_name) && ascii_ci_equal(other, col_name))
           POSEIDON_THROW((
-              "MySQL index `$1` contains duplicate column `$2`"),
-              index.name, index.columns[icol]);
+              "Index `$1` contains duplicate column `$2`"),
+              index.name, col_name);
     }
 
     return do_add_element(this->m_indexes, index);
