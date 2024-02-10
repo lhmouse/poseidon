@@ -8,11 +8,18 @@
 namespace poseidon {
 
 MySQL_Connection::
-MySQL_Connection(cow_stringR server, uint16_t port, cow_stringR user, cow_stringR passwd, cow_stringR db)
-  :
-    m_server(server), m_user(user), m_passwd(passwd), m_db(db), m_port(port),
-    m_connected(false), m_reset_clear(true)
+MySQL_Connection(cow_stringR server, uint16_t port, cow_stringR db, cow_stringR user, cow_stringR passwd)
   {
+    this->m_server = server;
+    this->m_port = port;
+    this->m_db = db;
+    this->m_user = user;
+
+    this->m_connected = false;
+    this->m_reset_clear = true;
+    this->m_passwd_mask = 0x80000000U | random_uint32();
+    this->m_passwd = passwd;
+    mask_string(this->m_passwd.mut_data(), this->m_passwd.size(), nullptr, this->m_passwd_mask);
   }
 
 MySQL_Connection::
@@ -54,19 +61,22 @@ execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)
   {
     if(!this->m_connected) {
       // Try connecting to the server now.
-      if(!::mysql_real_connect(this->m_mysql, this->m_server.safe_c_str(),
-                               this->m_user.safe_c_str(), this->m_passwd.safe_c_str(),
-                               this->m_db.safe_c_str(), this->m_port, nullptr,
-                               CLIENT_IGNORE_SIGPIPE | CLIENT_REMEMBER_OPTIONS))
+      mask_string(this->m_passwd.mut_data(), this->m_passwd.size(), nullptr, this->m_passwd_mask);
+
+      ::MYSQL* rc = ::mysql_real_connect(this->m_mysql, this->m_server.c_str(),
+                        this->m_user.c_str(), this->m_passwd.c_str(), this->m_db.c_str(),
+                        this->m_port, nullptr, CLIENT_IGNORE_SIGPIPE | CLIENT_REMEMBER_OPTIONS);
+
+      this->m_passwd_mask = 0x80000000U | random_uint32();
+      mask_string(this->m_passwd.mut_data(), this->m_passwd.size(), nullptr, this->m_passwd_mask);
+
+      if(!rc)
         POSEIDON_THROW((
             "Could not connect to MySQL server: ERROR $1: $2",
             "[`mysql_real_connect()` failed]"),
             ::mysql_errno(this->m_mysql), ::mysql_error(this->m_mysql));
 
-      // Erase the password for safety.
-      cow_string passwd;
-      passwd.swap(this->m_passwd);
-      ::explicit_bzero(passwd.mut_data(), passwd.size());
+      cow_string().swap(this->m_passwd);
       this->m_connected = true;
 
       POSEIDON_LOG_INFO((

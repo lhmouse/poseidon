@@ -283,8 +283,7 @@ do_ws_send_raw_frame(int rsv_opcode, chars_view data)
     header.rsv3 = rsv_opcode >> 4 & 1;
     header.opcode = rsv_opcode & 15;
     header.mask = 1;
-    header.mask_key_u32 = random_uint32();
-    header.mask_key[0] |= '\x80';
+    header.mask_key = 0x80000000U | random_uint32();
     header.payload_len = data.n;
 
     tinyfmt_ln fmt;

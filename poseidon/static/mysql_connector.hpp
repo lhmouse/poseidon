@@ -44,7 +44,7 @@ class MySQL_Connector
     // database to `db`. If a matching idle connection exists in the pool, it is
     // returned; otherwise a new connection is created.
     uniptr<MySQL_Connection>
-    allocate_connection(cow_stringR server, uint16_t port, cow_stringR user, cow_stringR passwd, cow_stringR db);
+    allocate_connection(cow_stringR server, uint16_t port, cow_stringR db, cow_stringR user, cow_stringR passwd);
 
     // Allocates a connection using arguments from 'main.conf'. This function
     // is otherwise the same as `allocate_connection_explicit()`.

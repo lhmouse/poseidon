@@ -13,9 +13,9 @@ class Mongo_Connector
   private:
     mutable plain_mutex m_conf_mutex;
     cow_string m_conf_default_server;
+    cow_string m_conf_default_database;
     cow_string m_conf_default_user;
     cow_string m_conf_default_password;
-    cow_string m_conf_default_database;
     uint16_t m_conf_default_port = 0;
     uint16_t m_conf_connection_pool_size = 0;
     uint32_t m_conf_password_mask = 0;
@@ -44,7 +44,7 @@ class Mongo_Connector
     // database to `db`. If a matching idle connection exists in the pool, it is
     // returned; otherwise a new connection is created.
     uniptr<Mongo_Connection>
-    allocate_connection(cow_stringR server, uint16_t port, cow_stringR user, cow_stringR passwd, cow_stringR db);
+    allocate_connection(cow_stringR server, uint16_t port, cow_stringR db, cow_stringR user, cow_stringR passwd);
 
     // Allocates a connection using arguments from 'main.conf'. This function
     // is otherwise the same as `allocate_connection_explicit()`.

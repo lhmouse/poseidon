@@ -87,7 +87,7 @@ static Easy_Timer my_timer(
           // HACKS; DO NOT PLAY WITH THESE AT HOME.
           WebSocket_Frame_Header header;
           header.mask = 1;
-          header.mask_key_u32 = 0x87654321;
+          header.mask_key = 0x87654321U;
 
           // fragment 1
           header.fin = 0;
@@ -144,7 +144,7 @@ static Easy_Timer my_timer(
           // HACKS; DO NOT PLAY WITH THESE AT HOME.
           WebSocket_Frame_Header header;
           header.mask = 1;
-          header.mask_key_u32 = 0x87654321;
+          header.mask_key = 0x87654321U;
 
           // fragment 1
           header.fin = 0;

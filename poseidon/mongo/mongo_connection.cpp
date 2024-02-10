@@ -8,11 +8,12 @@
 namespace poseidon {
 
 Mongo_Connection::
-Mongo_Connection(cow_stringR server, uint16_t port, cow_stringR user, cow_stringR passwd, cow_stringR db)
-  :
-    m_server(server), m_user(user), m_passwd(passwd), m_db(db), m_port(port),
-    m_connected(false), m_reset_clear(true)
+Mongo_Connection(cow_stringR server, uint16_t port, cow_stringR db, cow_stringR user, cow_stringR passwd)
   {
+    this->m_server = server;
+    this->m_port = port;
+    this->m_db = db;
+    this->m_user = user;
   }
 
 Mongo_Connection::

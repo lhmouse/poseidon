@@ -24,11 +24,7 @@ struct WebSocket_Frame_Header
         uint8_t reserved_1 : 7;
         uint8_t mask : 1;
         uint16_t reserved_2;
-        union {
-          char mask_key[4];
-          uint32_t mask_key_u32;
-          int32_t mask_key_i32;
-        };
+        uint32_t mask_key;
         uint64_t payload_len;
       };
     };

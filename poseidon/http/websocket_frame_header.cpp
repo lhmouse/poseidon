@@ -36,7 +36,7 @@ encode(tinyfmt& fmt) const
     }
 
     if(this->mask)
-      fmt.putn(this->mask_key, 4);
+      fmt.putn((const char*) &(this->mask_key), 4);
   }
 
 size_t
@@ -46,32 +46,7 @@ mask_payload(char* data, size_t size) noexcept
     if(!this->mask)
       return 0;
 
-    __m128i exmask = _mm_set1_epi32(this->mask_key_i32);
-    char* cur = data;
-    char* esdata = data + size;
-
-    while(esdata - cur >= 16) {
-      // by XMMWORD
-      __m128i* xcur = (__m128i*) cur;
-      _mm_storeu_si128(xcur, _mm_loadu_si128(xcur) ^ exmask);
-      cur += 16;
-    }
-
-    if(esdata - cur >= 8) {
-      // by QWORD
-      __m128i* xcur = (__m128i*) cur;
-      _mm_storeu_si64(xcur, _mm_loadu_si64(xcur) ^ exmask);
-      cur += 8;
-    }
-
-    while(cur != esdata) {
-      // bytewise
-      *cur ^= this->mask_key[0];
-      exmask = _mm_srli_si128(exmask, 1);
-      this->mask_key_i32 = _mm_cvtsi128_si32(exmask);
-      cur ++;
-    }
-
+    mask_string(data, size, &(this->mask_key), this->mask_key);
     return size;
   }
 

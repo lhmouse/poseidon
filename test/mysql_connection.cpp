@@ -11,7 +11,7 @@ int
 main()
   {
     // Try connecting to localhost. If the server is offline, skip the test.
-    MySQL_Connection conn(&"localhost", 3306, &"root", &"123456", &"mysql");
+    MySQL_Connection conn(&"localhost", 3306, &"mysql", &"root", &"123456");
     try {
       conn.execute(&"select * from `engine_cost`");
     }

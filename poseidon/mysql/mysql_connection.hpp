@@ -17,11 +17,13 @@ class MySQL_Connection
 
     cow_string m_server;
     cow_string m_user;
-    cow_string m_passwd;
     cow_string m_db;
     uint16_t m_port;
+
     bool m_connected;
     bool m_reset_clear;
+    uint32_t m_passwd_mask;
+    cow_string m_passwd;
 
     mysql_Client m_mysql;
     uniptr_MYSQL_STMT m_stmt;
@@ -31,7 +33,7 @@ class MySQL_Connection
   public:
     // Sets connection parameters. This function does not attempt to connect
     // to the server, and is not blocking.
-    MySQL_Connection(cow_stringR server, uint16_t port, cow_stringR user, cow_stringR passwd, cow_stringR db);
+    MySQL_Connection(cow_stringR server, uint16_t port, cow_stringR db, cow_stringR user, cow_stringR passwd);
 
   private:
     ::MYSQL_FIELD*
@@ -47,17 +49,17 @@ class MySQL_Connection
     server() const noexcept
       { return this->m_server;  }
 
-    cow_stringR
-    user() const noexcept
-      { return this->m_user;  }
+    uint16_t
+    port() const noexcept
+      { return this->m_port;  }
 
     cow_stringR
     db() const noexcept
       { return this->m_db;  }
 
-    uint16_t
-    port() const noexcept
-      { return this->m_port;  }
+    cow_stringR
+    user() const noexcept
+      { return this->m_user;  }
 
     // Resets the connection so it can be reused by another thread. This is a
     // blocking functions. DO NOT ATTEMPT TO REUSE THE CONNECTION IF THIS

@@ -609,7 +609,7 @@ parse_frame_header_from_stream(linear_buffer& data)
       if(data.size() < ntotal)
         return;
 
-      ::memcpy(this->m_frm_header.mask_key, bptr + ntotal - 4, 4);
+      ::memcpy(&(this->m_frm_header.mask_key), bptr + ntotal - 4, 4);
     }
 
     data.discard(ntotal);

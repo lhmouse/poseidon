@@ -47,10 +47,10 @@ reload(const Config_File& conf_file)
     // Parse new configuration. Default ones are defined here.
     cow_string default_server = &"localhost";
     int64_t default_port = 3306;
+    cow_string default_database;
     cow_string default_user = &"root";
     cow_string default_password;
     uint32_t password_mask = 0;
-    cow_string default_database;
     int64_t connection_pool_size = 0;
     int64_t connection_idle_timeout = 60;
 
@@ -82,6 +82,16 @@ reload(const Config_File& conf_file)
           "[in configuration file '$2']"),
           default_port, conf_file.path());
 
+    // Read the default database from configuration.
+    conf_value = conf_file.query("mysql", "default_database");
+    if(conf_value.is_string())
+      default_database = conf_value.as_string();
+    else if(!conf_value.is_null())
+      POSEIDON_THROW((
+          "Invalid `mysql.default_database`: expecting a `string`, got `$1`",
+          "[in configuration file '$2']"),
+          conf_value, conf_file.path());
+
     // Read the user name from configuration.
     conf_value = conf_file.query("mysql", "default_user");
     if(conf_value.is_string())
@@ -105,16 +115,6 @@ reload(const Config_File& conf_file)
 
     password_mask = 0x80808080U | random_uint32();
     do_mask_password(default_password, password_mask);
-
-    // Read the default database from configuration.
-    conf_value = conf_file.query("mysql", "default_database");
-    if(conf_value.is_string())
-      default_database = conf_value.as_string();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `mysql.default_database`: expecting a `string`, got `$1`",
-          "[in configuration file '$2']"),
-          conf_value, conf_file.path());
 
     // Read the connection pool size from configuration.
     conf_value = conf_file.query("mysql", "connection_pool_size");
@@ -162,7 +162,7 @@ reload(const Config_File& conf_file)
 
 uniptr<MySQL_Connection>
 MySQL_Connector::
-allocate_connection(cow_stringR server, uint16_t port, cow_stringR user, cow_stringR passwd, cow_stringR db)
+allocate_connection(cow_stringR server, uint16_t port, cow_stringR db, cow_stringR user, cow_stringR passwd)
   {
     plain_mutex::unique_lock lock(this->m_conf_mutex);
     const uint32_t pool_size = this->m_conf_connection_pool_size;
@@ -184,7 +184,7 @@ allocate_connection(cow_stringR server, uint16_t port, cow_stringR user, cow_str
         elem.pooled_since = steady_time::max();
       }
       else if(elem.conn && (elem.conn->m_server == server) && (elem.conn->m_port == port)
-                        && (elem.conn->m_user == user) && (elem.conn->m_db == db)
+                        && (elem.conn->m_db == db) && (elem.conn->m_user == user)
                         && (!target || (elem.pooled_since < target->pooled_since)))
         target = &elem;
 
@@ -192,7 +192,7 @@ allocate_connection(cow_stringR server, uint16_t port, cow_stringR user, cow_str
       lock.unlock();
 
       // Create a new connection.
-      return new_uni<MySQL_Connection>(server, port, user, passwd, db);
+      return new_uni<MySQL_Connection>(server, port, db, user, passwd);
     }
 
     // Pop this connection from the pool.
@@ -208,10 +208,10 @@ allocate_default_connection()
     plain_mutex::unique_lock lock(this->m_conf_mutex);
     const cow_string server = this->m_conf_default_server;
     const uint16_t port = this->m_conf_default_port;
+    const cow_string db = this->m_conf_default_database;
     const cow_string user = this->m_conf_default_user;
     const cow_string xpasswd = this->m_conf_default_password;
     const uint32_t passwd_mask = this->m_conf_password_mask;
-    const cow_string db = this->m_conf_default_database;
     const uint32_t pool_size = this->m_conf_connection_pool_size;
     const seconds idle_timeout = this->m_conf_connection_idle_timeout;
     lock.unlock();
@@ -231,7 +231,7 @@ allocate_default_connection()
         elem.pooled_since = steady_time::max();
       }
       else if(elem.conn && (elem.conn->m_server == server) && (elem.conn->m_port == port)
-                        && (elem.conn->m_user == user) && (elem.conn->m_db == db)
+                        && (elem.conn->m_db == db) && (elem.conn->m_user == user)
                         && (!target || (elem.pooled_since < target->pooled_since)))
         target = &elem;
 
@@ -242,7 +242,7 @@ allocate_default_connection()
       cow_string passwd;
       passwd.assign(xpasswd.begin(), xpasswd.end());
       do_mask_password(passwd, passwd_mask);
-      return new_uni<MySQL_Connection>(server, port, user, passwd, db);
+      return new_uni<MySQL_Connection>(server, port, db, user, passwd);
     }
 
     // Pop this connection from the pool.

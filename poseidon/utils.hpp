@@ -115,5 +115,10 @@ struct Network_Reference
 size_t
 parse_network_reference(Network_Reference& caddr, chars_view str) noexcept;
 
+// Masks a string so it will not be visible as plaintext inside a debugger or a
+// core dump file. This is primarily used to protect passwords.
+void
+mask_string(char* data, size_t size, uint32_t* next_mask_key_opt, uint32_t mask_key) noexcept;
+
 }  // namespace poseidon
 #endif
