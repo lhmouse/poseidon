@@ -97,8 +97,9 @@ poseidon_include_mysql = [
 
 poseidon_include_mongodb = [
   'poseidon/third/mongodb_fwd.hpp',
-  'poseidon/mongodb/enums.hpp',
   'poseidon/static/mongodb_connector.hpp',
+  'poseidon/mongodb/enums.hpp',
+  'poseidon/mongodb/mongodb_connection.hpp',
 ]
 
 poseidon_src = [
@@ -174,6 +175,7 @@ poseidon_src_mysql = [
 
 poseidon_src_mongodb = [
   'poseidon/static/mongodb_connector.cpp',
+  'poseidon/mongodb/mongodb_connection.cpp',
 ]
 
 etc_poseidon = [
