@@ -15,7 +15,7 @@ class zlib_xStream
   protected:
     mutable ::z_stream m_zstrm[1];
 
-  protected:
+  public:
     zlib_xStream() noexcept
       {
         this->m_zstrm->zalloc = nullptr;
@@ -28,9 +28,7 @@ class zlib_xStream
     zlib_xStream(const zlib_xStream&) = delete;
     zlib_xStream& operator=(const zlib_xStream&) & = delete;
 
-  public:
-    operator
-    ::z_stream*() const noexcept
+    operator ::z_stream*() const noexcept
       { return this->m_zstrm;  }
 
     const char*

@@ -38,7 +38,7 @@ set_mysql_time_from_tm(::MYSQL_TIME& myt, const struct ::tm& tm) noexcept
 
 class mysql_Client
   {
-  private:
+  protected:
     mutable ::MYSQL m_mysql[1];
 
   public:
@@ -61,9 +61,7 @@ class mysql_Client
     mysql_Client(const mysql_Client&) = delete;
     mysql_Client& operator=(const mysql_Client&) & = delete;
 
-  public:
-    operator
-    ::MYSQL*() const noexcept
+    operator ::MYSQL*() const noexcept
       { return this->m_mysql;  }
   };
 
