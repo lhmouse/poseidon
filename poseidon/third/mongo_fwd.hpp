@@ -75,7 +75,6 @@ class BSON
       { return this->m_bson;  }
   };
 
-
 inline
 tinyfmt&
 operator<<(tinyfmt& fmt, const BSON& bson)
@@ -83,6 +82,13 @@ operator<<(tinyfmt& fmt, const BSON& bson)
     char* str = ::bson_as_relaxed_extended_json(bson, nullptr);
     const ::rocket::unique_ptr<char, void (void*)> str_guard(str, ::bson_free);
     return fmt << (str ? str : "(invalid BSON)");
+  }
+
+inline
+tinyfmt&
+operator<<(tinyfmt& fmt, const ::bson_error_t& err)
+  {
+    return format(fmt, "ERROR $1.$2: $3", err.domain, err.code, err.message);
   }
 
 struct mongoc_uri_deleter

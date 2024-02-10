@@ -301,6 +301,7 @@ dep_mongoc = disabler()
 if get_option('enable-mysql')
   dep_mysqlclient = dependency('mysqlclient')
   add_project_arguments('-DPOSEIDON_ENABLE_MYSQL', language: [ 'c', 'cpp' ])
+  add_project_dependencies(dep_mysqlclient, language: 'cpp')
 
   poseidon_include += poseidon_include_mysql
   poseidon_src += poseidon_src_mysql
@@ -310,6 +311,7 @@ endif
 if get_option('enable-mongo')
   dep_mongoc = dependency('libmongoc-1.0')
   add_project_arguments('-DPOSEIDON_ENABLE_MONGO', language: [ 'c', 'cpp' ])
+  add_project_dependencies(dep_mongoc, language: 'cpp')
 
   poseidon_include += poseidon_include_mongo
   poseidon_src += poseidon_src_mongo
