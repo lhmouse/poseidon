@@ -54,4 +54,6 @@ main()
       format(fmt, "[$1] --->\n", ++num);
       format(fmt, "  $1\n", obj);
     }
+
+    ::fprintf(stderr, "reset ==> %d\n", conn.reset());
   }

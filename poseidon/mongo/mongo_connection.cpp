@@ -38,6 +38,7 @@ Mongo_Connection(cow_stringR server, uint16_t port, cow_stringR db, cow_stringR 
           "[`mongoc_client_new_from_uri_with_error()` failed]"),
           error.domain, error.code, error.message);
 
+    this->m_reset_clear = true;
     ::mongoc_client_set_error_api(this->m_mongo, MONGOC_ERROR_API_VERSION_2);
   }
 
@@ -50,8 +51,18 @@ bool
 Mongo_Connection::
 reset() noexcept
   {
+    // Discard the current reply and cursor.
     ::bson_reinit(this->m_reply);
     this->m_cursor.reset();
+    this->m_reset_clear = false;
+
+    // Check whether the server is still active. This is a blocking function.
+    using server_t = ::mongoc_server_description_t;
+    ::rocket::unique_ptr<server_t, void (server_t*)> server(::mongoc_server_description_destroy);
+    if(!server.reset(::mongoc_client_select_server(this->m_mongo, false, nullptr, nullptr)))
+      return false;
+
+    this->m_reset_clear = true;
     return true;
   }
 
@@ -62,13 +73,14 @@ execute(const BSON& cmd)
     // Discard the current reply and cursor.
     ::bson_reinit(this->m_reply);
     this->m_cursor.reset();
+    this->m_reset_clear = false;
 
     // Execute the command. `mongoc_client_command_with_opts()` always recreate
     // the reply object, so destroy it first.
     ::bson_error_t error;
     ::bson_destroy(this->m_reply);
-    if(!::mongoc_client_command_with_opts(this->m_mongo, this->m_db.c_str(), cmd,
-                                          nullptr, nullptr, this->m_reply, &error))
+    if(!::mongoc_client_command_with_opts(this->m_mongo, this->m_db.c_str(), cmd, nullptr,
+                                          nullptr, this->m_reply, &error))
       POSEIDON_THROW((
           "Could not execute Mongo command: ERROR $1.$2: $3",
           "[`mongoc_client_command_with_opts()` failed]"),
@@ -99,7 +111,7 @@ fetch_reply(BSON& output)
       // Create the cursor. `mongoc_cursor_new_from_command_reply_with_opts()`
       // destroys the reply object, so it has to be recreated afterwards.
       this->m_cursor.reset(::mongoc_cursor_new_from_command_reply_with_opts(
-                                         this->m_mongo, this->m_reply, nullptr));
+                                                 this->m_mongo, this->m_reply, nullptr));
       ROCKET_ASSERT(this->m_cursor);
       ::bson_init(this->m_reply);
     }

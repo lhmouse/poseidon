@@ -19,6 +19,7 @@ class Mongo_Connection
     cow_string m_user;
     uint16_t m_port;
 
+    bool m_reset_clear;
     uniptr_mongoc_client m_mongo;
     BSON m_reply;
     uniptr_mongoc_cursor m_cursor;
