@@ -17,56 +17,16 @@ class BSON
   public:
     BSON() noexcept
       {
-        // Initialize `this->m_bson` using inline storage. No dynamic memory
-        // is allocated.
         ::bson_init(this->m_bson);
-      }
-
-    BSON(const BSON& other) noexcept
-      {
-        // Initialize `this->m_bson` with copied contents from `other.m_bson`.
-        ::bson_copy_to(other.m_bson, this->m_bson);
-      }
-
-    BSON(BSON&& other) noexcept
-      {
-        // Initialize `this->m_bson` with stolen contents from `other.m_bson`.
-        // `other.m_bson` is to be destroyed by `bson_steal()` and must be
-        // reinitialized.
-        ::bson_steal(this->m_bson, other.m_bson);
-        ::bson_init(other.m_bson);
-      }
-
-    BSON&
-    operator=(const BSON& other) & noexcept
-      {
-        if(this == &other)
-          return *this;
-
-        // Perform a destroy-and-reconstruct operation in place.
-        ::bson_destroy(this->m_bson);
-        ::bson_copy_to(other.m_bson, this->m_bson);
-        return *this;
-      }
-
-    BSON&
-    operator=(BSON&& other) & noexcept
-      {
-        if(this == &other)
-          return *this;
-
-        // Perform a destroy-and-reconstruct operation in place. `other.m_bson`
-        // is to be destroyed by `bson_steal()` and must be reinitialized.
-        ::bson_destroy(this->m_bson);
-        ::bson_steal(this->m_bson, other.m_bson);
-        ::bson_init(other.m_bson);
-        return *this;
       }
 
     ~BSON()
       {
         ::bson_destroy(this->m_bson);
       }
+
+    BSON(const BSON& other) = delete;
+    BSON& operator=(const BSON& other) & = delete;
 
     constexpr operator const ::bson_t*() const noexcept
       { return this->m_bson;  }
