@@ -36,4 +36,6 @@ main()
       for(size_t k = 0;  k != fields.size();  ++k)
         format(fmt, "  $1 = $2\n", fields.at(k), values.at(k));
     }
+
+    ::fprintf(stderr, "reset ==> %d\n", conn.reset());
   }
