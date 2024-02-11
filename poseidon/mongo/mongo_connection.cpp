@@ -57,9 +57,10 @@ reset() noexcept
     this->m_reset_clear = false;
 
     // Check whether the server is still active. This is a blocking function.
-    using server_t = ::mongoc_server_description_t;
-    ::rocket::unique_ptr<server_t, void (server_t*)> server(::mongoc_server_description_destroy);
-    if(!server.reset(::mongoc_client_select_server(this->m_mongo, false, nullptr, nullptr)))
+    auto server = ::mongoc_client_select_server(this->m_mongo, false, nullptr, nullptr);
+    bool no_available_server = !server;
+    ::mongoc_server_description_destroy(server);
+    if(no_available_server)
       return false;
 
     this->m_reset_clear = true;
