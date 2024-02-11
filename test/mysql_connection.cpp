@@ -10,6 +10,8 @@ using namespace ::poseidon;
 int
 main()
   {
+    ::mysql_library_init(0, nullptr, nullptr);
+
     // Try connecting to localhost. If the server is offline, skip the test.
     MySQL_Connection conn(&"localhost", 3306, &"mysql", &"root", &"123456");
     try {
