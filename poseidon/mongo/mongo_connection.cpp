@@ -112,7 +112,7 @@ fetch_reply(BSON& output)
       // Create the cursor. `mongoc_cursor_new_from_command_reply_with_opts()`
       // destroys the reply object, so it has to be recreated afterwards.
       this->m_cursor.reset(::mongoc_cursor_new_from_command_reply_with_opts(
-                                                 this->m_mongo, this->m_reply, nullptr));
+                                          this->m_mongo, this->m_reply, nullptr));
       ROCKET_ASSERT(this->m_cursor);
       ::bson_init(this->m_reply);
     }
