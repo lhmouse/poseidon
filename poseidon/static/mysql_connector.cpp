@@ -15,17 +15,6 @@ struct Pooled_Connection
     steady_time pooled_since = steady_time::max();
   };
 
-void
-do_mask_password(cow_string& password, uint32_t mask)
-  {
-    uint32_t mask_reg = mask;
-    ::std::for_each(password.mut_begin(), password.mut_end(),
-        [&](char& c) {
-          c ^= static_cast<char>(mask_reg);
-          mask_reg = mask_reg << 24 | mask_reg >> 8;
-        });
-  }
-
 }  // namespace
 
 POSEIDON_HIDDEN_X_STRUCT(MySQL_Connector, Pooled_Connection);
@@ -114,7 +103,7 @@ reload(const Config_File& conf_file)
           conf_value, conf_file.path());
 
     password_mask = 0x80808080U | random_uint32();
-    do_mask_password(default_password, password_mask);
+    mask_string(default_password.mut_data(), default_password.size(), nullptr, password_mask);
 
     // Read the connection pool size from configuration.
     conf_value = conf_file.query("mysql", "connection_pool_size");
@@ -210,8 +199,8 @@ allocate_default_connection()
     const uint16_t port = this->m_conf_default_port;
     const cow_string db = this->m_conf_default_database;
     const cow_string user = this->m_conf_default_user;
-    const cow_string xpasswd = this->m_conf_default_password;
-    const uint32_t passwd_mask = this->m_conf_password_mask;
+    const cow_string default_password = this->m_conf_default_password;
+    const uint32_t password_mask = this->m_conf_password_mask;
     const uint32_t pool_size = this->m_conf_connection_pool_size;
     const seconds idle_timeout = this->m_conf_connection_idle_timeout;
     lock.unlock();
@@ -239,9 +228,8 @@ allocate_default_connection()
       lock.unlock();
 
       // Create a new connection.
-      cow_string passwd;
-      passwd.assign(xpasswd.begin(), xpasswd.end());
-      do_mask_password(passwd, passwd_mask);
+      cow_string passwd = default_password;
+      mask_string(passwd.mut_data(), passwd.size(), nullptr, password_mask);
       return new_uni<MySQL_Connection>(server, port, db, user, passwd);
     }
 
