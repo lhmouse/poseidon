@@ -88,13 +88,13 @@ class HTTP_Value
 
     HTTP_Value(system_time tm) noexcept
       {
-        this->m_stor.emplace<DateTime>(time_point_cast<seconds>(tm));
+        this->m_stor.emplace<DateTime>(tm);
       }
 
     HTTP_Value&
     operator=(system_time tm) & noexcept
       {
-        this->m_stor.emplace<DateTime>(time_point_cast<seconds>(tm));
+        this->m_stor.emplace<DateTime>(tm);
         return *this;
       }
 
