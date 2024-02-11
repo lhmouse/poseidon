@@ -331,7 +331,7 @@ struct chars_view
     template<size_t N>
     constexpr chars_view(const char (*ps)[N]) noexcept
       :
-        p(*ps), n(::rocket::xstrlen(*ps))
+        p(*ps), n((ROCKET_ASSERT(*(*ps + N - 1) == '\0'), N - 1))
       { }
 
     template<typename allocT>
