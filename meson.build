@@ -99,6 +99,7 @@ poseidon_include_mongo = [
   'poseidon/third/mongo_fwd.hpp',
   'poseidon/static/mongo_connector.hpp',
   'poseidon/mongo/enums.hpp',
+  'poseidon/mongo/mongo_value.hpp',
   'poseidon/mongo/mongo_connection.hpp',
 ]
 
@@ -175,6 +176,7 @@ poseidon_src_mysql = [
 
 poseidon_src_mongo = [
   'poseidon/static/mongo_connector.cpp',
+  'poseidon/mongo/mongo_value.cpp',
   'poseidon/mongo/mongo_connection.cpp',
 ]
 
@@ -217,6 +219,7 @@ test_src_mysql = [
 ]
 
 test_src_mongo = [
+  'test/mongo_value.cpp',
   'test/mongo_connection.cpp',
 ]
 

@@ -637,6 +637,11 @@ class MySQL_Value;
 class MySQL_Connection;
 
 // MongoDB types
+enum Mongo_Value_Type : uint8_t;
+class Mongo_Value;
+using Mongo_Binary = ::asteria::cow_vector<uint8_t>;
+using Mongo_Array = ::asteria::cow_vector<Mongo_Value>;
+using Mongo_Document = ::asteria::cow_bivector<cow_string, Mongo_Value>;
 class Mongo_Connection;
 
 // Easy types
