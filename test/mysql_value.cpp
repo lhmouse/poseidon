@@ -12,28 +12,36 @@ main()
     POSEIDON_TEST_CHECK(hval.is_null());
     POSEIDON_TEST_CHECK(hval.print_to_string() == "NULL");
 
-    hval.set_integer(1234567890123456789);
+    hval = 1234567890123456789;
     POSEIDON_TEST_CHECK(hval.is_integer());
     POSEIDON_TEST_CHECK(hval.as_integer() == 1234567890123456789);
     hval.mut_integer() += 1;
     POSEIDON_TEST_CHECK(hval.as_integer() == 1234567890123456790);
     POSEIDON_TEST_CHECK(hval.print_to_string() == "1234567890123456790");
 
-    hval.set_double(42.5);
+    hval = 42.5;
     POSEIDON_TEST_CHECK(hval.is_double());
     POSEIDON_TEST_CHECK(hval.as_double() == 42.5);
     hval.mut_double() += 1;
     POSEIDON_TEST_CHECK(hval.as_double() == 43.5);
     POSEIDON_TEST_CHECK(hval.print_to_string() == "43.5");
 
-    hval.set_string(&"meow");
-    POSEIDON_TEST_CHECK(hval.is_string());
-    POSEIDON_TEST_CHECK(hval.as_string() == "meow");
-    hval.mut_string() += "MEOW";
-    POSEIDON_TEST_CHECK(hval.as_string() == "meowMEOW");
+    hval = &"meow";
+    POSEIDON_TEST_CHECK(hval.is_blob());
+    POSEIDON_TEST_CHECK(hval.as_blob() == "meow");
+    hval.mut_blob() += "MEOW";
+    POSEIDON_TEST_CHECK(hval.as_blob() == "meowMEOW");
     POSEIDON_TEST_CHECK(hval.print_to_string() == "\'meowMEOW\'");
 
-    hval.set_mysql_datetime(2016,7,21, 16,26,51,678);
+    ::MYSQL_TIME myt = { };
+    myt.year = 2016;
+    myt.month = 7;
+    myt.day = 21;
+    myt.hour = 16;
+    myt.minute = 26;
+    myt.second = 51;
+    myt.second_part = 678;
+    hval = myt;
     POSEIDON_TEST_CHECK(hval.is_mysql_time());
     POSEIDON_TEST_CHECK(hval.print_to_string() == "\'2016-07-21 16:26:51.678\'");
 
@@ -41,11 +49,11 @@ main()
     POSEIDON_TEST_CHECK(hval.is_null());
     POSEIDON_TEST_CHECK(hval.print_to_string() == "NULL");
 
-    hval.set_string(&"hello\r\n\tworld");
-    POSEIDON_TEST_CHECK(hval.is_string());
+    hval = &"hello\r\n\tworld";
+    POSEIDON_TEST_CHECK(hval.is_blob());
     POSEIDON_TEST_CHECK(hval.print_to_string() == "\'hello\\r\\n\tworld\'");
 
-    hval.set_string(&"with\1control");
-    POSEIDON_TEST_CHECK(hval.is_string());
+    hval = &"with\1control";
+    POSEIDON_TEST_CHECK(hval.is_blob());
     POSEIDON_TEST_CHECK(hval.print_to_string() == "\'with\1control\'");
   }

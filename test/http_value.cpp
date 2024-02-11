@@ -12,21 +12,21 @@ main()
     POSEIDON_TEST_CHECK(hval.is_null());
     POSEIDON_TEST_CHECK(hval.print_to_string() == "");
 
-    hval.set_number(42.5);
+    hval = 42.5;
     POSEIDON_TEST_CHECK(hval.is_number());
     POSEIDON_TEST_CHECK(hval.as_number() == 42.5);
     hval.mut_number() += 1;
     POSEIDON_TEST_CHECK(hval.as_number() == 43.5);
     POSEIDON_TEST_CHECK(hval.print_to_string() == "43.5");
 
-    hval.set_string(&"meow");
+    hval = &"meow";
     POSEIDON_TEST_CHECK(hval.is_string());
     POSEIDON_TEST_CHECK(hval.as_string() == "meow");
     hval.mut_string() += "MEOW";
     POSEIDON_TEST_CHECK(hval.as_string() == "meowMEOW");
     POSEIDON_TEST_CHECK(hval.print_to_string() == "meowMEOW");
 
-    hval.set_datetime(DateTime("Thu, 21 Jul 2016 16:26:51 GMT"));
+    hval = system_clock::from_time_t(1469118411);
     POSEIDON_TEST_CHECK(hval.is_datetime());
     POSEIDON_TEST_CHECK(hval.as_time_t() == 1469118411);
     POSEIDON_TEST_CHECK(hval.print_to_string() == "Thu, 21 Jul 2016 16:26:51 GMT");
@@ -35,11 +35,11 @@ main()
     POSEIDON_TEST_CHECK(hval.is_null());
     POSEIDON_TEST_CHECK(hval.print_to_string() == "");
 
-    hval.set_string(&"hello\r\n\tworld");
+    hval = &"hello\r\n\tworld";
     POSEIDON_TEST_CHECK(hval.is_string());
     POSEIDON_TEST_CHECK(hval.print_to_string() == "\"hello world\"");
 
-    hval.set_string(&"with,comma");
+    hval = &"with,comma";
     POSEIDON_TEST_CHECK(hval.is_string());
     POSEIDON_TEST_CHECK(hval.print_to_string() == "\"with,comma\"");
 

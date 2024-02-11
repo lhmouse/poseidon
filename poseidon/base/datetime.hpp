@@ -14,20 +14,19 @@ class DateTime
 
   public:
     // Initializes a timestamp of `1970-01-01 00:00:00 UTC`.
-    constexpr DateTime() noexcept
-      :
-        m_tp()
-      { }
+    constexpr DateTime() noexcept { }
 
-    // Initializes a timestamp from a foreign source.
     constexpr DateTime(system_time tp) noexcept
       :
         m_tp(tp)
       { }
 
-    // Parses a timestamp from an HTTP date/time string, like `parse()`.
-    // An exception is thrown if the date/time string is not valid.
-    explicit DateTime(chars_view str);
+    DateTime&
+    operator=(system_time tp) & noexcept
+      {
+        this->m_tp = tp;
+        return *this;
+      }
 
     DateTime&
     swap(DateTime& other) noexcept
@@ -35,6 +34,10 @@ class DateTime
         ::std::swap(this->m_tp, other.m_tp);
         return *this;
       }
+
+    // Parses a timestamp from an HTTP date/time string, like `parse()`.
+    // An exception is thrown if the date/time string is not valid.
+    explicit DateTime(chars_view str);
 
   public:
     // Accesses raw data.

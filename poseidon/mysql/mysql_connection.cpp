@@ -134,11 +134,11 @@ execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)
         binds[col].buffer = const_cast<double*>(&(args_opt[col].as_double()));
         binds[col].buffer_length = sizeof(double);
       }
-      else if(args_opt[col].is_string()) {
+      else if(args_opt[col].is_blob()) {
         // `BLOB`
         binds[col].buffer_type = MYSQL_TYPE_BLOB;
-        binds[col].buffer = const_cast<char*>(args_opt[col].str_data());
-        binds[col].buffer_length = args_opt[col].str_length();
+        binds[col].buffer = const_cast<char*>(args_opt[col].blob_data());
+        binds[col].buffer_length = args_opt[col].blob_size();
       }
       else if(args_opt[col].is_mysql_time()) {
         // `DATETIME`
@@ -251,7 +251,6 @@ fetch_row(vector<MySQL_Value>& output)
         case MYSQL_TYPE_LONG:
         case MYSQL_TYPE_LONGLONG:
           {
-            output[col].set_integer(0);
             binds[col].buffer_type = MYSQL_TYPE_LONGLONG;
             binds[col].buffer = &(output[col].mut_integer());
             binds[col].buffer_length = sizeof(int64_t);
@@ -261,7 +260,6 @@ fetch_row(vector<MySQL_Value>& output)
         case MYSQL_TYPE_FLOAT:
         case MYSQL_TYPE_DOUBLE:
           {
-            output[col].set_double(0);
             binds[col].buffer_type = MYSQL_TYPE_DOUBLE;
             binds[col].buffer = &(output[col].mut_double());
             binds[col].buffer_length = sizeof(double);
@@ -273,7 +271,6 @@ fetch_row(vector<MySQL_Value>& output)
         case MYSQL_TYPE_DATE:
         case MYSQL_TYPE_TIME:
           {
-            output[col].set_mysql_datetime(0, 0, 0);
             binds[col].buffer_type = MYSQL_TYPE_DATETIME;
             binds[col].buffer = &(output[col].mut_mysql_time());
             binds[col].buffer_length = sizeof(::MYSQL_TIME);
@@ -282,10 +279,14 @@ fetch_row(vector<MySQL_Value>& output)
 
         default:
           {
-            output[col].set_string(&".......+.......+.......+.......+.......+");
+            // Reserve a small amount of memory for BLOB fields. This will be
+            // extended as necessary.
+            auto& output_str = output[col].mut_blob();
+            output_str.resize(64);
+
             binds[col].buffer_type = MYSQL_TYPE_LONG_BLOB;
-            binds[col].buffer = output[col].mut_str_data();
-            binds[col].buffer_length = output[col].str_length();
+            binds[col].buffer = output_str.mut_data();
+            binds[col].buffer_length = output_str.size();
           }
           break;
         }
@@ -318,12 +319,14 @@ fetch_row(vector<MySQL_Value>& output)
         output[col].clear();
       }
       else if(binds[col].buffer_type == MYSQL_TYPE_LONG_BLOB) {
-        // If the value has been truncated, fetch more.
-        size_t rlen = output[col].str_length();
-        output[col].mut_string().resize(binds[col].length_value);
-        if(rlen < binds[col].length_value) {
-          binds[col].buffer = output[col].mut_str_data();
-          binds[col].buffer_length = output[col].str_length();
+        // Check whether the value has been truncated.
+        auto& output_str = output[col].mut_blob();
+        output_str.resize(binds[col].length_value);
+
+        if(binds[col].error_value) {
+          // Refetch the truncated value.
+          binds[col].buffer = output_str.mut_data();
+          binds[col].buffer_length = output_str.size();
           ::mysql_stmt_fetch_column(this->m_stmt, &(binds[col]), col, 0);
         }
       }

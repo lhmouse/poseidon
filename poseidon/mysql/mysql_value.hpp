@@ -12,44 +12,12 @@ namespace poseidon {
 class MySQL_Value
   {
   private:
-    ::rocket::variant<nullptr_t, int64_t, double, cow_string, ::MYSQL_TIME> m_stor;
+    ::rocket::variant<nullptr_t,
+         int64_t, double, cow_string, ::MYSQL_TIME> m_stor;
 
   public:
     // Value constructors
-    constexpr MySQL_Value(nullptr_t = nullptr) noexcept
-      :
-        m_stor()
-      { }
-
-    MySQL_Value(bool value) noexcept
-      :
-        m_stor(static_cast<int64_t>(value))
-      { }
-
-    MySQL_Value(int num) noexcept
-      :
-        m_stor(static_cast<int64_t>(num))
-      { }
-
-    MySQL_Value(int64_t num) noexcept
-      :
-        m_stor(num)
-      { }
-
-    MySQL_Value(double num) noexcept
-      :
-        m_stor(num)
-      { }
-
-    MySQL_Value(cow_stringR str) noexcept
-      :
-        m_stor(str)
-      { }
-
-    MySQL_Value(const ::MYSQL_TIME& myt) noexcept
-      :
-        m_stor(myt)
-      { }
+    constexpr MySQL_Value(nullptr_t = nullptr) noexcept { }
 
     MySQL_Value&
     operator=(nullptr_t) & noexcept
@@ -58,45 +26,89 @@ class MySQL_Value
         return *this;
       }
 
+    MySQL_Value(bool value) noexcept
+      {
+        this->m_stor.emplace<int64_t>(value);
+      }
+
     MySQL_Value&
     operator=(bool value) & noexcept
       {
-        this->set_integer(value);
+        this->m_stor = static_cast<int64_t>(value);
         return *this;
+      }
+
+    MySQL_Value(int num) noexcept
+      {
+        this->m_stor.emplace<int64_t>(num);
       }
 
     MySQL_Value&
     operator=(int num) & noexcept
       {
-        this->set_integer(num);
+        this->m_stor = static_cast<int64_t>(num);
         return *this;
+      }
+
+    MySQL_Value(int64_t num) noexcept
+      {
+        this->m_stor.emplace<int64_t>(num);
       }
 
     MySQL_Value&
     operator=(int64_t num) & noexcept
       {
-        this->set_integer(num);
+        this->m_stor = num;
         return *this;
+      }
+
+    MySQL_Value(double num) noexcept
+      {
+        this->m_stor.emplace<double>(num);
       }
 
     MySQL_Value&
     operator=(double num) & noexcept
       {
-        this->set_double(num);
+        this->m_stor = num;
         return *this;
+      }
+
+    MySQL_Value(cow_stringR str) noexcept
+      {
+        this->m_stor.emplace<cow_string>(str);
       }
 
     MySQL_Value&
     operator=(cow_stringR str) & noexcept
       {
-        this->set_string(str);
+        this->m_stor = str;
         return *this;
+      }
+
+    template<size_t N>
+    MySQL_Value(const char (*ps)[N]) noexcept
+      {
+        this->m_stor.emplace<cow_string>(ps);
+      }
+
+    template<size_t N>
+    MySQL_Value&
+    operator=(const char (*ps)[N]) noexcept
+      {
+        this->mut_blob() = ps;
+        return *this;
+      }
+
+    MySQL_Value(const ::MYSQL_TIME& myt) noexcept
+      {
+        this->m_stor.emplace<::MYSQL_TIME>(myt);
       }
 
     MySQL_Value&
     operator=(const ::MYSQL_TIME& myt) & noexcept
       {
-        this->set_mysql_time(myt);
+        this->m_stor = myt;
         return *this;
       }
 
@@ -132,12 +144,13 @@ class MySQL_Value
       { return this->m_stor.as<int64_t>();  }
 
     int64_t&
-    mut_integer()
-      { return this->m_stor.mut<int64_t>();  }
-
-    void
-    set_integer(int64_t num) noexcept
-      { this->m_stor = num;  }
+    mut_integer() noexcept
+      {
+        if(auto ptr = this->m_stor.mut_ptr<int64_t>())
+          return *ptr;
+        else
+          return this->m_stor.emplace<int64_t>();
+      }
 
     bool
     is_double() const noexcept
@@ -148,48 +161,37 @@ class MySQL_Value
       { return this->m_stor.as<double>();  }
 
     double&
-    mut_double()
-      { return this->m_stor.mut<double>();  }
-
-    void
-    set_double(double num) noexcept
-      { this->m_stor = num;  }
+    mut_double() noexcept
+      {
+        if(auto ptr = this->m_stor.mut_ptr<double>())
+          return *ptr;
+        else
+          return this->m_stor.emplace<double>();
+      }
 
     bool
-    is_string() const noexcept
+    is_blob() const noexcept
       { return this->m_stor.ptr<cow_string>() != nullptr;  }
 
     cow_stringR
-    as_string() const
+    as_blob() const
       { return this->m_stor.as<cow_string>();  }
 
     const char*
-    str_data() const
-      { return this->m_stor.as<cow_string>().c_str();  }
-
-    char*
-    mut_str_data()
-      { return this->m_stor.mut<cow_string>().mut_data();  }
+    blob_data() const
+      { return this->m_stor.as<cow_string>().data();  }
 
     size_t
-    str_length() const
-      { return this->m_stor.as<cow_string>().length();  }
+    blob_size() const
+      { return this->m_stor.as<cow_string>().size();  }
 
     cow_string&
-    mut_string()
-      { return this->m_stor.mut<cow_string>();  }
-
-    void
-    set_string(cow_stringR str) noexcept
-      { this->m_stor = str;  }
-
-    void
-    set_string(const char* str, size_t len)
+    mut_blob() noexcept
       {
-        if(auto ps = this->m_stor.mut_ptr<cow_string>())
-          ps->assign(str, len);
+        if(auto ptr = this->m_stor.mut_ptr<cow_string>())
+          return *ptr;
         else
-          this->m_stor.emplace<cow_string>(str, len);
+          return this->m_stor.emplace<cow_string>();
       }
 
     bool
@@ -201,26 +203,12 @@ class MySQL_Value
       { return this->m_stor.as<::MYSQL_TIME>();  }
 
     ::MYSQL_TIME&
-    mut_mysql_time()
-      { return this->m_stor.mut<::MYSQL_TIME>();  }
-
-    void
-    set_mysql_time(const ::MYSQL_TIME& myt) noexcept
-      { this->m_stor = myt;  }
-
-    void
-    set_mysql_datetime(uint32_t y, uint32_t m, uint32_t d, uint32_t H = 0, uint32_t M = 0, uint32_t S = 0, uint32_t ms = 0) noexcept
+    mut_mysql_time() noexcept
       {
-        ::MYSQL_TIME myt = { };
-        myt.year = y;
-        myt.month = m;
-        myt.day = d;
-        myt.hour = H;
-        myt.minute = M;
-        myt.second = S;
-        myt.second_part = ms;
-        myt.time_type = MYSQL_TIMESTAMP_DATETIME;
-        this->m_stor = myt;
+        if(auto ptr = this->m_stor.mut_ptr<::MYSQL_TIME>())
+          return *ptr;
+        else
+          return this->m_stor.emplace<::MYSQL_TIME>();
       }
 
     // Converts this value to its string form. The result will be suitable

@@ -15,75 +15,86 @@ class HTTP_Value
 
   public:
     // Value constructors
-    constexpr HTTP_Value(nullptr_t = nullptr) noexcept
-      :
-        m_stor()
-      { }
-
-    HTTP_Value(cow_stringR str) noexcept
-      :
-        m_stor(str)
-      { }
-
-    HTTP_Value(double num) noexcept
-      :
-        m_stor(num)
-      { }
-
-    HTTP_Value(int num) noexcept
-      :
-        m_stor(static_cast<double>(num))
-      { }
-
-    HTTP_Value(const DateTime& dt) noexcept
-      :
-        m_stor(dt)
-      { }
-
-    HTTP_Value(system_time tm) noexcept
-      :
-        m_stor(DateTime(time_point_cast<seconds>(tm)))
-      { }
+    constexpr HTTP_Value(nullptr_t = nullptr) noexcept { }
 
     HTTP_Value&
     operator=(nullptr_t) & noexcept
       {
-        this->clear();
+        this->m_stor.emplace<nullptr_t>();
         return *this;
+      }
+
+    HTTP_Value(cow_stringR str) noexcept
+      {
+        this->m_stor.emplace<cow_string>(str);
       }
 
     HTTP_Value&
     operator=(cow_stringR str) & noexcept
       {
-        this->set_string(str);
+        this->m_stor = str;
         return *this;
+      }
+
+    template<size_t N>
+    HTTP_Value(const char (*ps)[N]) noexcept
+      {
+        this->m_stor.emplace<cow_string>(ps);
+      }
+
+    template<size_t N>
+    HTTP_Value&
+    operator=(const char (*ps)[N]) noexcept
+      {
+        this->mut_string() = ps;
+        return *this;
+      }
+
+    HTTP_Value(double num) noexcept
+      {
+        this->m_stor.emplace<double>(num);
       }
 
     HTTP_Value&
     operator=(double num) & noexcept
       {
-        this->set_number(num);
+        this->m_stor = num;
         return *this;
+      }
+
+    HTTP_Value(int num) noexcept
+      {
+        this->m_stor.emplace<double>(num);
       }
 
     HTTP_Value&
     operator=(int num) & noexcept
       {
-        this->set_number(num);
+        this->m_stor = static_cast<double>(num);
         return *this;
+      }
+
+    HTTP_Value(const DateTime& dt) noexcept
+      {
+        this->m_stor.emplace<DateTime>(dt);
       }
 
     HTTP_Value&
     operator=(const DateTime& dt) & noexcept
       {
-        this->set_datetime(dt);
+        this->m_stor = dt;
         return *this;
+      }
+
+    HTTP_Value(system_time tm) noexcept
+      {
+        this->m_stor.emplace<DateTime>(time_point_cast<seconds>(tm));
       }
 
     HTTP_Value&
     operator=(system_time tm) & noexcept
       {
-        this->set_datetime(tm);
+        this->m_stor.emplace<DateTime>(time_point_cast<seconds>(tm));
         return *this;
       }
 
@@ -120,31 +131,19 @@ class HTTP_Value
 
     const char*
     str_data() const
-      { return this->m_stor.as<cow_string>().c_str();  }
-
-    char*
-    mut_str_data()
-      { return this->m_stor.mut<cow_string>().mut_data();  }
+      { return this->m_stor.as<cow_string>().data();  }
 
     size_t
-    str_length() const
-      { return this->m_stor.as<cow_string>().length();  }
+    str_size() const
+      { return this->m_stor.as<cow_string>().size();  }
 
     cow_string&
-    mut_string()
-      { return this->m_stor.mut<cow_string>();  }
-
-    void
-    set_string(cow_stringR str) noexcept
-      { this->m_stor = str;  }
-
-    void
-    set_string(const char* str, size_t len)
+    mut_string() noexcept
       {
-        if(auto ps = this->m_stor.mut_ptr<cow_string>())
-          ps->assign(str, len);
+        if(auto ptr = this->m_stor.mut_ptr<cow_string>())
+          return *ptr;
         else
-          this->m_stor.emplace<cow_string>(str, len);
+          return this->m_stor.emplace<cow_string>();
       }
 
     bool
@@ -156,12 +155,13 @@ class HTTP_Value
       { return this->m_stor.as<double>();  }
 
     double&
-    mut_number()
-      { return this->m_stor.mut<double>();  }
-
-    void
-    set_number(double num) noexcept
-      { this->m_stor = num;  }
+    mut_number() noexcept
+      {
+        if(auto ptr = this->m_stor.mut_ptr<double>())
+          return *ptr;
+        else
+          return this->m_stor.emplace<double>();
+      }
 
     bool
     is_datetime() const noexcept
@@ -176,16 +176,13 @@ class HTTP_Value
       { return this->m_stor.as<DateTime>().as_time_t();  }
 
     DateTime&
-    mut_datetime()
-      { return this->m_stor.mut<DateTime>();  }
-
-    void
-    set_datetime(const DateTime& dt) noexcept
-      { this->m_stor = dt;  }
-
-    void
-    set_time_t(time_t dt) noexcept
-      { this->m_stor.emplace<DateTime>().set_time_t(dt);  }
+    mut_datetime() noexcept
+      {
+        if(auto ptr = this->m_stor.mut_ptr<DateTime>())
+          return *ptr;
+        else
+          return this->m_stor.emplace<DateTime>();
+      }
 
     // Try parsing a quoted string. Upon success, the number of characters that
     // have been accepted is returned. Otherwise zero is returned, and the

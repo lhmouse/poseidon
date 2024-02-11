@@ -230,16 +230,16 @@ do_on_abstract_future_execute()
         ix_extra = t;
 
     while(conn->fetch_row(row)) {
-      cow_string& name = row.at(ix_name.value()).mut_string();
+      cow_string& name = row.at(ix_name.value()).mut_blob();
       if(auto column_config = this->m_res.table.find_column_opt(name))
         name = column_config->name;
 
       // Save this column.
       exColumn& r = excolumns[name];
-      r.type = row.at(ix_type.value()).as_string();
-      r.nullable = ascii_ci_equal(row.at(ix_nullable.value()).as_string(), "yes");
+      r.type = row.at(ix_type.value()).as_blob();
+      r.nullable = ascii_ci_equal(row.at(ix_nullable.value()).as_blob(), "yes");
       r.default_value = move(row.at(ix_default_value.value()));
-      r.extra = row.at(ix_extra.value()).as_string();
+      r.extra = row.at(ix_extra.value()).as_blob();
     }
 
     sql.clear_string();
@@ -261,7 +261,7 @@ do_on_abstract_future_execute()
         ix_seq_in_index = t;
 
     while(conn->fetch_row(row)) {
-      cow_string& name = row.at(ix_name.value()).mut_string();
+      cow_string& name = row.at(ix_name.value()).mut_blob();
       if(auto index_config = this->m_res.table.find_index_opt(name))
         name = index_config->name;
 
@@ -270,7 +270,7 @@ do_on_abstract_future_execute()
       r.multi = row.at(ix_non_unique.value()).as_integer() != 0;
       size_t column_seq = static_cast<size_t>(row.at(ix_seq_in_index.value()).as_integer());
       r.columns.resize(::std::max(r.columns.size(), column_seq));
-      r.columns.at(column_seq - 1) = row.at(ix_column_name.value()).as_string();
+      r.columns.at(column_seq - 1) = row.at(ix_column_name.value()).as_blob();
     }
 
     // Compare the existent columns and indexes with the requested ones,
@@ -301,10 +301,10 @@ do_on_abstract_future_execute()
               if(!column.default_value.is_null()) {
                 // The default value is a string and shall be an exact match of
                 // the configuration.
-                if(!ex->second.default_value.is_string())
+                if(!ex->second.default_value.is_blob())
                   goto do_alter_table_column_;
 
-                if(ex->second.default_value.as_string() != column.default_value.as_string())
+                if(ex->second.default_value.as_blob() != column.default_value.as_blob())
                   goto do_alter_table_column_;
               }
 
@@ -325,12 +325,12 @@ do_on_abstract_future_execute()
                 // The default value is an integer and shall be an exact match
                 // of the configuration. The MySQL server returns the default as
                 // a generic string, so parse it first.
-                if(!ex->second.default_value.is_string())
+                if(!ex->second.default_value.is_blob())
                   goto do_alter_table_column_;
 
                 int64_t def_value;
                 ::rocket::ascii_numget numg;
-                numg.parse_DI(ex->second.default_value.str_data(), ex->second.default_value.str_length());
+                numg.parse_DI(ex->second.default_value.blob_data(), ex->second.default_value.blob_size());
                 numg.cast_I(def_value, INT64_MIN, INT64_MAX);
 
                 if(def_value != column.default_value.as_integer())
@@ -353,12 +353,12 @@ do_on_abstract_future_execute()
                 // The default value is an integer and shall be an exact match
                 // of the configuration. The MySQL server returns the default as
                 // a generic string, so parse it first.
-                if(!ex->second.default_value.is_string())
+                if(!ex->second.default_value.is_blob())
                   goto do_alter_table_column_;
 
                 int64_t def_value;
                 ::rocket::ascii_numget numg;
-                numg.parse_DI(ex->second.default_value.str_data(), ex->second.default_value.str_length());
+                numg.parse_DI(ex->second.default_value.blob_data(), ex->second.default_value.blob_size());
                 numg.cast_I(def_value, INT64_MIN, INT64_MAX);
 
                 if(def_value != column.default_value.as_integer())
@@ -381,12 +381,12 @@ do_on_abstract_future_execute()
                 // The default value is an integer and shall be an exact match
                 // of the configuration. The MySQL server returns the default as
                 // a generic string, so parse it first.
-                if(!ex->second.default_value.is_string())
+                if(!ex->second.default_value.is_blob())
                   goto do_alter_table_column_;
 
                 int64_t def_value;
                 ::rocket::ascii_numget numg;
-                numg.parse_DI(ex->second.default_value.str_data(), ex->second.default_value.str_length());
+                numg.parse_DI(ex->second.default_value.blob_data(), ex->second.default_value.blob_size());
                 numg.cast_I(def_value, INT64_MIN, INT64_MAX);
 
                 if(def_value != column.default_value.as_integer())
@@ -408,12 +408,12 @@ do_on_abstract_future_execute()
                 // The default value is a double and shall be an exact match of
                 // the configuration. The MySQL server returns the default as a
                 // generic string, so parse it first.
-                if(!ex->second.default_value.is_string())
+                if(!ex->second.default_value.is_blob())
                   goto do_alter_table_column_;
 
                 double def_value;
                 ::rocket::ascii_numget numg;
-                numg.parse_DD(ex->second.default_value.str_data(), ex->second.default_value.str_length());
+                numg.parse_DD(ex->second.default_value.blob_data(), ex->second.default_value.blob_size());
                 numg.cast_D(def_value, -HUGE_VAL, HUGE_VAL);
 
                 if(def_value != column.default_value.as_double())
@@ -447,14 +447,14 @@ do_on_abstract_future_execute()
                 // The default value is a broken-down date/time and shall be an
                 // exact match of the configuration. The MySQL server returns
                 // the default as a generic string, so parse it first.
-                if(!ex->second.default_value.is_string())
+                if(!ex->second.default_value.is_blob())
                   goto do_alter_table_column_;
 
                 struct ::tm tm;
                 set_tm_from_mysql_time(tm, column.default_value.as_mysql_time());
                 ::time_t def_tp = ::mktime(&tm);
 
-                ::strptime(ex->second.default_value.str_data(), "%Y-%m-%d %H:%M:%S", &tm);
+                ::strptime(ex->second.default_value.blob_data(), "%Y-%m-%d %H:%M:%S", &tm);
                 tm.tm_isdst = -1;
                 ::time_t ex_tp = ::mktime(&tm);
 

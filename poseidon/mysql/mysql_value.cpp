@@ -135,9 +135,12 @@ print(tinyfmt& fmt) const
             nump.put_DU(myt.second, 2);
             this->pfmt->putn(nump.data(), nump.size());
 
-            this->pfmt->putc('.');
-            nump.put_DU(myt.second_part, 3);
-            this->pfmt->putn(nump.data(), nump.size());
+            if(myt.second_part != 0) {
+              // This part is optional and is usually omitted.
+              this->pfmt->putc('.');
+              nump.put_DU(myt.second_part, 3);
+              this->pfmt->putn(nump.data(), nump.size());
+            }
 
             this->pfmt->putc('\'');
           }

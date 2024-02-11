@@ -110,14 +110,14 @@ add_column(const Column& column)
           if(column.default_value.is_null())
             break;
 
-          if(!column.default_value.is_string())
+          if(!column.default_value.is_blob())
             POSEIDON_THROW((
                 "Invalid default value for column `$1`"),
                 column.name);
 
           // Verify the default value. MySQL store a VARCHAR value as a series
           // of UTF characters, so count them.
-          const cow_string& val = column.default_value.as_string();
+          const cow_string& val = column.default_value.as_blob();
 
           size_t offset = 0, count = 0;;
           char32_t cp;

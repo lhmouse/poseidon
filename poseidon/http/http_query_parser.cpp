@@ -136,12 +136,10 @@ next_element()
 
       // If the value looks like a number, accept it as a number; otherwise,
       // accept it as a string.
-      if((vlen != 0) && (numg.parse_D(vstr, vlen) == vlen)) {
-        double num;
-        numg.cast_D(num, -HUGE_VAL, HUGE_VAL);
-        this->m_value.set_number(num);
-      } else
-        this->m_value.set_string(vstr, vlen);
+      if((vlen != 0) && (numg.parse_D(vstr, vlen) == vlen))
+        numg.cast_D(this->m_value.mut_number(), -HUGE_VAL, HUGE_VAL);
+      else
+        this->m_value.mut_string().assign(vstr, vlen);
 
       this->m_name.erase(name_len);
     }
