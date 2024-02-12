@@ -20,13 +20,13 @@ print(tinyfmt& fmt) const
         tinyfmt* pfmt;
 
         void
-        operator()(nullptr_t) const
+        operator()(nullptr_t)
           {
             this->pfmt->putn("NULL", 4);
           }
 
         void
-        operator()(int64_t num) const
+        operator()(int64_t num)
           {
             ::rocket::ascii_numput nump;
             nump.put_DI(num);
@@ -34,7 +34,7 @@ print(tinyfmt& fmt) const
           }
 
         void
-        operator()(double num) const
+        operator()(double num)
           {
             if(::std::isnan(num)) {
               // MySQL does not allow NaN values.
@@ -49,7 +49,7 @@ print(tinyfmt& fmt) const
           }
 
         void
-        operator()(cow_stringR str) const
+        operator()(cow_stringR str)
           {
             this->pfmt->putc('\'');
 
@@ -97,7 +97,7 @@ print(tinyfmt& fmt) const
           }
 
         void
-        operator()(const ::MYSQL_TIME& myt) const
+        operator()(const ::MYSQL_TIME& myt)
           {
             this->pfmt->putc('\'');
 
