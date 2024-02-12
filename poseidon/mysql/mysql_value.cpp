@@ -5,18 +5,6 @@
 #include "mysql_value.hpp"
 #include "../utils.hpp"
 namespace poseidon {
-namespace {
-
-constexpr
-bool
-do_needs_escape(char ch) noexcept
-  {
-    // https://dev.mysql.com/doc/c-api/8.0/en/mysql-real-escape-string-quote.html
-    return (ch == '\\') || (ch == '\'') || (ch == '\"') || (ch == 0)
-           || (ch == '\n') || (ch == '\r') || (ch == 26) || (ch == '`');
-  }
-
-}  // namespace
 
 MySQL_Value::
 ~MySQL_Value()
@@ -65,42 +53,44 @@ print(tinyfmt& fmt) const
           {
             this->pfmt->putc('\'');
 
-            auto pos = ::std::find_if(str.begin(), str.end(), do_needs_escape);
-            this->pfmt->putn(str.data(), (size_t) (pos - str.begin()));
+            size_t pos = 0;
+            while(pos != str.size()) {
+              // This includes the null terminator.
+              // https://dev.mysql.com/doc/c-api/8.0/en/mysql-real-escape-string-quote.html
+              static constexpr char unsafe_chars[] = "\\\'\"\n\r\x1A`";
+              size_t brk = str.find_of(pos, unsafe_chars, sizeof(unsafe_chars));
+              if(brk == cow_string::npos) {
+                this->pfmt->putn(str.data() + pos, str.size() - pos);
+                break;
+              }
 
-            while(pos != str.end()) {
-              if((*pos == '\\') || (*pos == '\'') || (*pos == '\"') || (*pos == '`')) {
-                // Escape it.
-                char seq[2] = { '\\', *pos };
-                this->pfmt->putn(seq, 2);
-                ++ pos;
-              }
-              else if(*pos == 0) {
-                // Translate it.
-                this->pfmt->putn("\0", 2);
-                ++ pos;
-              }
-              else if(*pos == '\n') {
-                // Translate it.
-                this->pfmt->putn("\\n", 2);
-                ++ pos;
-              }
-              else if(*pos == '\r') {
-                // Translate it.
-                this->pfmt->putn("\\r", 2);
-                ++ pos;
-              }
-              else if(*pos == 26) {
-                // Translate it.
-                this->pfmt->putn("\\Z", 2);
-                ++ pos;
-              }
-              else {
-                // Write this sequence verbatim.
-                auto from = pos;
-                pos = ::std::find_if(pos + 1, str.end(), do_needs_escape);
-                this->pfmt->putn(&*from, (size_t) (pos - from));
-              }
+              this->pfmt->putn(str.data() + pos, brk - pos);
+              pos = brk + 1;
+              char eseq[2] = { '\\', str[brk] };
+
+              // Escape this single character.
+              switch(eseq[1])
+                {
+                case '\n':
+                  this->pfmt->putn("\\n", 2);
+                  break;
+
+                case '\r':
+                  this->pfmt->putn("\\r", 2);
+                  break;
+
+                case 0x1A:
+                  this->pfmt->putn("\\Z", 2);
+                  break;
+
+                case 0:
+                  this->pfmt->putn("\\0", 2);
+                  break;
+
+                default:
+                  this->pfmt->putn(eseq, 2);
+                  break;
+                }
             }
 
             this->pfmt->putc('\'');
