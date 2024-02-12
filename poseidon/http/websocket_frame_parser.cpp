@@ -28,11 +28,11 @@ struct Sec_WebSocket
       {
         ::SHA_CTX ctx;
         ::SHA1_Init(&ctx);
-        int64_t source_data[7] = { -7, -6, -5, -4, -3, ::getpid(), (intptr_t) self };
+        int64_t source_data[7] = { -7, ::getpid(), -6, reinterpret_cast<intptr_t>(self) };
         ::SHA1_Update(&ctx, source_data, 56);
         unsigned char checksum[20];
         ::SHA1_Final(checksum, &ctx);
-        ::EVP_EncodeBlock((unsigned char*) this->key_str, checksum, 16);
+        ::EVP_EncodeBlock(reinterpret_cast<unsigned char*>(this->key_str), checksum, 16);
       }
 
     void
@@ -44,7 +44,7 @@ struct Sec_WebSocket
         ::SHA1_Update(&ctx, "258EAFA5-E914-47DA-95CA-C5AB0DC85B11", 36);
         unsigned char checksum[20];
         ::SHA1_Final(checksum, &ctx);
-        ::EVP_EncodeBlock((unsigned char*) this->accept_str, checksum, 20);
+        ::EVP_EncodeBlock(reinterpret_cast<unsigned char*>(this->accept_str), checksum, 20);
       }
   };
 
@@ -120,13 +120,13 @@ struct PerMessage_Deflate
               return;
 
             double value = hparser.current_value().as_number();
-            if(!(value >= 9) || !(value <= 15) || (value != (int) value))
+            if(!(value >= 9) || !(value <= 15) || (value != static_cast<int>(value)))
               return;
 
             // `server_max_window_bits`:
             // States the maximum size of the LZ77 sliding window that the server
             // will use, in number of bits.
-            this->server_max_window_bits = (int) value;
+            this->server_max_window_bits = static_cast<int>(value);
           }
           else if(ascii_ci_equal(hparser.current_name(), "client_max_window_bits")) {
             if(hparser.current_value().is_null())
@@ -135,13 +135,13 @@ struct PerMessage_Deflate
               return;
 
             double value = hparser.current_value().as_number();
-            if(!(value >= 9) || !(value <= 15) || (value != (int) value))
+            if(!(value >= 9) || !(value <= 15) || (value != static_cast<int>(value)))
               return;
 
             // `client_max_window_bits`:
             // States the maximum size of the LZ77 sliding window that the client
             // will use, in number of bits.
-            this->client_max_window_bits = (int) value;
+            this->client_max_window_bits = static_cast<int>(value);
           }
           else
             return;
