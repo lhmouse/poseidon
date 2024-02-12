@@ -3,7 +3,7 @@
 
 #include "utils.hpp"
 #include "../poseidon/mongo/mongo_connection.hpp"
-//#include "../poseidon/mongo/mongo_value.hpp"
+#include "../poseidon/mongo/mongo_value.hpp"
 #include <rocket/tinyfmt_file.hpp>
 using namespace ::poseidon;
 
@@ -13,11 +13,11 @@ main()
     ::mongoc_init();
 
     // Try connecting to localhost. If the server is offline, skip the test.
-    scoped_bson obj;
+    Mongo_Document doc;
     Mongo_Connection conn(&"localhost", 27017, &"admin", &"root", &"123456");
     try {
-      ::bson_append_int32(obj, "ping", -1, 1);
-      conn.execute(obj);
+      doc.emplace_back(&"ping", 1);
+      conn.execute(doc);
     }
     catch(exception& e) {
       ::fprintf(stderr, "could not connect to server: %s\n", e.what());
@@ -29,30 +29,30 @@ main()
     ::rocket::tinyfmt_file fmt(stderr, nullptr);
 
     // `show dbs`
-    ::bson_reinit(obj);
-    ::bson_append_int32(obj, "listDatabases", -1, 1);
-    ::bson_append_utf8(obj, "$db", -1, "admin", -1);
-    conn.execute(obj);
+    doc.clear();
+    doc.emplace_back(&"listDatabases", 1);
+    doc.emplace_back(&"$db", &"admin");
+    conn.execute(doc);
 
     num = 0;
     format(fmt, "show dbs -->\n");
 
-    while(conn.fetch_reply(obj)) {
+    while(conn.fetch_reply(doc)) {
       format(fmt, "[$1] --->\n", ++num);
-      //format(fmt, "  $1\n", obj);
+      format(fmt, "  $1\n", doc);
     }
 
     // `db.system.version.find()`
-    ::bson_reinit(obj);
-    ::bson_append_utf8(obj, "find", -1, "system.version", -1);
-    conn.execute(obj);
+    doc.clear();
+    doc.emplace_back(&"find", &"system.version");
+    conn.execute(doc);
 
     num = 0;
     format(fmt, "db.system.version.find() -->\n");
 
-    while(conn.fetch_reply(obj)) {
+    while(conn.fetch_reply(doc)) {
       format(fmt, "[$1] --->\n", ++num);
-      //format(fmt, "  $1\n", obj);
+      format(fmt, "  $1\n", doc);
     }
 
     ::fprintf(stderr, "reset ==> %d\n", conn.reset());

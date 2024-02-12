@@ -33,6 +33,14 @@ class scoped_bson
 
     operator ::bson_t*() noexcept
       { return this->m_bson;  }
+
+    const uint8_t*
+    data() const noexcept
+      { return ::bson_get_data(this->m_bson);  }
+
+    uint32_t
+    size() const noexcept
+      { return this->m_bson->len;  }
   };
 
 struct mongoc_uri_deleter

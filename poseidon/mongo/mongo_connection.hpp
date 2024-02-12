@@ -6,6 +6,7 @@
 
 #include "../fwd.hpp"
 #include "enums.hpp"
+#include "../mongo/mongo_value.hpp"
 #include "../third/mongo_fwd.hpp"
 namespace poseidon {
 
@@ -28,6 +29,10 @@ class Mongo_Connection
     // Sets connection parameters. This function does not attempt to connect
     // to the server, and is not blocking.
     Mongo_Connection(cow_stringR server, uint16_t port, cow_stringR db, cow_stringR user, cow_stringR passwd);
+
+  private:
+    void
+    do_set_document_from_bson(Mongo_Document& output, const ::bson_t* input) const;
 
   public:
     Mongo_Connection(const Mongo_Connection&) = delete;
@@ -62,7 +67,7 @@ class Mongo_Connection
     // on the default database.
     // Reference: https://www.mongodb.com/docs/manual/reference/command/nav-crud/
     void
-    execute(const scoped_bson& cmd);
+    execute(const Mongo_Document& cmd);
 
     // Fetches an object from the reply to the last command. This function must
     // be called after `execute()`. `output` is cleared before fetching any data.
@@ -70,7 +75,7 @@ class Mongo_Connection
     // fetched, `true` is returned. If there is no result or the end of result
     // has been reached, `false` is returned.
     bool
-    fetch_reply(scoped_bson& output);
+    fetch_reply(Mongo_Document& output);
   };
 
 }  // namespace poseidon

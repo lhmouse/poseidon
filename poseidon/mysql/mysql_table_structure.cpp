@@ -119,7 +119,7 @@ add_column(const Column& column)
           // of UTF characters, so count them.
           const cow_string& val = column.default_value.as_blob();
 
-          size_t offset = 0, count = 0;;
+          size_t offset = 0, count = 0;
           char32_t cp;
           while(::asteria::utf8_decode(cp, val, offset))
             count ++;

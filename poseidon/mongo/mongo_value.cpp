@@ -56,12 +56,14 @@ print(tinyfmt& fmt) const
         operator()(cow_stringR str)
           {
             this->pfmt->putc('\"');
-            size_t off = 0;
-            while(off < str.size()) {
+            size_t offset = 0;
+            while(offset < str.size()) {
               // Decode one UTF code point.
               char32_t cp;
-              if(!::asteria::utf8_decode(cp, str, off))
-                cp = U'\uFFFD';
+              if(!::asteria::utf8_decode(cp, str, offset)) {
+                cp = U'\xFFFD';
+                offset ++;
+              }
 
               switch(cp)
                 {
@@ -120,13 +122,13 @@ print(tinyfmt& fmt) const
         operator()(const Mongo_Binary& bin)
           {
             this->pfmt->putn("{$base64:\"", 10);
-            size_t off = 0;
-            while(off < bin.size()) {
+            size_t offset = 0;
+            while(offset < bin.size()) {
               // Encode source data in blocks.
               char output[68];
-              int bsize = clamp_cast<int>(bin.size() - off, 0, 48);
-              ::EVP_EncodeBlock(reinterpret_cast<unsigned char*>(output), bin.data() + off, bsize);
-              off += static_cast<uint32_t>(bsize);
+              int bsize = clamp_cast<int>(bin.size() - offset, 0, 48);
+              ::EVP_EncodeBlock(reinterpret_cast<unsigned char*>(output), bin.data() + offset, bsize);
+              offset += static_cast<uint32_t>(bsize);
               this->pfmt->putn(output, static_cast<uint32_t>(bsize + 2) / 3 * 4);
             }
             this->pfmt->putn("\"}", 2);
