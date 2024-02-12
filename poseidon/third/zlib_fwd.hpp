@@ -48,76 +48,89 @@ class zlib_xStream
         this->m_zstrm->next_out = reinterpret_cast<::Bytef*>(ocur);
         this->m_zstrm->avail_out = ::rocket::clamp_cast<::uInt>(oend - ocur, 0, INT_MAX);
         this->m_zstrm->next_in = reinterpret_cast<const ::Bytef*>(icur);
-        this->m_zstrm->avail_in = ::rocket::clamp_cast<const ::uInt>(iend - icur, 0, INT_MAX);
+        this->m_zstrm->avail_in = ::rocket::clamp_cast<::uInt>(iend - icur, 0, INT_MAX);
       }
   };
 
-struct deflate_Stream : zlib_xStream
+struct scoped_deflate_stream : zlib_xStream
   {
-    deflate_Stream(zlib_Format fmt, uint8_t wbits, int level)
+    scoped_deflate_stream(zlib_Format fmt, uint8_t wbits, int level)
       {
         if((wbits < 9) || (wbits > 15))
           ::rocket::sprintf_and_throw<::std::invalid_argument>(
-              "deflate_Stream: window bits `%d` not valid",
-              wbits);
+                      "scoped_deflate_stream: window bits `%d` not valid", wbits);
 
         int fmt_wbits;
-        if(fmt == zlib_deflate)
-          fmt_wbits = wbits;
-        else if(fmt == zlib_raw)
-          fmt_wbits = -wbits;
-        else if(fmt == zlib_gzip)
-          fmt_wbits = wbits + 16;
-        else
-          ::rocket::sprintf_and_throw<::std::invalid_argument>(
-              "deflate_Stream: format `%d` not valid",
-              fmt);
+        switch(fmt)
+          {
+          case zlib_deflate:
+            fmt_wbits = wbits;
+            break;
+
+          case zlib_raw:
+            fmt_wbits = -wbits;
+            break;
+
+          case zlib_gzip:
+            fmt_wbits = wbits + 16;
+            break;
+
+          default:
+            ::rocket::sprintf_and_throw<::std::invalid_argument>(
+                        "scoped_deflate_stream: format `%d` not valid", fmt);
+          }
 
         if((level < -1) || (level > 9))
           ::rocket::sprintf_and_throw<::std::invalid_argument>(
-              "deflate_Stream: compression level `%d` not valid",
-              level);
+                      "scoped_deflate_stream: compression level `%d` not valid", level);
 
-        int err = ::deflateInit2(this->m_zstrm, level, Z_DEFLATED, fmt_wbits, 9, Z_DEFAULT_STRATEGY);
-        if(err != Z_OK)
+        if(::deflateInit2(this->m_zstrm, level, Z_DEFLATED, fmt_wbits, 9,
+                          Z_DEFAULT_STRATEGY) != Z_OK)
           ::rocket::sprintf_and_throw<::std::runtime_error>(
-                "deflate_Stream: insufficient memory");
+                      "scoped_deflate_stream: insufficient memory");
       }
 
-    ~deflate_Stream()
+    ~scoped_deflate_stream()
       {
         ::deflateEnd(this->m_zstrm);
       }
   };
 
-struct inflate_Stream : zlib_xStream
+struct scoped_inflate_stream : zlib_xStream
   {
-    inflate_Stream(zlib_Format fmt, uint8_t wbits)
+    scoped_inflate_stream(zlib_Format fmt, uint8_t wbits)
       {
         if((wbits < 9) || (wbits > 15))
           ::rocket::sprintf_and_throw<::std::invalid_argument>(
-              "inflate_Stream: window bits `%d` not valid",
-              wbits);
+                      "scoped_inflate_stream: window bits `%d` not valid", wbits);
 
         int fmt_wbits;
-        if(fmt == zlib_deflate)
-          fmt_wbits = wbits;
-        else if(fmt == zlib_raw)
-          fmt_wbits = -wbits;
-        else if(fmt == zlib_gzip)
-          fmt_wbits = wbits + 16;
-        else
-          ::rocket::sprintf_and_throw<::std::invalid_argument>(
-              "inflate_Stream: format `%d` not valid",
-              fmt);
+        switch(fmt)
+          {
+          case zlib_deflate:
+            fmt_wbits = wbits;
+            break;
+
+          case zlib_raw:
+            fmt_wbits = -wbits;
+            break;
+
+          case zlib_gzip:
+            fmt_wbits = wbits + 16;
+            break;
+
+          default:
+            ::rocket::sprintf_and_throw<::std::invalid_argument>(
+                        "scoped_inflate_stream: format `%d` not valid", fmt);
+          }
 
         int err = ::inflateInit2(this->m_zstrm, fmt_wbits);
         if(err != Z_OK)
           ::rocket::sprintf_and_throw<::std::runtime_error>(
-                "sprintf_and_throw: insufficient memory");
+                      "scoped_inflate_stream: insufficient memory");
       }
 
-    ~inflate_Stream()
+    ~scoped_inflate_stream()
       {
         ::inflateEnd(this->m_zstrm);
       }

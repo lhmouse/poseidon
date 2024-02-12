@@ -8,6 +8,52 @@
 #include <mysql/mysql.h>
 namespace poseidon {
 
+class scoped_MYSQL
+  {
+  protected:
+    mutable ::MYSQL m_mysql[1];
+
+  public:
+    scoped_MYSQL()
+      {
+        if(::mysql_init(this->m_mysql) == nullptr)
+          ::rocket::sprintf_and_throw<::std::runtime_error>(
+                "mysql_Client: insufficient memory");
+
+        // Set default options.
+        ::mysql_options(this->m_mysql, MYSQL_OPT_COMPRESS, "1");
+        ::mysql_options(this->m_mysql, MYSQL_SET_CHARSET_NAME , "utf8mb4");
+      }
+
+    ~scoped_MYSQL()
+      {
+        ::mysql_close(this->m_mysql);
+      }
+
+    scoped_MYSQL(const scoped_MYSQL&) = delete;
+    scoped_MYSQL& operator=(const scoped_MYSQL&) & = delete;
+
+    operator ::MYSQL*() const noexcept
+      { return this->m_mysql;  }
+  };
+
+struct MYSQL_STMT_deleter
+  {
+    void
+    operator()(::MYSQL_STMT* p) const noexcept
+      { ::mysql_stmt_close(p);  }
+  };
+
+struct MYSQL_RES_deleter
+  {
+    void
+    operator()(::MYSQL_RES* p) const noexcept
+      { ::mysql_free_result(p);  }
+  };
+
+using uniptr_MYSQL_STMT = ::rocket::unique_ptr<::MYSQL_STMT, MYSQL_STMT_deleter>;
+using uniptr_MYSQL_RES = ::rocket::unique_ptr<::MYSQL_RES, MYSQL_RES_deleter>;
+
 inline
 void
 set_tm_from_mysql_time(struct ::tm& tm, const ::MYSQL_TIME& myt) noexcept
@@ -35,52 +81,6 @@ set_mysql_time_from_tm(::MYSQL_TIME& myt, const struct ::tm& tm) noexcept
     myt.second = static_cast<unsigned>(tm.tm_sec);
     myt.time_type = MYSQL_TIMESTAMP_DATETIME;
   }
-
-class mysql_Client
-  {
-  protected:
-    mutable ::MYSQL m_mysql[1];
-
-  public:
-    mysql_Client()
-      {
-        if(::mysql_init(this->m_mysql) == nullptr)
-          ::rocket::sprintf_and_throw<::std::runtime_error>(
-                "mysql_Client: insufficient memory");
-
-        // Set default options.
-        ::mysql_options(this->m_mysql, MYSQL_OPT_COMPRESS, "1");
-        ::mysql_options(this->m_mysql, MYSQL_SET_CHARSET_NAME , "utf8mb4");
-      }
-
-    ~mysql_Client()
-      {
-        ::mysql_close(this->m_mysql);
-      }
-
-    mysql_Client(const mysql_Client&) = delete;
-    mysql_Client& operator=(const mysql_Client&) & = delete;
-
-    operator ::MYSQL*() const noexcept
-      { return this->m_mysql;  }
-  };
-
-struct MYSQL_STMT_deleter
-  {
-    void
-    operator()(::MYSQL_STMT* p) const noexcept
-      { ::mysql_stmt_close(p);  }
-  };
-
-struct MYSQL_RES_deleter
-  {
-    void
-    operator()(::MYSQL_RES* p) const noexcept
-      { ::mysql_free_result(p);  }
-  };
-
-using uniptr_MYSQL_STMT = ::rocket::unique_ptr<::MYSQL_STMT, MYSQL_STMT_deleter>;
-using uniptr_MYSQL_RES = ::rocket::unique_ptr<::MYSQL_RES, MYSQL_RES_deleter>;
 
 }  // namespace poseidon
 #endif

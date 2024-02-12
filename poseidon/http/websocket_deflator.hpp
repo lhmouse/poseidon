@@ -13,13 +13,13 @@ class WebSocket_Deflator
   private:
     // deflator (send)
     mutable plain_mutex m_def_mtx;
-    deflate_Stream m_def_strm;
+    scoped_deflate_stream m_def_strm;
     linear_buffer m_def_buf;
     cacheline_barrier m_xcb_1;
 
     // inflator (recv)
     mutable plain_mutex m_inf_mtx;
-    inflate_Stream m_inf_strm;
+    scoped_inflate_stream m_inf_strm;
     linear_buffer m_inf_buf;
 
   public:

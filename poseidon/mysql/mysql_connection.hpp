@@ -24,7 +24,7 @@ class MySQL_Connection
     uint32_t m_passwd_mask;
     cow_string m_passwd;
 
-    mysql_Client m_mysql;
+    scoped_MYSQL m_mysql;
     uniptr_MYSQL_STMT m_stmt;
     uniptr_MYSQL_RES m_meta;
     uniptr_MYSQL_RES m_res;

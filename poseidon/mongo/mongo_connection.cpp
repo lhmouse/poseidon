@@ -69,7 +69,7 @@ reset() noexcept
 
 void
 Mongo_Connection::
-execute(const BSON& cmd)
+execute(const scoped_bson& cmd)
   {
     // Discard the current reply and cursor.
     ::bson_reinit(this->m_reply);
@@ -90,7 +90,7 @@ execute(const BSON& cmd)
 
 bool
 Mongo_Connection::
-fetch_reply(BSON& output)
+fetch_reply(scoped_bson& output)
   {
     ::bson_reinit(output);
 

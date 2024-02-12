@@ -11,7 +11,7 @@ namespace poseidon {
 class Abstract_Deflator
   {
   private:
-    deflate_Stream m_strm;
+    scoped_deflate_stream m_strm;
 
   public:
     // Constructs a data compressor.

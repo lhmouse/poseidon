@@ -9,24 +9,24 @@
 #include <libmongoc-1.0/mongoc/mongoc.h>
 namespace poseidon {
 
-class BSON
+class scoped_bson
   {
   protected:
     ::bson_t m_bson[1];
 
   public:
-    BSON() noexcept
+    scoped_bson() noexcept
       {
         ::bson_init(this->m_bson);
       }
 
-    ~BSON()
+    ~scoped_bson()
       {
         ::bson_destroy(this->m_bson);
       }
 
-    BSON(const BSON& other) = delete;
-    BSON& operator=(const BSON& other) & = delete;
+    scoped_bson(const scoped_bson& other) = delete;
+    scoped_bson& operator=(const scoped_bson& other) & = delete;
 
     constexpr operator const ::bson_t*() const noexcept
       { return this->m_bson;  }
@@ -34,15 +34,6 @@ class BSON
     operator ::bson_t*() noexcept
       { return this->m_bson;  }
   };
-
-inline
-tinyfmt&
-operator<<(tinyfmt& fmt, const BSON& bson)
-  {
-    char* str = ::bson_as_relaxed_extended_json(bson, nullptr);
-    const ::rocket::unique_ptr<char, void (void*)> str_guard(str, ::bson_free);
-    return fmt << (str ? str : "(invalid BSON)");
-  }
 
 struct mongoc_uri_deleter
   {

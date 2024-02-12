@@ -13,7 +13,7 @@ main()
     ::mongoc_init();
 
     // Try connecting to localhost. If the server is offline, skip the test.
-    BSON obj;
+    scoped_bson obj;
     Mongo_Connection conn(&"localhost", 27017, &"admin", &"root", &"123456");
     try {
       ::bson_append_int32(obj, "ping", -1, 1);
@@ -39,7 +39,7 @@ main()
 
     while(conn.fetch_reply(obj)) {
       format(fmt, "[$1] --->\n", ++num);
-      format(fmt, "  $1\n", obj);
+      //format(fmt, "  $1\n", obj);
     }
 
     // `db.system.version.find()`
@@ -52,7 +52,7 @@ main()
 
     while(conn.fetch_reply(obj)) {
       format(fmt, "[$1] --->\n", ++num);
-      format(fmt, "  $1\n", obj);
+      //format(fmt, "  $1\n", obj);
     }
 
     ::fprintf(stderr, "reset ==> %d\n", conn.reset());

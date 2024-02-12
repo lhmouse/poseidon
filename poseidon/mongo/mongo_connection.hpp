@@ -21,7 +21,7 @@ class Mongo_Connection
 
     bool m_reset_clear;
     uniptr_mongoc_client m_mongo;
-    BSON m_reply;
+    scoped_bson m_reply;
     uniptr_mongoc_cursor m_cursor;
 
   public:
@@ -62,7 +62,7 @@ class Mongo_Connection
     // on the default database.
     // Reference: https://www.mongodb.com/docs/manual/reference/command/nav-crud/
     void
-    execute(const BSON& cmd);
+    execute(const scoped_bson& cmd);
 
     // Fetches an object from the reply to the last command. This function must
     // be called after `execute()`. `output` is cleared before fetching any data.
@@ -70,7 +70,7 @@ class Mongo_Connection
     // fetched, `true` is returned. If there is no result or the end of result
     // has been reached, `false` is returned.
     bool
-    fetch_reply(BSON& output);
+    fetch_reply(scoped_bson& output);
   };
 
 }  // namespace poseidon
