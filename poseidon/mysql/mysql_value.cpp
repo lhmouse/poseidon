@@ -99,40 +99,55 @@ print(tinyfmt& fmt) const
         void
         operator()(const ::MYSQL_TIME& myt)
           {
-            this->pfmt->putc('\'');
+            uint64_t tm = myt.year;
+            tm = tm * 100 + myt.month;
+            tm = tm * 100 + myt.day;
+            tm = tm * 100 + myt.hour;
+            tm = tm * 100 + myt.minute;
+            tm = tm * 100 + myt.second;
+            tm = tm * 1000 + myt.second_part;
 
             ::rocket::ascii_numput nump;
-            nump.put_DU(myt.year, 4);
-            this->pfmt->putn(nump.data(), nump.size());
+            nump.put_DU(tm);
+            const char* s = nump.data();
+            char temp[32];
+            char* t = temp;
 
-            this->pfmt->putc('-');
-            nump.put_DU(myt.month, 2);
-            this->pfmt->putn(nump.data(), nump.size());
+            *(t++) = '\'';
 
-            this->pfmt->putc('-');
-            nump.put_DU(myt.day, 2);
-            this->pfmt->putn(nump.data(), nump.size());
+            *(t++) = *(s++);
+            *(t++) = *(s++);
+            *(t++) = *(s++);
+            *(t++) = *(s++);
+            *(t++) = '-';
+            *(t++) = *(s++);
+            *(t++) = *(s++);
+            *(t++) = '-';
+            *(t++) = *(s++);
+            *(t++) = *(s++);
 
-            this->pfmt->putc(' ');
-            nump.put_DU(myt.hour, 2);
-            this->pfmt->putn(nump.data(), nump.size());
+            *(t++) = ' ';
 
-            this->pfmt->putc(':');
-            nump.put_DU(myt.minute, 2);
-            this->pfmt->putn(nump.data(), nump.size());
-
-            this->pfmt->putc(':');
-            nump.put_DU(myt.second, 2);
-            this->pfmt->putn(nump.data(), nump.size());
+            *(t++) = *(s++);
+            *(t++) = *(s++);
+            *(t++) = ':';
+            *(t++) = *(s++);
+            *(t++) = *(s++);
+            *(t++) = ':';
+            *(t++) = *(s++);
+            *(t++) = *(s++);
 
             if(myt.second_part != 0) {
               // This part is optional and is usually omitted.
-              this->pfmt->putc('.');
-              nump.put_DU(myt.second_part, 3);
-              this->pfmt->putn(nump.data(), nump.size());
+              *(t++) = '.';
+              *(t++) = *(s++);
+              *(t++) = *(s++);
+              *(t++) = *(s++);
             }
 
-            this->pfmt->putc('\'');
+            *(t++) = '\'';
+
+            this->pfmt->putn(temp, static_cast<size_t>(t - temp));
           }
       };
 
