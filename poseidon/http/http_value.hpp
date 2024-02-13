@@ -112,14 +112,14 @@ class HTTP_Value
     HTTP_Value& operator=(HTTP_Value&&) & = default;
     ~HTTP_Value();
 
+    void
+    clear() noexcept
+      { this->m_stor.emplace<nullptr_t>();  }
+
     // Access raw data.
     bool
     is_null() const noexcept
       { return this->m_stor.ptr<nullptr_t>() != nullptr;  }
-
-    void
-    clear() noexcept
-      { this->m_stor = nullptr;  }
 
     bool
     is_string() const noexcept
