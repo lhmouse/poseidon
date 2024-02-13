@@ -118,39 +118,53 @@ execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)
     vector<::MYSQL_BIND> binds(nparams);
 
     for(unsigned col = 0;  col != nparams;  ++col) {
-      if(args_opt[col].is_null()) {
-        // `NULL`
-        binds[col].buffer_type = MYSQL_TYPE_NULL;
-      }
-      else if(args_opt[col].is_integer()) {
-        // `BIGINT`
-        binds[col].buffer_type = MYSQL_TYPE_LONGLONG;
-        binds[col].buffer = const_cast<int64_t*>(&(args_opt[col].as_integer()));
-        binds[col].buffer_length = sizeof(int64_t);
-      }
-      else if(args_opt[col].is_double()) {
-        // `DOUBLE`
-        binds[col].buffer_type = MYSQL_TYPE_DOUBLE;
-        binds[col].buffer = const_cast<double*>(&(args_opt[col].as_double()));
-        binds[col].buffer_length = sizeof(double);
-      }
-      else if(args_opt[col].is_blob()) {
-        // `BLOB`
-        binds[col].buffer_type = MYSQL_TYPE_BLOB;
-        binds[col].buffer = const_cast<char*>(args_opt[col].blob_data());
-        binds[col].buffer_length = args_opt[col].blob_size();
-      }
-      else if(args_opt[col].is_datetime()) {
-        // `DATETIME`, using an internal `MYSQL_TIME` object
-        const auto& input_mdt = args_opt[col].m_stor.as<DateTime_and_MYSQL_TIME>();
-        set_mysql_time_to_system_time(input_mdt.myt, input_mdt.dt.as_system_time());
+      // Prepare input buffers for all arguments.
+      switch(args_opt[col].type())
+        {
+        case mysql_value_null:
+          {
+            binds[col].buffer_type = MYSQL_TYPE_NULL;
+          }
+          break;
 
-        binds[col].buffer_type = MYSQL_TYPE_DATETIME;
-        binds[col].buffer = &(input_mdt.myt);
-        binds[col].buffer_length = sizeof(::MYSQL_TIME);
-      }
-      else
-        POSEIDON_THROW(("Unhandled `MySQL_Value`: $1"), args_opt[col]);
+        case mysql_value_integer:
+          {
+            binds[col].buffer_type = MYSQL_TYPE_LONGLONG;
+            binds[col].buffer = const_cast<int64_t*>(&(args_opt[col].as_integer()));
+            binds[col].buffer_length = sizeof(int64_t);
+          }
+          break;
+
+        case mysql_value_double:
+          {
+            binds[col].buffer_type = MYSQL_TYPE_DOUBLE;
+            binds[col].buffer = const_cast<double*>(&(args_opt[col].as_double()));
+            binds[col].buffer_length = sizeof(double);
+          }
+          break;
+
+        case mysql_value_blob:
+          {
+            binds[col].buffer_type = MYSQL_TYPE_BLOB;
+            binds[col].buffer = const_cast<char*>(args_opt[col].blob_data());
+            binds[col].buffer_length = args_opt[col].blob_size();
+          }
+          break;
+
+        case mysql_value_datetime:
+          {
+            const auto& input_mdt = args_opt[col].m_stor.as<DateTime_and_MYSQL_TIME>();
+            set_mysql_time_to_system_time(input_mdt.myt, input_mdt.dt.as_system_time());
+
+            binds[col].buffer_type = MYSQL_TYPE_DATETIME;
+            binds[col].buffer = &(input_mdt.myt);
+            binds[col].buffer_length = sizeof(::MYSQL_TIME);
+          }
+          break;
+
+        default:
+          POSEIDON_THROW(("Unknown MySQL value type: $1"), args_opt[col]);
+        }
     }
 
     if(::mysql_stmt_bind_param(this->m_stmt, binds.data()) != 0)

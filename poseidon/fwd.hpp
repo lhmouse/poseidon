@@ -632,6 +632,7 @@ class WebSocket_Deflator;
 enum MySQL_Column_Type : uint8_t;
 enum MySQL_Index_Type : uint8_t;
 enum MySQL_Engine_Type : uint8_t;
+enum MySQL_Value_Type : uint8_t;
 class MySQL_Table_Structure;
 class MySQL_Value;
 class MySQL_Connection;

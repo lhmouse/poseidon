@@ -36,5 +36,14 @@ enum MySQL_Engine_Type : uint8_t
     mysql_engine_archive  = 3,
   };
 
+enum MySQL_Value_Type : uint8_t
+  {
+    mysql_value_null       = 0,  // NULL
+    mysql_value_integer    = 1,  // tinyint, int, bigint
+    mysql_value_double     = 2,  // double
+    mysql_value_blob       = 3,  // varchar(255), longblob
+    mysql_value_datetime   = 4,  // datetime
+  };
+
 }  // namespace poseidon
 #endif

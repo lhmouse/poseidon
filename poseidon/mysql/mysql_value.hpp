@@ -141,18 +141,22 @@ class MySQL_Value
     MySQL_Value& operator=(MySQL_Value&&) & = default;
     ~MySQL_Value();
 
-    // Access raw data.
-    bool
-    is_null() const noexcept
-      { return this->m_stor.ptr<nullptr_t>() != nullptr;  }
+    MySQL_Value_Type
+    type() const noexcept
+      { return static_cast<MySQL_Value_Type>(this->m_stor.index());  }
 
     void
     clear() noexcept
-      { this->m_stor = nullptr;  }
+      { this->m_stor.emplace<nullptr_t>();  }
+
+    // Access raw data.
+    bool
+    is_null() const noexcept
+      { return this->m_stor.index() == mysql_value_null;  }
 
     bool
     is_integer() const noexcept
-      { return this->m_stor.ptr<int64_t>() != nullptr;  }
+      { return this->m_stor.index() == mysql_value_integer;  }
 
     const int64_t&
     as_integer() const
@@ -169,7 +173,7 @@ class MySQL_Value
 
     bool
     is_double() const noexcept
-      { return this->m_stor.ptr<double>() != nullptr;  }
+      { return this->m_stor.index() == mysql_value_double;  }
 
     const double&
     as_double() const
@@ -186,7 +190,7 @@ class MySQL_Value
 
     bool
     is_blob() const noexcept
-      { return this->m_stor.ptr<cow_string>() != nullptr;  }
+      { return this->m_stor.index() == mysql_value_blob;  }
 
     cow_stringR
     as_blob() const
@@ -211,7 +215,7 @@ class MySQL_Value
 
     bool
     is_datetime() const noexcept
-      { return this->m_stor.ptr<DateTime_and_MYSQL_TIME>() != nullptr;  }
+      { return this->m_stor.index() == mysql_value_datetime;  }
 
     const DateTime&
     as_datetime() const
