@@ -147,8 +147,8 @@ add_column(const Column& column)
 
           if((val != 0) && (val != 1))
             POSEIDON_THROW((
-                "Default value for column `$1` is out of range"),
-                column.name);
+                "Default value `$2` for column `$1` is out of range"),
+                column.name, val);
         }
         break;
 
@@ -167,8 +167,8 @@ add_column(const Column& column)
 
           if((val < INT32_MIN) && (val > INT32_MAX))
             POSEIDON_THROW((
-                "Default value for column `$1` is out of range"),
-                column.name);
+                "Default value `$2` for column `$1` is out of range"),
+                column.name, val);
         }
         break;
 
@@ -219,66 +219,28 @@ add_column(const Column& column)
           if(column.default_value.is_null())
             break;
 
-          if(!column.default_value.is_mysql_time())
+          if(!column.default_value.is_datetime())
             POSEIDON_THROW((
                 "Invalid default value for column `$1`"),
                 column.name);
 
-          // Verify the default value, which shall be a normalized date/time
-          // value.
-          const ::MYSQL_TIME& val = column.default_value.as_mysql_time();
+          // Verify the default value, which shall be a timestamp between
+          // '1900-01-01 00:00:00 UTC' and '9999-12-31 23:59:59 UTC', with no
+          // fractional part.
+          const system_time val = column.default_value.as_system_time();
 
-          if(val.time_type != MYSQL_TIMESTAMP_DATETIME)
+          ::time_t secs = system_clock::to_time_t(val);
+          system_time rounded = system_clock::from_time_t(secs);
+
+          if((secs < -2208988800) || (secs >= 253402300799))
             POSEIDON_THROW((
-                "Default value for column `$1` must be `MYSQL_TIMESTAMP_DATETIME`"),
+                "Default value `$2` for column `$1` is out of range"),
+                column.name, secs);
+
+          if(rounded != val)
+            POSEIDON_THROW((
+                "Default value for column `$1` shall not contain a fractional part"),
                 column.name);
-
-          if(val.year | val.month | val.day | val.hour | val.minute | val.second | val.second_part) {
-            // The value shall be normalized.
-            if((val.year < 1000) || (val.year > 9999))
-              POSEIDON_THROW((
-                  "Default value for column `$1` contains invalid year `$2`"),
-                  column.name, val.year);
-
-            struct ::tm tm;
-            set_tm_from_mysql_time(tm, val);
-            ::timegm(&tm);
-
-            if(val.year != static_cast<unsigned>(tm.tm_year) + 1900)
-              POSEIDON_THROW((
-                  "Default value for column `$1` contains invalid year `$2`"),
-                  column.name, val.year);
-
-            if(val.month != static_cast<unsigned>(tm.tm_mon) + 1)
-              POSEIDON_THROW((
-                  "Default value for column `$1` contains invalid month `$2`"),
-                  column.name, val.month);
-
-            if(val.day != static_cast<unsigned>(tm.tm_mday))
-              POSEIDON_THROW((
-                  "Default value for column `$1` contains invalid day of month `$2`"),
-                  column.name, val.day);
-
-            if(val.hour != static_cast<unsigned>(tm.tm_hour))
-              POSEIDON_THROW((
-                  "Default value for column `$1` contains invalid hour `$2`"),
-                  column.name, val.hour);
-
-            if(val.minute != static_cast<unsigned>(tm.tm_min))
-              POSEIDON_THROW((
-                  "Default value for column `$1` contains invalid minute `$2`"),
-                  column.name, val.minute);
-
-            if(val.second != static_cast<unsigned>(tm.tm_sec))
-              POSEIDON_THROW((
-                  "Default value for column `$1` contains invalid second `$2`"),
-                  column.name, val.second);
-
-            if(val.second_part > 999)
-              POSEIDON_THROW((
-                  "Default value for column `$1` contains invalid millisecond `$2`"),
-                  column.name, val.second_part);
-          }
         }
         break;
 

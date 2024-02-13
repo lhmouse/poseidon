@@ -33,17 +33,9 @@ main()
     POSEIDON_TEST_CHECK(hval.as_blob() == "meowMEOW");
     POSEIDON_TEST_CHECK(hval.print_to_string() == "\'meowMEOW\'");
 
-    ::MYSQL_TIME myt = { };
-    myt.year = 2016;
-    myt.month = 7;
-    myt.day = 21;
-    myt.hour = 16;
-    myt.minute = 26;
-    myt.second = 51;
-    myt.second_part = 678;
-    hval = myt;
-    POSEIDON_TEST_CHECK(hval.is_mysql_time());
-    POSEIDON_TEST_CHECK(hval.print_to_string() == "\'2016-07-21 16:26:51.678\'");
+    hval = system_clock::from_time_t(1469118411) + milliseconds(678);
+    POSEIDON_TEST_CHECK(hval.is_datetime());
+    POSEIDON_TEST_CHECK(hval.print_to_string() == "\'2016-07-21 16:26:51.678 UTC\'");
 
     hval.clear();
     POSEIDON_TEST_CHECK(hval.is_null());

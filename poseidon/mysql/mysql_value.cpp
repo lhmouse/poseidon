@@ -97,57 +97,24 @@ print(tinyfmt& fmt) const
           }
 
         void
-        operator()(const ::MYSQL_TIME& myt)
+        operator()(const DateTime_and_MYSQL_TIME& mdt)
           {
-            uint64_t tm = myt.year;
-            tm = tm * 100 + myt.month;
-            tm = tm * 100 + myt.day;
-            tm = tm * 100 + myt.hour;
-            tm = tm * 100 + myt.minute;
-            tm = tm * 100 + myt.second;
-            tm = tm * 1000 + myt.second_part;
+            time_t secs = system_clock::to_time_t(mdt.dt.as_system_time());
+            system_time rounded = system_clock::from_time_t(secs);
+            auto ns = duration_cast<nanoseconds>(mdt.dt.as_system_time() - rounded);
 
             ::rocket::ascii_numput nump;
-            nump.put_DU(tm);
-            const char* s = nump.data();
+            nump.put_DU(static_cast<uint64_t>(ns.count()), 9);
+
+            // `'1994-11-06 08:49:37.123 UTC'`
             char temp[32];
-            char* t = temp;
+            temp[0] = '\'';
+            mdt.dt.print_iso8601_partial(temp + 1);
+            temp[20] = '.';
+            ::memcpy(temp + 21, nump.data(), 4);
+            ::memcpy(temp + 24, " UTC\'\0*", 8);
 
-            *(t++) = '\'';
-
-            *(t++) = *(s++);
-            *(t++) = *(s++);
-            *(t++) = *(s++);
-            *(t++) = *(s++);
-            *(t++) = '-';
-            *(t++) = *(s++);
-            *(t++) = *(s++);
-            *(t++) = '-';
-            *(t++) = *(s++);
-            *(t++) = *(s++);
-
-            *(t++) = ' ';
-
-            *(t++) = *(s++);
-            *(t++) = *(s++);
-            *(t++) = ':';
-            *(t++) = *(s++);
-            *(t++) = *(s++);
-            *(t++) = ':';
-            *(t++) = *(s++);
-            *(t++) = *(s++);
-
-            if(myt.second_part != 0) {
-              // This part is optional and is usually omitted.
-              *(t++) = '.';
-              *(t++) = *(s++);
-              *(t++) = *(s++);
-              *(t++) = *(s++);
-            }
-
-            *(t++) = '\'';
-
-            this->pfmt->putn(temp, static_cast<size_t>(t - temp));
+            this->pfmt->putn(temp, 29);
           }
       };
 

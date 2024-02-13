@@ -140,10 +140,13 @@ execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)
         binds[col].buffer = const_cast<char*>(args_opt[col].blob_data());
         binds[col].buffer_length = args_opt[col].blob_size();
       }
-      else if(args_opt[col].is_mysql_time()) {
-        // `DATETIME`
+      else if(args_opt[col].is_datetime()) {
+        // `DATETIME`, using an internal `MYSQL_TIME` object
+        const auto& input_mdt = args_opt[col].m_stor.as<DateTime_and_MYSQL_TIME>();
+        set_mysql_time_to_system_time(input_mdt.myt, input_mdt.dt.as_system_time());
+
         binds[col].buffer_type = MYSQL_TYPE_DATETIME;
-        binds[col].buffer = const_cast<::MYSQL_TIME*>(&(args_opt[col].as_mysql_time()));
+        binds[col].buffer = &(input_mdt.myt);
         binds[col].buffer_length = sizeof(::MYSQL_TIME);
       }
       else
@@ -272,7 +275,7 @@ fetch_row(vector<MySQL_Value>& output)
         case MYSQL_TYPE_TIME:
           {
             binds[col].buffer_type = MYSQL_TYPE_DATETIME;
-            binds[col].buffer = &(output[col].mut_mysql_time());
+            binds[col].buffer = &(output[col].m_stor.emplace<DateTime_and_MYSQL_TIME>().myt);
             binds[col].buffer_length = sizeof(::MYSQL_TIME);
           }
           break;
@@ -318,13 +321,29 @@ fetch_row(vector<MySQL_Value>& output)
         // Set it to an explicit `NULL`.
         output[col].clear();
       }
+      else if(binds[col].buffer_type == MYSQL_TYPE_DATETIME) {
+        // Assemble the timestamp.
+        auto& output_mdt = output[col].m_stor.mut<DateTime_and_MYSQL_TIME>();
+
+        ::tm tm = { };
+        tm.tm_year = static_cast<int>(output_mdt.myt.year - 1900);
+        tm.tm_mon = static_cast<int>(output_mdt.myt.month - 1);
+        tm.tm_mday = static_cast<int>(output_mdt.myt.day);
+        tm.tm_hour = static_cast<int>(output_mdt.myt.hour);
+        tm.tm_min = static_cast<int>(output_mdt.myt.minute);
+        tm.tm_sec = static_cast<int>(output_mdt.myt.second);
+
+        ::time_t secs = ::timegm(&tm);
+        uint32_t msecs = static_cast<uint32_t>(output_mdt.myt.second_part);
+        output_mdt.dt = system_clock::from_time_t(secs) + milliseconds(msecs);
+      }
       else if(binds[col].buffer_type == MYSQL_TYPE_LONG_BLOB) {
         // Check whether the value has been truncated.
         auto& output_str = output[col].mut_blob();
         output_str.resize(binds[col].length_value);
 
         if(binds[col].error_value) {
-          // Refetch the truncated value.
+          // Refetch.
           binds[col].buffer = output_str.mut_data();
           binds[col].buffer_length = output_str.size();
           ::mysql_stmt_fetch_column(this->m_stmt, &(binds[col]), col, 0);

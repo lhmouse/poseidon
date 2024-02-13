@@ -6,14 +6,17 @@
 
 #include "../fwd.hpp"
 #include "enums.hpp"
+#include "../base/datetime.hpp"
 #include "../third/mysql_fwd.hpp"
 namespace poseidon {
 
 class MySQL_Value
   {
   private:
+    friend class MySQL_Connection;
+
     ::rocket::variant<nullptr_t,
-         int64_t, double, cow_string, ::MYSQL_TIME> m_stor;
+         int64_t, double, cow_string, DateTime_and_MYSQL_TIME> m_stor;
 
   public:
     // Value constructors
@@ -100,15 +103,27 @@ class MySQL_Value
         return *this;
       }
 
-    MySQL_Value(const ::MYSQL_TIME& myt) noexcept
+    MySQL_Value(const DateTime& dt) noexcept
       {
-        this->m_stor.emplace<::MYSQL_TIME>(myt);
+        this->m_stor.emplace<DateTime_and_MYSQL_TIME>().dt = dt;
       }
 
     MySQL_Value&
-    operator=(const ::MYSQL_TIME& myt) & noexcept
+    operator=(const DateTime& dt) & noexcept
       {
-        this->m_stor = myt;
+        this->m_stor.emplace<DateTime_and_MYSQL_TIME>().dt = dt;
+        return *this;
+      }
+
+    MySQL_Value(system_time tm) noexcept
+      {
+        this->m_stor.emplace<DateTime_and_MYSQL_TIME>().dt = tm;
+      }
+
+    MySQL_Value&
+    operator=(system_time tm) & noexcept
+      {
+        this->m_stor.emplace<DateTime_and_MYSQL_TIME>().dt = tm;
         return *this;
       }
 
@@ -195,20 +210,24 @@ class MySQL_Value
       }
 
     bool
-    is_mysql_time() const noexcept
-      { return this->m_stor.ptr<::MYSQL_TIME>() != nullptr;  }
+    is_datetime() const noexcept
+      { return this->m_stor.ptr<DateTime_and_MYSQL_TIME>() != nullptr;  }
 
-    const ::MYSQL_TIME&
-    as_mysql_time() const
-      { return this->m_stor.as<::MYSQL_TIME>();  }
+    const DateTime&
+    as_datetime() const
+      { return this->m_stor.as<DateTime_and_MYSQL_TIME>().dt;  }
 
-    ::MYSQL_TIME&
-    mut_mysql_time() noexcept
+    system_time
+    as_system_time() const
+      { return this->m_stor.as<DateTime_and_MYSQL_TIME>().dt.as_system_time();  }
+
+    DateTime&
+    mut_datetime() noexcept
       {
-        if(auto ptr = this->m_stor.mut_ptr<::MYSQL_TIME>())
-          return *ptr;
+        if(auto ptr = this->m_stor.mut_ptr<DateTime_and_MYSQL_TIME>())
+          return ptr->dt;
         else
-          return this->m_stor.emplace<::MYSQL_TIME>();
+          return this->m_stor.emplace<DateTime_and_MYSQL_TIME>().dt;
       }
 
     // Converts this value to its string form. The result will be suitable

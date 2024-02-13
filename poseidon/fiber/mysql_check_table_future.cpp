@@ -450,15 +450,11 @@ do_on_abstract_future_execute()
                 if(!ex->second.default_value.is_blob())
                   goto do_alter_table_column_;
 
-                struct ::tm tm;
-                set_tm_from_mysql_time(tm, column.default_value.as_mysql_time());
-                ::time_t def_tp = ::timegm(&tm);
-
+                ::tm tm = { };
                 ::strptime(ex->second.default_value.blob_data(), "%Y-%m-%d %H:%M:%S", &tm);
-                tm.tm_isdst = -1;
-                ::time_t ex_tp = ::timegm(&tm);
+                auto def_value = system_clock::from_time_t(::timegm(&tm));
 
-                if(ex_tp != def_tp)
+                if(def_value != column.default_value.as_system_time())
                   goto do_alter_table_column_;
               }
 

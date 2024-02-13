@@ -5,6 +5,7 @@
 #define POSEIDON_THIRD_MYSQL_FWD_
 
 #include "../fwd.hpp"
+#include "../base/datetime.hpp"
 #include <mysql/mysql.h>
 namespace poseidon {
 
@@ -54,31 +55,32 @@ struct MYSQL_RES_deleter
 using uniptr_MYSQL_STMT = ::rocket::unique_ptr<::MYSQL_STMT, MYSQL_STMT_deleter>;
 using uniptr_MYSQL_RES = ::rocket::unique_ptr<::MYSQL_RES, MYSQL_RES_deleter>;
 
-inline
-void
-set_tm_from_mysql_time(struct ::tm& tm, const ::MYSQL_TIME& myt) noexcept
+struct DateTime_and_MYSQL_TIME
   {
-    ::memset(&tm, 0, sizeof(struct ::tm));
-    tm.tm_year = static_cast<int>(myt.year - 1900);
-    tm.tm_mon = static_cast<int>(myt.month - 1);
-    tm.tm_mday = static_cast<int>(myt.day);
-    tm.tm_hour = static_cast<int>(myt.hour);
-    tm.tm_min = static_cast<int>(myt.minute);
-    tm.tm_sec = static_cast<int>(myt.second);
-    tm.tm_isdst = -1;
-  }
+    DateTime dt;
+    mutable ::MYSQL_TIME myt;
+  };
 
 inline
 void
-set_mysql_time_from_tm(::MYSQL_TIME& myt, const struct ::tm& tm) noexcept
+set_mysql_time_to_system_time(::MYSQL_TIME& myt, system_time syst) noexcept
   {
-    ::memset(&myt, 0, sizeof(::MYSQL_TIME));
-    myt.year = static_cast<unsigned>(tm.tm_year) + 1900;
-    myt.month = static_cast<unsigned>(tm.tm_mon) + 1;
-    myt.day = static_cast<unsigned>(tm.tm_mday);
-    myt.hour = static_cast<unsigned>(tm.tm_hour);
-    myt.minute = static_cast<unsigned>(tm.tm_min);
-    myt.second = static_cast<unsigned>(tm.tm_sec);
+    ::time_t secs = system_clock::to_time_t(syst);
+    ::tm tm = { };
+    ::gmtime_r(&secs, &tm);
+
+    system_time rounded = system_clock::from_time_t(secs);
+    ROCKET_ASSERT(rounded <= syst);
+    using ms_type = ::std::chrono::duration<uint32_t, ::std::milli>;
+    uint32_t msecs = ::std::chrono::duration_cast<ms_type>(syst - rounded).count();
+
+    myt.year = static_cast<unsigned int>(tm.tm_year) + 1900;
+    myt.month = static_cast<unsigned int>(tm.tm_mon) + 1;
+    myt.day = static_cast<unsigned int>(tm.tm_mday);
+    myt.hour = static_cast<unsigned int>(tm.tm_hour);
+    myt.minute = static_cast<unsigned int>(tm.tm_min);
+    myt.second = static_cast<unsigned int>(tm.tm_sec);
+    myt.second_part = msecs;
     myt.time_type = MYSQL_TIMESTAMP_DATETIME;
   }
 
