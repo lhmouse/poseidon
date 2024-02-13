@@ -183,18 +183,22 @@ class Mongo_Value
     Mongo_Value& operator=(Mongo_Value&&) & = default;
     ~Mongo_Value();
 
-    // Access raw data.
-    bool
-    is_null() const noexcept
-      { return this->m_stor.ptr<nullptr_t>() != nullptr;  }
+    Mongo_Value_Type
+    type() const noexcept
+      { return static_cast<Mongo_Value_Type>(this->m_stor.index());  }
 
     void
     clear() noexcept
-      { this->m_stor = nullptr;  }
+      { this->m_stor.emplace<nullptr_t>();  }
+
+    // Access raw data.
+    bool
+    is_null() const noexcept
+      { return this->m_stor.index() == mongo_value_null;  }
 
     bool
     is_boolean() const noexcept
-      { return this->m_stor.ptr<bool>() != nullptr;  }
+      { return this->m_stor.index() == mongo_value_boolean;  }
 
     const bool&
     as_boolean() const
@@ -211,7 +215,7 @@ class Mongo_Value
 
     bool
     is_integer() const noexcept
-      { return this->m_stor.ptr<int64_t>() != nullptr;  }
+      { return this->m_stor.index() == mongo_value_integer;  }
 
     const int64_t&
     as_integer() const
@@ -228,7 +232,7 @@ class Mongo_Value
 
     bool
     is_double() const noexcept
-      { return this->m_stor.ptr<double>() != nullptr;  }
+      { return this->m_stor.index() == mongo_value_double;  }
 
     const double&
     as_double() const
@@ -245,7 +249,7 @@ class Mongo_Value
 
     bool
     is_utf8() const noexcept
-      { return this->m_stor.ptr<cow_string>() != nullptr;  }
+      { return this->m_stor.index() == mongo_value_utf8;  }
 
     cow_stringR
     as_utf8() const
@@ -270,7 +274,7 @@ class Mongo_Value
 
     bool
     is_binary() const noexcept
-      { return this->m_stor.ptr<Mongo_Binary>() != nullptr;  }
+      { return this->m_stor.index() == mongo_value_binary;  }
 
     const Mongo_Binary&
     as_binary() const
@@ -295,7 +299,7 @@ class Mongo_Value
 
     bool
     is_array() const noexcept
-      { return this->m_stor.ptr<Mongo_Array>() != nullptr;  }
+      { return this->m_stor.index() == mongo_value_array;  }
 
     const Mongo_Array&
     as_array() const
@@ -312,7 +316,7 @@ class Mongo_Value
 
     bool
     is_document() const noexcept
-      { return this->m_stor.ptr<Mongo_Document>() != nullptr;  }
+      { return this->m_stor.index() == mongo_value_document;  }
 
     const Mongo_Document&
     as_document() const
@@ -329,7 +333,7 @@ class Mongo_Value
 
     bool
     is_oid() const noexcept
-      { return this->m_stor.ptr<::bson_oid_t>() != nullptr;  }
+      { return this->m_stor.index() == mongo_value_oid;  }
 
     const ::bson_oid_t&
     as_oid() const
@@ -346,7 +350,7 @@ class Mongo_Value
 
     bool
     is_datetime() const noexcept
-      { return this->m_stor.ptr<DateTime>() != nullptr;  }
+      { return this->m_stor.index() == mongo_value_datetime;  }
 
     const DateTime&
     as_datetime() const
@@ -365,8 +369,8 @@ class Mongo_Value
           return this->m_stor.emplace<DateTime>();
       }
 
-    // Converts this value to its string form, as an extended JSON string.
-    // https://github.com/mongodb/specifications/blob/master/source/extended-json.rst#conversion-table
+    // Converts this value to its string form, as an extended JSON string. This
+    // notation does not distinguish 64-bit integers from floating-point values.
     tinyfmt&
     print(tinyfmt& fmt) const;
 
