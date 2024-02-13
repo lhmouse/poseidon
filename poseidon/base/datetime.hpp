@@ -120,7 +120,7 @@ class DateTime
     print_cookie_partial(char* str) const noexcept;
 
     // Converts this timestamp to its ISO 8601 format, with a null terminator.
-    // There shall be at least 20 characters in the buffer that `str` points to.
+    // There shall be at least 24 characters in the buffer that `str` points to.
     // This function returns the number of characters that have been written,
     // excluding the null terminator, which is always 23.
     size_t
