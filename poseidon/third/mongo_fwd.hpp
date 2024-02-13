@@ -11,7 +11,7 @@ namespace poseidon {
 
 class scoped_bson
   {
-  protected:
+  private:
     ::bson_t m_bson[1];
 
   public:

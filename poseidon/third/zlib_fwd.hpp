@@ -10,52 +10,20 @@
 #include <zlib.h>
 namespace poseidon {
 
-class zlib_xStream
+class scoped_deflate_stream
   {
-  protected:
-    mutable ::z_stream m_zstrm[1];
+  private:
+    mutable ::z_stream m_strm[1];
 
   public:
-    zlib_xStream() noexcept
-      {
-        this->m_zstrm->zalloc = nullptr;
-        this->m_zstrm->zfree = nullptr;
-        this->m_zstrm->opaque = nullptr;
-        this->m_zstrm->next_in = nullptr;
-        this->m_zstrm->avail_in = 0;
-      }
-
-    zlib_xStream(const zlib_xStream&) = delete;
-    zlib_xStream& operator=(const zlib_xStream&) & = delete;
-
-    operator ::z_stream*() const noexcept
-      { return this->m_zstrm;  }
-
-    const char*
-    msg() const noexcept
-      { return this->m_zstrm->msg ? this->m_zstrm->msg : "no error";  }
-
-    void
-    get_buffers(char*& ocur, const char*& icur) noexcept
-      {
-        ocur = reinterpret_cast<char*>(this->m_zstrm->next_out);
-        icur = reinterpret_cast<const char*>(this->m_zstrm->next_in);
-      }
-
-    void
-    set_buffers(char* ocur, char* oend, const char* icur, const char* iend) noexcept
-      {
-        this->m_zstrm->next_out = reinterpret_cast<::Bytef*>(ocur);
-        this->m_zstrm->avail_out = ::rocket::clamp_cast<::uInt>(oend - ocur, 0, INT_MAX);
-        this->m_zstrm->next_in = reinterpret_cast<const ::Bytef*>(icur);
-        this->m_zstrm->avail_in = ::rocket::clamp_cast<::uInt>(iend - icur, 0, INT_MAX);
-      }
-  };
-
-struct scoped_deflate_stream : zlib_xStream
-  {
     scoped_deflate_stream(zlib_Format fmt, uint8_t wbits, int level)
       {
+        this->m_strm->zalloc = nullptr;
+        this->m_strm->zfree = nullptr;
+        this->m_strm->opaque = nullptr;
+        this->m_strm->next_in = nullptr;
+        this->m_strm->avail_in = 0;
+
         if((wbits < 9) || (wbits > 15))
           ::rocket::sprintf_and_throw<::std::invalid_argument>(
                       "scoped_deflate_stream: window bits `%d` not valid", wbits);
@@ -84,7 +52,7 @@ struct scoped_deflate_stream : zlib_xStream
           ::rocket::sprintf_and_throw<::std::invalid_argument>(
                       "scoped_deflate_stream: compression level `%d` not valid", level);
 
-        if(::deflateInit2(this->m_zstrm, level, Z_DEFLATED, fmt_wbits, 9,
+        if(::deflateInit2(this->m_strm, level, Z_DEFLATED, fmt_wbits, 9,
                           Z_DEFAULT_STRATEGY) != Z_OK)
           ::rocket::sprintf_and_throw<::std::runtime_error>(
                       "scoped_deflate_stream: insufficient memory");
@@ -92,14 +60,50 @@ struct scoped_deflate_stream : zlib_xStream
 
     ~scoped_deflate_stream()
       {
-        ::deflateEnd(this->m_zstrm);
+        ::deflateEnd(this->m_strm);
+      }
+
+    scoped_deflate_stream(const scoped_deflate_stream&) = delete;
+    scoped_deflate_stream& operator=(const scoped_deflate_stream&) & = delete;
+
+    operator ::z_stream*() const noexcept
+      { return this->m_strm;  }
+
+    const char*
+    msg() const noexcept
+      { return this->m_strm->msg ? this->m_strm->msg : "no error";  }
+
+    void
+    get_buffers(char*& ocur, const char*& icur) noexcept
+      {
+        ocur = reinterpret_cast<char*>(this->m_strm->next_out);
+        icur = reinterpret_cast<const char*>(this->m_strm->next_in);
+      }
+
+    void
+    set_buffers(char* ocur, char* oend, const char* icur, const char* iend) noexcept
+      {
+        this->m_strm->next_out = reinterpret_cast<::Bytef*>(ocur);
+        this->m_strm->avail_out = ::rocket::clamp_cast<::uInt>(oend - ocur, 0, INT_MAX);
+        this->m_strm->next_in = reinterpret_cast<const ::Bytef*>(icur);
+        this->m_strm->avail_in = ::rocket::clamp_cast<::uInt>(iend - icur, 0, INT_MAX);
       }
   };
 
-struct scoped_inflate_stream : zlib_xStream
+class scoped_inflate_stream
   {
+  private:
+    mutable ::z_stream m_strm[1];
+
+  public:
     scoped_inflate_stream(zlib_Format fmt, uint8_t wbits)
       {
+        this->m_strm->zalloc = nullptr;
+        this->m_strm->zfree = nullptr;
+        this->m_strm->opaque = nullptr;
+        this->m_strm->next_in = nullptr;
+        this->m_strm->avail_in = 0;
+
         if((wbits < 9) || (wbits > 15))
           ::rocket::sprintf_and_throw<::std::invalid_argument>(
                       "scoped_inflate_stream: window bits `%d` not valid", wbits);
@@ -124,7 +128,7 @@ struct scoped_inflate_stream : zlib_xStream
                         "scoped_inflate_stream: format `%d` not valid", fmt);
           }
 
-        int err = ::inflateInit2(this->m_zstrm, fmt_wbits);
+        int err = ::inflateInit2(this->m_strm, fmt_wbits);
         if(err != Z_OK)
           ::rocket::sprintf_and_throw<::std::runtime_error>(
                       "scoped_inflate_stream: insufficient memory");
@@ -132,7 +136,33 @@ struct scoped_inflate_stream : zlib_xStream
 
     ~scoped_inflate_stream()
       {
-        ::inflateEnd(this->m_zstrm);
+        ::inflateEnd(this->m_strm);
+      }
+
+    scoped_inflate_stream(const scoped_inflate_stream&) = delete;
+    scoped_inflate_stream& operator=(const scoped_inflate_stream&) & = delete;
+
+    operator ::z_stream*() const noexcept
+      { return this->m_strm;  }
+
+    const char*
+    msg() const noexcept
+      { return this->m_strm->msg ? this->m_strm->msg : "no error";  }
+
+    void
+    get_buffers(char*& ocur, const char*& icur) noexcept
+      {
+        ocur = reinterpret_cast<char*>(this->m_strm->next_out);
+        icur = reinterpret_cast<const char*>(this->m_strm->next_in);
+      }
+
+    void
+    set_buffers(char* ocur, char* oend, const char* icur, const char* iend) noexcept
+      {
+        this->m_strm->next_out = reinterpret_cast<::Bytef*>(ocur);
+        this->m_strm->avail_out = ::rocket::clamp_cast<::uInt>(oend - ocur, 0, INT_MAX);
+        this->m_strm->next_in = reinterpret_cast<const ::Bytef*>(icur);
+        this->m_strm->avail_in = ::rocket::clamp_cast<::uInt>(iend - icur, 0, INT_MAX);
       }
   };
 

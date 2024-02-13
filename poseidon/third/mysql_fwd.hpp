@@ -10,7 +10,7 @@ namespace poseidon {
 
 class scoped_MYSQL
   {
-  protected:
+  private:
     mutable ::MYSQL m_mysql[1];
 
   public:
