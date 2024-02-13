@@ -452,11 +452,11 @@ do_on_abstract_future_execute()
 
                 struct ::tm tm;
                 set_tm_from_mysql_time(tm, column.default_value.as_mysql_time());
-                ::time_t def_tp = ::mktime(&tm);
+                ::time_t def_tp = ::timegm(&tm);
 
                 ::strptime(ex->second.default_value.blob_data(), "%Y-%m-%d %H:%M:%S", &tm);
                 tm.tm_isdst = -1;
-                ::time_t ex_tp = ::mktime(&tm);
+                ::time_t ex_tp = ::timegm(&tm);
 
                 if(ex_tp != def_tp)
                   goto do_alter_table_column_;

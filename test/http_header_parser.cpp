@@ -124,7 +124,7 @@ main()
     POSEIDON_TEST_CHECK(parser.next_attribute() == true);
     POSEIDON_TEST_CHECK(parser.current_name() == "expires");
     POSEIDON_TEST_CHECK(parser.current_value().is_datetime());
-    POSEIDON_TEST_CHECK(parser.current_value().as_time_t() == 1690711245);
+    POSEIDON_TEST_CHECK(system_clock::to_time_t(parser.current_value().as_system_time()) == 1690711245);
 
     POSEIDON_TEST_CHECK(parser.next_attribute() == true);
     POSEIDON_TEST_CHECK(parser.current_name() == "path");

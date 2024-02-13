@@ -194,7 +194,7 @@ execute(const Mongo_Document& cmd)
       else if(value->is_datetime()) {
         // timestamp
         bson_success = ::bson_append_date_time(rb_top->parent, key, key_len,
-                                               static_cast<int64_t>(value->as_time_t()) * 1000);
+                time_point_cast<milliseconds>(value->as_system_time()).time_since_epoch().count());
       }
       else
         POSEIDON_THROW(("Unhandled `Mongo_Value`: $1"), *value);
@@ -335,6 +335,7 @@ do_set_document_from_bson(Mongo_Document& output, const ::bson_t* input) const
             uint32_t len;
             const uint8_t* ptr;
             ::bson_iter_array(&(rb_top->iter), &len, &ptr);
+            Mongo_Value* value;
 
             ::rocket::unique_ptr<rb_ctx> rb_next(new rb_ctx);
             bson_success = ::bson_iter_init_from_data(&(rb_next->iter), ptr, len);
@@ -342,12 +343,11 @@ do_set_document_from_bson(Mongo_Document& output, const ::bson_t* input) const
               break;
 
             if(rb_top->arr)
-              rb_next->arr = &(rb_top->arr->emplace_back().mut_array());
+              value = &(rb_top->arr->emplace_back());
             else
-              rb_next->arr = &(rb_top->doc->emplace_back(
-                                    ::bson_iter_key_unsafe(&(rb_top->iter)),
-                                     nullptr).second.mut_array());
+              value = &(rb_top->doc->emplace_back(::bson_iter_key_unsafe(&(rb_top->iter)), nullptr).second);
 
+            rb_next->arr = &(value->mut_array());
             rb_next->prev = rb_top.release();
             rb_top.reset(rb_next.release());
           }
@@ -358,6 +358,7 @@ do_set_document_from_bson(Mongo_Document& output, const ::bson_t* input) const
             uint32_t len;
             const uint8_t* ptr;
             ::bson_iter_document(&(rb_top->iter), &len, &ptr);
+            Mongo_Value* value;
 
             ::rocket::unique_ptr<rb_ctx> rb_next(new rb_ctx);
             bson_success = ::bson_iter_init_from_data(&(rb_next->iter), ptr, len);
@@ -365,12 +366,11 @@ do_set_document_from_bson(Mongo_Document& output, const ::bson_t* input) const
               break;
 
             if(rb_top->arr)
-              rb_next->doc = &(rb_top->arr->emplace_back().mut_document());
+              value = &(rb_top->arr->emplace_back());
             else
-              rb_next->doc = &(rb_top->doc->emplace_back(
-                                    ::bson_iter_key_unsafe(&(rb_top->iter)),
-                                     nullptr).second.mut_document());
+              value = &(rb_top->doc->emplace_back(::bson_iter_key_unsafe(&(rb_top->iter)), nullptr).second);
 
+            rb_next->doc = &(value->mut_document());
             rb_next->prev = rb_top.release();
             rb_top.reset(rb_next.release());
           }

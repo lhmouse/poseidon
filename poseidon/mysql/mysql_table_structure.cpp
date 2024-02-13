@@ -242,7 +242,7 @@ add_column(const Column& column)
 
             struct ::tm tm;
             set_tm_from_mysql_time(tm, val);
-            ::mktime(&tm);
+            ::timegm(&tm);
 
             if(val.year != static_cast<unsigned>(tm.tm_year) + 1900)
               POSEIDON_THROW((

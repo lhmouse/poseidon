@@ -50,14 +50,6 @@ class DateTime
     set_system_time(system_time tp) noexcept
       { this->m_tp = tp;  }
 
-    time_t
-    as_time_t() const noexcept
-      { return system_clock::to_time_t(this->m_tp);  }
-
-    void
-    set_time_t(time_t tp) noexcept
-      { this->m_tp = system_clock::from_time_t(tp);  }
-
     // Try parsing an HTTP date/time in the formal RFC 1123 format. An example
     // is `Sun, 06 Nov 1994 08:49:37 GMT`. This function returns the number of
     // characters that have been accepted, which is 29 upon success, and 0 upon

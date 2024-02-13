@@ -127,39 +127,39 @@ main()
     for(const auto& r : tests) {
       dt.set_system_time({});
       POSEIDON_TEST_CHECK(dt.parse_rfc1123_partial(r.rfc1123) == ::strlen(r.rfc1123));
-      POSEIDON_TEST_CHECK(dt.as_time_t() == r.ts);
+      POSEIDON_TEST_CHECK(system_clock::to_time_t(dt.as_system_time()) == r.ts);
 
       dt.set_system_time({});
       POSEIDON_TEST_CHECK(dt.parse_iso8601_partial(r.iso8601) == ::strlen(r.iso8601));
-      POSEIDON_TEST_CHECK(dt.as_time_t() == r.ts);
+      POSEIDON_TEST_CHECK(system_clock::to_time_t(dt.as_system_time()) == r.ts);
 
       dt.set_system_time({});
       POSEIDON_TEST_CHECK(dt.parse_rfc850_partial(r.rfc850) == ::strlen(r.rfc850));
-      POSEIDON_TEST_CHECK(dt.as_time_t() == r.ts);
+      POSEIDON_TEST_CHECK(system_clock::to_time_t(dt.as_system_time()) == r.ts);
 
       dt.set_system_time({});
       POSEIDON_TEST_CHECK(dt.parse_asctime_partial(r.asctime) == ::strlen(r.asctime));
-      POSEIDON_TEST_CHECK(dt.as_time_t() == r.ts);
+      POSEIDON_TEST_CHECK(system_clock::to_time_t(dt.as_system_time()) == r.ts);
 
       dt.set_system_time({});
       POSEIDON_TEST_CHECK(dt.parse(r.rfc1123) == ::strlen(r.rfc1123));
-      POSEIDON_TEST_CHECK(dt.as_time_t() == r.ts);
+      POSEIDON_TEST_CHECK(system_clock::to_time_t(dt.as_system_time()) == r.ts);
 
       dt.set_system_time({});
       POSEIDON_TEST_CHECK(dt.parse(r.iso8601) == ::strlen(r.iso8601));
-      POSEIDON_TEST_CHECK(dt.as_time_t() == r.ts);
+      POSEIDON_TEST_CHECK(system_clock::to_time_t(dt.as_system_time()) == r.ts);
 
       dt.set_system_time({});
       POSEIDON_TEST_CHECK(dt.parse(r.rfc850) == ::strlen(r.rfc850));
-      POSEIDON_TEST_CHECK(dt.as_time_t() == r.ts);
+      POSEIDON_TEST_CHECK(system_clock::to_time_t(dt.as_system_time()) == r.ts);
 
       dt.set_system_time({});
       POSEIDON_TEST_CHECK(dt.parse(r.asctime) == ::strlen(r.asctime));
-      POSEIDON_TEST_CHECK(dt.as_time_t() == r.ts);
+      POSEIDON_TEST_CHECK(system_clock::to_time_t(dt.as_system_time()) == r.ts);
     }
 
     for(const auto& r : tests) {
-      dt.set_time_t(r.ts);
+      dt.set_system_time(system_clock::from_time_t(r.ts));
       POSEIDON_TEST_CHECK(dt.print_to_string() == r.iso8601);
 
       ::memset(temp, '*', sizeof(temp));

@@ -28,7 +28,7 @@ main()
 
     hval = system_clock::from_time_t(1469118411);
     POSEIDON_TEST_CHECK(hval.is_datetime());
-    POSEIDON_TEST_CHECK(hval.as_time_t() == 1469118411);
+    POSEIDON_TEST_CHECK(system_clock::to_time_t(hval.as_system_time()) == 1469118411);
     POSEIDON_TEST_CHECK(hval.print_to_string() == "Thu, 21 Jul 2016 16:26:51 GMT");
 
     hval.clear();
@@ -61,7 +61,7 @@ main()
 
     POSEIDON_TEST_CHECK(hval.parse("Thu, 21 Jul 2016 16:26:51 GMT mumble") == 29);
     POSEIDON_TEST_CHECK(hval.is_datetime());
-    POSEIDON_TEST_CHECK(hval.as_time_t() == 1469118411);
+    POSEIDON_TEST_CHECK(system_clock::to_time_t(hval.as_system_time()) == 1469118411);
 
     POSEIDON_TEST_CHECK(hval.parse("Thu, 21 Jul 2016 16:26:51| GMT mumble") == 3);
     POSEIDON_TEST_CHECK(hval.is_string());

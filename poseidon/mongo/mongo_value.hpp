@@ -350,9 +350,9 @@ class Mongo_Value
     as_datetime() const
       { return this->m_stor.as<DateTime>();  }
 
-    time_t
-    as_time_t() const
-      { return this->m_stor.as<DateTime>().as_time_t();  }
+    system_time
+    as_system_time() const
+      { return this->m_stor.as<DateTime>().as_system_time();  }
 
     DateTime&
     mut_datetime() noexcept
