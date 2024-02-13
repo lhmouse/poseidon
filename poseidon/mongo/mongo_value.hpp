@@ -13,6 +13,8 @@ namespace poseidon {
 class Mongo_Value
   {
   private:
+    friend class Mongo_Connection;
+
     ::rocket::variant<nullptr_t, bool, int64_t, double,
          cow_string, Mongo_Binary, Mongo_Array, Mongo_Document,
          ::bson_oid_t, DateTime> m_stor;
