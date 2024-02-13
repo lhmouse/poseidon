@@ -353,6 +353,7 @@ print_rfc1123_partial(char* str) const noexcept
   {
     char* wptr = str;
     ::time_t tp = system_clock::to_time_t(this->m_tp);
+    tp = ::std::clamp<::time_t>(tp, -2208988800, 253402300799);
     ::tm tm;
     ::gmtime_r(&tp, &tm);
 
@@ -383,6 +384,7 @@ print_rfc850_partial(char* str) const noexcept
   {
     char* wptr = str;
     ::time_t tp = system_clock::to_time_t(this->m_tp);
+    tp = ::std::clamp<::time_t>(tp, -2208988800, 253402300799);
     ::tm tm;
     ::gmtime_r(&tp, &tm);
 
@@ -413,6 +415,7 @@ print_asctime_partial(char* str) const noexcept
   {
     char* wptr = str;
     ::time_t tp = system_clock::to_time_t(this->m_tp);
+    tp = ::std::clamp<::time_t>(tp, -2208988800, 253402300799);
     ::tm tm;
     ::gmtime_r(&tp, &tm);
 
@@ -443,6 +446,7 @@ print_cookie_partial(char* str) const noexcept
   {
     char* wptr = str;
     ::time_t tp = system_clock::to_time_t(this->m_tp);
+    tp = ::std::clamp<::time_t>(tp, -2208988800, 253402300799);
     ::tm tm;
     ::gmtime_r(&tp, &tm);
 
@@ -473,6 +477,7 @@ print_iso8601_partial(char* str) const noexcept
   {
     char* wptr = str;
     ::time_t tp = system_clock::to_time_t(this->m_tp);
+    tp = ::std::clamp<::time_t>(tp, -2208988800, 253402300799);
     ::tm tm;
     ::gmtime_r(&tp, &tm);
 
