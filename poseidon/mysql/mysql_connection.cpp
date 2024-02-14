@@ -203,21 +203,6 @@ execute(cow_stringR stmt)
     this->execute(stmt, nullptr, 0);
   }
 
-POSEIDON_VISIBILITY_HIDDEN
-::MYSQL_FIELD*
-MySQL_Connection::
-do_metadata_for_field_opt(unsigned col) noexcept
-  {
-    // Get the metadata for this result. This is done at most once.
-    if(!this->m_meta)
-      this->m_meta.reset(::mysql_stmt_result_metadata(this->m_stmt));
-
-    if(!this->m_meta)
-      return nullptr;
-
-    return ::mysql_fetch_field_direct(this->m_meta, col);
-  }
-
 bool
 MySQL_Connection::
 fetch_fields(vector<cow_string>& output)
@@ -227,16 +212,19 @@ fetch_fields(vector<cow_string>& output)
     if(!this->m_stmt)
       POSEIDON_THROW(("No query has been executed"));
 
+    if(!this->m_meta)
+      this->m_meta.reset(::mysql_stmt_result_metadata(this->m_stmt));
+
+    if(!this->m_meta)
+      return false;
+
+    ::MYSQL_FIELD* meta_fields = ::mysql_fetch_fields(this->m_meta);
     unsigned long nfields = ::mysql_stmt_field_count(this->m_stmt);
+
     output.resize(nfields);
-
     for(unsigned col = 0;  col != nfields;  ++col) {
-      ::MYSQL_FIELD* field = this->do_metadata_for_field_opt(col);
-      if(!field)
-        continue;
-
       // Copy the name of this field from metadata.
-      output[col].assign(field->name, field->name_length);
+      output[col].assign(meta_fields[col].name, meta_fields[col].name_length);
     }
     return true;
   }
@@ -250,16 +238,22 @@ fetch_row(vector<MySQL_Value>& output)
     if(!this->m_stmt)
       POSEIDON_THROW(("No query has been executed"));
 
+    ::MYSQL_FIELD* meta_fields = nullptr;
     unsigned long nfields = ::mysql_stmt_field_count(this->m_stmt);
     vector<::MYSQL_BIND> binds(nfields);
-    output.resize(nfields);
 
+    if(!this->m_meta)
+      this->m_meta.reset(::mysql_stmt_result_metadata(this->m_stmt));
+
+    if(this->m_meta)
+      meta_fields = ::mysql_fetch_fields(this->m_meta);
+
+    output.resize(nfields);
     for(unsigned col = 0;  col != nfields;  ++col) {
       // Prepare output buffers. When there is no metadata o we can't know the
       // type of this field, the output is written as an omnipotent string.
-      ::MYSQL_FIELD* field = this->do_metadata_for_field_opt(col);
-      uint32_t type = field ? field->type : MYSQL_TYPE_BLOB;
-      switch(type)
+      uint32_t field_type = meta_fields ? meta_fields[col].type : MYSQL_TYPE_BLOB;
+      switch(field_type)
         {
         case MYSQL_TYPE_NULL:
           binds[col].buffer_type = MYSQL_TYPE_NULL;
@@ -325,7 +319,7 @@ fetch_row(vector<MySQL_Value>& output)
           "[`mysql_stmt_fetch()` failed]"),
           ::mysql_stmt_errno(this->m_stmt), ::mysql_stmt_error(this->m_stmt));
 
-    for(unsigned col = 0;  col != nfields;  ++col) {
+    for(unsigned col = 0;  col != output.size();  ++col) {
       if(binds[col].is_null_value) {
         // Set it to an explicit `NULL`.
         output[col].clear();

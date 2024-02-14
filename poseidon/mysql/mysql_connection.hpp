@@ -34,10 +34,6 @@ class MySQL_Connection
     // to the server, and is not blocking.
     MySQL_Connection(cow_stringR server, uint16_t port, cow_stringR db, cow_stringR user, cow_stringR passwd);
 
-  private:
-    ::MYSQL_FIELD*
-    do_metadata_for_field_opt(unsigned col) noexcept;
-
   public:
     MySQL_Connection(const MySQL_Connection&) = delete;
     MySQL_Connection& operator=(const MySQL_Connection&) & = delete;
