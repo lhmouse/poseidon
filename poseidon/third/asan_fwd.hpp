@@ -6,10 +6,8 @@
 
 #include "../fwd.hpp"
 #include <ucontext.h>
-#ifdef POSEIDON_ENABLE_ADDRESS_SANITIZER
 extern "C" void __sanitizer_start_switch_fiber(void**, const void*, size_t) noexcept;
 extern "C" void __sanitizer_finish_switch_fiber(void*, const void**, size_t*) noexcept;
-#endif  // POSEIDON_ENABLE_ADDRESS_SANITIZER
 namespace poseidon {
 
 ROCKET_ALWAYS_INLINE
