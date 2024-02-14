@@ -120,8 +120,7 @@ execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)
 
     vector<::MYSQL_BIND> binds(nparams);
 
-    for(unsigned col = 0;  col != nparams;  ++col) {
-      // Prepare input buffers for all arguments.
+    for(unsigned col = 0;  col != nparams;  ++col)
       switch(args_opt[col].type())
         {
         case mysql_value_null:
@@ -175,7 +174,6 @@ execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)
         default:
           POSEIDON_THROW(("Unknown MySQL value type: $1"), args_opt[col]);
         }
-    }
 
     if(::mysql_stmt_bind_param(this->m_stmt, binds.data()) != 0)
       POSEIDON_THROW((
@@ -225,10 +223,9 @@ fetch_fields(vector<cow_string>& output)
     unsigned long nfields = ::mysql_stmt_field_count(this->m_stmt);
 
     output.resize(nfields);
-    for(unsigned col = 0;  col != nfields;  ++col) {
-      // Copy the name of this field from metadata.
+    for(unsigned col = 0;  col != nfields;  ++col)
       output[col].assign(meta_fields[col].name, meta_fields[col].name_length);
-    }
+
     return true;
   }
 
@@ -322,7 +319,7 @@ fetch_row(vector<MySQL_Value>& output)
           "[`mysql_stmt_fetch()` failed]"),
           ::mysql_stmt_errno(this->m_stmt), ::mysql_stmt_error(this->m_stmt));
 
-    for(unsigned col = 0;  col != output.size();  ++col) {
+    for(unsigned col = 0;  col != output.size();  ++col)
       if(binds[col].is_null_value) {
         // Set it to an explicit `NULL`.
         output[col].clear();
@@ -355,7 +352,7 @@ fetch_row(vector<MySQL_Value>& output)
           ::mysql_stmt_fetch_column(this->m_stmt, &(binds[col]), col, 0);
         }
       }
-    }
+
     return true;
   }
 
