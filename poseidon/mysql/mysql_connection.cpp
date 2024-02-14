@@ -122,39 +122,46 @@ execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)
       switch(args_opt[col].type())
         {
         case mysql_value_null:
-          {
-            binds[col].buffer_type = MYSQL_TYPE_NULL;
-          }
+          binds[col].buffer_type = MYSQL_TYPE_NULL;
           break;
 
         case mysql_value_integer:
-          {
-            binds[col].buffer_type = MYSQL_TYPE_LONGLONG;
-            binds[col].buffer = const_cast<int64_t*>(&(args_opt[col].as_integer()));
-            binds[col].buffer_length = sizeof(int64_t);
-          }
+          binds[col].buffer_type = MYSQL_TYPE_LONGLONG;
+          binds[col].buffer = const_cast<int64_t*>(&(args_opt[col].as_integer()));
+          binds[col].buffer_length = sizeof(int64_t);
           break;
 
         case mysql_value_double:
-          {
-            binds[col].buffer_type = MYSQL_TYPE_DOUBLE;
-            binds[col].buffer = const_cast<double*>(&(args_opt[col].as_double()));
-            binds[col].buffer_length = sizeof(double);
-          }
+          binds[col].buffer_type = MYSQL_TYPE_DOUBLE;
+          binds[col].buffer = const_cast<double*>(&(args_opt[col].as_double()));
+          binds[col].buffer_length = sizeof(double);
           break;
 
         case mysql_value_blob:
-          {
-            binds[col].buffer_type = MYSQL_TYPE_BLOB;
-            binds[col].buffer = const_cast<char*>(args_opt[col].blob_data());
-            binds[col].buffer_length = args_opt[col].blob_size();
-          }
+          binds[col].buffer_type = MYSQL_TYPE_BLOB;
+          binds[col].buffer = const_cast<char*>(args_opt[col].blob_data());
+          binds[col].buffer_length = args_opt[col].blob_size();
           break;
 
         case mysql_value_datetime:
           {
-            const auto& input_mdt = args_opt[col].m_stor.as<DateTime_and_MYSQL_TIME>();
-            set_mysql_time_to_system_time(input_mdt.myt, input_mdt.dt.as_system_time());
+            const auto& input_mdt = args_opt[col].m_stor.as<DateTime_with_MYSQL_TIME>();
+
+            ::time_t secs = system_clock::to_time_t(input_mdt.dt.as_system_time());
+            auto frac = input_mdt.dt.as_system_time() - system_clock::from_time_t(secs);
+            ROCKET_ASSERT(frac.count() > 0);
+            auto frac_ms = duration_cast<::std::chrono::duration<uint32_t, ::std::milli>>(frac);
+
+            ::tm tm = { };
+            ::gmtime_r(&secs, &tm);
+            input_mdt.myt.year = static_cast<unsigned int>(tm.tm_year) + 1900;
+            input_mdt.myt.month = static_cast<unsigned int>(tm.tm_mon) + 1;
+            input_mdt.myt.day = static_cast<unsigned int>(tm.tm_mday);
+            input_mdt.myt.hour = static_cast<unsigned int>(tm.tm_hour);
+            input_mdt.myt.minute = static_cast<unsigned int>(tm.tm_min);
+            input_mdt.myt.second = static_cast<unsigned int>(tm.tm_sec);
+            input_mdt.myt.second_part = frac_ms.count();
+            input_mdt.myt.time_type = MYSQL_TIMESTAMP_DATETIME;
 
             binds[col].buffer_type = MYSQL_TYPE_DATETIME;
             binds[col].buffer = &(input_mdt.myt);
@@ -255,11 +262,9 @@ fetch_row(vector<MySQL_Value>& output)
       switch(type)
         {
         case MYSQL_TYPE_NULL:
-          {
-            binds[col].buffer_type = MYSQL_TYPE_NULL;
-            binds[col].buffer = nullptr;
-            binds[col].buffer_length = 0;
-          }
+          binds[col].buffer_type = MYSQL_TYPE_NULL;
+          binds[col].buffer = nullptr;
+          binds[col].buffer_length = 0;
           break;
 
         case MYSQL_TYPE_TINY:
@@ -267,44 +272,34 @@ fetch_row(vector<MySQL_Value>& output)
         case MYSQL_TYPE_INT24:
         case MYSQL_TYPE_LONG:
         case MYSQL_TYPE_LONGLONG:
-          {
-            binds[col].buffer_type = MYSQL_TYPE_LONGLONG;
-            binds[col].buffer = &(output[col].mut_integer());
-            binds[col].buffer_length = sizeof(int64_t);
-          }
+          binds[col].buffer_type = MYSQL_TYPE_LONGLONG;
+          binds[col].buffer = &(output[col].mut_integer());
+          binds[col].buffer_length = sizeof(int64_t);
           break;
 
         case MYSQL_TYPE_FLOAT:
         case MYSQL_TYPE_DOUBLE:
-          {
-            binds[col].buffer_type = MYSQL_TYPE_DOUBLE;
-            binds[col].buffer = &(output[col].mut_double());
-            binds[col].buffer_length = sizeof(double);
-          }
+          binds[col].buffer_type = MYSQL_TYPE_DOUBLE;
+          binds[col].buffer = &(output[col].mut_double());
+          binds[col].buffer_length = sizeof(double);
           break;
 
         case MYSQL_TYPE_TIMESTAMP:
         case MYSQL_TYPE_DATETIME:
         case MYSQL_TYPE_DATE:
         case MYSQL_TYPE_TIME:
-          {
-            binds[col].buffer_type = MYSQL_TYPE_DATETIME;
-            binds[col].buffer = &(output[col].m_stor.emplace<DateTime_and_MYSQL_TIME>().myt);
-            binds[col].buffer_length = sizeof(::MYSQL_TIME);
-          }
+          binds[col].buffer_type = MYSQL_TYPE_DATETIME;
+          binds[col].buffer = &(output[col].m_stor.emplace<DateTime_with_MYSQL_TIME>().myt);
+          binds[col].buffer_length = sizeof(::MYSQL_TIME);
           break;
 
         default:
-          {
-            // Reserve a small amount of memory for BLOB fields. This will be
-            // extended as necessary.
-            auto& output_str = output[col].mut_blob();
-            output_str.resize(64);
-
-            binds[col].buffer_type = MYSQL_TYPE_LONG_BLOB;
-            binds[col].buffer = output_str.mut_data();
-            binds[col].buffer_length = output_str.size();
-          }
+          // Reserve a small amount of memory for BLOB fields. If it's not
+          // large enough, it will be extended later.
+          binds[col].buffer_type = MYSQL_TYPE_LONG_BLOB;
+          output[col].mut_blob().resize(64);
+          binds[col].buffer = output[col].mut_blob().mut_data();
+          binds[col].buffer_length = output[col].mut_blob().size();
           break;
         }
 
@@ -337,7 +332,7 @@ fetch_row(vector<MySQL_Value>& output)
       }
       else if(binds[col].buffer_type == MYSQL_TYPE_DATETIME) {
         // Assemble the timestamp.
-        auto& output_mdt = output[col].m_stor.mut<DateTime_and_MYSQL_TIME>();
+        auto& output_mdt = output[col].m_stor.mut<DateTime_with_MYSQL_TIME>();
 
         ::tm tm = { };
         tm.tm_year = static_cast<int>(output_mdt.myt.year - 1900);

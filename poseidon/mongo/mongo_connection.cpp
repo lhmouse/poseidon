@@ -138,43 +138,31 @@ execute(const Mongo_Document& cmd)
       switch(value->type())
         {
         case mongo_value_null:
-          {
-            bson_success = ::bson_append_null(rb_top->parent, key, key_len);
-          }
+          bson_success = ::bson_append_null(rb_top->parent, key, key_len);
           break;
 
         case mongo_value_boolean:
-          {
-            bson_success = ::bson_append_bool(rb_top->parent, key, key_len, value->as_boolean());
-          }
+          bson_success = ::bson_append_bool(rb_top->parent, key, key_len, value->as_boolean());
           break;
 
         case mongo_value_integer:
-          {
-            bson_success = ::bson_append_int64(rb_top->parent, key, key_len, value->as_integer());
-          }
+          bson_success = ::bson_append_int64(rb_top->parent, key, key_len, value->as_integer());
           break;
 
         case mongo_value_double:
-          {
-            bson_success = ::bson_append_double(rb_top->parent, key, key_len, value->as_double());
-          }
+          bson_success = ::bson_append_double(rb_top->parent, key, key_len, value->as_double());
           break;
 
         case mongo_value_utf8:
-          {
-            bson_success = (value->utf8_size() <= INT_MAX)
-                       && ::bson_append_utf8(rb_top->parent, key, key_len,
-                                             value->utf8_data(), static_cast<int>(value->utf8_size()));
-          }
+          bson_success = (value->utf8_size() <= INT_MAX)
+                     && ::bson_append_utf8(rb_top->parent, key, key_len,
+                                           value->utf8_data(), static_cast<int>(value->utf8_size()));
           break;
 
         case mongo_value_binary:
-          {
-            bson_success = (value->binary_size() <= INT_MAX)
-                   && ::bson_append_binary(rb_top->parent, key, key_len, BSON_SUBTYPE_BINARY,
-                                    value->binary_data(), static_cast<uint32_t>(value->binary_size()));
-          }
+          bson_success = (value->binary_size() <= INT_MAX)
+                 && ::bson_append_binary(rb_top->parent, key, key_len, BSON_SUBTYPE_BINARY,
+                                  value->binary_data(), static_cast<uint32_t>(value->binary_size()));
           break;
 
         case mongo_value_array:
@@ -206,16 +194,12 @@ execute(const Mongo_Document& cmd)
           break;
 
         case mongo_value_oid:
-          {
-            bson_success = ::bson_append_oid(rb_top->parent, key, key_len, &(value->as_oid()));
-          }
+          bson_success = ::bson_append_oid(rb_top->parent, key, key_len, &(value->as_oid()));
           break;
 
         case mongo_value_datetime:
-          {
-            bson_success = ::bson_append_date_time(rb_top->parent, key, key_len,
-                     time_point_cast<milliseconds>(value->as_system_time()).time_since_epoch().count());
-          }
+          bson_success = ::bson_append_date_time(rb_top->parent, key, key_len,
+                   time_point_cast<milliseconds>(value->as_system_time()).time_since_epoch().count());
           break;
 
         default:

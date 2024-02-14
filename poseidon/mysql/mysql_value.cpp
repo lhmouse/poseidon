@@ -97,7 +97,7 @@ print(tinyfmt& fmt) const
           }
 
         void
-        operator()(const DateTime_and_MYSQL_TIME& mdt)
+        operator()(const DateTime_with_MYSQL_TIME& mdt)
           {
             time_t secs = system_clock::to_time_t(mdt.dt.as_system_time());
             system_time rounded = system_clock::from_time_t(secs);

@@ -16,7 +16,7 @@ class MySQL_Value
     friend class MySQL_Connection;
 
     ::rocket::variant<nullptr_t,
-         int64_t, double, cow_string, DateTime_and_MYSQL_TIME> m_stor;
+         int64_t, double, cow_string, DateTime_with_MYSQL_TIME> m_stor;
 
   public:
     // Value constructors
@@ -105,25 +105,25 @@ class MySQL_Value
 
     MySQL_Value(const DateTime& dt) noexcept
       {
-        this->m_stor.emplace<DateTime_and_MYSQL_TIME>().dt = dt;
+        this->m_stor.emplace<DateTime_with_MYSQL_TIME>().dt = dt;
       }
 
     MySQL_Value&
     operator=(const DateTime& dt) & noexcept
       {
-        this->m_stor.emplace<DateTime_and_MYSQL_TIME>().dt = dt;
+        this->m_stor.emplace<DateTime_with_MYSQL_TIME>().dt = dt;
         return *this;
       }
 
     MySQL_Value(system_time tm) noexcept
       {
-        this->m_stor.emplace<DateTime_and_MYSQL_TIME>().dt = tm;
+        this->m_stor.emplace<DateTime_with_MYSQL_TIME>().dt = tm;
       }
 
     MySQL_Value&
     operator=(system_time tm) & noexcept
       {
-        this->m_stor.emplace<DateTime_and_MYSQL_TIME>().dt = tm;
+        this->m_stor.emplace<DateTime_with_MYSQL_TIME>().dt = tm;
         return *this;
       }
 
@@ -219,19 +219,19 @@ class MySQL_Value
 
     const DateTime&
     as_datetime() const
-      { return this->m_stor.as<DateTime_and_MYSQL_TIME>().dt;  }
+      { return this->m_stor.as<DateTime_with_MYSQL_TIME>().dt;  }
 
     system_time
     as_system_time() const
-      { return this->m_stor.as<DateTime_and_MYSQL_TIME>().dt.as_system_time();  }
+      { return this->m_stor.as<DateTime_with_MYSQL_TIME>().dt.as_system_time();  }
 
     DateTime&
     mut_datetime() noexcept
       {
-        if(auto ptr = this->m_stor.mut_ptr<DateTime_and_MYSQL_TIME>())
+        if(auto ptr = this->m_stor.mut_ptr<DateTime_with_MYSQL_TIME>())
           return ptr->dt;
         else
-          return this->m_stor.emplace<DateTime_and_MYSQL_TIME>().dt;
+          return this->m_stor.emplace<DateTime_with_MYSQL_TIME>().dt;
       }
 
     // Converts this value to its string form. The result will be suitable
