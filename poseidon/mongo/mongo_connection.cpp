@@ -264,16 +264,20 @@ fetch_reply(const ::bson_t*& bson_output)
     }
 
     // Get the next document from the reply cursor.
-    bool success = ::mongoc_cursor_next(this->m_cursor, &bson_output);
+    bool fetched = ::mongoc_cursor_next(this->m_cursor, &bson_output);
 
     ::bson_error_t error;
-    if(!success && ::mongoc_cursor_error(this->m_cursor, &error))
+    if(!fetched && ::mongoc_cursor_error(this->m_cursor, &error))
       POSEIDON_THROW((
           "Could not fetch result from Mongo server: ERROR $1.$2: $3",
           "[`mongoc_cursor_next()` failed]"),
           error.domain, error.code, error.message);
 
-    return success;
+    if(!fetched)
+      return false;
+
+    // Return the result into `bson_output`.
+    return true;
   }
 
 bool
@@ -468,6 +472,7 @@ fetch_reply(Mongo_Document& output)
     if(!bson_success)
       POSEIDON_THROW(("Failed to parse BSON reply"));
 
+    // Return the result into `output`.
     return true;
   }
 

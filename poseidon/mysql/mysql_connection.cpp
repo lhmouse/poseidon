@@ -311,13 +311,14 @@ fetch_row(vector<MySQL_Value>& output)
 
     // Request the next row.
     int status = ::mysql_stmt_fetch(this->m_stmt);
-    if(status == MYSQL_NO_DATA)
-      return false;
-    else if(status == 1)
+    if(status == 1)
       POSEIDON_THROW((
           "Could not fetch MySQL result: ERROR $1: $2",
           "[`mysql_stmt_fetch()` failed]"),
           ::mysql_stmt_errno(this->m_stmt), ::mysql_stmt_error(this->m_stmt));
+
+    if(status == MYSQL_NO_DATA)
+      return false;
 
     for(unsigned col = 0;  col != output.size();  ++col)
       if(binds[col].is_null_value) {
@@ -353,6 +354,7 @@ fetch_row(vector<MySQL_Value>& output)
         }
       }
 
+    // Return the result into `output`.
     return true;
   }
 
