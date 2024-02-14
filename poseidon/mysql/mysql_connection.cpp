@@ -95,6 +95,9 @@ execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)
     this->m_stmt.reset();
     this->m_reset_clear = false;
 
+    if(stmt.empty())
+      POSEIDON_THROW(("Empty SQL statement"));
+
     // Create a prepared statement.
     if(!this->m_stmt.reset(::mysql_stmt_init(this->m_mysql)))
       POSEIDON_THROW((
