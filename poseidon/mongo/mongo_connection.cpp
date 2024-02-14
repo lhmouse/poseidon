@@ -37,8 +37,9 @@ Mongo_Connection(cow_stringR server, uint16_t port, cow_stringR db, cow_stringR 
           "[`mongoc_client_new_from_uri_with_error()` failed]"),
           error.domain, error.code, error.message);
 
-    this->m_reset_clear = true;
     ::mongoc_client_set_error_api(this->m_mongo, MONGOC_ERROR_API_VERSION_2);
+    this->m_reply_available = false;
+    this->m_reset_clear = true;
   }
 
 Mongo_Connection::
@@ -51,8 +52,8 @@ Mongo_Connection::
 reset() noexcept
   {
     // Discard the current reply and cursor.
-    ::bson_reinit(this->m_reply);
     this->m_cursor.reset();
+    this->m_reply_available = false;
     this->m_reset_clear = false;
 
     // Check whether the server is still active. This is a blocking function.
@@ -67,15 +68,36 @@ reset() noexcept
 
 void
 Mongo_Connection::
-execute(const Mongo_Document& cmd)
+execute(const ::bson_t* bson_cmd)
   {
     // Discard the current reply and cursor.
-    ::bson_reinit(this->m_reply);
     this->m_cursor.reset();
+    this->m_reply_available = false;
     this->m_reset_clear = false;
 
-    // Pack the command into a BSON object. The `bson_t` type has a HUGE alignment
-    // of 128, which prevents use of standard containers.
+    if(!bson_cmd)
+      POSEIDON_THROW(("Null BSON pointer"));
+
+    // Execute the command. `mongoc_client_command_with_opts()` always recreate
+    // the reply object, so destroy it first.
+    ::bson_error_t error;
+    ::bson_destroy(this->m_reply);
+    if(!::mongoc_client_command_with_opts(this->m_mongo, this->m_db.c_str(), bson_cmd,
+                                          nullptr, nullptr, this->m_reply, &error))
+      POSEIDON_THROW((
+          "Could not execute Mongo command: ERROR $1.$2: $3",
+          "[`mongoc_client_command_with_opts()` failed]"),
+          error.domain, error.code, error.message);
+
+    this->m_reply_available = true;
+  }
+
+void
+Mongo_Connection::
+execute(const Mongo_Document& cmd)
+  {
+    // Pack the command into a BSON object. The `bson_t` type has a HUGE
+    // alignment of 128, which prevents use of standard containers.
     struct rb_ctx
       {
         rb_ctx* prev = nullptr;
@@ -199,7 +221,7 @@ execute(const Mongo_Document& cmd)
 
         case mongo_value_datetime:
           bson_success = ::bson_append_date_time(rb_top->parent, key, key_len,
-                   time_point_cast<milliseconds>(value->as_system_time()).time_since_epoch().count());
+                     time_point_cast<milliseconds>(value->as_system_time()).time_since_epoch().count());
           break;
 
         default:
@@ -210,25 +232,60 @@ execute(const Mongo_Document& cmd)
     if(!bson_success)
       POSEIDON_THROW(("Failed to compose BSON command"));
 
-    // Execute the command. `mongoc_client_command_with_opts()` always recreate
-    // the reply object, so destroy it first.
-    ::bson_error_t error;
-    ::bson_destroy(this->m_reply);
-    if(!::mongoc_client_command_with_opts(this->m_mongo, this->m_db.c_str(), bson_cmd,
-                                          nullptr, nullptr, this->m_reply, &error))
-      POSEIDON_THROW((
-          "Could not execute Mongo command: ERROR $1.$2: $3",
-          "[`mongoc_client_command_with_opts()` failed]"),
-          error.domain, error.code, error.message);
+    return this->execute(bson_cmd);
   }
 
-POSEIDON_VISIBILITY_HIDDEN
-void
+bool
 Mongo_Connection::
-do_set_document_from_bson(Mongo_Document& output, const ::bson_t* input) const
+fetch_reply(const ::bson_t*& bson_output)
   {
-    // Unpack a BSON object. The `bson_t` type has a HUGE alignment of 128, which
-    // prevents use of standard containers.
+    bson_output = nullptr;
+
+    if(!this->m_cursor) {
+      // There are two possibilities: Either the reply has not been parsed yet,
+      // or the reply does not contain a cursor.
+      if(!this->m_reply_available)
+        return false;
+
+      if(!::bson_has_field(this->m_reply, "cursor")) {
+        // If the reply contains no cursor, assign it directly to `bson_output`.
+        this->m_reply_available = false;
+        bson_output = this->m_reply;
+        return true;
+      }
+
+      // Create the cursor. `mongoc_cursor_new_from_command_reply_with_opts()`
+      // destroys the reply object, so it has to be recreated afterwards.
+      this->m_cursor.reset(::mongoc_cursor_new_from_command_reply_with_opts(
+                                            this->m_mongo, this->m_reply, nullptr));
+      ROCKET_ASSERT(this->m_cursor);
+      ::bson_init(this->m_reply);
+      this->m_reply_available = false;
+    }
+
+    // Get the next document from the reply cursor.
+    bool success = ::mongoc_cursor_next(this->m_cursor, &bson_output);
+
+    ::bson_error_t error;
+    if(!success && ::mongoc_cursor_error(this->m_cursor, &error))
+      POSEIDON_THROW((
+          "Could not fetch result from Mongo server: ERROR $1.$2: $3",
+          "[`mongoc_cursor_next()` failed]"),
+          error.domain, error.code, error.message);
+
+    return success;
+  }
+
+bool
+Mongo_Connection::
+fetch_reply(Mongo_Document& output)
+  {
+    const ::bson_t* bson_output;
+    if(!this->fetch_reply(bson_output))
+      return false;
+
+    // Unpack a BSON object. The `bson_t` type has a HUGE alignment of 128,
+    // which prevents use of standard containers.
     struct rb_ctx
       {
         rb_ctx* prev = nullptr;
@@ -244,7 +301,7 @@ do_set_document_from_bson(Mongo_Document& output, const ::bson_t* input) const
            });
 
     rb_top->doc = &output;
-    bool bson_success = ::bson_iter_init(&(rb_top->iter), input);
+    bool bson_success = ::bson_iter_init(&(rb_top->iter), bson_output);
 
     while(rb_top && bson_success) {
       if(!::bson_iter_next(&(rb_top->iter))) {
@@ -407,53 +464,10 @@ do_set_document_from_bson(Mongo_Document& output, const ::bson_t* input) const
           break;
         }
     }
-  }
 
-bool
-Mongo_Connection::
-fetch_reply(Mongo_Document& output)
-  {
-    output.clear();
+    if(!bson_success)
+      POSEIDON_THROW(("Failed to parse BSON reply"));
 
-    if(!this->m_cursor) {
-      // There are two possibilities: Either the reply has not been parsed yet,
-      // or the reply does not contain a cursor.
-      // First, check whether the reply has been parsed.
-      if(this->m_reply.size() <= 5)
-        return false;
-
-      if(!::bson_has_field(this->m_reply, "cursor")) {
-        // If the reply does not contain a cursor, copy it directly to `output`,
-        // then clear it.
-        this->do_set_document_from_bson(output, this->m_reply);
-        ::bson_reinit(this->m_reply);
-        return true;
-      }
-
-      // Create the cursor. `mongoc_cursor_new_from_command_reply_with_opts()`
-      // destroys the reply object, so it has to be recreated afterwards.
-      this->m_cursor.reset(::mongoc_cursor_new_from_command_reply_with_opts(
-                                            this->m_mongo, this->m_reply, nullptr));
-      ROCKET_ASSERT(this->m_cursor);
-      ::bson_init(this->m_reply);
-    }
-
-    // Get the next document from the reply cursor.
-    ::bson_error_t error;
-    const ::bson_t* result;
-    if(!::mongoc_cursor_next(this->m_cursor, &result)) {
-      // Check whether an error has been stored in the cursor.
-      if(!::mongoc_cursor_error(this->m_cursor, &error))
-        return false;
-
-      POSEIDON_THROW((
-          "Could not fetch result from Mongo server: ERROR $1.$2: $3",
-          "[`mongoc_cursor_next()` failed]"),
-          error.domain, error.code, error.message);
-    }
-
-    // Make a copy.
-    this->do_set_document_from_bson(output, result);
     return true;
   }
 

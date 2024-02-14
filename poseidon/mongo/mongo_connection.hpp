@@ -21,6 +21,7 @@ class Mongo_Connection
     uint16_t m_port;
 
     bool m_reset_clear;
+    bool m_reply_available;
     uniptr_mongoc_client m_mongo;
     scoped_bson m_reply;
     uniptr_mongoc_cursor m_cursor;
@@ -29,10 +30,6 @@ class Mongo_Connection
     // Sets connection parameters. This function does not attempt to connect
     // to the server, and is not blocking.
     Mongo_Connection(cow_stringR server, uint16_t port, cow_stringR db, cow_stringR user, cow_stringR passwd);
-
-  private:
-    void
-    do_set_document_from_bson(Mongo_Document& output, const ::bson_t* input) const;
 
   public:
     Mongo_Connection(const Mongo_Connection&) = delete;
@@ -67,6 +64,9 @@ class Mongo_Connection
     // on the default database.
     // Reference: https://www.mongodb.com/docs/manual/reference/command/nav-crud/
     void
+    execute(const ::bson_t* bson_cmd);
+
+    void
     execute(const Mongo_Document& cmd);
 
     // Fetches an object from the reply to the last command. This function must
@@ -74,6 +74,9 @@ class Mongo_Connection
     // If the query has produced a result and an object has been successfully
     // fetched, `true` is returned. If there is no result or the end of result
     // has been reached, `false` is returned.
+    bool
+    fetch_reply(const ::bson_t*& bson_output);
+
     bool
     fetch_reply(Mongo_Document& output);
   };
