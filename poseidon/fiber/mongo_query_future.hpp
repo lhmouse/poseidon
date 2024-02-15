@@ -54,17 +54,11 @@ class Mongo_Query_Future
 
     const Result&
     result() const
-      {
-        this->check_success();
-        return this->m_res;
-      }
+      { return this->do_check_success(this->m_res);  }
 
     Result&
     mut_result()
-      {
-        this->check_success();
-        return this->m_res;
-      }
+      { return this->do_check_success(this->m_res);  }
   };
 
 }  // namespace poseidon

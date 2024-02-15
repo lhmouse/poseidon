@@ -38,6 +38,15 @@ class Abstract_Future
     void
     do_abstract_future_request() noexcept;
 
+    // This is a convenient wrapper for `check_success()`.
+    template<typename xResult>
+    xResult&&
+    do_check_success(xResult&& res) const
+      {
+        this->check_success();
+        return forward<xResult>(res);
+      }
+
   public:
     Abstract_Future(const Abstract_Future&) = delete;
     Abstract_Future& operator=(const Abstract_Future&) & = delete;
