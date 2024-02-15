@@ -119,7 +119,7 @@ print(tinyfmt& fmt) const
           }
 
         void
-        operator()(const Mongo_Binary& bin)
+        operator()(const cow_bstring& bin)
           {
             this->pfmt->putn("{$base64:\"", 10);
             size_t offset = 0;

@@ -112,7 +112,7 @@ using ::rocket::cow_vector;
 using ::rocket::cow_hashmap;
 using ::rocket::static_vector;
 using ::rocket::cow_string;
-using cow_stringR = const ::rocket::cow_string&;
+using ::rocket::cow_bstring;
 using ::rocket::cow_u16string;
 using ::rocket::cow_u32string;
 using ::rocket::linear_buffer;
@@ -132,6 +132,8 @@ POSEIDON_USING opt = ::rocket::optional<Ts...>;
 POSEIDON_USING uniptr = ::std::unique_ptr<Ts...>;
 POSEIDON_USING shptr = ::std::shared_ptr<Ts...>;
 POSEIDON_USING wkptr = ::std::weak_ptr<Ts...>;
+
+using cow_stringR = const ::rocket::cow_string&;
 POSEIDON_USING shptrR = const ::std::shared_ptr<Ts...>&;
 
 using ::rocket::begin;
@@ -650,7 +652,6 @@ class MySQL_Connection;
 // MongoDB types
 enum Mongo_Value_Type : uint8_t;
 class Mongo_Value;
-using Mongo_Binary = ::asteria::cow_vector<uint8_t>;
 using Mongo_Array = ::asteria::cow_vector<Mongo_Value>;
 using Mongo_Document = ::asteria::cow_bivector<cow_string, Mongo_Value>;
 class Mongo_Connection;

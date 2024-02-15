@@ -34,10 +34,10 @@ main()
     POSEIDON_TEST_CHECK(hval.print_to_string() == R"("meowME\tOW")");
 
     constexpr uint8_t bin_data[] = "\x02\x7F\x00\xF2\xFC\xFF\xFE";
-    hval = Mongo_Binary(begin(bin_data), end(bin_data));
+    hval = cow_bstring(&bin_data);
     POSEIDON_TEST_CHECK(hval.is_binary());
     POSEIDON_TEST_CHECK(::memcmp(hval.binary_data(), bin_data, sizeof(bin_data)) == 0);
-    POSEIDON_TEST_CHECK(hval.print_to_string() == R"({$base64:"An8A8vz//gA="})");
+    POSEIDON_TEST_CHECK(hval.print_to_string() == R"({$base64:"An8A8vz//g=="})");
 
     Mongo_Array arr_data = { };
     hval = arr_data;

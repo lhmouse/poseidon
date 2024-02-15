@@ -16,7 +16,7 @@ class Mongo_Value
     friend class Mongo_Connection;
 
     ::rocket::variant<nullptr_t, bool, int64_t, double,
-         cow_string, Mongo_Binary, Mongo_Array, Mongo_Document,
+         cow_string, cow_bstring, Mongo_Array, Mongo_Document,
          ::bson_oid_t, DateTime> m_stor;
 
   public:
@@ -97,13 +97,13 @@ class Mongo_Value
         return *this;
       }
 
-    Mongo_Value(const Mongo_Binary& bin) noexcept
+    Mongo_Value(const cow_bstring& bin) noexcept
       {
-        this->m_stor.emplace<Mongo_Binary>(bin);
+        this->m_stor.emplace<cow_bstring>(bin);
       }
 
     Mongo_Value&
-    operator=(const Mongo_Binary& bin) noexcept
+    operator=(const cow_bstring& bin) noexcept
       {
         this->m_stor = bin;
         return *this;
@@ -276,25 +276,25 @@ class Mongo_Value
     is_binary() const noexcept
       { return this->m_stor.index() == mongo_value_binary;  }
 
-    const Mongo_Binary&
+    const cow_bstring&
     as_binary() const
-      { return this->m_stor.as<Mongo_Binary>();  }
+      { return this->m_stor.as<cow_bstring>();  }
 
     const uint8_t*
     binary_data() const
-      { return this->m_stor.as<Mongo_Binary>().data();  }
+      { return this->m_stor.as<cow_bstring>().data();  }
 
     size_t
     binary_size() const
-      { return this->m_stor.as<Mongo_Binary>().size();  }
+      { return this->m_stor.as<cow_bstring>().size();  }
 
-    Mongo_Binary&
+    cow_bstring&
     mut_binary() noexcept
       {
-        if(auto ptr = this->m_stor.mut_ptr<Mongo_Binary>())
+        if(auto ptr = this->m_stor.mut_ptr<cow_bstring>())
           return *ptr;
         else
-          return this->m_stor.emplace<Mongo_Binary>();
+          return this->m_stor.emplace<cow_bstring>();
       }
 
     bool

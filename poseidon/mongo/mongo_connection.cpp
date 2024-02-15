@@ -389,7 +389,7 @@ fetch_reply(Mongo_Document& output)
             uint32_t len;
             const uint8_t* ptr;
             ::bson_iter_binary(&(rb_top->iter), nullptr, &len, &ptr);
-            Mongo_Binary value(ptr, ptr + len);
+            cow_bstring value(ptr, ptr + len);
 
             if(rb_top->arr)
               rb_top->arr->emplace_back(move(value));
