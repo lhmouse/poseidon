@@ -7,6 +7,7 @@
 #include "../socket/ssl_socket.hpp"
 #include "../base/config_file.hpp"
 #include "../utils.hpp"
+#include <rocket/once_flag.hpp>
 #include <sys/epoll.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -172,6 +173,9 @@ void
 Network_Driver::
 reload(const Config_File& conf_file)
   {
+    static ::rocket::once_flag s_openssl_init_once;
+    s_openssl_init_once.call(::OPENSSL_init_ssl, OPENSSL_INIT_NO_ATEXIT, nullptr);
+
     // Parse new configuration. Default ones are defined here.
     int64_t event_buffer_size = 1024;
     int64_t throttle_size = 1048576;

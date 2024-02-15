@@ -9,15 +9,15 @@
 #include "static/timer_driver.hpp"
 #include "static/async_task_executor.hpp"
 #include "static/network_driver.hpp"
+#define UNW_LOCAL_ONLY  1
+#include <libunwind.h>
+#include <cxxabi.h>
 #ifdef POSEIDON_ENABLE_MYSQL
 #include "static/mysql_connector.hpp"
 #endif
 #ifdef POSEIDON_ENABLE_MONGO
 #include "static/mongo_connector.hpp"
 #endif
-#define UNW_LOCAL_ONLY  1
-#include <libunwind.h>
-#include <cxxabi.h>
 namespace poseidon {
 
 atomic_relaxed<int> exit_signal;

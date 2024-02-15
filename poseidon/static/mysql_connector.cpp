@@ -6,6 +6,7 @@
 #include "../mysql/mysql_connection.hpp"
 #include "../base/config_file.hpp"
 #include "../utils.hpp"
+#include <rocket/once_flag.hpp>
 namespace poseidon {
 namespace {
 
@@ -33,6 +34,9 @@ void
 MySQL_Connector::
 reload(const Config_File& conf_file)
   {
+    static ::rocket::once_flag s_mysql_init_once;
+    s_mysql_init_once.call(::mysql_library_init, 0, nullptr, nullptr);
+
     // Parse new configuration. Default ones are defined here.
     cow_string default_server = &"localhost";
     int64_t default_port = 3306;

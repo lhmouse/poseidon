@@ -286,7 +286,6 @@ dep_pthread = dependency('threads')
 dep_asteria = dependency('asteria')
 
 dep_libunwind = dependency('libunwind')
-dep_dl = dependency('dl')
 dep_openssl = dependency('openssl', version: '>= 3.0.0')
 dep_zlib = dependency('zlib', version: '>= 1.2.9')
 dep_libmagic = dependency('libmagic')
@@ -357,7 +356,6 @@ import('pkgconfig').generate(lib_poseidon,
 executable('poseidon',
            cpp_pch: 'poseidon/xprecompiled.hpp',
            sources: [ 'poseidon/main.cpp' ],
-           dependencies: [ dep_dl, dep_openssl, dep_mysqlclient, dep_mongoc ],
            link_with: lib_poseidon,
            install: true)
 
