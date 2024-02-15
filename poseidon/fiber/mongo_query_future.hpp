@@ -48,10 +48,8 @@ class Mongo_Query_Future
     Mongo_Query_Future& operator=(const Mongo_Query_Future&) & = delete;
     virtual ~Mongo_Query_Future();
 
-    bool
-    has_result() const noexcept
-      { return this->successful();  }
-
+    // Gets the result if `successful()` yields `true`. If `successful()` yields
+    // `false`, an exception is thrown, and there is no effect.
     const Result&
     result() const
       { return this->do_check_success(this->m_res);  }
