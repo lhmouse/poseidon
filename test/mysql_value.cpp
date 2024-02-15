@@ -35,7 +35,7 @@ main()
 
     hval = system_clock::from_time_t(1469118411) + milliseconds(678);
     POSEIDON_TEST_CHECK(hval.is_datetime());
-    POSEIDON_TEST_CHECK(hval.print_to_string() == "\'2016-07-21 16:26:51.678 UTC\'");
+    POSEIDON_TEST_CHECK(hval.print_to_string() == "\'2016-07-21 16:26:51.678\'");
 
     hval.clear();
     POSEIDON_TEST_CHECK(hval.is_null());
