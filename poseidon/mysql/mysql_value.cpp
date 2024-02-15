@@ -52,7 +52,6 @@ print(tinyfmt& fmt) const
         operator()(cow_stringR str)
           {
             this->pfmt->putc('\'');
-
             size_t pos = 0;
             while(pos != str.size()) {
               // This includes the null terminator.
@@ -92,7 +91,6 @@ print(tinyfmt& fmt) const
                   break;
                 }
             }
-
             this->pfmt->putc('\'');
           }
 
