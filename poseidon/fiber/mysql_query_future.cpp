@@ -42,7 +42,7 @@ do_on_abstract_future_execute()
             });
 
     // Execute the statement.
-    conn->execute(this->m_res.stmt, this->m_res.stmt_args);
+    conn->execute(this->m_res.stmt, this->m_res.stmt_args.data(), this->m_res.stmt_args.size());
 
     // Fetch result metadata.
     this->m_res.warning_count = conn->warning_count();

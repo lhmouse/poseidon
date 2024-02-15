@@ -15,7 +15,7 @@ main()
     // Try connecting to localhost. If the server is offline, skip the test.
     MySQL_Connection conn(&"localhost", 3306, &"mysql", &"root", &"123456");
     try {
-      conn.execute(&"select * from `engine_cost`");
+      conn.execute(&"select * from `engine_cost`", nullptr, 0);
     }
     catch(exception& e) {
       ::fprintf(stderr, "could not connect to server: %s\n", e.what());

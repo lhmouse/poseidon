@@ -189,20 +189,6 @@ execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)
           ::mysql_stmt_errno(this->m_stmt), ::mysql_stmt_error(this->m_stmt));
   }
 
-void
-MySQL_Connection::
-execute(cow_stringR stmt, const vector<MySQL_Value>& args)
-  {
-    this->execute(stmt, args.data(), args.size());
-  }
-
-void
-MySQL_Connection::
-execute(cow_stringR stmt)
-  {
-    this->execute(stmt, nullptr, 0);
-  }
-
 bool
 MySQL_Connection::
 fetch_fields(vector<cow_string>& output)

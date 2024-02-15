@@ -76,12 +76,6 @@ class MySQL_Connection
     void
     execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs);
 
-    void
-    execute(cow_stringR stmt, const vector<MySQL_Value>& args);
-
-    void
-    execute(cow_stringR stmt);
-
     // Fetches the names of all fields of the result set. This function must be
     // called after `execute()`. `output` is cleared before fetching any data. If
     // the query has produced a result and all fields have been successfully

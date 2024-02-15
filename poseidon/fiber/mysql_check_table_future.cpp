@@ -201,7 +201,7 @@ do_on_abstract_future_execute()
     sql << ",\n  CHARSET = 'utf8mb4'";
 
     POSEIDON_LOG_INFO(("Checking MySQL table:\n$1"), sql.get_string());
-    conn->execute(sql.get_string());
+    conn->execute(sql.get_string(), nullptr, 0);
     this->m_res.warning_count = conn->warning_count();
     this->m_res.altered = false;
 
@@ -211,7 +211,7 @@ do_on_abstract_future_execute()
 
     sql.clear_string();
     sql << "SHOW COLUMNS FROM `" << table_name << "`";
-    conn->execute(sql.get_string());
+    conn->execute(sql.get_string(), nullptr, 0);
     conn->fetch_fields(fields);
 
     map<cow_string, exColumn> excolumns;
@@ -244,7 +244,7 @@ do_on_abstract_future_execute()
 
     sql.clear_string();
     sql << "SHOW INDEXES FROM `" << table_name << "`";
-    conn->execute(sql.get_string());
+    conn->execute(sql.get_string(), nullptr, 0);
     conn->fetch_fields(fields);
 
     map<cow_string, exIndex> exindexes;
@@ -576,7 +576,7 @@ do_on_abstract_future_execute()
       return;
 
     POSEIDON_LOG_WARN(("Updating MySQL table structure:", "$1"), sql.get_string());
-    conn->execute(sql.get_string());
+    conn->execute(sql.get_string(), nullptr, 0);
     this->m_res.altered = true;
   }
 
