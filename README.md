@@ -54,14 +54,14 @@ cd ..
 #### Build Poseidon
 
 ```sh
-meson setup build_dir
-meson compile -Cbuild_dir
+meson setup build_debug
+meson compile -Cbuild_debug
 ```
 
-#### Start Poseidon in _build_dir_
+#### Start Poseidon in _build_debug_
 
 ```sh
-./build_dir/poseidon ./etc/poseidon
+LD_LIBRARY_PATH=$(realpath -e build_debug) ./build_debug/poseidon ./etc/poseidon
 ```
 
 # License
