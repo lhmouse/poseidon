@@ -22,6 +22,8 @@ class Mongo_Connection
 
     bool m_reset_clear;
     bool m_reply_available;
+    steady_time m_time_pooled;
+
     uniptr_mongoc_client m_mongo;
     scoped_bson m_reply;
     uniptr_mongoc_cursor m_cursor;

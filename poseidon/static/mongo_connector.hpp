@@ -22,8 +22,7 @@ class Mongo_Connector
     seconds m_conf_connection_idle_timeout = 0s;
 
     mutable plain_mutex m_pool_mutex;
-    struct X_Pooled_Connection;
-    vector<X_Pooled_Connection> m_pool;
+    vector<uniptr<Mongo_Connection>> m_pool;
 
   public:
     // Constructs an empty connector.

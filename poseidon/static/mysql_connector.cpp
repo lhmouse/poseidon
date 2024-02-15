@@ -8,17 +8,6 @@
 #include "../utils.hpp"
 #include <rocket/once_flag.hpp>
 namespace poseidon {
-namespace {
-
-struct Pooled_Connection
-  {
-    uniptr<MySQL_Connection> conn;
-    steady_time pooled_since = steady_time::max();
-  };
-
-}  // namespace
-
-POSEIDON_HIDDEN_X_STRUCT(MySQL_Connector, Pooled_Connection);
 
 MySQL_Connector::
 MySQL_Connector() noexcept
@@ -165,33 +154,27 @@ allocate_connection(cow_stringR server, uint16_t port, cow_stringR db, cow_strin
     // Iterate over the pool, looking for a matching connection with minimum
     // timestamp.
     lock.lock(this->m_pool_mutex);
-    Pooled_Connection* target = nullptr;
-
-    const steady_time expired_since = steady_clock::now() - idle_timeout;
     this->m_pool.resize(pool_size);
+    uniptr<MySQL_Connection>* use_slot = nullptr;
+    const steady_time expired_since = steady_clock::now() - idle_timeout;
 
-    for(auto& elem : this->m_pool)
-      if(elem.pooled_since < expired_since) {
-        // expired
-        elem.conn.reset();
-        elem.pooled_since = steady_time::max();
-      }
-      else if(elem.conn && (elem.conn->m_server == server) && (elem.conn->m_port == port)
-                        && (elem.conn->m_db == db) && (elem.conn->m_user == user)
-                        && (!target || (elem.pooled_since < target->pooled_since)))
-        target = &elem;
+    for(auto& slot : this->m_pool)
+      if(!slot)
+        continue;
+      else if(slot->m_time_pooled < expired_since)
+        slot.reset();  // expired
+      else if((!use_slot || (slot->m_time_pooled < (*use_slot)->m_time_pooled))
+              && (slot->m_server == server) && (slot->m_port == port) && (slot->m_db == db)
+              && (slot->m_user == user))
+        use_slot = &slot;
 
-    if(!target) {
-      lock.unlock();
+    if(use_slot)
+      return move(*use_slot);
 
-      // Create a new connection.
-      return new_uni<MySQL_Connection>(server, port, db, user, passwd);
-    }
+    lock.unlock();
 
-    // Pop this connection from the pool.
-    auto conn = move(target->conn);
-    target->pooled_since = steady_time::max();
-    return conn;
+    // Create a new connection.
+    return new_uni<MySQL_Connection>(server, port, db, user, passwd);
   }
 
 uniptr<MySQL_Connection>
@@ -212,35 +195,29 @@ allocate_default_connection()
     // Iterate over the pool, looking for a matching connection with minimum
     // timestamp.
     lock.lock(this->m_pool_mutex);
-    Pooled_Connection* target = nullptr;
-
-    const steady_time expired_since = steady_clock::now() - idle_timeout;
     this->m_pool.resize(pool_size);
+    uniptr<MySQL_Connection>* use_slot = nullptr;
+    const steady_time expired_since = steady_clock::now() - idle_timeout;
 
-    for(auto& elem : this->m_pool)
-      if(elem.pooled_since < expired_since) {
-        // expired
-        elem.conn.reset();
-        elem.pooled_since = steady_time::max();
-      }
-      else if(elem.conn && (elem.conn->m_server == server) && (elem.conn->m_port == port)
-                        && (elem.conn->m_db == db) && (elem.conn->m_user == user)
-                        && (!target || (elem.pooled_since < target->pooled_since)))
-        target = &elem;
+    for(auto& slot : this->m_pool)
+      if(!slot)
+        continue;
+      else if(slot->m_time_pooled < expired_since)
+        slot.reset();  // expired
+      else if((!use_slot || (slot->m_time_pooled < (*use_slot)->m_time_pooled))
+              && (slot->m_server == server) && (slot->m_port == port) && (slot->m_db == db)
+              && (slot->m_user == user))
+        use_slot = &slot;
 
-    if(!target) {
-      lock.unlock();
+    if(use_slot)
+      return move(*use_slot);
 
-      // Create a new connection.
-      cow_string passwd = default_password;
-      mask_string(passwd.mut_data(), passwd.size(), nullptr, password_mask);
-      return new_uni<MySQL_Connection>(server, port, db, user, passwd);
-    }
+    lock.unlock();
 
-    // Pop this connection from the pool.
-    auto conn = move(target->conn);
-    target->pooled_since = steady_time::max();
-    return conn;
+    // Create a new connection.
+    cow_string passwd = default_password;
+    mask_string(passwd.mut_data(), passwd.size(), nullptr, password_mask);
+    return new_uni<MySQL_Connection>(server, port, db, user, passwd);
   }
 
 bool
@@ -261,30 +238,21 @@ pool_connection(uniptr<MySQL_Connection>&& conn) noexcept
     const seconds idle_timeout = this->m_conf_connection_idle_timeout;
     lock.unlock();
 
-    // Iterate over the pool, looking for a matching connection with minimum
-    // timestamp.
+    // Put the connection back into an empty slot.
     lock.lock(this->m_pool_mutex);
-    Pooled_Connection* target = nullptr;
+    uniptr<MySQL_Connection>* use_slot = nullptr;
 
-    for(auto& elem : this->m_pool)
-      if(!elem.conn) {
-        // empty
-        target = &elem;
+    for(auto& slot : this->m_pool)
+      if(!slot) {
+        use_slot = &slot;
         break;
       }
-      else if(!target || (elem.pooled_since < target->pooled_since))
-        target = &elem;
 
-    if(!target)
+    if(!use_slot)
       return false;
 
-    // Move the connection into this element.
-    target->conn.swap(conn);
-    target->pooled_since = steady_clock::now();
-    lock.unlock();
-
-    // Free the replaced connection before returning, if any.
-    conn.reset();
+    conn->m_time_pooled = steady_clock::now();
+    *use_slot = move(conn);
     return true;
   }
 

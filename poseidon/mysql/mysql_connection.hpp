@@ -23,6 +23,7 @@ class MySQL_Connection
     bool m_reset_clear;
     uint32_t m_passwd_mask;
     cow_string m_passwd;
+    steady_time m_time_pooled;
 
     scoped_MYSQL m_mysql;
     uniptr_MYSQL_STMT m_stmt;
