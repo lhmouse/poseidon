@@ -64,6 +64,9 @@ void
 MySQL_Connection::
 execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)
   {
+    if(stmt.empty())
+      POSEIDON_THROW(("Empty SQL statement"));
+
     if(!this->m_connected) {
       // Try connecting to the server now.
       mask_string(this->m_passwd.mut_data(), this->m_passwd.size(), nullptr, this->m_passwd_mask);
@@ -94,9 +97,6 @@ execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)
     this->m_meta.reset();
     this->m_stmt.reset();
     this->m_reset_clear = false;
-
-    if(stmt.empty())
-      POSEIDON_THROW(("Empty SQL statement"));
 
     // Create a prepared statement.
     if(!this->m_stmt.reset(::mysql_stmt_init(this->m_mysql)))

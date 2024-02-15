@@ -70,13 +70,13 @@ void
 Mongo_Connection::
 execute_bson(const ::bson_t* bson_cmd)
   {
+    if(!bson_cmd)
+      POSEIDON_THROW(("Null BSON pointer"));
+
     // Discard the current reply and cursor.
     this->m_cursor.reset();
     this->m_reply_available = false;
     this->m_reset_clear = false;
-
-    if(!bson_cmd)
-      POSEIDON_THROW(("Null BSON pointer"));
 
     // Execute the command. `mongoc_client_command_with_opts()` always recreate
     // the reply object, so destroy it first.
@@ -282,6 +282,8 @@ bool
 Mongo_Connection::
 fetch_reply(Mongo_Document& output)
   {
+    output.clear();
+
     const ::bson_t* bson_output = this->fetch_reply_bson_opt();
     if(!bson_output)
       return false;
