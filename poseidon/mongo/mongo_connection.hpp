@@ -60,23 +60,33 @@ class Mongo_Connection
     bool
     reset() noexcept;
 
-    // Executes a command in BSON syntax with no options. The command is run
-    // on the default database.
-    // Reference: https://www.mongodb.com/docs/manual/reference/command/nav-crud/
+    // Executes a command in BSON format with no option on the default database. It
+    // is recommended that you pass a `scoped_bson` object.
     void
-    execute(const ::bson_t* bson_cmd);
+    execute_bson(const ::bson_t* bson_cmd);
 
+    // Fetches a document from the reply to the last command. This function must be
+    // be called after `execute_bson()`. If the command has produced a reply which
+    // does not contain a cursor, a pointer to the reply document is returned. If
+    // the command has produced a reply which contains a cursor, a cursor is created
+    // where subsequent documents will be fetched. In  either case, the caller must
+    // not free the result `bson_t` object. If there is no more document to fetch, a
+    // null pointer is returned.
+    const ::bson_t*
+    fetch_reply_bson_opt();
+
+    // Executes a command in BSON format with no option on the default database.
+    // Reference: https://www.mongodb.com/docs/manual/reference/command/nav-crud/
     void
     execute(const Mongo_Document& cmd);
 
-    // Fetches an object from the reply to the last command. This function must
-    // be called after `execute()`. `output` is cleared before fetching any data.
-    // If the query has produced a result and an object has been successfully
-    // fetched, `true` is returned. If there is no result or the end of result
-    // has been reached, `false` is returned.
-    bool
-    fetch_reply(const ::bson_t*& bson_output);
-
+    // Fetches a document from the reply to the last command. This function must be
+    // called after `execute()`. `output` is cleared before fetching any data. If
+    // the command has produced a reply which does not contain a cursor, the reply
+    // is converted to a `Mongo_Document` literally and stored into `output`. If the
+    // command has produced a reply which contains a cursor, a cursor is created
+    // where subsequent documents will be fetched. If there is no more document to
+    // fetch, `false` is returned.
     bool
     fetch_reply(Mongo_Document& output);
   };

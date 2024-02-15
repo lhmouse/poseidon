@@ -68,7 +68,7 @@ reset() noexcept
 
 void
 Mongo_Connection::
-execute(const ::bson_t* bson_cmd)
+execute_bson(const ::bson_t* bson_cmd)
   {
     // Discard the current reply and cursor.
     this->m_cursor.reset();
@@ -89,6 +89,7 @@ execute(const ::bson_t* bson_cmd)
           "[`mongoc_client_command_with_opts()` failed]"),
           error.domain, error.code, error.message);
 
+    // This will be checked in `fetch_reply_bson_opt()`.
     this->m_reply_available = true;
   }
 
@@ -232,41 +233,38 @@ execute(const Mongo_Document& cmd)
     if(!bson_success)
       POSEIDON_THROW(("Failed to compose BSON command"));
 
-    return this->execute(bson_cmd);
+    return this->execute_bson(bson_cmd);
   }
 
-bool
+const ::bson_t*
 Mongo_Connection::
-fetch_reply(const ::bson_t*& bson_output)
+fetch_reply_bson_opt()
   {
-    bson_output = nullptr;
-
     if(!this->m_cursor) {
       // There are two possibilities: Either the reply has not been parsed yet,
       // or the reply does not contain a cursor.
       if(!this->m_reply_available)
-        return false;
+        return nullptr;
 
       if(!::bson_has_field(this->m_reply, "cursor")) {
         // If the reply contains no cursor, assign it directly to `bson_output`.
         this->m_reply_available = false;
-        bson_output = this->m_reply;
-        return true;
+        return this->m_reply;
       }
 
       // Create the cursor. `mongoc_cursor_new_from_command_reply_with_opts()`
       // destroys the reply object, so it has to be recreated afterwards.
       this->m_cursor.reset(::mongoc_cursor_new_from_command_reply_with_opts(
                                             this->m_mongo, this->m_reply, nullptr));
-      ROCKET_ASSERT(this->m_cursor);
       ::bson_init(this->m_reply);
       this->m_reply_available = false;
     }
 
     // Get the next document from the reply cursor.
+    ::bson_error_t error;
+    const ::bson_t* bson_output;
     bool fetched = ::mongoc_cursor_next(this->m_cursor, &bson_output);
 
-    ::bson_error_t error;
     if(!fetched && ::mongoc_cursor_error(this->m_cursor, &error))
       POSEIDON_THROW((
           "Could not fetch result from Mongo server: ERROR $1.$2: $3",
@@ -274,18 +272,18 @@ fetch_reply(const ::bson_t*& bson_output)
           error.domain, error.code, error.message);
 
     if(!fetched)
-      return false;
+      return nullptr;
 
-    // Return the result into `bson_output`.
-    return true;
+    // Return the result inside the cursor.
+    return bson_output;
   }
 
 bool
 Mongo_Connection::
 fetch_reply(Mongo_Document& output)
   {
-    const ::bson_t* bson_output;
-    if(!this->fetch_reply(bson_output))
+    const ::bson_t* bson_output = this->fetch_reply_bson_opt();
+    if(!bson_output)
       return false;
 
     // Unpack a BSON object. The `bson_t` type has a HUGE alignment of 128,
