@@ -1,8 +1,8 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
-#ifndef POSEIDON_MONGODB_ENUMS_
-#define POSEIDON_MONGODB_ENUMS_
+#ifndef POSEIDON_MONGO_ENUMS_
+#define POSEIDON_MONGO_ENUMS_
 
 #include "../fwd.hpp"
 #include "enums.hpp"
