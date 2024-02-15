@@ -178,7 +178,7 @@ do_parse_command_line(int argc, char** argv)
 
         default:
           do_exit_printf(exit_invalid_argument,
-              "%s: invalid argument -- '%c'\nTry `%s -h` for help.\n",
+              "%s: invalid argument -- '%c'\nTry `%s -h` for help.",
               argv[0], ::optopt, argv[0]);
         }
 
@@ -192,7 +192,7 @@ do_parse_command_line(int argc, char** argv)
     // If more arguments follow, they denote the working directory.
     if(argc - ::optind > 1)
       do_exit_printf(exit_invalid_argument,
-          "%s: too many arguments -- '%s'\nTry `%s -h` for help.\n",
+          "%s: too many arguments -- '%s'\nTry `%s -h` for help.",
           argv[0], argv[::optind+1], argv[0]);
 
     if(argc - ::optind > 0)
@@ -240,11 +240,11 @@ do_await_child_process_and_exit(::pid_t cpid)
         continue;
 
       if(WIFEXITED(wstat))
-        do_exit_printf(WEXITSTATUS(wstat), "");
+        do_exit_printf(WEXITSTATUS(wstat));
 
       if(WIFSIGNALED(wstat))
         do_exit_printf(128 + WTERMSIG(wstat),
-              "Child process %d terminated by signal %d: %s\n",
+              "Child process %d terminated by signal %d: %s",
               (int) cpid, WTERMSIG(wstat), ::strsignal(WTERMSIG(wstat)));
     }
   }
@@ -275,7 +275,7 @@ do_daemonize_start()
     // Create the CHILD and wait.
     ::pid_t cpid = ::fork();
     if(cpid == -1)
-      do_exit_printf(exit_system_error, "Could not spawn child process: %m\n");
+      do_exit_printf(exit_system_error, "Could not spawn child process: %m");
 
     if(cpid != 0) {
       // The PARENT shall wait for CHILD and forward its exit status.
@@ -297,7 +297,7 @@ do_daemonize_start()
     // Create the GRANDCHILD.
     cpid = ::fork();
     if(cpid == -1)
-      do_exit_printf(exit_system_error, "Could not spawn grandchild process: %m\n");
+      do_exit_printf(exit_system_error, "Could not spawn grandchild process: %m");
 
     if(cpid != 0) {
       // The CHILD shall wait for notification from the GRANDCHILD. If no
@@ -394,7 +394,7 @@ do_create_resident_thread(xObject& obj, const char* name)
     );
 
     if(err != 0)
-      do_exit_printf(exit_system_error, "Could not spawn thread '%s': %m\n", name);
+      do_exit_printf(exit_system_error, "Could not spawn thread '%s': %m", name);
 
     // Name the thread and detach it. Errors are ignored.
     ::pthread_setname_np(thrd, name);
@@ -642,7 +642,6 @@ main(int argc, char** argv)
   }
   catch(exception& stdex) {
     // Print the message in `stdex`. There isn't much we can do.
-    do_exit_printf(exit_system_error,
-        "%s\n[exception class `%s`]\n",
-        stdex.what(), typeid(stdex).name());
+    POSEIDON_LOG_FATAL(("$1"), stdex);
+    do_exit_printf(exit_system_error, "%s", stdex.what());
   }
