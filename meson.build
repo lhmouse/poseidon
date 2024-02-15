@@ -104,6 +104,14 @@ poseidon_include_mongo = [
   'poseidon/fiber/mongo_query_future.hpp',
 ]
 
+poseidon_include_redis = [
+  'poseidon/third/redis_fwd.hpp',
+  'poseidon/static/redis_connector.hpp',
+  'poseidon/redis/enums.hpp',
+  'poseidon/redis/redis_value.hpp',
+  'poseidon/fiber/redis_query_future.hpp',
+]
+
 poseidon_src = [
   'poseidon/fwd.cpp',
   'poseidon/utils.cpp',
@@ -182,6 +190,12 @@ poseidon_src_mongo = [
   'poseidon/fiber/mongo_query_future.cpp',
 ]
 
+poseidon_src_redis = [
+  'poseidon/static/redis_connector.cpp',
+  'poseidon/redis/redis_value.cpp',
+  'poseidon/fiber/redis_query_future.cpp',
+]
+
 etc_poseidon = [
   'etc/poseidon/main.conf',
   'etc/poseidon/ssl/test.crt',
@@ -223,6 +237,11 @@ test_src_mysql = [
 test_src_mongo = [
   'test/mongo_value.cpp',
   'test/mongo_connection.cpp',
+]
+
+test_src_redis = [
+  'test/redis_value.cpp',
+  'test/redis_connection.cpp',
 ]
 
 #===========================================================
@@ -298,6 +317,7 @@ add_project_dependencies(dep_pthread, dep_asteria, language: 'cpp')
 #===========================================================
 dep_mysqlclient = disabler()
 dep_mongoc = disabler()
+dep_hiredis = disabler()
 
 if get_option('enable-mysql')
   dep_mysqlclient = dependency('mysqlclient')
@@ -319,6 +339,16 @@ if get_option('enable-mongo')
   test_src += test_src_mongo
 endif
 
+if get_option('enable-redis')
+  dep_hiredis = dependency('hiredis')
+  add_project_arguments('-DPOSEIDON_ENABLE_REDIS', language: [ 'c', 'cpp' ])
+  add_project_dependencies(dep_hiredis, language: 'cpp')
+
+  poseidon_include += poseidon_include_redis
+  poseidon_src += poseidon_src_redis
+  test_src += test_src_redis
+endif
+
 #===========================================================
 # Rules for headers
 #===========================================================
@@ -337,7 +367,7 @@ lib_poseidon = shared_library('poseidon',
       cpp_pch: 'poseidon/xprecompiled.hpp',
       sources: [ poseidon_src ],
       dependencies: [ dep_libunwind, dep_openssl, dep_http_parser, dep_zlib,
-                      dep_libmagic, dep_mysqlclient, dep_mongoc ],
+                      dep_libmagic, dep_mysqlclient, dep_mongoc, dep_hiredis ],
       soversion: ver.get('abi_major'),
       version: '@0@.@1@.@2@'.format(ver.get('abi_major'), ver.get('abi_minor'), 0),
       install: true)
@@ -347,8 +377,8 @@ import('pkgconfig').generate(lib_poseidon,
       url: 'https://github.com/lhmouse/poseidon',
       description: 'The Poseidon Server Framework is a modern framework for game '
                    + 'server development, with support for plain TCP, TCP over TLS, '
-                   + 'UDP, HTTP, WebSocket (with permessage-deflate), MySQL, Mongo, '
-                   + 'and coroutines.')
+                   + 'UDP, HTTP, WebSocket (with permessage-deflate), MySQL, MongoDB, '
+                   + 'Redis, and coroutines.')
 
 #===========================================================
 # Rules for 'bin/poseidon'

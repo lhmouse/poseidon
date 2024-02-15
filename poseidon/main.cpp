@@ -27,6 +27,9 @@
 #ifdef POSEIDON_ENABLE_MONGO
 #include "static/mongo_connector.hpp"
 #endif
+#ifdef POSEIDON_ENABLE_REDIS
+#include "static/redis_connector.hpp"
+#endif
 namespace {
 using namespace poseidon;
 
@@ -595,6 +598,9 @@ main(int argc, char** argv)
 #endif
 #ifdef POSEIDON_ENABLE_MONGO
     mongo_connector.reload(main_config.copy());
+#endif
+#ifdef POSEIDON_ENABLE_REDIS
+    redis_connector.reload(main_config.copy());
 #endif
 
     network_driver.reload(main_config.copy());
