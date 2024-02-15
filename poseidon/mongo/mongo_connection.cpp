@@ -261,10 +261,10 @@ fetch_reply_bson_opt()
     }
 
     // Get the next document from the reply cursor.
-    ::bson_error_t error;
     const ::bson_t* bson_output;
     bool fetched = ::mongoc_cursor_next(this->m_cursor, &bson_output);
 
+    ::bson_error_t error;
     if(!fetched && ::mongoc_cursor_error(this->m_cursor, &error))
       POSEIDON_THROW((
           "Could not fetch result from Mongo server: ERROR $1.$2: $3",
