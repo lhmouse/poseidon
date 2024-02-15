@@ -14,8 +14,7 @@
 3. I/O multiplexing basing on epoll
 4. HTTP and WebSocket with permessage-deflate
 5. Configurable add-ons
-6. Asynchronous MySQL access (optional)
-7. Asynchronous MongoDB access (optional)
+6. Asynchronous MySQL, MongoDB and Redis access (optional)
 
 # How to build
 

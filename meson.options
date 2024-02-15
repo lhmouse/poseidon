@@ -27,3 +27,7 @@ option('enable-mysql',
 option('enable-mongo',
        type: 'boolean', value: true,
        description: 'enable access to MongoDB servers')
+
+option('enable-redis',
+       type: 'boolean', value: true,
+       description: 'enable access to redis servers')

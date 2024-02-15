@@ -18,6 +18,9 @@
 #ifdef POSEIDON_ENABLE_MONGO
 #include "static/mongo_connector.hpp"
 #endif
+#ifdef POSEIDON_ENABLE_REDIS
+#include "static/redis_connector.hpp"
+#endif
 namespace poseidon {
 
 atomic_relaxed<int> exit_signal;
@@ -34,6 +37,9 @@ MySQL_Connector& mysql_connector = *new MySQL_Connector;
 #endif
 #ifdef POSEIDON_ENABLE_MONGO
 Mongo_Connector& mongo_connector = *new Mongo_Connector;
+#endif
+#ifdef POSEIDON_ENABLE_REDIS
+Redis_Connector& redis_connector = *new Redis_Connector;
 #endif
 
 bool

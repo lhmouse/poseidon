@@ -606,6 +606,7 @@ class Read_File_Future;
 class MySQL_Query_Future;
 class MySQL_Check_Table_Future;
 class Mongo_Query_Future;
+class Redis_Query_Future;
 
 // Socket types
 enum IP_Address_Class : uint8_t;
@@ -656,6 +657,12 @@ using Mongo_Array = ::asteria::cow_vector<Mongo_Value>;
 using Mongo_Document = ::asteria::cow_bivector<cow_string, Mongo_Value>;
 class Mongo_Connection;
 
+// Redis types
+enum Redis_Value_Type : uint8_t;
+class Redis_Value;
+using Redis_Array = ::asteria::cow_vector<Redis_Value>;
+class Redis_Connection;
+
 // Easy types
 // Being 'easy' means all callbacks are invoked in fibers and can perform
 // async/await operations. These are suitable for agile development.
@@ -690,6 +697,7 @@ extern class Fiber_Scheduler& fiber_scheduler;
 
 extern class MySQL_Connector& mysql_connector;
 extern class Mongo_Connector& mongo_connector;
+extern class Redis_Connector& redis_connector;
 
 }  // namespace poseidon
 #endif
