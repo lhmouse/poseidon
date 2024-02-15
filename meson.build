@@ -101,6 +101,7 @@ poseidon_include_mongo = [
   'poseidon/mongo/enums.hpp',
   'poseidon/mongo/mongo_value.hpp',
   'poseidon/mongo/mongo_connection.hpp',
+  'poseidon/fiber/mongo_query_future.hpp',
 ]
 
 poseidon_src = [
@@ -178,6 +179,7 @@ poseidon_src_mongo = [
   'poseidon/static/mongo_connector.cpp',
   'poseidon/mongo/mongo_value.cpp',
   'poseidon/mongo/mongo_connection.cpp',
+  'poseidon/fiber/mongo_query_future.cpp',
 ]
 
 etc_poseidon = [
