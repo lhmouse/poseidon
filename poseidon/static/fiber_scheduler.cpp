@@ -126,7 +126,7 @@ void
 Fiber_Scheduler::
 do_fiber_function() noexcept
   {
-    asan_fiber_switch_finish(this->m_sched_asan_save);
+    asan_fiber_switch_finish(this->m_sched_outer->uc_stack, this->m_sched_asan_save);
     const auto& elem = this->m_sched_elem;
     ROCKET_ASSERT(elem);
 
@@ -154,7 +154,7 @@ do_fiber_function() noexcept
 
     // Return to the scheduler.
     elem->async_time.store(steady_clock::now());
-    asan_fiber_switch_start(this->m_sched_asan_save, elem->sched_inner->uc_link);
+    asan_fiber_switch_start(this->m_sched_asan_save, elem->sched_inner->uc_link->uc_stack);
   }
 
 POSEIDON_VISIBILITY_HIDDEN
@@ -202,9 +202,9 @@ do_yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override)
     POSEIDON_LOG_TRACE(("Suspending fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
     POSEIDON_CATCH_ALL(elem->fiber->do_on_abstract_fiber_suspended());
 
-    asan_fiber_switch_start(this->m_sched_asan_save, this->m_sched_outer);
+    asan_fiber_switch_start(this->m_sched_asan_save, this->m_sched_outer->uc_stack);
     ::swapcontext(elem->sched_inner, this->m_sched_outer);
-    asan_fiber_switch_finish(this->m_sched_asan_save);
+    asan_fiber_switch_finish(this->m_sched_outer->uc_stack, this->m_sched_asan_save);
 
     POSEIDON_CATCH_ALL(elem->fiber->do_on_abstract_fiber_resumed());
     POSEIDON_LOG_TRACE(("Resumed fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
@@ -421,9 +421,9 @@ thread_loop()
     this->m_sched_elem = elem;
     POSEIDON_LOG_TRACE(("Resuming fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
 
-    asan_fiber_switch_start(this->m_sched_asan_save, elem->sched_inner);
+    asan_fiber_switch_start(this->m_sched_asan_save, elem->sched_inner->uc_stack);
     ::swapcontext(this->m_sched_outer, elem->sched_inner);
-    asan_fiber_switch_finish(this->m_sched_asan_save);
+    asan_fiber_switch_finish(elem->sched_inner->uc_stack, this->m_sched_asan_save);
 
     ROCKET_ASSERT(this->m_sched_elem == elem);
     this->m_sched_elem = nullptr;

@@ -12,23 +12,23 @@ namespace poseidon {
 
 ROCKET_ALWAYS_INLINE
 void
-asan_fiber_switch_start(void*& save, const ::ucontext_t* uctx) noexcept
+asan_fiber_switch_start(void*& save, const ::stack_t& st) noexcept
   {
 #ifdef POSEIDON_ENABLE_ADDRESS_SANITIZER
-    __sanitizer_start_switch_fiber(&save, uctx->uc_stack.ss_sp, uctx->uc_stack.ss_size);
+    __sanitizer_start_switch_fiber(&save, st.ss_sp, st.ss_size);
 #else
-    save = uctx->uc_stack.ss_sp;
+    save = st.ss_sp;
 #endif
   }
 
 ROCKET_ALWAYS_INLINE
 void
-asan_fiber_switch_finish(void* save) noexcept
+asan_fiber_switch_finish(::stack_t& st, void* save) noexcept
   {
 #ifdef POSEIDON_ENABLE_ADDRESS_SANITIZER
-    __sanitizer_finish_switch_fiber(save, nullptr, nullptr);
+    __sanitizer_finish_switch_fiber(save, (const void**) &(st.ss_sp), &(st.ss_size));
 #else
-    (void) save;
+    (void)! (st.ss_sp == save);
 #endif
   }
 
