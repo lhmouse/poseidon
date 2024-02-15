@@ -99,19 +99,17 @@ print(tinyfmt& fmt) const
         void
         operator()(const DateTime_with_MYSQL_TIME& mdt)
           {
-            time_t secs = system_clock::to_time_t(mdt.dt.as_system_time());
-            system_time rounded = system_clock::from_time_t(secs);
-            auto ns = duration_cast<nanoseconds>(mdt.dt.as_system_time() - rounded);
-
-            ::rocket::ascii_numput nump;
-            nump.put_DU(static_cast<uint64_t>(ns.count()), 9);
+            ::timespec ts;
+            ::rocket::ascii_numput ns_nump;
+            timespec_from_system_time(ts, mdt.datetime.as_system_time());
+            ns_nump.put_DU(static_cast<uint32_t>(ts.tv_nsec), 9);
 
             // `'1994-11-06 08:49:37.123 UTC'`
             char temp[32];
             temp[0] = '\'';
-            mdt.dt.print_iso8601_partial(temp + 1);
+            mdt.datetime.print_iso8601_partial(temp + 1);
             temp[20] = '.';
-            ::memcpy(temp + 21, nump.data(), 4);
+            ::memcpy(temp + 21, ns_nump.data(), 4);
             ::memcpy(temp + 24, " UTC\'\0*", 8);
 
             this->pfmt->putn(temp, 29);

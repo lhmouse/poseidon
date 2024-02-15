@@ -148,25 +148,24 @@ execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)
         case mysql_value_datetime:
           {
             const auto& input_mdt = args_opt[col].m_stor.as<DateTime_with_MYSQL_TIME>();
+            ::MYSQL_TIME& myt = input_mdt.get_mysql_time();
 
-            ::time_t secs = system_clock::to_time_t(input_mdt.dt.as_system_time());
-            auto frac = input_mdt.dt.as_system_time() - system_clock::from_time_t(secs);
-            ROCKET_ASSERT(frac.count() > 0);
-            auto frac_ms = duration_cast<::std::chrono::duration<uint32_t, ::std::milli>>(frac);
+            ::timespec ts;
+            timespec_from_system_time(ts, input_mdt.datetime.as_system_time());
+            ::tm tm;
+            ::gmtime_r(&(ts.tv_sec), &tm);
 
-            ::tm tm = { };
-            ::gmtime_r(&secs, &tm);
-            input_mdt.myt.year = static_cast<unsigned int>(tm.tm_year) + 1900;
-            input_mdt.myt.month = static_cast<unsigned int>(tm.tm_mon) + 1;
-            input_mdt.myt.day = static_cast<unsigned int>(tm.tm_mday);
-            input_mdt.myt.hour = static_cast<unsigned int>(tm.tm_hour);
-            input_mdt.myt.minute = static_cast<unsigned int>(tm.tm_min);
-            input_mdt.myt.second = static_cast<unsigned int>(tm.tm_sec);
-            input_mdt.myt.second_part = frac_ms.count();
-            input_mdt.myt.time_type = MYSQL_TIMESTAMP_DATETIME;
+            myt.year = static_cast<uint32_t>(tm.tm_year) + 1900;
+            myt.month = static_cast<uint32_t>(tm.tm_mon) + 1;
+            myt.day = static_cast<uint32_t>(tm.tm_mday);
+            myt.hour = static_cast<uint32_t>(tm.tm_hour);
+            myt.minute = static_cast<uint32_t>(tm.tm_min);
+            myt.second = static_cast<uint32_t>(tm.tm_sec);
+            myt.second_part = static_cast<uint32_t>(ts.tv_nsec) / 1000000;
+            myt.time_type = MYSQL_TIMESTAMP_DATETIME;
 
             binds[col].buffer_type = MYSQL_TYPE_DATETIME;
-            binds[col].buffer = &(input_mdt.myt);
+            binds[col].buffer = &myt;
             binds[col].buffer_length = sizeof(::MYSQL_TIME);
           }
           break;
@@ -283,7 +282,7 @@ fetch_row(vector<MySQL_Value>& output)
         case MYSQL_TYPE_DATE:
         case MYSQL_TYPE_TIME:
           binds[col].buffer_type = MYSQL_TYPE_DATETIME;
-          binds[col].buffer = &(output[col].m_stor.emplace<DateTime_with_MYSQL_TIME>().myt);
+          binds[col].buffer = &(output[col].m_stor.emplace<DateTime_with_MYSQL_TIME>().get_mysql_time());
           binds[col].buffer_length = sizeof(::MYSQL_TIME);
           break;
 
@@ -328,18 +327,20 @@ fetch_row(vector<MySQL_Value>& output)
       else if(binds[col].buffer_type == MYSQL_TYPE_DATETIME) {
         // Assemble the timestamp.
         auto& output_mdt = output[col].m_stor.mut<DateTime_with_MYSQL_TIME>();
+        ::MYSQL_TIME& myt = output_mdt.get_mysql_time();
 
-        ::tm tm = { };
-        tm.tm_year = static_cast<int>(output_mdt.myt.year - 1900);
-        tm.tm_mon = static_cast<int>(output_mdt.myt.month - 1);
-        tm.tm_mday = static_cast<int>(output_mdt.myt.day);
-        tm.tm_hour = static_cast<int>(output_mdt.myt.hour);
-        tm.tm_min = static_cast<int>(output_mdt.myt.minute);
-        tm.tm_sec = static_cast<int>(output_mdt.myt.second);
+        ::tm tm;
+        tm.tm_year = static_cast<int>(myt.year) - 1900;
+        tm.tm_mon = static_cast<int>(myt.month) - 1;
+        tm.tm_mday = static_cast<int>(myt.day);
+        tm.tm_hour = static_cast<int>(myt.hour);
+        tm.tm_min = static_cast<int>(myt.minute);
+        tm.tm_sec = static_cast<int>(myt.second);
+        tm.tm_isdst = 0;
 
         ::time_t secs = ::timegm(&tm);
-        uint32_t msecs = static_cast<uint32_t>(output_mdt.myt.second_part);
-        output_mdt.dt = system_clock::from_time_t(secs) + milliseconds(msecs);
+        uint32_t msecs = static_cast<uint32_t>(myt.second_part);
+        output_mdt.datetime = system_clock::from_time_t(secs) + milliseconds(msecs);
       }
       else if(binds[col].buffer_type == MYSQL_TYPE_LONG_BLOB) {
         // Check whether the value has been truncated.

@@ -105,25 +105,25 @@ class MySQL_Value
 
     MySQL_Value(const DateTime& dt) noexcept
       {
-        this->m_stor.emplace<DateTime_with_MYSQL_TIME>().dt = dt;
+        this->m_stor.emplace<DateTime_with_MYSQL_TIME>().datetime = dt;
       }
 
     MySQL_Value&
     operator=(const DateTime& dt) & noexcept
       {
-        this->m_stor.emplace<DateTime_with_MYSQL_TIME>().dt = dt;
+        this->mut_datetime() = dt;
         return *this;
       }
 
     MySQL_Value(system_time tm) noexcept
       {
-        this->m_stor.emplace<DateTime_with_MYSQL_TIME>().dt = tm;
+        this->m_stor.emplace<DateTime_with_MYSQL_TIME>().datetime = tm;
       }
 
     MySQL_Value&
     operator=(system_time tm) & noexcept
       {
-        this->m_stor.emplace<DateTime_with_MYSQL_TIME>().dt = tm;
+        this->mut_datetime() = tm;
         return *this;
       }
 
@@ -219,19 +219,19 @@ class MySQL_Value
 
     const DateTime&
     as_datetime() const
-      { return this->m_stor.as<DateTime_with_MYSQL_TIME>().dt;  }
+      { return this->m_stor.as<DateTime_with_MYSQL_TIME>().datetime;  }
 
     system_time
     as_system_time() const
-      { return this->m_stor.as<DateTime_with_MYSQL_TIME>().dt.as_system_time();  }
+      { return this->m_stor.as<DateTime_with_MYSQL_TIME>().datetime.as_system_time();  }
 
     DateTime&
     mut_datetime() noexcept
       {
         if(auto ptr = this->m_stor.mut_ptr<DateTime_with_MYSQL_TIME>())
-          return ptr->dt;
+          return ptr->datetime;
         else
-          return this->m_stor.emplace<DateTime_with_MYSQL_TIME>().dt;
+          return this->m_stor.emplace<DateTime_with_MYSQL_TIME>().datetime;
       }
 
     // Converts this value to its string form. The result will be suitable

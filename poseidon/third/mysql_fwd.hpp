@@ -21,7 +21,6 @@ class scoped_MYSQL
           ::rocket::sprintf_and_throw<::std::runtime_error>(
                 "mysql_Client: insufficient memory");
 
-        // Set default options.
         ::mysql_options(this->m_mysql, MYSQL_OPT_COMPRESS, "1");
         ::mysql_options(this->m_mysql, MYSQL_SET_CHARSET_NAME , "utf8mb4");
       }
@@ -37,6 +36,35 @@ class scoped_MYSQL
     operator ::MYSQL*() const noexcept
       { return this->m_mysql;  }
   };
+
+struct DateTime_with_MYSQL_TIME
+  {
+    DateTime datetime;
+    mutable uniptr<::MYSQL_TIME> cached_mysql_time;
+
+    constexpr DateTime_with_MYSQL_TIME() noexcept = default;
+
+    constexpr DateTime_with_MYSQL_TIME(const DateTime_with_MYSQL_TIME& other) noexcept
+      : datetime(other.datetime)
+      { }
+
+    DateTime_with_MYSQL_TIME&
+    operator=(const DateTime_with_MYSQL_TIME& other) & noexcept
+      {
+        this->datetime = other.datetime;
+        return *this;
+      }
+
+    ::MYSQL_TIME&
+    get_mysql_time() const
+      {
+        if(!this->cached_mysql_time)
+          this->cached_mysql_time = new_uni<::MYSQL_TIME>();
+
+        return *(this->cached_mysql_time);
+      }
+  };
+
 
 struct MYSQL_STMT_deleter
   {
@@ -54,12 +82,6 @@ struct MYSQL_RES_deleter
 
 using uniptr_MYSQL_STMT = ::rocket::unique_ptr<::MYSQL_STMT, MYSQL_STMT_deleter>;
 using uniptr_MYSQL_RES = ::rocket::unique_ptr<::MYSQL_RES, MYSQL_RES_deleter>;
-
-struct DateTime_with_MYSQL_TIME
-  {
-    DateTime dt;
-    mutable ::MYSQL_TIME myt;
-  };
 
 }  // namespace poseidon
 #endif

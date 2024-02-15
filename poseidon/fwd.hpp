@@ -449,6 +449,15 @@ system_time_from_timespec(const struct ::timespec& ts) noexcept
     return system_clock::from_time_t(ts.tv_sec) + nanoseconds(ts.tv_nsec);
   }
 
+ROCKET_ALWAYS_INLINE
+void
+timespec_from_system_time(struct ::timespec& ts, system_time tm) noexcept
+  {
+    ts.tv_sec = system_clock::to_time_t(tm);
+    auto ns_dur = duration_cast<nanoseconds>(tm - system_clock::from_time_t(ts.tv_sec));
+    ts.tv_nsec = static_cast<long>(ns_dur.count());
+  }
+
 template<typename xValue, typename... xArgs>
 ROCKET_ALWAYS_INLINE
 uniptr<xValue>
