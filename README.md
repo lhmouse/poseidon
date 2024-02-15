@@ -10,12 +10,12 @@
 # Features
 
 1. Coroutines (fibers)
-2. Native _TCP_, _TLS over TCP_ and _UDP_ over either _IPv4_ or _IPv6_
-3. I/O multiplexing basing on _epoll_
-4. _HTTP_ and _WebSocket_ with _permessage-deflate_
+2. Native TCP, TLS over TCP and UDP over either IPv4 or IPv6
+3. I/O multiplexing basing on epoll
+4. HTTP and WebSocket with permessage-deflate
 5. Configurable add-ons
-6. Asynchronous _MySQL_ access (optional)
-7. Asynchronous _MongoDB_ access (optional)
+6. Asynchronous MySQL access (optional)
+7. Asynchronous MongoDB access (optional)
 
 # How to build
 
