@@ -196,12 +196,12 @@ print(tinyfmt& fmt) const
             this->pfmt->putc('\"');
             this->pfmt->putn(str.data(), (size_t) (pos - str.begin()));
 
-            do {
+            while(pos != str.end())
               if((*pos == '\\') || (*pos == '\"')) {
                 // Escape it.
                 char seq[2] = { '\\', *pos };
-                this->pfmt->putn(seq, 2);
                 ++ pos;
+                this->pfmt->putn(seq, 2);
               }
               else if(do_is_ctl_or_ws(*pos)) {
                 // Replace this sequence of control and space characters with a
@@ -215,8 +215,6 @@ print(tinyfmt& fmt) const
                 pos = ::std::find_if(pos + 1, str.end(), do_is_ctl_or_sep);
                 this->pfmt->putn(&*from, (size_t) (pos - from));
               }
-            }
-            while(pos != str.end());
 
             this->pfmt->putc('\"');
           }
