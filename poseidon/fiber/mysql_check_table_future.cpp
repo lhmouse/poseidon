@@ -450,11 +450,15 @@ do_on_abstract_future_execute()
                 if(!ex->second.default_value.is_blob())
                   goto do_alter_table_column_;
 
-                ::tm tm = { };
-                ::strptime(ex->second.default_value.blob_data(), "%Y-%m-%d %H:%M:%S", &tm);
-                auto def_value = system_clock::from_time_t(::timegm(&tm));
+                char def_str[32];
+                column.default_value.as_datetime().print_iso8601_partial(def_str);
+                ::memcpy(def_str + 19, ".000000", 8);
+                size_t cmp_len = ex->second.default_value.blob_size();
 
-                if(def_value != column.default_value.as_system_time())
+                if((cmp_len < 19) || (cmp_len > 26))
+                  goto do_alter_table_column_;
+
+                if(::memcmp(ex->second.default_value.blob_data(), def_str, cmp_len) != 0)
                   goto do_alter_table_column_;
               }
 
