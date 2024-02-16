@@ -196,7 +196,7 @@ fetch_fields(vector<cow_string>& output)
     output.clear();
 
     if(!this->m_stmt)
-      POSEIDON_THROW(("No query has been executed"));
+      return false;
 
     if(!this->m_meta)
       this->m_meta.reset(::mysql_stmt_result_metadata(this->m_stmt));
@@ -221,7 +221,7 @@ fetch_row(vector<MySQL_Value>& output)
     output.clear();
 
     if(!this->m_stmt)
-      POSEIDON_THROW(("No query has been executed"));
+      return false;
 
     ::MYSQL_FIELD* meta_fields = nullptr;
     unsigned long nfields = ::mysql_stmt_field_count(this->m_stmt);
@@ -347,20 +347,20 @@ fetch_row(vector<MySQL_Value>& output)
 
 uint64_t
 MySQL_Connection::
-affected_rows() const
+affected_rows() const noexcept
   {
     if(!this->m_stmt)
-      POSEIDON_THROW(("No query has been executed"));
+      return 0;
 
     return ::mysql_stmt_affected_rows(this->m_stmt);
   }
 
 uint64_t
 MySQL_Connection::
-insert_id() const
+insert_id() const noexcept
   {
     if(!this->m_stmt)
-      POSEIDON_THROW(("No query has been executed"));
+      return 0;
 
     return ::mysql_stmt_insert_id(this->m_stmt);
   }
