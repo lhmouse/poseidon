@@ -52,44 +52,31 @@ print(tinyfmt& fmt) const
         operator()(cow_stringR str)
           {
             this->pfmt->putc('\'');
-            size_t pos = 0;
-            while(pos != str.size()) {
-              // This includes the null terminator.
-              // https://dev.mysql.com/doc/c-api/8.0/en/mysql-real-escape-string-quote.html
-              static constexpr char unsafe_chars[] = "\\\'\"\n\r\x1A`";
-              size_t brk = str.find_of(pos, unsafe_chars, sizeof(unsafe_chars));
-              if(brk == cow_string::npos) {
-                this->pfmt->putn(str.data() + pos, str.size() - pos);
-                break;
-              }
+            auto pos = str.begin();
+            while(pos != str.end()) {
+              // https://dev.mysql.com/doc/refman/8.0/en/string-literals.html#character-escape-sequences
+              static constexpr char src_chars[] = { '\0','\'','\"','\b','\n','\r','\t', 26,'\\' };
+              static constexpr char esc_chars[] = {  '0','\'','\"', 'b', 'n', 'r', 't','Z','\\' };
+              char my_esc_char = 0;
 
-              this->pfmt->putn(str.data() + pos, brk - pos);
-              pos = brk + 1;
-              char eseq[2] = { '\\', str[brk] };
-
-              // Escape this single character.
-              switch(eseq[1])
-                {
-                case '\n':
-                  this->pfmt->putn("\\n", 2);
-                  break;
-
-                case '\r':
-                  this->pfmt->putn("\\r", 2);
-                  break;
-
-                case 0x1A:
-                  this->pfmt->putn("\\Z", 2);
-                  break;
-
-                case 0:
-                  this->pfmt->putn("\\0", 2);
-                  break;
-
-                default:
-                  this->pfmt->putn(eseq, 2);
+              for(uint32_t k = 0;  k != size(src_chars);  ++k)
+                if(*pos == src_chars[k]) {
+                  my_esc_char = esc_chars[k];
                   break;
                 }
+
+              if(my_esc_char != 0) {
+                // Escape it.
+                char seq[2] = { '\\', my_esc_char };
+                ++ pos;
+                this->pfmt->putn(seq, 2);
+              }
+              else {
+                // Write this sequence verbatim.
+                auto from = pos;
+                pos = ::std::find_first_of(pos + 1, str.end(), begin(src_chars), end(src_chars));
+                this->pfmt->putn(&*from, static_cast<size_t>(pos - from));
+              }
             }
             this->pfmt->putc('\'');
           }

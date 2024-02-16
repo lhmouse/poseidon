@@ -43,7 +43,7 @@ main()
 
     hval = &"hello\r\n\tworld";
     POSEIDON_TEST_CHECK(hval.is_blob());
-    POSEIDON_TEST_CHECK(hval.print_to_string() == "\'hello\\r\\n\tworld\'");
+    POSEIDON_TEST_CHECK(hval.print_to_string() == "\'hello\\r\\n\\tworld\'");
 
     hval = &"with\1control";
     POSEIDON_TEST_CHECK(hval.is_blob());
