@@ -55,8 +55,9 @@ print(tinyfmt& fmt) const
             auto pos = str.begin();
             while(pos != str.end()) {
               // https://dev.mysql.com/doc/refman/8.0/en/string-literals.html#character-escape-sequences
-              static constexpr char src_chars[] = { '\0','\'','\"','\b','\n','\r','\t', 26,'\\' };
-              static constexpr char esc_chars[] = {  '0','\'','\"', 'b', 'n', 'r', 't','Z','\\' };
+              //                                    ' " \  \b  \n  \r  \t    \Z \0
+              static constexpr char src_chars[] = "\'\"\\""\b""\n""\r""\t""\x1A";
+              static constexpr char esc_chars[] = "\'\"\\" "b" "n" "r" "t"   "Z""0";
               char my_esc_char = 0;
 
               for(uint32_t k = 0;  k != size(src_chars);  ++k)
