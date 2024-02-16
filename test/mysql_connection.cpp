@@ -19,8 +19,9 @@ main()
     }
     catch(exception& e) {
       ::fprintf(stderr, "could not connect to server: %s\n", e.what());
-      if(::strstr(e.what(), "ERROR 2002:") != nullptr)
-        return 77;
+      return ::strstr(e.what(), "ERROR 2002:")
+                  ? 77  // skip
+                  :  1; // fail
     }
 
     vector<cow_string> fields;
