@@ -187,16 +187,14 @@ print(tinyfmt& fmt) const
           {
             auto pos = ::std::find_if(str.begin(), str.end(), do_is_ctl_or_sep);
             if(pos == str.end()) {
-              // Quoting is not necessary.
+              // Write the string unquoted.
               this->pfmt->putn(str.data(), str.size());
               return;
             }
 
-            // Quote the string. First, write the prefix that needs no quoting.
             this->pfmt->putc('\"');
             this->pfmt->putn(str.data(), (size_t) (pos - str.begin()));
-
-            while(pos != str.end())
+            while(pos != str.end()) {
               if((*pos == '\\') || (*pos == '\"')) {
                 // Escape it.
                 char seq[2] = { '\\', *pos };
@@ -215,7 +213,7 @@ print(tinyfmt& fmt) const
                 pos = ::std::find_if(pos + 1, str.end(), do_is_ctl_or_sep);
                 this->pfmt->putn(&*from, (size_t) (pos - from));
               }
-
+            }
             this->pfmt->putc('\"');
           }
 
