@@ -36,7 +36,8 @@ do_on_abstract_future_execute()
     // Execute the command.
     conn->execute(this->m_res.cmd.data(), this->m_res.cmd.size());
 
-    // Fetch its the reply.
+    // Fetch its reply. We don't do pipelining, so it's assumed that there is
+    // exactly one reply for this command.
     bool fetched = conn->fetch_reply(this->m_res.reply);
 
     POSEIDON_LOG_DEBUG((
