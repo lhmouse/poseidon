@@ -5,8 +5,12 @@
 #define POSEIDON_THIRD_MONGO_FWD_
 
 #include "../fwd.hpp"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
 #include <bson/bson.h>
 #include <mongoc/mongoc.h>
+#pragma GCC diagnostic pop
 namespace poseidon {
 
 class scoped_bson
