@@ -29,15 +29,10 @@ jobs:
       run: >-
            sudo pip3 install meson  # --break-system-packages
 
-    - name: Build and install asteria
+    - name: Build and install submodules
       run: >-
-           git submodule update --init asteria
-           && (cd asteria && ./makedeb.sh && sudo dpkg -i *.deb)
-
-    - name: Build and install http-parser
-      run: >-
-           git submodule update --init http-parser
-           && (cd http-parser && ./makedeb.sh && sudo dpkg -i *.deb)
+           git submodule update --init
+           git submodule foreach 'rm -f *.deb && ./makedeb.sh && sudo dpkg -i *.deb'
 
     - name: Run tests (minimal)
       run: >-
