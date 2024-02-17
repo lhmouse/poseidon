@@ -4,9 +4,6 @@
 [submodule "http-parser"]
 	path = http-parser
 	url = https://github.com/lhmouse/http-parser.git
-[submodule "libmogoc-dev-symlinks"]
-	path = libmogoc-dev-symlinks
-	url = https://github.com/lhmouse/libmogoc-dev-symlinks.git
 [submodule "libmongoc-dev-symlinks"]
 	path = libmongoc-dev-symlinks
 	url = https://github.com/lhmouse/libmongoc-dev-symlinks.git
