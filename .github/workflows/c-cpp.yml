@@ -31,8 +31,8 @@ jobs:
 
     - name: Build and install submodules
       run: >-
-           git submodule update --init
-           git submodule foreach 'rm -f *.deb && ./makedeb.sh && sudo dpkg -i *.deb'
+           git submodule update --init && git submodule foreach
+           'rm -f *.deb && ./makedeb.sh && sudo dpkg -i *.deb'
 
     - name: Run tests (minimal)
       run: >-
