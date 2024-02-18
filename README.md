@@ -18,7 +18,7 @@
 
 # How to build
 
-#### Prerequisite
+#### Install dependencies
 
 ```sh
 # For Debian, Ubuntu, Linux Mint:
@@ -29,26 +29,11 @@ sudo apt-get install ninja-build python3 python3-pip pkgconf g++  \
 sudo pip3 install meson
 ```
 
-#### Build and install Asteria
+#### Build and install submodules
 
 ```sh
 git submodule update --init
-cd asteria/
-git checkout origin/master -B master
-./makedeb.sh
-sudo dpkg -i asteria_*.deb
-cd ..
-```
-
-#### Build and install http-parser
-
-```sh
-git submodule update --init
-cd http-parser/
-git checkout origin/master -B master
-./makedeb.sh
-sudo dpkg -i http-parser_*.deb
-cd ..
+git submodule foreach 'rm -f *.deb && ./makedeb.sh && sudo dpkg -i *.deb'
 ```
 
 #### Build Poseidon
