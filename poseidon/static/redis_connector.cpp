@@ -141,17 +141,17 @@ allocate_connection(cow_stringR server, uint16_t port, cow_stringR user, cow_str
     lock.lock(this->m_pool_mutex);
     this->m_pool.resize(pool_size);
     uniptr<Redis_Connection>* use_slot = nullptr;
-    const steady_time expired_since = steady_clock::now() - idle_timeout;
+    const steady_time now = steady_clock::now();
 
-    for(auto& slot : this->m_pool)
-      if(!slot)
-        continue;
-      else if(slot->m_time_pooled < expired_since)
-        slot.reset();  // expired
-      else if((!use_slot || (slot->m_time_pooled < (*use_slot)->m_time_pooled))
+    for(auto& slot : this->m_pool) {
+      if(slot && (now - slot->m_time_pooled > idle_timeout))
+        slot.reset();
+
+      if(slot && (!use_slot || (slot->m_time_pooled < (*use_slot)->m_time_pooled))
               && (slot->m_server == server) && (slot->m_port == port)
               && (slot->m_user == user))
         use_slot = &slot;
+    }
 
     if(use_slot)
       return move(*use_slot);
@@ -181,17 +181,17 @@ allocate_default_connection()
     lock.lock(this->m_pool_mutex);
     this->m_pool.resize(pool_size);
     uniptr<Redis_Connection>* use_slot = nullptr;
-    const steady_time expired_since = steady_clock::now() - idle_timeout;
+    const steady_time now = steady_clock::now();
 
-    for(auto& slot : this->m_pool)
-      if(!slot)
-        continue;
-      else if(slot->m_time_pooled < expired_since)
-        slot.reset();  // expired
-      else if((!use_slot || (slot->m_time_pooled < (*use_slot)->m_time_pooled))
+    for(auto& slot : this->m_pool) {
+      if(slot && (now - slot->m_time_pooled > idle_timeout))
+        slot.reset();
+
+      if(slot && (!use_slot || (slot->m_time_pooled < (*use_slot)->m_time_pooled))
               && (slot->m_server == server) && (slot->m_port == port)
               && (slot->m_user == user))
         use_slot = &slot;
+    }
 
     if(use_slot)
       return move(*use_slot);
@@ -225,12 +225,15 @@ pool_connection(uniptr<Redis_Connection>&& conn) noexcept
     // Put the connection back into an empty slot.
     lock.lock(this->m_pool_mutex);
     uniptr<Redis_Connection>* use_slot = nullptr;
+    const steady_time now = steady_clock::now();
 
-    for(auto& slot : this->m_pool)
-      if(!slot) {
+    for(auto& slot : this->m_pool) {
+      if(slot && (now - slot->m_time_pooled > idle_timeout))
+        slot.reset();
+
+      if(!slot || !use_slot || (slot->m_time_pooled < (*use_slot)->m_time_pooled))
         use_slot = &slot;
-        break;
-      }
+    }
 
     if(!use_slot)
       return false;
