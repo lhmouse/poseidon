@@ -89,5 +89,5 @@ main()
     hval = datetime_data;
     POSEIDON_TEST_CHECK(hval.is_datetime());
     POSEIDON_TEST_CHECK(hval.as_datetime() == datetime_data);
-    POSEIDON_TEST_CHECK(hval.print_to_string() == R"({$date:"2021-10-07 19:34:51 UTC"})");
+    POSEIDON_TEST_CHECK(hval.print_to_string() == R"({$date:"2021-10-07 19:34:51.000"})");
   }

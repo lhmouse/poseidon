@@ -85,19 +85,19 @@ print(tinyfmt& fmt) const
         void
         operator()(const DateTime_with_MYSQL_TIME& mdt)
           {
+            // `'1994-11-06 08:49:37.123'`
             ::timespec ts;
             ::rocket::ascii_numput ns_nump;
             timespec_from_system_time(ts, mdt.datetime.as_system_time());
             ns_nump.put_DU(static_cast<uint32_t>(ts.tv_nsec), 9);
 
-            // `'1994-11-06 08:49:37.123'`
             char temp[32];
             temp[0] = '\'';
             mdt.datetime.print_iso8601_partial(temp + 1);
+            temp[11] = ' ';
             temp[20] = '.';
             ::memcpy(temp + 21, ns_nump.data(), 4);
             ::memcpy(temp + 24, "\'\0*", 4);
-
             this->pfmt->putn(temp, 25);
           }
       };

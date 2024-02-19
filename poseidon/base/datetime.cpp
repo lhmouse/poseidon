@@ -292,7 +292,7 @@ parse_iso8601_partial(const char* str)
     const char* rptr = str;
     ::tm tm = { };
 
-    // `1994-11-06 08:49:37 UTC`
+    // `1994-11-06T08:49:37Z`
     do_match(rptr, tm.tm_year, s_2digit, 2);
     tm.tm_year = tm.tm_year * 100 - 1900;
     do_match(rptr, tm.tm_year, s_2digit, 2);
@@ -301,13 +301,13 @@ parse_iso8601_partial(const char* str)
     tm.tm_mon -= 1;
     do_match(rptr, "-", 1);
     do_match(rptr, tm.tm_mday, s_2digit, 2);
-    do_match(rptr, " ", 1);
+    do_match(rptr, "T", 1);
     do_match(rptr, tm.tm_hour, s_2digit, 2);
     do_match(rptr, ":", 1);
     do_match(rptr, tm.tm_min, s_2digit, 2);
     do_match(rptr, ":", 1);
     do_match(rptr, tm.tm_sec, s_2digit, 2);
-    do_match(rptr, " UTC", 4);
+    do_match(rptr, "Z", 1);
 
     // Accept nothing if any of the operations above has failed.
     if(rptr == nullptr)
@@ -340,7 +340,7 @@ parse(chars_view str)
       if(size_t aclen = this->parse_cookie_partial(str.p))
         return aclen;
 
-    if(str.n >= 23)
+    if(str.n >= 20)
       if(size_t aclen = this->parse_iso8601_partial(str.p))
         return aclen;
 
@@ -481,20 +481,20 @@ print_iso8601_partial(char* str) const noexcept
     ::tm tm;
     ::gmtime_r(&tp, &tm);
 
-    // `1994-11-06 08:49:37 UTC`
+    // `1994-11-06T08:49:37Z`
     xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_year / 100 + 19], 2);
     xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_year % 100], 2);
     xstrrpcpy(wptr, "-");
     xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_mon + 1], 2);
     xstrrpcpy(wptr, "-");
     xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_mday], 2);
-    xstrrpcpy(wptr, " ");
+    xstrrpcpy(wptr, "T");
     xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_hour], 2);
     xstrrpcpy(wptr, ":");
     xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_min], 2);
     xstrrpcpy(wptr, ":");
     xmemrpcpy(wptr, s_2digit[(uint32_t) tm.tm_sec], 2);
-    xstrrpcpy(wptr, " UTC");
+    xstrrpcpy(wptr, "Z");
 
     // Return the number of characters that have been written.
     return static_cast<size_t>(wptr - str);

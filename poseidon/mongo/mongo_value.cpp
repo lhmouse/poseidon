@@ -179,21 +179,31 @@ print(tinyfmt& fmt) const
         void
         operator()(const ::bson_oid_t& oid)
           {
-            this->pfmt->putn("{$oid:\"", 7);
-            char output[25];
-            ::bson_oid_to_string(&oid, output);
-            this->pfmt->putn(output, 24);
-            this->pfmt->putn("\"}", 2);
+            // `{$oid:"00112233445566778899aabb"}`
+            char temp[40];
+            ::memcpy(temp, "{$oid:\"", 8);
+            ::bson_oid_to_string(&oid, temp + 7);
+            ::memcpy(temp + 31, "\"}\0", 4);
+            this->pfmt->putn(temp, 33);
           }
 
         void
         operator()(const DateTime& dt)
           {
-            this->pfmt->putn("{$date:\"", 8);
-            char output[24];
-            dt.print_iso8601_partial(output);
-            this->pfmt->putn(output, 23);
-            this->pfmt->putn("\"}", 2);
+            // `{$date:"1994-11-06 08:49:37.123"}`
+            ::timespec ts;
+            ::rocket::ascii_numput ns_nump;
+            timespec_from_system_time(ts, dt.as_system_time());
+            ns_nump.put_DU(static_cast<uint32_t>(ts.tv_nsec), 9);
+
+            char temp[40];
+            ::memcpy(temp, "{$date:\"", 8);
+            dt.print_iso8601_partial(temp + 8);
+            temp[18] = ' ';
+            temp[27] = '.';
+            ::memcpy(temp + 28, ns_nump.data(), 4);
+            ::memcpy(temp + 31, "\"}\0", 4);
+            this->pfmt->putn(temp, 33);
           }
       };
 

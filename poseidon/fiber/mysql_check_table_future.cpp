@@ -452,6 +452,7 @@ do_on_abstract_future_execute()
 
                 char def_str[32];
                 column.default_value.as_datetime().print_iso8601_partial(def_str);
+                def_str[10] = ' ';
                 ::memcpy(def_str + 19, ".000000", 8);
                 size_t cmp_len = ex->second.default_value.blob_size();
 
