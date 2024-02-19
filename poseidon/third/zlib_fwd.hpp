@@ -5,6 +5,7 @@
 #define POSEIDON_THIRD_ZLIB_FWD_
 
 #include "../fwd.hpp"
+#include "../base/enums.hpp"
 #define ZLIB_CONST 1
 #define Z_SOLO 1
 #include <zlib.h>

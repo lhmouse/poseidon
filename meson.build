@@ -29,6 +29,7 @@ poseidon_include = [
   'poseidon/static/fiber_scheduler.hpp',
   'poseidon/static/async_task_executor.hpp',
   'poseidon/static/network_driver.hpp',
+  'poseidon/base/enums.hpp',
   'poseidon/base/uuid.hpp',
   'poseidon/base/datetime.hpp',
   'poseidon/base/config_file.hpp',

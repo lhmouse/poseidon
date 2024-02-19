@@ -5,6 +5,7 @@
 #define POSEIDON_BASE_ABSTRACT_ASYNC_TASK_
 
 #include "../fwd.hpp"
+#include "enums.hpp"
 namespace poseidon {
 
 class Abstract_Async_Task

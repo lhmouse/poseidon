@@ -5,16 +5,16 @@
 #define POSEIDON_FIBER_ABSTRACT_FIBER_
 
 #include "../fwd.hpp"
+#include "../base/enums.hpp"
 namespace poseidon {
 
 class Abstract_Fiber
   {
   private:
     friend class Fiber_Scheduler;
+    using yield_function = void (Fiber_Scheduler*, shptrR<Abstract_Future>, milliseconds);
 
     atomic_relaxed<Async_State> m_state;
-
-    using yield_function = void (Fiber_Scheduler*, shptrR<Abstract_Future>, milliseconds);
     yield_function* m_yield = nullptr;
     Fiber_Scheduler* m_sched = nullptr;
 
