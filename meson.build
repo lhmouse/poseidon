@@ -312,8 +312,10 @@ dep_openssl = dependency('openssl', version: '>= 3.0.0')
 dep_zlib = dependency('zlib', version: '>= 1.2.9')
 dep_libmagic = dependency('libmagic')
 dep_http_parser = cxx.find_library('http_parser')
+dep_uuid = dependency('uuid')
 
-add_project_dependencies(dep_pthread, dep_asteria, language: 'cpp')
+add_project_dependencies(dep_pthread, language: 'cpp')
+add_project_dependencies(dep_asteria, language: 'cpp')
 
 #===========================================================
 # Optional dependencies
@@ -370,7 +372,8 @@ lib_poseidon = shared_library('poseidon',
       cpp_pch: 'poseidon/xprecompiled.hpp',
       sources: [ poseidon_src ],
       dependencies: [ dep_libunwind, dep_openssl, dep_http_parser, dep_zlib,
-                      dep_libmagic, dep_mysqlclient, dep_mongoc, dep_hiredis ],
+                      dep_libmagic, dep_mysqlclient, dep_mongoc, dep_hiredis,
+                      dep_uuid ],
       soversion: ver.get('abi_major'),
       version: '.'.join([ ver.get('abi_major'), ver.get('abi_minor'), '0' ]),
       install: true)

@@ -25,7 +25,7 @@
 # There is usually an outdated version of meson in the system APT source. Do
 # not use it; instead, install the latest one from pip.
 sudo apt-get install ninja-build python3 python3-pip pkgconf g++  \
-        libpcre2-dev libssl-dev zlib1g-dev libedit-dev
+        libpcre2-dev libssl-dev zlib1g-dev libedit-dev uuid-dev
 sudo pip3 install meson
 ```
 
