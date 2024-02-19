@@ -54,6 +54,11 @@ next_element()
     const char* sptr = this->m_hstr.c_str() + this->m_hpos;
     const char* const esptr = this->m_hstr.c_str() + this->m_hstr.size();
 
+    // Each ASCII character that is allowed in a query string has its
+    // corresponding bit set to zero.
+    // Reference: https://www.rfc-editor.org/rfc/rfc3986#section-3.4
+    static constexpr uint32_t bad_chars[4] = { 0xFFFFFFFF, 0x5000000D, 0x78000000, 0xB8000001 };
+
     // Get a name-value pair. If a plain equals sign is encountered, it shall
     // separate the value from the name。
     this->m_name.clear();
@@ -63,12 +68,9 @@ next_element()
     while(sptr != esptr) {
       uint32_t ch = (uint8_t) *sptr;
       if(ch < 128) {
-        // Each ASCII character that is allowed in a query string has its
-        // corresponding bit set to zero.
-        // Reference: https://www.rfc-editor.org/rfc/rfc3986#section-3.4
-        static constexpr array<uint32_t, 4> bad_chars = { 0xFFFFFFFF, 0x5000000D, 0x78000000, 0xB8000001 };
-        if((bad_chars.at(ch / 32) >> ch % 32) & 1) {
-          POSEIDON_LOG_DEBUG(("Invalid character encountered at `$1`"), chars_view(sptr, ::strnlen(sptr, 40)));
+        if((bad_chars[ch / 32] >> (ch % 32)) & 1) {
+          POSEIDON_LOG_DEBUG(("Invalid character encountered at `$1`"),
+                              chars_view(sptr, ::strnlen(sptr, 40)));
           this->m_hpos = error_hpos;
           return false;
         }
@@ -80,7 +82,8 @@ next_element()
         else if(ch == '%') {
           // Expect two hexadecimal digits.
           if(esptr - sptr < 3) {
-            POSEIDON_LOG_DEBUG(("Invalid percent-encoding sequence encountered at `$1`"), chars_view(sptr, ::strnlen(sptr, 40)));
+            POSEIDON_LOG_DEBUG(("Invalid percent-encoding sequence encountered at `$1`"),
+                                chars_view(sptr, ::strnlen(sptr, 40)));
             this->m_hpos = error_hpos;
             return false;
           }
@@ -92,7 +95,8 @@ next_element()
           else if((sptr[1] >= 'a') && (sptr[1] <= 'f'))
             ch = (uint32_t) ((uint8_t) sptr[1] - 'a' + 10) << 4;
           else {
-            POSEIDON_LOG_DEBUG(("Invalid hexadecimal character encountered at `$1`"), chars_view(sptr, ::strnlen(sptr, 40)));
+            POSEIDON_LOG_DEBUG(("Invalid hexadecimal character encountered at `$1`"),
+                               chars_view(sptr, ::strnlen(sptr, 40)));
             this->m_hpos = error_hpos;
             return false;
           }
@@ -104,7 +108,8 @@ next_element()
           else if((sptr[2] >= 'a') && (sptr[2] <= 'f'))
             ch |= (uint32_t) ((uint8_t) sptr[2] - 'a' + 10);
           else {
-            POSEIDON_LOG_DEBUG(("Invalid hexadecimal character encountered at `$1`"), chars_view(sptr, ::strnlen(sptr, 40)));
+            POSEIDON_LOG_DEBUG(("Invalid hexadecimal character encountered at `$1`"),
+                                chars_view(sptr, ::strnlen(sptr, 40)));
             this->m_hpos = error_hpos;
             return false;
           }
