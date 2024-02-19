@@ -3,7 +3,7 @@
 
 #include "xprecompiled.hpp"
 #include "utils.hpp"
-#include <openssl/rand.h>
+#include <uuid/uuid.h>
 namespace poseidon {
 
 cow_string
@@ -154,39 +154,12 @@ hex_encode_16_partial(char* str, const void* data) noexcept
 uint32_t
 random_uint32() noexcept
   {
-    uint32_t bits;
-    ::RAND_bytes((uint8_t*) &bits, sizeof(bits));
-    return bits;
-  }
+    ::uuid_t temp;
+    ::uuid_generate_random(temp);
 
-uint64_t
-random_uint64() noexcept
-  {
-    uint64_t bits;
-    ::RAND_bytes((uint8_t*) &bits, sizeof(bits));
-    return bits;
-  }
-
-float
-random_float() noexcept
-  {
-    uint32_t bits;
-    ::RAND_bytes((uint8_t*) &bits, sizeof(bits));
-    bits = 0x7FU << 23 | bits >> 9;  // 1:8:23
-    float valp1;
-    ::memcpy(&valp1, &bits, sizeof(valp1));
-    return valp1 - 1;
-  }
-
-double
-random_double() noexcept
-  {
-    uint64_t bits;
-    ::RAND_bytes((uint8_t*) &bits, sizeof(bits));
-    bits = 0x3FFULL << 52 | bits >> 12;  // 1:11:52
-    double valp1;
-    ::memcpy(&valp1, &bits, sizeof(valp1));
-    return valp1 - 1;
+    uint32_t bytes;
+    ::memcpy(&bytes, temp + 12, 4);
+    return bytes;
   }
 
 size_t

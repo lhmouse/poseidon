@@ -494,6 +494,14 @@ do_write_pid_file()
 
 ROCKET_NEVER_INLINE
 void
+do_seed_random()
+  {
+    ::srand(random_uint32());
+    ::srand48(static_cast<long>(random_uint32()));
+  }
+
+ROCKET_NEVER_INLINE
+void
 do_check_ulimits()
   {
     ::rlimit rlim;
@@ -590,8 +598,7 @@ main(int argc, char** argv)
     do_check_ulimits();
     do_init_signal_handlers();
     do_write_pid_file();
-    ::srand(random_uint32());
-    ::srand48(static_cast<long>(random_uint64()));
+    do_seed_random();
 
 #ifdef POSEIDON_ENABLE_MYSQL
     mysql_connector.reload(main_config.copy());

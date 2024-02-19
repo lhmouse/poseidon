@@ -77,21 +77,10 @@ implode(const vector<cow_string>& segments, char delim = ',');
 void
 hex_encode_16_partial(char* str, const void* data) noexcept;
 
-// Generates a cryptographically secure random integer in [0,UINT32_MAX].
+// Generates a cryptographically secure random integer in [0,UINT32_MAX]. Please
+// be advised that this function may be very slow.
 uint32_t
 random_uint32() noexcept;
-
-// Generates a cryptographically secure random integer in [0,UINT64_MAX].
-uint64_t
-random_uint64() noexcept;
-
-// Generates a cryptographically secure random integer in [0,1).
-float
-random_float() noexcept;
-
-// Generates a cryptographically secure random integer in [0,1).
-double
-random_double() noexcept;
 
 // This resembles a URI without the `scheme://` and `userinfo@` parts.
 struct Network_Reference
