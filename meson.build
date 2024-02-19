@@ -371,7 +371,7 @@ lib_poseidon = shared_library('poseidon',
       dependencies: [ dep_libunwind, dep_openssl, dep_http_parser, dep_zlib,
                       dep_libmagic, dep_mysqlclient, dep_mongoc, dep_hiredis ],
       soversion: ver.get('abi_major'),
-      version: '@0@.@1@.@2@'.format(ver.get('abi_major'), ver.get('abi_minor'), 0),
+      version: '.'.join([ ver.get('abi_major'), ver.get('abi_minor'), '0' ]),
       install: true)
 
 import('pkgconfig').generate(lib_poseidon,
