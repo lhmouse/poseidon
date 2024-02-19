@@ -400,8 +400,8 @@ install_data(etc_poseidon, install_dir: '.', preserve_path: true)
 # Rules for example libraries
 #===========================================================
 foreach src: example_src
-  name = src.replace('.cpp', '').underscorify()
-  shared_module('poseidon-' + name, src,
+  shared_module('poseidon-' + src.replace('.cpp', '').underscorify(),
+                src,
                 link_with: lib_poseidon,
                 install: true)
 endforeach
