@@ -22,11 +22,11 @@ splice_buffers(linear_buffer& out, linear_buffer&& in)
 
     // Don't bother making a copy if `out` is empty.
     if(ROCKET_EXPECT(out.empty()))
-      out.swap(in);
-    else {
-      out.putn(in.data(), in.size());
-      in.clear();
-    }
+      return out.swap(in);
+
+    // Copy bytes from `in`, then clear it.
+    out.putn(in.data(), in.size());
+    in.clear();
     return out;
   }
 
