@@ -119,7 +119,7 @@ do_classify_ipv6_generic(const char* addr) noexcept
 
 }  // namespace
 
-#define DOCUMENTATION_   32,1,13,184,243,151,214,23,74,162,130,224,   // 2001:db8::/32, generated with 'UUID'
+#define DOCUMENTATION_   32,1,13,184,243,151,214,23,74,162,130,224,   // 2001:db8::/32; random
 #define IPV4_MAPPED_     0,0,0,0,0,0,0,0,0,0,255,255,  // ::ffff:0:0/96
 
 const Socket_Address ipv6_unspecified   = { (::in6_addr)   IN6ADDR_ANY_INIT,                0 };
