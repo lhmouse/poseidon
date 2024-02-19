@@ -9,6 +9,7 @@
 #include "static/timer_driver.hpp"
 #include "static/async_task_executor.hpp"
 #include "static/network_driver.hpp"
+#include <locale.h>
 #define UNW_LOCAL_ONLY  1
 #include <libunwind.h>
 #include <cxxabi.h>
@@ -23,6 +24,7 @@
 #endif
 namespace poseidon {
 
+const ::locale_t c_locale = ::newlocale(0, "C", nullptr);
 atomic_relaxed<int> exit_signal;
 Main_Config& main_config = *new Main_Config;
 Async_Logger& async_logger = *new Async_Logger;
