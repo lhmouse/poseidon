@@ -574,7 +574,6 @@ backtrace_and_throw(const Log_Context& ctx, vfptr<cow_string&, void*> thunk, voi
     }))
 
 // Base types
-enum zlib_Format : uint8_t;
 enum Async_State : uint8_t;
 class UUID;
 class DateTime;

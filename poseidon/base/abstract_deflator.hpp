@@ -15,7 +15,7 @@ class Abstract_Deflator
 
   public:
     // Constructs a data compressor.
-    explicit Abstract_Deflator(zlib_Format format, int level = -1);
+    explicit Abstract_Deflator(zlib_Format format, int level = Z_DEFAULT_COMPRESSION);
 
   protected:
     // This callback is invoked to request an output buffer if none has been
