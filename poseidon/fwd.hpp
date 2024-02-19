@@ -41,7 +41,23 @@ using ::poseidon_addon_main;
 #define POSEIDON_VISIBILITY_HIDDEN   \
   __attribute__((__visibility__("hidden"))) inline
 
-#define POSEIDON_USING    template<typename... Ts> using
+#define POSEIDON_USING  \
+  template<typename... Ts> using
+
+#define POSEIDON_SYSCALL_LOOP(...)  \
+    __extension__ ({  \
+      auto wdLAlUiJ = (__VA_ARGS__);  \
+      while(ROCKET_UNEXPECT(wdLAlUiJ < 0) && (errno == EINTR))  \
+        /* retry */ wdLAlUiJ = (__VA_ARGS__);  \
+      wdLAlUiJ;  \
+    })
+
+#define POSEIDON_CATCH_ALL(...)  \
+    (__extension__ ({  \
+      try { (void) (__VA_ARGS__);  }  \
+      catch(::std::exception&) { }  \
+      (void) 0;  \
+    }))
 
 // Aliases
 using ::std::initializer_list;
@@ -176,6 +192,118 @@ using ::rocket::xmemrpcpy;
 
 using ::asteria::format;
 using ::asteria::format_string;
+
+// Base types
+enum Async_State : uint8_t;
+class UUID;
+class DateTime;
+class Config_File;
+class Abstract_Timer;
+class Abstract_Async_Task;
+class Abstract_Deflator;
+class Abstract_Inflator;
+
+// Fiber types
+class Abstract_Fiber;
+class Abstract_Future;
+class DNS_Query_Future;
+class Read_File_Future;
+class MySQL_Query_Future;
+class MySQL_Check_Table_Future;
+class Mongo_Query_Future;
+class Redis_Query_Future;
+
+// Socket types
+enum IP_Address_Class : uint8_t;
+enum Socket_State : uint8_t;
+enum HTTP_Payload_Type : uint8_t;
+enum WebSocket_OpCode : uint8_t;
+class Socket_Address;
+class Abstract_Socket;
+class Listen_Socket;
+class UDP_Socket;
+class TCP_Socket;
+class SSL_Socket;
+class HTTP_Server_Session;
+class HTTP_Client_Session;
+class HTTPS_Server_Session;
+class HTTPS_Client_Session;
+class WS_Server_Session;
+class WS_Client_Session;
+class WSS_Server_Session;
+class WSS_Client_Session;
+class Async_Connect;
+
+// HTTP types
+class HTTP_Value;
+class HTTP_Header_Parser;
+class HTTP_Query_Parser;
+struct HTTP_Request_Headers;
+class HTTP_Request_Parser;
+struct HTTP_Response_Headers;
+class HTTP_Response_Parser;
+struct WebSocket_Frame_Header;
+class WebSocket_Frame_Parser;
+class WebSocket_Deflator;
+
+// MySQL types
+enum MySQL_Column_Type : uint8_t;
+enum MySQL_Index_Type : uint8_t;
+enum MySQL_Engine_Type : uint8_t;
+enum MySQL_Value_Type : uint8_t;
+class MySQL_Table_Structure;
+class MySQL_Value;
+class MySQL_Connection;
+
+// MongoDB types
+enum Mongo_Value_Type : uint8_t;
+class Mongo_Value;
+using Mongo_Array = ::asteria::cow_vector<Mongo_Value>;
+using Mongo_Document = ::asteria::cow_bivector<cow_string, Mongo_Value>;
+class Mongo_Connection;
+
+// Redis types
+enum Redis_Value_Type : uint8_t;
+class Redis_Value;
+using Redis_Array = ::asteria::cow_vector<Redis_Value>;
+class Redis_Connection;
+
+// Easy types
+// Being 'easy' means all callbacks are invoked in fibers and can perform
+// async/await operations. These are suitable for agile development.
+enum Easy_Stream_Event : uint8_t;  // TCP, SSL
+enum Easy_HTTP_Event : uint8_t;  // HTTP, HTTPS
+enum Easy_WS_Event : uint8_t;  // WS, WSS
+class Easy_Timer;
+class Easy_UDP_Server;
+class Easy_UDP_Client;
+class Easy_TCP_Server;
+class Easy_TCP_Client;
+class Easy_SSL_Server;
+class Easy_SSL_Client;
+class Easy_HTTP_Server;
+class Easy_HTTP_Client;
+class Easy_HTTPS_Server;
+class Easy_HTTPS_Client;
+class Easy_WS_Server;
+class Easy_WS_Client;
+class Easy_WSS_Server;
+class Easy_WSS_Client;
+
+// Singletons
+extern const ::locale_t c_locale;
+extern atomic_relaxed<int> exit_signal;
+extern class Main_Config& main_config;
+extern class Async_Logger& async_logger;
+
+extern class Timer_Driver& timer_driver;
+extern class Async_Task_Executor& async_task_executor;
+extern class Network_Driver& network_driver;
+extern class Fiber_Scheduler& fiber_scheduler;
+
+extern class MySQL_Connector& mysql_connector;
+extern class Mongo_Connector& mongo_connector;
+extern class Redis_Connector& redis_connector;
 
 // utilities
 struct cacheline_barrier
@@ -487,7 +615,7 @@ new_sh(xValue&& value)
 // Logging and error reporting (diagnostics)
 // Each level corresponds to an element in `logger.colors` in 'main.conf'. It
 // determines how messages are colorized and where to write them,
-enum Log_Level
+enum Log_Level : uint8_t
   {
     log_level_fatal  = 0,
     log_level_error  = 1,
@@ -554,136 +682,6 @@ backtrace_and_throw(const Log_Context& ctx, vfptr<cow_string&, void*> thunk, voi
       ::poseidon::backtrace_and_throw(Muu3lei1, Uc3zohpa, &eTho2Ebu);  \
       true;  \
     })
-
-// Performs a syscall, retrying upon interrupts. The arguments may be evaluated
-// more than once.
-#define POSEIDON_SYSCALL_LOOP(...)  \
-    __extension__ ({  \
-      auto wdLAlUiJ = (__VA_ARGS__);  \
-      while(ROCKET_UNEXPECT(wdLAlUiJ < 0) && (errno == EINTR))  \
-        /* retry */ wdLAlUiJ = (__VA_ARGS__);  \
-      wdLAlUiJ;  \
-    })
-
-// Evaluates an expression, catching and ignoring exceptions.
-#define POSEIDON_CATCH_ALL(...)  \
-    (__extension__ ({  \
-      try { (void) (__VA_ARGS__);  }  \
-      catch(::std::exception&) { }  \
-      (void) 0;  \
-    }))
-
-// Base types
-enum Async_State : uint8_t;
-class UUID;
-class DateTime;
-class Config_File;
-class Abstract_Timer;
-class Abstract_Async_Task;
-class Abstract_Deflator;
-class Abstract_Inflator;
-
-// Fiber types
-class Abstract_Fiber;
-class Abstract_Future;
-class DNS_Query_Future;
-class Read_File_Future;
-class MySQL_Query_Future;
-class MySQL_Check_Table_Future;
-class Mongo_Query_Future;
-class Redis_Query_Future;
-
-// Socket types
-enum IP_Address_Class : uint8_t;
-enum Socket_State : uint8_t;
-enum HTTP_Payload_Type : uint8_t;
-enum WebSocket_OpCode : uint8_t;
-class Socket_Address;
-class Abstract_Socket;
-class Listen_Socket;
-class UDP_Socket;
-class TCP_Socket;
-class SSL_Socket;
-class HTTP_Server_Session;
-class HTTP_Client_Session;
-class HTTPS_Server_Session;
-class HTTPS_Client_Session;
-class WS_Server_Session;
-class WS_Client_Session;
-class WSS_Server_Session;
-class WSS_Client_Session;
-class Async_Connect;
-
-// HTTP types
-class HTTP_Value;
-class HTTP_Header_Parser;
-class HTTP_Query_Parser;
-struct HTTP_Request_Headers;
-class HTTP_Request_Parser;
-struct HTTP_Response_Headers;
-class HTTP_Response_Parser;
-struct WebSocket_Frame_Header;
-class WebSocket_Frame_Parser;
-class WebSocket_Deflator;
-
-// MySQL types
-enum MySQL_Column_Type : uint8_t;
-enum MySQL_Index_Type : uint8_t;
-enum MySQL_Engine_Type : uint8_t;
-enum MySQL_Value_Type : uint8_t;
-class MySQL_Table_Structure;
-class MySQL_Value;
-class MySQL_Connection;
-
-// MongoDB types
-enum Mongo_Value_Type : uint8_t;
-class Mongo_Value;
-using Mongo_Array = ::asteria::cow_vector<Mongo_Value>;
-using Mongo_Document = ::asteria::cow_bivector<cow_string, Mongo_Value>;
-class Mongo_Connection;
-
-// Redis types
-enum Redis_Value_Type : uint8_t;
-class Redis_Value;
-using Redis_Array = ::asteria::cow_vector<Redis_Value>;
-class Redis_Connection;
-
-// Easy types
-// Being 'easy' means all callbacks are invoked in fibers and can perform
-// async/await operations. These are suitable for agile development.
-enum Easy_Stream_Event : uint8_t;  // TCP, SSL
-enum Easy_HTTP_Event : uint8_t;  // HTTP, HTTPS
-enum Easy_WS_Event : uint8_t;  // WS, WSS
-class Easy_Timer;
-class Easy_UDP_Server;
-class Easy_UDP_Client;
-class Easy_TCP_Server;
-class Easy_TCP_Client;
-class Easy_SSL_Server;
-class Easy_SSL_Client;
-class Easy_HTTP_Server;
-class Easy_HTTP_Client;
-class Easy_HTTPS_Server;
-class Easy_HTTPS_Client;
-class Easy_WS_Server;
-class Easy_WS_Client;
-class Easy_WSS_Server;
-class Easy_WSS_Client;
-
-// Singletons
-extern const ::locale_t c_locale;
-extern atomic_relaxed<int> exit_signal;
-extern class Main_Config& main_config;
-extern class Async_Logger& async_logger;
-
-extern class Timer_Driver& timer_driver;
-extern class Async_Task_Executor& async_task_executor;
-extern class Network_Driver& network_driver;
-extern class Fiber_Scheduler& fiber_scheduler;
-
-extern class MySQL_Connector& mysql_connector;
-extern class Mongo_Connector& mongo_connector;
-extern class Redis_Connector& redis_connector;
 
 }  // namespace poseidon
 #endif

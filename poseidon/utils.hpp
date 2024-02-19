@@ -5,9 +5,53 @@
 #define POSEIDON_UTILS_
 
 #include "fwd.hpp"
-#include <asteria/utils.hpp>
-#include <cstdio>
 namespace poseidon {
+
+// Converts all ASCII letters in a string into uppercase.
+cow_string
+ascii_uppercase(cow_string text);
+
+// Converts all ASCII letters in a string into lowercase.
+cow_string
+ascii_lowercase(cow_string text);
+
+// Removes all leading and trailing blank characters.
+cow_string
+ascii_trim(cow_string text);
+
+// Checks whether two strings compare equal.
+constexpr
+bool
+ascii_ci_equal(cow_stringR str, cow_stringR cmp) noexcept
+  {
+    return ::rocket::ascii_ci_equal(str.data(), str.size(), cmp.data(), cmp.size());
+  }
+
+constexpr
+bool
+ascii_ci_equal(cow_stringR str, const char* sp) noexcept
+  {
+    return ::rocket::ascii_ci_equal(str.data(), str.size(), sp, ::rocket::xstrlen(sp));
+  }
+
+// Splits a string into a vector of tokens, and vice versa.
+void
+explode(vector<cow_string>& segments, cow_stringR text, char delim = ',', size_t limit = SIZE_MAX);
+
+vector<cow_string>
+explode(cow_stringR text, char delim = ',', size_t limit = SIZE_MAX);
+
+void
+implode(cow_string& text, const cow_string* segment_ptr, size_t segment_count, char delim = ',');
+
+cow_string
+implode(const cow_string* segment_ptr, size_t segment_count, char delim = ',');
+
+void
+implode(cow_string& text, const vector<cow_string>& segments, char delim = ',');
+
+cow_string
+implode(const vector<cow_string>& segments, char delim = ',');
 
 // Splices two buffers. After this function returns, `in` will be empty.
 inline
@@ -29,48 +73,6 @@ splice_buffers(linear_buffer& out, linear_buffer&& in)
     in.clear();
     return out;
   }
-
-// Converts all ASCII letters in a string into uppercase.
-cow_string
-ascii_uppercase(cow_string text);
-
-// Converts all ASCII letters in a string into lowercase.
-cow_string
-ascii_lowercase(cow_string text);
-
-// Removes all leading and trailing blank characters.
-cow_string
-ascii_trim(cow_string text);
-
-// Checks whether two strings compare equal.
-constexpr
-bool
-ascii_ci_equal(cow_stringR str, cow_stringR cmp) noexcept
-  { return ::rocket::ascii_ci_equal(str.data(), str.size(), cmp.data(), cmp.size());  }
-
-constexpr
-bool
-ascii_ci_equal(cow_stringR str, const char* sp) noexcept
-  { return ::rocket::ascii_ci_equal(str.data(), str.size(), sp, ::rocket::xstrlen(sp));  }
-
-// Splits a string into a vector of tokens, and vice versa.
-void
-explode(vector<cow_string>& segments, cow_stringR text, char delim = ',', size_t limit = SIZE_MAX);
-
-vector<cow_string>
-explode(cow_stringR text, char delim = ',', size_t limit = SIZE_MAX);
-
-void
-implode(cow_string& text, const cow_string* segment_ptr, size_t segment_count, char delim = ',');
-
-cow_string
-implode(const cow_string* segment_ptr, size_t segment_count, char delim = ',');
-
-void
-implode(cow_string& text, const vector<cow_string>& segments, char delim = ',');
-
-cow_string
-implode(const vector<cow_string>& segments, char delim = ',');
 
 // Converts 16 bytes into a hexadecimal string. Exactly 33 characters will be
 // written, including a null terminator.
