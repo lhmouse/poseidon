@@ -20,9 +20,12 @@ struct Level_Config
 
 struct Log_Message
   {
-    Log_Context ctx;
+    uint32_t level : 8;
+    uint32_t thrd_lwpid : 24;
     char thrd_name[16] = "unknown";
-    uint32_t thrd_lwpid;
+    const char* func;
+    const char* file;
+    uint32_t line;
     cow_string text;
   };
 
@@ -241,14 +244,14 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
 
     // Write the source location and enclosing function.
     do_color(mtext, lconf, "34");  // blue
-    mtext.puts("source '");
-    mtext.puts(msg.ctx.file);
+    mtext.puts("inside function `");
+    mtext.puts(msg.func);
+    mtext.puts("` at '");
+    mtext.puts(msg.file);
     mtext.putc(':');
-    nump.put_DU(msg.ctx.line);
+    nump.put_DU(msg.line);
     mtext.putn(nump.data(), nump.size());
-    mtext.puts("' inside function `");
-    mtext.puts(msg.ctx.func);
-    mtext.puts("`" NEL_HT_);
+    mtext.puts("'" NEL_HT_);
 
     // Append a genuine new line for grep'ing.
     mtext.unaccept(1);
@@ -296,16 +299,16 @@ reload(const Config_File& conf_file)
     this->m_conf_level_bits.store(UINT32_MAX);
 
     // Parse new configuration.
-    cow_vector<X_Level_Config> levels(6);
+    cow_vector<X_Level_Config> levels;
+    levels.reserve(6);
+    do_load_level_config(levels.emplace_back(), conf_file, "fatal");
+    do_load_level_config(levels.emplace_back(), conf_file, "error");
+    do_load_level_config(levels.emplace_back(), conf_file, "warn");
+    do_load_level_config(levels.emplace_back(), conf_file, "info");
+    do_load_level_config(levels.emplace_back(), conf_file, "debug");
+    do_load_level_config(levels.emplace_back(), conf_file, "trace");
+
     uint32_t level_bits = 0;
-
-    do_load_level_config(levels.mut(log_level_trace), conf_file, "trace");
-    do_load_level_config(levels.mut(log_level_debug), conf_file, "debug");
-    do_load_level_config(levels.mut(log_level_info ), conf_file, "info" );
-    do_load_level_config(levels.mut(log_level_warn ), conf_file, "warn" );
-    do_load_level_config(levels.mut(log_level_error), conf_file, "error");
-    do_load_level_config(levels.mut(log_level_fatal), conf_file, "fatal");
-
     for(size_t k = 0;  k != levels.size();  ++k)
       if(levels[k].files.size() != 0)
         level_bits |= 1U << k;
@@ -330,6 +333,7 @@ thread_loop()
     recursive_mutex::unique_lock io_sync_lock(this->m_io_mutex);
     this->m_io_queue.clear();
     this->m_io_queue.swap(this->m_queue);
+    bool too_much = this->m_io_queue.size() <= 1024U;
     lock.unlock();
 
     // Get configuration of all levels.
@@ -339,8 +343,8 @@ thread_loop()
 
     // Write all elements.
     for(const auto& msg : this->m_io_queue)
-      if((this->m_io_queue.size() <= 1024U) || (levels.at(msg.ctx.level).trivial == false))
-        do_write_nothrow(levels.at(msg.ctx.level), msg);
+      if((msg.level < levels.size()) && !(too_much && levels[msg.level].trivial))
+        do_write_nothrow(levels[msg.level], msg);
 
     this->m_io_queue.clear();
     io_sync_lock.unlock();
@@ -349,13 +353,16 @@ thread_loop()
 
 void
 Async_Logger::
-enqueue(const Log_Context& ctx, cow_stringR text)
+enqueue(uint8_t level, const char* func, const char* file, uint32_t line, cow_stringR text)
   {
     // Fill in the name and LWP ID of the calling thread.
     X_Log_Message msg;
-    msg.ctx = ctx;
+    msg.level = level;
+    msg.thrd_lwpid = (uint32_t) ::syscall(SYS_gettid) & 0xFFFFFFU;
     ::pthread_getname_np(::pthread_self(), msg.thrd_name, sizeof(msg.thrd_name));
-    msg.thrd_lwpid = static_cast<uint32_t>(::syscall(SYS_gettid));
+    msg.func = func;
+    msg.file = file;
+    msg.line = line;
     msg.text = text;
 
     // Enqueue the element.
@@ -385,8 +392,8 @@ synchronize() noexcept
 
     // Write all elements.
     for(const auto& msg : this->m_io_queue)
-      if(msg.ctx.level < levels.size())
-        do_write_nothrow(levels[msg.ctx.level], msg);
+      if(msg.level < levels.size())
+        do_write_nothrow(levels[msg.level], msg);
 
     this->m_io_queue.clear();
     io_sync_lock.unlock();

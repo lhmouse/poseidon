@@ -120,8 +120,8 @@ int
 do_exit_printf(int code, const char* fmt = nullptr, ...) noexcept
   {
     // Wait for pending logs to be flushed.
-    async_logger.synchronize();
     ::fflush(nullptr);
+    async_logger.synchronize();
 
     if(fmt) {
       // Output the string to standard error.

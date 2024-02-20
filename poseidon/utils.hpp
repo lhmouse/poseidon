@@ -5,6 +5,7 @@
 #define POSEIDON_UTILS_
 
 #include "fwd.hpp"
+#include "static/async_logger.hpp"
 namespace poseidon {
 
 // Converts all ASCII letters in a string into uppercase.
@@ -110,6 +111,51 @@ parse_network_reference(Network_Reference& caddr, chars_view str) noexcept;
 // core dump file. This is primarily used to protect passwords.
 void
 mask_string(char* data, size_t size, uint32_t* next_mask_key_opt, uint32_t mask_key) noexcept;
+
+// These are internal functions.
+bool
+enqueue_log_message(vfptr<cow_string&, void*> composer_thunk, void* composer,
+                    uint8_t level, const char* func, const char* file, uint32_t line) noexcept;
+
+::std::runtime_error
+create_runtime_error(vfptr<cow_string&, void*> composer_thunk, void* composer,
+                     const char* func, const char* file, uint32_t line);
+
+// Compose a log message and enqueue it into the global logger. The `TEMPLATE`
+// argument shall be a list of string literals in parentheses. Multiple strings
+// are joined with line separators. `format()` is to be found via ADL.
+#define POSEIDON_LOG_(LEVEL, TEMPLATE, ...)  \
+    (::poseidon::async_logger.enabled(LEVEL)  \
+     && __extension__  \
+       ({  \
+         auto IuChah0u = [&](::asteria::cow_string& quu1Opae)  \
+           { format(quu1Opae, (::asteria::make_string_template TEMPLATE), ##__VA_ARGS__);  };  \
+         auto ohng0Ohh = [](::asteria::cow_string& iughih5B, void* fi8OhNgo)  \
+           { (*static_cast<decltype(IuChah0u)*>(fi8OhNgo)) (iughih5B);  };  \
+         ::poseidon::enqueue_log_message(+ohng0Ohh, &IuChah0u, LEVEL,  \
+             __func__, __FILE__, __LINE__);  \
+       }))
+
+#define POSEIDON_LOG_FATAL(...)   POSEIDON_LOG_(0U, __VA_ARGS__)
+#define POSEIDON_LOG_ERROR(...)   POSEIDON_LOG_(1U, __VA_ARGS__)
+#define POSEIDON_LOG_WARN(...)    POSEIDON_LOG_(2U, __VA_ARGS__)
+#define POSEIDON_LOG_INFO(...)    POSEIDON_LOG_(3U, __VA_ARGS__)
+#define POSEIDON_LOG_DEBUG(...)   POSEIDON_LOG_(4U, __VA_ARGS__)
+#define POSEIDON_LOG_TRACE(...)   POSEIDON_LOG_(5U, __VA_ARGS__)
+
+// Throws an `std::runtime_error` object. The `TEMPLATE` argument shall be a
+// list of string literals in parentheses. Multiple strings are joined with
+// line separators. `format()` is to be found via ADL.
+#define POSEIDON_THROW(TEMPLATE, ...)  \
+    throw (__extension__  \
+       ({  \
+         auto IuChah0u = [&](::asteria::cow_string& quu1Opae)  \
+           { format(quu1Opae, (::asteria::make_string_template TEMPLATE), ##__VA_ARGS__);  };  \
+         auto ohng0Ohh = [](::asteria::cow_string& iughih5B, void* fi8OhNgo)  \
+           { (*static_cast<decltype(IuChah0u)*>(fi8OhNgo)) (iughih5B);  };  \
+         ::poseidon::create_runtime_error(+ohng0Ohh, &IuChah0u,  \
+             __func__, __FILE__, __LINE__);  \
+       }))
 
 }  // namespace poseidon
 #endif

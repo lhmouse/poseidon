@@ -61,6 +61,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include <wchar.h>
+#include <cxxabi.h>
 #ifdef __SSE2__
 #include <x86intrin.h>
 #include <immintrin.h>
