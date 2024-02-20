@@ -29,11 +29,6 @@ extern "C++" void poseidon_addon_main(void);  // see below
 namespace poseidon {
 namespace noadl = poseidon;
 
-// Entry point procedure for add-ons
-// This function is to be defined by users. It will be called after an add-on
-// is loaded.
-using ::poseidon_addon_main;
-
 // Macros
 #define POSEIDON_HIDDEN_X_STRUCT(C, S)  \
   struct __attribute__((__visibility__("hidden"))) C::X_##S  \
@@ -309,6 +304,11 @@ extern class Fiber_Scheduler& fiber_scheduler;
 extern class MySQL_Connector& mysql_connector;
 extern class Mongo_Connector& mongo_connector;
 extern class Redis_Connector& redis_connector;
+
+// Entry point procedure for add-ons
+// This function is to be defined by users. It will be called after an add-on
+// is loaded.
+using ::poseidon_addon_main;
 
 // utilities
 struct cacheline_barrier
