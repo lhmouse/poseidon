@@ -151,6 +151,30 @@ POSEIDON_USING wkptr = ::std::weak_ptr<Ts...>;
 using cow_stringR = const ::rocket::cow_string&;
 POSEIDON_USING shptrR = const ::std::shared_ptr<Ts...>&;
 
+template<typename xValue, typename... xArgs>
+ROCKET_ALWAYS_INLINE
+uniptr<xValue>
+new_uni(xArgs&&... args)
+  { return ::std::make_unique<xValue>(forward<xArgs>(args)...);  }
+
+template<typename xValue>
+ROCKET_ALWAYS_INLINE
+uniptr<typename ::std::decay<xValue>::type>
+new_uni(xValue&& value)
+  { return ::std::make_unique<typename ::std::decay<xValue>::type>(forward<xValue>(value));  }
+
+template<typename xValue, typename... xArgs>
+ROCKET_ALWAYS_INLINE
+shptr<xValue>
+new_sh(xArgs&&... args)
+  { return ::std::make_shared<xValue>(forward<xArgs>(args)...);  }
+
+template<typename xValue>
+ROCKET_ALWAYS_INLINE
+shptr<typename ::std::decay<xValue>::type>
+new_sh(xValue&& value)
+  { return ::std::make_shared<typename ::std::decay<xValue>::type>(forward<xValue>(value));  }
+
 using ::rocket::begin;
 using ::rocket::end;
 using ::rocket::swap;
@@ -575,47 +599,6 @@ inline
 tinyfmt&
 operator<<(tinyfmt& fmt, chars_view data)
   { return fmt.putn(data.p, data.n);  }
-
-// utilities
-ROCKET_ALWAYS_INLINE
-system_time
-system_time_from_timespec(const struct ::timespec& ts) noexcept
-  {
-    return system_clock::from_time_t(ts.tv_sec) + nanoseconds(ts.tv_nsec);
-  }
-
-ROCKET_ALWAYS_INLINE
-void
-timespec_from_system_time(struct ::timespec& ts, system_time tm) noexcept
-  {
-    ts.tv_sec = system_clock::to_time_t(tm);
-    auto ns_dur = duration_cast<nanoseconds>(tm - system_clock::from_time_t(ts.tv_sec));
-    ts.tv_nsec = static_cast<long>(ns_dur.count());
-  }
-
-template<typename xValue, typename... xArgs>
-ROCKET_ALWAYS_INLINE
-uniptr<xValue>
-new_uni(xArgs&&... args)
-  { return ::std::make_unique<xValue>(forward<xArgs>(args)...);  }
-
-template<typename xValue>
-ROCKET_ALWAYS_INLINE
-uniptr<typename ::std::decay<xValue>::type>
-new_uni(xValue&& value)
-  { return ::std::make_unique<typename ::std::decay<xValue>::type>(forward<xValue>(value));  }
-
-template<typename xValue, typename... xArgs>
-ROCKET_ALWAYS_INLINE
-shptr<xValue>
-new_sh(xArgs&&... args)
-  { return ::std::make_shared<xValue>(forward<xArgs>(args)...);  }
-
-template<typename xValue>
-ROCKET_ALWAYS_INLINE
-shptr<typename ::std::decay<xValue>::type>
-new_sh(xValue&& value)
-  { return ::std::make_shared<typename ::std::decay<xValue>::type>(forward<xValue>(value));  }
 
 }  // namespace poseidon
 #endif

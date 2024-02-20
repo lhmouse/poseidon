@@ -85,7 +85,25 @@ hex_encode_16_partial(char* str, const void* data) noexcept;
 uint32_t
 random_uint32() noexcept;
 
-// This resembles a URI without the `scheme://` and `userinfo@` parts.
+// Performs conversion between `timespec` and `system_time`.
+ROCKET_ALWAYS_INLINE
+system_time
+system_time_from_timespec(const struct ::timespec& ts) noexcept
+  {
+    return system_clock::from_time_t(ts.tv_sec) + nanoseconds(ts.tv_nsec);
+  }
+
+ROCKET_ALWAYS_INLINE
+void
+timespec_from_system_time(struct ::timespec& ts, system_time tm) noexcept
+  {
+    ts.tv_sec = system_clock::to_time_t(tm);
+    auto ns_dur = duration_cast<nanoseconds>(tm - system_clock::from_time_t(ts.tv_sec));
+    ts.tv_nsec = static_cast<long>(ns_dur.count());
+  }
+
+// This resembles a partial URI like `host[:port]/path?query#fragment`. The
+// `scheme://` and `userinfo@` parts are not supported.
 struct Network_Reference
   {
     chars_view host;
