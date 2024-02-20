@@ -10,9 +10,9 @@ namespace poseidon {
 
 enum zlib_Format : uint8_t
   {
-    zlib_deflate  = 0,
-    zlib_raw      = 1,
-    zlib_gzip     = 2,
+    zlib_deflate  = 0,  // deflate data with zlib header
+    zlib_raw      = 1,  // raw deflate data
+    zlib_gzip     = 2,  // deflate data with gzip header
   };
 
 enum Async_State : uint8_t
