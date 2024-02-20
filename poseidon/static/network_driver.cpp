@@ -6,6 +6,7 @@
 #include "../socket/abstract_socket.hpp"
 #include "../socket/ssl_socket.hpp"
 #include "../base/config_file.hpp"
+#include "../base/char256.hpp"
 #include "../utils.hpp"
 #include <rocket/once_flag.hpp>
 #include <sys/epoll.h>

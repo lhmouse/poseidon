@@ -6,6 +6,7 @@
 
 #include "../fwd.hpp"
 #include "enums.hpp"
+#include "../base/thunk.hpp"
 #include "../socket/ssl_socket.hpp"
 namespace poseidon {
 
@@ -46,7 +47,7 @@ class Easy_SSL_Client
     // accordingly in the main thread. The callback object is never copied,
     // and is allowed to modify itself.
     template<typename xCallback,
-    ROCKET_ENABLE_IF(thunk_type::is_invocable<xCallback>::value)>
+    ROCKET_ENABLE_IF(thunk_type::is_viable<xCallback>::value)>
     explicit Easy_SSL_Client(xCallback&& cb)
       :
         m_thunk(new_sh(forward<xCallback>(cb)))

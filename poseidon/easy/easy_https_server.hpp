@@ -6,6 +6,7 @@
 
 #include "../fwd.hpp"
 #include "enums.hpp"
+#include "../base/thunk.hpp"
 #include "../socket/https_server_session.hpp"
 namespace poseidon {
 
@@ -45,7 +46,7 @@ class Easy_HTTPS_Server
     // object, which is invoked accordingly in the main thread. The callback
     // object is never copied, and is allowed to modify itself.
     template<typename xCallback,
-    ROCKET_ENABLE_IF(thunk_type::is_invocable<xCallback>::value)>
+    ROCKET_ENABLE_IF(thunk_type::is_viable<xCallback>::value)>
     explicit Easy_HTTPS_Server(xCallback&& cb)
       :
         m_thunk(new_sh(forward<xCallback>(cb)))

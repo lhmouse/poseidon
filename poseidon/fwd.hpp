@@ -151,30 +151,6 @@ POSEIDON_USING wkptr = ::std::weak_ptr<Ts...>;
 using cow_stringR = const ::rocket::cow_string&;
 POSEIDON_USING shptrR = const ::std::shared_ptr<Ts...>&;
 
-template<typename xValue, typename... xArgs>
-ROCKET_ALWAYS_INLINE
-uniptr<xValue>
-new_uni(xArgs&&... args)
-  { return ::std::make_unique<xValue>(forward<xArgs>(args)...);  }
-
-template<typename xValue>
-ROCKET_ALWAYS_INLINE
-uniptr<typename ::std::decay<xValue>::type>
-new_uni(xValue&& value)
-  { return ::std::make_unique<typename ::std::decay<xValue>::type>(forward<xValue>(value));  }
-
-template<typename xValue, typename... xArgs>
-ROCKET_ALWAYS_INLINE
-shptr<xValue>
-new_sh(xArgs&&... args)
-  { return ::std::make_shared<xValue>(forward<xArgs>(args)...);  }
-
-template<typename xValue>
-ROCKET_ALWAYS_INLINE
-shptr<typename ::std::decay<xValue>::type>
-new_sh(xValue&& value)
-  { return ::std::make_shared<typename ::std::decay<xValue>::type>(forward<xValue>(value));  }
-
 using ::rocket::begin;
 using ::rocket::end;
 using ::rocket::swap;
@@ -216,125 +192,6 @@ using ::rocket::xmemrpcpy;
 using ::asteria::format;
 using ::asteria::format_string;
 
-// Base types
-enum zlib_Format : uint8_t;
-enum Async_State : uint8_t;
-class UUID;
-class DateTime;
-class Config_File;
-class Abstract_Timer;
-class Abstract_Async_Task;
-class Abstract_Deflator;
-class Abstract_Inflator;
-
-// Fiber types
-class Abstract_Fiber;
-class Abstract_Future;
-class DNS_Query_Future;
-class Read_File_Future;
-class MySQL_Query_Future;
-class MySQL_Check_Table_Future;
-class Mongo_Query_Future;
-class Redis_Query_Future;
-
-// Socket types
-enum IP_Address_Class : uint8_t;
-enum Socket_State : uint8_t;
-enum HTTP_Payload_Type : uint8_t;
-enum WebSocket_OpCode : uint8_t;
-class Socket_Address;
-class Abstract_Socket;
-class Listen_Socket;
-class UDP_Socket;
-class TCP_Socket;
-class SSL_Socket;
-class HTTP_Server_Session;
-class HTTP_Client_Session;
-class HTTPS_Server_Session;
-class HTTPS_Client_Session;
-class WS_Server_Session;
-class WS_Client_Session;
-class WSS_Server_Session;
-class WSS_Client_Session;
-class Async_Connect;
-
-// HTTP types
-class HTTP_Value;
-class HTTP_Header_Parser;
-class HTTP_Query_Parser;
-struct HTTP_Request_Headers;
-class HTTP_Request_Parser;
-struct HTTP_Response_Headers;
-class HTTP_Response_Parser;
-struct WebSocket_Frame_Header;
-class WebSocket_Frame_Parser;
-class WebSocket_Deflator;
-
-// MySQL types
-enum MySQL_Column_Type : uint8_t;
-enum MySQL_Index_Type : uint8_t;
-enum MySQL_Engine_Type : uint8_t;
-enum MySQL_Value_Type : uint8_t;
-class MySQL_Table_Structure;
-class MySQL_Value;
-class MySQL_Connection;
-
-// MongoDB types
-enum Mongo_Value_Type : uint8_t;
-class Mongo_Value;
-using Mongo_Array = ::asteria::cow_vector<Mongo_Value>;
-using Mongo_Document = ::asteria::cow_bivector<cow_string, Mongo_Value>;
-class Mongo_Connection;
-
-// Redis types
-enum Redis_Value_Type : uint8_t;
-class Redis_Value;
-using Redis_Array = ::asteria::cow_vector<Redis_Value>;
-class Redis_Connection;
-
-// Easy types
-// Being 'easy' means all callbacks are invoked in fibers and can perform
-// async/await operations. These are suitable for agile development.
-enum Easy_Stream_Event : uint8_t;  // TCP, SSL
-enum Easy_HTTP_Event : uint8_t;  // HTTP, HTTPS
-enum Easy_WS_Event : uint8_t;  // WS, WSS
-class Easy_Timer;
-class Easy_UDP_Server;
-class Easy_UDP_Client;
-class Easy_TCP_Server;
-class Easy_TCP_Client;
-class Easy_SSL_Server;
-class Easy_SSL_Client;
-class Easy_HTTP_Server;
-class Easy_HTTP_Client;
-class Easy_HTTPS_Server;
-class Easy_HTTPS_Client;
-class Easy_WS_Server;
-class Easy_WS_Client;
-class Easy_WSS_Server;
-class Easy_WSS_Client;
-
-// Singletons
-extern const ::locale_t c_locale;
-extern atomic_relaxed<int> exit_signal;
-extern class Main_Config& main_config;
-extern class Async_Logger& async_logger;
-
-extern class Timer_Driver& timer_driver;
-extern class Async_Task_Executor& async_task_executor;
-extern class Network_Driver& network_driver;
-extern class Fiber_Scheduler& fiber_scheduler;
-
-extern class MySQL_Connector& mysql_connector;
-extern class Mongo_Connector& mongo_connector;
-extern class Redis_Connector& redis_connector;
-
-// Entry point procedure for add-ons
-// This function is to be defined by users. It will be called after an add-on
-// is loaded.
-using ::poseidon_addon_main;
-
-// utilities
 struct cacheline_barrier
   {
     static constexpr size_t alignment = alignof(max_align_t);
@@ -344,103 +201,40 @@ struct cacheline_barrier
 
     cacheline_barrier() noexcept = default;
     cacheline_barrier(const cacheline_barrier&) { }
-    cacheline_barrier& operator=(const cacheline_barrier&) { return *this;  }
+    cacheline_barrier& operator=(const cacheline_barrier&) { return *this; }
   };
 
-template<typename... xArgs>
-class thunk
+template<typename xValue, typename... xArgs>
+ROCKET_ALWAYS_INLINE
+uniptr<xValue>
+new_uni(xArgs&&... args)
   {
-  public:
-    using function_type = void (xArgs...);
-    template<typename T> using is_invocable = ::std::is_invocable<T&, xArgs&&...>;
+    return ::std::make_unique<xValue>(forward<xArgs>(args)...);
+  }
 
-  private:
-    vfptr<void*, xArgs&&...> m_func;
-    shptr<void> m_obj;
-
-  public:
-    // Points this callback to a target object, with its type erased.
-    template<typename xReal,
-    ROCKET_ENABLE_IF(is_invocable<xReal>::value)>
-    explicit thunk(shptrR<xReal> obj) noexcept
-      {
-        this->m_func = [](void* p, xArgs&&... args) { (*(xReal*) p) (forward<xArgs>(args)...);  };
-        this->m_obj = obj;
-      }
-
-    // And this is an optimized overload if the target object is a plain
-    // function pointer, which can be stored into `m_obj` directly.
-    explicit thunk(function_type* fptr) noexcept
-      {
-        this->m_func = nullptr;
-        this->m_obj = shptr<void>(shptr<int>(), (void*)(intptr_t) fptr);
-      }
-
-    // Performs a virtual call to the target object.
-    void
-    operator()(xArgs... args) const
-      {
-        if(this->m_func)
-          this->m_func(this->m_obj.get(), forward<xArgs>(args)...);
-        else
-          ((function_type*)(intptr_t) this->m_obj.get()) (forward<xArgs>(args)...);
-      }
-  };
-
-class char256
+template<typename xValue>
+ROCKET_ALWAYS_INLINE
+uniptr<typename ::std::decay<xValue>::type>
+new_uni(xValue&& value)
   {
-  private:
-    union {
-      char m_data[4];
-      ::std::aligned_storage<256>::type m_stor;
-    };
+    return ::std::make_unique<typename ::std::decay<xValue>::type>(forward<xValue>(value));
+  }
 
-  public:
-    // Constructs a null-terminated string of zero characters.
-    // This constructor is not explicit as it doesn't allocate memory.
-    constexpr char256() noexcept
-      :
-        m_data()
-      { }
+template<typename xValue, typename... xArgs>
+ROCKET_ALWAYS_INLINE
+shptr<xValue>
+new_sh(xArgs&&... args)
+  {
+    return ::std::make_shared<xValue>(forward<xArgs>(args)...);
+  }
 
-    // Constructs a null-terminated string.
-    // This constructor is not explicit as it doesn't allocate memory.
-    constexpr char256(const char* str_opt)
-      :
-        m_data()
-      {
-        const char* str = str_opt ? str_opt : "";
-        size_t len = ::rocket::xstrlen(str);
-        if(len >= 256)
-          ::rocket::sprintf_and_throw<::std::length_error>(
-              "char256: string `%s` (length `%lld`) too long",
-              str, (long long) len);
-
-        // XXX: This should be `xmempcpy()` but clang doesn't like it?
-        ::rocket::details_xstring::maybe_constexpr::ymempcpy(this->m_data, str, len + 1);
-      }
-
-  public:
-    // Returns a pointer to internal storage so a buffer can be passed as
-    // an argument for `char*`.
-    constexpr operator
-    const char*() const noexcept
-      { return this->m_data;  }
-
-    operator
-    char*() noexcept
-      { return this->m_data;  }
-
-    constexpr
-    const char*
-    c_str() const noexcept
-      { return this->m_data;  }
-  };
-
-inline
-tinyfmt&
-operator<<(tinyfmt& fmt, const char256& cbuf)
-  { return fmt.putn(cbuf.c_str(), ::rocket::xstrlen(cbuf.c_str()));  }
+template<typename xValue>
+ROCKET_ALWAYS_INLINE
+shptr<typename ::std::decay<xValue>::type>
+new_sh(xValue&& value)
+  {
+    return ::std::make_shared<typename ::std::decay<xValue>::type>(forward<xValue>(value));
+  }
 
 struct chars_view
   {
@@ -599,6 +393,125 @@ inline
 tinyfmt&
 operator<<(tinyfmt& fmt, chars_view data)
   { return fmt.putn(data.p, data.n);  }
+
+// Base types
+enum zlib_Format : uint8_t;
+enum Async_State : uint8_t;
+class char256;
+class UUID;
+class DateTime;
+class Config_File;
+class Abstract_Timer;
+class Abstract_Async_Task;
+class Abstract_Deflator;
+class Abstract_Inflator;
+
+// Fiber types
+class Abstract_Fiber;
+class Abstract_Future;
+class DNS_Query_Future;
+class Read_File_Future;
+class MySQL_Query_Future;
+class MySQL_Check_Table_Future;
+class Mongo_Query_Future;
+class Redis_Query_Future;
+
+// Socket types
+enum IP_Address_Class : uint8_t;
+enum Socket_State : uint8_t;
+enum HTTP_Payload_Type : uint8_t;
+enum WebSocket_OpCode : uint8_t;
+class Socket_Address;
+class Abstract_Socket;
+class Listen_Socket;
+class UDP_Socket;
+class TCP_Socket;
+class SSL_Socket;
+class HTTP_Server_Session;
+class HTTP_Client_Session;
+class HTTPS_Server_Session;
+class HTTPS_Client_Session;
+class WS_Server_Session;
+class WS_Client_Session;
+class WSS_Server_Session;
+class WSS_Client_Session;
+class Async_Connect;
+
+// HTTP types
+class HTTP_Value;
+class HTTP_Header_Parser;
+class HTTP_Query_Parser;
+struct HTTP_Request_Headers;
+class HTTP_Request_Parser;
+struct HTTP_Response_Headers;
+class HTTP_Response_Parser;
+struct WebSocket_Frame_Header;
+class WebSocket_Frame_Parser;
+class WebSocket_Deflator;
+
+// MySQL types
+enum MySQL_Column_Type : uint8_t;
+enum MySQL_Index_Type : uint8_t;
+enum MySQL_Engine_Type : uint8_t;
+enum MySQL_Value_Type : uint8_t;
+class MySQL_Table_Structure;
+class MySQL_Value;
+class MySQL_Connection;
+
+// MongoDB types
+enum Mongo_Value_Type : uint8_t;
+class Mongo_Value;
+using Mongo_Array = ::asteria::cow_vector<Mongo_Value>;
+using Mongo_Document = ::asteria::cow_bivector<cow_string, Mongo_Value>;
+class Mongo_Connection;
+
+// Redis types
+enum Redis_Value_Type : uint8_t;
+class Redis_Value;
+using Redis_Array = ::asteria::cow_vector<Redis_Value>;
+class Redis_Connection;
+
+// Easy types
+// Being 'easy' means all callbacks are invoked in fibers and can perform
+// async/await operations. These are suitable for agile development.
+enum Easy_Stream_Event : uint8_t;  // TCP, SSL
+enum Easy_HTTP_Event : uint8_t;  // HTTP, HTTPS
+enum Easy_WS_Event : uint8_t;  // WS, WSS
+class Easy_Timer;
+class Easy_UDP_Server;
+class Easy_UDP_Client;
+class Easy_TCP_Server;
+class Easy_TCP_Client;
+class Easy_SSL_Server;
+class Easy_SSL_Client;
+class Easy_HTTP_Server;
+class Easy_HTTP_Client;
+class Easy_HTTPS_Server;
+class Easy_HTTPS_Client;
+class Easy_WS_Server;
+class Easy_WS_Client;
+class Easy_WSS_Server;
+class Easy_WSS_Client;
+
+// Singletons
+extern const ::locale_t c_locale;
+extern atomic_relaxed<int> exit_signal;
+extern class Main_Config& main_config;
+extern class Async_Logger& async_logger;
+
+extern class Timer_Driver& timer_driver;
+extern class Async_Task_Executor& async_task_executor;
+extern class Network_Driver& network_driver;
+extern class Fiber_Scheduler& fiber_scheduler;
+
+extern class MySQL_Connector& mysql_connector;
+extern class Mongo_Connector& mongo_connector;
+extern class Redis_Connector& redis_connector;
+
+// Entry point procedure for add-ons
+// This function is to be defined by users. It will be called after an add-on
+// is loaded.
+using ::poseidon_addon_main;
 
 }  // namespace poseidon
 #endif

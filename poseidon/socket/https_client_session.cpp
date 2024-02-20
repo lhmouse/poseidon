@@ -4,6 +4,7 @@
 #include "../xprecompiled.hpp"
 #include "https_client_session.hpp"
 #include "../base/config_file.hpp"
+#include "../base/char256.hpp"
 #include "../static/main_config.hpp"
 #include "../utils.hpp"
 namespace poseidon {

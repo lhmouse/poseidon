@@ -30,6 +30,8 @@ poseidon_include = [
   'poseidon/static/async_task_executor.hpp',
   'poseidon/static/network_driver.hpp',
   'poseidon/base/enums.hpp',
+  'poseidon/base/char256.hpp',
+  'poseidon/base/thunk.hpp',
   'poseidon/base/uuid.hpp',
   'poseidon/base/datetime.hpp',
   'poseidon/base/config_file.hpp',

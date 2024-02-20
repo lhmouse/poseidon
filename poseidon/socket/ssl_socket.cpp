@@ -3,6 +3,7 @@
 
 #include "../xprecompiled.hpp"
 #include "ssl_socket.hpp"
+#include "../base/char256.hpp"
 #include "../static/network_driver.hpp"
 #include "../utils.hpp"
 #include <sys/socket.h>
