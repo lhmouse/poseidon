@@ -502,11 +502,11 @@ do_on_abstract_future_execute()
         sql << ",\n  ";
 
       if(ex == excolumns.end()) {
-        sql << "ADD COLUMN";
+        sql << "ADD COLUMN ";
         do_append_column_definition(sql, column);
       }
       else if(column.type != mysql_column_dropped) {
-        sql << "MODIFY COLUMN";
+        sql << "MODIFY COLUMN ";
         do_append_column_definition(sql, column);
       }
       else
