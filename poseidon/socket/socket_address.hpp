@@ -132,7 +132,7 @@ class Socket_Address
     print_partial(char* str) const noexcept;
 
     tinyfmt&
-    print(tinyfmt& fmt) const;
+    print_to(tinyfmt& fmt) const;
 
     cow_string
     print_to_string() const;
@@ -154,7 +154,7 @@ swap(Socket_Address& lhs, Socket_Address& rhs) noexcept
 inline
 tinyfmt&
 operator<<(tinyfmt& fmt, const Socket_Address& addr)
-  { return addr.print(fmt);  }
+  { return addr.print_to(fmt);  }
 
 inline
 bool

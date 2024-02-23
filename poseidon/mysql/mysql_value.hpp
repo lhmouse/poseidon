@@ -237,7 +237,7 @@ class MySQL_Value
     // Converts this value to its string form. The result will be suitable
     // for immediate use in an SQL statement. Strings are quoted as necessary.
     tinyfmt&
-    print(tinyfmt& fmt) const;
+    print_to(tinyfmt& fmt) const;
 
     cow_string
     print_to_string() const;
@@ -251,7 +251,7 @@ swap(MySQL_Value& lhs, MySQL_Value& rhs) noexcept
 inline
 tinyfmt&
 operator<<(tinyfmt& fmt, const MySQL_Value& value)
-  { return value.print(fmt);  }
+  { return value.print_to(fmt);  }
 
 }  // namespace poseidon
 #endif

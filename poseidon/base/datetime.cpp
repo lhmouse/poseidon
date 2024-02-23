@@ -215,7 +215,7 @@ print_iso8601_partial(char* str) const noexcept
 
 tinyfmt&
 DateTime::
-print(tinyfmt& fmt) const
+print_to(tinyfmt& fmt) const
   {
     char str[64];
     size_t len = this->print_iso8601_partial(str);

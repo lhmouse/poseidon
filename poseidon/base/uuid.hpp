@@ -132,7 +132,7 @@ class UUID
     print_partial(char* str) const noexcept;
 
     tinyfmt&
-    print(tinyfmt& fmt) const;
+    print_to(tinyfmt& fmt) const;
 
     cow_string
     print_to_string() const;
@@ -146,7 +146,7 @@ swap(UUID& lhs, UUID& rhs) noexcept
 inline
 tinyfmt&
 operator<<(tinyfmt& fmt, const UUID& value)
-  { return value.print(fmt);  }
+  { return value.print_to(fmt);  }
 
 inline
 bool

@@ -15,7 +15,7 @@ Mongo_Value::
 
 tinyfmt&
 Mongo_Value::
-print(tinyfmt& fmt) const
+print_to(tinyfmt& fmt) const
   {
     struct variant_printer
       {
@@ -217,7 +217,7 @@ Mongo_Value::
 print_to_string() const
   {
     tinyfmt_str fmt;
-    this->print(fmt);
+    this->print_to(fmt);
     return fmt.extract_string();
   }
 

@@ -236,7 +236,7 @@ class HTTP_Value
     // HTTP date/time, which contain a comma itself, will not be enclosed
     // in double quotes.
     tinyfmt&
-    print(tinyfmt& fmt) const;
+    print_to(tinyfmt& fmt) const;
 
     cow_string
     print_to_string() const;
@@ -250,7 +250,7 @@ swap(HTTP_Value& lhs, HTTP_Value& rhs) noexcept
 inline
 tinyfmt&
 operator<<(tinyfmt& fmt, const HTTP_Value& value)
-  { return value.print(fmt);  }
+  { return value.print_to(fmt);  }
 
 }  // namespace poseidon
 #endif

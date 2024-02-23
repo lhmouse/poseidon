@@ -171,7 +171,7 @@ class Redis_Value
     // Converts this value to its string form. Strings are enclosed in double
     // quotation marks.
     tinyfmt&
-    print(tinyfmt& fmt) const;
+    print_to(tinyfmt& fmt) const;
 
     cow_string
     print_to_string() const;
@@ -185,7 +185,7 @@ swap(Redis_Value& lhs, Redis_Value& rhs) noexcept
 inline
 tinyfmt&
 operator<<(tinyfmt& fmt, const Redis_Value& value)
-  { return value.print(fmt);  }
+  { return value.print_to(fmt);  }
 
 }  // namespace poseidon
 #endif

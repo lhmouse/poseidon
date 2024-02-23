@@ -372,7 +372,7 @@ class Mongo_Value
     // Converts this value to its string form, as an extended JSON string. This
     // notation does not distinguish 64-bit integers from floating-point values.
     tinyfmt&
-    print(tinyfmt& fmt) const;
+    print_to(tinyfmt& fmt) const;
 
     cow_string
     print_to_string() const;
@@ -386,7 +386,7 @@ swap(Mongo_Value& lhs, Mongo_Value& rhs) noexcept
 inline
 tinyfmt&
 operator<<(tinyfmt& fmt, const Mongo_Value& value)
-  { return value.print(fmt);  }
+  { return value.print_to(fmt);  }
 
 }  // namespace poseidon
 #endif

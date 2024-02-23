@@ -128,7 +128,7 @@ class DateTime
 
     // Converts this timestamp to its ISO 8601 form.
     tinyfmt&
-    print(tinyfmt& fmt) const;
+    print_to(tinyfmt& fmt) const;
 
     cow_string
     print_to_string() const;
@@ -172,7 +172,7 @@ swap(DateTime& lhs, DateTime& rhs) noexcept
 inline
 tinyfmt&
 operator<<(tinyfmt& fmt, const DateTime& ts)
-  { return ts.print(fmt);  }
+  { return ts.print_to(fmt);  }
 
 }  // namespace poseidon
 #endif

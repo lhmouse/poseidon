@@ -13,7 +13,7 @@ MySQL_Value::
 
 tinyfmt&
 MySQL_Value::
-print(tinyfmt& fmt) const
+print_to(tinyfmt& fmt) const
   {
     struct variant_printer
       {
@@ -112,7 +112,7 @@ MySQL_Value::
 print_to_string() const
   {
     tinyfmt_str fmt;
-    this->print(fmt);
+    this->print_to(fmt);
     return fmt.extract_string();
   }
 

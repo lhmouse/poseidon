@@ -171,7 +171,7 @@ parse(chars_view str)
 
 tinyfmt&
 HTTP_Value::
-print(tinyfmt& fmt) const
+print_to(tinyfmt& fmt) const
   {
     struct variant_printer
       {
@@ -244,7 +244,7 @@ HTTP_Value::
 print_to_string() const
   {
     tinyfmt_str fmt;
-    this->print(fmt);
+    this->print_to(fmt);
     return fmt.extract_string();
   }
 

@@ -96,7 +96,7 @@ print_partial(char* str) const noexcept
 
 tinyfmt&
 UUID::
-print(tinyfmt& fmt) const
+print_to(tinyfmt& fmt) const
   {
     char str[64];
     size_t len = this->print_partial(str);
