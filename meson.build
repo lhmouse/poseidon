@@ -307,7 +307,13 @@ add_project_arguments(
 # Dependencies
 #===========================================================
 dep_pthread = dependency('threads')
+add_project_dependencies(dep_pthread, language: 'cpp')
+
 dep_asteria = dependency('asteria')
+add_project_dependencies(dep_asteria, language: 'cpp')
+
+dep_taxon = dependency('taxon')
+add_project_dependencies(dep_taxon, language: 'cpp')
 
 dep_libunwind = dependency('libunwind')
 dep_openssl = dependency('openssl', version: '>= 3.0.0')
@@ -315,9 +321,6 @@ dep_zlib = dependency('zlib', version: '>= 1.2.9')
 dep_libmagic = dependency('libmagic')
 dep_http_parser = cxx.find_library('http_parser')
 dep_uuid = dependency('uuid')
-
-add_project_dependencies(dep_pthread, language: 'cpp')
-add_project_dependencies(dep_asteria, language: 'cpp')
 
 #===========================================================
 # Optional dependencies
