@@ -7,3 +7,6 @@
 [submodule "libmongoc-dev-symlinks"]
 	path = libmongoc-dev-symlinks
 	url = https://github.com/lhmouse/libmongoc-dev-symlinks.git
+[submodule "taxon"]
+	path = taxon
+	url = https://github.com/lhmouse/taxon.git
