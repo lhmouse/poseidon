@@ -5,15 +5,12 @@
 #define POSEIDON_BASE_ABSTRACT_TIMER_
 
 #include "../fwd.hpp"
-#include "enums.hpp"
 namespace poseidon {
 
 class Abstract_Timer
   {
   private:
     friend class Timer_Driver;
-
-    atomic_relaxed<Async_State> m_state;
 
   protected:
     // Constructs an inactive timer.
@@ -28,11 +25,6 @@ class Abstract_Timer
 
   public:
     virtual ~Abstract_Timer();
-
-    // Gets the schedule state.
-    Async_State
-    async_state() const noexcept
-      { return this->m_state.load();  }
   };
 
 }  // namespace poseidon

@@ -5,11 +5,17 @@
 #define POSEIDON_THIRD_ZLIB_FWD_
 
 #include "../fwd.hpp"
-#include "../base/enums.hpp"
 #define ZLIB_CONST 1
 #define Z_SOLO 1
 #include <zlib.h>
 namespace poseidon {
+
+enum zlib_Format : uint8_t
+  {
+    zlib_deflate  = 0,  // deflate data with zlib header
+    zlib_raw      = 1,  // raw deflate data
+    zlib_gzip     = 2,  // deflate data with gzip header
+  };
 
 class scoped_deflate_stream
   {

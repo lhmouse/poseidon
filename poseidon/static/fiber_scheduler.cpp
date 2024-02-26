@@ -78,15 +78,24 @@ do_free_stack(::stack_t ss) noexcept
     s_stack_pool = ss;
   }
 
+enum Fiber_State : uint8_t
+  {
+    fiber_pending     = 0,
+    fiber_suspended   = 1,
+    fiber_running     = 2,
+    fiber_terminated  = 3,
+  };
+
 struct Queued_Fiber
   {
-    shptr<Abstract_Fiber> fiber;
     atomic_relaxed<steady_time> async_time;  // volatile
+    shptr<Abstract_Fiber> fiber;
 
     wkptr<Abstract_Future> wfutr;
     steady_time yield_time;
     steady_time check_time;
     steady_time fail_time;
+    Fiber_State state = fiber_pending;
     ::ucontext_t sched_inner[1];
   };
 
@@ -130,27 +139,15 @@ do_fiber_function() noexcept
     const auto& elem = this->m_sched_elem;
     ROCKET_ASSERT(elem);
 
-    POSEIDON_CATCH_ALL(elem->fiber->do_on_abstract_fiber_resumed());
-    ROCKET_ASSERT(elem->fiber->m_state.load() == async_pending);
-    elem->fiber->m_state.store(async_running);
+    POSEIDON_CATCH_EVERYTHING(elem->fiber->do_on_abstract_fiber_resumed());
+    ROCKET_ASSERT(elem->state == fiber_pending);
+    elem->state = fiber_running;
     POSEIDON_LOG_TRACE(("Starting fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
-    // -- NOEXCEPT REGION ENDS --
-
-    try {
-      elem->fiber->do_on_abstract_fiber_execute();
-    }
-    catch(exception& stdex) {
-      POSEIDON_LOG_ERROR((
-          "Unhandled exception thrown from fiber: $1",
-          "[fiber class `$2`]"),
-          stdex, typeid(*(elem->fiber)));
-    }
-
-    // -- NOEXCEPT REGION BEGINS --
-    ROCKET_ASSERT(elem->fiber->m_state.load() == async_running);
-    elem->fiber->m_state.store(async_finished);
+    POSEIDON_CATCH_EVERYTHING(elem->fiber->do_on_abstract_fiber_execute());
+    ROCKET_ASSERT(elem->state == fiber_running);
+    elem->state = fiber_terminated;
     POSEIDON_LOG_TRACE(("Terminating fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
-    POSEIDON_CATCH_ALL(elem->fiber->do_on_abstract_fiber_suspended());
+    POSEIDON_CATCH_EVERYTHING(elem->fiber->do_on_abstract_fiber_suspended());
 
     // Return to the scheduler.
     elem->async_time.store(steady_clock::now());
@@ -196,23 +193,18 @@ do_yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override)
       lock.unlock();
     }
 
-    // -- NOEXCEPT REGION BEGINS --
-    ROCKET_ASSERT(elem->fiber->m_state.load() == async_running);
-    elem->fiber->m_state.store(async_suspended);
+    ROCKET_ASSERT(elem->state == fiber_running);
+    elem->state = fiber_suspended;
     POSEIDON_LOG_TRACE(("Suspending fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
-    POSEIDON_CATCH_ALL(elem->fiber->do_on_abstract_fiber_suspended());
-
+    POSEIDON_CATCH_EVERYTHING(elem->fiber->do_on_abstract_fiber_suspended());
     asan_fiber_switch_start(this->m_sched_asan_save, this->m_sched_outer->uc_stack);
     ::swapcontext(elem->sched_inner, this->m_sched_outer);
     asan_fiber_switch_finish(this->m_sched_outer->uc_stack, this->m_sched_asan_save);
-
-    POSEIDON_CATCH_ALL(elem->fiber->do_on_abstract_fiber_resumed());
-    POSEIDON_LOG_TRACE(("Resumed fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
-    ROCKET_ASSERT(elem->fiber->m_state.load() == async_suspended);
-    elem->fiber->m_state.store(async_running);
-    // -- NOEXCEPT REGION ENDS --
-
     elem->wfutr.reset();
+    POSEIDON_CATCH_EVERYTHING(elem->fiber->do_on_abstract_fiber_resumed());
+    POSEIDON_LOG_TRACE(("Resumed fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
+    ROCKET_ASSERT(elem->state == fiber_suspended);
+    elem->state = fiber_running;
   }
 
 void
@@ -341,7 +333,7 @@ thread_loop()
 
     ::std::pop_heap(this->m_pq.begin(), this->m_pq.end(), fiber_comparator);
     auto elem = this->m_pq.back();
-    if(elem->fiber->m_state.load() == async_finished) {
+    if(elem->state == fiber_terminated) {
       this->m_pq.pop_back();
       lock.unlock();
 
@@ -363,12 +355,10 @@ thread_loop()
     elem->fiber->m_sched = this;
     lock.unlock();
 
-    POSEIDON_LOG_TRACE((
-        "Processing fiber `$1` (class `$2`): state = $3"),
-        elem->fiber, typeid(*(elem->fiber)), elem->fiber->m_state.load());
-
+    POSEIDON_LOG_TRACE(("Processing fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
     if(futr && !futr->m_once.test()) {
-      // Wait for future.
+      // Wait for the future. In case of a shutdown request or timeout, ignore the
+      // future and move on anyway.
       if(now >= elem->yield_time + warn_timeout)
         POSEIDON_LOG_WARN((
             "Fiber `$1` (class `$2`) has been suspended for $3"),
@@ -384,7 +374,7 @@ thread_loop()
         return;
     }
 
-    if(elem->fiber->m_state.load() == async_pending) {
+    if(elem->state == fiber_pending) {
       POSEIDON_LOG_TRACE(("Initializing fiber `$1` (class `$2`)"), elem->fiber, typeid(*(elem->fiber)));
       ROCKET_ASSERT(elem->sched_inner->uc_stack.ss_sp == nullptr);
 
@@ -440,14 +430,14 @@ size() const noexcept
 
 void
 Fiber_Scheduler::
-launch(uniptr<Abstract_Fiber>&& fiber)
+launch(shptrR<Abstract_Fiber> fiber)
   {
     if(!fiber)
       POSEIDON_THROW(("Null fiber pointer not valid"));
 
     // Create the management node.
     auto elem = new_sh<X_Queued_Fiber>();
-    elem->fiber = move(fiber);
+    elem->fiber = fiber;
     elem->yield_time = steady_clock::now();
     elem->check_time = elem->yield_time;
     elem->async_time.store(elem->yield_time);

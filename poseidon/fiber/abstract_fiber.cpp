@@ -20,20 +20,14 @@ void
 Abstract_Fiber::
 do_on_abstract_fiber_resumed()
   {
-    POSEIDON_LOG_TRACE((
-        "Resumed fiber `$1` (class `$2`): state `$3`"),
-        this, typeid(*this),
-        this->m_state.load());
+    POSEIDON_LOG_TRACE(("Resumed fiber `$1` (class `$2`)"), this, typeid(*this));
   }
 
 void
 Abstract_Fiber::
 do_on_abstract_fiber_suspended()
   {
-    POSEIDON_LOG_TRACE((
-        "Suspended fiber `$1` (class `$2`): state `$3`"),
-        this, typeid(*this),
-        this->m_state.load());
+    POSEIDON_LOG_TRACE(("Suspended fiber `$1` (class `$2`)"), this, typeid(*this));
   }
 
 void

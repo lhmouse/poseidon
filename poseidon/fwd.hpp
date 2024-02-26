@@ -49,15 +49,6 @@ namespace noadl = poseidon;
         wdLAlUiJ;  \
       })
 
-#define POSEIDON_CATCH_ALL(...)  \
-    __extension__  \
-      ({  \
-        try { (void) (__VA_ARGS__);  }  \
-        catch(::abi::__forced_unwind&) { throw; }  \
-        catch(...) { }  \
-        (void) 0;  \
-      })
-
 // Aliases
 using ::std::initializer_list;
 using ::std::nullptr_t;
@@ -349,8 +340,6 @@ operator<<(tinyfmt& fmt, chars_view data)
   { return fmt.putn(data.p, data.n);  }
 
 // Base types
-enum zlib_Format : uint8_t;
-enum Async_State : uint8_t;
 class char256;
 class UUID;
 class DateTime;

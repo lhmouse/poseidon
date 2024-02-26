@@ -5,15 +5,12 @@
 #define POSEIDON_BASE_ABSTRACT_ASYNC_TASK_
 
 #include "../fwd.hpp"
-#include "enums.hpp"
 namespace poseidon {
 
 class Abstract_Async_Task
   {
   private:
     friend class Async_Task_Executor;
-
-    atomic_relaxed<Async_State> m_state;
 
   protected:
     // Constructs an asynchronous task.
@@ -28,11 +25,6 @@ class Abstract_Async_Task
 
   public:
     virtual ~Abstract_Async_Task();
-
-    // Gets the schedule state.
-    Async_State
-    async_state() const noexcept
-      { return this->m_state.load();  }
   };
 
 }  // namespace poseidon

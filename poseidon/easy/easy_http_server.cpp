@@ -154,7 +154,7 @@ struct Final_Session final : HTTP_Server_Session
           if(!client_iter->second.fiber_active) {
             // Create a new fiber, if none is active. The fiber shall only reset
             // `m_fiber_private_buffer` if no event is pending.
-            fiber_scheduler.launch(new_uni<Final_Fiber>(this->m_thunk, table, this));
+            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, table, this));
             client_iter->second.fiber_active = true;
           }
 

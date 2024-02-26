@@ -5,7 +5,6 @@
 #define POSEIDON_FIBER_ABSTRACT_FIBER_
 
 #include "../fwd.hpp"
-#include "../base/enums.hpp"
 namespace poseidon {
 
 class Abstract_Fiber
@@ -14,7 +13,6 @@ class Abstract_Fiber
     friend class Fiber_Scheduler;
     using yield_function = void (Fiber_Scheduler*, shptrR<Abstract_Future>, milliseconds);
 
-    atomic_relaxed<Async_State> m_state;
     yield_function* m_yield = nullptr;
     Fiber_Scheduler* m_sched = nullptr;
 
@@ -34,8 +32,7 @@ class Abstract_Fiber
       }
 
     // This callback is invoked before `do_on_abstract_fiber_execute()`, and
-    // after it is resumed from a preivous yield operation. `async_state()` can
-    // be used to examine the current operation.
+    // after it is resumed from a previous yield operation.
     // This function should not throw exceptions; exceptions are ignored.
     // The default implementations merely print a message.
     virtual
@@ -49,8 +46,7 @@ class Abstract_Fiber
     do_on_abstract_fiber_execute() = 0;
 
     // This callback is invoked after `do_on_abstract_fiber_execute()`, and
-    // before it is suspended by a yield operation. `async_state()` can  be
-    // used to examine the current operation.
+    // before it is suspended by a yield operation.
     // This function should not throw exceptions; exceptions are ignored.
     // The default implementations merely print a message.
     virtual
@@ -61,11 +57,6 @@ class Abstract_Fiber
     Abstract_Fiber(const Abstract_Fiber&) = delete;
     Abstract_Fiber& operator=(const Abstract_Fiber&) & = delete;
     virtual ~Abstract_Fiber();
-
-    // Gets the schedule state.
-    Async_State
-    async_state() const noexcept
-      { return this->m_state.load();  }
 
     // Yields execution to another fiber. If `futr_opt` is not null, the
     // current fiber is suspended until `*futr_opt` becomes ready. If

@@ -63,7 +63,6 @@ thread_loop()
     ::std::pop_heap(this->m_pq.begin(), this->m_pq.end(), timer_comparator);
     steady_time next = this->m_pq.back().next;
     auto timer = this->m_pq.back().wtimer.lock();
-    Async_State next_state;
     if(!timer) {
       // If the timer has expired, delete it.
       this->m_pq.pop_back();
@@ -73,31 +72,16 @@ thread_loop()
       // Update the next time point and insert the timer back.
       this->m_pq.back().next += this->m_pq.back().period;
       ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), timer_comparator);
-      next_state = async_suspended;
     }
     else {
       // Delete the one-shot timer.
       this->m_pq.pop_back();
-      next_state = async_finished;
     }
     lock.unlock();
 
     // Execute it. Exceptions are ignored.
     POSEIDON_LOG_TRACE(("Executing timer `$1` (class `$2`)"), timer, typeid(*timer));
-    timer->m_state.store(async_running);
-
-    try {
-      timer->do_abstract_timer_on_tick(next);
-    }
-    catch(exception& stdex) {
-      POSEIDON_LOG_ERROR((
-          "Unhandled exception thrown from timer: $1",
-          "[timer class `$2`]"),
-          stdex, typeid(*timer));
-    }
-
-    ROCKET_ASSERT(timer->m_state.load() == async_running);
-    timer->m_state.store(next_state);
+    POSEIDON_CATCH_EVERYTHING(timer->do_abstract_timer_on_tick(next));
   }
 
 void
