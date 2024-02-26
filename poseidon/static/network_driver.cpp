@@ -160,7 +160,7 @@ Network_Driver::
 client_ssl_ctx() const
   {
     plain_mutex::unique_lock lock(this->m_conf_mutex);
-    auto ptr = this->m_server_ssl_ctx.get();
+    auto ptr = this->m_client_ssl_ctx.get();
     if(!ptr)
       POSEIDON_THROW(("Client SSL not configured"));
 
