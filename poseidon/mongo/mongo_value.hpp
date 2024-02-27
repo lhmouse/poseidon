@@ -256,12 +256,12 @@ class Mongo_Value
       { return this->m_stor.as<cow_string>();  }
 
     const char*
-    utf8_data() const
-      { return this->m_stor.as<cow_string>().data();  }
+    as_utf8_c_str() const
+      { return this->m_stor.as<cow_string>().c_str();  }
 
     size_t
-    utf8_size() const
-      { return this->m_stor.as<cow_string>().size();  }
+    as_utf8_length() const
+      { return this->m_stor.as<cow_string>().length();  }
 
     cow_string&
     mut_utf8() noexcept
@@ -281,11 +281,11 @@ class Mongo_Value
       { return this->m_stor.as<cow_bstring>();  }
 
     const uint8_t*
-    binary_data() const
+    as_binary_data() const
       { return this->m_stor.as<cow_bstring>().data();  }
 
     size_t
-    binary_size() const
+    as_binary_size() const
       { return this->m_stor.as<cow_bstring>().size();  }
 
     cow_bstring&

@@ -177,15 +177,15 @@ execute(const Mongo_Document& cmd)
           break;
 
         case mongo_value_utf8:
-          bson_success = (value->utf8_size() <= INT_MAX)
-                     && ::bson_append_utf8(rb_top->parent, key, key_len,
-                                           value->utf8_data(), static_cast<int>(value->utf8_size()));
+          bson_success = (value->as_utf8_length() <= INT_MAX)
+                 && ::bson_append_utf8(rb_top->parent, key, key_len,
+                                       value->as_utf8_c_str(), static_cast<int>(value->as_utf8_length()));
           break;
 
         case mongo_value_binary:
-          bson_success = (value->binary_size() <= INT_MAX)
+          bson_success = (value->as_binary_size() <= INT_MAX)
                  && ::bson_append_binary(rb_top->parent, key, key_len, BSON_SUBTYPE_BINARY,
-                                  value->binary_data(), static_cast<uint32_t>(value->binary_size()));
+                                  value->as_binary_data(), static_cast<uint32_t>(value->as_binary_size()));
           break;
 
         case mongo_value_array:

@@ -36,7 +36,7 @@ main()
     constexpr uint8_t bin_data[] = "\x02\x7F\x00\xF2\xFC\xFF\xFE";
     hval = cow_bstring(&bin_data);
     POSEIDON_TEST_CHECK(hval.is_binary());
-    POSEIDON_TEST_CHECK(::memcmp(hval.binary_data(), bin_data, sizeof(bin_data)) == 0);
+    POSEIDON_TEST_CHECK(::memcmp(hval.as_binary_data(), bin_data, sizeof(bin_data)) == 0);
     POSEIDON_TEST_CHECK(hval.print_to_string() == R"({$base64:"An8A8vz//g=="})");
 
     Mongo_Array arr_data = { };
@@ -68,7 +68,7 @@ main()
     POSEIDON_TEST_CHECK(hval.is_document());
     POSEIDON_TEST_CHECK(hval.as_document().at(0).first == "first");
     POSEIDON_TEST_CHECK(hval.as_document().at(0).second.as_boolean() == false);
-    POSEIDON_TEST_CHECK(hval.print_to_string() == R"({"first":false})");
+    POSEIDON_TEST_CHECK(hval.print_to_string() == R"({first:false})");
 
     doc_data = { { &"first", &"meow" }, { &"second", 12.5 } };
     hval = doc_data;
@@ -77,7 +77,7 @@ main()
     POSEIDON_TEST_CHECK(hval.as_document().at(0).second.as_utf8() == "meow");
     POSEIDON_TEST_CHECK(hval.as_document().at(1).first == "second");
     POSEIDON_TEST_CHECK(hval.as_document().at(1).second.as_double() == 12.5);
-    POSEIDON_TEST_CHECK(hval.print_to_string() == R"({"first":"meow","second":12.5})");
+    POSEIDON_TEST_CHECK(hval.print_to_string() == R"({first:"meow",second:12.5})");
 
     ::bson_oid_t oid_data = { 0x65,0xC9,0x8F,0x34,0x2D,0x18,0x60,0xB7,0xBA,0xEF,0x94,0xFB };
     hval = oid_data;
