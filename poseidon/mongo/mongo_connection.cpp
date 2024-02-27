@@ -303,7 +303,7 @@ fetch_reply(Mongo_Document& output)
     if(!::bson_iter_init(&bson_iter, bson_output))
       POSEIDON_THROW(("Failed to parse BSON reply from server"));
 
-#define do_output_  \
+#define do_reply_value_  \
     (output_array ? output_array->emplace_back()  \
        : output.emplace_back(::bson_iter_key_unsafe(&bson_iter), nullptr).second)
 
@@ -312,30 +312,30 @@ fetch_reply(Mongo_Document& output)
       switch(static_cast<uint32_t>(::bson_iter_type(&bson_iter)))
         {
         case BSON_TYPE_NULL:
-          do_output_.clear();
+          do_reply_value_.clear();
           break;
 
         case BSON_TYPE_BOOL:
-          do_output_.mut_boolean() = ::bson_iter_bool_unsafe(&bson_iter);
+          do_reply_value_.mut_boolean() = ::bson_iter_bool_unsafe(&bson_iter);
           break;
 
         case BSON_TYPE_INT32:
-          do_output_.mut_integer() = ::bson_iter_int32_unsafe(&bson_iter);
+          do_reply_value_.mut_integer() = ::bson_iter_int32_unsafe(&bson_iter);
           break;
 
         case BSON_TYPE_INT64:
-          do_output_.mut_integer() = ::bson_iter_int64_unsafe(&bson_iter);
+          do_reply_value_.mut_integer() = ::bson_iter_int64_unsafe(&bson_iter);
           break;
 
         case BSON_TYPE_DOUBLE:
-          do_output_.mut_double() = ::bson_iter_double_unsafe(&bson_iter);
+          do_reply_value_.mut_double() = ::bson_iter_double_unsafe(&bson_iter);
           break;
 
         case BSON_TYPE_UTF8:
           {
             uint32_t len;
             const char* str = ::bson_iter_utf8(&bson_iter, &len);
-            do_output_.mut_utf8().append(str, len);
+            do_reply_value_.mut_utf8().append(str, len);
           }
           break;
 
@@ -358,7 +358,7 @@ fetch_reply(Mongo_Document& output)
             }
 
             // empty
-            do_output_.mut_array();
+            do_reply_value_.mut_array();
           }
           break;
 
@@ -381,18 +381,18 @@ fetch_reply(Mongo_Document& output)
             }
 
             // empty
-            do_output_.mut_document();
+            do_reply_value_.mut_document();
           }
           break;
 
         case BSON_TYPE_OID:
-          do_output_.mut_oid() = *::bson_iter_oid_unsafe(&bson_iter);
+          do_reply_value_.mut_oid() = *::bson_iter_oid_unsafe(&bson_iter);
           break;
 
         case BSON_TYPE_DATE_TIME:
           {
             int64_t ms = ::bson_iter_date_time(&bson_iter);
-            do_output_.mut_datetime() = system_time(milliseconds(ms));
+            do_reply_value_.mut_datetime() = system_time(milliseconds(ms));
           }
           break;
         }
@@ -404,9 +404,9 @@ fetch_reply(Mongo_Document& output)
       bson_iter = frm.parent_iter;
 
       if(frm.parent_array)
-        do_output_.mut_array().swap(*(frm.parent_array));
+        do_reply_value_.mut_array().swap(*(frm.parent_array));
       else
-        do_output_.mut_document().swap(frm.parent);
+        do_reply_value_.mut_document().swap(frm.parent);
 
       // close
       stack.pop_back();
