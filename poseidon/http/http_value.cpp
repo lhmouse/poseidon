@@ -13,7 +13,7 @@ do_is_ctl_or_sep(char ch) noexcept
   {
     // https://www.rfc-editor.org/rfc/rfc2616#section-2.2
     return ((ch >= 0x00) && (ch <= 0x20)) || (ch == 0x7F)
-           || (ch == '\\') || (ch == '\"')
+           || (ch == '\\') || (ch == '"')
            || (ch == '(') || (ch == ')') || (ch == '<') || (ch == '>')
            || (ch == '@') || (ch == ',') || (ch == ';') || (ch == ':')
            || (ch == '/') || (ch == '[') || (ch == ']') || (ch == '?')
@@ -53,13 +53,13 @@ parse_quoted_string_partial(chars_view str)
       pstr = &(this->m_stor.emplace<cow_string>());
 
     // Get a quoted string. Zero shall be returned in case of any errors.
-    if((str.n < 2) || (str[0] != '\"'))
+    if((str.n < 2) || (str[0] != '"'))
       return 0;
 
     const char* curp = str.p + 1;
     intptr_t plain = 1;
 
-    while((*curp != '\"') || (plain == 0)) {
+    while((*curp != '"') || (plain == 0)) {
       // A previous escape character exists if `plain` equals zero.
       if((*curp != '\\') || (plain == 0))
         pstr->push_back(*curp);
@@ -150,7 +150,7 @@ parse(chars_view str)
       return 0;
 
     // What does the string look like?
-    if(*str == '\"')
+    if(*str == '"')
       if(size_t aclen = this->parse_quoted_string_partial(str))
         return aclen;
 
@@ -192,10 +192,10 @@ print_to(tinyfmt& fmt) const
               return;
             }
 
-            this->pfmt->putc('\"');
+            this->pfmt->putc('"');
             this->pfmt->putn(str.data(), (size_t) (pos - str.begin()));
             while(pos != str.end()) {
-              if((*pos == '\\') || (*pos == '\"')) {
+              if((*pos == '\\') || (*pos == '"')) {
                 // Escape it.
                 char seq[2] = { '\\', *pos };
                 ++ pos;
@@ -214,7 +214,7 @@ print_to(tinyfmt& fmt) const
                 this->pfmt->putn(&*from, (size_t) (pos - from));
               }
             }
-            this->pfmt->putc('\"');
+            this->pfmt->putc('"');
           }
 
         void
