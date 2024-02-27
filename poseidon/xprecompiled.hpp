@@ -62,9 +62,10 @@
 #include <limits.h>
 #include <wchar.h>
 #include <cxxabi.h>
-#ifdef __SSE2__
+#ifdef __SSE4_2__
 #include <x86intrin.h>
 #include <immintrin.h>
-#endif  // __SSE2__
+#include <nmmintrin.h>
+#endif  // __SSE4_2__
 
 #endif

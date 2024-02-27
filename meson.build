@@ -265,8 +265,8 @@ if cxx_asm_intel
   add_project_arguments('-masm=intel', language: [ 'c', 'cpp' ])
 endif
 
-if cxx_is_i386
-  add_project_arguments('-msse2', '-mfpmath=sse', language: [ 'c', 'cpp' ])
+if cxx_is_i386 or cxx_is_amd64
+  add_project_arguments('-msse4.2', '-mfpmath=sse', language: [ 'c', 'cpp' ])
 endif
 
 if get_option('enable-avx') and (cxx_is_i386 or cxx_is_amd64)
