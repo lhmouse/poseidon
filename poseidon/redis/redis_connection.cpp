@@ -143,57 +143,62 @@ fetch_reply(Redis_Value& output)
       return false;
 
     // Parse the reply and store the result into `output`.
-    struct rb_context
+    struct xFrame
       {
-        Redis_Value* output;
-        ::redisReply* reply;
-        size_t pos = 0;
+        Redis_Array vsa;
+        const ::redisReply* parent;
       };
 
-    vector<rb_context> rb_stack;
-    rb_stack.emplace_back();
-    rb_stack.back().output = &output;
-    rb_stack.back().reply = this->m_reply;
+    vector<xFrame> stack;
+    const ::redisReply* reply = this->m_reply;
 
-    while(!rb_stack.empty()) {
-      auto& rb_top = rb_stack.back();
+  do_pack_loop_:
+    switch(reply->type)
+      {
+      case REDIS_REPLY_NIL:
+        output.clear();
+        break;
 
-      // Unpack a reply.
-      switch(rb_top.reply->type)
-        {
-        case REDIS_REPLY_NIL:
-          rb_top.output->clear();
-          break;
+      case REDIS_REPLY_INTEGER:
+        output.mut_integer() = reply->integer;
+        break;
 
-        case REDIS_REPLY_INTEGER:
-          rb_top.output->mut_integer() = rb_top.reply->integer;
-          break;
+      case REDIS_REPLY_STRING:
+        output.mut_string().assign(reply->str, reply->len);
+        break;
 
-        case REDIS_REPLY_STRING:
-          rb_top.output->mut_string().assign(rb_top.reply->str, rb_top.reply->len);
-          break;
-
-        case REDIS_REPLY_ARRAY:
-          {
-            auto& output_arr = rb_top.output->mut_array();
-            output_arr.resize(rb_top.reply->elements);
-
-            if(rb_top.pos < rb_top.reply->elements) {
-              // Descend into this array.
-              rb_context rb_next;
-              rb_next.output = &(output_arr.mut(rb_top.pos));
-              rb_next.reply = rb_top.reply->element[rb_top.pos];
-              rb_top.pos ++;
-              rb_stack.push_back(rb_next);
-              continue;
-            }
-          }
-          break;
+      case REDIS_REPLY_ARRAY:
+        if(reply->elements != 0) {
+          // open
+          auto& frm = stack.emplace_back();
+          frm.vsa.reserve(reply->elements);
+          frm.parent = reply;
+          reply = reply->element[0];
+          goto do_pack_loop_;
         }
 
-      rb_stack.pop_back();
+        // empty
+        output.mut_array().clear();
+        break;
+      }
+
+    while(!stack.empty()) {
+      auto& frm = stack.back();
+      frm.vsa.emplace_back(move(output));
+      output = frm.vsa;
+
+      size_t i = frm.vsa.size();
+      if(i != frm.parent->elements) {
+        // next
+        reply = frm.parent->element[i];
+        goto do_pack_loop_;
+      }
+
+      // close
+      stack.pop_back();
     }
 
+    // Free reply data that has been parsed and consumed.
     this->m_reply.reset();
 
     // Return the result into `output`.
