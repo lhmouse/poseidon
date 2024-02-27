@@ -229,8 +229,12 @@ print_iso8601_ns_partial(char* str) const noexcept
     ::tm tm;
     ::gmtime_r(&(ts.tv_sec), &tm);
 
-    size_t len = ::strftime_l(str, 21, "%Y-%m-%dT%TZ", &tm, c_locale);
-    ROCKET_ASSERT(len == 20);
+    ::rocket::ascii_numput nump;
+    nump.put_DU(static_cast<uint32_t>(ts.tv_nsec), 9);
+
+    size_t len = ::strftime_l(str, 31, "%Y-%m-%dT%T.mmmuuunnnZ", &tm, c_locale);
+    ROCKET_ASSERT(len == 30);
+    ::memcpy(str + 20, nump.data(), 9);
     return len;
   }
 
@@ -239,7 +243,7 @@ DateTime::
 print_to(tinyfmt& fmt) const
   {
     char str[64];
-    size_t len = this->print_iso8601_partial(str);
+    size_t len = this->print_iso8601_ns_partial(str);
     return fmt.putn(str, len);
   }
 
@@ -248,7 +252,7 @@ DateTime::
 print_to_string() const
   {
     char str[64];
-    size_t len = this->print_iso8601_partial(str);
+    size_t len = this->print_iso8601_ns_partial(str);
     return cow_string(str, len);
   }
 

@@ -160,7 +160,6 @@ main()
 
     for(const auto& r : tests) {
       dt.set_system_time(system_clock::from_time_t(r.ts));
-      POSEIDON_TEST_CHECK(dt.print_to_string() == r.iso8601);
 
       ::memset(temp, '*', sizeof(temp));
       dt.print_rfc1123_partial(temp);

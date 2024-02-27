@@ -57,7 +57,6 @@ print_to(tinyfmt& fmt) const
       };
 
     vector<xFrame> stack;
-    ::rocket::ascii_numput nump;
     const Mongo_Value* pval = this;
 
   do_unpack_loop_:
@@ -146,18 +145,11 @@ print_to(tinyfmt& fmt) const
 
       case mongo_value_datetime:
         {
-          // `{$date:"1994-11-06 08:49:37.123"}`
-          ::timespec ts;
-          timespec_from_system_time(ts, pval->as_system_time());
-          nump.put_DU(static_cast<uint32_t>(ts.tv_nsec), 9);
-
+          // `{$date:"1994-11-06T08:49:37.123Z}"}`
           char temp[40];
           ::memcpy(temp, "{$date:\"", 8);
-          pval->as_datetime().print_iso8601_partial(temp + 8);
-          temp[18] = ' ';
-          temp[27] = '.';
-          ::memcpy(temp + 28, nump.data(), 4);
-          ::memcpy(temp + 31, "\"}\0", 4);
+          pval->as_datetime().print_iso8601_ns_partial(temp + 8);
+          ::memcpy(temp + 31, "Z\"}", 4);
           fmt << temp;
         }
         break;
