@@ -255,7 +255,7 @@ fetch_reply_bson_opt()
       // Create the cursor. `mongoc_cursor_new_from_command_reply_with_opts()`
       // destroys the reply object, so it has to be recreated afterwards.
       this->m_cursor.reset(::mongoc_cursor_new_from_command_reply_with_opts(
-                                            this->m_mongo, this->m_reply, nullptr));
+                                        this->m_mongo, this->m_reply, nullptr));
       ::bson_init(this->m_reply);
       this->m_reply_available = false;
     }
@@ -296,8 +296,8 @@ fetch_reply(Mongo_Document& output)
         ::bson_iter_t parent_iter;
       };
 
-    list<xFrame> stack;
     opt<Mongo_Array> output_array;
+    list<xFrame> stack;
 
     ::bson_iter_t bson_iter;
     if(!::bson_iter_init(&bson_iter, bson_output))
