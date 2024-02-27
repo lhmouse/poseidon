@@ -139,7 +139,8 @@ fetch_reply(Redis_Value& output)
   {
     output.clear();
 
-    if(!this->m_reply)
+    const auto unique_reply = move(this->m_reply);
+    if(!unique_reply)
       return false;
 
     // Parse the reply and store the result into `output`.
@@ -150,7 +151,7 @@ fetch_reply(Redis_Value& output)
       };
 
     vector<xFrame> stack;
-    const ::redisReply* reply = this->m_reply;
+    const ::redisReply* reply = unique_reply;
 
   do_pack_loop_:
     switch(reply->type)
@@ -197,9 +198,6 @@ fetch_reply(Redis_Value& output)
       // close
       stack.pop_back();
     }
-
-    // Free reply data that has been parsed and consumed.
-    this->m_reply.reset();
 
     // Return the result into `output`.
     return true;
