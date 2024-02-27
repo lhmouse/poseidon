@@ -133,6 +133,82 @@ implode(const vector<cow_string>& segments, char delim)
   }
 
 void
+quote_json_string(tinybuf& buf, cow_stringR str)
+  {
+    buf.putc('"');
+    size_t offset = 0;
+    while(offset < str.size()) {
+      // Decode one UTF code point.
+      char32_t cp;
+      if(!::asteria::utf8_decode(cp, str, offset)) {
+        cp = U'\xFFFD';
+        offset ++;
+      }
+
+      switch(cp)
+        {
+        case '\b':
+          buf.putn("\\b", 2);
+          break;
+
+        case '\f':
+          buf.putn("\\f", 2);
+          break;
+
+        case '\n':
+          buf.putn("\\n", 2);
+          break;
+
+        case '\r':
+          buf.putn("\\r", 2);
+          break;
+
+        case '\t':
+          buf.putn("\\t", 2);
+          break;
+
+        case '\"':  // 0x22
+        case '\\':  // 0x5C
+          {
+            char esc_seq[2] = "\\";
+            esc_seq[1] = static_cast<char>(cp);
+            buf.putn(esc_seq, 2);
+          }
+          break;
+
+        case 0x20 ... 0x21:
+        case 0x23 ... 0x5B:
+        case 0x5D ... 0x7E:
+          buf.putc(static_cast<char>(cp));
+          break;
+
+        default:
+          {
+            char16_t ustr[2];
+            char16_t* ueptr = ustr;
+            ::asteria::utf16_encode(ueptr, cp);
+
+            ::rocket::ascii_numput nump;
+            nump.put_XU(ustr[0] * 0x10000UL + ustr[1], 8);
+
+            char esc_seq[16] = "\\uXXXX\\uXXXX";
+            ::memcpy(esc_seq + 2, nump.data(), 4);
+            ::memcpy(esc_seq + 8, nump.data() + 4, 4);
+            buf.putn(esc_seq, static_cast<uint32_t>(ueptr - ustr) * 6);
+          }
+          break;
+        }
+    }
+    buf.putc('"');
+  }
+
+void
+quote_json_string(tinyfmt& fmt, cow_stringR str)
+  {
+    quote_json_string(fmt.mut_buf(), str);
+  }
+
+void
 hex_encode_16_partial(char* str, const void* data) noexcept
   {
     // Split the higher and lower halves into two SSE registers.

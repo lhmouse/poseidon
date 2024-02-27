@@ -54,6 +54,13 @@ implode(cow_string& text, const vector<cow_string>& segments, char delim = ',');
 cow_string
 implode(const vector<cow_string>& segments, char delim = ',');
 
+// Prints a quoted UTF-8 string, like in JSON.
+void
+quote_json_string(tinybuf& buf, cow_stringR str);
+
+void
+quote_json_string(tinyfmt& fmt, cow_stringR str);
+
 // Splices two buffers. After this function returns, `in` will be empty.
 inline
 linear_buffer&

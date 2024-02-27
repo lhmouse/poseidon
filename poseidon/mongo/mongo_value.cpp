@@ -80,71 +80,7 @@ print_to(tinyfmt& fmt) const
         break;
 
       case mongo_value_utf8:
-        {
-          fmt.putc('"');
-          size_t offset = 0;
-          while(offset < pval->as_utf8_length()) {
-            // Decode one UTF code point.
-            char32_t cp;
-            if(!::asteria::utf8_decode(cp, pval->as_utf8(), offset)) {
-              cp = U'\xFFFD';
-              offset ++;
-            }
-
-            switch(cp)
-              {
-              case '\b':
-                fmt.putn("\\b", 2);
-                break;
-
-              case '\f':
-                fmt.putn("\\f", 2);
-                break;
-
-              case '\n':
-                fmt.putn("\\n", 2);
-                break;
-
-              case '\r':
-                fmt.putn("\\r", 2);
-                break;
-
-              case '\t':
-                fmt.putn("\\t", 2);
-                break;
-
-              case '\"':  // 0x22
-              case '\\':  // 0x5C
-                {
-                  char esc_seq[2] = "\\";
-                  esc_seq[1] = static_cast<char>(cp);
-                  fmt.putn(esc_seq, 2);
-                }
-                break;
-
-              case 0x20 ... 0x21:
-              case 0x23 ... 0x5B:
-              case 0x5D ... 0x7E:
-                fmt.putc(static_cast<char>(cp));
-                break;
-
-              default:
-                {
-                  char16_t ustr[2];
-                  char16_t* ueptr = ustr;
-                  ::asteria::utf16_encode(ueptr, cp);
-                  nump.put_XU(ustr[0] * 0x10000UL + ustr[1], 8);
-
-                  char esc_seq[16] = "\\uXXXX\\uXXXX";
-                  ::memcpy(esc_seq + 2, nump.data(), 4);
-                  ::memcpy(esc_seq + 8, nump.data() + 4, 4);
-                  fmt.putn(esc_seq, static_cast<uint32_t>(ueptr - ustr) * 6);
-                }
-                break;
-              }
-          }
-          fmt.putc('"');
-        }
+        quote_json_string(fmt, pval->as_utf8());
         break;
 
       case mongo_value_binary:
@@ -186,7 +122,9 @@ print_to(tinyfmt& fmt) const
           frm.closure = '}';
           frm.pso = &(pval->as_document());
           frm.ito = frm.pso->begin();
-          fmt << '{' << frm.ito->first << ':';
+          fmt << '{';
+          quote_json_string(fmt, frm.ito->first);
+          fmt << ':';
           pval = &(frm.ito->second);
           goto do_unpack_loop_;
         }
@@ -244,7 +182,9 @@ print_to(tinyfmt& fmt) const
         case '}':
           if(++ frm.ito != frm.pso->end()) {
             // next
-            fmt << ',' << frm.ito->first << ':';
+            fmt << ',';
+            quote_json_string(fmt, frm.ito->first);
+            fmt << ':';
             pval = &(frm.ito->second);
             goto do_unpack_loop_;
           }
