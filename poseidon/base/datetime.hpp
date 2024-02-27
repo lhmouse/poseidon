@@ -126,6 +126,14 @@ class DateTime
     size_t
     print_iso8601_partial(char* str) const noexcept;
 
+    // Converts this timestamp to its ISO 8601 format with nanoseconds, with a
+    // null terminator. There shall be at least 31 characters in the buffer
+    // that `str` points to. This function returns the number of characters
+    // that have been written, excluding the null terminator, which is always
+    // 30.
+    size_t
+    print_iso8601_ns_partial(char* str) const noexcept;
+
     // Converts this timestamp to its ISO 8601 form.
     tinyfmt&
     print_to(tinyfmt& fmt) const;

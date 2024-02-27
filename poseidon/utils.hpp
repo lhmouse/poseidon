@@ -104,9 +104,10 @@ ROCKET_ALWAYS_INLINE
 void
 timespec_from_system_time(struct ::timespec& ts, system_time tm) noexcept
   {
-    ts.tv_sec = system_clock::to_time_t(tm);
-    auto ns_dur = duration_cast<nanoseconds>(tm - system_clock::from_time_t(ts.tv_sec));
-    ts.tv_nsec = static_cast<long>(ns_dur.count());
+    int64_t ns = time_point_cast<nanoseconds>(tm).time_since_epoch().count();
+    uint64_t shifted_ns = static_cast<uint64_t>(ns) + 9223372036000000000;
+    ts.tv_sec = static_cast<::time_t>(shifted_ns / 1000000000) - 9223372036;
+    ts.tv_nsec = static_cast<long>(shifted_ns % 1000000000);
   }
 
 // This resembles a partial URI like `host[:port]/path?query#fragment`. The

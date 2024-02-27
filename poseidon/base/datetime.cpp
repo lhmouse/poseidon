@@ -143,10 +143,11 @@ DateTime::
 print_rfc1123_partial(char* str) const noexcept
   {
     // `Sun, 06 Nov 1994 08:49:37 GMT`
-    ::time_t tp = system_clock::to_time_t(this->m_tp);
-    tp = ::std::clamp<::time_t>(tp, -2208988800, 253402300799);
+    ::timespec ts;
+    timespec_from_system_time(ts, this->m_tp);
+    ts.tv_sec = ::std::clamp<::time_t>(ts.tv_sec, -2208988800, 253402300799);
     ::tm tm;
-    ::gmtime_r(&tp, &tm);
+    ::gmtime_r(&(ts.tv_sec), &tm);
 
     size_t len = ::strftime_l(str, 30, "%a, %d %b %Y %T GMT", &tm, c_locale);
     ROCKET_ASSERT(len == 29);
@@ -158,10 +159,11 @@ DateTime::
 print_rfc850_partial(char* str) const noexcept
   {
     // `Sunday, 06-Nov-94 08:49:37 GMT`
-    ::time_t tp = system_clock::to_time_t(this->m_tp);
-    tp = ::std::clamp<::time_t>(tp, -2208988800, 253402300799);
+    ::timespec ts;
+    timespec_from_system_time(ts, this->m_tp);
+    ts.tv_sec = ::std::clamp<::time_t>(ts.tv_sec, -2208988800, 253402300799);
     ::tm tm;
-    ::gmtime_r(&tp, &tm);
+    ::gmtime_r(&(ts.tv_sec), &tm);
 
     size_t len = ::strftime_l(str, 34, "%A, %d-%b-%y %T GMT", &tm, c_locale);
     ROCKET_ASSERT((len >= 30) && (len <= 33));
@@ -173,10 +175,11 @@ DateTime::
 print_asctime_partial(char* str) const noexcept
   {
     // `Sun Nov  6 08:49:37 1994`
-    ::time_t tp = system_clock::to_time_t(this->m_tp);
-    tp = ::std::clamp<::time_t>(tp, -2208988800, 253402300799);
+    ::timespec ts;
+    timespec_from_system_time(ts, this->m_tp);
+    ts.tv_sec = ::std::clamp<::time_t>(ts.tv_sec, -2208988800, 253402300799);
     ::tm tm;
-    ::gmtime_r(&tp, &tm);
+    ::gmtime_r(&(ts.tv_sec), &tm);
 
     size_t len = ::strftime_l(str, 25, "%a %b %e %T %Y", &tm, c_locale);
     ROCKET_ASSERT(len == 24);
@@ -188,10 +191,11 @@ DateTime::
 print_cookie_partial(char* str) const noexcept
   {
     // `Sun, 06-Nov-1994 08:49:37 GMT`
-    ::time_t tp = system_clock::to_time_t(this->m_tp);
-    tp = ::std::clamp<::time_t>(tp, -2208988800, 253402300799);
+    ::timespec ts;
+    timespec_from_system_time(ts, this->m_tp);
+    ts.tv_sec = ::std::clamp<::time_t>(ts.tv_sec, -2208988800, 253402300799);
     ::tm tm;
-    ::gmtime_r(&tp, &tm);
+    ::gmtime_r(&(ts.tv_sec), &tm);
 
     size_t len = ::strftime_l(str, 30, "%a, %d-%b-%Y %T GMT", &tm, c_locale);
     ROCKET_ASSERT(len == 29);
@@ -203,10 +207,27 @@ DateTime::
 print_iso8601_partial(char* str) const noexcept
   {
     // `1994-11-06T08:49:37Z`
-    ::time_t tp = system_clock::to_time_t(this->m_tp);
-    tp = ::std::clamp<::time_t>(tp, -2208988800, 253402300799);
+    ::timespec ts;
+    timespec_from_system_time(ts, this->m_tp);
+    ts.tv_sec = ::std::clamp<::time_t>(ts.tv_sec, -2208988800, 253402300799);
     ::tm tm;
-    ::gmtime_r(&tp, &tm);
+    ::gmtime_r(&(ts.tv_sec), &tm);
+
+    size_t len = ::strftime_l(str, 21, "%Y-%m-%dT%TZ", &tm, c_locale);
+    ROCKET_ASSERT(len == 20);
+    return len;
+  }
+
+size_t
+DateTime::
+print_iso8601_ns_partial(char* str) const noexcept
+  {
+    // `1994-11-06T08:49:37.123456789Z`
+    ::timespec ts;
+    timespec_from_system_time(ts, this->m_tp);
+    ts.tv_sec = ::std::clamp<::time_t>(ts.tv_sec, -2208988800, 253402300799);
+    ::tm tm;
+    ::gmtime_r(&(ts.tv_sec), &tm);
 
     size_t len = ::strftime_l(str, 21, "%Y-%m-%dT%TZ", &tm, c_locale);
     ROCKET_ASSERT(len == 20);

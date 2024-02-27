@@ -227,19 +227,18 @@ add_column(const Column& column)
           // Verify the default value, which shall be a timestamp between
           // '1900-01-01 00:00:00 UTC' and '9999-12-31 23:59:59 UTC', with no
           // fractional part.
-          const system_time val = column.default_value.as_system_time();
+          ::timespec ts;
+          timespec_from_system_time(ts, column.default_value.as_system_time());
+          const system_time val = system_clock::from_time_t(ts.tv_sec);
 
-          ::time_t secs = system_clock::to_time_t(val);
-          system_time rounded = system_clock::from_time_t(secs);
-
-          if((secs < -2208988800) || (secs >= 253402300799))
+          if((ts.tv_sec < -2208988800) || (ts.tv_sec > 253402300799))
             POSEIDON_THROW((
-                "Default value `$2` for column `$1` is out of range"),
-                column.name, secs);
+                "Default value for column `$1` is out of range"),
+                column.name);
 
-          if(rounded != val)
+          if(val != column.default_value.as_system_time())
             POSEIDON_THROW((
-                "Default value for column `$1` shall not contain a fractional part"),
+                "Default value for column `$1` shall not contain a fraction"),
                 column.name);
         }
         break;
