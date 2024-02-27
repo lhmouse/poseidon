@@ -97,6 +97,7 @@ class UUID
       {
         __m128i tval = _mm_load_si128(&(this->m_stor));
         __m128i oval = _mm_load_si128(&(other.m_stor));
+
         int eq_mask = _mm_movemask_epi8(_mm_cmpeq_epi8(tval, oval));
         return eq_mask == 0xFFFF;
       }
@@ -105,11 +106,16 @@ class UUID
     int
     compare(const UUID& other) const noexcept
       {
-        __m128i shift_to_uint8 = _mm_set1_epi8(-0x80);
-        __m128i tval = _mm_xor_si128(_mm_load_si128(&(this->m_stor)), shift_to_uint8);
-        __m128i oval = _mm_xor_si128(_mm_load_si128(&(other.m_stor)), shift_to_uint8);
-        int gt_mask = ROCKET_HTOBE16((uint16_t) _mm_movemask_epi8(_mm_cmpgt_epi8(tval, oval)));
-        int lt_mask = ROCKET_HTOBE16((uint16_t) _mm_movemask_epi8(_mm_cmpgt_epi8(oval, tval)));
+        __m128i tval = _mm_load_si128(&(this->m_stor));
+        __m128i oval = _mm_load_si128(&(other.m_stor));
+
+        __m128i bits_rev = _mm_set_epi8(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15);
+        __m128i bits_to_u8 = _mm_set1_epi8(-0x80);
+        tval = _mm_xor_si128(_mm_shuffle_epi8(tval, bits_rev), bits_to_u8);
+        oval = _mm_xor_si128(_mm_shuffle_epi8(oval, bits_rev), bits_to_u8);
+
+        int gt_mask = _mm_movemask_epi8(_mm_cmpgt_epi8(tval, oval));
+        int lt_mask = _mm_movemask_epi8(_mm_cmpgt_epi8(oval, tval));
         return gt_mask - lt_mask;
       }
 
