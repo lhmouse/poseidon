@@ -288,113 +288,54 @@ fetch_reply(Mongo_Document& output)
     if(!bson_output)
       return false;
 
-    // Unpack a BSON object. The `bson_t` type has a HUGE alignment of 128,
-    // which prevents use of standard containers.
-    struct rb_ctx
+    // Parse the reply and store the result into `output`.
+    struct xFrame
       {
-        rb_ctx* prev = nullptr;
-        Mongo_Array* arr = nullptr;
-        Mongo_Document* doc = nullptr;
-        ::bson_iter_t iter;
+        opt<Mongo_Array> parent_array;
+        Mongo_Document parent;
+        ::bson_iter_t parent_iter;
       };
 
-    ::rocket::unique_ptr<rb_ctx, void (rb_ctx*&)> rb_top(new rb_ctx,
-           *[](rb_ctx*& top) {
-             while(top)
-               delete ::std::exchange(top, top->prev);
-           });
+    list<xFrame> stack;
+    opt<Mongo_Array> output_array;
 
-    rb_top->doc = &output;
-    bool bson_success = ::bson_iter_init(&(rb_top->iter), bson_output);
+    ::bson_iter_t bson_iter;
+    if(!::bson_iter_init(&bson_iter, bson_output))
+      POSEIDON_THROW(("Failed to parse BSON reply from server"));
 
-    while(rb_top && bson_success) {
-      if(!::bson_iter_next(&(rb_top->iter))) {
-        // Leave this value.
-        ::rocket::unique_ptr<rb_ctx> rb_old_top(rb_top.release());
-        rb_top.reset(rb_old_top->prev);
-        continue;
-      }
+#define do_output_  \
+    (output_array ? output_array->emplace_back()  \
+       : output.emplace_back(::bson_iter_key_unsafe(&bson_iter), nullptr).second)
 
-      uint32_t type = ::bson_iter_type(&(rb_top->iter));
-      switch(type)
+  do_pack_loop_:
+    while(::bson_iter_next(&bson_iter))
+      switch(static_cast<uint32_t>(::bson_iter_type(&bson_iter)))
         {
         case BSON_TYPE_NULL:
-          {
-            if(rb_top->arr)
-              rb_top->arr->emplace_back(nullptr);
-            else
-              rb_top->doc->emplace_back(::bson_iter_key_unsafe(&(rb_top->iter)), nullptr);
-          }
+          do_output_.clear();
           break;
 
         case BSON_TYPE_BOOL:
-          {
-            bool value = ::bson_iter_bool_unsafe(&(rb_top->iter));
-
-            if(rb_top->arr)
-              rb_top->arr->emplace_back(value);
-            else
-              rb_top->doc->emplace_back(::bson_iter_key_unsafe(&(rb_top->iter)), value);
-          }
+          do_output_.mut_boolean() = ::bson_iter_bool_unsafe(&bson_iter);
           break;
 
         case BSON_TYPE_INT32:
-          {
-            int64_t value = ::bson_iter_int32_unsafe(&(rb_top->iter));
-
-            if(rb_top->arr)
-              rb_top->arr->emplace_back(value);
-            else
-              rb_top->doc->emplace_back(::bson_iter_key_unsafe(&(rb_top->iter)), value);
-          }
+          do_output_.mut_integer() = ::bson_iter_int32_unsafe(&bson_iter);
           break;
 
         case BSON_TYPE_INT64:
-          {
-            int64_t value = ::bson_iter_int64_unsafe(&(rb_top->iter));
-
-            if(rb_top->arr)
-              rb_top->arr->emplace_back(value);
-            else
-              rb_top->doc->emplace_back(::bson_iter_key_unsafe(&(rb_top->iter)), value);
-          }
+          do_output_.mut_integer() = ::bson_iter_int64_unsafe(&bson_iter);
           break;
 
         case BSON_TYPE_DOUBLE:
-          {
-            double value = ::bson_iter_double_unsafe(&(rb_top->iter));
-
-            if(rb_top->arr)
-              rb_top->arr->emplace_back(value);
-            else
-              rb_top->doc->emplace_back(::bson_iter_key_unsafe(&(rb_top->iter)), value);
-          }
+          do_output_.mut_double() = ::bson_iter_double_unsafe(&bson_iter);
           break;
 
         case BSON_TYPE_UTF8:
           {
             uint32_t len;
-            const char* str = ::bson_iter_utf8(&(rb_top->iter), &len);
-            cow_string value(str, len);
-
-            if(rb_top->arr)
-              rb_top->arr->emplace_back(move(value));
-            else
-              rb_top->doc->emplace_back(::bson_iter_key_unsafe(&(rb_top->iter)), move(value));
-          }
-          break;
-
-        case BSON_TYPE_BINARY:
-          {
-            uint32_t len;
-            const uint8_t* ptr;
-            ::bson_iter_binary(&(rb_top->iter), nullptr, &len, &ptr);
-            cow_bstring value(ptr, ptr + len);
-
-            if(rb_top->arr)
-              rb_top->arr->emplace_back(move(value));
-            else
-              rb_top->doc->emplace_back(::bson_iter_key_unsafe(&(rb_top->iter)), move(value));
+            const char* str = ::bson_iter_utf8(&bson_iter, &len);
+            do_output_.mut_utf8().append(str, len);
           }
           break;
 
@@ -402,22 +343,22 @@ fetch_reply(Mongo_Document& output)
           {
             uint32_t len;
             const uint8_t* ptr;
-            ::bson_iter_array(&(rb_top->iter), &len, &ptr);
-            Mongo_Value* value;
+            ::bson_iter_array(&bson_iter, &len, &ptr);
 
-            ::rocket::unique_ptr<rb_ctx> rb_next(new rb_ctx);
-            bson_success = ::bson_iter_init_from_data(&(rb_next->iter), ptr, len);
-            if(!bson_success)
-              break;
+            ::bson_iter_t child_iter;
+            if((len > 5) && ::bson_iter_init_from_data(&child_iter, ptr, len)) {
+              // open
+              auto& frm = stack.emplace_back();
+              frm.parent_array.swap(output_array);
+              frm.parent.swap(output);
+              frm.parent_iter = bson_iter;
+              bson_iter = child_iter;
+              output_array.emplace();  // append to `*output_array`
+              goto do_pack_loop_;
+            }
 
-            if(rb_top->arr)
-              value = &(rb_top->arr->emplace_back());
-            else
-              value = &(rb_top->doc->emplace_back(::bson_iter_key_unsafe(&(rb_top->iter)), nullptr).second);
-
-            rb_next->arr = &(value->mut_array());
-            rb_next->prev = rb_top.release();
-            rb_top.reset(rb_next.release());
+            // empty
+            do_output_.mut_array();
           }
           break;
 
@@ -425,52 +366,52 @@ fetch_reply(Mongo_Document& output)
           {
             uint32_t len;
             const uint8_t* ptr;
-            ::bson_iter_document(&(rb_top->iter), &len, &ptr);
-            Mongo_Value* value;
+            ::bson_iter_document(&bson_iter, &len, &ptr);
 
-            ::rocket::unique_ptr<rb_ctx> rb_next(new rb_ctx);
-            bson_success = ::bson_iter_init_from_data(&(rb_next->iter), ptr, len);
-            if(!bson_success)
-              break;
+            ::bson_iter_t child_iter;
+            if((len > 5) && ::bson_iter_init_from_data(&child_iter, ptr, len)) {
+              // open
+              auto& frm = stack.emplace_back();
+              frm.parent_array.swap(output_array);
+              frm.parent.swap(output);
+              frm.parent_iter = bson_iter;
+              bson_iter = child_iter;
+              output_array.reset();  // append to `output`
+              goto do_pack_loop_;
+            }
 
-            if(rb_top->arr)
-              value = &(rb_top->arr->emplace_back());
-            else
-              value = &(rb_top->doc->emplace_back(::bson_iter_key_unsafe(&(rb_top->iter)), nullptr).second);
-
-            rb_next->doc = &(value->mut_document());
-            rb_next->prev = rb_top.release();
-            rb_top.reset(rb_next.release());
+            // empty
+            do_output_.mut_document();
           }
           break;
 
         case BSON_TYPE_OID:
-          {
-            const ::bson_oid_t* poid = ::bson_iter_oid(&(rb_top->iter));
-
-            if(rb_top->arr)
-              rb_top->arr->emplace_back(*poid);
-            else
-              rb_top->doc->emplace_back(::bson_iter_key_unsafe(&(rb_top->iter)), *poid);
-          }
+          do_output_.mut_oid() = *::bson_iter_oid_unsafe(&bson_iter);
           break;
 
         case BSON_TYPE_DATE_TIME:
           {
-            milliseconds ms(::bson_iter_date_time(&(rb_top->iter)));
-            system_time sys_tm(ms);
-
-            if(rb_top->arr)
-              rb_top->arr->emplace_back(sys_tm);
-            else
-              rb_top->doc->emplace_back(::bson_iter_key_unsafe(&(rb_top->iter)), sys_tm);
+            int64_t ms = ::bson_iter_date_time(&bson_iter);
+            do_output_.mut_datetime() = system_time(milliseconds(ms));
           }
           break;
         }
-    }
 
-    if(!bson_success)
-      POSEIDON_THROW(("Failed to parse BSON reply"));
+    if(!stack.empty()) {
+      auto& frm = stack.back();
+      output_array.swap(frm.parent_array);
+      output.swap(frm.parent);
+      bson_iter = frm.parent_iter;
+
+      if(frm.parent_array)
+        do_output_.mut_array().swap(*(frm.parent_array));
+      else
+        do_output_.mut_document().swap(frm.parent);
+
+      // close
+      stack.pop_back();
+      goto do_pack_loop_;
+    }
 
     // Return the result into `output`.
     return true;
