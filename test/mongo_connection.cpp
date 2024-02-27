@@ -36,7 +36,7 @@ main()
     conn.execute(doc);
 
     num = 0;
-    format(fmt, "show dbs -->\n");
+    format(fmt, "$1-->\n", doc);
 
     while(conn.fetch_reply(doc)) {
       format(fmt, "[$1] --->\n", ++num);
@@ -49,7 +49,23 @@ main()
     conn.execute(doc);
 
     num = 0;
-    format(fmt, "db.system.version.find() -->\n");
+    format(fmt, "$1-->\n", doc);
+
+    while(conn.fetch_reply(doc)) {
+      format(fmt, "[$1] --->\n", ++num);
+      format(fmt, "  $1\n", doc);
+    }
+
+    // `db.system.version.find({_id:{$regex:'\w*Version$'}})`
+    doc.clear();
+    doc.emplace_back(&"find", &"system.version");
+    auto& filter = doc.emplace_back(&"filter", nullptr).second.mut_document();
+    auto& _id = filter.emplace_back(&"_id", nullptr).second.mut_document();
+    _id.emplace_back(&"$regex", &R"(^\w+Schema$)");
+    conn.execute(doc);
+
+    num = 0;
+    format(fmt, "$1-->\n", doc);
 
     while(conn.fetch_reply(doc)) {
       format(fmt, "[$1] --->\n", ++num);
