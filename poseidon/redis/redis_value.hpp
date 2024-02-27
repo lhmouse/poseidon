@@ -135,12 +135,12 @@ class Redis_Value
       { return this->m_stor.as<cow_string>();  }
 
     const char*
-    string_data() const
-      { return this->m_stor.as<cow_string>().data();  }
+    as_string_c_str() const
+      { return this->m_stor.as<cow_string>().c_str();  }
 
     size_t
-    string_size() const
-      { return this->m_stor.as<cow_string>().size();  }
+    as_string_length() const
+      { return this->m_stor.as<cow_string>().length();  }
 
     cow_string&
     mut_string() noexcept

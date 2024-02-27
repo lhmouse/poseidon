@@ -10,7 +10,7 @@ main()
   {
     Redis_Value hval;
     POSEIDON_TEST_CHECK(hval.is_null());
-    POSEIDON_TEST_CHECK(hval.print_to_string() == "(nil)");
+    POSEIDON_TEST_CHECK(hval.print_to_string() == "null");
 
     hval = 1234567890123456789;
     POSEIDON_TEST_CHECK(hval.is_integer());
