@@ -9,6 +9,30 @@ namespace poseidon {
 Redis_Value::
 ~Redis_Value()
   {
+    // Break deep recursion with a handwritten stack.
+    struct xVariant : decltype(this->m_stor)  { };
+    vector<xVariant> stack;
+
+  do_unpack_loop_:
+    try {
+      // Unpack arrays or objects.
+      auto psa = this->m_stor.mut_ptr<Redis_Array>();
+      if(psa && psa->unique())
+        for(auto it = psa->mut_begin();  it != psa->end();  ++it)
+          stack.emplace_back().swap(it->m_stor);
+    }
+    catch(::std::exception& stdex) {
+      // Ignore this exception.
+      ::std::fprintf(stderr, "WARNING: %s\n", stdex.what());
+    }
+
+    if(!stack.empty()) {
+      // Destroy the this value. This will not result in recursion.
+      ::rocket::destroy(&(this->m_stor));
+      ::rocket::construct(&(this->m_stor), move(stack.back()));
+      stack.pop_back();
+      goto do_unpack_loop_;
+    }
   }
 
 tinyfmt&
