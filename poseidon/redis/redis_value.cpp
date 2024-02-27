@@ -48,7 +48,7 @@ print_to(tinyfmt& fmt) const
 
     vector<xFrame> stack;
     ::rocket::ascii_numput nump;
-    auto pval = this;
+    const Redis_Value* pval = this;
 
   do_unpack_loop_:
     switch(pval->type())
