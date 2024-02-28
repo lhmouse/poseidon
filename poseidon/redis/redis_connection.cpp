@@ -185,7 +185,6 @@ fetch_reply(Redis_Value& output)
     while(!stack.empty()) {
       auto& frm = stack.back();
       frm.vsa.emplace_back(move(output));
-      output = frm.vsa;
 
       size_t n = frm.vsa.size();
       if(n != frm.parent->elements) {
@@ -194,6 +193,8 @@ fetch_reply(Redis_Value& output)
         reply = frm.parent->element[n];
         goto do_pack_loop_;
       }
+
+      output = move(frm.vsa);
 
       // close
       stack.pop_back();
