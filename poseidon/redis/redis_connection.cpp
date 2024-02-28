@@ -118,9 +118,8 @@ execute(const cow_string* cmds, size_t ncmds)
     }
 
     this->m_reply.reset(static_cast<::redisReply*>(::redisCommandArgv(this->m_redis,
-              static_cast<int>(ncmds), reinterpret_cast<const char**>(argv.data()),
-              reinterpret_cast<size_t*>(argv.data() + ncmds))));
-
+                          static_cast<int>(ncmds), reinterpret_cast<const char**>(argv.data()),
+                          reinterpret_cast<size_t*>(argv.data() + ncmds))));
     if(!this->m_reply)
       POSEIDON_THROW((
           "Could not execute Redis command: ERROR $1: $2",
@@ -188,10 +187,9 @@ fetch_reply(Redis_Value& output)
       frm.vsa.emplace_back(move(output));
       output = frm.vsa;
 
-      size_t i = frm.vsa.size();
-      if(i != frm.parent->elements) {
+      if(frm.vsa.size() != frm.parent->elements) {
         // next
-        reply = frm.parent->element[i];
+        reply = *(frm.parent->element + frm.vsa.size());
         goto do_pack_loop_;
       }
 
