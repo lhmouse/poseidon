@@ -187,9 +187,11 @@ fetch_reply(Redis_Value& output)
       frm.vsa.emplace_back(move(output));
       output = frm.vsa;
 
-      if(frm.vsa.size() != frm.parent->elements) {
+      size_t n = frm.vsa.size();
+      if(n != frm.parent->elements) {
         // next
-        reply = *(frm.parent->element + frm.vsa.size());
+        ROCKET_ASSERT(n < frm.parent->elements);
+        reply = frm.parent->element[n];
         goto do_pack_loop_;
       }
 
