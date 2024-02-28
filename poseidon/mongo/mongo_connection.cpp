@@ -298,7 +298,7 @@ fetch_reply(Mongo_Document& output)
 
     opt<Mongo_Array> output_array;
     list<xFrame> stack;
-    ::bson_iter_t bson_iter, c_iter;
+    ::bson_iter_t bson_iter, child_iter;
 
     if(!::bson_iter_init(&bson_iter, bson_output))
       POSEIDON_THROW(("Failed to parse BSON reply from server"));
@@ -307,7 +307,7 @@ fetch_reply(Mongo_Document& output)
     (output_array ? output_array->emplace_back()  \
        : output.emplace_back(::bson_iter_key_unsafe(&bson_iter), nullptr).second)
 
-  do_pack_loop_:
+  do_unpack_bson_loop_:
     while(::bson_iter_next(&bson_iter))
       switch(static_cast<uint32_t>(::bson_iter_type(&bson_iter)))
         {
@@ -345,15 +345,15 @@ fetch_reply(Mongo_Document& output)
             const uint8_t* ptr;
             ::bson_iter_array(&bson_iter, &len, &ptr);
 
-            if(::bson_iter_init_from_data(&c_iter, ptr, len)) {
+            if(::bson_iter_init_from_data(&child_iter, ptr, len)) {
               // open
               auto& frm = stack.emplace_back();
               frm.parent_array.swap(output_array);
               frm.parent.swap(output);
               frm.parent_iter = bson_iter;
-              bson_iter = c_iter;
-              output_array.emplace();  // append to `*output_array`
-              goto do_pack_loop_;
+              output_array.emplace();
+              bson_iter = child_iter;
+              goto do_unpack_bson_loop_;
             }
 
             // empty
@@ -367,15 +367,14 @@ fetch_reply(Mongo_Document& output)
             const uint8_t* ptr;
             ::bson_iter_document(&bson_iter, &len, &ptr);
 
-            if(::bson_iter_init_from_data(&c_iter, ptr, len)) {
+            if(::bson_iter_init_from_data(&child_iter, ptr, len)) {
               // open
               auto& frm = stack.emplace_back();
               frm.parent_array.swap(output_array);
               frm.parent.swap(output);
               frm.parent_iter = bson_iter;
-              bson_iter = c_iter;
-              output_array.reset();  // append to `output`
-              goto do_pack_loop_;
+              bson_iter = child_iter;
+              goto do_unpack_bson_loop_;
             }
 
             // empty
@@ -405,13 +404,13 @@ fetch_reply(Mongo_Document& output)
       bson_iter = frm.parent_iter;
 
       if(frm.parent_array)
-        do_reply_output_value_ = move(*(frm.parent_array));
+        do_reply_output_value_.mut_array() = move(*(frm.parent_array));
       else
-        do_reply_output_value_ = move(frm.parent);
+        do_reply_output_value_.mut_document() = move(frm.parent);
 
       // close
       stack.pop_back();
-      goto do_pack_loop_;
+      goto do_unpack_bson_loop_;
     }
 
     // Return the result into `output`.
