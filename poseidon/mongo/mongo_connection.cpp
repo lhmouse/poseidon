@@ -298,8 +298,8 @@ fetch_reply(Mongo_Document& output)
 
     opt<Mongo_Array> output_array;
     list<xFrame> stack;
+    ::bson_iter_t bson_iter, c_iter;
 
-    ::bson_iter_t bson_iter;
     if(!::bson_iter_init(&bson_iter, bson_output))
       POSEIDON_THROW(("Failed to parse BSON reply from server"));
 
@@ -345,18 +345,15 @@ fetch_reply(Mongo_Document& output)
             const uint8_t* ptr;
             ::bson_iter_array(&bson_iter, &len, &ptr);
 
-            if(len > 5) {
-              ::bson_iter_t child_iter;
-              if(::bson_iter_init_from_data(&child_iter, ptr, len)) {
-                // open
-                auto& frm = stack.emplace_back();
-                frm.parent_array.swap(output_array);
-                frm.parent.swap(output);
-                frm.parent_iter = bson_iter;
-                bson_iter = child_iter;
-                output_array.emplace();  // append to `*output_array`
-                goto do_pack_loop_;
-              }
+            if(::bson_iter_init_from_data(&c_iter, ptr, len)) {
+              // open
+              auto& frm = stack.emplace_back();
+              frm.parent_array.swap(output_array);
+              frm.parent.swap(output);
+              frm.parent_iter = bson_iter;
+              bson_iter = c_iter;
+              output_array.emplace();  // append to `*output_array`
+              goto do_pack_loop_;
             }
 
             // empty
@@ -370,18 +367,15 @@ fetch_reply(Mongo_Document& output)
             const uint8_t* ptr;
             ::bson_iter_document(&bson_iter, &len, &ptr);
 
-            if(len > 5) {
-              ::bson_iter_t child_iter;
-              if(::bson_iter_init_from_data(&child_iter, ptr, len)) {
-                // open
-                auto& frm = stack.emplace_back();
-                frm.parent_array.swap(output_array);
-                frm.parent.swap(output);
-                frm.parent_iter = bson_iter;
-                bson_iter = child_iter;
-                output_array.reset();  // append to `output`
-                goto do_pack_loop_;
-              }
+            if(::bson_iter_init_from_data(&c_iter, ptr, len)) {
+              // open
+              auto& frm = stack.emplace_back();
+              frm.parent_array.swap(output_array);
+              frm.parent.swap(output);
+              frm.parent_iter = bson_iter;
+              bson_iter = c_iter;
+              output_array.reset();  // append to `output`
+              goto do_pack_loop_;
             }
 
             // empty
@@ -390,7 +384,10 @@ fetch_reply(Mongo_Document& output)
           break;
 
         case BSON_TYPE_OID:
-          do_reply_output_value_.mut_oid() = *::bson_iter_oid_unsafe(&bson_iter);
+          {
+            const ::bson_oid_t* poid = ::bson_iter_oid_unsafe(&bson_iter);
+            do_reply_output_value_.mut_oid() = *poid;
+          }
           break;
 
         case BSON_TYPE_DATE_TIME:
@@ -408,9 +405,9 @@ fetch_reply(Mongo_Document& output)
       bson_iter = frm.parent_iter;
 
       if(frm.parent_array)
-        do_reply_output_value_.mut_array().swap(*(frm.parent_array));
+        do_reply_output_value_ = move(*(frm.parent_array));
       else
-        do_reply_output_value_.mut_document().swap(frm.parent);
+        do_reply_output_value_ = move(frm.parent);
 
       // close
       stack.pop_back();
