@@ -98,141 +98,29 @@ void
 Mongo_Connection::
 execute(const Mongo_Document& cmd)
   {
-    // Pack the command into a BSON object. The `bson_t` type has a HUGE
-    // alignment of 128, which prevents use of standard containers.
-    struct rb_ctx
+    // Pack the command into a BSON object.
+    struct xFrame
       {
-        rb_ctx* prev = nullptr;
-        ::bson_t* parent = nullptr;
-        const Mongo_Array* arr = nullptr;
-        const Mongo_Document* doc = nullptr;
-        size_t index = 0;
-        ::bson_t child;  // uninitialized at top
+        const Mongo_Array* psa;
+        const Mongo_Document* pso;
+        size_t pos;
+        size_t size;
+        ::bson_t temp;
       };
 
-    ::rocket::unique_ptr<rb_ctx, void (rb_ctx*&)> rb_top(new rb_ctx,
-           *[](rb_ctx*& top) {
-             while(top)
-               delete ::std::exchange(top, top->prev);
-           });
-
     scoped_bson bson_cmd;
-    rb_top->parent = bson_cmd;
-    rb_top->doc = &cmd;
-    bool bson_success = true;
+    list<xFrame> stack;
+    const Mongo_Array* pval_a = nullptr;
+    const Mongo_Document* pval_o = &cmd;
+    size_t pos = SIZE_MAX;
+    size_t size = cmd.size();
 
-    while(rb_top && bson_success) {
-      ::rocket::ascii_numput key_nump;
-      const char* key;
-      int key_len;
-      const Mongo_Value* value;
+  do_unpack_loop_:
+    while(++ pos != size)
+    ;
 
-      if(rb_top->arr) {
-        if(rb_top->index >= rb_top->arr->size()) {
-          // Leave this array.
-          ::rocket::unique_ptr<rb_ctx> rb_old_top(rb_top.release());
-          rb_top.reset(rb_old_top->prev);
-          bson_success = !rb_top || ::bson_append_array_end(rb_top->parent, &(rb_top->child));
-          continue;
-        }
 
-        // Get an element.
-        key_nump.put_DU(rb_top->index);
-        key = key_nump.data();
-        key_len = static_cast<int>(key_nump.size());
-        value = &(rb_top->arr->at(rb_top->index));
-        rb_top->index ++;
-      }
-      else {
-        if(rb_top->index >= rb_top->doc->size()) {
-          // Leave this document.
-          ::rocket::unique_ptr<rb_ctx> rb_old_top(rb_top.release());
-          rb_top.reset(rb_old_top->prev);
-          bson_success = !rb_top || ::bson_append_document_end(rb_top->parent, &(rb_top->child));
-          continue;
-        }
 
-        // Get an element.
-        key = rb_top->doc->at(rb_top->index).first.c_str();
-        key_len = clamp_cast<int>(rb_top->doc->at(rb_top->index).first.size(), 0, INT_MAX);
-        value = &(rb_top->doc->at(rb_top->index).second);
-        rb_top->index ++;
-      }
-
-      switch(value->type())
-        {
-        case mongo_value_null:
-          bson_success = ::bson_append_null(rb_top->parent, key, key_len);
-          break;
-
-        case mongo_value_boolean:
-          bson_success = ::bson_append_bool(rb_top->parent, key, key_len, value->as_boolean());
-          break;
-
-        case mongo_value_integer:
-          bson_success = ::bson_append_int64(rb_top->parent, key, key_len, value->as_integer());
-          break;
-
-        case mongo_value_double:
-          bson_success = ::bson_append_double(rb_top->parent, key, key_len, value->as_double());
-          break;
-
-        case mongo_value_utf8:
-          bson_success = (value->as_utf8_length() <= INT_MAX)
-                 && ::bson_append_utf8(rb_top->parent, key, key_len,
-                                       value->as_utf8_c_str(), static_cast<int>(value->as_utf8_length()));
-          break;
-
-        case mongo_value_binary:
-          bson_success = (value->as_binary_size() <= INT_MAX)
-                 && ::bson_append_binary(rb_top->parent, key, key_len, BSON_SUBTYPE_BINARY,
-                                  value->as_binary_data(), static_cast<uint32_t>(value->as_binary_size()));
-          break;
-
-        case mongo_value_array:
-          {
-            ::rocket::unique_ptr<rb_ctx> rb_next(new rb_ctx);
-            bson_success = ::bson_append_array_begin(rb_top->parent, key, key_len, &(rb_top->child));
-            if(!bson_success)
-              break;
-
-            rb_next->parent = &(rb_top->child);
-            rb_next->arr = &(value->as_array());
-            rb_next->prev = rb_top.release();
-            rb_top.reset(rb_next.release());
-          }
-          break;
-
-        case mongo_value_document:
-          {
-            ::rocket::unique_ptr<rb_ctx> rb_next(new rb_ctx);
-            bson_success = ::bson_append_document_begin(rb_top->parent, key, key_len, &(rb_top->child));
-            if(!bson_success)
-              break;
-
-            rb_next->parent = &(rb_top->child);
-            rb_next->doc = &(value->as_document());
-            rb_next->prev = rb_top.release();
-            rb_top.reset(rb_next.release());
-          }
-          break;
-
-        case mongo_value_oid:
-          bson_success = ::bson_append_oid(rb_top->parent, key, key_len, &(value->as_oid()));
-          break;
-
-        case mongo_value_datetime:
-          bson_success = ::bson_append_date_time(rb_top->parent, key, key_len,
-                     time_point_cast<milliseconds>(value->as_system_time()).time_since_epoch().count());
-          break;
-
-        default:
-          POSEIDON_THROW(("Unknown Mongo value type: $1"), *value);
-        }
-    }
-
-    if(!bson_success)
-      POSEIDON_THROW(("Failed to compose BSON command"));
 
     return this->execute_bson(bson_cmd);
   }
