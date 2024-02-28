@@ -171,7 +171,7 @@ execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)
           break;
 
         default:
-          POSEIDON_THROW(("Unknown MySQL value type: $1"), args_opt[col]);
+          ASTERIA_TERMINATE(("Corrupted MySQL value type `$1`"), args_opt[col].type());
         }
 
     if(::mysql_stmt_bind_param(this->m_stmt, binds.data()) != 0)
