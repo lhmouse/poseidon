@@ -184,7 +184,7 @@ fetch_reply(Redis_Value& output)
 
     while(!stack.empty()) {
       auto& frm = stack.back();
-      frm.vsa.emplace_back(move(output));
+      frm.vsa.emplace_back().swap(output);
 
       size_t n = frm.vsa.size();
       if(n != frm.parent->elements) {
@@ -194,6 +194,7 @@ fetch_reply(Redis_Value& output)
         goto do_pack_loop_;
       }
 
+      ROCKET_ASSERT(output.type() == redis_value_null);
       output = move(frm.vsa);
 
       // close
