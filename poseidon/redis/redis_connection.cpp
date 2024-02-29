@@ -145,59 +145,63 @@ fetch_reply(Redis_Value& output)
     // Parse the reply and store the result into `output`.
     struct xFrame
       {
+        Redis_Value* target;
         Redis_Array vsa;
         const ::redisReply* parent;
       };
 
     vector<xFrame> stack;
+    Redis_Value* pval = &output;
     const ::redisReply* reply = unique_reply;
 
   do_pack_loop_:
     switch(reply->type)
       {
       case REDIS_REPLY_NIL:
-        output.clear();
+        pval->clear();
         break;
 
       case REDIS_REPLY_INTEGER:
-        output.mut_integer() = reply->integer;
+        pval->mut_integer() = reply->integer;
         break;
 
       case REDIS_REPLY_STRING:
-        output.mut_string().assign(reply->str, reply->len);
+        pval->mut_string().assign(reply->str, reply->len);
         break;
 
       case REDIS_REPLY_ARRAY:
         if(reply->elements != 0) {
           // open
           auto& frm = stack.emplace_back();
-          frm.vsa.reserve(reply->elements);
+          frm.target = pval;
+          frm.vsa.reserve(static_cast<uint32_t>(reply->elements));
+          pval = &(frm.vsa.emplace_back());
           frm.parent = reply;
           reply = reply->element[0];
           goto do_pack_loop_;
         }
 
         // empty
-        output.mut_array().clear();
+        pval->mut_array().clear();
         break;
       }
 
     while(!stack.empty()) {
       auto& frm = stack.back();
-      frm.vsa.emplace_back().swap(output);
-
       size_t n = frm.vsa.size();
       if(n != frm.parent->elements) {
         // next
         ROCKET_ASSERT(n < frm.parent->elements);
         reply = frm.parent->element[n];
+        pval = &(frm.vsa.emplace_back());
         goto do_pack_loop_;
       }
 
-      ROCKET_ASSERT(output.type() == redis_value_null);
-      output = move(frm.vsa);
+      ROCKET_ASSERT(frm.target->m_stor.index() == 0);
+      frm.target->m_stor = move(frm.vsa);
 
       // close
+      pval = frm.target;
       stack.pop_back();
     }
 
