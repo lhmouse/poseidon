@@ -15,88 +15,57 @@ tinyfmt&
 MySQL_Value::
 print_to(tinyfmt& fmt) const
   {
-    struct variant_printer
+    switch(this->type())
       {
-        tinyfmt* pfmt;
+      case mysql_value_null:
+        fmt << "NULL";
+        break;
 
-        void
-        operator()(nullptr_t)
-          {
-            this->pfmt->putn("NULL", 4);
+      case mysql_value_integer:
+        fmt << this->as_integer();
+        break;
+
+      case mysql_value_double:
+        {
+          if(::std::isnan(this->as_double()))
+            fmt << "NULL";
+          else
+            fmt << ::std::clamp(this->as_double(), -DBL_MAX, DBL_MAX);
+        }
+        break;
+
+      case mysql_value_blob:
+        {
+          const auto& str = this->as_blob();
+          fmt.putc('\'');
+          size_t pos = str.find_of("\'\\");
+          fmt.putn(str.data(), ::std::min(pos, str.size()));
+          while(pos != str.npos) {
+            size_t base = pos;
+            pos = str.find_of(pos + 1, "\'\\");
+            fmt.putc('\\');
+            fmt.putn(str.data() + base, ::std::min(pos, str.size()) - base);
           }
+          fmt.putc('\'');
+        }
+        break;
 
-        void
-        operator()(int64_t num)
-          {
-            ::rocket::ascii_numput nump;
-            nump.put_DI(num);
-            this->pfmt->putn(nump.data(), nump.size());
-          }
+      case mysql_value_datetime:
+        {
+          // `'1994-11-06 08:49:37.123'`
+          char temp[32];
+          temp[0] = '\'';
+          this->as_datetime().print_iso8601_ns_partial(temp + 1);
+          temp[11] = ' ';
+          temp[24] = '\'';
+          fmt.putn(temp, 25);
+        }
+        break;
 
-        void
-        operator()(double num)
-          {
-            if(::std::isnan(num)) {
-              // MySQL does not allow NaN values.
-              this->pfmt->putn("NULL", 4);
-              return;
-            }
+      default:
+        ASTERIA_TERMINATE(("Corrupted value type `$1`"), this->m_stor.index());
+      }
 
-            double rval = ::std::clamp(num, -DBL_MAX, +DBL_MAX);
-            ::rocket::ascii_numput nump;
-            nump.put_DD(rval);
-            this->pfmt->putn(nump.data(), nump.size());
-          }
-
-        void
-        operator()(cow_stringR str)
-          {
-            this->pfmt->putc('\'');
-            auto pos = str.begin();
-            while(pos != str.end()) {
-              // https://dev.mysql.com/doc/refman/8.0/en/string-literals.html#character-escape-sequences
-              //                                    ' " \  \b  \n  \r  \t    \Z \0
-              static constexpr char src_chars[] = "\'\"\\""\b""\n""\r""\t""\x1A";
-              static constexpr char esc_chars[] = "\'\"\\" "b" "n" "r" "t"   "Z""0";
-              char my_esc_char = 0;
-
-              for(uint32_t k = 0;  k != size(src_chars);  ++k)
-                if(*pos == src_chars[k]) {
-                  my_esc_char = esc_chars[k];
-                  break;
-                }
-
-              if(my_esc_char != 0) {
-                // Escape it.
-                char seq[2] = { '\\', my_esc_char };
-                ++ pos;
-                this->pfmt->putn(seq, 2);
-              }
-              else {
-                // Write this sequence verbatim.
-                auto from = pos;
-                pos = ::std::find_first_of(pos + 1, str.end(), begin(src_chars), end(src_chars));
-                this->pfmt->putn(&*from, static_cast<size_t>(pos - from));
-              }
-            }
-            this->pfmt->putc('\'');
-          }
-
-        void
-        operator()(const DateTime_with_MYSQL_TIME& mdt)
-          {
-            // `'1994-11-06 08:49:37.123'`
-            char temp[32];
-            temp[0] = '\'';
-            mdt.datetime.print_iso8601_ns_partial(temp + 1);
-            temp[11] = ' ';
-            temp[24] = '\'';
-            this->pfmt->putn(temp, 25);
-          }
-      };
-
-    variant_printer p = { &fmt };
-    this->m_stor.visit(p);
     return fmt;
   }
 

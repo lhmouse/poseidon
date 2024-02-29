@@ -197,11 +197,11 @@ class MySQL_Value
       { return this->m_stor.as<cow_string>();  }
 
     const char*
-    blob_data() const
+    as_blob_data() const
       { return this->m_stor.as<cow_string>().data();  }
 
     size_t
-    blob_size() const
+    as_blob_size() const
       { return this->m_stor.as<cow_string>().size();  }
 
     cow_string&

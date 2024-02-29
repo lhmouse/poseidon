@@ -330,7 +330,7 @@ do_on_abstract_future_execute()
 
                 int64_t def_value;
                 ::rocket::ascii_numget numg;
-                numg.parse_DI(ex->second.default_value.blob_data(), ex->second.default_value.blob_size());
+                numg.parse_DI(ex->second.default_value.as_blob_data(), ex->second.default_value.as_blob_size());
                 numg.cast_I(def_value, INT64_MIN, INT64_MAX);
 
                 if(def_value != column.default_value.as_integer())
@@ -358,7 +358,7 @@ do_on_abstract_future_execute()
 
                 int64_t def_value;
                 ::rocket::ascii_numget numg;
-                numg.parse_DI(ex->second.default_value.blob_data(), ex->second.default_value.blob_size());
+                numg.parse_DI(ex->second.default_value.as_blob_data(), ex->second.default_value.as_blob_size());
                 numg.cast_I(def_value, INT64_MIN, INT64_MAX);
 
                 if(def_value != column.default_value.as_integer())
@@ -386,7 +386,7 @@ do_on_abstract_future_execute()
 
                 int64_t def_value;
                 ::rocket::ascii_numget numg;
-                numg.parse_DI(ex->second.default_value.blob_data(), ex->second.default_value.blob_size());
+                numg.parse_DI(ex->second.default_value.as_blob_data(), ex->second.default_value.as_blob_size());
                 numg.cast_I(def_value, INT64_MIN, INT64_MAX);
 
                 if(def_value != column.default_value.as_integer())
@@ -413,7 +413,7 @@ do_on_abstract_future_execute()
 
                 double def_value;
                 ::rocket::ascii_numget numg;
-                numg.parse_DD(ex->second.default_value.blob_data(), ex->second.default_value.blob_size());
+                numg.parse_DD(ex->second.default_value.as_blob_data(), ex->second.default_value.as_blob_size());
                 numg.cast_D(def_value, -HUGE_VAL, HUGE_VAL);
 
                 if(def_value != column.default_value.as_double())
@@ -454,12 +454,12 @@ do_on_abstract_future_execute()
                 column.default_value.as_datetime().print_iso8601_partial(def_str);
                 def_str[10] = ' ';
                 ::memcpy(def_str + 19, ".000000", 8);
-                size_t cmp_len = ex->second.default_value.blob_size();
+                size_t cmp_len = ex->second.default_value.as_blob_size();
 
                 if((cmp_len < 19) || (cmp_len > 26))
                   goto do_alter_table_column_;
 
-                if(::memcmp(ex->second.default_value.blob_data(), def_str, cmp_len) != 0)
+                if(::memcmp(ex->second.default_value.as_blob_data(), def_str, cmp_len) != 0)
                   goto do_alter_table_column_;
               }
 

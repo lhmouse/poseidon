@@ -150,7 +150,7 @@ print_to(tinyfmt& fmt) const
           ::memcpy(temp, "{$date:\"", 8);
           pval->as_datetime().print_iso8601_ns_partial(temp + 8);
           ::memcpy(temp + 31, "Z\"}", 4);
-          fmt << temp;
+          fmt.putn(temp, 34);
         }
         break;
 

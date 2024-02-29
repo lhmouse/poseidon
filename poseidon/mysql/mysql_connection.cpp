@@ -141,8 +141,8 @@ execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)
 
         case mysql_value_blob:
           binds[col].buffer_type = MYSQL_TYPE_BLOB;
-          binds[col].buffer = const_cast<char*>(args_opt[col].blob_data());
-          binds[col].buffer_length = args_opt[col].blob_size();
+          binds[col].buffer = const_cast<char*>(args_opt[col].as_blob_data());
+          binds[col].buffer_length = args_opt[col].as_blob_size();
           break;
 
         case mysql_value_datetime:

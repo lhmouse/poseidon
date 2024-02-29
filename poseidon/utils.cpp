@@ -137,12 +137,11 @@ quote_json_string(tinybuf& buf, cow_stringR str)
   {
     buf.putc('"');
     size_t offset = 0;
-    while(offset < str.size()) {
-      // Decode one UTF code point.
+    while(offset != str.size()) {
       char32_t cp;
       if(!::asteria::utf8_decode(cp, str, offset)) {
-        cp = U'\xFFFD';
         offset ++;
+        cp = U'\xFFFD';
       }
 
       switch(cp)
