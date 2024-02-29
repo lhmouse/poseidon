@@ -274,7 +274,6 @@ fetch_reply_bson_opt()
     if(!fetched)
       return nullptr;
 
-    // Return the result inside the cursor.
     return bson_output;
   }
 

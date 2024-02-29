@@ -341,7 +341,6 @@ fetch_row(vector<MySQL_Value>& output)
         }
       }
 
-    // Return the result into `output`.
     return true;
   }
 

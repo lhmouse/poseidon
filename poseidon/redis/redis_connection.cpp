@@ -201,7 +201,6 @@ fetch_reply(Redis_Value& output)
       stack.pop_back();
     }
 
-    // Return the result into `output`.
     return true;
   }
 
