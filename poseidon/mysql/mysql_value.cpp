@@ -38,14 +38,14 @@ print_to(tinyfmt& fmt) const
         {
           const auto& str = this->as_blob();
           fmt.putc('\'');
-          size_t pos = str.find_of("\'\\");
-          fmt.putn(str.data(), ::std::min(pos, str.size()));
-          while(pos != str.npos) {
-            size_t base = pos;
-            pos = str.find_of(pos + 1, "\'\\");
+          size_t base = 0;
+          size_t next = cow_string::npos;
+          while((next = str.find_of(next + 1, "\'\\")) != cow_string::npos) {
+            fmt.putn(str.data() + base, next - base);
             fmt.putc('\\');
-            fmt.putn(str.data() + base, ::std::min(pos, str.size()) - base);
+            base = next;
           }
+          fmt.putn(str.data() + base, str.size() - base);
           fmt.putc('\'');
         }
         break;
