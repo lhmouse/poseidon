@@ -307,7 +307,7 @@ fetch_reply(Mongo_Document& output)
 
 #define do_reply_output_  \
     (pval_a ? pval_a->emplace_back()  \
-      : pval_o->emplace_back(::bson_iter_key_unsafe(&top_iter), nullptr).second)
+       : pval_o->emplace_back(::bson_iter_key_unsafe(&top_iter), nullptr).second)
 
     uint32_t size;
     const char* str;
