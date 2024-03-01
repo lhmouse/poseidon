@@ -57,9 +57,9 @@ reset() noexcept
     this->m_reset_clear = false;
 
     // Check whether the server is still active. This is a blocking function.
-    auto servers = ::rocket::make_unique_handle(
-             ::mongoc_client_select_server(this->m_mongo, false, nullptr, nullptr),
-                   ::mongoc_server_description_destroy);
+    auto servers = make_unique_handle(
+           ::mongoc_client_select_server(this->m_mongo, false, nullptr, nullptr),
+           ::mongoc_server_description_destroy);
     if(!servers)
       return false;
 
@@ -291,123 +291,133 @@ fetch_reply(Mongo_Document& output)
     // Parse the reply and store the result into `output`.
     struct xFrame
       {
-        Mongo_Array* target_a;
         Mongo_Document* target_o;
-        Mongo_Value vs;
+        Mongo_Array* target_a;
+        Mongo_Value* target;
         ::bson_iter_t parent_iter;
       };
 
     list<xFrame> stack;
-    Mongo_Array* pval_a = nullptr;
-    Mongo_Document* pval_o = &output;
-    ::bson_iter_t top_iter;
+    Mongo_Document* top_o = &output;
+    Mongo_Array* top_a = nullptr;
+    Mongo_Value* pval = nullptr;
 
+    ::bson_iter_t top_iter;
     if(!::bson_iter_init(&top_iter, bson_output))
       POSEIDON_THROW(("Failed to parse BSON reply from server"));
 
-#define do_reply_output_  \
-    (pval_a ? pval_a->emplace_back()  \
-       : pval_o->emplace_back(::bson_iter_key_unsafe(&top_iter), nullptr).second)
-
-    uint32_t size;
-    const char* str;
-    const unsigned char* bytes;
-    int64_t num;
-    ::bson_iter_t child_iter;
-
   do_pack_loop_:
-    while(::bson_iter_next(&top_iter))
-      switch(static_cast<uint32_t>(::bson_iter_type(&top_iter)))
+    while(::bson_iter_next(&top_iter)) {
+      if(top_o)
+        pval = &(top_o->emplace_back(::bson_iter_key_unsafe(&top_iter), nullptr).second);
+      else
+        pval = &(top_a->emplace_back());
+
+      switch(static_cast<uint32_t>(::bson_iter_type_unsafe(&top_iter)))
         {
         case BSON_TYPE_NULL:
-          do_reply_output_;
           break;
 
         case BSON_TYPE_BOOL:
-          do_reply_output_.mut_boolean() = ::bson_iter_bool_unsafe(&top_iter);
+          pval->mut_boolean() = ::bson_iter_bool_unsafe(&top_iter);
           break;
 
         case BSON_TYPE_INT32:
-          do_reply_output_.mut_integer() = ::bson_iter_int32_unsafe(&top_iter);
+          pval->mut_integer() = ::bson_iter_int32_unsafe(&top_iter);
           break;
 
         case BSON_TYPE_INT64:
-          do_reply_output_.mut_integer() = ::bson_iter_int64_unsafe(&top_iter);
+          pval->mut_integer() = ::bson_iter_int64_unsafe(&top_iter);
           break;
 
         case BSON_TYPE_DOUBLE:
-          do_reply_output_.mut_double() = ::bson_iter_double_unsafe(&top_iter);
+          pval->mut_double() = ::bson_iter_double_unsafe(&top_iter);
           break;
 
         case BSON_TYPE_UTF8:
-          str = ::bson_iter_utf8(&top_iter, &size);
-          do_reply_output_.mut_utf8().assign(str, size);
-          break;
-
-        case BSON_TYPE_ARRAY:
-          ::bson_iter_array(&top_iter, &size, &bytes);
-          if(::bson_iter_init_from_data(&child_iter, bytes, size)) {
-            // open
-            auto& frm = stack.emplace_back();
-            frm.target_a = pval_a;
-            frm.target_o = pval_o;
-            pval_a = &(frm.vs.mut_array());
-            pval_o = nullptr;
-            frm.parent_iter = top_iter;
-            top_iter = child_iter;
-            goto do_pack_loop_;
+          {
+            uint32_t len;
+            const char* str = ::bson_iter_utf8(&top_iter, &len);
+            pval->mut_utf8().append(str, len);
           }
-
-          // empty
-          do_reply_output_.mut_array();
-          break;
-
-        case BSON_TYPE_DOCUMENT:
-          ::bson_iter_document(&top_iter, &size, &bytes);
-          if(::bson_iter_init_from_data(&child_iter, bytes, size)) {
-            // open
-            auto& frm = stack.emplace_back();
-            frm.target_a = pval_a;
-            frm.target_o = pval_o;
-            pval_a = nullptr;
-            pval_o = &(frm.vs.mut_document());
-            frm.parent_iter = top_iter;
-            top_iter = child_iter;
-            goto do_pack_loop_;
-          }
-
-          // empty
-          do_reply_output_.mut_document();
           break;
 
         case BSON_TYPE_BINARY:
-          ::bson_iter_binary(&top_iter, nullptr, &size, &bytes);
-          do_reply_output_.mut_binary().assign(bytes, size);
+          {
+            uint32_t len;
+            const uint8_t* bytes;
+            ::bson_iter_binary(&top_iter, nullptr, &len, &bytes);
+            pval->mut_binary().append(bytes, len);
+          }
+          break;
+
+        case BSON_TYPE_DOCUMENT:
+          {
+            uint32_t len;
+            const uint8_t* bytes;
+            ::bson_iter_document(&top_iter, &len, &bytes);
+
+            ::bson_iter_t child_iter;
+            if(::bson_iter_init_from_data(&child_iter, bytes, len)) {
+              // open
+              auto& frm = stack.emplace_back();
+              frm.target_o = top_o;
+              frm.target_a = top_a;
+              frm.target = pval;
+              frm.parent_iter = top_iter;
+              top_o = &(pval->mut_document());
+              top_iter = child_iter;
+              goto do_pack_loop_;
+            }
+
+            // empty (?)
+            pval->mut_document();
+          }
+          break;
+
+        case BSON_TYPE_ARRAY:
+          {
+            uint32_t len;
+            const uint8_t* bytes;
+            ::bson_iter_array(&top_iter, &len, &bytes);
+
+            ::bson_iter_t child_iter;
+            if(::bson_iter_init_from_data(&child_iter, bytes, len)) {
+              // open
+              auto& frm = stack.emplace_back();
+              frm.target_o = top_o;
+              frm.target_a = top_a;
+              frm.target = pval;
+              frm.parent_iter = top_iter;
+              top_a = &(pval->mut_array());
+              top_iter = child_iter;
+              goto do_pack_loop_;
+            }
+
+            // empty (?)
+            pval->mut_array();
+          }
           break;
 
         case BSON_TYPE_OID:
-          do_reply_output_.mut_oid() = *::bson_iter_oid_unsafe(&top_iter);
+          pval->mut_oid() = *::bson_iter_oid_unsafe(&top_iter);
           break;
 
         case BSON_TYPE_DATE_TIME:
-          num = ::bson_iter_date_time(&top_iter);
-          do_reply_output_.mut_datetime() = system_time() + milliseconds(num);
+          {
+            int64_t ms = ::bson_iter_date_time(&top_iter);
+            pval->mut_datetime() = system_time() + milliseconds(ms);
+          }
           break;
         }
+    }
 
     if(!stack.empty()) {
       auto& frm = stack.back();
 
-      // move the sub-object
-      if(frm.target_a)
-        frm.target_a->emplace_back(move(frm.vs));
-      else
-        frm.target_o->emplace_back(::bson_iter_key_unsafe(&(frm.parent_iter)),
-                                   move(frm.vs));
-
       // close
-      pval_a = frm.target_a;
-      pval_o = frm.target_o;
+      top_o = frm.target_o;
+      top_a = frm.target_a;
       top_iter = frm.parent_iter;
       stack.pop_back();
       goto do_pack_loop_;
