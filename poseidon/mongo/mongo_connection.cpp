@@ -300,24 +300,24 @@ fetch_reply(Mongo_Document& output)
     if(!::bson_iter_init(&top_iter, bson_output))
       POSEIDON_THROW(("Failed to parse BSON reply from server"));
 
+    Mongo_Value* pval;
+    uint32_t len;
+    const char* str;
+    const unsigned char* bytes;
+    ::bson_iter_t child_iter;
+    milliseconds dur;
+
   do_pack_loop_:
     while(::bson_iter_next(&top_iter)) {
-      Mongo_Value* pval;
-      uint32_t len;
-      const char* str;
-      const unsigned char* bytes;
-      int64_t int64;
-
-      if(top_a)
-        pval = &(top_a->emplace_back());
-      else
-        pval = &(top_o->emplace_back(
-                   ::std::piecewise_construct,
-                   ::std::forward_as_tuple(
-                       reinterpret_cast<const char*>(top_iter.raw + top_iter.key),
-                       top_iter.d1 - top_iter.key - 1),
-                   ::std::forward_as_tuple())
-                 .second);
+      pval = top_a
+        ? &(top_a->emplace_back())
+        : &(top_o->emplace_back(
+              ::std::piecewise_construct,
+              ::std::forward_as_tuple(
+                  reinterpret_cast<const char*>(top_iter.raw + top_iter.key),
+                  top_iter.d1 - top_iter.key - 1),
+              ::std::forward_as_tuple())
+            .second);
 
       switch(static_cast<uint32_t>(::bson_iter_type_unsafe(&top_iter)))
         {
@@ -351,39 +351,37 @@ fetch_reply(Mongo_Document& output)
           break;
 
         case BSON_TYPE_ARRAY:
-          {
+          ::bson_iter_array(&top_iter, &len, &bytes);
+          if(::bson_iter_init_from_data(&child_iter, bytes, len)) {
+            // open
             auto& frm = stack.emplace_back();
             frm.parent = pval;
             frm.parent_iter = top_iter;
             top_a = &(pval->mut_array());
             top_o = nullptr;
-
-            // open
-            ::bson_iter_array(&top_iter, &len, &bytes);
-            if(::bson_iter_init_from_data(&top_iter, bytes, len))
-              goto do_pack_loop_;
-
-            top_iter = frm.parent_iter;
-            stack.pop_back();
+            top_iter = child_iter;
+            goto do_pack_loop_;
           }
+
+          // invalid
+          pval->mut_array();
           break;
 
         case BSON_TYPE_DOCUMENT:
-          {
+          ::bson_iter_document(&top_iter, &len, &bytes);
+          if(::bson_iter_init_from_data(&child_iter, bytes, len)) {
+            // open
             auto& frm = stack.emplace_back();
             frm.parent = pval;
             frm.parent_iter = top_iter;
             top_a = nullptr;
             top_o = &(pval->mut_document());
-
-            // open
-            ::bson_iter_document(&top_iter, &len, &bytes);
-            if(::bson_iter_init_from_data(&top_iter, bytes, len))
-              goto do_pack_loop_;
-
-            top_iter = frm.parent_iter;
-            stack.pop_back();
+            top_iter = child_iter;
+            goto do_pack_loop_;
           }
+
+          // invalid
+          pval->mut_document();
           break;
 
         case BSON_TYPE_OID:
@@ -391,8 +389,8 @@ fetch_reply(Mongo_Document& output)
           break;
 
         case BSON_TYPE_DATE_TIME:
-          int64 = ::bson_iter_date_time(&top_iter);
-          pval->mut_datetime() = system_time() + milliseconds(int64);
+          dur = milliseconds(::bson_iter_date_time(&top_iter));
+          pval->mut_datetime() = system_time() + dur;
           break;
         }
     }
