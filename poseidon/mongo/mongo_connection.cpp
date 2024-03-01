@@ -125,6 +125,7 @@ execute(const Mongo_Document& cmd)
       milliseconds dur;
 
       if(top_a) {
+        // array; keys are subscripts as decimal strings.
         size_t pos = top_a->size() - top_rpos;
         top_rpos --;
         array_key_nump.put_DU(pos);
@@ -133,6 +134,7 @@ execute(const Mongo_Document& cmd)
         pval = &(top_a->at(pos));
       }
       else {
+        // documents
         size_t pos = top_o->size() - top_rpos;
         top_rpos --;
         key = top_o->at(pos).first.data();
