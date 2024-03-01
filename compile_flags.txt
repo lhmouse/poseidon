@@ -1,0 +1,7 @@
+-Ibuild_debug
+-I/usr/include/libbson-1.0
+-I/usr/include/libmongoc-1.0
+-std=c++17
+-Werror=conversion
+-Werror=sign-compare
+-Werror=sign-conversion
