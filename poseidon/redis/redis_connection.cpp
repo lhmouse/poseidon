@@ -146,7 +146,7 @@ fetch_reply(Redis_Value& output)
     struct xFrame
       {
         Redis_Value* target;
-        Redis_Array vsa;
+        Redis_Array* psa;
         const ::redisReply* parent;
       };
 
@@ -166,7 +166,7 @@ fetch_reply(Redis_Value& output)
         break;
 
       case REDIS_REPLY_STRING:
-        pval->mut_string().assign(reply->str, reply->len);
+        pval->mut_string().append(reply->str, reply->len);
         break;
 
       case REDIS_REPLY_ARRAY:
@@ -174,31 +174,28 @@ fetch_reply(Redis_Value& output)
           // open
           auto& frm = stack.emplace_back();
           frm.target = pval;
-          frm.vsa.reserve(static_cast<uint32_t>(reply->elements));
+          frm.psa = &(pval->mut_array());
           frm.parent = reply;
-          pval = &(frm.vsa.emplace_back());
+          frm.psa->reserve(static_cast<uint32_t>(reply->elements));
+          pval = &(frm.psa->emplace_back());
           reply = reply->element[0];
           goto do_pack_loop_;
         }
 
         // empty
-        pval->mut_array().clear();
+        pval->mut_array();
         break;
       }
 
     while(!stack.empty()) {
       auto& frm = stack.back();
-      size_t n = frm.vsa.size();
-      if(n != frm.parent->elements) {
+      size_t t = frm.psa->size();
+      if(t != frm.parent->elements) {
         // next
-        ROCKET_ASSERT(n < frm.parent->elements);
-        pval = &(frm.vsa.emplace_back());
-        reply = frm.parent->element[n];
+        pval = &(frm.psa->emplace_back());
+        reply = frm.parent->element[t];
         goto do_pack_loop_;
       }
-
-      ROCKET_ASSERT(frm.target->m_stor.index() == 0);
-      frm.target->m_stor = move(frm.vsa);
 
       // close
       pval = frm.target;
