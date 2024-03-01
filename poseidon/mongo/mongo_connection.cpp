@@ -184,7 +184,7 @@ execute(const Mongo_Document& cmd)
             frm.parent = pval;
             frm.parent_rpos = top_rpos;
 
-            switch(static_cast<uint32_t>(pval->type()))
+            switch(pval->m_stor.index())
               {
               case mongo_value_array:
                 top_rpos = pval->as_array().size();
