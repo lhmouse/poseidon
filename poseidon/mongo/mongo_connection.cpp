@@ -261,19 +261,16 @@ fetch_reply_bson_opt()
       this->m_reply_available = false;
     }
 
-    // Get the next document from the reply cursor.
     const ::bson_t* bson_output;
-    bool fetched = ::mongoc_cursor_next(this->m_cursor, &bson_output);
-
-    ::bson_error_t error;
-    if(!fetched && ::mongoc_cursor_error(this->m_cursor, &error))
-      POSEIDON_THROW((
-          "Could not fetch result from Mongo server: ERROR $1.$2: $3",
-          "[`mongoc_cursor_next()` failed]"),
-          error.domain, error.code, error.message);
-
-    if(!fetched)
-      return nullptr;
+    if(!::mongoc_cursor_next(this->m_cursor, &bson_output)) {
+      // An error may have been stored in the cursor.
+      ::bson_error_t error;
+      if(::mongoc_cursor_error(this->m_cursor, &error))
+        POSEIDON_THROW((
+            "Could not fetch result from Mongo server: ERROR $1.$2: $3",
+            "[`mongoc_cursor_next()` failed]"),
+            error.domain, error.code, error.message);
+    }
 
     return bson_output;
   }
@@ -314,9 +311,13 @@ fetch_reply(Mongo_Document& output)
       if(top_a)
         pval = &(top_a->emplace_back());
       else
-        pval = &(top_o->emplace_back(::bson_iter_key_unsafe(&top_iter), nullptr).second);
-
-      ROCKET_ASSERT(pval->m_stor.index() == 0);
+        pval = &(top_o->emplace_back(
+                   ::std::piecewise_construct,
+                   ::std::forward_as_tuple(
+                       reinterpret_cast<const char*>(top_iter.raw + top_iter.key),
+                       top_iter.d1 - top_iter.key - 1),
+                   ::std::forward_as_tuple())
+                 .second);
 
       switch(static_cast<uint32_t>(::bson_iter_type_unsafe(&top_iter)))
         {
