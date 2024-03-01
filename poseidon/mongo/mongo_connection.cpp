@@ -291,9 +291,7 @@ fetch_reply(Mongo_Document& output)
     // Parse the reply and store the result into `output`.
     struct xFrame
       {
-        Mongo_Array* psa;
-        Mongo_Document* pso;
-        Mongo_Value* target;
+        Mongo_Value* psv;
         ::bson_iter_t parent_iter;
       };
 
@@ -354,9 +352,7 @@ fetch_reply(Mongo_Document& output)
         case BSON_TYPE_ARRAY:
           {
             auto& frm = stack.emplace_back();
-            frm.psa = top_a;
-            frm.pso = top_o;
-            frm.target = pval;
+            frm.psv = pval;
             frm.parent_iter = top_iter;
             top_a = &(pval->mut_array());
             top_o = nullptr;
@@ -374,9 +370,7 @@ fetch_reply(Mongo_Document& output)
         case BSON_TYPE_DOCUMENT:
           {
             auto& frm = stack.emplace_back();
-            frm.psa = top_a;
-            frm.pso = top_o;
-            frm.target = pval;
+            frm.psv = pval;
             frm.parent_iter = top_iter;
             top_a = nullptr;
             top_o = &(pval->mut_document());
@@ -406,8 +400,8 @@ fetch_reply(Mongo_Document& output)
       auto& frm = stack.back();
 
       // close
-      top_a = frm.psa;
-      top_o = frm.pso;
+      top_a = frm.psv->m_stor.mut_ptr<Mongo_Array>();
+      top_o = frm.psv->m_stor.mut_ptr<Mongo_Document>();
       top_iter = frm.parent_iter;
       stack.pop_back();
       goto do_pack_loop_;
