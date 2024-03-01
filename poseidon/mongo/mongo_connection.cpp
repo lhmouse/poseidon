@@ -57,9 +57,9 @@ reset() noexcept
     this->m_reset_clear = false;
 
     // Check whether the server is still active. This is a blocking function.
-    auto servers = make_unique_handle(
-           ::mongoc_client_select_server(this->m_mongo, false, nullptr, nullptr),
-           ::mongoc_server_description_destroy);
+    auto servers = make_unique_handle(::mongoc_client_select_server(this->m_mongo,
+                                                            false, nullptr, nullptr),
+                                      ::mongoc_server_description_destroy);
     if(!servers)
       return false;
 
@@ -256,7 +256,7 @@ fetch_reply_bson_opt()
       // Create the cursor. `mongoc_cursor_new_from_command_reply_with_opts()`
       // destroys the reply object, so it has to be recreated afterwards.
       this->m_cursor.reset(::mongoc_cursor_new_from_command_reply_with_opts(
-                                        this->m_mongo, this->m_reply, nullptr));
+                                            this->m_mongo, this->m_reply, nullptr));
       ::bson_init(this->m_reply);
       this->m_reply_available = false;
     }
@@ -291,16 +291,15 @@ fetch_reply(Mongo_Document& output)
     // Parse the reply and store the result into `output`.
     struct xFrame
       {
-        Mongo_Document* target_o;
-        Mongo_Array* target_a;
+        Mongo_Array* psa;
+        Mongo_Document* pso;
         Mongo_Value* target;
         ::bson_iter_t parent_iter;
       };
 
     list<xFrame> stack;
-    Mongo_Document* top_o = &output;
     Mongo_Array* top_a = nullptr;
-    Mongo_Value* pval = nullptr;
+    Mongo_Document* top_o = &output;
 
     ::bson_iter_t top_iter;
     if(!::bson_iter_init(&top_iter, bson_output))
@@ -308,10 +307,18 @@ fetch_reply(Mongo_Document& output)
 
   do_pack_loop_:
     while(::bson_iter_next(&top_iter)) {
-      if(top_o)
-        pval = &(top_o->emplace_back(::bson_iter_key_unsafe(&top_iter), nullptr).second);
-      else
+      Mongo_Value* pval;
+      uint32_t len;
+      const char* str;
+      const unsigned char* bytes;
+      int64_t int64;
+
+      if(top_a)
         pval = &(top_a->emplace_back());
+      else
+        pval = &(top_o->emplace_back(::bson_iter_key_unsafe(&top_iter), nullptr).second);
+
+      ROCKET_ASSERT(pval->m_stor.index() == 0);
 
       switch(static_cast<uint32_t>(::bson_iter_type_unsafe(&top_iter)))
         {
@@ -335,67 +342,52 @@ fetch_reply(Mongo_Document& output)
           break;
 
         case BSON_TYPE_UTF8:
-          {
-            uint32_t len;
-            const char* str = ::bson_iter_utf8(&top_iter, &len);
-            pval->mut_utf8().append(str, len);
-          }
+          str = ::bson_iter_utf8(&top_iter, &len);
+          pval->mut_utf8().append(str, len);
           break;
 
         case BSON_TYPE_BINARY:
+          ::bson_iter_binary(&top_iter, nullptr, &len, &bytes);
+          pval->mut_binary().append(bytes, len);
+          break;
+
+        case BSON_TYPE_ARRAY:
           {
-            uint32_t len;
-            const uint8_t* bytes;
-            ::bson_iter_binary(&top_iter, nullptr, &len, &bytes);
-            pval->mut_binary().append(bytes, len);
+            auto& frm = stack.emplace_back();
+            frm.psa = top_a;
+            frm.pso = top_o;
+            frm.target = pval;
+            frm.parent_iter = top_iter;
+            top_a = &(pval->mut_array());
+            top_o = nullptr;
+
+            // open
+            ::bson_iter_array(&top_iter, &len, &bytes);
+            if(::bson_iter_init_from_data(&top_iter, bytes, len))
+              goto do_pack_loop_;
+
+            top_iter = frm.parent_iter;
+            stack.pop_back();
           }
           break;
 
         case BSON_TYPE_DOCUMENT:
           {
-            uint32_t len;
-            const uint8_t* bytes;
+            auto& frm = stack.emplace_back();
+            frm.psa = top_a;
+            frm.pso = top_o;
+            frm.target = pval;
+            frm.parent_iter = top_iter;
+            top_a = nullptr;
+            top_o = &(pval->mut_document());
+
+            // open
             ::bson_iter_document(&top_iter, &len, &bytes);
-
-            ::bson_iter_t child_iter;
-            if(::bson_iter_init_from_data(&child_iter, bytes, len)) {
-              // open
-              auto& frm = stack.emplace_back();
-              frm.target_o = top_o;
-              frm.target_a = top_a;
-              frm.target = pval;
-              frm.parent_iter = top_iter;
-              top_o = &(pval->mut_document());
-              top_iter = child_iter;
+            if(::bson_iter_init_from_data(&top_iter, bytes, len))
               goto do_pack_loop_;
-            }
 
-            // empty (?)
-            pval->mut_document();
-          }
-          break;
-
-        case BSON_TYPE_ARRAY:
-          {
-            uint32_t len;
-            const uint8_t* bytes;
-            ::bson_iter_array(&top_iter, &len, &bytes);
-
-            ::bson_iter_t child_iter;
-            if(::bson_iter_init_from_data(&child_iter, bytes, len)) {
-              // open
-              auto& frm = stack.emplace_back();
-              frm.target_o = top_o;
-              frm.target_a = top_a;
-              frm.target = pval;
-              frm.parent_iter = top_iter;
-              top_a = &(pval->mut_array());
-              top_iter = child_iter;
-              goto do_pack_loop_;
-            }
-
-            // empty (?)
-            pval->mut_array();
+            top_iter = frm.parent_iter;
+            stack.pop_back();
           }
           break;
 
@@ -404,10 +396,8 @@ fetch_reply(Mongo_Document& output)
           break;
 
         case BSON_TYPE_DATE_TIME:
-          {
-            int64_t ms = ::bson_iter_date_time(&top_iter);
-            pval->mut_datetime() = system_time() + milliseconds(ms);
-          }
+          int64 = ::bson_iter_date_time(&top_iter);
+          pval->mut_datetime() = system_time() + milliseconds(int64);
           break;
         }
     }
@@ -416,8 +406,8 @@ fetch_reply(Mongo_Document& output)
       auto& frm = stack.back();
 
       // close
-      top_o = frm.target_o;
-      top_a = frm.target_a;
+      top_a = frm.psa;
+      top_o = frm.pso;
       top_iter = frm.parent_iter;
       stack.pop_back();
       goto do_pack_loop_;
