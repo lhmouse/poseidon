@@ -175,8 +175,8 @@ fetch_reply(Redis_Value& output)
           auto& frm = stack.emplace_back();
           frm.target = pval;
           frm.vsa.reserve(static_cast<uint32_t>(reply->elements));
-          pval = &(frm.vsa.emplace_back());
           frm.parent = reply;
+          pval = &(frm.vsa.emplace_back());
           reply = reply->element[0];
           goto do_pack_loop_;
         }
@@ -192,8 +192,8 @@ fetch_reply(Redis_Value& output)
       if(n != frm.parent->elements) {
         // next
         ROCKET_ASSERT(n < frm.parent->elements);
-        reply = frm.parent->element[n];
         pval = &(frm.vsa.emplace_back());
+        reply = frm.parent->element[n];
         goto do_pack_loop_;
       }
 
