@@ -46,7 +46,7 @@ do_on_abstract_async_task_execute()
             "[`getaddrinfo()` failed: $2]"),
             this->m_host, ::gai_strerror(err));
 
-      const auto guard = ::rocket::make_unique_handle(res, ::freeaddrinfo);
+      const auto guard = make_unique_handle(res, ::freeaddrinfo);
 
       // Iterate over the list and find a suitable address to connect. IPv4
       // addresses are preferred to IPv6 ones, so this has to be done as two

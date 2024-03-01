@@ -476,7 +476,7 @@ create_runtime_error(vfptr<cow_string&, void*> composer_thunk, void* composer,
 
       char* fn_ptr = nullptr;
       size_t fn_size = 0;
-      const auto fn_guard = ::rocket::make_unique_handle(&fn_ptr, [](char** p) { ::free(*p);  });
+      const auto fn_guard = make_unique_handle(&fn_ptr, [](char** p) { ::free(*p);  });
 
       char unw_name[1024];
       ::unw_word_t unw_offset;

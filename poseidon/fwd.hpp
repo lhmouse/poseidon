@@ -155,6 +155,7 @@ using ::rocket::ssize;
 using ::rocket::static_pointer_cast;
 using ::rocket::dynamic_pointer_cast;
 using ::rocket::const_pointer_cast;
+using ::rocket::make_unique_handle;
 using ::rocket::min;
 using ::rocket::max;
 using ::rocket::clamp;

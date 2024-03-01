@@ -27,11 +27,11 @@ do_on_abstract_future_execute()
     // Get a connection. Before this function returns, the connection should
     // be reset and put back.
     uniptr<Mongo_Connection> conn = this->m_connector->allocate_default_connection();
-    const auto conn_guard = ::rocket::make_unique_handle(&conn,
-            [=](uniptr<Mongo_Connection>* p) {
-              if((*p)->reset())
-                this->m_connector->pool_connection(move(*p));
-            });
+    const auto conn_guard = make_unique_handle(&conn,
+        [=](uniptr<Mongo_Connection>* p) {
+          if((*p)->reset())
+            this->m_connector->pool_connection(move(*p));
+        });
 
     // Execute the command.
     conn->execute(this->m_res.cmd);

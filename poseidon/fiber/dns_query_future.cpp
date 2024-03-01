@@ -36,7 +36,7 @@ do_on_abstract_future_execute()
           this->m_res.host, ::gai_strerror(err));
 
     // Copy records into `m_res`.
-    const auto guard = ::rocket::make_unique_handle(res, ::freeaddrinfo);
+    const auto guard = make_unique_handle(res, ::freeaddrinfo);
     Socket_Address saddr;
 
     for(res = guard; res;  res = res->ai_next)

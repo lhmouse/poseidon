@@ -35,11 +35,11 @@ do_on_abstract_future_execute()
     // Get a connection. Before this function returns, the connection should
     // be reset and put back.
     uniptr<MySQL_Connection> conn = this->m_connector->allocate_default_connection();
-    const auto conn_guard = ::rocket::make_unique_handle(&conn,
-            [=](uniptr<MySQL_Connection>* p) {
-              if((*p)->reset())
-                this->m_connector->pool_connection(move(*p));
-            });
+    const auto conn_guard = make_unique_handle(&conn,
+        [=](uniptr<MySQL_Connection>* p) {
+          if((*p)->reset())
+            this->m_connector->pool_connection(move(*p));
+        });
 
     // Execute the statement.
     conn->execute(this->m_res.stmt, this->m_res.stmt_args.data(), this->m_res.stmt_args.size());
