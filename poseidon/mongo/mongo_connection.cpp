@@ -230,11 +230,11 @@ execute(const Mongo_Document& cmd)
 
     if(success && !stack.empty()) {
       auto& frm = stack.back();
-      frm.append_end_fn(frm.parent_bson, &(frm.temp));
       top_rpos = frm.parent_rpos;
       pbson = frm.parent_bson;
       top_a = frm.parent->m_stor.ptr<Mongo_Array>();
       top_o = frm.parent->m_stor.ptr<Mongo_Document>();
+      success = frm.append_end_fn(pbson, &(frm.temp));
       stack.pop_back();
       goto do_unpack_loop_;
     }
