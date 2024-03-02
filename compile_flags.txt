@@ -13,8 +13,11 @@
 ## CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 -Ibuild_debug
+-DPOSEIDON_ENABLE_MYSQL
+-DPOSEIDON_ENABLE_MONGO
 -I/usr/include/libbson-1.0
 -I/usr/include/libmongoc-1.0
+-DPOSEIDON_ENABLE_REDIS
 -std=c++17
 -Wall
 -Wextra
