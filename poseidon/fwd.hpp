@@ -340,6 +340,16 @@ tinyfmt&
 operator<<(tinyfmt& fmt, chars_view data)
   { return fmt.putn(data.p, data.n);  }
 
+inline
+chars_view
+sview(const char* str) noexcept
+  { return chars_view(str, ::strlen(str));  }
+
+inline
+chars_view
+snview(const char* str, size_t n) noexcept
+  { return chars_view(str, ::strnlen(str, n));  }
+
 // Base types
 class char256;
 class UUID;

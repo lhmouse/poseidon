@@ -60,7 +60,7 @@ do_next_attribute_from_separator()
     // Parse the name of an attribute, and initialize its value to null.
     size_t tlen = this->m_value.parse_token_partial(sptr);
     if(tlen == 0) {
-      POSEIDON_LOG_DEBUG(("Invalid attribute name at `$1`"), chars_view(sptr, ::strnlen(sptr, 40)));
+      POSEIDON_LOG_DEBUG(("Invalid attribute name at `$1`"), snview(sptr, 40));
       this->m_hpos = error_hpos;
       return -1;
     }
@@ -95,7 +95,7 @@ do_next_attribute_from_separator()
 
     // The attribute shall have been terminated by a separator.
     if((sptr != esptr) && (*sptr != ';') && (*sptr != ',')) {
-      POSEIDON_LOG_DEBUG(("Invalid character encountered at `$1`"), chars_view(sptr, ::strnlen(sptr, 40)));
+      POSEIDON_LOG_DEBUG(("Invalid character at `$1`"), snview(sptr, 40));
       this->m_hpos = error_hpos;
       return -1;
     }
