@@ -102,6 +102,7 @@ execute(const Mongo_Document& cmd)
     struct xFrame
       {
         ::bson_t* parent_bson;
+        decltype(::bson_append_array_end)* append_end_fn;
         const Mongo_Value* parent;
         size_t parent_rpos;
         ::bson_t temp;
@@ -189,11 +190,13 @@ execute(const Mongo_Document& cmd)
               case mongo_value_array:
                 top_rpos = pval->as_array().size();
                 success = ::bson_append_array_begin(pbson, key, key_len, &(frm.temp));
+                frm.append_end_fn = ::bson_append_array_end;
                 break;
 
               case mongo_value_document:
                 top_rpos = pval->as_document().size();
                 success = ::bson_append_document_begin(pbson, key, key_len, &(frm.temp));
+                frm.append_end_fn = ::bson_append_document_end;
                 break;
               }
 
@@ -227,12 +230,7 @@ execute(const Mongo_Document& cmd)
 
     if(success && !stack.empty()) {
       auto& frm = stack.back();
-
-      if(top_a)
-        success = ::bson_append_array_end(frm.parent_bson, &(frm.temp));
-      else
-        success = ::bson_append_document_end(frm.parent_bson, &(frm.temp));
-
+      frm.append_end_fn(frm.parent_bson, &(frm.temp));
       top_rpos = frm.parent_rpos;
       pbson = frm.parent_bson;
       top_a = frm.parent->m_stor.ptr<Mongo_Array>();
@@ -417,8 +415,6 @@ fetch_reply(Mongo_Document& output)
 
     if(!stack.empty()) {
       auto& frm = stack.back();
-
-      // close
       top_a = frm.parent->m_stor.mut_ptr<Mongo_Array>();
       top_o = frm.parent->m_stor.mut_ptr<Mongo_Document>();
       top_iter = frm.parent_iter;
