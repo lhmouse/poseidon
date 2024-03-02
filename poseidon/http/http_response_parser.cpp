@@ -56,11 +56,11 @@ HTTP_Response_Parser::s_settings[1] =
       {
         // Convert header values from strings to their presumed form.
         HTTP_Value value;
-        for(auto hiter = this->m_headers.headers.mut_begin();  hiter != this->m_headers.headers.end();  ++ hiter)
-          if(hiter->second.is_null())
-            hiter->second = &"";
-          else if(value.parse(hiter->second.as_string()) == hiter->second.str_size())
-            hiter->second = move(value);
+        for(auto ht = this->m_headers.headers.mut_begin();  ht != this->m_headers.headers.end();  ++ ht)
+          if(ht->second.is_null())
+            ht->second = &"";
+          else if(value.parse(ht->second.as_string()) == ht->second.str_size())
+            ht->second = move(value);
 
         // The headers are complete, so halt.
         this->m_hresp = hresp_headers_done;
