@@ -30,16 +30,4 @@ do_on_abstract_fiber_suspended()
     POSEIDON_LOG_TRACE(("Suspended fiber `$1` (class `$2`)"), this, typeid(*this));
   }
 
-void
-Abstract_Fiber::
-yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override) const
-  {
-    if(!this->m_yield)
-      POSEIDON_THROW(("Fiber not executing"));
-
-    POSEIDON_LOG_DEBUG(("Yielding from fiber `$1` (class `$2`)"), this, typeid(*this));
-    this->m_yield(this->m_sched, futr_opt, fail_timeout_override);
-    POSEIDON_LOG_DEBUG(("Yielded back to fiber `$1` (class `$2`)"), this, typeid(*this));
-  }
-
 }  // namespace poseidon

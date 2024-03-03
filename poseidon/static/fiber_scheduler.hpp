@@ -35,9 +35,6 @@ class Fiber_Scheduler
     void
     do_fiber_function() noexcept;
 
-    void
-    do_yield(shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override);
-
   public:
     Fiber_Scheduler(const Fiber_Scheduler&) = delete;
     Fiber_Scheduler& operator=(const Fiber_Scheduler&) & = delete;
@@ -65,6 +62,13 @@ class Fiber_Scheduler
     // This function is thread-safe.
     void
     launch(shptrR<Abstract_Fiber> fiber);
+
+    // Suspends execution of the current fiber. If `futr_opt` is not null, it
+    // is suspended until `*futr_opt` becomes ready. If `fail_timeout_override`
+    // is not zero, it specifies the maximum timeout that the current fiber
+    // can be suspended.
+    void
+    yield(const Abstract_Fiber& fiber, shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override);
   };
 
 }  // namespace poseidon
