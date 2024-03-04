@@ -4,7 +4,7 @@
 #include "../xprecompiled.hpp"
 #include "uuid.hpp"
 #include "../utils.hpp"
-#define DEFINE_UUID_REP_(x, y)  UUID_DEFINE(x,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y)
+#define do_define_uuid_rep_(x, y)  UUID_DEFINE(x,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y)
 namespace poseidon {
 
 UUID::
@@ -18,7 +18,7 @@ const UUID&
 UUID::
 min() noexcept
   {
-    DEFINE_UUID_REP_(uuid_bytes, 0x00);
+    do_define_uuid_rep_(uuid_bytes, 0x00);
     return reinterpret_cast<const UUID&>(uuid_bytes);
   }
 
@@ -26,7 +26,7 @@ const UUID&
 UUID::
 max() noexcept
   {
-    DEFINE_UUID_REP_(uuid_bytes, 0xFF);
+    do_define_uuid_rep_(uuid_bytes, 0xFF);
     return reinterpret_cast<const UUID&>(uuid_bytes);
   }
 
@@ -34,27 +34,30 @@ UUID
 UUID::
 random() noexcept
   {
-    // First, generate a random UUID. This creates the `Nzzz-zzzzzzzzzzzz` part
-    // so we need not fill it again.
-    ::uuid_t uuid_bytes;
-    ::uuid_generate_random(uuid_bytes);
-
-    // Write the `xxxxxxxx-xxxx-Myyy` part. This is a 64-bit integer, composed
-    // in little-endian order.
+    // The UUID shall look like `xxxxxxxx-xxxx-Myyy-Nzzz-zzzzzzzzzzzz`.
+    // First, generate the `xxxxxxxx-xxxx` field. This is the number of 1/30518
+    // seconds since 2001-03-01T00:00:00Z, plus a serial number to keep it
+    // monotonic.
     ::timespec ts;
     ::clock_gettime(CLOCK_REALTIME, &ts);
-    static atomic<uint64_t> seq;
+    uint64_t high = static_cast<uint64_t>(ts.tv_sec - 983404800) * 30518 << 16;
+    high += static_cast<uint32_t>(ts.tv_nsec) / 32768 << 16;
 
-    uint64_t qword = (uint64_t) ts.tv_sec * 30518U + (uint32_t) ts.tv_nsec / 32768U;
-    qword += seq.xadd(1);
-    qword <<= 16;
-    qword |= 0x4000U;
-    qword += (uint32_t) ::getpid() & 0x0FFFU;
+    static ::std::atomic_uint64_t s_serial;
+    high += s_serial.fetch_add(1, ::std::memory_order_relaxed) << 16;
 
-    qword = ROCKET_HTOBE64(qword);
-    ::memcpy(uuid_bytes, &qword, 8);
+    // Then, set the `M` field, which is always `4` (UUID version 4).
+    high |= 0x4000;
 
-    static_assert(::std::is_trivially_copyable<UUID>::value);
+    // Then, set the `yyy` field, which is the PID of the current process,
+    // truncated to 12 bits.
+    high |= static_cast<uint32_t>(::getpid()) & 0x0FFF;
+
+    // Finally, generate the `Nzzz-zzzzzzzzzzzz` part with libuuid, convert our
+    // higher part to big-endian order and overwrite it.
+    ::uuid_t uuid_bytes;
+    ::uuid_generate_random(uuid_bytes);
+    reinterpret_cast<uint64_t&>(uuid_bytes) = ROCKET_HTOBE64(high);
     return reinterpret_cast<const UUID&>(uuid_bytes);
   }
 
