@@ -43,7 +43,7 @@ random() noexcept
     uint64_t high = static_cast<uint64_t>(ts.tv_sec - 983404800) * 30518 << 16;
     high += static_cast<uint32_t>(ts.tv_nsec) / 32768 << 16;
 
-    static ::std::atomic_uint64_t s_serial;
+    static ::std::atomic_uint64_t s_serial = { 0 };
     high += s_serial.fetch_add(1, ::std::memory_order_relaxed) << 16;
 
     // Then, set the `M` field, which is always `4` (UUID version 4).
