@@ -50,41 +50,41 @@ class DateTime
     set_system_time(system_time tp) noexcept
       { this->m_tp = tp;  }
 
-    // Try parsing an HTTP date/time in the formal RFC 1123 format. An example
+    // Tries parsing an HTTP date/time in the formal RFC 1123 format. An example
     // is `Sun, 06 Nov 1994 08:49:37 GMT`. This function returns the number of
     // characters that have been accepted, which is 29 upon success, and 0 upon
     // failure.
     size_t
     parse_rfc1123_partial(const char* str);
 
-    // Try parsing an HTTP date/time in the obsolete RFC 850 format. An example
+    // Tries parsing an HTTP date/time in the obsolete RFC 850 format. An example
     // is `Sunday, 06-Nov-94 08:49:37 GMT`. This function returns the number of
     // characters that have been accepted, which is within [30,33] upon success,
     // and 0 upon failure.
     size_t
     parse_rfc850_partial(const char* str);
 
-    // Try parsing an HTTP date/time in the obsolete asctime format. An example
+    // Tries parsing an HTTP date/time in the obsolete asctime format. An example
     // is `Sun Nov  6 08:49:37 1994`. This function returns the number of
     // characters that have been accepted, which is 24 upon success, and 0 upon
     // failure.
     size_t
     parse_asctime_partial(const char* str);
 
-    // Try parsing an HTTP date/time in the cookie format. An example is `Sun,
+    // Tries parsing an HTTP date/time in the cookie format. An example is `Sun,
     // 06-Nov-1994 08:49:37 GMT`. This function returns the number of characters
     // that have been accepted, which is 29 upon success, and 0 upon failure.
     size_t
     parse_cookie_partial(const char* str);
 
-    // Try parsing a general date/time in the ISO 8601 format. An example is
+    // Tries parsing a general date/time in the ISO 8601 format. An example is
     // `1994-11-06T08:49:37Z`. Only the `Z` time zone specifier is allowed. This
     // function returns the number of characters that have been accepted, which
     // is 20 upon success, and 0 upon failure.
     size_t
     parse_iso8601_partial(const char* str);
 
-    // Try parsing an HTTP date/time in any of the formats above. If a date/time
+    // Tries parsing an HTTP date/time in any of the formats above. If a date/time
     // string has been parsed, the number of characters that have been consumed
     // is returned. If zero is returned or an exception is thrown, the contents
     // of this object are unspecified.
