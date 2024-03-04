@@ -65,28 +65,21 @@ size_t
 UUID::
 parse_partial(const char* str) noexcept
   {
-    char temp[40];
-    size_t len = ::strnlen(str, 36);
-    ::memcpy(temp, str, len);
-    temp[len] = 0;
-
-    if(::uuid_parse(temp, this->m_uuid) != 0)
-      return 0;
-
-    return len;
+    int r = ::uuid_parse_range(str, str + 36, this->m_uuid);
+    ROCKET_ASSERT((r == 0) || (r == -1));
+    return static_cast<uint32_t>(r & 36) ^ 36;
   }
 
 size_t
 UUID::
 parse(chars_view str) noexcept
   {
-    // A string with an erroneous length will not be accepted, so we just need
-    // to check for possibilities by `str.n`.
-    if(str.n >= 36)
-      if(size_t aclen = this->parse_partial(str.p))
-        return aclen;
+    if(str.n != 36)
+      return 0;
 
-    return 0;
+    int r = ::uuid_parse_range(str.p, str.p + 36, this->m_uuid);
+    ROCKET_ASSERT((r == 0) || (r == -1));
+    return static_cast<uint32_t>(r & 36) ^ 36;
   }
 
 size_t

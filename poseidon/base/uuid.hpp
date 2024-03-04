@@ -118,21 +118,22 @@ class UUID
         return gt_mask - lt_mask;
       }
 
-    // Parses a UUID from a string in the RFC 4122 format. An example is
-    // `f81d4fae-7dec-11d0-a765-00a0c91e6bf6`. If a UUID has been parsed, the
-    // number of characters that have been consumed is returned, which is
-    // always 36; otherwise zero is returned, and the contents of this object
-    // are unspecified.
+    // Tries parsing a UUID from a string in the RFC 4122 format. An example is
+    // `f81d4fae-7dec-11d0-a765-00a0c91e6bf6`. If a UUID has been parsed, the number
+    // of characters that have been consumed is returned, which is always 36;
+    // otherwise zero is returned, and the contents of this object are unspecified.
     size_t
     parse_partial(const char* str) noexcept;
 
+    // Tries parsing a UUID from a string like `parse_partial()`, but the length of
+    // `str` is validated.
     size_t
     parse(chars_view str) noexcept;
 
-    // Converts this UUID to its RFC 4112 form. Hexadecimal digits are written
-    // in uppercase. The caller should supply a buffer for 37 characters. A
-    // null terminator will always be appended. The number of characters that
-    // have been written is stored, which is always 36.
+    // Converts this UUID to its RFC 4112 form. Hexadecimal digits are written in
+    // uppercase. The caller should supply a buffer for 37 characters. A null
+    // terminator is always appended. The number of characters that have been written
+    // is stored, which is always 36.
     size_t
     print_partial(char* str) const noexcept;
 

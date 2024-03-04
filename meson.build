@@ -319,7 +319,7 @@ dep_openssl = dependency('openssl', version: '>= 3.0.0')
 dep_zlib = dependency('zlib', version: '>= 1.2.9')
 dep_libmagic = dependency('libmagic')
 dep_http_parser = cxx.find_library('http_parser')
-dep_uuid = dependency('uuid')
+dep_uuid = dependency('uuid', version: '>= 2.36.0')
 
 #===========================================================
 # Optional dependencies
