@@ -184,40 +184,40 @@ class HTTP_Value
           return this->m_stor.emplace<DateTime>();
       }
 
-    // Try parsing a quoted string. Upon success, the number of characters that
-    // have been accepted is returned. Otherwise zero is returned, and the
-    // contents of this object is indeterminate.
+    // Tries parsing a quoted string. Upon success, the number of characters that
+    // have been accepted is returned. Otherwise zero is returned, and the contents
+    // of this object is indeterminate.
     size_t
     parse_quoted_string_partial(chars_view str);
 
-    // Try parsing a floating-point number, starting with a decimal digit. Upon
+    // Tries parsing a floating-point number, starting with a decimal digit. Upon
     // success, the number of characters that have been accepted is returned.
     // Otherwise zero is returned, and the contents of this object are
     // indeterminate.
     size_t
     parse_number_partial(chars_view str);
 
-    // Try parsing an HTTP date/time partially from a string. Upon success, the
-    // number of characters that have been accepted is returned. Otherwise zero
-    // is returned, and the contents of this object are indeterminate.
+    // Tries parsing an HTTP date/time partially from a string. Upon success, the
+    // number of characters that have been accepted is returned. Otherwise zero is
+    // returned, and the contents of this object are indeterminate.
     size_t
     parse_datetime_partial(chars_view str);
 
-    // Try parsing an HTTP token and store it as a string. Upon success, the
-    // number of characters that have been accepted is returned. Otherwise zero
-    // is returned, and the contents of this object are indeterminate.
+    // Tries parsing an HTTP token and store it as a string. Upon success, the
+    // number of characters that have been accepted is returned. Otherwise zero is
+    // returned, and the contents of this object are indeterminate.
     size_t
     parse_token_partial(chars_view str);
 
-    // Try parsing an HTTP unquoted string and store it. This is a more
-    // permissive variant of a token. All characters other than whitespace,
-    // control characters, `=`, `,` and `;` are accepted. Upon success, the
-    // number of characters that have been accepted is returned. Otherwise zero
-    // is returned, and the contents of this object are indeterminate.
+    // Tries parsing an HTTP unquoted string and store it. This is a more permissive
+    // variant of a token. All characters other than whitespace, control characters,
+    // `=`, `,` and `;` are accepted. Upon success, the number of characters that
+    // have been accepted is returned. Otherwise zero is returned, and the contents
+    // of this object are indeterminate.
     size_t
     parse_unquoted_partial(chars_view str);
 
-    // Try parsing an HTTP value, possibly from an HTTP header. The string is
+    // Tries parsing an HTTP value, possibly from an HTTP header. The string is
     // matched against these rules (in this order):
     //
     // * a quoted string, enclosed in a pair of double quotes
@@ -225,16 +225,15 @@ class HTTP_Value
     // * an HTTP date/time, starting with a weekday
     // * an HTTP unquoted string
     //
-    // If a match is found and parsed accordingly, the number of characters
-    // that have been consumed is returned. Otherwise zero is  returned, and
-    // the contents of this object are indeterminate.
+    // If a match is found and parsed accordingly, the number of characters that have
+    // been consumed is returned. Otherwise zero is  returned, and the contents of
+    // this object are indeterminate.
     size_t
     parse(chars_view str);
 
-    // Converts this value to its string form. The result will be suitable
-    // for immediate use in an HTTP header. It is important to note that
-    // HTTP date/time, which contain a comma itself, will not be enclosed
-    // in double quotes.
+    // Converts this value to its string form. The result will be suitable for
+    // immediate use in an HTTP header. It is important to note that HTTP date/time,
+    // which contain a comma itself, will not be enclosed in double quotes.
     tinyfmt&
     print_to(tinyfmt& fmt) const;
 
