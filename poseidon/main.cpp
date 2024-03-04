@@ -497,7 +497,7 @@ void
 do_seed_random()
   {
     ::srand(random_uint32());
-    ::srand48(static_cast<long>(random_uint32()));
+    ::srand48(static_cast<long>(random_uint64()));
   }
 
 ROCKET_NEVER_INLINE

@@ -3,7 +3,8 @@
 
 #include "xprecompiled.hpp"
 #include "utils.hpp"
-#include <uuid/uuid.h>
+#include <openssl/rand.h>
+#include <openssl/err.h>
 #define UNW_LOCAL_ONLY  1
 #include <libunwind.h>
 namespace poseidon {
@@ -228,15 +229,15 @@ hex_encode_16_partial(char* str, const void* data) noexcept
     str[32] = 0;
   }
 
-uint32_t
-random_uint32() noexcept
+void
+random_bytes(void* ptr, size_t size) noexcept
   {
-    ::uuid_t temp;
-    ::uuid_generate_random(temp);
-
-    uint32_t bytes;
-    ::memcpy(&bytes, temp + 12, 4);
-    return bytes;
+    auto ctx = ::OSSL_LIB_CTX_get0_global_default();
+    if(::RAND_bytes_ex(ctx, static_cast<unsigned char*>(ptr), size, 0) != 1)
+      ASTERIA_TERMINATE((
+          "Could not generate random bytes: $1",
+          "[`RAND_bytes()` failed]"),
+          ::ERR_reason_error_string(::ERR_peek_error()));
   }
 
 size_t

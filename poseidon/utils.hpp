@@ -87,10 +87,28 @@ splice_buffers(linear_buffer& out, linear_buffer&& in)
 void
 hex_encode_16_partial(char* str, const void* data) noexcept;
 
-// Generates a cryptographically secure random integer in [0,UINT32_MAX]. Please
-// be advised that this function may be very slow.
+// Generates a cryptographically secure random byte sequence. Please be advised
+// that this function may be very slow.
+void
+random_bytes(void* ptr, size_t size) noexcept;
+
+ROCKET_ALWAYS_INLINE
 uint32_t
-random_uint32() noexcept;
+random_uint32() noexcept
+  {
+    uint32_t bits;
+    noadl::random_bytes(&bits, sizeof(bits));
+    return bits;
+  }
+
+ROCKET_ALWAYS_INLINE
+uint64_t
+random_uint64() noexcept
+  {
+    uint64_t bits;
+    noadl::random_bytes(&bits, sizeof(bits));
+    return bits;
+  }
 
 // Performs conversion between `timespec` and `system_time`.
 ROCKET_ALWAYS_INLINE
