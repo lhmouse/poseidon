@@ -86,7 +86,7 @@ size_t
 UUID::
 print_partial(char* str) const noexcept
   {
-    ::uuid_unparse_upper(this->m_uuid, str);
+    ::uuid_unparse_lower(this->m_uuid, str);
     return 36;
   }
 
