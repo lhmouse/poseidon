@@ -217,7 +217,7 @@ hex_encode_16_partial(char* str, const void* data) noexcept
     __m128i lo = _mm_and_si128(tval, _mm_set1_epi8(15));
 
     // Convert digits into their string forms:
-    //   xdigit := val + '0' + ((val > 9) ? 7 : 0)
+    //   xdigit := val + '0' + (-(val > 9) & ('a' - 10 - '0'))
     tval = _mm_and_si128(_mm_cmpgt_epi8(hi, _mm_set1_epi8(9)), _mm_set1_epi8(39));
     hi = _mm_add_epi8(_mm_add_epi8(hi, _mm_set1_epi8('0')), tval);
     tval = _mm_and_si128(_mm_cmpgt_epi8(lo, _mm_set1_epi8(9)), _mm_set1_epi8(39));
