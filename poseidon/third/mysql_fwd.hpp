@@ -58,10 +58,13 @@ struct DateTime_with_MYSQL_TIME
     ::MYSQL_TIME&
     get_mysql_time() const
       {
-        if(!this->cached_mysql_time)
-          this->cached_mysql_time = new_uni<::MYSQL_TIME>();
-
-        return *(this->cached_mysql_time);
+        auto ptr = this->cached_mysql_time.get();
+        if(!ptr) {
+          ptr = new ::MYSQL_TIME();
+          (void)! this->cached_mysql_time.release();
+          this->cached_mysql_time.reset(ptr);
+        }
+        return *ptr;
       }
   };
 
