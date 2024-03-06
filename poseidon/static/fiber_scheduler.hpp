@@ -68,7 +68,7 @@ class Fiber_Scheduler
     // is not zero, it specifies the maximum timeout that the current fiber
     // can be suspended.
     void
-    yield(const Abstract_Fiber& fiber, shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override);
+    yield(const Abstract_Fiber& tfiber, shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override);
   };
 
 }  // namespace poseidon
