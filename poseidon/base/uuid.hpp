@@ -10,6 +10,16 @@ namespace poseidon {
 
 class UUID
   {
+  public:
+    struct fields
+      {
+        uint32_t xh;
+        uint16_t xl;
+        uint16_t y;
+        uint64_t zh : 16;
+        uint64_t zl : 48;
+      };
+
   private:
     union {
       ::uuid_t m_uuid = { };  // array
@@ -19,6 +29,30 @@ class UUID
   public:
     // Constructs an all-zero UUID.
     constexpr UUID() noexcept = default;
+
+    // Constructs a UUID from individual fields.
+    constexpr UUID(const fields& f) noexcept
+      {
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+        this->m_uuid[0] = f.xh >> 24;
+        this->m_uuid[1] = f.xh >> 16;
+        this->m_uuid[2] = f.xh >> 8;
+        this->m_uuid[3] = f.xh;
+        this->m_uuid[4] = f.xl >> 8;
+        this->m_uuid[5] = f.xl;
+        this->m_uuid[6] = f.y >> 8;
+        this->m_uuid[7] = f.y;
+        this->m_uuid[8] = f.zh >> 8;
+        this->m_uuid[9] = f.zh;
+        this->m_uuid[10] = f.zl >> 40;
+        this->m_uuid[11] = f.zl >> 32;
+        this->m_uuid[12] = f.zl >> 24;
+        this->m_uuid[13] = f.zl >> 16;
+        this->m_uuid[14] = f.zl >> 8;
+        this->m_uuid[15] = f.zl;
+#pragma GCC diagnostic pop
+      }
 
     // Parses a UUID from a string, like `parse()`.
     // An exception is thrown if the UUID string is not valid.
@@ -183,6 +217,9 @@ inline
 bool
 operator>=(const UUID& lhs, const UUID& rhs) noexcept
   { return lhs.compare(rhs) >= 0;  }
+
+#define POSEIDON_UUID(a8,b4,c4,d4,e12)  \
+    (::poseidon::UUID(::poseidon::UUID::fields { 0x##a8,0x##b4,0x##c4,0x##d4,0x##e12 }))
 
 }  // namespace poseidon
 #endif

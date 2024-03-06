@@ -26,6 +26,7 @@ main()
     char uuid_dstr[64];
     ::memset(uuid_dstr, '*', sizeof(uuid_dstr));
     POSEIDON_TEST_CHECK(tid.parse("EF8A3765-A4F4-4D24-9C72-EE61D7B1253D") == 36);
+    POSEIDON_TEST_CHECK(tid == POSEIDON_UUID(ef8a3765,a4f4,4d24,9c72,ee61d7b1253d));
     tid.print_partial(uuid_dstr);
     POSEIDON_TEST_CHECK(::strcmp(uuid_dstr, "ef8a3765-a4f4-4d24-9c72-ee61d7b1253d") == 0);
 

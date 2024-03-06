@@ -4,7 +4,6 @@
 #include "../xprecompiled.hpp"
 #include "uuid.hpp"
 #include "../utils.hpp"
-#define do_define_uuid_rep_(x, y)  UUID_DEFINE(x,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y)
 namespace poseidon {
 
 UUID::
@@ -18,16 +17,16 @@ const UUID&
 UUID::
 min() noexcept
   {
-    do_define_uuid_rep_(uuid_bytes, 0x00);
-    return reinterpret_cast<const UUID&>(uuid_bytes);
+    static constexpr UUID st = POSEIDON_UUID(00000000,0000,0000,0000,000000000000);
+    return st;
   }
 
 const UUID&
 UUID::
 max() noexcept
   {
-    do_define_uuid_rep_(uuid_bytes, 0xFF);
-    return reinterpret_cast<const UUID&>(uuid_bytes);
+    static constexpr UUID st = POSEIDON_UUID(ffffffff,ffff,ffff,ffff,ffffffffffff);
+    return st;
   }
 
 UUID
@@ -53,12 +52,12 @@ random() noexcept
     // truncated to 12 bits.
     high |= static_cast<uint32_t>(::getpid()) & 0x0FFF;
 
-    // Finally, generate the `Nzzz-zzzzzzzzzzzz` part with libuuid, convert our
-    // higher part to big-endian order and overwrite it.
-    ::uuid_t uuid_bytes;
-    ::uuid_generate_random(uuid_bytes);
-    reinterpret_cast<uint64_t&>(uuid_bytes) = ROCKET_HTOBE64(high);
-    return reinterpret_cast<const UUID&>(uuid_bytes);
+    // Finally, generate the `Nzzz-zzzzzzzzzzzz` part with libuuid.
+    UUID st;
+    ::uuid_generate_random(st.m_uuid);
+    high = ROCKET_HTOBE64(high);
+    ::memcpy(st.m_uuid, &high, 8);
+    return st;
   }
 
 size_t
