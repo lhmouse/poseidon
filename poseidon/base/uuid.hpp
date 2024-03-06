@@ -178,6 +178,9 @@ class UUID
     print_to_string() const;
   };
 
+#define POSEIDON_UUID(a8,b4,c4,d4,e12)  \
+    (::poseidon::UUID(::poseidon::UUID::fields { 0x##a8,0x##b4,0x##c4,0x##d4,0x##e12 }))
+
 inline
 void
 swap(UUID& lhs, UUID& rhs) noexcept
@@ -217,9 +220,6 @@ inline
 bool
 operator>=(const UUID& lhs, const UUID& rhs) noexcept
   { return lhs.compare(rhs) >= 0;  }
-
-#define POSEIDON_UUID(a8,b4,c4,d4,e12)  \
-    (::poseidon::UUID(::poseidon::UUID::fields { 0x##a8,0x##b4,0x##c4,0x##d4,0x##e12 }))
 
 }  // namespace poseidon
 #endif
