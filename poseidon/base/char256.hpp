@@ -11,7 +11,7 @@ class char256
   {
   private:
     union {
-      char m_data[4];
+      char m_data[1];
       ::std::aligned_storage<256>::type m_stor;
     };
 
@@ -31,9 +31,9 @@ class char256
       {
         const char* str = str_opt ? str_opt : "";
         size_t len = ::rocket::xstrlen(str);
-        if(len >= 256)
+        if(len > 255)
           ::rocket::sprintf_and_throw<::std::length_error>(
-              "char256: string `%s` (length `%lld`) too long",
+              "char256: string `%s` too long (length `%lld` > 255)",
               str, (long long) len);
 
         // XXX: This should be `xmempcpy()` but clang doesn't like it?
