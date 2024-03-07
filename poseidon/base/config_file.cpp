@@ -5,6 +5,7 @@
 #include "config_file.hpp"
 #include "../utils.hpp"
 #include <stdlib.h>
+#include <asteria/utils.hpp>
 #include <asteria/library/system.hpp>
 namespace poseidon {
 
@@ -16,15 +17,7 @@ Config_File() noexcept
 Config_File::
 Config_File(cow_stringR path)
   {
-    // Resolve the path to an absolute one.
-    ::rocket::unique_ptr<char, void (void*)> abs_path(::free);
-    if(!abs_path.reset(::realpath(path.safe_c_str(), nullptr)))
-      POSEIDON_THROW((
-          "Could not find configuration file '$1'",
-          "[`realpath()` failed: ${errno:full}]"),
-          path);
-
-    this->m_path.append(abs_path.get());
+    this->m_path = ::asteria::get_real_path(path);
     this->m_root = ::asteria::std_system_load_conf(this->m_path);
   }
 
