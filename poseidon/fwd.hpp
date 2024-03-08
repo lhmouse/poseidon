@@ -19,6 +19,7 @@
 #include <vector>
 #include <deque>
 #include <list>
+#include <forward_list>
 #include <map>
 #include <set>
 #include <unordered_map>
@@ -76,6 +77,7 @@ using ::std::array;
 using ::std::vector;
 using ::std::deque;
 using ::std::list;
+using ::std::forward_list;
 using ::std::map;
 using ::std::multimap;
 using ::std::set;

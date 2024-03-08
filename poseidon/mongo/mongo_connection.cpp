@@ -109,7 +109,7 @@ execute(const Mongo_Document& cmd)
       };
 
     scoped_bson bson_cmd;
-    list<xFrame> stack;
+    forward_list<xFrame> stack;
     bool success = true;
     size_t top_rpos = cmd.size();
     ::bson_t* pbson = bson_cmd;
@@ -180,7 +180,7 @@ execute(const Mongo_Document& cmd)
         case mongo_value_array:
         case mongo_value_document:
           {
-            auto& frm = stack.emplace_back();
+            auto& frm = stack.emplace_front();
             frm.parent_bson = pbson;
             frm.parent = pval;
             frm.parent_rpos = top_rpos;
@@ -210,7 +210,7 @@ execute(const Mongo_Document& cmd)
 
             // invalid; shouldn't happen, but be tolerant anyway.
             top_rpos = frm.parent_rpos;
-            stack.pop_back();
+            stack.pop_front();
           }
           break;
 
@@ -229,13 +229,13 @@ execute(const Mongo_Document& cmd)
     }
 
     if(success && !stack.empty()) {
-      auto& frm = stack.back();
+      auto& frm = stack.front();
       top_rpos = frm.parent_rpos;
       pbson = frm.parent_bson;
       top_a = frm.parent->m_stor.ptr<Mongo_Array>();
       top_o = frm.parent->m_stor.ptr<Mongo_Document>();
       success = frm.append_end_fn(pbson, &(frm.temp));
-      stack.pop_back();
+      stack.pop_front();
       goto do_unpack_loop_;
     }
 
@@ -307,7 +307,7 @@ fetch_reply(Mongo_Document& output)
         ::bson_iter_t parent_iter;
       };
 
-    list<xFrame> stack;
+    forward_list<xFrame> stack;
     Mongo_Array* top_a = nullptr;
     Mongo_Document* top_o = &output;
 
@@ -385,7 +385,7 @@ fetch_reply(Mongo_Document& output)
             }
 
           if(len > 5) {
-            auto& frm = stack.emplace_back();
+            auto& frm = stack.emplace_front();
             frm.parent = pval;
             frm.parent_iter = top_iter;
 
@@ -398,7 +398,7 @@ fetch_reply(Mongo_Document& output)
 
             // invalid; shouldn't happen, but be tolerant anyway.
             top_iter = frm.parent_iter;
-            stack.pop_back();
+            stack.pop_front();
           }
           break;
 
@@ -414,11 +414,11 @@ fetch_reply(Mongo_Document& output)
     }
 
     if(!stack.empty()) {
-      auto& frm = stack.back();
+      auto& frm = stack.front();
       top_a = frm.parent->m_stor.mut_ptr<Mongo_Array>();
       top_o = frm.parent->m_stor.mut_ptr<Mongo_Document>();
       top_iter = frm.parent_iter;
-      stack.pop_back();
+      stack.pop_front();
       goto do_pack_loop_;
     }
 
