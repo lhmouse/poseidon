@@ -2,7 +2,7 @@
 // Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #include "../xprecompiled.hpp"
-#include "socket_address.hpp"
+#include "ipv6_address.hpp"
 #include "../utils.hpp"
 #include <arpa/inet.h>
 namespace poseidon {
@@ -122,24 +122,24 @@ do_classify_ipv6_generic(const char* addr) noexcept
 #define DOCUMENTATION_   32,1,13,184,243,151,214,23,74,162,130,224,   // 2001:db8::/32; random
 #define IPV4_MAPPED_     0,0,0,0,0,0,0,0,0,0,255,255,  // ::ffff:0:0/96
 
-const Socket_Address ipv6_unspecified   = { (::in6_addr)   IN6ADDR_ANY_INIT,                0 };
-const Socket_Address ipv6_loopback      = { (::in6_addr)   IN6ADDR_LOOPBACK_INIT,           0 };
-const Socket_Address ipv6_invalid       = { (::in6_addr) { DOCUMENTATION_ 44,95,237,217 },  0 };
+const IPv6_Address ipv6_unspecified   = { (::in6_addr)   IN6ADDR_ANY_INIT,                0 };
+const IPv6_Address ipv6_loopback      = { (::in6_addr)   IN6ADDR_LOOPBACK_INIT,           0 };
+const IPv6_Address ipv6_invalid       = { (::in6_addr) { DOCUMENTATION_ 44,95,237,217 },  0 };
 
-const Socket_Address ipv4_unspecified   = { (::in6_addr) { IPV4_MAPPED_ 0,0,0,0 },          0 };
-const Socket_Address ipv4_loopback      = { (::in6_addr) { IPV4_MAPPED_ 127,0,0,1 },        0 };
-const Socket_Address ipv4_broadcast     = { (::in6_addr) { IPV4_MAPPED_ 255,255,255,255 },  0 };
+const IPv6_Address ipv4_unspecified   = { (::in6_addr) { IPV4_MAPPED_ 0,0,0,0 },          0 };
+const IPv6_Address ipv4_loopback      = { (::in6_addr) { IPV4_MAPPED_ 127,0,0,1 },        0 };
+const IPv6_Address ipv4_broadcast     = { (::in6_addr) { IPV4_MAPPED_ 255,255,255,255 },  0 };
 
-Socket_Address::
-Socket_Address(chars_view str)
+IPv6_Address::
+IPv6_Address(chars_view str)
   {
     if(this->parse(str) != str.n)
       POSEIDON_THROW(("Could not parse socket address string `$1`"), str);
   }
 
 int
-Socket_Address::
-compare(const Socket_Address& other) const noexcept
+IPv6_Address::
+compare(const IPv6_Address& other) const noexcept
   {
     char tdata[18];
     ::memcpy(tdata, &(this->m_addr), 16);
@@ -155,14 +155,14 @@ compare(const Socket_Address& other) const noexcept
   }
 
 IP_Address_Class
-Socket_Address::
+IPv6_Address::
 classify() const noexcept
   {
     return do_classify_ipv6_generic((const char*) &(this->m_addr));
   }
 
 size_t
-Socket_Address::
+IPv6_Address::
 parse(chars_view str) noexcept
   {
     Network_Reference caddr;
@@ -198,7 +198,7 @@ parse(chars_view str) noexcept
   }
 
 size_t
-Socket_Address::
+IPv6_Address::
 print_partial(char* str) const noexcept
   {
     const char* addr = (const char*) &(this->m_addr);
@@ -231,7 +231,7 @@ print_partial(char* str) const noexcept
   }
 
 tinyfmt&
-Socket_Address::
+IPv6_Address::
 print_to(tinyfmt& fmt) const
   {
     char str[64];
@@ -240,7 +240,7 @@ print_to(tinyfmt& fmt) const
   }
 
 cow_string
-Socket_Address::
+IPv6_Address::
 print_to_string() const
   {
     char str[64];

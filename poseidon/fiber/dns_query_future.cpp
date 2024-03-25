@@ -37,7 +37,7 @@ do_on_abstract_future_execute()
 
     // Copy records into `m_res`.
     const auto guard = make_unique_handle(res, ::freeaddrinfo);
-    Socket_Address saddr;
+    IPv6_Address saddr;
 
     for(res = guard; res;  res = res->ai_next)
       if(res->ai_family == AF_INET) {

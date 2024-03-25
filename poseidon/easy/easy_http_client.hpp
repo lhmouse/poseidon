@@ -83,13 +83,13 @@ class Easy_HTTP_Client
     // Gets the local address of this HTTP client for incoming data. In case of
     // errors, `ipv6_unspecified` is returned.
     ROCKET_PURE
-    const Socket_Address&
+    const IPv6_Address&
     local_address() const noexcept;
 
     // Gets the remote or connected address of this client for outgoing data. In
     // case of errors, `ipv6_unspecified` is returned.
     ROCKET_PURE
-    const Socket_Address&
+    const IPv6_Address&
     remote_address() const noexcept;
 
     // Sends a GET request. The request cannot contain a payload body. The

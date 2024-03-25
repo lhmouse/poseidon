@@ -318,7 +318,7 @@ do_on_ssl_oob_byte(char data)
         this, typeid(*this), (int) data, (char) data);
   }
 
-const Socket_Address&
+const IPv6_Address&
 SSL_Socket::
 remote_address() const noexcept
   {

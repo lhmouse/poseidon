@@ -85,13 +85,13 @@ class Easy_WS_Client
     // Gets the local address of this client for outgoing data. In case of an
     // error, `ipv6_unspecified` is returned.
     ROCKET_PURE
-    const Socket_Address&
+    const IPv6_Address&
     local_address() const noexcept;
 
     // Gets the remote or connected address of this client for outgoing data. In
     // case of errors, `ipv6_unspecified` is returned.
     ROCKET_PURE
-    const Socket_Address&
+    const IPv6_Address&
     remote_address() const noexcept;
 
     // Sends a data message or control frame to the other peer. `opcode` indicates

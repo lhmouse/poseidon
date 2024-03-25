@@ -10,7 +10,7 @@
 namespace poseidon {
 
 Listen_Socket::
-Listen_Socket(const Socket_Address& addr)
+Listen_Socket(const IPv6_Address& addr)
   :
     Abstract_Socket(SOCK_STREAM, IPPROTO_TCP)
   {

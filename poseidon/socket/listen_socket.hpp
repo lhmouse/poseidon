@@ -16,12 +16,12 @@ class Listen_Socket
   private:
     friend class Network_Driver;
 
-    Socket_Address m_taddr;
+    IPv6_Address m_taddr;
 
   protected:
     // Creates a TCP socket that is bound onto the given address, that accepts
     // either TCP or SSL connections.
-    explicit Listen_Socket(const Socket_Address& addr);
+    explicit Listen_Socket(const IPv6_Address& addr);
 
   protected:
     // These callbacks implement `Abstract_Socket`.
@@ -46,7 +46,7 @@ class Listen_Socket
     // should return a pointer to a socket object, constructed from the given FD.
     virtual
     shptr<Abstract_Socket>
-    do_on_listen_new_client_opt(Socket_Address&& addr, unique_posix_fd&& fd) = 0;
+    do_on_listen_new_client_opt(IPv6_Address&& addr, unique_posix_fd&& fd) = 0;
 
   public:
     Listen_Socket(const Listen_Socket&) = delete;

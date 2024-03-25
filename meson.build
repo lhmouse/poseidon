@@ -43,7 +43,7 @@ poseidon_include = [
   'poseidon/fiber/dns_query_future.hpp',
   'poseidon/fiber/read_file_future.hpp',
   'poseidon/socket/enums.hpp',
-  'poseidon/socket/socket_address.hpp',
+  'poseidon/socket/ipv6_address.hpp',
   'poseidon/socket/abstract_socket.hpp',
   'poseidon/socket/udp_socket.hpp',
   'poseidon/socket/listen_socket.hpp',
@@ -135,7 +135,7 @@ poseidon_src = [
   'poseidon/fiber/abstract_future.cpp',
   'poseidon/fiber/dns_query_future.cpp',
   'poseidon/fiber/read_file_future.cpp',
-  'poseidon/socket/socket_address.cpp',
+  'poseidon/socket/ipv6_address.cpp',
   'poseidon/socket/abstract_socket.cpp',
   'poseidon/socket/udp_socket.cpp',
   'poseidon/socket/listen_socket.cpp',
@@ -222,7 +222,7 @@ example_src = [
 
 test_src = [
   'test/utils.cpp',
-  'test/socket_address.cpp',
+  'test/ipv6_address.cpp',
   'test/uuid.cpp',
   'test/datetime.cpp',
   'test/http_value.cpp',

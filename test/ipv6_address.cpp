@@ -2,13 +2,13 @@
 // Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #include "utils.hpp"
-#include "../poseidon/socket/socket_address.hpp"
+#include "../poseidon/socket/ipv6_address.hpp"
 using namespace ::poseidon;
 
 int
 main()
   {
-    Socket_Address addr;
+    IPv6_Address addr;
     void* const data = &(addr.mut_addr());
     constexpr size_t size = sizeof(addr.mut_addr());
 
@@ -45,7 +45,7 @@ main()
         "\xfe\x80\x12\x54\x56\x78\x00\x00\x00\x00\x00\x00\x90\xAB\xCD\xEF", 16) == 0);
     POSEIDON_TEST_CHECK(addr.port() == 0);
 
-    Socket_Address cmp;
+    IPv6_Address cmp;
     cmp.parse("[fe80:1254:5678::90ab:cdef]:0");
     POSEIDON_TEST_CHECK(addr.compare(cmp) == 0);
     POSEIDON_TEST_CHECK(cmp.compare(addr) == 0);

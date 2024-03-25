@@ -16,11 +16,11 @@ class UDP_Socket
   private:
     friend class Network_Driver;
 
-    Socket_Address m_taddr;
+    IPv6_Address m_taddr;
 
   protected:
     // Creates a socket that is bound onto `addr`. [server-side constructor]
-    explicit UDP_Socket(const Socket_Address& addr);
+    explicit UDP_Socket(const IPv6_Address& addr);
 
     // Creates an unbound socket. [client-side constructor]
     UDP_Socket();
@@ -49,7 +49,7 @@ class UDP_Socket
     // for subsequent packets.
     virtual
     void
-    do_on_udp_packet(Socket_Address&& addr, linear_buffer&& data) = 0;
+    do_on_udp_packet(IPv6_Address&& addr, linear_buffer&& data) = 0;
 
   public:
     UDP_Socket(const UDP_Socket&) = delete;
@@ -67,10 +67,10 @@ class UDP_Socket
     // is unspecified.
     // These functions are thread-safe.
     void
-    join_multicast_group(const Socket_Address& maddr, uint8_t ttl, bool loopback, const char* ifname_opt = nullptr);
+    join_multicast_group(const IPv6_Address& maddr, uint8_t ttl, bool loopback, const char* ifname_opt = nullptr);
 
     void
-    leave_multicast_group(const Socket_Address& maddr, const char* ifname_opt = nullptr);
+    leave_multicast_group(const IPv6_Address& maddr, const char* ifname_opt = nullptr);
 
     // Enqueues a packet for sending.
     // If this function returns `true`, data will have been enqueued; however it
@@ -80,7 +80,7 @@ class UDP_Socket
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    udp_send(const Socket_Address& addr, chars_view data);
+    udp_send(const IPv6_Address& addr, chars_view data);
   };
 
 }  // namespace poseidon

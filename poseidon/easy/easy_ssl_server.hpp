@@ -76,7 +76,7 @@ class Easy_SSL_Server
     // Gets the bound address of this server for incoming connections. In case
     // of errors, `ipv6_invalid` is returned.
     ROCKET_PURE
-    const Socket_Address&
+    const IPv6_Address&
     local_address() const noexcept;
   };
 

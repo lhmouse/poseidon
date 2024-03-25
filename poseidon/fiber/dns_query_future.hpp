@@ -7,7 +7,7 @@
 #include "../fwd.hpp"
 #include "abstract_future.hpp"
 #include "../base/abstract_async_task.hpp"
-#include "../socket/socket_address.hpp"
+#include "../socket/ipv6_address.hpp"
 namespace poseidon {
 
 class DNS_Query_Future
@@ -21,7 +21,7 @@ class DNS_Query_Future
       {
         cow_string host;
         uint16_t port;
-        vector<Socket_Address> addrs;
+        vector<IPv6_Address> addrs;
       };
 
   private:

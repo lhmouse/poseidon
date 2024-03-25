@@ -51,7 +51,7 @@ Abstract_Socket::
   {
   }
 
-const Socket_Address&
+const IPv6_Address&
 Abstract_Socket::
 local_address() const noexcept
   {
@@ -86,7 +86,7 @@ local_address() const noexcept
 
 void
 Abstract_Socket::
-connect(const Socket_Address& addr)
+connect(const IPv6_Address& addr)
   {
     ::sockaddr_in6 sa;
     sa.sin6_family = AF_INET6;

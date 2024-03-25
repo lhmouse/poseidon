@@ -19,7 +19,7 @@ struct Packet_Queue
     // shared fields between threads
     struct Packet
       {
-        Socket_Address addr;
+        IPv6_Address addr;
         linear_buffer data;
       };
 
@@ -92,7 +92,7 @@ struct Final_Socket final : UDP_Socket
 
     virtual
     void
-    do_on_udp_packet(Socket_Address&& addr, linear_buffer&& data) override
+    do_on_udp_packet(IPv6_Address&& addr, linear_buffer&& data) override
       {
         auto queue = this->m_wqueue.lock();
         if(!queue)
@@ -144,7 +144,7 @@ close() noexcept
     this->m_socket = nullptr;
   }
 
-const Socket_Address&
+const IPv6_Address&
 Easy_UDP_Client::
 local_address() const noexcept
   {
@@ -156,7 +156,7 @@ local_address() const noexcept
 
 void
 Easy_UDP_Client::
-join_multicast_group(const Socket_Address& maddr, uint8_t ttl, bool loopback, const char* ifname_opt)
+join_multicast_group(const IPv6_Address& maddr, uint8_t ttl, bool loopback, const char* ifname_opt)
   {
     if(!this->m_socket)
       POSEIDON_THROW(("Client not running"));
@@ -166,7 +166,7 @@ join_multicast_group(const Socket_Address& maddr, uint8_t ttl, bool loopback, co
 
 void
 Easy_UDP_Client::
-leave_multicast_group(const Socket_Address& maddr, const char* ifname_opt)
+leave_multicast_group(const IPv6_Address& maddr, const char* ifname_opt)
   {
     if(!this->m_socket)
       POSEIDON_THROW(("Client not running"));
@@ -176,7 +176,7 @@ leave_multicast_group(const Socket_Address& maddr, const char* ifname_opt)
 
 bool
 Easy_UDP_Client::
-udp_send(const Socket_Address& addr, chars_view data)
+udp_send(const IPv6_Address& addr, chars_view data)
   {
     if(!this->m_socket)
       return false;

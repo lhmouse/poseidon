@@ -230,7 +230,7 @@ close() noexcept
     this->m_socket = nullptr;
   }
 
-const Socket_Address&
+const IPv6_Address&
 Easy_TCP_Client::
 local_address() const noexcept
   {
@@ -240,7 +240,7 @@ local_address() const noexcept
     return this->m_socket->local_address();
   }
 
-const Socket_Address&
+const IPv6_Address&
 Easy_TCP_Client::
 remote_address() const noexcept
   {

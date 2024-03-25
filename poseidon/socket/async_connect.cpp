@@ -31,7 +31,7 @@ void
 Async_Connect::
 do_on_abstract_async_task_execute()
   {
-    opt<Socket_Address> dns_result;
+    opt<IPv6_Address> dns_result;
     shptr<Abstract_Socket> socket;
 
     try {

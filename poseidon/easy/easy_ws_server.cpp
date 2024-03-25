@@ -198,7 +198,7 @@ struct Final_Listener final : Listen_Socket
     Easy_WS_Server::thunk_type m_thunk;
     wkptr<Client_Table> m_wtable;
 
-    Final_Listener(const Easy_WS_Server::thunk_type& thunk, const Socket_Address& addr,
+    Final_Listener(const Easy_WS_Server::thunk_type& thunk, const IPv6_Address& addr,
                    shptrR<Client_Table> table)
       :
         Listen_Socket(addr), m_thunk(thunk), m_wtable(table)
@@ -208,7 +208,7 @@ struct Final_Listener final : Listen_Socket
 
     virtual
     shptr<Abstract_Socket>
-    do_on_listen_new_client_opt(Socket_Address&& addr, unique_posix_fd&& fd) override
+    do_on_listen_new_client_opt(IPv6_Address&& addr, unique_posix_fd&& fd) override
       {
         auto table = this->m_wtable.lock();
         if(!table)
@@ -240,7 +240,7 @@ void
 Easy_WS_Server::
 start(chars_view addr)
   {
-    Socket_Address saddr(addr);
+    IPv6_Address saddr(addr);
     auto table = new_sh<X_Client_Table>();
     auto socket = new_sh<Final_Listener>(this->m_thunk, saddr, table);
 
@@ -257,7 +257,7 @@ stop() noexcept
     this->m_socket = nullptr;
   }
 
-const Socket_Address&
+const IPv6_Address&
 Easy_WS_Server::
 local_address() const noexcept
   {

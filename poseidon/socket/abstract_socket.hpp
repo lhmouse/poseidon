@@ -6,7 +6,7 @@
 
 #include "../fwd.hpp"
 #include "enums.hpp"
-#include "socket_address.hpp"
+#include "ipv6_address.hpp"
 namespace poseidon {
 
 class Abstract_Socket
@@ -17,7 +17,7 @@ class Abstract_Socket
     unique_posix_fd m_fd;
     atomic_relaxed<Socket_State> m_state;
     mutable atomic_relaxed<bool> m_sockname_ready;
-    mutable Socket_Address m_sockname;
+    mutable IPv6_Address m_sockname;
 
     mutable recursive_mutex m_io_mutex;
     Network_Driver* m_io_driver;
@@ -127,13 +127,13 @@ class Abstract_Socket
     // `ipv6_invalid` is returned. The result is cached and will not
     // reflect changes that other APIs may have made.
     ROCKET_PURE
-    const Socket_Address&
+    const IPv6_Address&
     local_address() const noexcept;
 
     // Initiates a connection for a stream socket, or sets the peer address
     // for a datagram socket.
     void
-    connect(const Socket_Address& addr);
+    connect(const IPv6_Address& addr);
 
     // Shuts the socket down without sending any protocol-specific closure
     // notifications.

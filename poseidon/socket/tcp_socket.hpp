@@ -17,7 +17,7 @@ class TCP_Socket
     friend class Network_Driver;
 
     mutable atomic_relaxed<bool> m_peername_ready;
-    mutable Socket_Address m_peername;
+    mutable IPv6_Address m_peername;
 
   protected:
     // Takes ownership of an accepted socket. [server-side constructor]
@@ -75,7 +75,7 @@ class TCP_Socket
     // `ipv6_invalid` is returned. The result is cached and will not
     // reflect changes that other APIs may have made.
     ROCKET_PURE
-    const Socket_Address&
+    const IPv6_Address&
     remote_address() const noexcept;
 
     // Gets the maximum segment size (MSS) for outgoing packets.

@@ -18,7 +18,7 @@ class Easy_UDP_Server
       thunk<
         shptrR<UDP_Socket>,  // server data socket
         Abstract_Fiber&,     // fiber for current callback
-        Socket_Address&&,    // address of incoming packet
+        IPv6_Address&&,    // address of incoming packet
         linear_buffer&&>;    // data of incoming packet
 
   private:
@@ -30,7 +30,7 @@ class Easy_UDP_Server
 
   public:
     // Constructs a server. The argument shall be an invocable object taking
-    // `(shptrR<UDP_Socket> socket, Abstract_Fiber& fiber, Socket_Address&& addr,
+    // `(shptrR<UDP_Socket> socket, Abstract_Fiber& fiber, IPv6_Address&& addr,
     // linear_buffer&& data)`, where `socket` is a pointer to the server socket,
     // and `addr` and `data` are the source address and payload of the current
     // UDP packet, respectively. This server object stores a copy of the
@@ -69,7 +69,7 @@ class Easy_UDP_Server
     // Gets the bound address of this server for incoming packets. In case of
     // errors, `ipv6_invalid` is returned.
     ROCKET_PURE
-    const Socket_Address&
+    const IPv6_Address&
     local_address() const noexcept;
 
     // Joins/leaves a multicast group.
@@ -83,10 +83,10 @@ class Easy_UDP_Server
     // is unspecified.
     // These functions are thread-safe.
     void
-    join_multicast_group(const Socket_Address& maddr, uint8_t ttl, bool loopback, const char* ifname_opt = nullptr);
+    join_multicast_group(const IPv6_Address& maddr, uint8_t ttl, bool loopback, const char* ifname_opt = nullptr);
 
     void
-    leave_multicast_group(const Socket_Address& maddr, const char* ifname_opt = nullptr);
+    leave_multicast_group(const IPv6_Address& maddr, const char* ifname_opt = nullptr);
 
     // Enqueues a packet for sending.
     // If this function returns `true`, data will have been enqueued; however it
@@ -96,7 +96,7 @@ class Easy_UDP_Server
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    udp_send(const Socket_Address& addr, chars_view data);
+    udp_send(const IPv6_Address& addr, chars_view data);
   };
 
 }  // namespace poseidon

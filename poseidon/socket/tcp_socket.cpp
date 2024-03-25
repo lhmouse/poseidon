@@ -179,7 +179,7 @@ do_on_tcp_oob_byte(char data)
         this, typeid(*this), (int) data, (char) data);
   }
 
-const Socket_Address&
+const IPv6_Address&
 TCP_Socket::
 remote_address() const noexcept
   {

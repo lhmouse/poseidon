@@ -377,7 +377,7 @@ enum IP_Address_Class : uint8_t;
 enum Socket_State : uint8_t;
 enum HTTP_Payload_Type : uint8_t;
 enum WebSocket_OpCode : uint8_t;
-class Socket_Address;
+class IPv6_Address;
 class Abstract_Socket;
 class Listen_Socket;
 class UDP_Socket;

@@ -237,7 +237,7 @@ close() noexcept
     this->m_session = nullptr;
   }
 
-const Socket_Address&
+const IPv6_Address&
 Easy_HTTP_Client::
 local_address() const noexcept
   {
@@ -247,7 +247,7 @@ local_address() const noexcept
     return this->m_session->local_address();
   }
 
-const Socket_Address&
+const IPv6_Address&
 Easy_HTTP_Client::
 remote_address() const noexcept
   {

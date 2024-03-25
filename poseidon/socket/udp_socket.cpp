@@ -10,7 +10,7 @@
 namespace poseidon {
 
 UDP_Socket::
-UDP_Socket(const Socket_Address& addr)
+UDP_Socket(const IPv6_Address& addr)
   :
     Abstract_Socket(SOCK_DGRAM, IPPROTO_UDP)
   {
@@ -131,7 +131,7 @@ do_abstract_socket_on_writable()
 
 void
 UDP_Socket::
-join_multicast_group(const Socket_Address& maddr, uint8_t ttl, bool loopback, const char* ifname_opt)
+join_multicast_group(const IPv6_Address& maddr, uint8_t ttl, bool loopback, const char* ifname_opt)
   {
     // If no interface name is given, the second one is used, as the first one
     // is typically the loopback interface `lo`.
@@ -217,7 +217,7 @@ join_multicast_group(const Socket_Address& maddr, uint8_t ttl, bool loopback, co
 
 void
 UDP_Socket::
-leave_multicast_group(const Socket_Address& maddr, const char* ifname_opt)
+leave_multicast_group(const IPv6_Address& maddr, const char* ifname_opt)
   {
     // If no interface name is given, the second one is used, as the first one
     // is typically the loopback interface `lo`.
@@ -269,7 +269,7 @@ leave_multicast_group(const Socket_Address& maddr, const char* ifname_opt)
 
 bool
 UDP_Socket::
-udp_send(const Socket_Address& addr, chars_view data)
+udp_send(const IPv6_Address& addr, chars_view data)
   {
     if((data.p == nullptr) && (data.n != 0))
       POSEIDON_THROW((

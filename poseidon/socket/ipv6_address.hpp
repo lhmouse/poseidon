@@ -1,15 +1,15 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
-#ifndef POSEIDON_SOCKET_SOCKET_ADDRESS_
-#define POSEIDON_SOCKET_SOCKET_ADDRESS_
+#ifndef POSEIDON_SOCKET_IPV6_ADDRESS_
+#define POSEIDON_SOCKET_IPV6_ADDRESS_
 
 #include "../fwd.hpp"
 #include "enums.hpp"
 #include <netinet/in.h>
 namespace poseidon {
 
-class Socket_Address
+class IPv6_Address
   {
   private:
     union {
@@ -20,25 +20,25 @@ class Socket_Address
 
   public:
     // Initializes an unspecified (all-zero) address.
-    constexpr Socket_Address() noexcept = default;
+    constexpr IPv6_Address() noexcept = default;
 
     // Initializes an address from a foreign source.
-    constexpr Socket_Address(const ::in6_addr& addr, uint16_t port) noexcept
+    constexpr IPv6_Address(const ::in6_addr& addr, uint16_t port) noexcept
       :
         m_addr(addr), m_port(port)
       { }
 
-    constexpr Socket_Address(const Socket_Address& other, uint16_t port) noexcept
+    constexpr IPv6_Address(const IPv6_Address& other, uint16_t port) noexcept
       :
         m_addr(other.m_addr), m_port(port)
       { }
 
     // Parses an address from a string, like `parse()`.
     // An exception is thrown if the address string is not valid.
-    explicit Socket_Address(chars_view str);
+    explicit IPv6_Address(chars_view str);
 
-    Socket_Address&
-    swap(Socket_Address& other) noexcept
+    IPv6_Address&
+    swap(IPv6_Address& other) noexcept
       {
         ::std::swap(this->m_addr, other.m_addr);
         ::std::swap(this->m_port, other.m_port);
@@ -87,7 +87,7 @@ class Socket_Address
     // Performs bitwise comparison.
     ROCKET_PURE
     bool
-    equals(const Socket_Address& other) const noexcept
+    equals(const IPv6_Address& other) const noexcept
       {
         __m128i tval = _mm_load_si128(&(this->m_addr_stor));
         __m128i oval = _mm_load_si128(&(other.m_addr_stor));
@@ -98,7 +98,7 @@ class Socket_Address
 
     ROCKET_PURE
     int
-    compare(const Socket_Address& other) const noexcept;
+    compare(const IPv6_Address& other) const noexcept;
 
     // Returns the address class, which is shared by both IPv4 and IPv6.
     ROCKET_PURE
@@ -138,52 +138,52 @@ class Socket_Address
     print_to_string() const;
   };
 
-extern const Socket_Address ipv6_unspecified;  // [::]:0
-extern const Socket_Address ipv6_loopback;     // [::1]:0
-extern const Socket_Address ipv6_invalid;      // a documentation-only address
+extern const IPv6_Address ipv6_unspecified;  // [::]:0
+extern const IPv6_Address ipv6_loopback;     // [::1]:0
+extern const IPv6_Address ipv6_invalid;      // a documentation-only address
 
-extern const Socket_Address ipv4_unspecified;  // [::ffff:0.0.0.0]:0
-extern const Socket_Address ipv4_loopback;     // [::ffff:127.0.0.1]:0
-extern const Socket_Address ipv4_broadcast;    // [::ffff:255.255.255.255]:0
+extern const IPv6_Address ipv4_unspecified;  // [::ffff:0.0.0.0]:0
+extern const IPv6_Address ipv4_loopback;     // [::ffff:127.0.0.1]:0
+extern const IPv6_Address ipv4_broadcast;    // [::ffff:255.255.255.255]:0
 
 inline
 void
-swap(Socket_Address& lhs, Socket_Address& rhs) noexcept
+swap(IPv6_Address& lhs, IPv6_Address& rhs) noexcept
   { lhs.swap(rhs);  }
 
 inline
 tinyfmt&
-operator<<(tinyfmt& fmt, const Socket_Address& addr)
+operator<<(tinyfmt& fmt, const IPv6_Address& addr)
   { return addr.print_to(fmt);  }
 
 inline
 bool
-operator==(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
+operator==(const IPv6_Address& lhs, const IPv6_Address& rhs) noexcept
   { return lhs.equals(rhs);  }
 
 inline
 bool
-operator!=(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
+operator!=(const IPv6_Address& lhs, const IPv6_Address& rhs) noexcept
   { return not lhs.equals(rhs);  }
 
 inline
 bool
-operator<(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
+operator<(const IPv6_Address& lhs, const IPv6_Address& rhs) noexcept
   { return lhs.compare(rhs) < 0;  }
 
 inline
 bool
-operator>(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
+operator>(const IPv6_Address& lhs, const IPv6_Address& rhs) noexcept
   { return lhs.compare(rhs) > 0;  }
 
 inline
 bool
-operator<=(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
+operator<=(const IPv6_Address& lhs, const IPv6_Address& rhs) noexcept
   { return lhs.compare(rhs) <= 0;  }
 
 inline
 bool
-operator>=(const Socket_Address& lhs, const Socket_Address& rhs) noexcept
+operator>=(const IPv6_Address& lhs, const IPv6_Address& rhs) noexcept
   { return lhs.compare(rhs) >= 0;  }
 
 }  // namespace poseidon
