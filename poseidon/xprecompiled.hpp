@@ -6,6 +6,11 @@
 
 #include "version.h"
 
+// Prevent use of standard streams.
+#define _IOS_BASE_H  1
+#define _STREAM_ITERATOR_H  1
+#define _STREAMBUF_ITERATOR_H  1
+
 #include <rocket/cow_string.hpp>
 #include <rocket/cow_vector.hpp>
 #include <rocket/cow_hashmap.hpp>
