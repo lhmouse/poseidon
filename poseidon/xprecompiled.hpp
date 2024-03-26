@@ -1,8 +1,8 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
-#ifndef POSEIDON_PRECOMPILED_
-#define POSEIDON_PRECOMPILED_
+#ifndef POSEIDON_XPRECOMPILED_
+#define POSEIDON_XPRECOMPILED_
 
 #include "version.h"
 
