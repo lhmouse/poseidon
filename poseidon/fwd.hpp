@@ -26,6 +26,8 @@
 #include <unordered_set>
 #include <chrono>
 #include <cxxabi.h>
+#include <x86intrin.h>
+#include <emmintrin.h>
 extern "C++" void poseidon_addon_main(void);  // see below
 namespace poseidon {
 namespace noadl = poseidon;
