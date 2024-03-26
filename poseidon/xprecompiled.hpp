@@ -71,10 +71,14 @@
 #include <limits.h>
 #include <wchar.h>
 #include <cxxabi.h>
+
 #ifdef __SSE4_2__
 #include <x86intrin.h>
-#include <immintrin.h>
 #include <nmmintrin.h>
-#endif  // __SSE4_2__
+#endif
+
+#ifdef __AVX__
+#include <immintrin.h>
+#endif
 
 #endif
