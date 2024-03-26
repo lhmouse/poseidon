@@ -29,6 +29,9 @@ Mongo_Connection(cow_stringR server, uint16_t port, cow_stringR db, cow_stringR 
     if(!::mongoc_uri_set_password(uri, passwd.safe_c_str()))
       POSEIDON_THROW(("Invalid Mongo password"));
 
+    // Enable compression. Errors are ignored.
+    ::mongoc_uri_set_option_as_utf8(uri, MONGOC_URI_COMPRESSORS, "zlib");
+
     // Create the client object. This does not initiate the connection.
     ::bson_error_t error;
     if(!this->m_mongo.reset(::mongoc_client_new_from_uri_with_error(uri, &error)))
