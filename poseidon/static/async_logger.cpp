@@ -12,12 +12,12 @@ namespace {
 
 struct Level_Config
   {
-    char tag[13] = "[]]]]]]]]]]]";
+    char tag[16];
+    cow_string color;
+    cow_string file;
     bool p_stdout = false;
     bool p_stderr = false;
     bool trivial = false;
-    cow_string color;
-    cow_string file;
   };
 
 struct Log_Message
@@ -74,7 +74,10 @@ do_load_level_config(Level_Config& lconf, const Config_File& conf_file, const ch
   {
     // Set the tag. Three characters shall be reserved for the pair of brackets
     // and the null terminator.
-    ::memcpy(lconf.tag + 1, name, min(::strlen(name), sizeof(lconf.tag) - 3));
+    char* tag_wp = lconf.tag;
+    xstrrpcpy(tag_wp, "[");
+    xmemrpcpy(tag_wp, name, min(xstrlen(name), sizeof(lconf.tag) - 3));
+    xstrrpcpy(tag_wp, "]");
 
     // Read settings.
     auto conf_value = conf_file.query("logger", name, "color");
@@ -275,13 +278,13 @@ reload(const Config_File& conf_file)
 
     // Parse new configuration.
     cow_vector<X_Level_Config> levels;
-    levels.reserve(6);
-    do_load_level_config(levels.emplace_back(), conf_file, "fatal");
-    do_load_level_config(levels.emplace_back(), conf_file, "error");
-    do_load_level_config(levels.emplace_back(), conf_file, "warn");
-    do_load_level_config(levels.emplace_back(), conf_file, "info");
-    do_load_level_config(levels.emplace_back(), conf_file, "debug");
-    do_load_level_config(levels.emplace_back(), conf_file, "trace");
+    levels.resize(6);
+    do_load_level_config(levels.mut(0), conf_file, "fatal");
+    do_load_level_config(levels.mut(1), conf_file, "error");
+    do_load_level_config(levels.mut(2), conf_file, "warn");
+    do_load_level_config(levels.mut(3), conf_file, "info");
+    do_load_level_config(levels.mut(4), conf_file, "debug");
+    do_load_level_config(levels.mut(5), conf_file, "trace");
 
     uint32_t level_bits = 0;
     for(size_t k = 0;  k != levels.size();  ++k)
