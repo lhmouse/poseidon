@@ -6,4 +6,4 @@ _san_so_list=$(ldd ./build_debug/libposeidon.so |
 
 export LD_LIBRARY_PATH=$(realpath -e build_debug)
 export LD_PRELOAD=$(echo ${_san_so_list})
-poseidon ./etc
+./build_debug/poseidon ./etc/poseidon

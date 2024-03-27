@@ -12,10 +12,12 @@ namespace {
 
 struct Level_Config
   {
-    char tag[15] = "";
+    char tag[13] = "[]]]]]]]]]]]";
+    bool p_stdout = false;
+    bool p_stderr = false;
     bool trivial = false;
     cow_string color;
-    cow_vector<cow_string> files;
+    cow_string file;
   };
 
 struct Log_Message
@@ -72,82 +74,53 @@ do_load_level_config(Level_Config& lconf, const Config_File& conf_file, const ch
   {
     // Set the tag. Three characters shall be reserved for the pair of brackets
     // and the null terminator.
-    char* tag_wp = lconf.tag;
-    xstrrpcpy(tag_wp, "[");
-    xmemrpcpy(tag_wp, name, min(xstrlen(name), sizeof(lconf.tag) - 3));
-    xstrrpcpy(tag_wp, "]");
+    ::memcpy(lconf.tag + 1, name, min(::strlen(name), sizeof(lconf.tag) - 3));
 
-    // Read the color code sequence of the level.
-    auto conf_value = conf_file.query("logger", "colors", name);
+    // Read settings.
+    auto conf_value = conf_file.query("logger", name, "color");
     if(conf_value.is_string())
       lconf.color = conf_value.as_string();
     else if(!conf_value.is_null())
       POSEIDON_THROW((
-          "Invalid `logger.colors.$1`: expecting a `string`, got `$2`",
+          "Invalid `logger.$1.color`: expecting a `string`, got `$2`",
           "[in configuration file '$3']"),
           name, conf_value, conf_file.path());
 
-    // Read level settings.
-    ::asteria::V_object files;
-    conf_value = conf_file.query("logger", "files");
-    if(conf_value.is_object())
-      files = conf_value.as_object();
+    conf_value = conf_file.query("logger", name, "file");
+    if(conf_value.is_string())
+      lconf.file = conf_value.as_string();
     else if(!conf_value.is_null())
       POSEIDON_THROW((
-          "Invalid `logger.files`: expecting an `object`, got `$1`",
-          "[in configuration file '$2']"),
-          conf_value, conf_file.path());
-
-    ::asteria::V_array settings;
-    conf_value = conf_file.query("logger", name);
-    if(conf_value.is_array())
-      settings = conf_value.as_array();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `logger.$1`: expecting an `array`, got `$2`",
+          "Invalid `logger.$1.file`: expecting a `string`, got `$2`",
           "[in configuration file '$3']"),
           name, conf_value, conf_file.path());
 
-    for(size_t k = 0;  k < settings.size();  ++k) {
-      cow_string setting;
-      if(settings.at(k).is_string())
-        setting = settings.at(k).as_string();
-      else if(!settings.at(k).is_null())
-        POSEIDON_THROW((
-            "Invalid invalid element in `logger.$1`: expecting a `string`, got `$2`",
-            "[in configuration file '$3']"),
-            name, settings.at(k), conf_file.path());
+    conf_value = conf_file.query("logger", name, "stdout");
+    if(conf_value.is_boolean())
+      lconf.p_stdout = conf_value.as_boolean();
+    else if(!conf_value.is_null())
+      POSEIDON_THROW((
+          "Invalid `logger.$1.stdout`: expecting a `boolean`, got `$2`",
+          "[in configuration file '$3']"),
+          name, conf_value, conf_file.path());
 
-      if(setting.empty())
-        continue;
+    conf_value = conf_file.query("logger", name, "stderr");
+    if(conf_value.is_boolean())
+      lconf.p_stderr = conf_value.as_boolean();
+    else if(!conf_value.is_null())
+      POSEIDON_THROW((
+          "Invalid `logger.$1.stderr`: expecting a `boolean`, got `$2`",
+          "[in configuration file '$3']"),
+          name, conf_value, conf_file.path());
 
-      // Check for special values.
-      if(setting == "@stderr") {
-        lconf.files.emplace_back(&"/dev/stderr");
-        continue;
-      }
-      else  if(setting == "@stdout") {
-        lconf.files.emplace_back(&"/dev/stdout");
-        continue;
-      }
-      else if(setting == "@trivial") {
-        lconf.trivial = true;
-        continue;
-      }
-
-      // This shall be a path to a file in `logger.files`.
-      auto file_value = files.ptr(setting);
-      if(!file_value)
-        continue;
-
-      if(file_value->is_string())
-        lconf.files.emplace_back(file_value->as_string());
-      else if(!file_value->is_null())
-        POSEIDON_THROW((
-            "Invalid `logger.files.$1`: expecting a `string`, got `$2`",
-            "[in configuration file '$3']"),
-            setting, *file_value, conf_file.path());
-    }
+    conf_value = conf_file.query("logger", name, "trivial");
+    if(conf_value.is_boolean())
+      lconf.trivial = conf_value.as_boolean();
+    else if(!conf_value.is_null())
+      POSEIDON_THROW((
+          "Invalid `logger.$1.trivial`: expecting a `boolean`, got `$2`",
+          "[in configuration file '$3']"),
+          name, conf_value, conf_file.path());
   }
 
 inline
@@ -259,14 +232,16 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
     mtext.putc('\n');
 
     // Write the message. Errors are ignored.
-    unique_posix_fd xfd;
-    for(const auto& file : lconf.files)
-      if(file == "/dev/stderr")
-        (void)! ::write(STDERR_FILENO, mtext.data(), mtext.size());
-      else if(file == "/dev/stdout")
-        (void)! ::write(STDOUT_FILENO, mtext.data(), mtext.size());
-      else if(xfd.reset(::open(file.c_str(), O_WRONLY | O_APPEND | O_CREAT, 0644)))
-        (void)! ::write(xfd, mtext.data(), mtext.size());
+    if(lconf.p_stdout)
+      (void)! ::write(STDOUT_FILENO, mtext.data(), mtext.size());
+
+    if(lconf.p_stderr)
+      (void)! ::write(STDERR_FILENO, mtext.data(), mtext.size());
+
+    if(lconf.file != "")
+      if(const auto fd = unique_posix_fd(::open(lconf.file.c_str(),
+                                    O_WRONLY | O_APPEND | O_CREAT, 0644)))
+        (void)! ::write(fd, mtext.data(), mtext.size());
   }
   catch(exception& stdex) {
     ::fprintf(stderr,
@@ -310,7 +285,7 @@ reload(const Config_File& conf_file)
 
     uint32_t level_bits = 0;
     for(size_t k = 0;  k != levels.size();  ++k)
-      if(levels[k].files.size() != 0)
+      if((levels[k].file != "") || levels[k].p_stdout || levels[k].p_stderr)
         level_bits |= 1U << k;
 
     if(level_bits == 0)

@@ -10,15 +10,14 @@ namespace poseidon {
 class Async_Logger
   {
   private:
-    struct X_Level_Config;
-    struct X_Log_Message;
-
     mutable plain_mutex m_conf_mutex;
+    struct X_Level_Config;
     cow_vector<X_Level_Config> m_conf_levels;
     atomic_relaxed<uint32_t> m_conf_level_bits;
 
     mutable plain_mutex m_queue_mutex;
     condition_variable m_queue_avail;
+    struct X_Log_Message;
     vector<X_Log_Message> m_queue;
 
     mutable recursive_mutex m_io_mutex;
