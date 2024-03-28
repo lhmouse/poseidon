@@ -15,16 +15,23 @@ Mongo_Connection(cow_stringR server, uint16_t port, cow_stringR db, cow_stringR 
     this->m_user = user;
 
     // Parse the server name.
-    uniptr_mongoc_uri uri(::mongoc_uri_new_for_host_port(server.safe_c_str(), port));
-    if(!uri)
-      POSEIDON_THROW(("Invalid Mongo server name `$1:$2`"), server, port);
+    ::bson_error_t error;
+    uniptr_mongoc_uri uri;
 
-    // Fill connection parameters.
-    if(!::mongoc_uri_set_database(uri, db.safe_c_str()))
-      POSEIDON_THROW(("Invalid Mongo database name `$1`"), db);
-
-    if(!::mongoc_uri_set_username(uri, user.safe_c_str()))
+    if(user.find_of(":/?#") != cow_string::npos)
       POSEIDON_THROW(("Invalid Mongo user name `$1`"), user);
+
+    if(server.find_of("/?#") != cow_string::npos)
+      POSEIDON_THROW(("Invalid Mongo server name `$1`"), server);
+
+    tinyfmt_str uri_fmt;
+    format(uri_fmt, "mongodb://$1@$2:$3/$4", user, server, port, db);
+
+    if(!uri.reset(::mongoc_uri_new_with_error(uri_fmt.get_string().safe_c_str(), &error)))
+      POSEIDON_THROW((
+          "Could not compose Mongo URI: ERROR $1.$2: $3",
+          "[`mongoc_uri_new_with_error()` failed]"),
+          error.domain, error.code, error.message);
 
     if(!::mongoc_uri_set_password(uri, passwd.safe_c_str()))
       POSEIDON_THROW(("Invalid Mongo password"));
@@ -33,7 +40,6 @@ Mongo_Connection(cow_stringR server, uint16_t port, cow_stringR db, cow_stringR 
     ::mongoc_uri_set_option_as_utf8(uri, MONGOC_URI_COMPRESSORS, "zlib");
 
     // Create the client object. This does not initiate the connection.
-    ::bson_error_t error;
     if(!this->m_mongo.reset(::mongoc_client_new_from_uri_with_error(uri, &error)))
       POSEIDON_THROW((
           "Could not create Mongo client object: ERROR $1.$2: $3",
