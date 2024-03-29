@@ -6,6 +6,7 @@
 
 #include "../fwd.hpp"
 #include "enums.hpp"
+#include "../socket/ipv6_address.hpp"
 #include "../third/redis_fwd.hpp"
 namespace poseidon {
 
@@ -22,6 +23,7 @@ class Redis_Connection
     bool m_reset_clear;
     uint32_t m_passwd_mask;
     cow_string m_passwd;
+    IPv6_Address m_local_addr;
     steady_time m_time_pooled;
 
     uniptr_redisContext m_redis;
@@ -49,6 +51,10 @@ class Redis_Connection
     cow_stringR
     user() const noexcept
       { return this->m_user;  }
+
+    const IPv6_Address&
+    local_address() const noexcept
+      { return this->m_local_addr;  }
 
     // Resets the connection so it can be reused by another thread. This is a
     // blocking functions. DO NOT ATTEMPT TO REUSE THE CONNECTION IF THIS

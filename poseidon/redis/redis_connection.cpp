@@ -96,12 +96,33 @@ execute(const cow_string* cmds, size_t ncmds)
             "Failed to authenticate with Redis server: $1"),
             this->m_reply->str);
 
+      // Get the local address.
+      ::sockaddr_storage ss;
+      ::socklen_t sslen = sizeof(ss);
+      if(::getsockname(this->m_redis->fd, (::sockaddr*) &ss, &sslen) != 0)
+        POSEIDON_THROW((
+            "Could not get local address: ${errno:full}",
+            "[`getsockname()` failed]"));
+
+      if(ss.ss_family == AF_INET) {
+        // IPv4
+        ::memcpy(this->m_local_addr.mut_data(), ipv4_unspecified.data(), 12);
+        ::memcpy(this->m_local_addr.mut_data() + 12, &(((::sockaddr_in*) &ss)->sin_addr), 4);
+        this->m_local_addr.set_port(this->m_port);
+      }
+      else if(ss.ss_family == AF_INET6) {
+        // IPv6
+        ::memcpy(this->m_local_addr.mut_data(), &(((::sockaddr_in6*) &ss)->sin6_addr), 16);
+        this->m_local_addr.set_port(this->m_port);
+      }
+
       cow_string().swap(this->m_passwd);
       this->m_connected = true;
 
       POSEIDON_LOG_INFO((
-          "Connected to Redis server `$3@$1:$2`"),
-          this->m_server, this->m_port, this->m_user);
+          "Connected to Redis server `$3@$1:$2` from local address `$4`"),
+          this->m_server, this->m_port, this->m_user,
+          this->m_local_addr);
     }
 
     // Discard the current reply.
