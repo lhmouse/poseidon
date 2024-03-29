@@ -187,12 +187,12 @@ parse(chars_view str) noexcept
     }
     else {
       // IPv4-mapped
-      ::memcpy(&(this->m_addr), "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF", 12);
-
+      this->m_addr = ipv4_unspecified.m_addr;
       if(::inet_pton(AF_INET, sbuf, (char*) &(this->m_addr) + 12) == 0)
         return 0;
     }
 
+    // port
     this->m_port = caddr.port_num;
     return aclen;
   }
@@ -208,20 +208,18 @@ print_partial(char* str) const noexcept
     if(do_match_subnet(addr, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF", 96)) {
       // IPv4
       addr += 12;
-      if(::inet_ntop(AF_INET, addr, wptr, INET_ADDRSTRLEN) == nullptr)
-        return (size_t) (::stpcpy(wptr, "(invalid IPv4 address)") - str);
-
+      ::inet_ntop(AF_INET, addr, wptr, INET_ADDRSTRLEN);
       wptr += ::strlen(wptr);
     }
     else {
       // IPv6
       xstrrpcpy(wptr, "[");
-      if(::inet_ntop(AF_INET6, addr, wptr, INET6_ADDRSTRLEN) == nullptr)
-        return (size_t) (::stpcpy(wptr, "(invalid IPv6 address)") - str);
-
+      ::inet_ntop(AF_INET6, addr, wptr, INET6_ADDRSTRLEN);
       wptr += ::strlen(wptr);
       xstrrpcpy(wptr, "]");
     }
+
+    // port
     xstrrpcpy(wptr, ":");
     nump.put_DU(this->m_port);
     xmemrpcpy(wptr, nump.data(), nump.size());
