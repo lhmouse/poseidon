@@ -259,7 +259,8 @@ ver.set_quoted('abi_string', meson.project_version())
 cxx = meson.get_compiler('cpp')
 cxx_is_i386 = cxx.compiles('int foo = __i386__;')
 cxx_is_amd64 = cxx.compiles('int foo = __amd64__;')
-cxx_asm_intel = cxx.compiles('int foo(int a) { return a + 1; }', args: [ '-masm=intel' ])
+cxx_asm_intel = cxx.compiles('int foo(int a) { return a + 1; }',
+                             args: [ '-masm=intel' ])
 
 if cxx_asm_intel
   add_project_arguments('-masm=intel', language: [ 'c', 'cpp' ])
@@ -274,19 +275,17 @@ if get_option('enable-avx') and (cxx_is_i386 or cxx_is_amd64)
 endif
 
 if get_option('enable-debug-checks')
-  add_project_arguments('-D_GLIBCXX_DEBUG', '-D_LIBCPP_DEBUG', language: [ 'c', 'cpp' ])
+  add_project_arguments('-D_GLIBCXX_DEBUG', '-D_LIBCPP_DEBUG', language: 'cpp')
 endif
 
 if get_option('b_sanitize').contains('address')
-  add_project_arguments('-DPOSEIDON_ENABLE_ADDRESS_SANITIZER', language: [ 'c', 'cpp' ])
+  add_project_arguments('-DPOSEIDON_ENABLE_ADDRESS_SANITIZER', language: 'cpp')
 endif
 
 add_project_arguments(
-    '-Wall', '-Wextra', '-Winvalid-pch',
-    '-D_FILE_OFFSET_BITS=64', '-D_POSIX_C_SOURCE=200809', '-D_DEFAULT_SOURCE',
-    '-D_DARWIN_C_SOURCE', '-U_FORTIFY_SOURCE', '-fno-stack-protector',
+    '-Wall', '-Wextra', '-Winvalid-pch', '-D_FILE_OFFSET_BITS=64',
+    '-D_POSIX_C_SOURCE=200809', '-D_DEFAULT_SOURCE', '-ffast-math',
     '-fstrict-aliasing', '-fstrict-overflow', '-fmerge-all-constants',
-    '-frounding-math', '-fno-math-errno', '-fno-trapping-math', '-fno-ident',
     '-fno-devirtualize-speculatively', '-fno-semantic-interposition',
     '-Werror=conversion', '-Werror=sign-compare', '-Werror=sign-conversion',
     '-Werror=write-strings', '-Werror=return-type', '-Werror=double-promotion',
@@ -306,14 +305,8 @@ add_project_arguments(
 # Dependencies
 #===========================================================
 dep_pthread = dependency('threads')
-add_project_dependencies(dep_pthread, language: 'cpp')
-
 dep_asteria = dependency('asteria')
-add_project_dependencies(dep_asteria, language: 'cpp')
-
 dep_taxon = dependency('taxon')
-add_project_dependencies(dep_taxon, language: 'cpp')
-
 dep_libunwind = dependency('libunwind')
 dep_openssl = dependency('openssl', version: '>= 3.0.0')
 dep_zlib = dependency('zlib', version: '>= 1.2.9')
@@ -375,9 +368,9 @@ install_headers(meson.current_build_dir() / 'version.h', subdir: 'poseidon')
 lib_poseidon = shared_library('poseidon',
       cpp_pch: 'poseidon/xprecompiled.hpp',
       sources: [ poseidon_src ],
-      dependencies: [ dep_libunwind, dep_openssl, dep_http_parser, dep_zlib,
-                      dep_libmagic, dep_mysqlclient, dep_mongoc, dep_hiredis,
-                      dep_uuid ],
+      dependencies: [ dep_pthread, dep_asteria, dep_taxon, dep_libunwind,
+                      dep_openssl, dep_zlib, dep_libmagic, dep_http_parser,
+                      dep_uuid, dep_mysqlclient, dep_mongoc, dep_hiredis ],
       soversion: ver.get('abi_major'),
       version: '.'.join([ ver.get('abi_major'), ver.get('abi_minor'), '0' ]),
       install: true)
@@ -396,6 +389,7 @@ import('pkgconfig').generate(lib_poseidon,
 executable('poseidon',
            cpp_pch: 'poseidon/xprecompiled.hpp',
            sources: [ 'poseidon/main.cpp' ],
+           dependencies: [ dep_pthread, dep_asteria ],
            link_with: lib_poseidon,
            install: true)
 
@@ -410,6 +404,7 @@ install_data(etc_poseidon, install_dir: '.', preserve_path: true)
 foreach src: example_src
   shared_module('poseidon-' + src.replace('.cpp', '').underscorify(),
                 src,
+                dependencies: [ dep_pthread, dep_asteria ],
                 link_with: lib_poseidon,
                 install: true)
 endforeach
@@ -419,5 +414,6 @@ endforeach
 #===========================================================
 foreach src: test_src
   test(src, executable(src.replace('.cpp', '').underscorify(), src,
+                       dependencies: [ dep_asteria ],
                        link_with: lib_poseidon))
 endforeach
