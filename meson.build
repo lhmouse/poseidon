@@ -324,7 +324,6 @@ dep_hiredis = disabler()
 if get_option('enable-mysql')
   dep_mysqlclient = dependency('mysqlclient')
   add_project_arguments('-DPOSEIDON_ENABLE_MYSQL', language: [ 'c', 'cpp' ])
-  add_project_dependencies(dep_mysqlclient, language: 'cpp')
 
   poseidon_include += poseidon_include_mysql
   poseidon_src += poseidon_src_mysql
@@ -334,7 +333,6 @@ endif
 if get_option('enable-mongo')
   dep_mongoc = dependency('libmongoc-1.0')
   add_project_arguments('-DPOSEIDON_ENABLE_MONGO', language: [ 'c', 'cpp' ])
-  add_project_dependencies(dep_mongoc, language: 'cpp')
 
   poseidon_include += poseidon_include_mongo
   poseidon_src += poseidon_src_mongo
@@ -344,7 +342,6 @@ endif
 if get_option('enable-redis')
   dep_hiredis = dependency('hiredis')
   add_project_arguments('-DPOSEIDON_ENABLE_REDIS', language: [ 'c', 'cpp' ])
-  add_project_dependencies(dep_hiredis, language: 'cpp')
 
   poseidon_include += poseidon_include_redis
   poseidon_src += poseidon_src_redis
@@ -378,9 +375,9 @@ lib_poseidon = shared_library('poseidon',
 import('pkgconfig').generate(lib_poseidon,
       name: 'poseidon',
       url: 'https://github.com/lhmouse/poseidon',
-      description: 'The Poseidon Server Framework is a modern framework for game '
-                   + 'server development, with support for plain TCP, TCP over TLS, '
-                   + 'UDP, HTTP, WebSocket (with permessage-deflate), MySQL, MongoDB, '
+      description: 'The Poseidon Server Framework is a modern framework for '
+                   + 'game server development, with support for plain TCP, '
+                   + 'TCP over SSL/TLS, UDP, HTTP, WebSocket, MySQL, MongoDB, '
                    + 'Redis, and coroutines.')
 
 #===========================================================
@@ -414,6 +411,7 @@ endforeach
 #===========================================================
 foreach src: test_src
   test(src, executable(src.replace('.cpp', '').underscorify(), src,
-                       dependencies: [ dep_asteria ],
+                       dependencies: [ dep_asteria, dep_mysqlclient, dep_mongoc,
+                                       dep_hiredis ],
                        link_with: lib_poseidon))
 endforeach
