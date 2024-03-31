@@ -50,7 +50,7 @@ static Easy_HTTPS_Server my_server(
   });
 
 void
-poseidon_addon_main()
+poseidon_module_main()
   {
     my_server.start(&"[::]:3805");
     POSEIDON_LOG_WARN(("example HTTPS server started: $1"), my_server.local_address());

@@ -518,31 +518,31 @@ do_check_ulimits()
 
 ROCKET_NEVER_INLINE
 void
-do_load_addons()
+do_load_modules()
   {
-    ::asteria::V_array addons;
+    ::asteria::V_array modules;
     const auto conf = main_config.copy();
     bool empty = true;
 
-    auto conf_value = conf.query("addons");
+    auto conf_value = conf.query("modules");
     if(conf_value.is_array())
-      addons = conf_value.as_array();
+      modules = conf_value.as_array();
     else if(!conf_value.is_null())
       POSEIDON_THROW((
-          "Invalid `addons`: expecting an `array`, got `$1`",
+          "Invalid `modules`: expecting an `array`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf.path());
 
-    for(const auto& addon : addons) {
+    for(const auto& module : modules) {
       cow_string path;
 
-      if(addon.is_string())
-        path = addon.as_string();
-      else if(!addon.is_null())
+      if(module.is_string())
+        path = module.as_string();
+      else if(!module.is_null())
         POSEIDON_THROW((
             "Invalid path to add-on: expecting a `string`, got `$1`",
             "[in configuration file '$2']"),
-            addon, conf.path());
+            module, conf.path());
 
       if(path.empty())
         continue;
@@ -556,11 +556,11 @@ do_load_addons()
             "[`dlopen()` failed: $2]"),
             path, ::dlerror());
 
-      for(const char* fn_name : { "_Z19poseidon_addon_mainv", "poseidon_addon_main" })
+      for(const char* fn_name : { "_Z19poseidon_module_mainv", "poseidon_module_main" })
         if(void* fn = ::dlsym(so_handle, fn_name)) {
           // Check whether it is a function...?
-          POSEIDON_LOG_INFO(("Invoking `poseidon_addon_main()` in add-on: $1"), path);
-          reinterpret_cast<decltype(poseidon_addon_main)*>(fn) ();
+          POSEIDON_LOG_INFO(("Invoking `poseidon_module_main()` in add-on: $1"), path);
+          reinterpret_cast<decltype(poseidon_module_main)*>(fn) ();
           break;
         }
 
@@ -611,7 +611,7 @@ main(int argc, char** argv)
     fiber_scheduler.reload(main_config.copy());
 
     do_create_threads();
-    do_load_addons();
+    do_load_modules();
 
     POSEIDON_LOG_INFO(("Startup complete: $1"), PACKAGE_STRING);
     do_daemonize_finish();

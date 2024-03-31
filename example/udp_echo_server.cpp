@@ -19,7 +19,7 @@ static Easy_UDP_Server my_server(
   });
 
 void
-poseidon_addon_main()
+poseidon_module_main()
   {
     my_server.start(&"[::]:3801");
     POSEIDON_LOG_FATAL(("example UDP server started: $1"), my_server.local_address());

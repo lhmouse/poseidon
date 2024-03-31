@@ -100,7 +100,7 @@ static Easy_Timer my_timer(
   });
 
 void
-poseidon_addon_main()
+poseidon_module_main()
   {
     my_timer.start(1s, 2s);
   }

@@ -28,7 +28,7 @@
 #include <cxxabi.h>
 #include <x86intrin.h>
 #include <emmintrin.h>
-extern "C++" void poseidon_addon_main(void);  // see below
+extern "C++" void poseidon_module_main(void);  // see below
 namespace poseidon {
 namespace noadl = poseidon;
 
@@ -469,7 +469,7 @@ extern class Redis_Connector& redis_connector;
 // Entry point procedure for add-ons
 // This function is to be defined by users. It will be called after an add-on
 // is loaded.
-using ::poseidon_addon_main;
+using ::poseidon_module_main;
 
 }  // namespace poseidon
 #endif
