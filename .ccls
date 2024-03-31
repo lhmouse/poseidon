@@ -20,6 +20,8 @@ clang
 -std=c++17
 -Wall
 -Wextra
+-Wno-potentially-evaluated-expression
+-Wno-string-plus-int
 -Werror=conversion
 -Werror=sign-compare
 -Werror=sign-conversion

@@ -10,7 +10,7 @@ Redis_Value::
 ~Redis_Value()
   {
     // Break deep recursion with a handwritten stack.
-    struct xVariant : decltype(this->m_stor)  { };
+    struct xVariant : decltype(Redis_Value::m_stor)  { };
     vector<xVariant> stack;
 
   do_unpack_loop_:

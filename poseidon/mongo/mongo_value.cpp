@@ -12,8 +12,7 @@ Mongo_Value::
 ~Mongo_Value()
   {
     // Break deep recursion with a handwritten stack.
-    using storage_type = decltype(this->m_stor);
-    struct xVariant : storage_type  { };
+    struct xVariant : decltype(Mongo_Value::m_stor)  { };
     vector<xVariant> stack;
 
   do_unpack_loop_:
