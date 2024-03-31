@@ -45,15 +45,23 @@ do_print_help_and_exit(const char* self)
 //        1         2         3         4         5         6         7     |
 // 3456789012345678901234567890123456789012345678901234567890123456789012345|
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""" R"'''''''''''''''(
-Usage: %s [OPTIONS] [[--] DIRECTORY]
+Usage: %s [OPTIONS] [[--] DIRECTORY [MODULE]...]
 
   -d      daemonize; detach from terminal and run in background
   -h      show help message then exit
   -V      show version information then exit
   -v      enable verbose mode
 
-If DIRECTORY is specified, the working directory is switched there before
-doing everything else.
+If DIRECTORY is specified, it specifies where 'main.conf' is to be located.
+The working directory is switched there before configuration is loaded.
+Therefore, relative paths in 'main.conf' are relative to 'main.conf' itself,
+as one may expect.
+
+If at least one MODULE is specified, the `modules` that are specified in
+'main.conf' are ignored, and only those from the command line are loaded. In
+this case, they are interpreted as file names, possibly relative before the
+working directory is switched. If a module from '/usr/lib' is to be loaded,
+it is necessary to specify an absolute path.
 
 Visit the homepage at <%s>.
 Report bugs to <%s>.
@@ -100,6 +108,7 @@ struct Command_Line_Options
 
     // non-options
     cow_string cd_here;
+    cow_vector<cow_string> modules;
   };
 
 // They are declared here for convenience.
@@ -142,10 +151,7 @@ do_parse_command_line(int argc, char** argv)
   {
     bool help = false;
     bool version = false;
-
-    opt<bool> daemonize;
-    opt<bool> verbose;
-    opt<cow_string> cd_here;
+    ::rocket::unique_ptr<char, void (void*)> abs_path(nullptr, ::free);
 
     if(argc > 1) {
       // Check for common long options before calling `getopt()`.
@@ -162,7 +168,7 @@ do_parse_command_line(int argc, char** argv)
       switch(ch)
         {
         case 'd':
-          daemonize = true;
+          cmdline.daemonize = true;
           break;
 
         case 'h':
@@ -174,7 +180,7 @@ do_parse_command_line(int argc, char** argv)
           break;
 
         case 'v':
-          verbose = true;
+          cmdline.verbose = true;
           break;
 
         default:
@@ -190,26 +196,19 @@ do_parse_command_line(int argc, char** argv)
     if(version)
       do_print_version_and_exit();
 
-    // If more arguments follow, they denote the working directory.
-    if(argc - ::optind > 1)
-      do_exit_printf(exit_invalid_argument,
-          "%s: too many arguments -- '%s'\nTry `%s -h` for help.",
-          argv[0], argv[::optind+1], argv[0]);
+    for(uint32_t k = (uint32_t) ::optind;  (int) k < argc;  ++k) {
+      // If more arguments follow, they denote the working directory and
+      // modules to load.
+      if(!abs_path.reset(::realpath(argv[k], nullptr)))
+        do_exit_printf(exit_system_error,
+            "%s: invalid path -- '%s': %m",
+            argv[0], argv[k]);
 
-    if(argc - ::optind > 0)
-      cd_here = cow_string(argv[::optind]);
-
-    // Daemonization is off by default.
-    if(daemonize)
-      cmdline.daemonize = *daemonize;
-
-    // Verbose mode is off by default.
-    if(verbose)
-      cmdline.verbose = *verbose;
-
-    // The default working directory is empty which means 'do not switch'.
-    if(cd_here)
-      cmdline.cd_here = move(*cd_here);
+      if((int) k == ::optind)
+        cmdline.cd_here.assign(abs_path.get());
+      else
+        cmdline.modules.emplace_back(abs_path.get());
+    }
   }
 
 ROCKET_NEVER_INLINE
@@ -234,7 +233,8 @@ do_await_child_process_and_exit(::pid_t cpid)
 
     ::pid_t r = POSEIDON_SYSCALL_LOOP(::waitpid(cpid, &wstat, 0));
     if(r < 0)
-      do_exit_printf(exit_system_error, "Failed to await child process: %m");
+      do_exit_printf(exit_system_error,
+          "Failed to await child process: %m");
 
     if(WIFEXITED(wstat))
       do_exit_printf(WEXITSTATUS(wstat));
@@ -520,56 +520,51 @@ ROCKET_NEVER_INLINE
 void
 do_load_modules()
   {
-    ::asteria::V_array modules;
-    const auto conf = main_config.copy();
-    bool empty = true;
+    cow_vector<cow_string> modules = cmdline.modules;
 
-    auto conf_value = conf.query("modules");
-    if(conf_value.is_array())
-      modules = conf_value.as_array();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `modules`: expecting an `array`, got `$1`",
-          "[in configuration file '$2']"),
-          conf_value, conf.path());
+    if(modules.empty()) {
+      // Use `modules` from 'main.conf', which shall be an array of strings.
+      const auto conf = main_config.copy();
 
-    for(const auto& module : modules) {
-      cow_string path;
-
-      if(module.is_string())
-        path = module.as_string();
-      else if(!module.is_null())
+      auto conf_value = conf.query("modules");
+      if(!conf_value.is_null() && !conf_value.is_array())
         POSEIDON_THROW((
-            "Invalid path to add-on: expecting a `string`, got `$1`",
+            "Invalid `modules`: expecting an `array`, got `$1`",
             "[in configuration file '$2']"),
-            module, conf.path());
+            conf_value, conf.path());
 
-      if(path.empty())
-        continue;
+      if(conf_value.is_array())
+        for(const auto& r : conf_value.as_array()) {
+          if(!r.is_null() && !r.is_string())
+            POSEIDON_THROW((
+                "Invalid module name: expecting a `string`, got `$1`",
+                "[in configuration file '$2']"),
+                r, conf.path());
 
-      // Load the shared library.
-      POSEIDON_LOG_INFO(("Loading add-on: $1"), path);
-      void* so_handle = ::dlopen(path.safe_c_str(), RTLD_NOW | RTLD_NODELETE);
-      if(!so_handle)
-        POSEIDON_THROW((
-            "Failed to load add-on: $1",
-            "[`dlopen()` failed: $2]"),
-            path, ::dlerror());
-
-      for(const char* fn_name : { "_Z19poseidon_module_mainv", "poseidon_module_main" })
-        if(void* fn = ::dlsym(so_handle, fn_name)) {
-          // Check whether it is a function...?
-          POSEIDON_LOG_INFO(("Invoking `poseidon_module_main()` in add-on: $1"), path);
-          reinterpret_cast<decltype(poseidon_module_main)*>(fn) ();
-          break;
+          if(r.is_string())
+            modules.emplace_back(r.as_string());
         }
-
-      POSEIDON_LOG_DEBUG(("Finished loading add-on: $1"), path);
-      empty = false;
     }
 
-    if(empty)
-      POSEIDON_LOG_FATAL(("No add-on has been loaded. What's the job now?"));
+    if(modules.empty()) {
+      POSEIDON_LOG_FATAL(("No module has been loaded. What's the job now?"));
+      return;
+    }
+
+    for(const auto& name : modules) {
+      POSEIDON_LOG_INFO(("Loading module: $1"), name);
+
+      void* so_handle = ::dlopen(name.safe_c_str(), RTLD_NOW | RTLD_NODELETE);
+      if(!so_handle)
+        POSEIDON_THROW((
+            "Failed to load module '$1': $2",
+            "[`dlopen()` failed]"),
+            name, ::dlerror());
+
+      void* so_sym = ::dlsym(so_handle, "_Z20poseidon_module_mainv");
+      if(so_sym)
+        reinterpret_cast<decltype(poseidon_module_main)*>(so_sym) ();
+    }
   }
 
 }  // namespace

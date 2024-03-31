@@ -28,7 +28,7 @@
 #include <cxxabi.h>
 #include <x86intrin.h>
 #include <emmintrin.h>
-extern "C++" void poseidon_module_main(void);  // see below
+extern "C++" void poseidon_module_main();  // see below
 namespace poseidon {
 namespace noadl = poseidon;
 
@@ -466,8 +466,8 @@ extern class MySQL_Connector& mysql_connector;
 extern class Mongo_Connector& mongo_connector;
 extern class Redis_Connector& redis_connector;
 
-// Entry point procedure for add-ons
-// This function is to be defined by users. It will be called after an add-on
+// Entry point procedure for modules
+// This function is to be defined by users. It will be called after a module
 // is loaded.
 using ::poseidon_module_main;
 

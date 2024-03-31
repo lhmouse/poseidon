@@ -13,7 +13,7 @@
 2. Native TCP, TLS over TCP and UDP over either IPv4 or IPv6
 3. I/O multiplexing basing on epoll
 4. HTTP and WebSocket with permessage-deflate
-5. Configurable add-ons
+5. Configurable modules
 6. Asynchronous MySQL, MongoDB and Redis access (optional)
 
 # How to build

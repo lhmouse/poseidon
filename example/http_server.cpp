@@ -50,7 +50,7 @@ static Easy_HTTP_Server my_server(
   });
 
 void
-poseidon_module_main(void)
+poseidon_module_main()
   {
     my_server.start(&"[::]:3804");
     POSEIDON_LOG_ERROR(("example HTTP server started: $1"), my_server.local_address());
