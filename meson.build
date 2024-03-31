@@ -256,21 +256,7 @@ ver.set('abi_major', meson.project_version().split('.')[0])
 ver.set('abi_minor', meson.project_version().split('.')[1])
 ver.set_quoted('abi_string', meson.project_version())
 
-cxx = meson.get_compiler('cpp')
-cxx_is_i386 = cxx.compiles('int foo = __i386__;')
-cxx_is_amd64 = cxx.compiles('int foo = __amd64__;')
-cxx_asm_intel = cxx.compiles('int foo(int a) { return a + 1; }',
-                             args: [ '-masm=intel' ])
-
-if cxx_asm_intel
-  add_project_arguments('-masm=intel', language: [ 'c', 'cpp' ])
-endif
-
-if cxx_is_i386 or cxx_is_amd64
-  add_project_arguments('-msse4.2', '-mfpmath=sse', language: [ 'c', 'cpp' ])
-endif
-
-if get_option('enable-avx') and (cxx_is_i386 or cxx_is_amd64)
+if get_option('enable-avx')
   add_project_arguments('-mavx', language: [ 'c', 'cpp' ])
 endif
 
@@ -283,8 +269,8 @@ if get_option('b_sanitize').contains('address')
 endif
 
 add_project_arguments(
-    '-Wall', '-Wextra', '-Winvalid-pch', '-D_FILE_OFFSET_BITS=64',
-    '-D_POSIX_C_SOURCE=200809', '-D_DEFAULT_SOURCE', '-ffast-math',
+    '-Wall', '-Wextra', '-masm=intel', '-msse4.2', '-ffast-math',
+    '-D_FILE_OFFSET_BITS=64', '-D_POSIX_C_SOURCE=200809', '-D_DEFAULT_SOURCE',
     '-fstrict-aliasing', '-fstrict-overflow', '-fmerge-all-constants',
     '-fno-devirtualize-speculatively', '-fno-semantic-interposition',
     '-Werror=conversion', '-Werror=sign-compare', '-Werror=sign-conversion',
@@ -311,7 +297,7 @@ dep_libunwind = dependency('libunwind')
 dep_openssl = dependency('openssl', version: '>= 3.0.0')
 dep_zlib = dependency('zlib', version: '>= 1.2.9')
 dep_libmagic = dependency('libmagic')
-dep_http_parser = cxx.find_library('http_parser')
+dep_http_parser = dependency('http-parser')
 dep_uuid = dependency('uuid', version: '>= 2.36.0')
 
 #===========================================================
