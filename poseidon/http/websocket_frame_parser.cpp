@@ -67,18 +67,18 @@ struct PerMessage_Deflate
         const auto conf_file = main_config.copy();
         int64_t default_compression_level = 6;
 
-        auto conf_value = conf_file.query("general", "default_compression_level");
+        auto conf_value = conf_file.query("http", "default_compression_level");
         if(conf_value.is_integer())
           default_compression_level = conf_value.as_integer();
         else if(!conf_value.is_null())
           POSEIDON_THROW((
-              "Invalid `general.default_compression_level`: expecting an `integer`, got `$1`",
+              "Invalid `http.default_compression_level`: expecting an `integer`, got `$1`",
               "[in configuration file '$2']"),
               conf_value, conf_file.path());
 
         if((default_compression_level < 0) || (default_compression_level > 9))
           POSEIDON_THROW((
-              "`general.default_compression_level` value `$1` out of range",
+              "`http.default_compression_level` value `$1` out of range",
               "[in configuration file '$2']"),
               default_compression_level, conf_file.path());
 

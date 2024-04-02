@@ -452,36 +452,40 @@ ROCKET_NEVER_INLINE
 void
 do_write_pid_file()
   {
-    cow_string pid_file_path;
+    if(!cmdline.modules.empty())
+      return;
+
+    // Get the path to the PID file.
+    cow_string pid_file;
     const auto conf = main_config.copy();
 
-    auto conf_value = conf.query("general", "pid_file_path");
+    auto conf_value = conf.query("pid_file");
     if(conf_value.is_string())
-      pid_file_path = conf_value.as_string();
+      pid_file = conf_value.as_string();
     else if(!conf_value.is_null())
       POSEIDON_THROW((
-          "Invalid `general.pid_file_path`: expecting a `string`, got `$1`",
+          "Invalid `pid_file`: expecting a `string`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf.path());
 
-    if(pid_file_path.empty())
+    if(pid_file.empty())
       return;
 
     // Create the lock file and lock it in exclusive mode before overwriting.
-    if(!pid_file_fd.reset(::creat(pid_file_path.safe_c_str(), 0644)))
+    if(!pid_file_fd.reset(::creat(pid_file.safe_c_str(), 0644)))
       POSEIDON_THROW((
           "Could not create PID file '$1'",
           "[`creat()` failed: ${errno:full}]"),
-          pid_file_path);
+          pid_file);
 
     if(::flock(pid_file_fd, LOCK_EX | LOCK_NB) != 0)
       POSEIDON_THROW((
           "Could not lock PID file '$1'",
           "[`flock()` failed: ${errno:full}]"),
-          pid_file_path);
+          pid_file);
 
     // Write the PID of myself. Errors are ignored.
-    POSEIDON_LOG_DEBUG(("Writing current process ID to '$1'"), pid_file_path.c_str());
+    POSEIDON_LOG_DEBUG(("Writing current process ID to '$1'"), pid_file.c_str());
     ::dprintf(pid_file_fd, "%d\n", (int) ::getpid());
     ::at_quick_exit([] { (void)! ::ftruncate(pid_file_fd, 0);  });
 
@@ -493,8 +497,11 @@ ROCKET_NEVER_INLINE
 void
 do_seed_random()
   {
-    ::srand(random_uint32());
-    ::srand48(static_cast<long>(random_uint64()));
+    uint64_t seed[2];
+    random_bytes(seed, sizeof(seed));
+
+    ::srand(static_cast<uint32_t>(seed[0]));
+    ::srand48(static_cast<long>(seed[1]));
   }
 
 ROCKET_NEVER_INLINE
@@ -507,7 +514,7 @@ do_check_ulimits()
           "Core dumps have been disabled. We highly suggest you enable them in case "
           "of crashes. See `/etc/security/limits.conf` for details."));
 
-    if((::getrlimit(RLIMIT_NOFILE, &rlim) == 0) && (rlim.rlim_cur <= 10'000))
+    if((::getrlimit(RLIMIT_NOFILE, &rlim) == 0) && (rlim.rlim_cur <= 10000))
       POSEIDON_LOG_WARN((
           "The limit of number of open files (which is `$1`) is too low. This might "
           "result in denial of service when there are too many simultaneous network "
@@ -520,35 +527,34 @@ ROCKET_NEVER_INLINE
 void
 do_load_modules()
   {
-    cow_vector<cow_string> modules = cmdline.modules;
+    cow_vector<cow_string> modules;
 
-    if(modules.empty()) {
+    if(!cmdline.modules.empty()) {
+      // Load only modules from the command line.
+      modules = cmdline.modules;
+    }
+    else {
       // Use `modules` from 'main.conf', which shall be an array of strings.
+      ::asteria::V_array mods;
       const auto conf = main_config.copy();
 
       auto conf_value = conf.query("modules");
-      if(!conf_value.is_null() && !conf_value.is_array())
+      if(conf_value.is_array())
+        mods = conf_value.as_array();
+      else if(!conf_value.is_null())
         POSEIDON_THROW((
             "Invalid `modules`: expecting an `array`, got `$1`",
             "[in configuration file '$2']"),
             conf_value, conf.path());
 
-      if(conf_value.is_array())
-        for(const auto& r : conf_value.as_array()) {
-          if(!r.is_null() && !r.is_string())
-            POSEIDON_THROW((
-                "Invalid module name: expecting a `string`, got `$1`",
-                "[in configuration file '$2']"),
-                r, conf.path());
-
-          if(r.is_string())
-            modules.emplace_back(r.as_string());
-        }
-    }
-
-    if(modules.empty()) {
-      POSEIDON_LOG_FATAL(("No module has been loaded. What's the job now?"));
-      return;
+      for(const auto& r : mods)
+        if(r.is_string())
+          modules.emplace_back(r.as_string());
+        else if(!r.is_null())
+          POSEIDON_THROW((
+              "Invalid module name: expecting a `string`, got `$1`",
+              "[in configuration file '$2']"),
+              r, conf.path());
     }
 
     for(const auto& name : modules) {
@@ -565,6 +571,9 @@ do_load_modules()
       if(so_sym)
         reinterpret_cast<decltype(poseidon_module_main)*>(so_sym) ();
     }
+
+    if(modules.empty())
+      POSEIDON_LOG_FATAL(("No module has been loaded. What's the job now?"));
   }
 
 }  // namespace
