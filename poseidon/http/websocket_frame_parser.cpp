@@ -292,6 +292,8 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
     resp.headers.clear();
     resp.headers.emplace_back(&"Connection", &"Upgrade");
     resp.headers.emplace_back(&"Upgrade", &"websocket");
+    resp.headers.emplace_back(&"Date", system_clock::now());
+    resp.headers.emplace_back(&"Expires", &"0");
 
     sec_ws.make_accept_str();
     resp.headers.emplace_back(&"Sec-WebSocket-Accept", cow_string(sec_ws.accept_str, 28));
