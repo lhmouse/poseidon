@@ -53,9 +53,12 @@ do_epoll_ctl(int op, shptrR<Abstract_Socket> socket, uint32_t events)
 
     if((op == EPOLL_CTL_ADD) || (op == EPOLL_CTL_MOD))
       POSEIDON_LOG_TRACE((
-          "Updated epoll flags for socket `$1` (class `$2`): ET = $3, IN = $4, PRI = $5, OUT = $6"),
-          socket, typeid(*socket), event.events / EPOLLET & 1, event.events / EPOLLIN & 1,
-          event.events / EPOLLPRI & 1, event.events / EPOLLOUT & 1);
+          "Updated epoll flags for socket `$1` (class `$2`):$3$4$5$6"),
+          socket, typeid(*socket),
+          (event.events & EPOLLET)  ? " ET"  : "",
+          (event.events & EPOLLIN)  ? " IN"  : "",
+          (event.events & EPOLLPRI) ? " PRI" : "",
+          (event.events & EPOLLOUT) ? " OUT" : "");
   }
 
 POSEIDON_VISIBILITY_HIDDEN
