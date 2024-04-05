@@ -18,9 +18,6 @@ class Config_File
     // Constructs an empty file.
     Config_File() noexcept;
 
-    // Loads the file denoted by `path`.
-    explicit Config_File(cow_stringR path);
-
     Config_File&
     swap(Config_File& other) noexcept
       {
@@ -42,22 +39,34 @@ class Config_File
     path() const noexcept
       { return this->m_path;  }
 
-    // Accesses the contents.
+    // Gets the root object.
     ::asteria::V_object
     root() const noexcept
       { return this->m_root;  }
+
+    // Clears existent data.
+    void
+    clear() noexcept;
+
+    // Loads the file denoted by `path`. In case of an error, an exception is
+    // thrown, and there is no effect.
+    void
+    reload(cow_stringR path);
 
     // Gets a value denoted by a path, which shall not be empty.
     // If the path does not denote an existent value, a statically allocated
     // null value is returned. If during path resolution, an attempt is made
     // to get a field of a non-object, an exception is thrown.
     const ::asteria::Value&
-    query(initializer_list<cow_string> path) const;
+    queryv(const char* first, const char* const* psegs, size_t nsegs) const;
 
-    template<typename... stringT>
+    template<typename... xNext>
     const ::asteria::Value&
-    query(const stringT&... strs) const
-      {  return this->query({ ::rocket::sref(strs)... });  }
+    query(const char* first, const xNext&... xnext) const
+      {
+        const char* segs[] = { xnext... };
+        return this->queryv(first, segs, sizeof...(xNext));
+      }
   };
 
 inline

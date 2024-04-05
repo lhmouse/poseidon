@@ -20,7 +20,8 @@ Main_Config::
 reload()
   {
     // Read the file.
-    Config_File file(&"main.conf");
+    Config_File file;
+    file.reload(&"main.conf");
 
     // Set up new data.
     plain_mutex::unique_lock lock(this->m_mutex);

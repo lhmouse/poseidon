@@ -15,51 +15,63 @@ Config_File() noexcept
   }
 
 Config_File::
-Config_File(cow_stringR path)
-  {
-    this->m_path = ::asteria::get_real_path(path);
-    this->m_root = ::asteria::std_system_load_conf(this->m_path);
-  }
-
-Config_File::
 ~Config_File()
   {
   }
 
+void
+Config_File::
+clear() noexcept
+  {
+    this->m_path.clear();
+    this->m_root.clear();
+  }
+
+void
+Config_File::
+reload(cow_stringR path)
+  {
+    auto real_path = ::asteria::get_real_path(path);
+    auto real_root = ::asteria::std_system_load_conf(real_path);
+
+    // This will not throw exceptions.
+    this->m_path.swap(real_path);
+    this->m_root.swap(real_root);
+  }
+
 const ::asteria::Value&
 Config_File::
-query(initializer_list<cow_string> path) const
+queryv(const char* first, const char* const* psegs, size_t nsegs) const
   {
-    // We would like to return a `Value`, so the path shall not be empty.
-    auto cur = path.begin();
-    if(cur == path.end())
-      POSEIDON_THROW(("Empty value path not valid"));
+    auto pval = this->m_root.ptr(::rocket::sref(first));
+    size_t ks = 0;
 
-    // Resolve the first segment.
-    auto parent = &(this->m_root);
-    auto value = parent->ptr(*cur);
+    while((pval != nullptr) && (ks != nsegs)) {
+      if(pval->is_null()) {
+        pval = nullptr;
+        break;
+      }
+      else if(!pval->is_object()) {
+        // Compose a friendly message.
+        cow_string errp;
+        errp << first;
+        for(size_t k = 0;  k != ks;  ++k)
+          errp << '.' << psegs[k];
 
-    // Resolve all remaining segments.
-    while(value && (++cur != path.end())) {
-      if(value->is_null())
-        return ::asteria::null_value;
-
-      if(!value->is_object())
         POSEIDON_THROW((
-            "Unexpected type of `$1` (expecting an `object`, got `$2`)",
-            "[in configuration file '$3']"),
-            implode(path.begin(), (size_t) (cur - path.begin()), '.'), *value,
-            this->m_path);
+            "`$1` is not an object (got `$2`)",
+            "[in configuration file '$4']"),
+            errp, ::asteria::describe_type(pval->type()), this->m_path);
+      }
 
-      // Descend into this child object.
-      parent = &(value->as_object());
-      value = parent->ptr(*cur);
+      pval = pval->as_object().ptr(::rocket::sref(psegs[ks]));
+      ks ++;
     }
 
-    if(!value)
+    if(!pval)
       return ::asteria::null_value;
 
-    return *value;
+    return *pval;
   }
 
 }  // namespace poseidon
