@@ -11,6 +11,8 @@ namespace poseidon {
 class UUID
   {
   public:
+    struct hash;
+
     struct fields
       {
         uint32_t xh;
@@ -119,6 +121,7 @@ class UUID
       {
         __m128i tval = _mm_load_si128(&(this->m_stor));
         __m128i oval = _mm_setzero_si128();
+
         int eq_mask = _mm_movemask_epi8(_mm_cmpeq_epi8(tval, oval));
         return eq_mask == 0xFFFF;
       }
@@ -139,11 +142,11 @@ class UUID
     int
     compare(const UUID& other) const noexcept
       {
+        const __m128i bits_rev = _mm_set_epi8(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15);
+        const __m128i bits_to_u8 = _mm_set1_epi8(-0x80);
+
         __m128i tval = _mm_load_si128(&(this->m_stor));
         __m128i oval = _mm_load_si128(&(other.m_stor));
-
-        __m128i bits_rev = _mm_set_epi8(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15);
-        __m128i bits_to_u8 = _mm_set1_epi8(-0x80);
         tval = _mm_xor_si128(_mm_shuffle_epi8(tval, bits_rev), bits_to_u8);
         oval = _mm_xor_si128(_mm_shuffle_epi8(oval, bits_rev), bits_to_u8);
 
@@ -176,6 +179,23 @@ class UUID
 
     cow_string
     print_to_string() const;
+  };
+
+struct UUID::hash
+  {
+    using result_type    = size_t;
+    using argument_type  = UUID;
+
+    result_type
+    operator()(const UUID& uuid) const noexcept
+      {
+        __m128i tval = _mm_load_si128(&(uuid.m_stor));
+        tval = _mm_hadd_epi32(tval, _mm_srli_si128(tval, 8));
+        tval = _mm_hadd_epi32(tval, tval);
+
+        int64_t sum = _mm_cvtsi128_si64(tval);
+        return (size_t) sum;
+      }
   };
 
 #define POSEIDON_UUID(a8,b4,c4,d4,e12)  \
