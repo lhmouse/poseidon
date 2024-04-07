@@ -81,4 +81,7 @@
 #include <immintrin.h>
 #endif
 
+#include <asteria/utils.hpp>
+#include <taxon.hpp>
+
 #endif
