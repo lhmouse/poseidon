@@ -372,7 +372,7 @@ import('pkgconfig').generate(lib_poseidon,
 executable('poseidon',
            cpp_pch: 'poseidon/xprecompiled.hpp',
            sources: [ 'poseidon/main.cpp' ],
-           dependencies: [ dep_pthread, dep_asteria ],
+           dependencies: [ dep_pthread, dep_asteria, dep_taxon ],
            link_with: lib_poseidon,
            install: true)
 
@@ -387,7 +387,7 @@ install_data(etc_poseidon, install_dir: '.', preserve_path: true)
 foreach src: example_src
   shared_module('poseidon-' + src.replace('.cpp', '').underscorify(),
                 src,
-                dependencies: [ dep_pthread, dep_asteria ],
+                dependencies: [ dep_pthread, dep_asteria, dep_taxon ],
                 link_with: lib_poseidon,
                 install: true)
 endforeach
@@ -397,7 +397,7 @@ endforeach
 #===========================================================
 foreach src: test_src
   test(src, executable(src.replace('.cpp', '').underscorify(), src,
-                       dependencies: [ dep_asteria, dep_mysqlclient, dep_mongoc,
-                                       dep_hiredis ],
+                       dependencies: [ dep_asteria, dep_taxon, dep_mysqlclient,
+                                       dep_mongoc, dep_hiredis ],
                        link_with: lib_poseidon))
 endforeach
