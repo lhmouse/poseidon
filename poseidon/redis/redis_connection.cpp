@@ -99,7 +99,7 @@ execute(const cow_string* cmds, size_t ncmds)
       // Get the local address.
       ::sockaddr_storage ss;
       ::socklen_t sslen = sizeof(ss);
-      if(::getpeername(this->m_redis->fd, (::sockaddr*) &ss, &sslen) != 0)
+      if(::getsockname(this->m_redis->fd, (::sockaddr*) &ss, &sslen) != 0)
         POSEIDON_THROW((
             "Could not get local address: ${errno:full}",
             "[`getsockname()` failed]"));
@@ -127,7 +127,7 @@ execute(const cow_string* cmds, size_t ncmds)
       this->m_connected = true;
 
       POSEIDON_LOG_INFO((
-          "Connected to Redis server `$3@$1:$2` from local address `$4`"),
+          "Connected to Redis server `$3@$1:$2` from local socket address `$4`"),
           this->m_server, this->m_port, this->m_user, this->m_local_addr);
     }
 
