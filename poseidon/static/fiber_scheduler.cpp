@@ -400,8 +400,15 @@ yield(const Abstract_Fiber& tfiber, shptrR<Abstract_Future> futr_opt, millisecon
     if(!elem)
       POSEIDON_THROW(("No current fiber"));
 
-    if(elem->fiber.get() != &tfiber)
+    const auto& fiber = elem->fiber;
+    if(fiber.get() != &tfiber)
       POSEIDON_THROW(("Fiber not being scheduled"));
+
+    // Set re-scheduling parameters.
+    elem->wfutr = futr_opt;
+    elem->yield_time = steady_clock::now();
+    elem->fail_time = elem->yield_time;
+    elem->async_time.store(elem->yield_time);
 
     if(futr_opt) {
       plain_mutex::unique_lock lock(this->m_conf_mutex);
@@ -427,14 +434,6 @@ yield(const Abstract_Fiber& tfiber, shptrR<Abstract_Future> futr_opt, millisecon
       futr_opt->m_waiters.emplace_back(async_time_ptr);
       lock.unlock();
     }
-
-    // Set re-scheduling parameters.
-    const auto& fiber = elem->fiber;
-
-    elem->wfutr = futr_opt;
-    elem->yield_time = steady_clock::now();
-    elem->fail_time = elem->yield_time;
-    elem->async_time.store(elem->yield_time);
 
     POSEIDON_LOG_DEBUG(("Suspending fiber `$1` (class `$2`)"), fiber, typeid(*fiber));
     ROCKET_ASSERT(elem->state == fiber_running);
