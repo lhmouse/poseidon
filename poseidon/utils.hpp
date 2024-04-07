@@ -194,6 +194,7 @@ create_runtime_error(vfptr<cow_string&, void*> composer_thunk, void* composer,
 #define POSEIDON_THROW(TEMPLATE, ...)  \
     throw (__extension__  \
        ({  \
+         using ::asteria::format;  \
          auto IuChah0u = [&](::asteria::cow_string& quu1Opae)  \
            { format(quu1Opae, (::asteria::make_string_template TEMPLATE), ##__VA_ARGS__);  };  \
          auto ohng0Ohh = [](::asteria::cow_string& iughih5B, void* fi8OhNgo)  \
