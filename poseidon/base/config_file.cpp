@@ -69,7 +69,7 @@ queryv(const char* first, const char* const* psegs, size_t nsegs) const
     }
 
     if(!pval)
-      return ::asteria::null_value;
+      return ::asteria::null;
 
     return *pval;
   }
