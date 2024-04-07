@@ -5,7 +5,6 @@
 #define POSEIDON_REDIS_ENUMS_
 
 #include "../fwd.hpp"
-#include "enums.hpp"
 namespace poseidon {
 
 enum Redis_Value_Type : uint8_t

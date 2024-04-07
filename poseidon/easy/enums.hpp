@@ -5,7 +5,6 @@
 #define POSEIDON_EASY_ENUMS_
 
 #include "../fwd.hpp"
-#include "enums.hpp"
 namespace poseidon {
 
 enum Easy_Stream_Event : uint8_t

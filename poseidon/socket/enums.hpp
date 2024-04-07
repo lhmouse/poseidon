@@ -5,7 +5,6 @@
 #define POSEIDON_SOCKET_ENUMS_
 
 #include "../fwd.hpp"
-#include "enums.hpp"
 namespace poseidon {
 
 enum IP_Address_Class : uint8_t
