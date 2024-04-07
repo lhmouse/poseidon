@@ -26,7 +26,7 @@ reload(const Config_File& conf_file)
     // Parse new configuration. Default ones are defined here.
     cow_string default_server = &"localhost";
     int64_t default_port = 6379;
-    cow_string default_user = &"root";
+    cow_string default_user;
     cow_string default_password;
     uint32_t password_mask = 0;
     int64_t connection_pool_size = 0;
