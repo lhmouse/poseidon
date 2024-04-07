@@ -99,7 +99,7 @@ execute(const cow_string* cmds, size_t ncmds)
       // Get the local address.
       ::sockaddr_storage ss;
       ::socklen_t sslen = sizeof(ss);
-      if(::getsockname(this->m_redis->fd, (::sockaddr*) &ss, &sslen) != 0)
+      if(::getpeername(this->m_redis->fd, (::sockaddr*) &ss, &sslen) != 0)
         POSEIDON_THROW((
             "Could not get local address: ${errno:full}",
             "[`getsockname()` failed]"));
@@ -110,13 +110,13 @@ execute(const cow_string* cmds, size_t ncmds)
           // IPv4
           ::memcpy(this->m_local_addr.mut_data(), ipv4_unspecified.data(), 12);
           ::memcpy(this->m_local_addr.mut_data() + 12, &(((::sockaddr_in*) &ss)->sin_addr), 4);
-          this->m_local_addr.set_port(this->m_port);
+          this->m_local_addr.set_port(ROCKET_BETOH16(((::sockaddr_in*) &ss)->sin_port));
           break;
 
         case AF_INET6:
           // IPv6
           ::memcpy(this->m_local_addr.mut_data(), &(((::sockaddr_in6*) &ss)->sin6_addr), 16);
-          this->m_local_addr.set_port(this->m_port);
+          this->m_local_addr.set_port(ROCKET_BETOH16(((::sockaddr_in6*) &ss)->sin6_port));
           break;
 
         default:
@@ -128,8 +128,7 @@ execute(const cow_string* cmds, size_t ncmds)
 
       POSEIDON_LOG_INFO((
           "Connected to Redis server `$3@$1:$2` from local address `$4`"),
-          this->m_server, this->m_port, this->m_user,
-          this->m_local_addr);
+          this->m_server, this->m_port, this->m_user, this->m_local_addr);
     }
 
     // Discard the current reply.
@@ -146,8 +145,8 @@ execute(const cow_string* cmds, size_t ncmds)
     }
 
     this->m_reply.reset(static_cast<::redisReply*>(::redisCommandArgv(this->m_redis,
-                          static_cast<int>(ncmds), reinterpret_cast<const char**>(argv.data()),
-                          reinterpret_cast<size_t*>(argv.data() + ncmds))));
+                        static_cast<int>(ncmds), reinterpret_cast<const char**>(argv.data()),
+                        reinterpret_cast<size_t*>(argv.data() + ncmds))));
     if(!this->m_reply)
       POSEIDON_THROW((
           "Could not execute Redis command: ERROR $1: $2",
