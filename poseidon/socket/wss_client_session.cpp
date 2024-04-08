@@ -386,9 +386,9 @@ wss_shut_down(uint16_t status, chars_view reason) noexcept
     }
     catch(exception& stdex) {
       POSEIDON_LOG_ERROR((
-          "Failed to send WebSocket CLOSE notification: $1",
+          "Failed to send WebSocket CLOSE notification: $3",
           "[WebSocket client session `$1` (class `$2`)]"),
-          stdex);
+          this, typeid(*this), stdex);
     }
     succ |= this->ssl_shut_down();
     return succ;
