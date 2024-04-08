@@ -28,7 +28,7 @@ enum Easy_WS_Event : uint8_t
     easy_ws_binary   = 33,  // binary message received
     easy_ws_ping     = easy_ws_open,
     easy_ws_pong     = 34,  // pong notification received
-    easy_ws_close    = 35,  // closure notification closed
+    easy_ws_close    = 35,  // closure notification received
   };
 
 }  // namespace poseidon
