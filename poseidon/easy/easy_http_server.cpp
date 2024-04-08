@@ -110,16 +110,12 @@ struct Final_Fiber final : Abstract_Fiber
           catch(exception& stdex) {
             // Shut the connection down with a message.
             // XXX: The user-defined callback may have sent a response...?
+            POSEIDON_LOG_ERROR(("Unhandled exception thrown from easy HTTP client: $1"), stdex);
             HTTP_Response_Headers resp;
             resp.status = HTTP_STATUS_INTERNAL_SERVER_ERROR;
             resp.headers.emplace_back(&"Connection", &"close");
             session->http_response(move(resp), "");
-
             session->tcp_shut_down();
-
-            POSEIDON_LOG_ERROR((
-                "Unhandled exception thrown from easy HTTP client: $1"),
-                stdex);
           }
         }
       }
@@ -161,10 +157,7 @@ struct Final_Session final : HTTP_Server_Session
           client_iter->second.events.push_back(move(event));
         }
         catch(exception& stdex) {
-          POSEIDON_LOG_ERROR((
-              "Could not push network event: $1"),
-              stdex);
-
+          POSEIDON_LOG_ERROR(("Could not push network event: $1"), stdex);
           table->client_map.erase(client_iter);
           this->quick_close();
         }

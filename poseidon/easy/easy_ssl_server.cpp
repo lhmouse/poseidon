@@ -108,11 +108,8 @@ struct Final_Fiber final : Abstract_Fiber
             // Shut the connection down asynchronously. Pending output data
             // are discarded, but the user-defined callback will still be called
             // for remaining input data, in case there is something useful.
+            POSEIDON_LOG_ERROR(("Unhandled exception thrown from easy SSL client: $1"), stdex);
             socket->quick_close();
-
-            POSEIDON_LOG_ERROR((
-                "Unhandled exception thrown from easy SSL client: $1"),
-                stdex);
           }
         }
       }
@@ -154,10 +151,7 @@ struct Final_Socket final : SSL_Socket
           client_iter->second.events.push_back(move(event));
         }
         catch(exception& stdex) {
-          POSEIDON_LOG_ERROR((
-              "Could not push network event: $1"),
-              stdex);
-
+          POSEIDON_LOG_ERROR(("Could not push network event: $1"), stdex);
           table->client_map.erase(client_iter);
           this->quick_close();
         }

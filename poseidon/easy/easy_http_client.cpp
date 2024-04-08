@@ -83,11 +83,8 @@ struct Final_Fiber final : Abstract_Fiber
             // Shut the connection down asynchronously. Pending output data
             // are discarded, but the user-defined callback will still be called
             // for remaining input data, in case there is something useful.
+            POSEIDON_LOG_ERROR(("Unhandled exception thrown from easy HTTP client: $1"), stdex);
             session->quick_close();
-
-            POSEIDON_LOG_ERROR((
-                "Unhandled exception thrown from easy HTTP client: $1"),
-                stdex);
           }
         }
       }
@@ -126,10 +123,7 @@ struct Final_Session final : HTTP_Client_Session
           queue->events.push_back(move(event));
         }
         catch(exception& stdex) {
-          POSEIDON_LOG_ERROR((
-              "Could not push network event: $1"),
-              stdex);
-
+          POSEIDON_LOG_ERROR(("Could not push network event: $1"), stdex);
           this->quick_close();
         }
       }

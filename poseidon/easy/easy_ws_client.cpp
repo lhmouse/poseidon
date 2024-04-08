@@ -80,11 +80,8 @@ struct Final_Fiber final : Abstract_Fiber
           }
           catch(exception& stdex) {
             // Shut the connection down with a message.
+            POSEIDON_LOG_ERROR(("Unhandled exception thrown from easy TCP client: $1"), stdex);
             session->ws_shut_down(1015);
-
-            POSEIDON_LOG_ERROR((
-                "Unhandled exception thrown from easy TCP client: $1"),
-                stdex);
           }
         }
       }
@@ -122,10 +119,7 @@ struct Final_Session final : WS_Client_Session
           queue->events.push_back(move(event));
         }
         catch(exception& stdex) {
-          POSEIDON_LOG_ERROR((
-            "Could not push network event: $1"),
-            stdex);
-
+          POSEIDON_LOG_ERROR(("Could not push network event: $1"), stdex);
           this->quick_close();
         }
       }
