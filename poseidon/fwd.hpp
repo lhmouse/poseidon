@@ -436,6 +436,7 @@ class Redis_Connection;
 enum Easy_Stream_Event : uint8_t;  // TCP, SSL
 enum Easy_HTTP_Event : uint8_t;  // HTTP, HTTPS
 enum Easy_WS_Event : uint8_t;  // WS, WSS
+enum Easy_HWS_Event : uint8_t;  // HTTP+WS, HTTPS+WSS
 class Easy_Timer;
 class Easy_UDP_Server;
 class Easy_UDP_Client;
@@ -448,8 +449,10 @@ class Easy_HTTP_Client;
 class Easy_HTTPS_Server;
 class Easy_HTTPS_Client;
 class Easy_WS_Server;
+class Easy_HWS_Server;
 class Easy_WS_Client;
 class Easy_WSS_Server;
+class Easy_HWSS_Server;
 class Easy_WSS_Client;
 
 // Singletons

@@ -81,8 +81,10 @@ poseidon_include = [
   'poseidon/easy/easy_https_server.hpp',
   'poseidon/easy/easy_https_client.hpp',
   'poseidon/easy/easy_ws_server.hpp',
+  'poseidon/easy/easy_hws_server.hpp',
   'poseidon/easy/easy_ws_client.hpp',
   'poseidon/easy/easy_wss_server.hpp',
+  'poseidon/easy/easy_hwss_server.hpp',
   'poseidon/easy/easy_wss_client.hpp',
 ]
 
@@ -172,8 +174,10 @@ poseidon_src = [
   'poseidon/easy/easy_https_server.cpp',
   'poseidon/easy/easy_https_client.cpp',
   'poseidon/easy/easy_ws_server.cpp',
+  'poseidon/easy/easy_hws_server.cpp',
   'poseidon/easy/easy_ws_client.cpp',
   'poseidon/easy/easy_wss_server.cpp',
+  'poseidon/easy/easy_hwss_server.cpp',
   'poseidon/easy/easy_wss_client.cpp',
 ]
 
@@ -215,8 +219,10 @@ example_src = [
   'example/https_server.cpp',
   'example/https_client.cpp',
   'example/ws_server.cpp',
+  'example/hws_server.cpp',
   'example/ws_client.cpp',
   'example/wss_server.cpp',
+  'example/hwss_server.cpp',
   'example/wss_client.cpp',
 ]
 

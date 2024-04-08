@@ -31,5 +31,16 @@ enum Easy_WS_Event : uint8_t
     easy_ws_ping     = easy_ws_open,
   };
 
+enum Easy_HWS_Event : uint8_t
+  {
+    easy_hws_open     = easy_ws_open,
+    easy_hws_text     = easy_ws_text,
+    easy_hws_binary   = easy_ws_binary,
+    easy_hws_pong     = easy_ws_pong,
+    easy_hws_close    = easy_ws_close,
+    easy_hws_get      = 36,  // simple HTTP GET
+    easy_hws_head     = 37,  // simple HTTP HEAD
+  };
+
 }  // namespace poseidon
 #endif
