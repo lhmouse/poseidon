@@ -51,7 +51,7 @@ do_abstract_future_request() noexcept
         timep->store(now + steady_clock::time_point::duration(k));
 
     waiters_lock.unlock();
-    POSEIDON_LOG_DEBUG(("Future completed: `$1` (class `$2`)"), this, typeid(*this));
+    POSEIDON_LOG_TRACE(("Future completed: `$1` (class `$2`)"), this, typeid(*this));
   }
 
 void
