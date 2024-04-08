@@ -435,7 +435,7 @@ yield(const Abstract_Fiber& tfiber, shptrR<Abstract_Future> futr_opt, millisecon
       lock.unlock();
     }
 
-    POSEIDON_LOG_DEBUG(("Suspending fiber `$1` (class `$2`)"), fiber, typeid(*fiber));
+    POSEIDON_LOG_TRACE(("Suspending fiber `$1` (class `$2`)"), fiber, typeid(*fiber));
     ROCKET_ASSERT(elem->state == fiber_running);
     elem->state = fiber_suspended;
     POSEIDON_CATCH_EVERYTHING(fiber->do_on_abstract_fiber_suspended());
@@ -449,7 +449,7 @@ yield(const Abstract_Fiber& tfiber, shptrR<Abstract_Future> futr_opt, millisecon
     POSEIDON_CATCH_EVERYTHING(fiber->do_on_abstract_fiber_resumed());
     ROCKET_ASSERT(elem->state == fiber_suspended);
     elem->state = fiber_running;
-    POSEIDON_LOG_DEBUG(("Resumed fiber `$1` (class `$2`)"), fiber, typeid(*fiber));
+    POSEIDON_LOG_TRACE(("Resumed fiber `$1` (class `$2`)"), fiber, typeid(*fiber));
   }
 
 }  // namespace poseidon
