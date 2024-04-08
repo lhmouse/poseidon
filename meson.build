@@ -12,7 +12,7 @@
 ## NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
 ## CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-project('poseidon', 'cpp', version: '1.0.alpha')
+project('poseidon', 'cpp', version: '0.3.alpha')
 
 #===========================================================
 # List of files
