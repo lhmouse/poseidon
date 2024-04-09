@@ -28,9 +28,9 @@ do_on_abstract_future_execute()
     // be reset and put back.
     uniptr<Mongo_Connection> conn = this->m_ctr->allocate_default_connection();
     const auto conn_guard = make_unique_handle(&conn,
-        [&](void*) {
+        [&](...) {
           if(conn && conn->reset())
-              this->m_ctr->pool_connection(move(conn));
+            this->m_ctr->pool_connection(move(conn));
         });
 
     // Execute the command.
