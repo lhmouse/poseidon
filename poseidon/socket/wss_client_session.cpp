@@ -87,13 +87,7 @@ do_on_https_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& /*data
       this->m_pmce_opt = new_sh<WebSocket_Deflator>(this->m_parser);
 
     // Rebuild the URI.
-    tinyfmt_str uri_fmt;
-    uri_fmt << this->m_host << this->m_path;
-
-    if(!this->m_query.empty())
-      uri_fmt << '?' << this->m_query;
-
-    this->do_on_wss_connected(uri_fmt.extract_string());
+    this->do_on_wss_connected(this->m_host + this->m_path + '?' + this->m_query);
   }
 
 void

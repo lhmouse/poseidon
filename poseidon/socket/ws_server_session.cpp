@@ -97,14 +97,7 @@ do_on_http_request_headers(HTTP_Request_Headers& req, bool close_after_payload)
       this->m_pmce_opt = new_sh<WebSocket_Deflator>(this->m_parser);
 
     // Rebuild the URI.
-    // XXX: `req.uri_port` and `req.uri_userinfo` are discarded.
-    tinyfmt_str uri_fmt;
-    uri_fmt << req.uri_host << req.uri_path;
-
-    if(!req.uri_query.empty())
-      uri_fmt << '?' << req.uri_query;
-
-    this->do_on_ws_accepted(uri_fmt.extract_string());
+    this->do_on_ws_accepted(req.uri_host + req.uri_path + '?' + req.uri_query);
     return http_payload_normal;
   }
 
