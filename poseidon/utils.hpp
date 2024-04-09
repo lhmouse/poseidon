@@ -97,7 +97,7 @@ uint32_t
 random_uint32() noexcept
   {
     uint32_t bits;
-    noadl::random_bytes(&bits, sizeof(bits));
+    random_bytes(&bits, sizeof(bits));
     return bits;
   }
 
@@ -106,7 +106,7 @@ uint64_t
 random_uint64() noexcept
   {
     uint64_t bits;
-    noadl::random_bytes(&bits, sizeof(bits));
+    random_bytes(&bits, sizeof(bits));
     return bits;
   }
 
