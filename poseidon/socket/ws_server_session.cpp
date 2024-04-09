@@ -53,16 +53,16 @@ do_on_http_request_headers(HTTP_Request_Headers& req, bool close_after_payload)
 
     if(xstreq(req.method, "OPTIONS")) {
       // Response with allowed methods, or CORS options.
-      bool is_cors = any_of(req.headers,
-        [](const auto& hpair) {
-          return (hpair.first.size() >= 15)
-                 && ::rocket::ascii_ci_equal(hpair.first.data(), 15, "Access-Control-", 15);
-        });
-
       HTTP_Response_Headers resp;
       resp.status = 204;
       resp.headers.reserve(8);
+      resp.headers.emplace_back(&"Allow", &"GET");
       resp.headers.emplace_back(&"Date", system_clock::now());
+
+      bool is_cors = false;
+      for(const auto& r : req.headers)
+        if(r.first.length() >= 15)
+          is_cors |= ::rocket::ascii_ci_equal(r.first.c_str(), 15, "Access-Control-", 15);
 
       if(is_cors) {
         resp.headers.emplace_back(&"Access-Control-Allow-Origin", &"*");
@@ -73,8 +73,6 @@ do_on_http_request_headers(HTTP_Request_Headers& req, bool close_after_payload)
                &"Upgrade, Origin, Sec-WebSocket-Version, Sec-WebSocket-Key, "
                 "Sec-WebSocket-Extensions, Sec-WebSocket-Protocol");
       }
-      else
-        resp.headers.emplace_back(&"Allow", &"GET");
 
       if(close_after_payload)
         resp.headers.emplace_back(&"Connection", &"close");
