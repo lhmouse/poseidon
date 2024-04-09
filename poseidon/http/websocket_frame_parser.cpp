@@ -148,7 +148,7 @@ WebSocket_Frame_Parser()
 
     conf_value = conf_file.query("network", "http", "max_websocket_message_length");
     if(conf_value.is_integer())
-      this->m_max_message_length = clamp_cast<uint32_t>(conf_value.as_integer(), 0x1000, 0x10000000);
+      this->m_max_message_length = clamp_cast<uint32_t>(conf_value.as_integer(), 0x100, 0x10000000);
     else if(!conf_value.is_null())
       POSEIDON_THROW((
           "Invalid `network.http.max_websocket_message_length`: expecting an `integer`, got `$1`",
