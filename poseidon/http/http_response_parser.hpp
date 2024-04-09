@@ -12,7 +12,13 @@ namespace poseidon {
 class HTTP_Response_Parser
   {
   private:
+    int m_default_compression_level = 6;
+    uint32_t m_max_content_length = 1048576;
+
     static const ::http_parser_settings s_settings[1];
+    ::http_parser m_parser[1];
+    HTTP_Response_Headers m_headers;
+    linear_buffer m_payload;
 
     enum HRESP_State : uint8_t
       {
@@ -21,10 +27,6 @@ class HTTP_Response_Parser
         hresp_payload_done  = 2,
       };
 
-    ::http_parser m_parser[1];
-    HTTP_Response_Headers m_headers;
-    linear_buffer m_payload;
-
     HRESP_State m_hresp;
     bool m_close_after_payload;
     char m_reserved_1;
@@ -32,12 +34,21 @@ class HTTP_Response_Parser
 
   public:
     // Constructs a parser for incoming responses.
-    HTTP_Response_Parser() noexcept;
+    HTTP_Response_Parser();
 
   public:
     HTTP_Response_Parser(const HTTP_Response_Parser&) = delete;
     HTTP_Response_Parser& operator=(const HTTP_Response_Parser&) & = delete;
     ~HTTP_Response_Parser();
+
+    // Get configuration values.
+    int
+    default_compression_level() const noexcept
+      { return this->m_default_compression_level;  }
+
+    uint32_t
+    max_content_length() const noexcept
+      { return this->m_max_content_length;  }
 
     // Has an error occurred?
     bool

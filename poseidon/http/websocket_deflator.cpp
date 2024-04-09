@@ -92,7 +92,7 @@ deflate_message_finish(plain_mutex::unique_lock& lock)
 
 void
 WebSocket_Deflator::
-inflate_message_stream(plain_mutex::unique_lock& lock, chars_view data)
+inflate_message_stream(plain_mutex::unique_lock& lock, chars_view data, uint32_t max_message_length)
   {
     if(data.n == 0)
       return;
@@ -117,6 +117,11 @@ inflate_message_stream(plain_mutex::unique_lock& lock, chars_view data)
             "Failed to decompress WebSocket message; zlib error: $1",
             "[`inflate()` returned `$2`]"),
             this->m_inf_strm.msg(), err);
+
+      if(this->m_inf_buf.size() > max_message_length)
+        POSEIDON_THROW((
+            "WebSocket message length limit exceeded: `$1` > `$2`"),
+            this->m_inf_buf.size(), max_message_length);
     }
     while((in_ptr != in_end) && (err == Z_OK));
   }

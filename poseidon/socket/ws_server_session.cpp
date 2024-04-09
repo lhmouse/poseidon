@@ -4,8 +4,6 @@
 #include "../xprecompiled.hpp"
 #include "ws_server_session.hpp"
 #include "../http/websocket_deflator.hpp"
-#include "../base/config_file.hpp"
-#include "../static/main_config.hpp"
 #include "../easy/enums.hpp"
 #include "../utils.hpp"
 namespace poseidon {
@@ -185,7 +183,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
             }
 
             plain_mutex::unique_lock lock;
-            this->m_pmce_opt->inflate_message_stream(lock, payload);
+            this->m_pmce_opt->inflate_message_stream(lock, payload, this->m_parser.max_message_length());
 
             if(this->m_parser.message_fin())
               this->m_pmce_opt->inflate_message_finish(lock);
@@ -267,38 +265,21 @@ WS_Server_Session::
 do_on_ws_message_data_stream(WebSocket_OpCode /*opcode*/, linear_buffer& data)
   {
     // Leave `data` alone for consumption by `do_on_ws_message_finish()`, but
-    // perform some security checks, so we won't be affected by compromized
+    // perform some security checks, so we won't be affected by compromised
     // 3rd-party servers.
-    const auto conf_file = main_config.copy();
-    int64_t max_websocket_message_length = 1048576;
-
-    auto conf_value = conf_file.query("network", "http", "max_websocket_message_length");
-    if(conf_value.is_integer())
-      max_websocket_message_length = conf_value.as_integer();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `network.http.max_websocket_message_length`: expecting an `integer`, got `$1`",
-          "[in configuration file '$2']"),
-          conf_value, conf_file.path());
-
-    if(max_websocket_message_length < 0)
-      POSEIDON_THROW((
-          "`network.http.max_websocket_message_length` value `$1` out of range",
-          "[in configuration file '$2']"),
-          max_websocket_message_length, conf_file.path());
-
-    if(data.size() > (uint64_t) max_websocket_message_length)
+    if(data.size() > this->m_parser.max_message_length())
       POSEIDON_THROW((
           "WebSocket text data message too large: `$3` > `$4`",
           "[WebSocket server session `$1` (class `$2`)]"),
-          this, typeid(*this), data.size(), max_websocket_message_length);
+          this, typeid(*this), data.size(), this->m_parser.max_message_length());
   }
 
 void
 WS_Server_Session::
 do_on_ws_close(uint16_t status, chars_view reason)
   {
-    POSEIDON_LOG_DEBUG(("WebSocket CLOSE from `$1` (status $2): $3"), this->remote_address(), status, reason);
+    POSEIDON_LOG_DEBUG(("WebSocket CLOSE from `$1` (status $2): $3"),
+                       this->remote_address(), status, reason);
   }
 
 bool

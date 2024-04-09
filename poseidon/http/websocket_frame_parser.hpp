@@ -11,6 +11,14 @@ namespace poseidon {
 class WebSocket_Frame_Parser
   {
   private:
+    int m_default_compression_level = 6;
+    uint32_t m_max_message_length = 1048576;
+
+    WebSocket_Frame_Header m_frm_header;
+    linear_buffer m_frm_payload;
+    uint64_t m_frm_payload_rem = 0;
+    const char* m_error_desc = nullptr;
+
     enum WSHS_State : uint8_t
       {
         wshs_pending     = 0,
@@ -26,11 +34,6 @@ class WebSocket_Frame_Parser
         wsf_payload_done  = 2,
         wsf_error         = 9,
       };
-
-    WebSocket_Frame_Header m_frm_header;
-    linear_buffer m_frm_payload;
-    uint64_t m_frm_payload_rem = 0;
-    const char* m_error_desc = nullptr;
 
     union {
       uint32_t m_state_stor = 0;
@@ -57,12 +60,21 @@ class WebSocket_Frame_Parser
 
   public:
     // Constructs a parser for incoming frames.
-    WebSocket_Frame_Parser() noexcept;
+    WebSocket_Frame_Parser();
 
   public:
     WebSocket_Frame_Parser(const WebSocket_Frame_Parser&) = delete;
     WebSocket_Frame_Parser& operator=(const WebSocket_Frame_Parser&) & = delete;
     ~WebSocket_Frame_Parser();
+
+    // Get configuration values.
+    int
+    default_compression_level() const noexcept
+      { return this->m_default_compression_level;  }
+
+    uint32_t
+    max_message_length() const noexcept
+      { return this->m_max_message_length;  }
 
     // Has an error occurred?
     bool

@@ -3,10 +3,12 @@
 
 #include "../xprecompiled.hpp"
 #include "http_response_parser.hpp"
+#include "../base/config_file.hpp"
+#include "../static/main_config.hpp"
 #include "../utils.hpp"
 namespace poseidon {
 
-constexpr
+POSEIDON_VISIBILITY_HIDDEN
 const ::http_parser_settings
 HTTP_Response_Parser::s_settings[1] =
 #define this   static_cast<HTTP_Response_Parser*>(ps->data)
@@ -94,11 +96,30 @@ HTTP_Response_Parser::s_settings[1] =
 #undef this
 
 HTTP_Response_Parser::
-HTTP_Response_Parser() noexcept
+HTTP_Response_Parser()
   {
     ::http_parser_init(this->m_parser, HTTP_RESPONSE);
     this->m_parser->data = this;
     this->m_parser->allow_chunked_length = true;
+
+    const auto conf_file = main_config.copy();
+    auto conf_value = conf_file.query("network", "http", "default_compression_level");
+    if(conf_value.is_integer())
+      this->m_default_compression_level = clamp_cast<int>(conf_value.as_integer(), 0, 9);
+    else if(!conf_value.is_null())
+      POSEIDON_THROW((
+          "Invalid `network.http.default_compression_level`: expecting an `integer`, got `$1`",
+          "[in configuration file '$2']"),
+          conf_value, conf_file.path());
+
+    conf_value = conf_file.query("network", "http", "max_response_content_length");
+    if(conf_value.is_integer())
+      this->m_max_content_length = clamp_cast<uint32_t>(conf_value.as_integer(), 0x1000, 0x10000000);
+    else if(!conf_value.is_null())
+      POSEIDON_THROW((
+          "Invalid `network.http.max_response_content_length`: expecting an `integer`, got `$1`",
+          "[in configuration file '$2']"),
+          conf_value, conf_file.path());
   }
 
 HTTP_Response_Parser::

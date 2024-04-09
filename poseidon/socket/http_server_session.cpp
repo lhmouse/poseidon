@@ -4,8 +4,6 @@
 #include "../xprecompiled.hpp"
 #include "http_server_session.hpp"
 #include "../http/http_header_parser.hpp"
-#include "../base/config_file.hpp"
-#include "../static/main_config.hpp"
 #include "../utils.hpp"
 namespace poseidon {
 
@@ -132,31 +130,13 @@ HTTP_Server_Session::
 do_on_http_request_payload_stream(linear_buffer& data)
   {
     // Leave `data` alone for consumption by `do_on_http_request_finish()`,
-    // but perform some security checks, so we won't be affected by compromized
+    // but perform some security checks, so we won't be affected by compromised
     // 3rd-party servers.
-    const auto conf_file = main_config.copy();
-    int64_t max_request_content_length = 1048576;
-
-    auto conf_value = conf_file.query("network", "http", "max_request_content_length");
-    if(conf_value.is_integer())
-      max_request_content_length = conf_value.as_integer();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `network.http.max_request_content_length`: expecting an `integer`, got `$1`",
-          "[in configuration file '$2']"),
-          conf_value, conf_file.path());
-
-    if(max_request_content_length < 0)
-      POSEIDON_THROW((
-          "`network.http.max_request_content_length` value `$1` out of range",
-          "[in configuration file '$2']"),
-          max_request_content_length, conf_file.path());
-
-    if(data.size() > (uint64_t) max_request_content_length)
+    if(data.size() > this->m_req_parser->max_content_length())
       POSEIDON_THROW((
           "HTTP request payload too large: `$3` > `$4`",
           "[HTTP server session `$1` (class `$2`)]"),
-          this, typeid(*this), data.size(), max_request_content_length);
+          this, typeid(*this), data.size(), this->m_req_parser->max_content_length());
   }
 
 __attribute__((__noreturn__))

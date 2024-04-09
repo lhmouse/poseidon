@@ -64,7 +64,7 @@ class WebSocket_Deflator
 
     // Decompresses a part of the frame payload.
     void
-    inflate_message_stream(plain_mutex::unique_lock& lock, chars_view data);
+    inflate_message_stream(plain_mutex::unique_lock& lock, chars_view data, uint32_t max_message_length);
 
     // Completes this frame. This function appends a final `00 00 FF FF`, flushes
     // all pending output.

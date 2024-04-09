@@ -58,31 +58,11 @@ struct PerMessage_Deflate
     int client_max_window_bits = 15;
 
     void
-    use_permessage_deflate(HTTP_Header_Parser& hparser)
+    use_permessage_deflate(HTTP_Header_Parser& hparser, int default_compression_level)
       {
         if(this->compression_level != 0)
           return;
 
-        // Check whether compression has been disabled globally.
-        const auto conf_file = main_config.copy();
-        int64_t default_compression_level = 6;
-
-        auto conf_value = conf_file.query("http", "default_compression_level");
-        if(conf_value.is_integer())
-          default_compression_level = conf_value.as_integer();
-        else if(!conf_value.is_null())
-          POSEIDON_THROW((
-              "Invalid `http.default_compression_level`: expecting an `integer`, got `$1`",
-              "[in configuration file '$2']"),
-              conf_value, conf_file.path());
-
-        if((default_compression_level < 0) || (default_compression_level > 9))
-          POSEIDON_THROW((
-              "`http.default_compression_level` value `$1` out of range",
-              "[in configuration file '$2']"),
-              default_compression_level, conf_file.path());
-
-        // If compression has been disabled, do not accept PMCE.
         if(default_compression_level == 0)
           return;
 
@@ -147,15 +127,33 @@ struct PerMessage_Deflate
             return;
 
         // If all parameters have been acepted, accept this PMCE specification.
-        this->compression_level = (uint8_t) default_compression_level;
+        this->compression_level = static_cast<uint8_t>(default_compression_level);
       }
   };
 
 }  // namespace
 
 WebSocket_Frame_Parser::
-WebSocket_Frame_Parser() noexcept
+WebSocket_Frame_Parser()
   {
+    const auto conf_file = main_config.copy();
+    auto conf_value = conf_file.query("network", "http", "default_compression_level");
+    if(conf_value.is_integer())
+      this->m_default_compression_level = clamp_cast<int>(conf_value.as_integer(), 0, 9);
+    else if(!conf_value.is_null())
+      POSEIDON_THROW((
+          "Invalid `network.http.default_compression_level`: expecting an `integer`, got `$1`",
+          "[in configuration file '$2']"),
+          conf_value, conf_file.path());
+
+    conf_value = conf_file.query("network", "http", "max_websocket_message_length");
+    if(conf_value.is_integer())
+      this->m_max_message_length = clamp_cast<uint32_t>(conf_value.as_integer(), 0x1000, 0x10000000);
+    else if(!conf_value.is_null())
+      POSEIDON_THROW((
+          "Invalid `network.http.max_websocket_message_length`: expecting an `integer`, got `$1`",
+          "[in configuration file '$2']"),
+          conf_value, conf_file.path());
   }
 
 WebSocket_Frame_Parser::
@@ -274,7 +272,7 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
         hparser.reload(hpair.second.as_string());
         while(hparser.next_element())
           if(ascii_ci_equal(hparser.current_name(), "permessage-deflate"))
-            pmce.use_permessage_deflate(hparser);
+            pmce.use_permessage_deflate(hparser, this->m_default_compression_level);
       }
 
     if(!upgrade_ok || !ws_version_ok || !sec_ws.key_str[0]) {
@@ -387,7 +385,7 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
         hparser.reload(hpair.second.as_string());
         while(hparser.next_element())
           if(ascii_ci_equal(hparser.current_name(), "permessage-deflate"))
-            pmce.use_permessage_deflate(hparser);
+            pmce.use_permessage_deflate(hparser, this->m_default_compression_level);
           else
             return;  // unknown extension; fail
       }
