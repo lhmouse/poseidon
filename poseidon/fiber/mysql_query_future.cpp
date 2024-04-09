@@ -11,14 +11,14 @@ namespace poseidon {
 MySQL_Query_Future::
 MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt)
   {
-    this->m_connector = &connector;
+    this->m_ctr = &connector;
     this->m_res.stmt = stmt;
   }
 
 MySQL_Query_Future::
 MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt, vector<MySQL_Value> stmt_args)
   {
-    this->m_connector = &connector;
+    this->m_ctr = &connector;
     this->m_res.stmt = stmt;
     this->m_res.stmt_args = move(stmt_args);
   }
@@ -34,11 +34,11 @@ do_on_abstract_future_execute()
   {
     // Get a connection. Before this function returns, the connection should
     // be reset and put back.
-    uniptr<MySQL_Connection> conn = this->m_connector->allocate_default_connection();
+    uniptr<MySQL_Connection> conn = this->m_ctr->allocate_default_connection();
     const auto conn_guard = make_unique_handle(&conn,
-        [=](uniptr<MySQL_Connection>* p) {
-          if((*p)->reset())
-            this->m_connector->pool_connection(move(*p));
+        [&](void*) {
+          if(conn && conn->reset())
+              this->m_ctr->pool_connection(move(conn));
         });
 
     // Execute the statement.

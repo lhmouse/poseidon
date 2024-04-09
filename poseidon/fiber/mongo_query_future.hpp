@@ -24,7 +24,7 @@ class Mongo_Query_Future
       };
 
   private:
-    Mongo_Connector* m_connector;
+    Mongo_Connector* m_ctr;
     Result m_res;
 
   public:

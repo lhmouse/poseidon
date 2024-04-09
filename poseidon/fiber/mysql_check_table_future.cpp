@@ -146,7 +146,7 @@ struct exIndex
 MySQL_Check_Table_Future::
 MySQL_Check_Table_Future(MySQL_Connector& connector, MySQL_Table_Structure table)
   {
-    this->m_connector = &connector;
+    this->m_ctr = &connector;
     this->m_res.table = table;
   }
 
@@ -161,12 +161,12 @@ do_on_abstract_future_execute()
   {
     // Get a connection. Before this function returns, the connection should
     // be reset and put back.
-    uniptr<MySQL_Connection> conn = this->m_connector->allocate_default_connection();
+    uniptr<MySQL_Connection> conn = this->m_ctr->allocate_default_connection();
     const auto conn_guard = make_unique_handle(&conn,
-            [=](uniptr<MySQL_Connection>* p) {
-              if((*p)->reset())
-                this->m_connector->pool_connection(move(*p));
-            });
+        [&](void*) {
+          if(conn && conn->reset())
+              this->m_ctr->pool_connection(move(conn));
+        });
 
     // Compose a `CREATE TABLE` statement and execute it first. This ensures
     // the table exists for all operations later.

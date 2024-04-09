@@ -25,7 +25,7 @@ class MySQL_Check_Table_Future
       };
 
   private:
-    MySQL_Connector* m_connector;
+    MySQL_Connector* m_ctr;
     Result m_res;
 
   public:

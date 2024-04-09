@@ -11,7 +11,7 @@ namespace poseidon {
 Mongo_Query_Future::
 Mongo_Query_Future(Mongo_Connector& connector, Mongo_Document cmd)
   {
-    this->m_connector = &connector;
+    this->m_ctr = &connector;
     this->m_res.cmd = move(cmd);
   }
 
@@ -26,11 +26,11 @@ do_on_abstract_future_execute()
   {
     // Get a connection. Before this function returns, the connection should
     // be reset and put back.
-    uniptr<Mongo_Connection> conn = this->m_connector->allocate_default_connection();
+    uniptr<Mongo_Connection> conn = this->m_ctr->allocate_default_connection();
     const auto conn_guard = make_unique_handle(&conn,
-        [=](uniptr<Mongo_Connection>* p) {
-          if((*p)->reset())
-            this->m_connector->pool_connection(move(*p));
+        [&](void*) {
+          if(conn && conn->reset())
+              this->m_ctr->pool_connection(move(conn));
         });
 
     // Execute the command.

@@ -29,7 +29,7 @@ class MySQL_Query_Future
       };
 
   private:
-    MySQL_Connector* m_connector;
+    MySQL_Connector* m_ctr;
     Result m_res;
 
   public:

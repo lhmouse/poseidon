@@ -24,7 +24,7 @@ class Redis_Query_Future
       };
 
   private:
-    Redis_Connector* m_connector;
+    Redis_Connector* m_ctr;
     Result m_res;
 
   public:
