@@ -51,12 +51,20 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
         if(!this->m_req_parser->headers_complete())
           return;
 
-        // Check request headers.
-        if(this->m_req_parser->mut_headers().is_proxy == false)
-          this->m_req_parser->mut_headers().is_ssl = true;
+        // Check headers.
+        auto& headers = this->m_req_parser->mut_headers();
+
+        if(headers.is_proxy == false)
+          headers.is_ssl = true;
+
+        if(headers.uri_host.empty()) {
+          data.clear();
+          this->do_on_https_request_error(HTTP_STATUS_BAD_REQUEST);
+          return;
+        }
 
         bool fin = this->m_req_parser->should_close_after_payload();
-        auto payload_type = this->do_on_https_request_headers(this->m_req_parser->mut_headers(), fin);
+        auto payload_type = this->do_on_https_request_headers(headers, fin);
         switch(payload_type)
           {
           case http_payload_normal:

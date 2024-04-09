@@ -50,13 +50,20 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
         if(!this->m_req_parser->headers_complete())
           return;
 
-        // Check request headers.
-        if(this->m_req_parser->mut_headers().is_proxy == false)
-          this->m_req_parser->mut_headers().is_ssl = false;
+        // Check headers.
+        auto& headers = this->m_req_parser->mut_headers();
 
-        auto payload_type = this->do_on_http_request_headers(this->m_req_parser->mut_headers(),
-                this->m_req_parser->should_close_after_payload());
+        if(headers.is_proxy == false)
+          headers.is_ssl = false;
 
+        if(headers.uri_host.empty()) {
+          data.clear();
+          this->do_on_http_request_error(HTTP_STATUS_BAD_REQUEST);
+          return;
+        }
+
+        bool fin = this->m_req_parser->should_close_after_payload();
+        auto payload_type = this->do_on_http_request_headers(headers, fin);
         switch(payload_type)
           {
           case http_payload_normal:

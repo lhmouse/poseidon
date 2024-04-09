@@ -172,13 +172,11 @@ struct Final_Session final : WS_Server_Session
             // Handle an HTTP request.
             Client_Table::Event_Queue::Event event;
             event.type = is_get ? easy_hws_get : easy_hws_head;
-
             event.data.putn(req.uri_path.data(), req.uri_path.size());
             if(!req.uri_query.empty()) {
               event.data.putc('?');
               event.data.putn(req.uri_query.data(), req.uri_query.size());
             }
-
             this->do_push_event_common(move(event));
             return http_payload_normal;
           }
@@ -202,17 +200,18 @@ struct Final_Session final : WS_Server_Session
     void
     do_on_ws_message_finish(WebSocket_OpCode opcode, linear_buffer&& data) override
       {
-        Client_Table::Event_Queue::Event event;
-
+        Easy_HWS_Event ev_type;
         if(opcode == websocket_text)
-          event.type = easy_hws_text;
+          ev_type = easy_hws_text;
         else if(opcode == websocket_binary)
-          event.type = easy_hws_binary;
+          ev_type = easy_hws_binary;
         else if(opcode == websocket_pong)
-          event.type = easy_hws_pong;
+          ev_type = easy_hws_pong;
         else
           return;
 
+        Client_Table::Event_Queue::Event event;
+        event.type = ev_type;
         event.data.swap(data);
         this->do_push_event_common(move(event));
       }
@@ -221,13 +220,12 @@ struct Final_Session final : WS_Server_Session
     void
     do_on_ws_close(uint16_t status, chars_view reason) override
       {
-        Client_Table::Event_Queue::Event event;
-        event.type = easy_hws_close;
-
         tinyfmt_ln fmt;
         fmt << status << ": " << reason;
-        event.data = fmt.extract_buffer();
 
+        Client_Table::Event_Queue::Event event;
+        event.type = easy_hws_close;
+        event.data = fmt.extract_buffer();
         this->do_push_event_common(move(event));
       }
   };

@@ -70,8 +70,8 @@ do_on_https_request_headers(HTTP_Request_Headers& req, bool close_after_payload)
 
         // Allow all headers in RFC 6455.
         resp.headers.emplace_back(&"Access-Control-Allow-Headers",
-               &"Upgrade, Origin, Sec-WebSocket-Version, Sec-WebSocket-Key, "
-                "Sec-WebSocket-Extensions, Sec-WebSocket-Protocol");
+                       &"Upgrade, Origin, Sec-WebSocket-Version, Sec-WebSocket-Key, "
+                        "Sec-WebSocket-Extensions, Sec-WebSocket-Protocol");
       }
       else
         resp.headers.emplace_back(&"Allow", &"GET");

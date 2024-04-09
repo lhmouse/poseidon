@@ -14,9 +14,7 @@ WSS_Client_Session::
 WSS_Client_Session(cow_stringR host, cow_stringR path, cow_stringR query)
   {
     if(!path.starts_with("/"))
-      POSEIDON_THROW((
-          "Request paths must start with `/` (path `$1` not valid)"),
-          path);
+      POSEIDON_THROW(("Request paths must start with `/` (path `$1` not valid)"), path);
 
     this->m_host = host;
     this->m_path = path;

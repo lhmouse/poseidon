@@ -49,7 +49,7 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
         if(!this->m_resp_parser->headers_complete())
           return;
 
-        // Check response headers.
+        // Check headers.
         auto payload_type = this->do_on_http_response_headers(this->m_resp_parser->mut_headers());
         switch(payload_type)
           {
@@ -91,8 +91,8 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
         uint32_t status = this->m_resp_parser->headers().status;
 
         this->do_on_http_response_finish(move(this->m_resp_parser->mut_headers()),
-                move(this->m_resp_parser->mut_payload()),
-                this->m_resp_parser->should_close_after_payload());
+                                         move(this->m_resp_parser->mut_payload()),
+                                         this->m_resp_parser->should_close_after_payload());
 
         // For WebSocket and HTTP 2.0, this indiciates the server has switched to
         // another protocol. CONNECT responses are handled differently after the
