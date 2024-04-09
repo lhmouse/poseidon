@@ -171,15 +171,15 @@ create_runtime_error(vfptr<cow_string&, void*> composer_thunk, void* composer,
 #define POSEIDON_LOG_(LEVEL, TEMPLATE, ...)  \
     (::poseidon::async_logger.enabled(LEVEL)  \
      && __extension__  \
-       ({  \
-         using ::asteria::format;  \
-         auto IuChah0u = [&](::asteria::cow_string& quu1Opae)  \
-           { format(quu1Opae, (::asteria::make_string_template TEMPLATE), ##__VA_ARGS__);  };  \
-         auto ohng0Ohh = [](::asteria::cow_string& iughih5B, void* fi8OhNgo)  \
-           { (*static_cast<decltype(IuChah0u)*>(fi8OhNgo)) (iughih5B);  };  \
-         ::poseidon::enqueue_log_message(+ohng0Ohh, &IuChah0u, LEVEL,  \
-             __func__, __FILE__, __LINE__);  \
-       }))
+      ({  \
+        using ::asteria::format;  \
+        auto IuChah0u = [&](::asteria::cow_string& quu1Opae)  \
+          { format(quu1Opae, (::asteria::make_string_template TEMPLATE), ##__VA_ARGS__);  };  \
+        auto ohng0Ohh = [](::asteria::cow_string& iughih5B, void* fi8OhNgo)  \
+          { (*static_cast<decltype(IuChah0u)*>(fi8OhNgo)) (iughih5B);  };  \
+        ::poseidon::enqueue_log_message(+ohng0Ohh, &IuChah0u, LEVEL,  \
+            __func__, __FILE__, __LINE__);  \
+      }))
 
 #define POSEIDON_LOG_FATAL(...)   POSEIDON_LOG_(0U, __VA_ARGS__)
 #define POSEIDON_LOG_ERROR(...)   POSEIDON_LOG_(1U, __VA_ARGS__)
@@ -193,15 +193,15 @@ create_runtime_error(vfptr<cow_string&, void*> composer_thunk, void* composer,
 // line separators. `format()` is to be found via ADL.
 #define POSEIDON_THROW(TEMPLATE, ...)  \
     throw (__extension__  \
-       ({  \
-         using ::asteria::format;  \
-         auto IuChah0u = [&](::asteria::cow_string& quu1Opae)  \
-           { format(quu1Opae, (::asteria::make_string_template TEMPLATE), ##__VA_ARGS__);  };  \
-         auto ohng0Ohh = [](::asteria::cow_string& iughih5B, void* fi8OhNgo)  \
-           { (*static_cast<decltype(IuChah0u)*>(fi8OhNgo)) (iughih5B);  };  \
-         ::poseidon::create_runtime_error(+ohng0Ohh, &IuChah0u,  \
-             __func__, __FILE__, __LINE__);  \
-       }))
+      ({  \
+        using ::asteria::format;  \
+        auto IuChah0u = [&](::asteria::cow_string& quu1Opae)  \
+          { format(quu1Opae, (::asteria::make_string_template TEMPLATE), ##__VA_ARGS__);  };  \
+        auto ohng0Ohh = [](::asteria::cow_string& iughih5B, void* fi8OhNgo)  \
+          { (*static_cast<decltype(IuChah0u)*>(fi8OhNgo)) (iughih5B);  };  \
+        ::poseidon::create_runtime_error(+ohng0Ohh, &IuChah0u,  \
+            __func__, __FILE__, __LINE__);  \
+      }))
 
 #define POSEIDON_CATCH_EVERYTHING(...)  \
     __extension__  \
