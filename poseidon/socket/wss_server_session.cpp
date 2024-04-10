@@ -240,40 +240,13 @@ do_wss_complete_handshake(HTTP_Request_Headers& req, bool close_after_payload)
       return;
     }
 
-    if(xstreq(req.method, "OPTIONS")) {
-      // Response with allowed methods, or CORS options.
-      HTTP_Response_Headers resp;
-      resp.status = 204;
-      resp.headers.reserve(8);
-      resp.headers.emplace_back(&"Allow", &"GET");
-      resp.headers.emplace_back(&"Date", system_clock::now());
-
-      bool is_cors = false;
-      for(const auto& r : req.headers)
-        if(r.first.length() >= 15)
-          is_cors |= ::rocket::ascii_ci_equal(r.first.c_str(), 15, "Access-Control-", 15);
-
-      if(is_cors) {
-        resp.headers.emplace_back(&"Access-Control-Allow-Origin", &"*");
-        resp.headers.emplace_back(&"Access-Control-Allow-Methods", &"GET");
-
-        // Allow all headers in RFC 6455.
-        resp.headers.emplace_back(&"Access-Control-Allow-Headers",
-                        &"Upgrade, Origin, Sec-WebSocket-Version, Sec-WebSocket-Key, "
-                         "Sec-WebSocket-Extensions, Sec-WebSocket-Protocol");
-      }
-
-      if(close_after_payload)
-        resp.headers.emplace_back(&"Connection", &"close");
-
-      this->https_response_headers_only(move(resp));
-      return;
-    }
-
     // Send the handshake response.
     HTTP_Response_Headers resp;
     this->m_parser.accept_handshake_request(resp, req);
     this->https_response_headers_only(move(resp));
+
+    if(::memcmp(req.method, "OPTIONS", 8) == 0)
+      return;
 
     if(close_after_payload || !this->m_parser.is_server_mode()) {
       // The handshake failed.

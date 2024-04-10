@@ -179,12 +179,12 @@ create_handshake_request(HTTP_Request_Headers& req)
   {
     if((this->m_wshs != wshs_pending) && (this->m_wshs != wshs_c_req_sent))
       POSEIDON_THROW((
-          "`create_handshake_request()` must be called as the first function (state `$1` not valid)"),
+          "`create_handshake_request()` must be called at very first (state `$1` not valid)"),
           this->m_wshs);
 
     // Compose the handshake request.
     req.clear();
-    req.method = "GET";
+    ::memcpy(req.method, "GET", 4);
     req.uri_path = &"/";
     req.headers.reserve(8);
     req.headers.emplace_back(&"Connection", &"Upgrade");
@@ -194,8 +194,8 @@ create_handshake_request(HTTP_Request_Headers& req)
     Sec_WebSocket sec_ws;
     sec_ws.make_key_str(this);
     req.headers.emplace_back(&"Sec-WebSocket-Key", cow_string(sec_ws.key_str, 24));
-
-    req.headers.emplace_back(&"Sec-WebSocket-Extensions", &"permessage-deflate; client_max_window_bits");
+    req.headers.emplace_back(&"Sec-WebSocket-Extensions",
+                             &"permessage-deflate; client_max_window_bits");
 
     // Await the response. This cannot fail, so `m_wsf` is not updated.
     this->m_wshs = wshs_c_req_sent;
@@ -207,14 +207,28 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
   {
     if(this->m_wshs != wshs_pending)
       POSEIDON_THROW((
-          "`accept_handshake_request()` must be called as the first function (state `$1` not valid)"),
+          "`accept_handshake_request()` must be called at very first (state `$1` not valid)"),
           this->m_wshs);
 
-    // Compose a default response, so in case of errors, we return immediately.
+    // Compose a default response; So in case of errors, we return immediately.
     resp.clear();
     resp.status = 400;
     resp.headers.reserve(8);
     resp.headers.emplace_back(&"Connection", &"close");
+
+    if(::memcmp(req.method, "OPTIONS", 8) == 0) {
+      // Response with allowed methods and all CORS headers in RFC 6455.
+      resp.status = 204;
+      resp.headers.reserve(8);
+      resp.headers.emplace_back(&"Allow", &"GET");
+      resp.headers.emplace_back(&"Date", system_clock::now());
+      resp.headers.emplace_back(&"Access-Control-Allow-Origin", &"*");
+      resp.headers.emplace_back(&"Access-Control-Allow-Methods", &"GET");
+      resp.headers.emplace_back(&"Access-Control-Allow-Headers",
+                                &"Upgrade, Origin, Sec-WebSocket-Version, Sec-WebSocket-Key, "
+                                 "Sec-WebSocket-Extensions, Sec-WebSocket-Protocol");
+      return;
+    }
 
     this->m_wsf = wsf_error;
     this->m_error_desc = "handshake request invalid";

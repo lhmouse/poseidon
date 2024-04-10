@@ -10,11 +10,17 @@ namespace poseidon {
 
 struct HTTP_Request_Headers
   {
-    const char* method = nullptr;  // null implies `GET`
+    union {
+      __m128i packed_fields_1 = { };
+      struct {
+        char method[11];
+        char always_zero_2;
+        uint16_t uri_port;  // zero implies `80` or `443`, basing on `is_ssl`
+        bool is_proxy;
+        bool is_ssl;
+      };
+    };
     cow_string uri_host;
-    uint16_t uri_port;  // zero implies `80` or `443`, basing on `is_ssl`
-    bool is_proxy = false;
-    bool is_ssl = false;
     cow_string uri_userinfo;
     cow_string uri_path;
     cow_string uri_query;
@@ -23,11 +29,8 @@ struct HTTP_Request_Headers
     HTTP_Request_Headers&
     swap(HTTP_Request_Headers& other) noexcept
       {
-        ::std::swap(this->method, other.method);
+        ::std::swap(this->packed_fields_1, other.packed_fields_1);
         this->uri_host.swap(other.uri_host);
-        ::std::swap(this->uri_port, other.uri_port);
-        ::std::swap(this->is_proxy, other.is_proxy);
-        ::std::swap(this->is_ssl, other.is_ssl);
         this->uri_userinfo.swap(other.uri_userinfo);
         this->uri_path.swap(other.uri_path);
         this->uri_query.swap(other.uri_query);
@@ -39,11 +42,8 @@ struct HTTP_Request_Headers
     void
     clear() noexcept
       {
-        this->method = nullptr;
+        this->packed_fields_1 = _mm_setzero_si128();
         this->uri_host.clear();
-        this->uri_port = 0;
-        this->is_proxy = false;
-        this->is_ssl = false;
         this->uri_userinfo.clear();
         this->uri_path.clear();
         this->uri_query.clear();

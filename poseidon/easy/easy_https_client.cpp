@@ -258,7 +258,7 @@ https_GET(HTTP_Request_Headers&& req)
     if(!this->m_session)
       return false;
 
-    req.method = "GET";
+    ::strcpy(req.method, "GET");
     static_cast<Final_Session*>(this->m_session.get())->fix_headers(req);
     return this->m_session->https_request(move(req), "");
   }
@@ -270,7 +270,7 @@ https_POST(HTTP_Request_Headers&& req, chars_view data)
     if(!this->m_session)
       return false;
 
-    req.method = "POST";
+    ::strcpy(req.method, "POST");
     static_cast<Final_Session*>(this->m_session.get())->fix_headers(req);
     return this->m_session->https_request(move(req), data);
   }
@@ -282,7 +282,7 @@ https_PUT(HTTP_Request_Headers&& req, chars_view data)
     if(!this->m_session)
       return false;
 
-    req.method = "PUT";
+    ::strcpy(req.method, "PUT");
     static_cast<Final_Session*>(this->m_session.get())->fix_headers(req);
     return this->m_session->https_request(move(req), data);
   }
@@ -294,7 +294,7 @@ https_DELETE(HTTP_Request_Headers&& req)
     if(!this->m_session)
       return false;
 
-    req.method = "DELETE";
+    ::strcpy(req.method, "DELETE");
     static_cast<Final_Session*>(this->m_session.get())->fix_headers(req);
     return this->m_session->https_request(move(req), "");
   }
