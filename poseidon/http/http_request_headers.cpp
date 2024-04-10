@@ -10,10 +10,9 @@ void
 HTTP_Request_Headers::
 encode(tinyfmt& fmt) const
   {
-    // Write the request line. If `method` is null or points to an empty string,
-    // `GET` is assumed. This function does not validate whether these fields
-    // contain valid values.
-    if((this->method == nullptr) || (this->method[0] == 0))
+    // Write the request line. If `method` is an empty string, `GET` is assumed.
+    // This function does not validate whether these fields contain valid values.
+    if(this->method[0] == 0)
       fmt << "GET ";
     else
       fmt << this->method << ' ';
