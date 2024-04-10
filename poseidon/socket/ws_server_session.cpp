@@ -43,59 +43,7 @@ HTTP_Payload_Type
 WS_Server_Session::
 do_on_http_request_headers(HTTP_Request_Headers& req, bool close_after_payload)
   {
-    if(req.is_proxy) {
-      // Reject proxy requests.
-      this->do_on_http_request_error(HTTP_STATUS_FORBIDDEN);
-      return http_payload_normal;
-    }
-
-    if(xstreq(req.method, "OPTIONS")) {
-      // Response with allowed methods, or CORS options.
-      HTTP_Response_Headers resp;
-      resp.status = 204;
-      resp.headers.reserve(8);
-      resp.headers.emplace_back(&"Allow", &"GET");
-      resp.headers.emplace_back(&"Date", system_clock::now());
-
-      bool is_cors = false;
-      for(const auto& r : req.headers)
-        if(r.first.length() >= 15)
-          is_cors |= ::rocket::ascii_ci_equal(r.first.c_str(), 15, "Access-Control-", 15);
-
-      if(is_cors) {
-        resp.headers.emplace_back(&"Access-Control-Allow-Origin", &"*");
-        resp.headers.emplace_back(&"Access-Control-Allow-Methods", &"GET");
-
-        // Allow all headers in RFC 6455.
-        resp.headers.emplace_back(&"Access-Control-Allow-Headers",
-                        &"Upgrade, Origin, Sec-WebSocket-Version, Sec-WebSocket-Key, "
-                         "Sec-WebSocket-Extensions, Sec-WebSocket-Protocol");
-      }
-
-      if(close_after_payload)
-        resp.headers.emplace_back(&"Connection", &"close");
-
-      this->http_response_headers_only(move(resp));
-      return http_payload_normal;
-    }
-
-    // Send the handshake response.
-    HTTP_Response_Headers resp;
-    this->m_parser.accept_handshake_request(resp, req);
-    this->http_response_headers_only(move(resp));
-
-    if(close_after_payload || !this->m_parser.is_server_mode()) {
-      // The handshake failed.
-      this->do_call_on_ws_close_once(1002, this->m_parser.error_description());
-      return http_payload_normal;
-    }
-
-    // Initialize extensions.
-    if(this->m_parser.pmce_send_max_window_bits() != 0)
-      this->m_pmce_opt = new_sh<WebSocket_Deflator>(this->m_parser);
-
-    // Rebuild the URI.
-    this->do_on_ws_accepted(req.uri_host + req.uri_path + '?' + req.uri_query);
+    this->do_ws_complete_handshake(req, close_after_payload);
     return http_payload_normal;
   }
 
@@ -280,6 +228,65 @@ do_on_ws_close(uint16_t status, chars_view reason)
   {
     POSEIDON_LOG_DEBUG(("WebSocket CLOSE from `$1` (status $2): $3"),
                        this->remote_address(), status, reason);
+  }
+
+void
+WS_Server_Session::
+do_ws_complete_handshake(HTTP_Request_Headers& req, bool close_after_payload)
+  {
+    if(req.is_proxy) {
+      // Reject proxy requests.
+      this->do_on_http_request_error(HTTP_STATUS_FORBIDDEN);
+      return;
+    }
+
+    if(xstreq(req.method, "OPTIONS")) {
+      // Response with allowed methods, or CORS options.
+      HTTP_Response_Headers resp;
+      resp.status = 204;
+      resp.headers.reserve(8);
+      resp.headers.emplace_back(&"Allow", &"GET");
+      resp.headers.emplace_back(&"Date", system_clock::now());
+
+      bool is_cors = false;
+      for(const auto& r : req.headers)
+        if(r.first.length() >= 15)
+          is_cors |= ::rocket::ascii_ci_equal(r.first.c_str(), 15, "Access-Control-", 15);
+
+      if(is_cors) {
+        resp.headers.emplace_back(&"Access-Control-Allow-Origin", &"*");
+        resp.headers.emplace_back(&"Access-Control-Allow-Methods", &"GET");
+
+        // Allow all headers in RFC 6455.
+        resp.headers.emplace_back(&"Access-Control-Allow-Headers",
+                        &"Upgrade, Origin, Sec-WebSocket-Version, Sec-WebSocket-Key, "
+                         "Sec-WebSocket-Extensions, Sec-WebSocket-Protocol");
+      }
+
+      if(close_after_payload)
+        resp.headers.emplace_back(&"Connection", &"close");
+
+      this->http_response_headers_only(move(resp));
+      return;
+    }
+
+    // Send the handshake response.
+    HTTP_Response_Headers resp;
+    this->m_parser.accept_handshake_request(resp, req);
+    this->http_response_headers_only(move(resp));
+
+    if(close_after_payload || !this->m_parser.is_server_mode()) {
+      // The handshake failed.
+      this->do_call_on_ws_close_once(1002, this->m_parser.error_description());
+      return;
+    }
+
+    // Initialize extensions.
+    if(this->m_parser.pmce_send_max_window_bits() != 0)
+      this->m_pmce_opt = new_sh<WebSocket_Deflator>(this->m_parser);
+
+    // Rebuild the URI.
+    this->do_on_ws_accepted(req.uri_host + req.uri_path + '?' + req.uri_query);
   }
 
 bool

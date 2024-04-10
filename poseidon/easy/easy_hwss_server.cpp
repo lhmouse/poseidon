@@ -182,7 +182,8 @@ struct Final_Session final : WSS_Server_Session
         }
 
         // default
-        return this->WSS_Server_Session::do_on_https_request_headers(req, close_after_payload);
+        this->do_wss_complete_handshake(req, close_after_payload);
+        return http_payload_normal;
       }
 
     virtual

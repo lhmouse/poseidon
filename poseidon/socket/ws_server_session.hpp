@@ -90,6 +90,11 @@ class WS_Server_Session
     void
     do_on_ws_close(uint16_t status, chars_view reason);
 
+    // This function shall be called by `do_on_https_request_headers()` to
+    // establish a WebSocket connection.
+    void
+    do_ws_complete_handshake(HTTP_Request_Headers& req, bool close_after_payload);
+
     // Sends a raw frame (not a message). No error checking is performed. This
     // function is provided for convenience only, and maybe isn't very useful
     // unless for some low-level hacks.
