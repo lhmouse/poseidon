@@ -62,11 +62,4 @@ do_on_abstract_future_execute()
         this->m_res.affected_rows, this->m_res.result_rows.size());
   }
 
-void
-MySQL_Query_Future::
-do_on_abstract_async_task_execute()
-  {
-    this->do_abstract_future_request();
-  }
-
 }  // namespace poseidon

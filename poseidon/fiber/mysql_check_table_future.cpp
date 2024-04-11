@@ -585,11 +585,4 @@ do_on_abstract_future_execute()
     this->m_res.altered = true;
   }
 
-void
-MySQL_Check_Table_Future::
-do_on_abstract_async_task_execute()
-  {
-    this->do_abstract_future_request();
-  }
-
 }  // namespace poseidon

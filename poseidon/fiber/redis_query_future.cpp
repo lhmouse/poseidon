@@ -47,11 +47,4 @@ do_on_abstract_future_execute()
         fetched ? "failed to receive" : "received", this->m_res.reply);
   }
 
-void
-Redis_Query_Future::
-do_on_abstract_async_task_execute()
-  {
-    this->do_abstract_future_request();
-  }
-
 }  // namespace poseidon

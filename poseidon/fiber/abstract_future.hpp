@@ -5,10 +5,13 @@
 #define POSEIDON_FIBER_ABSTRACT_FUTURE_
 
 #include "../fwd.hpp"
+#include "../base/abstract_async_task.hpp"
 #include <rocket/once_flag.hpp>
 namespace poseidon {
 
 class Abstract_Future
+  :
+    public Abstract_Async_Task
   {
   private:
     friend class Fiber_Scheduler;
@@ -24,19 +27,12 @@ class Abstract_Future
     Abstract_Future() noexcept;
 
   protected:
-    // This callback is invoked by `do_abstract_future_request()` and is intended
-    // to be overriden by derived classes to do the asynchronous work. If this
-    // function throws an exception, it will be copied into `m_except` which
-    // can be examined with `check_result()`.
-    virtual
-    void
-    do_on_abstract_future_execute() = 0;
-
     // Requests the asynchronous work and sets the completion state. If the work
     // has not been done yet, this function calls `do_on_abstract_future_execute()`
     // do the work; otherwise, this function returns immediately.
+    virtual
     void
-    do_abstract_future_request() noexcept;
+    do_on_abstract_async_task_execute() noexcept override;
 
     // This is a convenient wrapper for `check_success()`.
     template<typename xResult>
@@ -46,6 +42,14 @@ class Abstract_Future
         this->check_success();
         return forward<xResult>(res);
       }
+
+    // This callback is invoked by `do_abstract_future_request()` and is intended
+    // to be overriden by derived classes to do the asynchronous work. If this
+    // function throws an exception, it will be copied into `m_except` which
+    // can be examined with `check_result()`.
+    virtual
+    void
+    do_on_abstract_future_execute() = 0;
 
   public:
     Abstract_Future(const Abstract_Future&) = delete;

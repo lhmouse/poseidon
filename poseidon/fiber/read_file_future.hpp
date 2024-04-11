@@ -6,13 +6,11 @@
 
 #include "../fwd.hpp"
 #include "abstract_future.hpp"
-#include "../base/abstract_async_task.hpp"
 namespace poseidon {
 
 class Read_File_Future
   :
-    public Abstract_Future,
-    public Abstract_Async_Task
+    public Abstract_Future
   {
   public:
   public:
@@ -40,14 +38,9 @@ class Read_File_Future
     explicit Read_File_Future(cow_stringR path, int64_t offset = 0, size_t limit = INT_MAX);
 
   private:
-    // Performs the read operation.
     virtual
     void
     do_on_abstract_future_execute() override;
-
-    virtual
-    void
-    do_on_abstract_async_task_execute() override;
 
   public:
     Read_File_Future(const Read_File_Future&) = delete;

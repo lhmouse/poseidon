@@ -6,14 +6,12 @@
 
 #include "../fwd.hpp"
 #include "abstract_future.hpp"
-#include "../base/abstract_async_task.hpp"
 #include "../mysql/mysql_value.hpp"
 namespace poseidon {
 
 class MySQL_Query_Future
   :
-    public Abstract_Future,
-    public Abstract_Async_Task
+    public Abstract_Future
   {
   public:
     // This is actually an input/output type.
@@ -41,14 +39,9 @@ class MySQL_Query_Future
     MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt, vector<MySQL_Value> stmt_args);
 
   private:
-    // Performs the SQL query.
     virtual
     void
     do_on_abstract_future_execute() override;
-
-    virtual
-    void
-    do_on_abstract_async_task_execute() override;
 
   public:
     MySQL_Query_Future(const MySQL_Query_Future&) = delete;

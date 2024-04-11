@@ -6,14 +6,12 @@
 
 #include "../fwd.hpp"
 #include "abstract_future.hpp"
-#include "../base/abstract_async_task.hpp"
 #include "../redis/redis_value.hpp"
 namespace poseidon {
 
 class Redis_Query_Future
   :
-    public Abstract_Future,
-    public Abstract_Async_Task
+    public Abstract_Future
   {
   public:
     // This is actually an input/output type.
@@ -34,14 +32,9 @@ class Redis_Query_Future
     Redis_Query_Future(Redis_Connector& connector, vector<cow_string> cmd);
 
   private:
-    // Performs the redis command.
     virtual
     void
     do_on_abstract_future_execute() override;
-
-    virtual
-    void
-    do_on_abstract_async_task_execute() override;
 
   public:
     Redis_Query_Future(const Redis_Query_Future&) = delete;

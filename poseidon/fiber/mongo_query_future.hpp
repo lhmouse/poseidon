@@ -6,14 +6,12 @@
 
 #include "../fwd.hpp"
 #include "abstract_future.hpp"
-#include "../base/abstract_async_task.hpp"
 #include "../mongo/mongo_value.hpp"
 namespace poseidon {
 
 class Mongo_Query_Future
   :
-    public Abstract_Future,
-    public Abstract_Async_Task
+    public Abstract_Future
   {
   public:
     // This is actually an input/output type.
@@ -34,14 +32,9 @@ class Mongo_Query_Future
     Mongo_Query_Future(Mongo_Connector& connector, Mongo_Document cmd);
 
   private:
-    // Performs the BSON command.
     virtual
     void
     do_on_abstract_future_execute() override;
-
-    virtual
-    void
-    do_on_abstract_async_task_execute() override;
 
   public:
     Mongo_Query_Future(const Mongo_Query_Future&) = delete;

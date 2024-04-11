@@ -6,14 +6,12 @@
 
 #include "../fwd.hpp"
 #include "abstract_future.hpp"
-#include "../base/abstract_async_task.hpp"
 #include "../socket/ipv6_address.hpp"
 namespace poseidon {
 
 class DNS_Query_Future
   :
-    public Abstract_Future,
-    public Abstract_Async_Task
+    public Abstract_Future
   {
   public:
     // This is actually an input/output type.
@@ -34,14 +32,9 @@ class DNS_Query_Future
     DNS_Query_Future(cow_stringR host, uint16_t port);
 
   private:
-    // Performs DNS lookup.
     virtual
     void
     do_on_abstract_future_execute() override;
-
-    virtual
-    void
-    do_on_abstract_async_task_execute() override;
 
   public:
     DNS_Query_Future(const DNS_Query_Future&) = delete;
