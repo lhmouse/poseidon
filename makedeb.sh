@@ -9,10 +9,10 @@ rm -rf ${_tempdir}
 mkdir -p ${_tempdir}
 cp -pr DEBIAN -t ${_tempdir}
 
-meson setup -Dbuildtype=release build_release
-meson compile -Cbuild_release
-meson test -Cbuild_release
-DESTDIR=${_tempdir} meson install -Cbuild_release
+meson setup -Dbuildtype=release build_makedeb
+meson compile -Cbuild_makedeb
+meson test -Cbuild_makedeb
+DESTDIR=${_tempdir} meson install -Cbuild_makedeb
 
 _etcdir=$(find ${_tempdir} -name "etc" -type d)
 find ${_etcdir} -type f | sed 's|^.*\.makedeb/|/|' > ${_tempdir}/conffiles
