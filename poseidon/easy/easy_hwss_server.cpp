@@ -149,7 +149,7 @@ struct Final_Session final : WSS_Server_Session
       {
         if(req.is_proxy) {
           // Reject proxy requests.
-          this->do_on_https_request_error(HTTP_STATUS_FORBIDDEN);
+          this->do_on_https_request_error(403);
           return http_payload_normal;
         }
 
@@ -159,7 +159,7 @@ struct Final_Session final : WSS_Server_Session
 
         if(!is_get && !is_head && !is_options) {
           // Reject the request.
-          this->do_on_https_request_error(HTTP_STATUS_METHOD_NOT_ALLOWED);
+          this->do_on_https_request_error(405);
           return http_payload_normal;
         }
 

@@ -206,22 +206,22 @@ http_status_from_error() const noexcept
       {
       case HPE_OK:
       case HPE_PAUSED:
-        return HTTP_STATUS_OK;
-
-      case HPE_INVALID_METHOD:
-        return HTTP_STATUS_METHOD_NOT_ALLOWED;
+        return 200;
 
       case HPE_INVALID_VERSION:
-        return HTTP_STATUS_HTTP_VERSION_NOT_SUPPORTED;
+        return 505;
+
+      case HPE_INVALID_METHOD:
+        return 405;
 
       case HPE_HEADER_OVERFLOW:
-        return HTTP_STATUS_REQUEST_HEADER_FIELDS_TOO_LARGE;
+        return 431;
 
       case HPE_INVALID_TRANSFER_ENCODING:
-        return HTTP_STATUS_LENGTH_REQUIRED;
+        return 411;
 
       default:
-        return HTTP_STATUS_BAD_REQUEST;
+        return 400;
       }
   }
 

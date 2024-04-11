@@ -239,7 +239,7 @@ do_wss_complete_handshake(HTTP_Request_Headers& req, bool close_after_payload)
   {
     if(req.is_proxy) {
       // Reject proxy requests.
-      this->do_on_https_request_error(HTTP_STATUS_FORBIDDEN);
+      this->do_on_https_request_error(403);
       return;
     }
 

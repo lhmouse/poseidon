@@ -112,7 +112,7 @@ struct Final_Fiber final : Abstract_Fiber
             // XXX: The user-defined callback may have sent a response...?
             POSEIDON_LOG_ERROR(("Unhandled exception thrown from easy HTTP client: $1"), stdex);
             HTTP_Response_Headers resp;
-            resp.status = HTTP_STATUS_INTERNAL_SERVER_ERROR;
+            resp.status = 500;
             resp.headers.emplace_back(&"Connection", &"close");
             session->https_response(move(resp), "");
             session->ssl_shut_down();

@@ -57,7 +57,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
 
         if(headers.uri_host.empty()) {
           data.clear();
-          this->do_on_https_request_error(HTTP_STATUS_BAD_REQUEST);
+          this->do_on_https_request_error(400);
           return;
         }
 
@@ -125,7 +125,7 @@ do_on_https_request_headers(HTTP_Request_Headers& req, bool /*close_after_payloa
   {
     if(req.is_proxy) {
       // Reject proxy requests.
-      this->do_on_https_request_error(HTTP_STATUS_FORBIDDEN);
+      this->do_on_https_request_error(403);
       return http_payload_normal;
     }
 
@@ -176,7 +176,7 @@ do_https_raw_response(const HTTP_Response_Headers& resp, chars_view data)
     // For server sessions, a status of 101 indicates that the server will switch
     // to another protocol after this message. The client might have sent more
     // data before this, which would violate RFC 6455 anyway, so we don't care.
-    if(resp.status == HTTP_STATUS_SWITCHING_PROTOCOLS)
+    if(resp.status == 101)
       this->m_upgrade_ack.store(true);
 
     // If `Connection:` contains `close`, the connection should be closed.
@@ -228,7 +228,7 @@ https_response(HTTP_Response_Headers&& resp, chars_view data)
 
     // Some responses are required to have no payload payload and require no
     // `Content-Length` header.
-    if((resp.status <= 199) || is_any_of(resp.status, { HTTP_STATUS_NO_CONTENT, HTTP_STATUS_NOT_MODIFIED }))
+    if((resp.status <= 199) || (resp.status == 204) || (resp.status == 304))
       return this->do_https_raw_response(resp, "");
 
     // Otherwise, a `Content-Length` is required; otherwise the response would
