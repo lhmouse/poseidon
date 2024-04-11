@@ -14,7 +14,7 @@ class Abstract_Future
     friend class Fiber_Scheduler;
 
     mutable ::rocket::once_flag m_once;
-    exception_ptr m_except_opt;
+    ::std::exception_ptr m_except;
 
     mutable plain_mutex m_waiters_mutex;
     vector<wkptr<atomic_relaxed<steady_time>>> m_waiters;
@@ -26,7 +26,7 @@ class Abstract_Future
   protected:
     // This callback is invoked by `do_abstract_future_request()` and is intended
     // to be overriden by derived classes to do the asynchronous work. If this
-    // function throws an exception, it will be copied into `m_except_opt` which
+    // function throws an exception, it will be copied into `m_except` which
     // can be examined with `check_result()`.
     virtual
     void
@@ -60,7 +60,7 @@ class Abstract_Future
 
     bool
     successful() const noexcept
-      { return this->m_once.test() && !this->m_except_opt;  }
+      { return this->m_once.test() && !this->m_except;  }
 
     // Checks whether this future has completed with no exception being thrown.
     void

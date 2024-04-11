@@ -31,7 +31,7 @@ do_abstract_future_request() noexcept
         }
         catch(exception& stdex) {
           POSEIDON_LOG_WARN(("Future failed: `$1` (class `$2`)\n$3"), this, typeid(*this), stdex);
-          this->m_except_opt = ::std::current_exception();
+          this->m_except = ::std::current_exception();
         }
 
         // This indicates something has been done and all waiters shall be
@@ -65,8 +65,8 @@ check_success() const
       });
 
     // If initialization has failed, rethrow the exact exception.
-    if(this->m_except_opt)
-      ::std::rethrow_exception(this->m_except_opt);
+    if(this->m_except)
+      ::std::rethrow_exception(this->m_except);
   }
 
 }  // namespace poseidon
