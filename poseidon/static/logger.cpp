@@ -2,7 +2,7 @@
 // Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #include "../xprecompiled.hpp"
-#include "async_logger.hpp"
+#include "logger.hpp"
 #include "../base/config_file.hpp"
 #include "../utils.hpp"
 #include <time.h>
@@ -255,21 +255,21 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
 
 }  // namespace
 
-POSEIDON_HIDDEN_X_STRUCT(Async_Logger, Level_Config);
-POSEIDON_HIDDEN_X_STRUCT(Async_Logger, Log_Message);
+POSEIDON_HIDDEN_X_STRUCT(Logger, Level_Config);
+POSEIDON_HIDDEN_X_STRUCT(Logger, Log_Message);
 
-Async_Logger::
-Async_Logger() noexcept
+Logger::
+Logger() noexcept
   {
   }
 
-Async_Logger::
-~Async_Logger()
+Logger::
+~Logger()
   {
   }
 
 void
-Async_Logger::
+Logger::
 reload(const Config_File& conf_file)
   {
     // Hold the logging thread.
@@ -301,7 +301,7 @@ reload(const Config_File& conf_file)
   }
 
 void
-Async_Logger::
+Logger::
 thread_loop()
   {
     plain_mutex::unique_lock lock(this->m_queue_mutex);
@@ -330,7 +330,7 @@ thread_loop()
   }
 
 void
-Async_Logger::
+Logger::
 enqueue(uint8_t level, const char* func, const char* file, uint32_t line, cow_stringR text)
   {
     // Fill in the name and LWP ID of the calling thread.
@@ -350,7 +350,7 @@ enqueue(uint8_t level, const char* func, const char* file, uint32_t line, cow_st
   }
 
 void
-Async_Logger::
+Logger::
 synchronize() noexcept
   {
     // Get all pending elements.

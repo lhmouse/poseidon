@@ -434,7 +434,7 @@ enqueue_log_message(vfptr<cow_string&, void*> composer_thunk, void* composer,
     sbuf.erase(sbuf.rfind_not_of(" \t\r\n") + 1);
 
     // Enqueue the message.
-    async_logger.enqueue(level, func, file, line, sbuf);
+    logger.enqueue(level, func, file, line, sbuf);
     return true;
   }
   catch(exception& stdex) {

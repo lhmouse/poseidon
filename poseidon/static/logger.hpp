@@ -1,13 +1,13 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
-#ifndef POSEIDON_STATIC_ASYNC_LOGGER_
-#define POSEIDON_STATIC_ASYNC_LOGGER_
+#ifndef POSEIDON_STATIC_LOGGER_
+#define POSEIDON_STATIC_LOGGER_
 
 #include "../fwd.hpp"
 namespace poseidon {
 
-class Async_Logger
+class Logger
   {
   private:
     mutable plain_mutex m_conf_mutex;
@@ -25,12 +25,12 @@ class Async_Logger
 
   public:
     // Creates a logger that outputs to nowhere.
-    Async_Logger() noexcept;
+    Logger() noexcept;
 
   public:
-    Async_Logger(const Async_Logger&) = delete;
-    Async_Logger& operator=(const Async_Logger&) & = delete;
-    ~Async_Logger();
+    Logger(const Logger&) = delete;
+    Logger& operator=(const Logger&) & = delete;
+    ~Logger();
 
     // Reloads configuration from 'main.conf'.
     // If this function fails, an exception is thrown, and there is no effect.

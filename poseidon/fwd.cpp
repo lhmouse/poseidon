@@ -5,7 +5,7 @@
 #include "fwd.hpp"
 #include "static/main_config.hpp"
 #include "static/fiber_scheduler.hpp"
-#include "static/async_logger.hpp"
+#include "static/logger.hpp"
 #include "static/timer_driver.hpp"
 #include "static/task_executor.hpp"
 #include "static/network_driver.hpp"
@@ -24,7 +24,7 @@ namespace poseidon {
 const ::locale_t c_locale = ::newlocale(0, "C", nullptr);
 atomic_relaxed<int> exit_signal;
 Main_Config& main_config = *new Main_Config;
-Async_Logger& async_logger = *new Async_Logger;
+Logger& logger = *new Logger;
 
 Timer_Driver& timer_driver = *new Timer_Driver;
 Task_Executor& task_executor = *new Task_Executor;

@@ -5,7 +5,7 @@
 #include "base/config_file.hpp"
 #include "static/main_config.hpp"
 #include "static/fiber_scheduler.hpp"
-#include "static/async_logger.hpp"
+#include "static/logger.hpp"
 #include "static/timer_driver.hpp"
 #include "static/task_executor.hpp"
 #include "static/network_driver.hpp"
@@ -130,7 +130,7 @@ do_exit_printf(int code, const char* fmt = nullptr, ...) noexcept
   {
     // Wait for pending logs to be flushed.
     ::fflush(nullptr);
-    async_logger.synchronize();
+    logger.synchronize();
 
     if(fmt) {
       // Output the string to standard error.
@@ -387,7 +387,7 @@ ROCKET_NEVER_INLINE
 void
 do_create_threads()
   {
-    do_create_resident_thread(async_logger, "logger");
+    do_create_resident_thread(logger, "logger");
     do_create_resident_thread(timer_driver, "timer");
     do_create_resident_thread(task_executor, "task_0");
     do_create_resident_thread(task_executor, "task_1");
@@ -592,7 +592,7 @@ main(int argc, char** argv)
     do_parse_command_line(argc, argv);
     do_set_working_directory();
     main_config.reload();
-    async_logger.reload(main_config.copy());
+    logger.reload(main_config.copy());
     do_daemonize_start();
     POSEIDON_LOG_INFO(("Starting up: $1"), PACKAGE_STRING);
 
@@ -619,7 +619,7 @@ main(int argc, char** argv)
 
     POSEIDON_LOG_INFO(("Startup complete: $1"), PACKAGE_STRING);
     do_daemonize_finish();
-    async_logger.synchronize();
+    logger.synchronize();
 
     // Schedule fibers if there is something to do, or no stop signal has
     // been received.

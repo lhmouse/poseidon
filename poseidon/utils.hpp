@@ -5,7 +5,7 @@
 #define POSEIDON_UTILS_
 
 #include "fwd.hpp"
-#include "static/async_logger.hpp"
+#include "static/logger.hpp"
 namespace poseidon {
 
 // Converts all ASCII letters in a string into uppercase.
@@ -169,7 +169,7 @@ create_runtime_error(vfptr<cow_string&, void*> composer_thunk, void* composer,
 // argument shall be a list of string literals in parentheses. Multiple strings
 // are joined with line separators. `format()` is to be found via ADL.
 #define POSEIDON_LOG_(LEVEL, TEMPLATE, ...)  \
-    (::poseidon::async_logger.enabled(LEVEL)  \
+    (::poseidon::logger.enabled(LEVEL)  \
      && __extension__  \
       ({  \
         using ::asteria::format;  \
