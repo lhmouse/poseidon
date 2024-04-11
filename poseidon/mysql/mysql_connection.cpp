@@ -5,26 +5,17 @@
 #include "mysql_connection.hpp"
 #include "mysql_value.hpp"
 #include "../utils.hpp"
+#include <http_parser.h>
 namespace poseidon {
 
 MySQL_Connection::
-MySQL_Connection(cow_stringR server, uint16_t port, cow_stringR db, cow_stringR user, cow_stringR passwd)
+MySQL_Connection(cow_stringR service_uri, cow_stringR password, uint32_t password_mask)
   {
-    this->m_server = server;
-    this->m_port = port;
-    this->m_db = db;
-    this->m_user = user;
-
-    server.safe_c_str();
-    db.safe_c_str();
-    user.safe_c_str();
-    passwd.safe_c_str();
-
+    this->m_service_uri = service_uri;
+    this->m_password = password;
+    this->m_password_mask = password_mask;
     this->m_connected = false;
     this->m_reset_clear = true;
-    this->m_passwd_mask = 0x80000000U | random_uint32();
-    this->m_passwd = passwd;
-    mask_string(this->m_passwd.mut_data(), this->m_passwd.size(), nullptr, this->m_passwd_mask);
   }
 
 MySQL_Connection::
@@ -68,28 +59,74 @@ execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)
       POSEIDON_THROW(("Empty SQL statement"));
 
     if(!this->m_connected) {
-      // Try connecting to the server now.
-      mask_string(this->m_passwd.mut_data(), this->m_passwd.size(), nullptr, this->m_passwd_mask);
+      // Parse the service URI in a hacky way.
+      linear_buffer uri_buf;
+      uri_buf.putn("t://", 4);
+      uri_buf.putn(this->m_service_uri.data(), this->m_service_uri.size() + 1);
 
-      ::MYSQL* rc = ::mysql_real_connect(this->m_mysql, this->m_server.c_str(),
-                        this->m_user.c_str(), this->m_passwd.c_str(), this->m_db.c_str(),
-                        this->m_port, nullptr, CLIENT_IGNORE_SIGPIPE | CLIENT_REMEMBER_OPTIONS);
-
-      this->m_passwd_mask = 0x80000000U | random_uint32();
-      mask_string(this->m_passwd.mut_data(), this->m_passwd.size(), nullptr, this->m_passwd_mask);
-
-      if(!rc)
+      ::http_parser_url uri_hp;
+      ::http_parser_url_init(&uri_hp);
+      if(::http_parser_parse_url(uri_buf.mut_data(), uri_buf.size() - 1, false, &uri_hp) != 0)
         POSEIDON_THROW((
-            "Could not connect to MySQL server: ERROR $1: $2",
+            "Invalid MySQL service URI `$1`",
+            "[`http_parser_parse_url()` failed]"),
+            this->m_service_uri);
+
+      if(uri_hp.field_set & (1 << UF_QUERY))
+        POSEIDON_THROW((
+            "Options not allowed in MySQL service URI `$1`"),
+            this->m_service_uri);
+
+      const char* user = "root";
+      if(uri_hp.field_set & (1 << UF_USERINFO)) {
+        char* s = uri_buf.mut_data() + uri_hp.field_data[UF_USERINFO].off;
+        *(s + uri_hp.field_data[UF_USERINFO].len) = 0;
+        user = s;
+      }
+
+      const char* host = "localhost";
+      if(uri_hp.field_set & (1 << UF_HOST)) {
+        char* s = uri_buf.mut_data() + uri_hp.field_data[UF_HOST].off;
+        *(s + uri_hp.field_data[UF_HOST].len) = 0;
+        host = s;
+      }
+
+      uint16_t port = 3306;
+      if(uri_hp.field_set & (1 << UF_PORT))
+        port = uri_hp.port;
+
+      const char* database = "admin";
+      if(uri_hp.field_set & (1 << UF_PATH)) {
+        char* s = uri_buf.mut_data() + uri_hp.field_data[UF_PATH].off;
+        *(s + uri_hp.field_data[UF_PATH].len) = 0;
+        database = s + 1;  // skip initial slash
+      }
+
+      // Unmask the password which is sensitive data, so erasure shall be ensured.
+      linear_buffer passwd_buf;
+      passwd_buf.putn(this->m_password.data(), this->m_password.size() + 1);
+      mask_string(passwd_buf.mut_data(), passwd_buf.size() - 1, nullptr, this->m_password_mask);
+
+      const auto passwd_buf_guard = make_unique_handle(&passwd_buf,
+          [&](...) {
+            ::std::fill_n(static_cast<volatile char*>(passwd_buf.mut_begin()),
+                          passwd_buf.size(), '\x9F');
+          });
+
+      // Try connecting to the server.
+      if(!::mysql_real_connect(this->m_mysql, host, user, passwd_buf.data(), database, port,
+                               nullptr, CLIENT_IGNORE_SIGPIPE | CLIENT_COMPRESS))
+        POSEIDON_THROW((
+            "Could not connect to MySQL server `$1`: ERROR $2: $3",
             "[`mysql_real_connect()` failed]"),
+            this->m_service_uri,
             ::mysql_errno(this->m_mysql), ::mysql_error(this->m_mysql));
 
-      cow_string().swap(this->m_passwd);
-      this->m_connected = true;
+      this->m_password.clear();
+      this->m_password.shrink_to_fit();
 
-      POSEIDON_LOG_INFO((
-          "Connected to MySQL server `$3@$1:$2` using default database `$4`"),
-          this->m_server, this->m_port, this->m_user, this->m_db);
+      this->m_connected = true;
+      POSEIDON_LOG_INFO(("Connected to MySQL server `$1`"), this->m_service_uri);
     }
 
     // Discard the current result set.

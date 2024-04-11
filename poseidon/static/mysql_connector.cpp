@@ -27,60 +27,20 @@ reload(const Config_File& conf_file)
     s_mysql_init_once.call(::mysql_library_init, 0, nullptr, nullptr);
 
     // Parse new configuration. Default ones are defined here.
-    cow_string default_server = &"localhost";
-    int64_t default_port = 3306;
-    cow_string default_database;
-    cow_string default_user = &"root";
+    cow_string default_service_uri = &"root@localhost:3306/admin";
     cow_string default_password;
-    uint32_t password_mask = 0;
+    uint32_t default_password_mask = 0;
     int64_t connection_pool_size = 0;
     int64_t connection_idle_timeout = 60;
 
     // Read the server name from configuration. The MySQL client library is able
     // to perform DNS lookup as necessary, so this need not be an IP address.
-    auto conf_value = conf_file.query("mysql", "default_server");
+    auto conf_value = conf_file.query("mysql", "default_service_uri");
     if(conf_value.is_string())
-      default_server = conf_value.as_string();
+      default_service_uri = conf_value.as_string();
     else if(!conf_value.is_null())
       POSEIDON_THROW((
-          "Invalid `mysql.default_server`: expecting a `string`, got `$1`",
-          "[in configuration file '$2']"),
-          conf_value, conf_file.path());
-
-    // Read the port number from configuration. 0 is allowed as it has a special
-    // meaning. 65535 is not allowed.
-    conf_value = conf_file.query("mysql", "default_port");
-    if(conf_value.is_integer())
-      default_port = conf_value.as_integer();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `mysql.default_port`: expecting an `integer`, got `$1`",
-          "[in configuration file '$2']"),
-          conf_value, conf_file.path());
-
-    if((default_port < 0) || (default_port > 65534))
-      POSEIDON_THROW((
-          "`mysql.default_port` value `$1` out of range",
-          "[in configuration file '$2']"),
-          default_port, conf_file.path());
-
-    // Read the default database from configuration.
-    conf_value = conf_file.query("mysql", "default_database");
-    if(conf_value.is_string())
-      default_database = conf_value.as_string();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `mysql.default_database`: expecting a `string`, got `$1`",
-          "[in configuration file '$2']"),
-          conf_value, conf_file.path());
-
-    // Read the user name from configuration.
-    conf_value = conf_file.query("mysql", "default_user");
-    if(conf_value.is_string())
-      default_user = conf_value.as_string();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `mysql.default_user`: expecting a `string`, got `$1`",
+          "Invalid `mysql.default_service_uri`: expecting a `string`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
 
@@ -95,8 +55,8 @@ reload(const Config_File& conf_file)
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
 
-    password_mask = 0x80808080U | random_uint32();
-    mask_string(default_password.mut_data(), default_password.size(), nullptr, password_mask);
+    default_password_mask = random_uint32() | 0x80;
+    mask_string(default_password.mut_data(), default_password.size(), nullptr, default_password_mask);
 
     // Read the connection pool size from configuration.
     conf_value = conf_file.query("mysql", "connection_pool_size");
@@ -132,19 +92,16 @@ reload(const Config_File& conf_file)
 
     // Set up new data.
     plain_mutex::unique_lock lock(this->m_conf_mutex);
-    this->m_conf_default_server.swap(default_server);
-    this->m_conf_default_port = static_cast<uint16_t>(default_port);
-    this->m_conf_default_user.swap(default_user);
+    this->m_conf_default_service_uri.swap(default_service_uri);
     this->m_conf_default_password.swap(default_password);
-    this->m_conf_password_mask = password_mask;
-    this->m_conf_default_database.swap(default_database);
-    this->m_conf_connection_pool_size = static_cast<uint16_t>(connection_pool_size);
+    this->m_conf_default_password_mask = default_password_mask;
+    this->m_conf_connection_pool_size = static_cast<uint32_t>(connection_pool_size);
     this->m_conf_connection_idle_timeout = static_cast<seconds>(connection_idle_timeout);
   }
 
 uniptr<MySQL_Connection>
 MySQL_Connector::
-allocate_connection(cow_stringR server, uint16_t port, cow_stringR db, cow_stringR user, cow_stringR passwd)
+allocate_connection(cow_stringR service_uri, cow_stringR password)
   {
     plain_mutex::unique_lock lock(this->m_conf_mutex);
     const uint32_t pool_size = this->m_conf_connection_pool_size;
@@ -158,23 +115,20 @@ allocate_connection(cow_stringR server, uint16_t port, cow_stringR db, cow_strin
     uniptr<MySQL_Connection>* use_slot = nullptr;
     const steady_time now = steady_clock::now();
 
-    for(auto& slot : this->m_pool) {
+    for(auto& slot : this->m_pool)
       if(slot && (now - slot->m_time_pooled > idle_timeout))
         slot.reset();
 
+    for(auto& slot : this->m_pool)
       if(slot && (!use_slot || (slot->m_time_pooled < (*use_slot)->m_time_pooled))
-              && (slot->m_server == server) && (slot->m_port == port) && (slot->m_db == db)
-              && (slot->m_user == user))
+              && (slot->m_service_uri == service_uri))
         use_slot = &slot;
-    }
 
     if(use_slot)
       return move(*use_slot);
 
     lock.unlock();
-
-    // Create a new connection.
-    return new_uni<MySQL_Connection>(server, port, db, user, passwd);
+    return new_uni<MySQL_Connection>(service_uri, password, 0);
   }
 
 uniptr<MySQL_Connection>
@@ -182,12 +136,9 @@ MySQL_Connector::
 allocate_default_connection()
   {
     plain_mutex::unique_lock lock(this->m_conf_mutex);
-    const cow_string server = this->m_conf_default_server;
-    const uint16_t port = this->m_conf_default_port;
-    const cow_string db = this->m_conf_default_database;
-    const cow_string user = this->m_conf_default_user;
-    const cow_string default_password = this->m_conf_default_password;
-    const uint32_t password_mask = this->m_conf_password_mask;
+    const cow_string service_uri = this->m_conf_default_service_uri;
+    const cow_string password = this->m_conf_default_password;
+    const uint32_t password_mask = this->m_conf_default_password_mask;
     const uint32_t pool_size = this->m_conf_connection_pool_size;
     const seconds idle_timeout = this->m_conf_connection_idle_timeout;
     lock.unlock();
@@ -199,25 +150,20 @@ allocate_default_connection()
     uniptr<MySQL_Connection>* use_slot = nullptr;
     const steady_time now = steady_clock::now();
 
-    for(auto& slot : this->m_pool) {
+    for(auto& slot : this->m_pool)
       if(slot && (now - slot->m_time_pooled > idle_timeout))
         slot.reset();
 
+    for(auto& slot : this->m_pool)
       if(slot && (!use_slot || (slot->m_time_pooled < (*use_slot)->m_time_pooled))
-              && (slot->m_server == server) && (slot->m_port == port) && (slot->m_db == db)
-              && (slot->m_user == user))
+              && (slot->m_service_uri == service_uri))
         use_slot = &slot;
-    }
 
     if(use_slot)
       return move(*use_slot);
 
     lock.unlock();
-
-    // Create a new connection.
-    cow_string passwd = default_password;
-    mask_string(passwd.mut_data(), passwd.size(), nullptr, password_mask);
-    return new_uni<MySQL_Connection>(server, port, db, user, passwd);
+    return new_uni<MySQL_Connection>(service_uri, password, password_mask);
   }
 
 bool
@@ -243,19 +189,20 @@ pool_connection(uniptr<MySQL_Connection>&& conn) noexcept
     uniptr<MySQL_Connection>* use_slot = nullptr;
     const steady_time now = steady_clock::now();
 
-    for(auto& slot : this->m_pool) {
+    for(auto& slot : this->m_pool)
       if(slot && (now - slot->m_time_pooled > idle_timeout))
         slot.reset();
 
+    for(auto& slot : this->m_pool)
       if(!slot || !use_slot || (slot->m_time_pooled < (*use_slot)->m_time_pooled))
         use_slot = &slot;
-    }
 
     if(!use_slot)
       return false;
 
     conn->m_time_pooled = steady_clock::now();
     *use_slot = move(conn);
+    lock.unlock();
     return true;
   }
 

@@ -14,7 +14,7 @@ main()
 
     // Try connecting to localhost. If the server is offline, skip the test.
     Mongo_Document doc;
-    Mongo_Connection conn(&"localhost", 27017, &"admin", &"root", &"123456");
+    Mongo_Connection conn(&"root@localhost:27017/admin", &"123456", 0);
     try {
       doc.emplace_back(&"ping", 1);
       conn.execute(doc);

@@ -5,23 +5,17 @@
 #include "redis_connection.hpp"
 #include "redis_value.hpp"
 #include "../utils.hpp"
+#include <http_parser.h>
 namespace poseidon {
 
 Redis_Connection::
-Redis_Connection(cow_stringR server, uint16_t port, cow_stringR user, cow_stringR passwd)
+Redis_Connection(cow_stringR service_uri, cow_stringR password, uint32_t password_mask)
   {
-    this->m_server = server;
-    this->m_port = port;
-    this->m_user = user;
-
-    server.safe_c_str();
-    user.safe_c_str();
-    passwd.safe_c_str();
-
+    this->m_service_uri = service_uri;
+    this->m_password = password;
+    this->m_password_mask = password_mask;
+    this->m_connected = false;
     this->m_reset_clear = true;
-    this->m_passwd_mask = 0x80000000U | random_uint32();
-    this->m_passwd = passwd;
-    mask_string(this->m_passwd.mut_data(), this->m_passwd.size(), nullptr, this->m_passwd_mask);
   }
 
 Redis_Connection::
@@ -56,33 +50,59 @@ execute(const cow_string* cmds, size_t ncmds)
       POSEIDON_THROW(("Empty Redis command"));
 
     if(!this->m_connected) {
-      // Try connecting to the server now.
-      mask_string(this->m_passwd.mut_data(), this->m_passwd.size(), nullptr, this->m_passwd_mask);
+      // Parse the service URI in a hacky way.
+      linear_buffer uri_buf;
+      uri_buf.putn("t://", 4);
+      uri_buf.putn(this->m_service_uri.data(), this->m_service_uri.size() + 1);
 
-      this->m_reply.reset();
-      this->m_redis.reset(::redisConnect(this->m_server.c_str(), this->m_port));
+      ::http_parser_url uri_hp;
+      ::http_parser_url_init(&uri_hp);
+      if(::http_parser_parse_url(uri_buf.mut_data(), uri_buf.size() - 1, false, &uri_hp) != 0)
+        POSEIDON_THROW((
+            "Invalid Redis service URI `$1`",
+            "[`http_parser_parse_url()` failed]"),
+            this->m_service_uri);
 
-      if(this->m_redis && (this->m_redis->err == 0) && !this->m_passwd.empty()) {
-        // Authenticate.
-        static_vector<const char*, 3> argv = { "AUTH", this->m_passwd.data() };
-        static_vector<size_t, 3> lenv = { 4, this->m_passwd.size() };
+      if(uri_hp.field_set & (1 << UF_PATH | 1 << UF_QUERY))
+        POSEIDON_THROW((
+            "Path or options not allowed in Redis service URI `$1`"),
+            this->m_service_uri);
 
-        if(!this->m_user.empty()) {
-          // `AUTH [user] pass`
-          argv.insert(1, this->m_user.data());
-          lenv.insert(1, this->m_user.size());
-        }
-
-        this->m_reply.reset(static_cast<::redisReply*>(::redisCommandArgv(this->m_redis,
-                  static_cast<int>(argv.size()), argv.mut_data(), lenv.mut_data())));
+      const char* user_str = "default";
+      size_t user_len = 7;
+      if(uri_hp.field_set & (1 << UF_USERINFO)) {
+        char* s = uri_buf.mut_data() + uri_hp.field_data[UF_USERINFO].off;
+        *(s + uri_hp.field_data[UF_USERINFO].len) = 0;
+        user_str = s;
+        user_len = uri_hp.field_data[UF_USERINFO].len;
       }
 
-      this->m_passwd_mask = 0x80000000U | random_uint32();
-      mask_string(this->m_passwd.mut_data(), this->m_passwd.size(), nullptr, this->m_passwd_mask);
+      const char* host = "localhost";
+      if(uri_hp.field_set & (1 << UF_HOST)) {
+        char* s = uri_buf.mut_data() + uri_hp.field_data[UF_HOST].off;
+        *(s + uri_hp.field_data[UF_HOST].len) = 0;
+        host = s;
+      }
 
-      if(!this->m_redis)
+      uint16_t port = 6379;
+      if(uri_hp.field_set & (1 << UF_PORT))
+        port = uri_hp.port;
+
+      // Unmask the password which is sensitive data, so erasure shall be ensured.
+      linear_buffer passwd_buf;
+      passwd_buf.putn(this->m_password.data(), this->m_password.size() + 1);
+      mask_string(passwd_buf.mut_data(), passwd_buf.size() - 1, nullptr, this->m_password_mask);
+
+      const auto passwd_buf_guard = make_unique_handle(&passwd_buf,
+          [&](...) {
+            ::std::fill_n(static_cast<volatile char*>(passwd_buf.mut_begin()),
+                          passwd_buf.size(), '\x9F');
+          });
+
+      // Try connecting to the server.
+      if(!this->m_redis.reset(::redisConnect(host, port)))
         POSEIDON_THROW((
-            "Could not allocate Redis context",
+            "Could not connect to Redis server: ${errno:full}",
             "[`redisConnect()` failed]"));
 
       if(this->m_redis->err != 0)
@@ -91,10 +111,22 @@ execute(const cow_string* cmds, size_t ncmds)
             "[`redisConnect()` failed]"),
             this->m_redis->err, this->m_redis->errstr);
 
-      if(this->m_reply && (this->m_reply->type == REDIS_REPLY_ERROR))
-        POSEIDON_THROW((
-            "Failed to authenticate with Redis server: $1"),
-            this->m_reply->str);
+      if(passwd_buf.size() > 1) {
+        // `AUTH user password`
+        const char* argv[] = { "AUTH", user_str, passwd_buf.data() };
+        size_t lenv[] = { 4, user_len, passwd_buf.size() - 1 };
+        if(!this->m_reply.reset(static_cast<::redisReply*>(::redisCommandArgv(
+                                   this->m_redis, 3, argv, lenv))))
+          POSEIDON_THROW((
+              "Could not execute Redis command: ERROR $1: $2",
+              "[`redisCommandArgv()` failed]"),
+              this->m_redis->err, this->m_redis->errstr);
+
+        if(this->m_reply->type == REDIS_REPLY_ERROR)
+          POSEIDON_THROW((
+              "Failed to authenticate with Redis server: $1"),
+              this->m_reply->str);
+      }
 
       // Get the local address.
       ::sockaddr_storage ss;
@@ -123,12 +155,12 @@ execute(const cow_string* cmds, size_t ncmds)
           POSEIDON_THROW(("Socket address family `$1` not supported"), ss.ss_family);
         }
 
-      cow_string().swap(this->m_passwd);
-      this->m_connected = true;
+      this->m_password.clear();
+      this->m_password.shrink_to_fit();
 
-      POSEIDON_LOG_INFO((
-          "Connected to Redis server `$3@$1:$2` from local socket address `$4`"),
-          this->m_server, this->m_port, this->m_user, this->m_local_addr);
+      cow_string().swap(this->m_password);
+      this->m_connected = true;
+      POSEIDON_LOG_INFO(("Connected to Redis server `$1`"), this->m_service_uri);
     }
 
     // Discard the current reply.
@@ -144,10 +176,10 @@ execute(const cow_string* cmds, size_t ncmds)
       argv.at(ncmds + t) = cmds[t].size();
     }
 
-    this->m_reply.reset(static_cast<::redisReply*>(::redisCommandArgv(this->m_redis,
-                        static_cast<int>(ncmds), reinterpret_cast<const char**>(argv.data()),
-                        reinterpret_cast<size_t*>(argv.data() + ncmds))));
-    if(!this->m_reply)
+    if(!this->m_reply.reset(static_cast<::redisReply*>(::redisCommandArgv(
+                               this->m_redis, static_cast<int>(ncmds),
+                               reinterpret_cast<const char**>(argv.data()),
+                               reinterpret_cast<size_t*>(argv.data() + ncmds)))))
       POSEIDON_THROW((
           "Could not execute Redis command: ERROR $1: $2",
           "[`redisCommandArgv()` failed]"),

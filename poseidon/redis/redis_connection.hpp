@@ -15,14 +15,13 @@ class Redis_Connection
   private:
     friend class Redis_Connector;
 
-    cow_string m_server;
-    cow_string m_user;
-    uint16_t m_port;
-
+    cow_string m_service_uri;
+    cow_string m_password;
+    uint32_t m_password_mask;
     bool m_connected;
     bool m_reset_clear;
-    uint32_t m_passwd_mask;
-    cow_string m_passwd;
+    char m_reserved_1;
+    char m_reserved_2;
     IPv6_Address m_local_addr;
     steady_time m_time_pooled;
 
@@ -31,27 +30,22 @@ class Redis_Connection
 
   public:
     // Sets connection parameters. This function does not attempt to connect
-    // to the server, and is not blocking.
-    Redis_Connection(cow_stringR server, uint16_t port, cow_stringR user, cow_stringR passwd);
+    // to the server, and is not blocking. If you need to set a password in
+    // plaintext, set `password_mask` to zero.
+    Redis_Connection(cow_stringR service_uri, cow_stringR password, uint32_t password_mask);
 
   public:
     Redis_Connection(const Redis_Connection&) = delete;
     Redis_Connection& operator=(const Redis_Connection&) & = delete;
     ~Redis_Connection();
 
-    // Get connection parameters.
+    // Gets the URI from the constructor.
     cow_stringR
-    server() const noexcept
-      { return this->m_server;  }
+    service_uri() const noexcept
+      { return this->m_service_uri;  }
 
-    uint16_t
-    port() const noexcept
-      { return this->m_port;  }
-
-    cow_stringR
-    user() const noexcept
-      { return this->m_user;  }
-
+    // Gets the local address if the connection has been established. If no
+    // query has been made, `ipv6_unspecified` is returned.
     const IPv6_Address&
     local_address() const noexcept
       { return this->m_local_addr;  }

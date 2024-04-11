@@ -69,7 +69,8 @@ HTTP_Request_Parser::s_settings[1] =
         cow_string caddr;
         caddr.swap(this->m_headers.uri_host);
 
-        ::http_parser_url uri_hp = { };
+        ::http_parser_url uri_hp;
+        ::http_parser_url_init(&uri_hp);
         if(::http_parser_parse_url(caddr.data(), caddr.size(), ps->method == HTTP_CONNECT, &uri_hp)) {
           ps->http_errno = HPE_INVALID_URL;
           return 0;

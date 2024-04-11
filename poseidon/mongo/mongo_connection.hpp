@@ -15,13 +15,12 @@ class Mongo_Connection
   private:
     friend class Mongo_Connector;
 
-    cow_string m_server;
+    cow_string m_service_uri;
     cow_string m_db;
-    cow_string m_user;
-    uint16_t m_port;
-
-    bool m_reset_clear;
     bool m_reply_available;
+    bool m_reset_clear;
+    char m_reserved_1;
+    char m_reserved_2;
     steady_time m_time_pooled;
 
     uniptr_mongoc_client m_mongo;
@@ -30,30 +29,19 @@ class Mongo_Connection
 
   public:
     // Sets connection parameters. This function does not attempt to connect
-    // to the server, and is not blocking.
-    Mongo_Connection(cow_stringR server, uint16_t port, cow_stringR db, cow_stringR user, cow_stringR passwd);
+    // to the server, and is not blocking. If you need to set a password in
+    // plaintext, set `password_mask` to zero.
+    Mongo_Connection(cow_stringR service_uri, cow_stringR password, uint32_t password_mask);
 
   public:
     Mongo_Connection(const Mongo_Connection&) = delete;
     Mongo_Connection& operator=(const Mongo_Connection&) & = delete;
     ~Mongo_Connection();
 
-    // Get connection parameters.
+    // Gets the URI from the constructor.
     cow_stringR
-    server() const noexcept
-      { return this->m_server;  }
-
-    uint16_t
-    port() const noexcept
-      { return this->m_port;  }
-
-    cow_stringR
-    db() const noexcept
-      { return this->m_db;  }
-
-    cow_stringR
-    user() const noexcept
-      { return this->m_user;  }
+    service_uri() const noexcept
+      { return this->m_service_uri;  }
 
     // Resets the connection so it can be reused by another thread. This is a
     // blocking functions. DO NOT ATTEMPT TO REUSE THE CONNECTION IF THIS

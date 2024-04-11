@@ -7,37 +7,43 @@
 namespace poseidon {
 
 Mongo_Connection::
-Mongo_Connection(cow_stringR server, uint16_t port, cow_stringR db, cow_stringR user, cow_stringR passwd)
+Mongo_Connection(cow_stringR service_uri, cow_stringR password, uint32_t password_mask)
   {
-    this->m_server = server;
-    this->m_port = port;
-    this->m_db = db;
-    this->m_user = user;
+    this->m_service_uri = service_uri;
+    this->m_reply_available = false;
+    this->m_reset_clear = true;
 
-    // Parse the server name.
+    // Parse the service URI.
+    linear_buffer uri_buf;
+    uri_buf.putn("mongodb://", 10);
+    uri_buf.putn(this->m_service_uri.data(), this->m_service_uri.size() + 1);
+
     ::bson_error_t error;
     uniptr_mongoc_uri uri;
-
-    if(user.find_of(":/?#") != cow_string::npos)
-      POSEIDON_THROW(("Invalid Mongo user name `$1`"), user);
-
-    if(server.find_of("/?#") != cow_string::npos)
-      POSEIDON_THROW(("Invalid Mongo server name `$1`"), server);
-
-    tinyfmt_str uri_fmt;
-    format(uri_fmt, "mongodb://$1@$2:$3/$4", user, server, port, db);
-
-    if(!uri.reset(::mongoc_uri_new_with_error(uri_fmt.get_string().safe_c_str(), &error)))
+    if(!uri.reset(::mongoc_uri_new_with_error(uri_buf.data(), &error)))
       POSEIDON_THROW((
-          "Could not compose Mongo URI: ERROR $1.$2: $3",
+          "Invalid Mongo service URI: ERROR $1.$2: $3",
           "[`mongoc_uri_new_with_error()` failed]"),
           error.domain, error.code, error.message);
 
-    if(!::mongoc_uri_set_password(uri, passwd.safe_c_str()))
-      POSEIDON_THROW(("Invalid Mongo password"));
-
-    // Enable compression. Errors are ignored.
     ::mongoc_uri_set_option_as_utf8(uri, MONGOC_URI_COMPRESSORS, "zlib");
+    this->m_db.assign(::mongoc_uri_get_database(uri));
+
+    // Unmask the password which is sensitive data, so erasure shall be ensured.
+    linear_buffer passwd_buf;
+    passwd_buf.putn(password.data(), password.size() + 1);
+    mask_string(passwd_buf.mut_data(), passwd_buf.size() - 1, nullptr, password_mask);
+
+    const auto passwd_buf_guard = make_unique_handle(&passwd_buf,
+        [&](...) {
+          ::std::fill_n(static_cast<volatile char*>(passwd_buf.mut_begin()),
+                        passwd_buf.size(), '\x9F');
+        });
+
+    if(!::mongoc_uri_set_password(uri, password.safe_c_str()))
+      POSEIDON_THROW((
+          "Invalid Mongo password (maybe it's not valid UTF-8?)",
+          "[`mongoc_uri_set_password()` failed]"));
 
     // Create the client object. This does not initiate the connection.
     if(!this->m_mongo.reset(::mongoc_client_new_from_uri_with_error(uri, &error)))
@@ -47,8 +53,6 @@ Mongo_Connection(cow_stringR server, uint16_t port, cow_stringR db, cow_stringR 
           error.domain, error.code, error.message);
 
     ::mongoc_client_set_error_api(this->m_mongo, MONGOC_ERROR_API_VERSION_2);
-    this->m_reply_available = false;
-    this->m_reset_clear = true;
   }
 
 Mongo_Connection::
