@@ -14,11 +14,9 @@ UDP_Socket(const IPv6_Address& addr)
   :
     Abstract_Socket(SOCK_DGRAM, IPPROTO_UDP)
   {
-    // Use `SO_REUSEADDR`. Errors are ignored.
     static constexpr int true_value = 1;
     ::setsockopt(this->do_get_fd(), SOL_SOCKET, SO_REUSEADDR, &true_value, sizeof(int));
 
-    // Bind this socket onto `addr`.
     ::sockaddr_in6 sa;
     sa.sin6_family = AF_INET6;
     sa.sin6_port = ROCKET_HTOBE16(addr.port());
@@ -28,15 +26,11 @@ UDP_Socket(const IPv6_Address& addr)
 
     if(::bind(this->do_get_fd(), (const ::sockaddr*) &sa, sizeof(sa)) != 0)
       POSEIDON_THROW((
-          "Failed to bind UDP socket onto `$3`",
-          "[`bind()` failed: ${errno:full}]",
-          "[UDP socket `$1` (class `$2`)]"),
-          this, typeid(*this), addr);
+          "Failed to bind UDP socket onto `$1`",
+          "[`bind()` failed: ${errno:full}]"),
+          addr);
 
-    POSEIDON_LOG_INFO((
-        "UDP server started listening on `$3`",
-        "[UDP socket `$1` (class `$2`)]"),
-        this, typeid(*this), this->local_address());
+    POSEIDON_LOG_INFO(("UDP socket listening on `$1`"), this->local_address());
   }
 
 UDP_Socket::
@@ -49,7 +43,6 @@ UDP_Socket()
 UDP_Socket::
 ~UDP_Socket()
   {
-    POSEIDON_LOG_INFO(("Destroying `$1` (class `$2`)"), this, typeid(*this));
   }
 
 void

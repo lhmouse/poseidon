@@ -17,22 +17,21 @@ SSL_Socket(unique_posix_fd&& fd, const Network_Driver& driver)
   :
     Abstract_Socket(move(fd))
   {
-    this->m_ssl.reset(::SSL_new(driver.server_ssl_ctx()));
-    if(!this->m_ssl)
+    if(!this->m_ssl.reset(::SSL_new(driver.server_ssl_ctx())))
       POSEIDON_THROW((
-          "Could not allocate server SSL structure",
-          "[`SSL_new()` failed: $3]",
-          "[SSL socket `$1` (class `$2`)]"),
-          this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
+          "Could not allocate client SSL structure",
+          "[`SSL_new()` failed: $1])"),
+          ::ERR_reason_error_string(::ERR_peek_error()));
 
     if(!::SSL_set_fd(this->m_ssl, this->do_get_fd()))
       POSEIDON_THROW((
-          "Could not allocate SSL BIO for incoming connection",
-          "[`SSL_set_fd()` failed: $3]",
-          "[SSL socket `$1` (class `$2`)]"),
-          this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
+          "Could not allocate SSL BIO for outgoing connection",
+          "[`SSL_set_fd()` failed: $1]"),
+          ::ERR_reason_error_string(::ERR_peek_error()));
 
     ::SSL_set_accept_state(this->m_ssl);
+
+    POSEIDON_LOG_INFO(("SSL socket from `$1` accepted"), this->local_address());
   }
 
 SSL_Socket::
@@ -40,20 +39,17 @@ SSL_Socket(const Network_Driver& driver)
   :
     Abstract_Socket(SOCK_STREAM, IPPROTO_TCP)
   {
-    this->m_ssl.reset(::SSL_new(driver.client_ssl_ctx()));
-    if(!this->m_ssl)
+    if(!this->m_ssl.reset(::SSL_new(driver.client_ssl_ctx())))
       POSEIDON_THROW((
           "Could not allocate client SSL structure",
-          "[`SSL_new()` failed: $3]",
-          "[SSL socket `$1` (class `$2`)]"),
-          this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
+          "[`SSL_new()` failed: $1])"),
+          ::ERR_reason_error_string(::ERR_peek_error()));
 
     if(!::SSL_set_fd(this->m_ssl, this->do_get_fd()))
       POSEIDON_THROW((
           "Could not allocate SSL BIO for outgoing connection",
-          "[`SSL_set_fd()` failed: $3]",
-          "[SSL socket `$1` (class `$2`)]"),
-          this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
+          "[`SSL_set_fd()` failed: $1]"),
+          ::ERR_reason_error_string(::ERR_peek_error()));
 
     ::SSL_set_connect_state(this->m_ssl);
   }
@@ -61,7 +57,6 @@ SSL_Socket(const Network_Driver& driver)
 SSL_Socket::
 ~SSL_Socket()
   {
-    POSEIDON_LOG_INFO(("Destroying `$1` (class `$2`)"), this, typeid(*this));
   }
 
 char256
