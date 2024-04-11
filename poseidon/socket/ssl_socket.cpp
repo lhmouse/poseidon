@@ -455,7 +455,7 @@ ssl_shut_down() noexcept
       return true;
 
     // If there are no data pending, close it immediately.
-    this->do_abstract_socket_set_state(socket_closed);
+    this->do_abstract_socket_set_closed();
     ::SSL_shutdown(this->m_ssl);
     return ::shutdown(this->do_get_fd(), SHUT_RDWR) == 0;
   }

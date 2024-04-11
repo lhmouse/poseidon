@@ -16,12 +16,13 @@ class Abstract_Socket
 
     unique_posix_fd m_fd;
     atomic_relaxed<Socket_State> m_state;
+    bool m_io_throttled = false;  // protected by `m_io_mutex`
+    char m_reserved_1;
     mutable atomic_relaxed<bool> m_sockname_ready;
     mutable IPv6_Address m_sockname;
 
     mutable recursive_mutex m_io_mutex;
     Network_Driver* m_io_driver;
-    bool m_io_throttled = false;
     linear_buffer m_io_read_queue;
     linear_buffer m_io_write_queue;
 
@@ -33,53 +34,30 @@ class Abstract_Socket
     Abstract_Socket(int type, int protocol);
 
   protected:
-    // Gets the file descriptor.
-    // Generally speaking, native handle getters should not be `const`. This
-    // function exists for convenience for derived classes.
+    // Gets the file descriptor. Generally speaking, native handle getters should
+    // not be `const`. This function exists for convenience for derived classes.
     int
     do_get_fd() const noexcept
       { return this->m_fd.get();  }
 
+    // Marks this socket closed after `shutdown()`.
+    void
+    do_abstract_socket_set_closed() noexcept
+      { this->m_state.store(socket_closed);  }
+
     // Gets the network driver instance inside the callbacks hereafter. If this
     // function is called elsewhere, the behavior is undefined.
     Network_Driver&
-    do_abstract_socket_lock_driver(recursive_mutex::unique_lock& lock) const noexcept
-      {
-        lock.lock(this->m_io_mutex);
-        ROCKET_ASSERT(this->m_io_driver);
-        return *(this->m_io_driver);
-      }
+    do_abstract_socket_lock_driver(recursive_mutex::unique_lock& lock) const noexcept;
 
-    // Gets the read (receive) queue.
     linear_buffer&
-    do_abstract_socket_lock_read_queue(recursive_mutex::unique_lock& lock) noexcept
-      {
-        lock.lock(this->m_io_mutex);
-        return this->m_io_read_queue;
-      }
+    do_abstract_socket_lock_read_queue(recursive_mutex::unique_lock& lock) noexcept;
 
-    // Gets the write (send) queue.
     linear_buffer&
-    do_abstract_socket_lock_write_queue(recursive_mutex::unique_lock& lock) noexcept
-      {
-        lock.lock(this->m_io_mutex);
-        return this->m_io_write_queue;
-      }
-
-    // Sets the socket state.
-    void
-    do_abstract_socket_set_state(Socket_State to) noexcept
-      {
-        this->m_state.store(to);
-      }
+    do_abstract_socket_lock_write_queue(recursive_mutex::unique_lock& lock) noexcept;
 
     bool
-    do_abstract_socket_change_state(Socket_State from, Socket_State to) noexcept
-      {
-        Socket_State comp = from;
-        bool eq = this->m_state.cmpxchg(comp, to);
-        return eq;
-      }
+    do_abstract_socket_change_state(Socket_State from, Socket_State to) noexcept;
 
     // This callback is invoked by the network thread when the socket has
     // been closed, and is intended to be overriden by derived classes.
@@ -129,6 +107,10 @@ class Abstract_Socket
     ROCKET_PURE
     const IPv6_Address&
     local_address() const noexcept;
+
+    // Checks whether the write (send) queue is empty.
+    bool
+    idle() const noexcept;
 
     // Initiates a connection for a stream socket, or sets the peer address
     // for a datagram socket.

@@ -51,6 +51,39 @@ Abstract_Socket::
   {
   }
 
+Network_Driver&
+Abstract_Socket::
+do_abstract_socket_lock_driver(recursive_mutex::unique_lock& lock) const noexcept
+  {
+    lock.lock(this->m_io_mutex);
+    ROCKET_ASSERT(this->m_io_driver);
+    return *(this->m_io_driver);
+  }
+
+linear_buffer&
+Abstract_Socket::
+do_abstract_socket_lock_read_queue(recursive_mutex::unique_lock& lock) noexcept
+  {
+    lock.lock(this->m_io_mutex);
+    return this->m_io_read_queue;
+  }
+
+linear_buffer&
+Abstract_Socket::
+do_abstract_socket_lock_write_queue(recursive_mutex::unique_lock& lock) noexcept
+  {
+    lock.lock(this->m_io_mutex);
+    return this->m_io_write_queue;
+  }
+
+bool
+Abstract_Socket::
+do_abstract_socket_change_state(Socket_State from, Socket_State to) noexcept
+  {
+    auto cmp = from;
+    return this->m_state.cmpxchg(cmp, to);
+  }
+
 const IPv6_Address&
 Abstract_Socket::
 local_address() const noexcept
@@ -82,6 +115,14 @@ local_address() const noexcept
     ::std::atomic_thread_fence(::std::memory_order_release);
     this->m_sockname_ready.store(true);
     return this->m_sockname;
+  }
+
+bool
+Abstract_Socket::
+idle() const noexcept
+  {
+    recursive_mutex::unique_lock lock(this->m_io_mutex);
+    return this->m_io_write_queue.empty();
   }
 
 void
