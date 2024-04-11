@@ -1,15 +1,15 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
-#ifndef POSEIDON_SOCKET_ASYNC_CONNECT_
-#define POSEIDON_SOCKET_ASYNC_CONNECT_
+#ifndef POSEIDON_SOCKET_DNS_CONNECT_TASK_
+#define POSEIDON_SOCKET_DNS_CONNECT_TASK_
 
 #include "../fwd.hpp"
 #include "enums.hpp"
 #include "../base/abstract_task.hpp"
 namespace poseidon {
 
-class Async_Connect
+class DNS_Connect_Task
   :
     public Abstract_Task
   {
@@ -24,7 +24,7 @@ class Async_Connect
     // `connect()` is called on `socket`. If both IPv4 and IPv6 addresses are
     // found, an IPv4 address is preferred to an IPv6 address. If no address can
     // be found, the socket is closed immediately.
-    Async_Connect(Network_Driver& driver, shptrR<Abstract_Socket> socket, cow_stringR host, uint16_t port);
+    DNS_Connect_Task(Network_Driver& driver, shptrR<Abstract_Socket> socket, cow_stringR host, uint16_t port);
 
   protected:
     // This class implements `Abstract_Task`.
@@ -33,9 +33,9 @@ class Async_Connect
     do_on_abstract_task_execute() override;
 
   public:
-    Async_Connect(const Async_Connect&) = delete;
-    Async_Connect& operator=(const Async_Connect&) & = delete;
-    virtual ~Async_Connect();
+    DNS_Connect_Task(const DNS_Connect_Task&) = delete;
+    DNS_Connect_Task& operator=(const DNS_Connect_Task&) & = delete;
+    virtual ~DNS_Connect_Task();
 
     shptr<Abstract_Socket>
     socket_opt() const noexcept

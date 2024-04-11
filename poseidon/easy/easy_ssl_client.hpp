@@ -25,7 +25,7 @@ class Easy_SSL_Client
   private:
     thunk_type m_thunk;
 
-    shptr<Async_Connect> m_dns_task;
+    shptr<DNS_Connect_Task> m_dns_task;
     struct X_Event_Queue;
     shptr<X_Event_Queue> m_queue;
     shptr<SSL_Socket> m_socket;

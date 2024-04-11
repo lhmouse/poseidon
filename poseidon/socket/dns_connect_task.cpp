@@ -2,7 +2,7 @@
 // Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #include "../xprecompiled.hpp"
-#include "async_connect.hpp"
+#include "dns_connect_task.hpp"
 #include "abstract_socket.hpp"
 #include "../static/network_driver.hpp"
 #include "../utils.hpp"
@@ -10,8 +10,8 @@
 #include <netdb.h>
 namespace poseidon {
 
-Async_Connect::
-Async_Connect(Network_Driver& driver, shptrR<Abstract_Socket> socket, cow_stringR host, uint16_t port)
+DNS_Connect_Task::
+DNS_Connect_Task(Network_Driver& driver, shptrR<Abstract_Socket> socket, cow_stringR host, uint16_t port)
   {
     if(!socket)
       POSEIDON_THROW(("Null socket pointer not valid"));
@@ -22,13 +22,13 @@ Async_Connect(Network_Driver& driver, shptrR<Abstract_Socket> socket, cow_string
     this->m_port = port;
   }
 
-Async_Connect::
-~Async_Connect()
+DNS_Connect_Task::
+~DNS_Connect_Task()
   {
   }
 
 void
-Async_Connect::
+DNS_Connect_Task::
 do_on_abstract_task_execute()
   {
     opt<IPv6_Address> dns_result;
@@ -83,15 +83,13 @@ do_on_abstract_task_execute()
     try {
       if(dns_result)
         socket->connect(*dns_result);
+      else
+        socket->quick_close();
     }
     catch(exception& stdex) {
-      // Shut the connection down later.
       POSEIDON_LOG_ERROR(("Could not initiate connection: $1"), stdex);
-      dns_result.reset();
-    }
-
-    if(!dns_result)
       socket->quick_close();
+    }
 
     // Insert the socket. Even in case of a failure, a closure notification
     // shall be delivered.
