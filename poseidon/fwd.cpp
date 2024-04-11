@@ -7,7 +7,7 @@
 #include "static/fiber_scheduler.hpp"
 #include "static/async_logger.hpp"
 #include "static/timer_driver.hpp"
-#include "static/async_task_executor.hpp"
+#include "static/task_executor.hpp"
 #include "static/network_driver.hpp"
 #include <locale.h>
 #ifdef POSEIDON_ENABLE_MYSQL
@@ -27,7 +27,7 @@ Main_Config& main_config = *new Main_Config;
 Async_Logger& async_logger = *new Async_Logger;
 
 Timer_Driver& timer_driver = *new Timer_Driver;
-Async_Task_Executor& async_task_executor = *new Async_Task_Executor;
+Task_Executor& task_executor = *new Task_Executor;
 Network_Driver& network_driver = *new Network_Driver;
 Fiber_Scheduler& fiber_scheduler = *new Fiber_Scheduler;
 

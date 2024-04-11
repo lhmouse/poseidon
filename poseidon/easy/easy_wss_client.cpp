@@ -7,7 +7,7 @@
 #include "../fiber/abstract_fiber.hpp"
 #include "../static/fiber_scheduler.hpp"
 #include "../socket/async_connect.hpp"
-#include "../static/async_task_executor.hpp"
+#include "../static/task_executor.hpp"
 #include "../utils.hpp"
 namespace poseidon {
 namespace {
@@ -204,7 +204,7 @@ connect(chars_view addr)
     auto dns_task = new_sh<Async_Connect>(network_driver, session,
                        cow_string(caddr.host), caddr.port_num);
 
-    async_task_executor.enqueue(dns_task);
+    task_executor.enqueue(dns_task);
     this->m_dns_task = move(dns_task);
     this->m_queue = move(queue);
     this->m_session = move(session);

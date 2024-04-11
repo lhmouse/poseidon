@@ -27,7 +27,7 @@ class Mongo_Query_Future
 
   public:
     // Constructs a future for a single Mongo command. This object also functions
-    // as an asynchronous task, which can be enqueued into an `Async_Task_Executor`.
+    // as an asynchronous task, which can be enqueued into an `Task_Executor`.
     // This future will become ready once the command is complete.
     Mongo_Query_Future(Mongo_Connector& connector, Mongo_Document cmd);
 

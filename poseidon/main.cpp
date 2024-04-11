@@ -7,7 +7,7 @@
 #include "static/fiber_scheduler.hpp"
 #include "static/async_logger.hpp"
 #include "static/timer_driver.hpp"
-#include "static/async_task_executor.hpp"
+#include "static/task_executor.hpp"
 #include "static/network_driver.hpp"
 #include "utils.hpp"
 #include <locale.h>
@@ -389,11 +389,11 @@ do_create_threads()
   {
     do_create_resident_thread(async_logger, "logger");
     do_create_resident_thread(timer_driver, "timer");
-    do_create_resident_thread(async_task_executor, "task_0");
-    do_create_resident_thread(async_task_executor, "task_1");
-    do_create_resident_thread(async_task_executor, "task_2");
-    do_create_resident_thread(async_task_executor, "task_3");
-    do_create_resident_thread(async_task_executor, "task_4");
+    do_create_resident_thread(task_executor, "task_0");
+    do_create_resident_thread(task_executor, "task_1");
+    do_create_resident_thread(task_executor, "task_2");
+    do_create_resident_thread(task_executor, "task_3");
+    do_create_resident_thread(task_executor, "task_4");
     do_create_resident_thread(network_driver, "network");
   }
 

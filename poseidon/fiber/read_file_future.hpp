@@ -33,7 +33,7 @@ class Read_File_Future
   public:
     // Constructs a result future for reading a file. The file which `path` denotes
     // must exist, and shall be a regular file. This object also functions as an
-    // asynchronous task, which can be enqueued into an `Async_Task_Executor`. This
+    // asynchronous task, which can be enqueued into an `Task_Executor`. This
     // future will become ready once the read operation is complete.
     explicit Read_File_Future(cow_stringR path, int64_t offset = 0, size_t limit = INT_MAX);
 

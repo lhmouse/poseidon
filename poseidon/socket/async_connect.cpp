@@ -29,7 +29,7 @@ Async_Connect::
 
 void
 Async_Connect::
-do_on_abstract_async_task_execute()
+do_on_abstract_task_execute()
   {
     opt<IPv6_Address> dns_result;
     shptr<Abstract_Socket> socket;

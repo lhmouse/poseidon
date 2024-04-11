@@ -27,7 +27,7 @@ class Redis_Query_Future
 
   public:
     // Constructs a future for a single redis command. This object also functions
-    // as an asynchronous task, which can be enqueued into an `Async_Task_Executor`.
+    // as an asynchronous task, which can be enqueued into an `Task_Executor`.
     // This future will become ready once the query is complete.
     Redis_Query_Future(Redis_Connector& connector, vector<cow_string> cmd);
 

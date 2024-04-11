@@ -5,13 +5,13 @@
 #define POSEIDON_FIBER_ABSTRACT_FUTURE_
 
 #include "../fwd.hpp"
-#include "../base/abstract_async_task.hpp"
+#include "../base/abstract_task.hpp"
 #include <rocket/once_flag.hpp>
 namespace poseidon {
 
 class Abstract_Future
   :
-    public Abstract_Async_Task
+    public Abstract_Task
   {
   private:
     friend class Fiber_Scheduler;
@@ -32,7 +32,7 @@ class Abstract_Future
     // do the work; otherwise, this function returns immediately.
     virtual
     void
-    do_on_abstract_async_task_execute() noexcept override;
+    do_on_abstract_task_execute() noexcept override;
 
     // This is a convenient wrapper for `check_success()`.
     template<typename xResult>

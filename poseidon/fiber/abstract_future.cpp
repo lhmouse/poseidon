@@ -18,7 +18,7 @@ Abstract_Future::
 
 void
 Abstract_Future::
-do_on_abstract_async_task_execute() noexcept
+do_on_abstract_task_execute() noexcept
   {
     // The completion state can only be updated with `m_waiters_mutex` locked.
     vector<wkptr<atomic_relaxed<steady_time>>> waiters;

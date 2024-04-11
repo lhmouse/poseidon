@@ -361,7 +361,7 @@ class UUID;
 class DateTime;
 class Config_File;
 class Abstract_Timer;
-class Abstract_Async_Task;
+class Abstract_Task;
 class Abstract_Deflator;
 class Abstract_Inflator;
 
@@ -462,7 +462,7 @@ extern class Main_Config& main_config;
 extern class Async_Logger& async_logger;
 
 extern class Timer_Driver& timer_driver;
-extern class Async_Task_Executor& async_task_executor;
+extern class Task_Executor& task_executor;
 extern class Network_Driver& network_driver;
 extern class Fiber_Scheduler& fiber_scheduler;
 

@@ -6,12 +6,12 @@
 
 #include "../fwd.hpp"
 #include "enums.hpp"
-#include "../base/abstract_async_task.hpp"
+#include "../base/abstract_task.hpp"
 namespace poseidon {
 
 class Async_Connect
   :
-    public Abstract_Async_Task
+    public Abstract_Task
   {
   private:
     Network_Driver* m_driver;
@@ -27,10 +27,10 @@ class Async_Connect
     Async_Connect(Network_Driver& driver, shptrR<Abstract_Socket> socket, cow_stringR host, uint16_t port);
 
   protected:
-    // This class implements `Abstract_Async_Task`.
+    // This class implements `Abstract_Task`.
     virtual
     void
-    do_on_abstract_async_task_execute() override;
+    do_on_abstract_task_execute() override;
 
   public:
     Async_Connect(const Async_Connect&) = delete;
