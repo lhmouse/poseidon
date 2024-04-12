@@ -124,7 +124,6 @@ execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)
 
       this->m_password.clear();
       this->m_password.shrink_to_fit();
-
       this->m_connected = true;
       POSEIDON_LOG_INFO(("Connected to MySQL server `$1`"), this->m_service_uri);
     }

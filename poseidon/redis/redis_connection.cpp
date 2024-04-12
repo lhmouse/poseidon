@@ -158,8 +158,6 @@ execute(const cow_string* cmds, size_t ncmds)
 
       this->m_password.clear();
       this->m_password.shrink_to_fit();
-
-      cow_string().swap(this->m_password);
       this->m_connected = true;
       POSEIDON_LOG_INFO(("Connected to Redis server `$1`"), this->m_service_uri);
     }
