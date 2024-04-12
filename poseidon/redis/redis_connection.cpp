@@ -102,14 +102,15 @@ execute(const cow_string* cmds, size_t ncmds)
       // Try connecting to the server.
       if(!this->m_redis.reset(::redisConnect(host, port)))
         POSEIDON_THROW((
-            "Could not connect to Redis server: ${errno:full}",
-            "[`redisConnect()` failed]"));
+            "Could not connect to Redis server `$1`: ${errno:full}",
+            "[`redisConnect()` failed]"),
+            this->m_service_uri);
 
       if(this->m_redis->err != 0)
         POSEIDON_THROW((
-            "Could not connect to Redis server: ERROR $1: $2",
+            "Could not connect to Redis server `$1`: ERROR $2: $3",
             "[`redisConnect()` failed]"),
-            this->m_redis->err, this->m_redis->errstr);
+            this->m_service_uri, this->m_redis->err, this->m_redis->errstr);
 
       if(passwd_buf.size() > 1) {
         // `AUTH user password`
