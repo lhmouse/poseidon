@@ -94,9 +94,13 @@ struct Queued_Fiber
     wkptr<Abstract_Future> wfutr;
     steady_time yield_time;
     steady_time check_time;
-    steady_time fail_time;
+    milliseconds fail_timeout_override;
     Fiber_State state = fiber_pending;
     ::ucontext_t sched_inner[1];
+
+    void
+    do_sync_time() noexcept
+      { this->check_time = this->async_time.load();  }
   };
 
 struct Fiber_Comparator
@@ -245,6 +249,7 @@ thread_loop()
     plain_mutex::unique_lock lock(this->m_conf_mutex);
     const size_t stack_vm_size = this->m_conf_stack_vm_size;
     const seconds warn_timeout = this->m_conf_warn_timeout;
+    const seconds fail_timeout = this->m_conf_fail_timeout;
     lock.unlock();
 
     lock.lock(this->m_pq_mutex);
@@ -259,9 +264,7 @@ thread_loop()
           // Rebuild the heap when there is nothing to do. `async_time` can be
           // modified by other threads arbitrarily, so has to be copied to
           // somewhere safe first.
-          for(const auto& elem : this->m_pq)
-            elem->check_time = elem->async_time.load();
-
+          ::std::for_each(this->m_pq.begin(), this->m_pq.end(), ::std::mem_fn(&Queued_Fiber::do_sync_time));
           ::std::make_heap(this->m_pq.begin(), this->m_pq.end(), fiber_comparator);
           POSEIDON_LOG_TRACE(("Rebuilt heap for fiber scheduler: size = $1"), this->m_pq.size());
           timeout_ns = duration_cast<nanoseconds>(this->m_pq.front()->check_time - now).count();
@@ -274,8 +277,8 @@ thread_loop()
       if(this->m_pq_wait.tv_nsec != 0) {
         lock.unlock();
 
-        ROCKET_ASSERT(this->m_pq_wait.tv_sec == 0);
         //POSEIDON_LOG_TRACE(("Sleeping for $1 nanoseconds..."), this->m_pq_wait.tv_nsec);
+        ROCKET_ASSERT(this->m_pq_wait.tv_sec == 0);
         ::nanosleep(&(this->m_pq_wait), nullptr);
         return;
       }
@@ -295,8 +298,8 @@ thread_loop()
       return;
     }
 
-    // Put the fiber back.
-    steady_time next_check_time = min(elem->check_time + warn_timeout, elem->fail_time);
+    milliseconds real_fail_timeout = (elem->fail_timeout_override >= 0ms) ? elem->fail_timeout_override : fail_timeout;
+    steady_time next_check_time = min(elem->check_time + warn_timeout, elem->yield_time + real_fail_timeout);
     elem->async_time.cmpxchg(elem->check_time, next_check_time);
     elem->check_time = next_check_time;
     ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), fiber_comparator);
@@ -308,18 +311,21 @@ thread_loop()
     if(futr && !futr->m_once.test()) {
       // Wait for the future. In case of a shutdown request or timeout, ignore the
       // future and move on anyway.
-      if(now >= elem->yield_time + warn_timeout)
+      bool should_warn = now >= elem->yield_time + warn_timeout;
+      bool should_fail = now >= elem->yield_time + real_fail_timeout;
+
+      if(should_warn && !should_fail)
         POSEIDON_LOG_WARN((
             "Fiber `$1` (class `$2`) has been suspended for $3"),
             fiber, typeid(*fiber), duration_cast<milliseconds>(now - elem->yield_time));
 
-      if(now >= elem->fail_time)
+      if(should_fail)
         POSEIDON_LOG_ERROR((
             "Fiber `$1` (class `$2`) has been suspended for $3",
             "This circumstance looks permanent. Please check for deadlocks."),
             fiber, typeid(*fiber), duration_cast<milliseconds>(now - elem->yield_time));
 
-      if((signal == 0) && (now < elem->fail_time))
+      if((signal == 0) && !should_fail)
         return;
     }
 
@@ -382,8 +388,8 @@ launch(shptrR<Abstract_Fiber> fiber)
     auto elem = new_sh<X_Queued_Fiber>();
     elem->fiber = fiber;
     elem->yield_time = steady_clock::now();
-    elem->check_time = elem->yield_time;
     elem->async_time.store(elem->yield_time);
+    elem->check_time = elem->yield_time;
 
     // Insert it.
     plain_mutex::unique_lock lock(this->m_pq_mutex);
@@ -406,30 +412,17 @@ yield(const Abstract_Fiber& tfiber, shptrR<Abstract_Future> futr_opt, millisecon
     // Set re-scheduling parameters.
     elem->wfutr = futr_opt;
     elem->yield_time = steady_clock::now();
-    elem->fail_time = elem->yield_time;
     elem->async_time.store(elem->yield_time);
+    elem->fail_timeout_override = fail_timeout_override;
 
     if(futr_opt) {
-      plain_mutex::unique_lock lock(this->m_conf_mutex);
-      const seconds warn_timeout = this->m_conf_warn_timeout;
-      const seconds fail_timeout = this->m_conf_fail_timeout;
-      lock.unlock();
-
       // Associate the future. If the future is already in the READY state,
       // don't block at all.
-      lock.lock(futr_opt->m_waiters_mutex);
+      plain_mutex::unique_lock lock(futr_opt->m_waiters_mutex);
       if(futr_opt->m_once.test())
         return;
 
       shptr<atomic_relaxed<steady_time>> async_time_ptr(elem, &(elem->async_time));
-      milliseconds real_fail_timeout = fail_timeout;
-
-      // Clamp the timeout for safety.
-      if(fail_timeout_override != 0s)
-        real_fail_timeout = clamp(fail_timeout_override, 0h, 1h);
-
-      elem->fail_time = elem->yield_time + real_fail_timeout;
-      elem->async_time.store(min(elem->yield_time + warn_timeout, elem->fail_time));
       futr_opt->m_waiters.emplace_back(async_time_ptr);
       lock.unlock();
     }
