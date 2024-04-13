@@ -100,28 +100,23 @@ Redis_Connector::
 allocate_connection(cow_stringR service_uri, cow_stringR password)
   {
     plain_mutex::unique_lock lock(this->m_conf_mutex);
-    const uint32_t pool_size = this->m_conf_connection_pool_size;
     const seconds idle_timeout = this->m_conf_connection_idle_timeout;
     lock.unlock();
 
-    // Iterate over the pool, looking for a matching connection with minimum
-    // timestamp.
+    // Look for a matching connection with minimum timestamp.
     lock.lock(this->m_pool_mutex);
-    this->m_pool.resize(pool_size);
-    uniptr<Redis_Connection>* use_slot = nullptr;
     const steady_time now = steady_clock::now();
 
-    for(auto& slot : this->m_pool)
-      if(slot && (now - slot->m_time_pooled > idle_timeout))
-        slot.reset();
+    auto pos = this->m_pool.begin();
+    while((pos != this->m_pool.end()) && (now - (*pos)->m_time_pooled > idle_timeout))
+      pos = this->m_pool.erase(pos);
 
-    for(auto& slot : this->m_pool)
-      if(slot && (!use_slot || (slot->m_time_pooled < (*use_slot)->m_time_pooled))
-              && (slot->m_service_uri == service_uri))
-        use_slot = &slot;
-
-    if(use_slot)
-      return move(*use_slot);
+    for(pos = this->m_pool.begin();  pos != this->m_pool.end();  ++pos)
+      if((*pos)->m_service_uri == service_uri) {
+        auto conn = move(*pos);
+        pos = this->m_pool.erase(pos);
+        return conn;
+      }
 
     lock.unlock();
     return new_uni<Redis_Connection>(service_uri, password, 0);
@@ -135,28 +130,23 @@ allocate_default_connection()
     const cow_string service_uri = this->m_conf_default_service_uri;
     const cow_string password = this->m_conf_default_password;
     const uint32_t password_mask = this->m_conf_default_password_mask;
-    const uint32_t pool_size = this->m_conf_connection_pool_size;
     const seconds idle_timeout = this->m_conf_connection_idle_timeout;
     lock.unlock();
 
-    // Iterate over the pool, looking for a matching connection with minimum
-    // timestamp.
+    // Look for a matching connection with minimum timestamp.
     lock.lock(this->m_pool_mutex);
-    this->m_pool.resize(pool_size);
-    uniptr<Redis_Connection>* use_slot = nullptr;
     const steady_time now = steady_clock::now();
 
-    for(auto& slot : this->m_pool)
-      if(slot && (now - slot->m_time_pooled > idle_timeout))
-        slot.reset();
+    auto pos = this->m_pool.begin();
+    while((pos != this->m_pool.end()) && (now - (*pos)->m_time_pooled > idle_timeout))
+      pos = this->m_pool.erase(pos);
 
-    for(auto& slot : this->m_pool)
-      if(slot && (!use_slot || (slot->m_time_pooled < (*use_slot)->m_time_pooled))
-              && (slot->m_service_uri == service_uri))
-        use_slot = &slot;
-
-    if(use_slot)
-      return move(*use_slot);
+    for(pos = this->m_pool.begin();  pos != this->m_pool.end();  ++pos)
+      if((*pos)->m_service_uri == service_uri) {
+        auto conn = move(*pos);
+        pos = this->m_pool.erase(pos);
+        return conn;
+      }
 
     lock.unlock();
     return new_uni<Redis_Connection>(service_uri, password, password_mask);
@@ -177,28 +167,23 @@ pool_connection(uniptr<Redis_Connection>&& conn) noexcept
     }
 
     plain_mutex::unique_lock lock(this->m_conf_mutex);
+    const uint32_t pool_size = this->m_conf_connection_pool_size;
     const seconds idle_timeout = this->m_conf_connection_idle_timeout;
     lock.unlock();
 
-    // Put the connection back into an empty slot.
+    // Append the connection to the end.
     lock.lock(this->m_pool_mutex);
-    uniptr<Redis_Connection>* use_slot = nullptr;
     const steady_time now = steady_clock::now();
 
-    for(auto& slot : this->m_pool)
-      if(slot && (now - slot->m_time_pooled > idle_timeout))
-        slot.reset();
+    auto pos = this->m_pool.begin();
+    while((pos != this->m_pool.end()) && (now - (*pos)->m_time_pooled > idle_timeout))
+      pos = this->m_pool.erase(pos);
 
-    for(auto& slot : this->m_pool)
-      if(!slot || !use_slot || (slot->m_time_pooled < (*use_slot)->m_time_pooled))
-        use_slot = &slot;
-
-    if(!use_slot)
-      return false;
+    while(this->m_pool.end() - pos >= static_cast<ptrdiff_t>(pool_size))
+      pos = this->m_pool.erase(pos);
 
     conn->m_time_pooled = steady_clock::now();
-    *use_slot = move(conn);
-    lock.unlock();
+    this->m_pool.emplace_back(move(conn));
     return true;
   }
 
