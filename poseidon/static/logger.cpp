@@ -311,7 +311,7 @@ thread_loop()
     recursive_mutex::unique_lock io_sync_lock(this->m_io_mutex);
     this->m_io_queue.clear();
     this->m_io_queue.swap(this->m_queue);
-    bool too_much = this->m_io_queue.size() <= 1024U;
+    size_t queue_size = this->m_io_queue.size();
     lock.unlock();
 
     // Get configuration of all levels.
@@ -321,7 +321,7 @@ thread_loop()
 
     // Write all elements.
     for(const auto& msg : this->m_io_queue)
-      if((msg.level < levels.size()) && !(too_much && levels[msg.level].trivial))
+      if((msg.level < levels.size()) && (!levels[msg.level].trivial || (queue_size < 1000)))
         do_write_nothrow(levels[msg.level], msg);
 
     this->m_io_queue.clear();

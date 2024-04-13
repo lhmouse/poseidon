@@ -305,7 +305,6 @@ thread_loop()
     auto futr = elem->wfutr.lock();
     lock.unlock();
 
-    POSEIDON_LOG_TRACE(("Processing fiber `$1` (class `$2`)"), fiber, typeid(*fiber));
     if(futr && !futr->m_once.test()) {
       // Wait for the future. In case of a shutdown request or timeout, ignore the
       // future and move on anyway.
