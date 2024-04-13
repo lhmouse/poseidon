@@ -71,15 +71,9 @@
 #include <limits.h>
 #include <wchar.h>
 #include <cxxabi.h>
-
-#ifdef __SSE4_2__
 #include <x86intrin.h>
 #include <nmmintrin.h>
-#endif
-
-#ifdef __AVX__
 #include <immintrin.h>
-#endif
 
 #include <asteria/utils.hpp>
 #include <taxon.hpp>
