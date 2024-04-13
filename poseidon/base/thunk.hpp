@@ -11,30 +11,32 @@ template<typename... xArgs>
 class thunk
   {
   public:
-    using function_type = void (xArgs...);
-    POSEIDON_USING is_viable = ::std::is_invocable<Ts..., xArgs&&...>;
+    template<typename xReal>
+    using is_viable = ::std::is_invocable<typename ::std::decay<xReal>::type&,
+                                          xArgs&&...>;
 
   private:
-    vfptr<void*, xArgs&&...> m_func;
     shptr<void> m_obj;
+    vfptr<void*, xArgs&&...> m_func;
+    void* m_padding;
 
   public:
-    // Points this callback to a target object, with its type erased.
+    // Points this thunk to `obj`, with its type erased.
     template<typename xReal,
-    ROCKET_ENABLE_IF(is_viable<xReal>::value)>
-    explicit thunk(shptrR<xReal> obj) noexcept
-      {
-        this->m_func = [](void* p, xArgs&&... args) { (*(xReal*) p) (forward<xArgs>(args)...);  };
-        this->m_obj = obj;
-      }
+    ROCKET_ENABLE_IF(is_viable<xReal>::value),
+    ROCKET_DISABLE_IF(::std::is_constructible<thunk, xReal&&>::value)>
+    explicit thunk(xReal&& obj)
+      : m_obj(new_sh<typename ::std::decay<xReal>::type>(forward<xReal>(obj))),
+        m_func([](void* p, xArgs&&... args) -> void
+          { ::std::invoke(static_cast<typename ::std::decay<xReal>::type*>(p),
+                          forward<xArgs>(args)...);  })
+      { }
 
-    // And this is an optimized overload if the target object is a plain
-    // function pointer, which can be stored into `m_obj` directly.
-    explicit thunk(function_type* fptr) noexcept
-      {
-        this->m_func = nullptr;
-        this->m_obj = shptr<void>(shptr<int>(), (void*)(intptr_t) fptr);
-      }
+    // Stores a pointer to `fptr` directly, without allocating memory.
+    explicit thunk(void fptr(xArgs...)) noexcept
+      : m_obj(shptr<int>(), reinterpret_cast<void*>(fptr)),
+        m_func(nullptr)
+      { }
 
     // Performs a virtual call to the target object.
     void
@@ -43,7 +45,8 @@ class thunk
         if(this->m_func)
           this->m_func(this->m_obj.get(), forward<xArgs>(args)...);
         else
-          ((function_type*)(intptr_t) this->m_obj.get()) (forward<xArgs>(args)...);
+          reinterpret_cast<void (*)(xArgs...)>(this->m_obj.get()) (
+                                                 forward<xArgs>(args)...);
       }
   };
 

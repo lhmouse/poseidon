@@ -49,12 +49,7 @@ class Easy_HTTP_Server
     ROCKET_ENABLE_IF(thunk_type::is_viable<xCallback>::value)>
     explicit Easy_HTTP_Server(xCallback&& cb)
       :
-        m_thunk(new_sh(forward<xCallback>(cb)))
-      { }
-
-    explicit Easy_HTTP_Server(thunk_type::function_type* fptr)
-      :
-        m_thunk(fptr)
+        m_thunk(forward<xCallback>(cb))
       { }
 
   public:
