@@ -254,16 +254,26 @@ thread_loop()
 
     if(signal == 0) {
       int64_t timeout_ns = INT_MAX;
+      bool remake_heap = false;
+
+      // Rebuild the heap when there is nothing to do. `async_time` can be
+      // modified by other threads arbitrarily, so has to be copied to somewhere
+      // safe first.
       if(!this->m_pq.empty()) {
         timeout_ns = duration_cast<nanoseconds>(this->m_pq.front()->check_time - now).count();
         if(timeout_ns > 0) {
-          // Rebuild the heap when there is nothing to do. `async_time` can be
-          // modified by other threads arbitrarily, so has to be copied to
-          // somewhere safe first.
-          ::rocket::for_each(this->m_pq, [](const auto& p) { p->check_time = p->async_time.load();  });
-          ::std::make_heap(this->m_pq.begin(), this->m_pq.end(), s_fiber_comparator);
-          POSEIDON_LOG_TRACE(("Rebuilt heap for fiber scheduler: size = $1"), this->m_pq.size());
-          timeout_ns = duration_cast<nanoseconds>(this->m_pq.front()->check_time - now).count();
+          for(const auto& ptr : this->m_pq) {
+            auto async_time = ptr->async_time.load();
+            if(ptr->check_time != async_time) {
+              remake_heap = true;
+              ptr->check_time = async_time;
+            }
+          }
+
+          if(remake_heap) {
+            ::std::make_heap(this->m_pq.begin(), this->m_pq.end(), s_fiber_comparator);
+            timeout_ns = duration_cast<nanoseconds>(this->m_pq.front()->check_time - now).count();
+          }
         }
       }
 
