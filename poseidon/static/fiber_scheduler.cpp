@@ -97,10 +97,6 @@ struct Queued_Fiber
     milliseconds fail_timeout_override;
     Fiber_State state = fiber_pending;
     ::ucontext_t sched_inner[1];
-
-    void
-    do_sync_time() noexcept
-      { this->check_time = this->async_time.load();  }
   };
 
 struct Fiber_Comparator
@@ -118,7 +114,7 @@ struct Fiber_Comparator
     operator()(steady_time lhs, shptrR<Queued_Fiber> rhs) noexcept
       { return lhs > rhs->check_time;  }
   }
-  constexpr fiber_comparator;
+  constexpr s_fiber_comparator;
 
 }  // namespace
 
@@ -264,8 +260,8 @@ thread_loop()
           // Rebuild the heap when there is nothing to do. `async_time` can be
           // modified by other threads arbitrarily, so has to be copied to
           // somewhere safe first.
-          ::std::for_each(this->m_pq.begin(), this->m_pq.end(), ::std::mem_fn(&Queued_Fiber::do_sync_time));
-          ::std::make_heap(this->m_pq.begin(), this->m_pq.end(), fiber_comparator);
+          ::rocket::for_each(this->m_pq, [](const auto& p) { p->check_time = p->async_time.load();  });
+          ::std::make_heap(this->m_pq.begin(), this->m_pq.end(), s_fiber_comparator);
           POSEIDON_LOG_TRACE(("Rebuilt heap for fiber scheduler: size = $1"), this->m_pq.size());
           timeout_ns = duration_cast<nanoseconds>(this->m_pq.front()->check_time - now).count();
         }
@@ -277,21 +273,19 @@ thread_loop()
       if(this->m_pq_wait.tv_nsec != 0) {
         lock.unlock();
 
-        //POSEIDON_LOG_TRACE(("Sleeping for $1 nanoseconds..."), this->m_pq_wait.tv_nsec);
         ROCKET_ASSERT(this->m_pq_wait.tv_sec == 0);
         ::nanosleep(&(this->m_pq_wait), nullptr);
         return;
       }
     }
 
-    ::std::pop_heap(this->m_pq.begin(), this->m_pq.end(), fiber_comparator);
+    ::std::pop_heap(this->m_pq.begin(), this->m_pq.end(), s_fiber_comparator);
     auto elem = this->m_pq.back();
     const auto& fiber = elem->fiber;
     if(elem->state == fiber_terminated) {
       this->m_pq.pop_back();
       lock.unlock();
 
-      POSEIDON_LOG_TRACE(("Deleting fiber `$1` (class `$2`)"), fiber, typeid(*fiber));
       elem->fiber.reset();
       ROCKET_ASSERT(elem->sched_inner->uc_stack.ss_sp != nullptr);
       do_free_stack(elem->sched_inner->uc_stack);
@@ -302,7 +296,7 @@ thread_loop()
     steady_time next_check_time = min(elem->check_time + warn_timeout, elem->yield_time + real_fail_timeout);
     elem->async_time.cmpxchg(elem->check_time, next_check_time);
     elem->check_time = next_check_time;
-    ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), fiber_comparator);
+    ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), s_fiber_comparator);
 
     recursive_mutex::unique_lock sched_lock(this->m_sched_mutex);
     auto futr = elem->wfutr.lock();
@@ -344,15 +338,14 @@ thread_loop()
 
       ::makecontext(elem->sched_inner,
           (void (*)()) +[](int xarg0, int xarg1)
-            {
-              Fiber_Scheduler* ythis = nullptr;
-              int yargs[2] = { xarg0, xarg1 };
-              ::memcpy(&ythis, yargs, sizeof(ythis));
+          {
+            Fiber_Scheduler* ythis = nullptr;
+            int yargs[2] = { xarg0, xarg1 };
+            ::memcpy(&ythis, yargs, sizeof(ythis));
 
-              ythis->do_fiber_function();
-            },
-          2,
-          xargs[0], xargs[1]);
+            ythis->do_fiber_function();
+          },
+          2, xargs[0], xargs[1]);
     }
 
     // Start or resume this fiber.
@@ -394,7 +387,7 @@ launch(shptrR<Abstract_Fiber> fiber)
     // Insert it.
     plain_mutex::unique_lock lock(this->m_pq_mutex);
     this->m_pq.emplace_back(move(elem));
-    ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), fiber_comparator);
+    ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), s_fiber_comparator);
   }
 
 void
