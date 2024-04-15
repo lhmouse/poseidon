@@ -31,7 +31,8 @@ class thunk
     // Points this thunk to a copy of `obj`, with its type erased.
     template<typename xReal,
     ROCKET_ENABLE_IF(is_viable<xReal>::value),
-    ROCKET_DISABLE_IF(::std::is_constructible<thunk, xReal&&>::value)>
+    ROCKET_DISABLE_IF(::std::is_base_of<thunk,
+        typename ::std::remove_reference<xReal>::type>::value)>
     explicit thunk(xReal&& obj)
       {
         struct Container : ::asteria::Rcbase
