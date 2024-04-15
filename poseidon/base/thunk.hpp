@@ -16,37 +16,46 @@ class thunk
                                           xArgs&&...>;
 
   private:
-    shptr<void> m_obj;
-    vfptr<void*, xArgs&&...> m_func;
-    void* m_padding;
+    ::rocket::refcnt_ptr<::asteria::Rcbase> m_obj;
+    union {
+      vfptr<xArgs...> m_pfn;
+      vfptr<::asteria::Rcbase*, xArgs&&...> m_ofn;
+    };
 
   public:
-    // Points this thunk to `obj`, with its type erased.
+    // Stores a pointer to `fptr` directly, without allocating memory.
+    explicit constexpr thunk(void fptr(xArgs...)) noexcept
+      : m_obj(), m_pfn(fptr)
+      { }
+
+    // Points this thunk to a copy of `obj`, with its type erased.
     template<typename xReal,
     ROCKET_ENABLE_IF(is_viable<xReal>::value),
     ROCKET_DISABLE_IF(::std::is_constructible<thunk, xReal&&>::value)>
     explicit thunk(xReal&& obj)
-      : m_obj(new_sh<typename ::std::decay<xReal>::type>(forward<xReal>(obj))),
-        m_func([](void* p, xArgs&&... args) -> void
-          { ::std::invoke(static_cast<typename ::std::decay<xReal>::type*>(p),
-                          forward<xArgs>(args)...);  })
-      { }
+      {
+        struct Container : ::asteria::Rcbase
+          {
+            typename ::std::decay<xReal>::type ofn;
 
-    // Stores a pointer to `fptr` directly, without allocating memory.
-    explicit thunk(void fptr(xArgs...)) noexcept
-      : m_obj(shptr<int>(), reinterpret_cast<void*>(fptr)),
-        m_func(nullptr)
-      { }
+            explicit Container(xReal&& xobj) : ofn(forward<xReal>(xobj))  { }
+            Container(const Container&) = delete;
+            Container& operator=(const Container&) & = delete;
+          };
+
+        this->m_obj.reset(new Container(forward<xReal>(obj)));
+        this->m_ofn = [](::asteria::Rcbase* b, xArgs&&... args)
+            { static_cast<Container*>(b)->ofn(forward<xArgs>(args)...);  };
+      }
 
     // Performs a virtual call to the target object.
     void
     operator()(xArgs... args) const
       {
-        if(this->m_func)
-          this->m_func(this->m_obj.get(), forward<xArgs>(args)...);
+        if(!this->m_obj)
+          this->m_pfn(forward<xArgs>(args)...);
         else
-          reinterpret_cast<void (*)(xArgs...)>(this->m_obj.get()) (
-                                                 forward<xArgs>(args)...);
+          this->m_ofn(this->m_obj.get(), forward<xArgs>(args)...);
       }
   };
 
