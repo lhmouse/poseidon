@@ -12,8 +12,8 @@ class thunk
   {
   public:
     template<typename xReal>
-    using is_viable = ::std::is_invocable<typename ::std::decay<xReal>::type&,
-                                          xArgs&&...>;
+    using is_viable = ::std::is_invocable<
+                typename ::std::decay<xReal>::type&, xArgs&&...>;
 
   private:
     ::rocket::refcnt_ptr<::asteria::Rcbase> m_obj;
@@ -23,36 +23,67 @@ class thunk
     };
 
   public:
-    // Stores a pointer to `fptr` directly, without allocating memory.
+    constexpr thunk() noexcept
+      : m_obj(), m_pfn()
+      { }
+
     explicit constexpr thunk(void fptr(xArgs...)) noexcept
       : m_obj(), m_pfn(fptr)
       { }
 
-    // Points this thunk to a copy of `obj`, with its type erased.
+    thunk(const thunk& other) noexcept
+      : m_obj(other.m_obj), m_pfn(other.m_pfn)
+      { }
+
+    thunk(thunk&& other) noexcept
+      : m_obj(move(other.m_obj)), m_pfn(exchange(other.m_pfn))
+      { }
+
+    explicit constexpr operator bool() const noexcept
+      { return this->m_pfn != nullptr;  }
+
     template<typename xReal,
     ROCKET_ENABLE_IF(is_viable<xReal>::value),
-    ROCKET_DISABLE_IF(::std::is_base_of<thunk,
-        typename ::std::remove_reference<xReal>::type>::value)>
+    ROCKET_DISABLE_SELF(thunk, xReal)>
     explicit thunk(xReal&& obj)
       {
         struct Container : ::asteria::Rcbase
           {
             typename ::std::decay<xReal>::type ofn;
 
-            explicit Container(xReal&& xobj) : ofn(forward<xReal>(xobj))  { }
+            Container(xReal&& xobj) : ofn(forward<xReal>(xobj))  { }
             Container(const Container&) = delete;
             Container& operator=(const Container&) & = delete;
           };
 
         this->m_obj.reset(new Container(forward<xReal>(obj)));
         this->m_ofn = [](::asteria::Rcbase* b, xArgs&&... args)
-            { static_cast<Container*>(b)->ofn(forward<xArgs>(args)...);  };
+          { static_cast<Container*>(b)->ofn(forward<xArgs>(args)...);  };
       }
 
-    // Performs a virtual call to the target object.
+    thunk&
+    operator=(const thunk& other) & noexcept
+      {
+        this->m_obj = other.m_obj;
+        this->m_pfn = other.m_pfn;
+        return *this;
+      }
+
+    thunk&
+    operator=(thunk&& other) & noexcept
+      {
+        this->m_obj = move(other.m_obj);
+        this->m_pfn = exchange(other.m_pfn);
+        return *this;
+      }
+
     void
     operator()(xArgs... args) const
       {
+        if(!this->m_pfn)
+          ::rocket::sprintf_and_throw<::std::invalid_argument>(
+                     "thunk: Attempt to call a null function object");
+
         if(!this->m_obj)
           this->m_pfn(forward<xArgs>(args)...);
         else
