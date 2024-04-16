@@ -27,8 +27,8 @@ class thunk
       : m_obj(), m_pfn()
       { }
 
-    explicit constexpr thunk(void fptr(xArgs...)) noexcept
-      : m_obj(), m_pfn(fptr)
+    explicit constexpr thunk(vfptr<xArgs...> pfn) noexcept
+      : m_obj(), m_pfn(pfn)
       { }
 
     thunk(const thunk& other) noexcept
@@ -38,9 +38,6 @@ class thunk
     thunk(thunk&& other) noexcept
       : m_obj(move(other.m_obj)), m_pfn(exchange(other.m_pfn))
       { }
-
-    explicit constexpr operator bool() const noexcept
-      { return this->m_pfn != nullptr;  }
 
     template<typename xReal,
     ROCKET_ENABLE_IF(is_viable<xReal>::value),
@@ -77,12 +74,16 @@ class thunk
         return *this;
       }
 
+    explicit constexpr
+    operator bool() const noexcept
+      { return this->m_pfn != nullptr;  }
+
     void
     operator()(xArgs... args) const
       {
         if(!this->m_pfn)
           ::rocket::sprintf_and_throw<::std::invalid_argument>(
-                     "thunk: Attempt to call a null function object");
+                       "thunk: Attempt to call a null function");
 
         if(!this->m_obj)
           this->m_pfn(forward<xArgs>(args)...);
