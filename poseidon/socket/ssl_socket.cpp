@@ -160,8 +160,7 @@ do_abstract_socket_on_readable()
 #endif  // OpenSSL 3.0
 
         POSEIDON_LOG_ERROR((
-            "Failed to read SSL socket: $3",
-            "[last syscall error: ${errno:full}]",
+            "Failed to read SSL socket: $3: ${errno:full}]",
             "[SSL socket `$1` (class `$2`)]"),
             this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
 
@@ -227,8 +226,7 @@ do_abstract_socket_on_writable()
         return;
 
       POSEIDON_LOG_ERROR((
-          "Failed to perform SSL handshake: $3",
-          "[last syscall error: ${errno:full}]",
+          "Failed to perform SSL handshake: $3: ${errno:full}]",
           "[SSL socket `$1` (class `$2`)]"),
           this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
 
@@ -251,8 +249,7 @@ do_abstract_socket_on_writable()
           break;
 
         POSEIDON_LOG_ERROR((
-            "Failed to write SSL socket: $3",
-            "[last syscall error: ${errno:full}]",
+            "Failed to write SSL socket: $3: ${errno:full}]",
             "[SSL socket `$1` (class `$2`)]"),
             this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
 
