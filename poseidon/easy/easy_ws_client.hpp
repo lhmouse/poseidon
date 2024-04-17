@@ -24,10 +24,8 @@ class Easy_WS_Client
   private:
     thunk_type m_thunk;
 
-    shptr<DNS_Connect_Task> m_dns_task;
-    struct X_Event_Queue;
-    shptr<X_Event_Queue> m_queue;
-    shptr<WS_Client_Session> m_session;
+    struct X_Session_Table;
+    shptr<X_Session_Table> m_sessions;
 
   public:
     // Constructs a client. The argument shall be an invocable object taking
@@ -65,43 +63,9 @@ class Easy_WS_Client
     void
     connect(chars_view addr);
 
-    // Destroys the current connection without graceful shutdown. This function
-    // should only be called after all data from the server have been read and
-    // processed properly. If graceful shutdown is desired, `ws_shut_down()`
-    // shall be called first.
+    // Shuts down all connections.
     void
-    close() noexcept;
-
-    // Gets the connection session object.
-    shptrR<WS_Client_Session>
-    session_opt() const noexcept
-      { return this->m_session;  }
-
-    // Gets the local address of this client for outgoing data. In case of an
-    // error, `ipv6_unspecified` is returned.
-    ROCKET_PURE
-    const IPv6_Address&
-    local_address() const noexcept;
-
-    // Gets the remote or connected address of this client for outgoing data. In
-    // case of errors, `ipv6_unspecified` is returned.
-    ROCKET_PURE
-    const IPv6_Address&
-    remote_address() const noexcept;
-
-    // Sends a data message or control frame to the other peer. `opcode` indicates
-    // the type of the message.
-    // If this function throws an exception, there is no effect.
-    // This function is thread-safe.
-    bool
-    ws_send(Easy_WS_Event opcode, chars_view data);
-
-    // Sends a CLOSE frame with an optional error message, then shuts down the
-    // connection. The reason string will be truncated to 123 bytes if it's too
-    // long.
-    // This function is thread-safe.
-    bool
-    ws_shut_down(uint16_t status = 1000, chars_view reason = "") noexcept;
+    close_all() noexcept;
   };
 
 }  // namespace poseidon

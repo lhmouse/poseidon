@@ -7,12 +7,19 @@
 #include "../poseidon/utils.hpp"
 using namespace ::poseidon;
 
+static shptr<WS_Client_Session> my_client_session;
+
 static Easy_WS_Client my_client(
   // callback
   *[](shptrR<WS_Client_Session> session, Abstract_Fiber& fiber, Easy_WS_Event event,
       linear_buffer&& data)
   {
     (void) fiber;
+
+    if(event != easy_ws_close)
+      my_client_session = session;
+    else
+      my_client_session = nullptr;
 
     switch(event)
       {
@@ -51,7 +58,7 @@ static Easy_Timer my_timer(
     (void) now;
     static uint32_t state;
 
-    if(my_client.session_opt() == nullptr)
+    if(my_client_session == nullptr)
       state = 0;
     else
       state ++;
@@ -69,7 +76,7 @@ static Easy_Timer my_timer(
       case 1:
         {
           const char data[] = "some text data";
-          my_client.ws_send(easy_ws_text, data);
+          my_client_session->ws_send(easy_ws_text, data);
           POSEIDON_LOG_DEBUG(("example WS client sent TEXT frame: $1"), data);
         }
         break;
@@ -77,7 +84,7 @@ static Easy_Timer my_timer(
       case 2:
         {
           const char data[] = "some binary data";
-          my_client.ws_send(easy_ws_binary, data);
+          my_client_session->ws_send(easy_ws_binary, data);
           POSEIDON_LOG_DEBUG(("example WS client sent BINARY frame: $1"), data);
         }
         break;
@@ -99,7 +106,7 @@ static Easy_Timer my_timer(
           header.encode(fmt);
           header.mask_payload(data1, sizeof(data1) - 1);
           fmt.putn(data1, sizeof(data1) - 1);
-          my_client.session_opt()->tcp_send(fmt);
+          my_client_session->tcp_send(fmt);
 
           // nested PING
           header.fin = 1;
@@ -111,7 +118,7 @@ static Easy_Timer my_timer(
           header.encode(fmt);
           header.mask_payload(ping1, sizeof(ping1) - 1);
           fmt.putn(ping1, sizeof(ping1) - 1);
-          my_client.session_opt()->tcp_send(fmt);
+          my_client_session->tcp_send(fmt);
 
           // fragment 2
           header.fin = 0;
@@ -123,7 +130,7 @@ static Easy_Timer my_timer(
           header.encode(fmt);
           header.mask_payload(data2, sizeof(data2) - 1);
           fmt.putn(data2, sizeof(data2) - 1);
-          my_client.session_opt()->tcp_send(fmt);
+          my_client_session->tcp_send(fmt);
 
           // fragment 3
           header.fin = 1;
@@ -135,7 +142,7 @@ static Easy_Timer my_timer(
           header.encode(fmt);
           header.mask_payload(data3, sizeof(data3) - 1);
           fmt.putn(data3, sizeof(data3) - 1);
-          my_client.session_opt()->tcp_send(fmt);
+          my_client_session->tcp_send(fmt);
         }
         break;
 
@@ -156,7 +163,7 @@ static Easy_Timer my_timer(
           header.encode(fmt);
           header.mask_payload(data1, sizeof(data1) - 1);
           fmt.putn(data1, sizeof(data1) - 1);
-          my_client.session_opt()->tcp_send(fmt);
+          my_client_session->tcp_send(fmt);
 
           // fragment 2
           header.fin = 0;
@@ -168,7 +175,7 @@ static Easy_Timer my_timer(
           header.encode(fmt);
           header.mask_payload(data2, sizeof(data2) - 1);
           fmt.putn(data2, sizeof(data2) - 1);
-          my_client.session_opt()->tcp_send(fmt);
+          my_client_session->tcp_send(fmt);
 
           // nested PING
           header.fin = 1;
@@ -180,7 +187,7 @@ static Easy_Timer my_timer(
           header.encode(fmt);
           header.mask_payload(ping1, sizeof(ping1) - 1);
           fmt.putn(ping1, sizeof(ping1) - 1);
-          my_client.session_opt()->tcp_send(fmt);
+          my_client_session->tcp_send(fmt);
 
           // fragment 3
           header.fin = 1;
@@ -192,14 +199,13 @@ static Easy_Timer my_timer(
           header.encode(fmt);
           header.mask_payload(data3, sizeof(data3) - 1);
           fmt.putn(data3, sizeof(data3) - 1);
-          my_client.session_opt()->tcp_send(fmt);
+          my_client_session->tcp_send(fmt);
         }
         break;
 
       default:
         POSEIDON_LOG_DEBUG(("example WS client shutting down"));
-        my_client.ws_shut_down(3456, "bye");
-        my_client.close();
+        my_client_session->ws_shut_down(3456, "bye");
       }
   });
 

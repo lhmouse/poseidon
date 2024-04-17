@@ -12,36 +12,40 @@
 namespace poseidon {
 namespace {
 
-struct Event_Queue
+struct Session_Table
   {
-    // read-only fields; no locking needed
-    wkptr<WS_Client_Session> wsession;
-    cacheline_barrier xcb_1;
-
-    // fiber-private fields; no locking needed
-    linear_buffer data_stream;
-    cacheline_barrier xcb_2;
-
-    // shared fields between threads
-    struct Event
+    struct Event_Queue
       {
-        Easy_WS_Event type;
-        linear_buffer data;
+        // read-only fields; no locking needed
+        shptr<WS_Client_Session> session;
+        shptr<DNS_Connect_Task> dns_task;
+        cacheline_barrier xcb_1;
+
+        // shared fields between threads
+        struct Event
+          {
+            Easy_WS_Event type;
+            linear_buffer data;
+          };
+
+        deque<Event> events;
+        bool fiber_active = false;
       };
 
     mutable plain_mutex mutex;
-    deque<Event> events;
-    bool fiber_active = false;
+    unordered_map<const volatile WS_Client_Session*, Event_Queue> session_map;
   };
 
 struct Final_Fiber final : Abstract_Fiber
   {
     Easy_WS_Client::thunk_type m_thunk;
-    wkptr<Event_Queue> m_wqueue;
+    wkptr<Session_Table> m_wsessions;
+    const volatile WS_Client_Session* m_refptr;
 
-    Final_Fiber(const Easy_WS_Client::thunk_type& thunk, shptrR<Event_Queue> queue)
+    Final_Fiber(const Easy_WS_Client::thunk_type& thunk, shptrR<Session_Table> sessions,
+                const volatile WS_Client_Session* refptr)
       :
-        m_thunk(thunk), m_wqueue(queue)
+        m_thunk(thunk), m_wsessions(sessions), m_refptr(refptr)
       { }
 
     virtual
@@ -51,27 +55,39 @@ struct Final_Fiber final : Abstract_Fiber
         for(;;) {
           // The event callback may stop this client, so we have to check for
           // expiry in every iteration.
-          auto queue = this->m_wqueue.lock();
-          if(!queue)
-            return;
-
-          auto session = queue->wsession.lock();
-          if(!session)
+          auto sessions = this->m_wsessions.lock();
+          if(!sessions)
             return;
 
           // Pop an event and invoke the user-defined callback here in the
           // main thread. Exceptions are ignored.
-          plain_mutex::unique_lock lock(queue->mutex);
+          plain_mutex::unique_lock lock(sessions->mutex);
 
-          if(queue->events.empty()) {
+          auto session_iter = sessions->session_map.find(this->m_refptr);
+          if(session_iter == sessions->session_map.end())
+            return;
+
+          if(session_iter->second.events.empty()) {
             // Terminate now.
-            queue->fiber_active = false;
+            session_iter->second.fiber_active = false;
             return;
           }
 
+          // After `sessions->mutex` is unlocked, other threads may modify
+          // `sessions->session_map` and invalidate all iterators, so maintain a
+          // reference outside it for safety.
+          auto queue = &(session_iter->second);
           ROCKET_ASSERT(queue->fiber_active);
+          auto session = queue->session;
           auto event = move(queue->events.front());
           queue->events.pop_front();
+
+          if(ROCKET_UNEXPECT(event.type == easy_ws_close)) {
+            // This will be the last event on this session.
+            queue = nullptr;
+            sessions->session_map.erase(session_iter);
+          }
+          session_iter = sessions->session_map.end();
           lock.unlock();
 
           try {
@@ -80,7 +96,7 @@ struct Final_Fiber final : Abstract_Fiber
           }
           catch(exception& stdex) {
             // Shut the connection down with a message.
-            POSEIDON_LOG_ERROR(("Unhandled exception thrown from easy TCP client: $1"), stdex);
+            POSEIDON_LOG_ERROR(("Unhandled exception thrown from easy WS client: $1"), stdex);
             session->ws_shut_down(1015);
           }
         }
@@ -90,36 +106,42 @@ struct Final_Fiber final : Abstract_Fiber
 struct Final_Session final : WS_Client_Session
   {
     Easy_WS_Client::thunk_type m_thunk;
-    wkptr<Event_Queue> m_wqueue;
+    wkptr<Session_Table> m_wsessions;
 
-    Final_Session(const Easy_WS_Client::thunk_type& thunk, shptrR<Event_Queue> queue,
+    Final_Session(const Easy_WS_Client::thunk_type& thunk, shptrR<Session_Table> sessions,
                   cow_stringR host, cow_stringR path, cow_stringR query)
       :
-        WS_Client_Session(host, path, query), m_thunk(thunk), m_wqueue(queue)
+        TCP_Socket(), WS_Client_Session(host, path, query),
+        m_thunk(thunk), m_wsessions(sessions)
       { }
 
     void
-    do_push_event_common(Event_Queue::Event&& event)
+    do_push_event_common(Session_Table::Event_Queue::Event&& event)
       {
-        auto queue = this->m_wqueue.lock();
-        if(!queue)
+        auto sessions = this->m_wsessions.lock();
+        if(!sessions)
           return;
 
         // We are in the network thread here.
-        plain_mutex::unique_lock lock(queue->mutex);
+        plain_mutex::unique_lock lock(sessions->mutex);
+
+        auto session_iter = sessions->session_map.find(this);
+        if(session_iter == sessions->session_map.end())
+          return;
 
         try {
-          if(!queue->fiber_active) {
+          if(!session_iter->second.fiber_active) {
             // Create a new fiber, if none is active. The fiber shall only reset
             // `m_fiber_private_buffer` if no event is pending.
-            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, queue));
-            queue->fiber_active = true;
+            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, sessions, this));
+            session_iter->second.fiber_active = true;
           }
 
-          queue->events.push_back(move(event));
+          session_iter->second.events.push_back(move(event));
         }
         catch(exception& stdex) {
           POSEIDON_LOG_ERROR(("Could not push network event: $1"), stdex);
+          sessions->session_map.erase(session_iter);
           this->quick_close();
         }
       }
@@ -128,7 +150,7 @@ struct Final_Session final : WS_Client_Session
     void
     do_on_ws_connected(cow_string&& caddr) override
       {
-        Event_Queue::Event event;
+        Session_Table::Event_Queue::Event event;
         event.type = easy_ws_open;
         event.data.putn(caddr.data(), caddr.size());
         this->do_push_event_common(move(event));
@@ -138,7 +160,7 @@ struct Final_Session final : WS_Client_Session
     void
     do_on_ws_message_finish(WebSocket_OpCode opcode, linear_buffer&& data) override
       {
-        Event_Queue::Event event;
+        Session_Table::Event_Queue::Event event;
 
         if(opcode == websocket_text)
           event.type = easy_ws_text;
@@ -157,7 +179,7 @@ struct Final_Session final : WS_Client_Session
     void
     do_on_ws_close(uint16_t status, chars_view reason) override
       {
-        Event_Queue::Event event;
+        Session_Table::Event_Queue::Event event;
         event.type = easy_ws_close;
 
         tinyfmt_ln fmt;
@@ -171,7 +193,7 @@ struct Final_Session final : WS_Client_Session
 }  // namespace
 
 POSEIDON_HIDDEN_X_STRUCT(Easy_WS_Client,
-  Event_Queue);
+  Session_Table);
 
 Easy_WS_Client::
 ~Easy_WS_Client()
@@ -190,73 +212,41 @@ connect(chars_view addr)
     if(parse_network_reference(caddr, addr) != addr.n)
       POSEIDON_THROW(("Invalid connect address `$1`"), addr);
 
+    if(caddr.port.n == 0)
+      POSEIDON_THROW(("No port specified in address `$1`"), addr);
+
     // Disallow superfluous components.
     if(caddr.fragment.p != nullptr)
-      POSEIDON_THROW(("URI fragments shall not be specified in connect address `$1`"), addr);
+      POSEIDON_THROW(("URI fragments shall not be specified in address `$1`"), addr);
+
+    // Pre-allocate necessary objects. The entire operation will be atomic.
+    if(!this->m_sessions)
+      this->m_sessions = new_sh<X_Session_Table>();
+
+    tinyfmt_str host_fmt;
+    host_fmt << caddr.host << ':' << caddr.port_num;
+
+    auto session = new_sh<Final_Session>(this->m_thunk, this->m_sessions,
+             host_fmt.extract_string(), cow_string(caddr.path), cow_string(caddr.query));
+
+    auto dns_task = new_sh<DNS_Connect_Task>(network_driver, session,
+                                 cow_string(caddr.host), caddr.port_num);
 
     // Initiate the connection.
-    auto queue = new_sh<X_Event_Queue>();
-    auto session = new_sh<Final_Session>(this->m_thunk, queue,
-                      format_string("$1:$2", caddr.host, caddr.port_num),
-                      cow_string(caddr.path), cow_string(caddr.query));
-
-    queue->wsession = session;
-    auto dns_task = new_sh<DNS_Connect_Task>(network_driver, session,
-                       cow_string(caddr.host), caddr.port_num);
+    plain_mutex::unique_lock lock(this->m_sessions->mutex);
 
     task_executor.enqueue(dns_task);
-    this->m_dns_task = move(dns_task);
-    this->m_queue = move(queue);
-    this->m_session = move(session);
+    auto r = this->m_sessions->session_map.try_emplace(session.get());
+    ROCKET_ASSERT(r.second);
+    r.first->second.session = session;
+    r.first->second.dns_task = dns_task;
   }
 
 void
 Easy_WS_Client::
-close() noexcept
+close_all() noexcept
   {
-    this->m_dns_task = nullptr;
-    this->m_queue = nullptr;
-    this->m_session = nullptr;
-  }
-
-const IPv6_Address&
-Easy_WS_Client::
-local_address() const noexcept
-  {
-    if(!this->m_session)
-      return ipv6_invalid;
-
-    return this->m_session->local_address();
-  }
-
-const IPv6_Address&
-Easy_WS_Client::
-remote_address() const noexcept
-  {
-    if(!this->m_session)
-      return ipv6_invalid;
-
-    return this->m_session->remote_address();
-  }
-
-bool
-Easy_WS_Client::
-ws_send(Easy_WS_Event opcode, chars_view data)
-  {
-    if(!this->m_session)
-      return false;
-
-    return this->m_session->ws_send(opcode, data);
-  }
-
-bool
-Easy_WS_Client::
-ws_shut_down(uint16_t status, chars_view reason) noexcept
-  {
-    if(!this->m_session)
-      return false;
-
-    return this->m_session->ws_shut_down(status, reason);
+    this->m_sessions = nullptr;
   }
 
 }  // namespace poseidon
