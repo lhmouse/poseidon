@@ -592,7 +592,7 @@ main(int argc, char** argv)
     do_parse_command_line(argc, argv);
     do_set_working_directory();
     main_config.reload();
-    logger.reload(main_config.copy());
+    logger.reload(main_config.copy(), cmdline.verbose);
     do_daemonize_start();
     POSEIDON_LOG_INFO(("Starting up: $1"), PACKAGE_STRING);
 

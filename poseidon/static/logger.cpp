@@ -12,12 +12,12 @@ namespace {
 
 struct Level_Config
   {
-    char tag[16];
-    cow_string color;
-    cow_string file;
+    char tag[13];
     bool p_stdout = false;
     bool p_stderr = false;
     bool trivial = false;
+    cow_string color;
+    cow_string file;
   };
 
 struct Message
@@ -273,7 +273,7 @@ Logger::
 
 void
 Logger::
-reload(const Config_File& conf_file)
+reload(const Config_File& conf_file, bool verbose)
   {
     // Hold the logging thread.
     recursive_mutex::unique_lock io_sync_lock(this->m_io_mutex);
@@ -288,6 +288,11 @@ reload(const Config_File& conf_file)
     do_load_level_config(levels.mut(3), conf_file, "info");
     do_load_level_config(levels.mut(4), conf_file, "debug");
     do_load_level_config(levels.mut(5), conf_file, "trace");
+
+    if(verbose)
+      for(size_t k = 0;  k != levels.size();  ++k)
+        if(levels[k].p_stderr == false)
+          levels.mut(k).p_stdout = true;
 
     uint32_t level_bits = 0;
     for(size_t k = 0;  k != levels.size();  ++k)
