@@ -232,8 +232,8 @@ connect(chars_view addr)
       this->m_sessions = new_sh<X_Session_Table>();
 
     auto socket = new_sh<Final_Socket>(this->m_thunk, this->m_sessions);
-    auto dns_task = new_sh<DNS_Connect_Task>(network_driver, socket,
-                                 cow_string(caddr.host), caddr.port_num);
+    auto dns_task = new_sh<DNS_Connect_Task>(network_driver,
+                       socket, cow_string(caddr.host), caddr.port_num);
 
     // Initiate the connection.
     plain_mutex::unique_lock lock(this->m_sessions->mutex);

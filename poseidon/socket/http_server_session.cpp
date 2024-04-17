@@ -212,12 +212,6 @@ http_response(HTTP_Response_Headers&& resp, chars_view data)
           "[HTTP server session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    // Erase bad headers.
-    for(size_t hindex = 0;  hindex < resp.headers.size();  hindex ++)
-      if(ascii_ci_equal(resp.headers.at(hindex).first, "Content-Length")
-         || ascii_ci_equal(resp.headers.at(hindex).first, "Transfer-Encoding"))
-        resp.headers.erase(hindex --);
-
     // Some responses are required to have no payload payload and require no
     // `Content-Length` header.
     if((resp.status <= 199) || (resp.status == 204) || (resp.status == 304))
@@ -240,11 +234,6 @@ http_chunked_response_start(HTTP_Response_Headers&& resp)
           "[HTTP server session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    // Erase bad headers.
-    for(size_t hindex = 0;  hindex < resp.headers.size();  hindex ++)
-      if(ascii_ci_equal(resp.headers.at(hindex).first, "Transfer-Encoding"))
-        resp.headers.erase(hindex --);
-
     // Write a chunked header.
     resp.headers.emplace_back(&"Transfer-Encoding", &"chunked");
 
@@ -263,7 +252,7 @@ http_chunked_response_send(chars_view data)
 
     // Ignore empty chunks, which would mark the end of the payload.
     if(data.n == 0)
-      return this->socket_state() <= socket_established;
+      return this->tcp_send("");
 
     // Compose a chunk and send it as a whole. The length of this chunk is
     // written as a hexadecimal integer without the `0x` prefix.

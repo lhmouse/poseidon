@@ -56,7 +56,7 @@ do_on_tcp_connected()
     req.headers.emplace_back(&"Host", this->m_host);
     req.uri_path = this->m_path;
     req.uri_query = this->m_query;
-    this->http_request(move(req), "");
+    this->do_http_raw_request(req, "");
   }
 
 void

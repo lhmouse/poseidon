@@ -162,6 +162,13 @@ do_http_raw_request(const HTTP_Request_Headers& req, chars_view data)
     return sent;
   }
 
+void
+HTTP_Client_Session::
+http_set_default_host(cow_stringR host) noexcept
+  {
+    this->m_default_host = host;
+  }
+
 bool
 HTTP_Client_Session::
 http_request(HTTP_Request_Headers&& req, chars_view data)
@@ -172,11 +179,9 @@ http_request(HTTP_Request_Headers&& req, chars_view data)
           "[HTTP client session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    // Erase bad headers.
-    for(size_t hindex = 0;  hindex < req.headers.size();  hindex ++)
-      if(ascii_ci_equal(req.headers.at(hindex).first, "Content-Length")
-          || ascii_ci_equal(req.headers.at(hindex).first, "Transfer-Encoding"))
-        req.headers.erase(hindex --);
+    // Set `Host:` as per HTTP/1.1.
+    if(!req.is_proxy && !this->m_default_host.empty())
+      req.headers.emplace_back(&"Host", this->m_default_host);
 
     // By default, request messages do not have payload bodies. Hence the length
     // is only necessary if the payload is non-empty.
@@ -196,10 +201,9 @@ http_chunked_request_start(HTTP_Request_Headers&& req)
           "[HTTP client session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    // Erase bad headers.
-    for(size_t hindex = 0;  hindex < req.headers.size();  hindex ++)
-      if(ascii_ci_equal(req.headers.at(hindex).first, "Transfer-Encoding"))
-        req.headers.erase(hindex --);
+    // Set `Host:` as per HTTP/1.1.
+    if(!req.is_proxy && !this->m_default_host.empty())
+      req.headers.emplace_back(&"Host", this->m_default_host);
 
     // Write a chunked header.
     req.headers.emplace_back(&"Transfer-Encoding", &"chunked");
@@ -219,7 +223,7 @@ http_chunked_request_send(chars_view data)
 
     // Ignore empty chunks, which would have marked the end of the payload.
     if(data.n == 0)
-      return this->socket_state() <= socket_established;
+      return this->tcp_send("");
 
     // Compose a chunk and send it as a whole. The length of this chunk is
     // written as a hexadecimal integer without the `0x` prefix.

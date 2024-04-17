@@ -17,6 +17,7 @@ class HTTP_Client_Session
   {
   private:
     HTTP_Response_Parser m_resp_parser;
+    cow_string m_default_host;
     atomic_relaxed<bool> m_upgrade_ack;
 
   public:
@@ -89,6 +90,15 @@ class HTTP_Client_Session
     HTTP_Client_Session(const HTTP_Client_Session&) = delete;
     HTTP_Client_Session& operator=(const HTTP_Client_Session&) & = delete;
     virtual ~HTTP_Client_Session();
+
+    // If no `Host:` headers is supplied for a non-proxy request, use this
+    // string.
+    cow_stringR
+    http_default_host() const noexcept
+      { return this->m_default_host;  }
+
+    void
+    http_set_default_host(cow_stringR host) noexcept;
 
     // Sends a simple request, possibly with a complete payload. Callers should
     // not supply `Content-Length` or `Transfer-Encoding` headers, as they

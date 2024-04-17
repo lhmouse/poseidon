@@ -56,7 +56,7 @@ do_on_ssl_connected()
     req.headers.emplace_back(&"Host", this->m_host);
     req.uri_path = this->m_path;
     req.uri_query = this->m_query;
-    this->https_request(move(req), "");
+    this->do_https_raw_request(req, "");
   }
 
 void

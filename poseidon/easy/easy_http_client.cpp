@@ -227,8 +227,9 @@ connect(chars_view addr)
       this->m_sessions = new_sh<X_Session_Table>();
 
     auto session = new_sh<Final_Session>(this->m_thunk, this->m_sessions);
-    auto dns_task = new_sh<DNS_Connect_Task>(network_driver, session,
-                                 cow_string(caddr.host), caddr.port_num);
+    session->http_set_default_host(format_string("$1:$2", caddr.host, caddr.port_num));
+    auto dns_task = new_sh<DNS_Connect_Task>(network_driver,
+                       session, cow_string(caddr.host), caddr.port_num);
 
     // Initiate the connection.
     plain_mutex::unique_lock lock(this->m_sessions->mutex);
