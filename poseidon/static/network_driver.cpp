@@ -412,60 +412,75 @@ thread_loop()
     socket->m_io_driver = this;
     lock.unlock();
 
-    if(event.events & (EPOLLHUP | EPOLLERR)) {
-      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLHUP | EPOLLERR"), socket, typeid(*socket));
+    // `EPOLLOUT` must be the very first event, as it also delivers connection
+    // establishment notifications.
+    if(event.events & EPOLLOUT)
       try {
+        POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): OUT"), socket, typeid(*socket));
+        socket->do_abstract_socket_on_writable();
+      }
+      catch(exception& stdex) {
+        POSEIDON_LOG_ERROR(("`do_abstract_socket_on_writable()` error: $1"), stdex);
+        socket->quick_close();
+        event.events |= EPOLLHUP;
+      }
+
+    if(event.events & EPOLLIN)
+      try {
+        POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): IN"), socket, typeid(*socket));
+        socket->do_abstract_socket_on_readable();
+      }
+      catch(exception& stdex) {
+        POSEIDON_LOG_ERROR(("`do_abstract_socket_on_readable()` error: $1"), stdex);
+        socket->quick_close();
+        event.events |= EPOLLHUP;
+      }
+
+    if(event.events & EPOLLPRI)
+      try {
+        POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): PRI"), socket, typeid(*socket));
+        socket->do_abstract_socket_on_oob_readable();
+      }
+      catch(exception& stdex) {
+        POSEIDON_LOG_ERROR(("`do_abstract_socket_on_oob_readable()` error: $1"), stdex);
+        socket->quick_close();
+        event.events |= EPOLLHUP;
+      }
+
+    // If either `EPOLLHUP` or `EPOLLERR` is set, deliver a notification and
+    // then remove the socket.
+    if(event.events & (EPOLLHUP | EPOLLERR)) {
+      try {
+        POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): HUP | ERR"), socket, typeid(*socket));
         socket->m_state.store(socket_closed);
+
+        ::socklen_t optlen = sizeof(int);
         errno = 0;
-        if(event.events & EPOLLERR) {
-          ::socklen_t optlen = sizeof(int);
+        if(event.events & EPOLLERR)
           ::getsockopt(socket->m_fd, SOL_SOCKET, SO_ERROR, &errno, &optlen);
-        }
         socket->do_abstract_socket_on_closed();
       }
       catch(exception& stdex) {
-        POSEIDON_LOG_ERROR(("`do_abstract_socket_on_closed()` error: $1", "[socket class `$2`]"), stdex, typeid(*socket));
+        POSEIDON_LOG_ERROR(("`do_abstract_socket_on_closed()` error: $1"), stdex);
       }
-      socket->m_io_driver = (Network_Driver*) 123456789;
-      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): EPOLLHUP | EPOLLERR done"), socket, typeid(*socket));
 
       // Stop listening on the file descriptor. The socket object will be deleted
       // upon the next rehash operation.
       this->do_epoll_ctl(EPOLL_CTL_DEL, socket, 0);
+      socket->m_io_driver = (Network_Driver*) 123456789;
       return;
     }
 
-#define do_handle_epoll_event_(EPOLL_EVENT, target_function)  \
-    if(event.events & EPOLL_EVENT) {  \
-      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): " #EPOLL_EVENT), socket, typeid(*socket));  \
-      try {  \
-        socket->target_function();  \
-      }  \
-      catch(exception& stdex) {  \
-        POSEIDON_LOG_ERROR(("`" #target_function "()` error: $1", "[socket class `$2`]"), stdex, typeid(*socket));  \
-        socket->quick_close();  \
-        socket->m_io_driver = (Network_Driver*) 123456789;  \
-        return;  \
-      }  \
-      POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): " #EPOLL_EVENT " done"), socket, typeid(*socket));  \
-    }
+    // When there are too many pending bytes, as a safety measure, EPOLLIN
+    // notifications are disabled until some bytes can be transferred.
+    bool should_throttle = socket->m_io_write_queue.size() > throttle_size;
+    if(socket->m_io_throttled != should_throttle) {
+      socket->m_io_throttled = should_throttle;
 
-    // `EPOLLOUT` must be the very first event, as it also delivers connection
-    // establishment notifications.
-    do_handle_epoll_event_(EPOLLOUT, do_abstract_socket_on_writable)
-    do_handle_epoll_event_(EPOLLIN, do_abstract_socket_on_readable)
-    do_handle_epoll_event_(EPOLLPRI, do_abstract_socket_on_oob_readable)
-
-    if(socket->m_io_throttled != (socket->m_io_write_queue.size() > throttle_size)) {
-      // When there are too many outgoing bytes pending, mostly likely due to
-      // network instability, as a safety measure, EPOLLIN notifications are
-      // disabled until some bytes can be transferred.
-      socket->m_io_throttled ^= true;
-      this->do_epoll_ctl(EPOLL_CTL_MOD, socket, EPOLLOUT | socket->m_io_throttled * (EPOLLIN | EPOLLPRI | EPOLLET));
-
-      POSEIDON_LOG_INFO((
-          "Throttle socket `$1` (class `$2`): queue_size = `$3`, throttled = `$4`"),
-          socket, typeid(*socket), socket->m_io_write_queue.size(), socket->m_io_throttled);
+      uint32_t epoll_inflags = 0;
+      if(!should_throttle)
+        epoll_inflags |= EPOLLIN | EPOLLPRI | EPOLLET;
+      this->do_epoll_ctl(EPOLL_CTL_MOD, socket, EPOLLOUT | epoll_inflags);
     }
 
     POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`) I/O complete"), socket, typeid(*socket));
