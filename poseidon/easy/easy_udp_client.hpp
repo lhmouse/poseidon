@@ -16,7 +16,7 @@ class Easy_UDP_Client
     // This is also the prototype of callbacks for the constructor.
     using thunk_type =
       thunk<
-        shptrR<UDP_Socket>,  // client data socket
+        shptrR<UDP_Socket>,  // session
         Abstract_Fiber&,     // fiber for current callback
         IPv6_Address&&,    // address of incoming packet
         linear_buffer&&>;    // data of incoming packet

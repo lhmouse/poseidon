@@ -16,7 +16,7 @@ class Easy_HTTP_Client
     // This is also the prototype of callbacks for the constructor.
     using thunk_type =
       thunk<
-        shptrR<HTTP_Client_Session>,  // client data socket
+        shptrR<HTTP_Client_Session>,  // session
         Abstract_Fiber&,              // fiber for current callback
         Easy_HTTP_Event,              // event type; see comments above constructor
         HTTP_Response_Headers&&,      // response status code and headers

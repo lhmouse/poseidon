@@ -16,7 +16,7 @@ class Easy_HWS_Server
     // This is also the prototype of callbacks for the constructor.
     using thunk_type =
       thunk<
-        shptrR<WS_Server_Session>,  // server data socket
+        shptrR<WS_Server_Session>,  // session
         Abstract_Fiber&,            // fiber for current callback
         Easy_HWS_Event,              // event type; see comments above constructor
         linear_buffer&&>;           // message payload
@@ -24,8 +24,8 @@ class Easy_HWS_Server
   private:
     thunk_type m_thunk;
 
-    struct X_Client_Table;
-    shptr<X_Client_Table> m_client_table;
+    struct X_Session_Table;
+    shptr<X_Session_Table> m_sessions;
     shptr<Listen_Socket> m_socket;
 
   public:

@@ -16,7 +16,7 @@ class Easy_SSL_Client
     // This is also the prototype of callbacks for the constructor.
     using thunk_type =
       thunk<
-        shptrR<SSL_Socket>,  // client data socket
+        shptrR<SSL_Socket>,  // session
         Abstract_Fiber&,     // fiber for current callback
         Easy_Stream_Event,   // event type; see comments above constructor
         linear_buffer&,      // accumulative data that have been received

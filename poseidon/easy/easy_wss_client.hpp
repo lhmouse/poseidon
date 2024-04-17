@@ -16,7 +16,7 @@ class Easy_WSS_Client
     // This is also the prototype of callbacks for the constructor.
     using thunk_type =
       thunk<
-        shptrR<WSS_Client_Session>,  // client data socket
+        shptrR<WSS_Client_Session>,  // session
         Abstract_Fiber&,            // fiber for current callback
         Easy_WS_Event,              // event type; see comments above constructor
         linear_buffer&&>;           // message payload
