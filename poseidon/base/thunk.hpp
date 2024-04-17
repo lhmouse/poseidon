@@ -76,14 +76,16 @@ class thunk
 
     explicit constexpr
     operator bool() const noexcept
-      { return this->m_pfn != nullptr;  }
+      {
+        return this->m_pfn != nullptr;
+      }
 
     void
     operator()(xArgs... args) const
       {
         if(!this->m_pfn)
           ::rocket::sprintf_and_throw<::std::invalid_argument>(
-                       "thunk: Attempt to call a null function");
+                         "thunk: Attempt to call a null function");
 
         if(!this->m_obj)
           this->m_pfn(forward<xArgs>(args)...);
