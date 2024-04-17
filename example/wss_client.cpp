@@ -7,19 +7,12 @@
 #include "../poseidon/utils.hpp"
 using namespace ::poseidon;
 
-static shptr<WSS_Client_Session> my_client_session;
-
 static Easy_WSS_Client my_client(
   // callback
   *[](shptrR<WSS_Client_Session> session, Abstract_Fiber& fiber, Easy_WS_Event event,
       linear_buffer&& data)
   {
     (void) fiber;
-
-    if(event != easy_ws_close)
-      my_client_session = session;
-    else
-      my_client_session = nullptr;
 
     switch(event)
       {
@@ -56,7 +49,9 @@ static Easy_Timer my_timer(
     (void) timer;
     (void) fiber;
     (void) now;
+
     static uint32_t state;
+    static shptr<WSS_Client_Session> my_client_session;
 
     if(my_client_session == nullptr)
       state = 0;
@@ -206,6 +201,7 @@ static Easy_Timer my_timer(
       default:
         POSEIDON_LOG_DEBUG(("example WSS client shutting down"));
         my_client_session->wss_shut_down(3456, "bye");
+        my_client_session.reset();
       }
   });
 

@@ -7,19 +7,12 @@
 #include "../poseidon/utils.hpp"
 using namespace ::poseidon;
 
-static shptr<HTTP_Client_Session> my_client_session;
-
 static Easy_HTTP_Client my_client(
   // callback
   *[](shptrR<HTTP_Client_Session> session, Abstract_Fiber& fiber, Easy_HTTP_Event event,
       HTTP_Response_Headers&& resp, linear_buffer&& data)
   {
     (void) fiber;
-
-    if(event != easy_http_close)
-      my_client_session = session;
-    else
-      my_client_session = nullptr;
 
     switch(event)
       {
@@ -55,7 +48,9 @@ static Easy_Timer my_timer(
     (void) timer;
     (void) fiber;
     (void) now;
+
     static uint32_t state;
+    static shptr<HTTP_Client_Session> my_client_session;
 
     if(my_client_session == nullptr)
       state = 0;
@@ -106,6 +101,7 @@ static Easy_Timer my_timer(
       default:
         POSEIDON_LOG_ERROR(("example HTTP client shutting down"));
         my_client_session->quick_close();
+        my_client_session.reset();
       }
   });
 
