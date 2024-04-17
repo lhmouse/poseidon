@@ -7,12 +7,19 @@
 #include "../poseidon/utils.hpp"
 using namespace ::poseidon;
 
+static shptr<HTTP_Client_Session> my_client_session;
+
 static Easy_HTTP_Client my_client(
   // callback
   *[](shptrR<HTTP_Client_Session> session, Abstract_Fiber& fiber, Easy_HTTP_Event event,
       HTTP_Response_Headers&& resp, linear_buffer&& data)
   {
     (void) fiber;
+
+    if(event != easy_http_close)
+      my_client_session = session;
+    else
+      my_client_session = nullptr;
 
     switch(event)
       {
@@ -50,7 +57,7 @@ static Easy_Timer my_timer(
     (void) now;
     static uint32_t state;
 
-    if(my_client.session_opt() == nullptr)
+    if(my_client_session == nullptr)
       state = 0;
     else
       state ++;
@@ -68,9 +75,11 @@ static Easy_Timer my_timer(
       case 1:
         {
           HTTP_Request_Headers req;
+          ::strcpy(req.method, "GET");
           req.uri_path = &"/";
+          req.headers.emplace_back(&"Host", &"www.example.org");
           req.headers.emplace_back(&"Connection", &"keep-alive");
-          my_client.http_GET(move(req));
+          my_client_session->http_request(move(req), "");
           POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method, req.uri_path);
         }
         break;
@@ -78,8 +87,10 @@ static Easy_Timer my_timer(
       case 2:
         {
           HTTP_Request_Headers req;
+          ::strcpy(req.method, "POST");
           req.uri_path = &"/";
-          my_client.http_POST(move(req), "testdata");
+          req.headers.emplace_back(&"Host", &"www.example.org");
+          my_client_session->http_request(move(req), "testdata");
           POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method, req.uri_path);
         }
         break;
@@ -87,15 +98,17 @@ static Easy_Timer my_timer(
       case 3:
         {
           HTTP_Request_Headers req;
+          ::strcpy(req.method, "DELETE");
           req.uri_path = &"/";
-          my_client.http_DELETE(move(req));
+          req.headers.emplace_back(&"Host", &"www.example.org");
+          my_client_session->http_request(move(req), "");
           POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method, req.uri_path);
         }
         break;
 
       default:
         POSEIDON_LOG_ERROR(("example HTTP client shutting down"));
-        my_client.close();
+        my_client_session->quick_close();
       }
   });
 
