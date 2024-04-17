@@ -25,10 +25,8 @@ class Easy_TCP_Client
   private:
     thunk_type m_thunk;
 
-    shptr<DNS_Connect_Task> m_dns_task;
-    struct X_Event_Queue;
-    shptr<X_Event_Queue> m_queue;
-    shptr<TCP_Socket> m_socket;
+    struct X_Session_Table;
+    shptr<X_Session_Table> m_sessions;
 
   public:
     // Constructs a client. The argument shall be an invocable object taking
@@ -63,44 +61,9 @@ class Easy_TCP_Client
     void
     connect(chars_view addr);
 
-    // Destroys the current connection without graceful shutdown. This function
-    // should only be called after all data from the server have been read and
-    // processed properly. If graceful shutdown is desired, `tcp_shut_down()`
-    // shall be called first.
+    // Shuts down all connections.
     void
-    close() noexcept;
-
-    // Gets the connection object.
-    shptrR<TCP_Socket>
-    socket_opt() const noexcept
-      { return this->m_socket;  }
-
-    // Gets the local address of this client for outgoing data. In case of an
-    // error, `ipv6_unspecified` is returned.
-    ROCKET_PURE
-    const IPv6_Address&
-    local_address() const noexcept;
-
-    // Gets the remote or connected address of this client for outgoing data. In
-    // case of errors, `ipv6_unspecified` is returned.
-    ROCKET_PURE
-    const IPv6_Address&
-    remote_address() const noexcept;
-
-    // Enqueues some bytes for sending.
-    // If this function returns `true`, data will have been enqueued; however it
-    // is not guaranteed that they will arrive at the destination host. If this
-    // function returns `false`, the connection will have been closed.
-    // If this function throws an exception, there is no effect.
-    // This function is thread-safe.
-    bool
-    tcp_send(chars_view data);
-
-    // Shuts the socket down gracefully. Errors during the shutdown operation
-    // are ignored.
-    // This function is thread-safe.
-    bool
-    tcp_shut_down() noexcept;
+    close_all() noexcept;
   };
 
 }  // namespace poseidon
