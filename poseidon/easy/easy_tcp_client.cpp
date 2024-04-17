@@ -227,22 +227,19 @@ connect(chars_view addr)
     if(caddr.fragment.p != nullptr)
       POSEIDON_THROW(("URI fragments shall not be specified in address `$1`"), addr);
 
-    // Create the socket container if it hasn't been created.
-    auto sessions = this->m_sessions;
-    if(!sessions) {
-      sessions = new_sh<X_Session_Table>();
-      this->m_sessions = sessions;
-    }
+    // Pre-allocate necessary objects. The entire operation will be atomic.
+    if(!this->m_sessions)
+      this->m_sessions = new_sh<X_Session_Table>();
 
-    auto socket = new_sh<Final_Socket>(this->m_thunk, sessions);
+    auto socket = new_sh<Final_Socket>(this->m_thunk, this->m_sessions);
     auto dns_task = new_sh<DNS_Connect_Task>(network_driver, socket,
                                  cow_string(caddr.host), caddr.port_num);
 
     // Initiate the connection.
-    plain_mutex::unique_lock lock(sessions->mutex);
+    plain_mutex::unique_lock lock(this->m_sessions->mutex);
 
     task_executor.enqueue(dns_task);
-    auto r = sessions->session_map.try_emplace(socket.get());
+    auto r = this->m_sessions->session_map.try_emplace(socket.get());
     ROCKET_ASSERT(r.second);
     r.first->second.socket = socket;
     r.first->second.dns_task = dns_task;
