@@ -57,7 +57,7 @@ class Easy_HTTP_Client
     // Initiates a new connection to the given address. `addr` shall specify the
     // host name and (optional) port number. User names, paths, query parameters
     // or fragments are not allowed. If no port number is given, 80 is implied.
-    void
+    shptr<HTTP_Client_Session>
     connect(chars_view addr);
 
     // Shuts down all connections.

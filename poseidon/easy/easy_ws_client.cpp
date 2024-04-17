@@ -200,7 +200,7 @@ Easy_WS_Client::
   {
   }
 
-void
+shptr<WS_Client_Session>
 Easy_WS_Client::
 connect(chars_view addr)
   {
@@ -236,6 +236,7 @@ connect(chars_view addr)
     ROCKET_ASSERT(r.second);
     r.first->second.session = session;
     r.first->second.dns_task = dns_task;
+    return session;
   }
 
 void

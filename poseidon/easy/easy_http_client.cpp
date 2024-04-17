@@ -198,7 +198,7 @@ Easy_HTTP_Client::
   {
   }
 
-void
+shptr<HTTP_Client_Session>
 Easy_HTTP_Client::
 connect(chars_view addr)
   {
@@ -239,6 +239,7 @@ connect(chars_view addr)
     ROCKET_ASSERT(r.second);
     r.first->second.session = session;
     r.first->second.dns_task = dns_task;
+    return session;
   }
 
 void

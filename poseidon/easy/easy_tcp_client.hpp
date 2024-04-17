@@ -58,7 +58,7 @@ class Easy_TCP_Client
 
     // Initiates a new connection to the given address. `addr` shall specify the
     // host and port to connect, such as `localhost:12345`.
-    void
+    shptr<TCP_Socket>
     connect(chars_view addr);
 
     // Shuts down all connections.

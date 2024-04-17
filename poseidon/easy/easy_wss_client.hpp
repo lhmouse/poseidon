@@ -60,7 +60,7 @@ class Easy_WSS_Client
     // host name and (optional) port number to connect, and optional request path
     // and query parameters. User names or fragments are not allowed. If no port
     // number is given, 443 is implied.
-    void
+    shptr<WSS_Client_Session>
     connect(chars_view caddr);
 
     // Shuts down all connections.

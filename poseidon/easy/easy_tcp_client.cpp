@@ -204,7 +204,7 @@ Easy_TCP_Client::
   {
   }
 
-void
+shptr<TCP_Socket>
 Easy_TCP_Client::
 connect(chars_view addr)
   {
@@ -243,6 +243,7 @@ connect(chars_view addr)
     ROCKET_ASSERT(r.second);
     r.first->second.socket = socket;
     r.first->second.dns_task = dns_task;
+    return socket;
   }
 
 void
