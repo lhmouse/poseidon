@@ -144,6 +144,15 @@ clear() noexcept
 
 void
 HTTP_Response_Parser::
+deallocate() noexcept
+  {
+    ::rocket::exchange(this->m_headers.reason);
+    ::rocket::exchange(this->m_headers.headers);
+    ::rocket::exchange(this->m_payload);
+  }
+
+void
+HTTP_Response_Parser::
 parse_headers_from_stream(linear_buffer& data, bool eof)
   {
     if(this->m_hresp >= hresp_headers_done)

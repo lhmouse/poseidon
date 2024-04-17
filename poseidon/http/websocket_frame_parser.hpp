@@ -117,6 +117,10 @@ class WebSocket_Frame_Parser
     void
     clear() noexcept;
 
+    // Deallocate dynamic memory, if any.
+    void
+    deallocate() noexcept;
+
     // Creates a WebSocket handshake request from a client. The user may modify
     // the request URI or append new headers after this function returns. The
     // request headers shall be sent to a WebSocket server without a request body.

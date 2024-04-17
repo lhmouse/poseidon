@@ -11,7 +11,6 @@ namespace poseidon {
 HTTPS_Server_Session::
 HTTPS_Server_Session()
   {
-    this->m_req_parser.emplace();
   }
 
 HTTPS_Server_Session::
@@ -23,34 +22,39 @@ void
 HTTPS_Server_Session::
 do_on_ssl_stream(linear_buffer& data, bool eof)
   {
+    if(this->m_upgrade_ack.load()) {
+      this->do_on_https_upgraded_stream(data, eof);
+      return;
+    }
+
     for(;;) {
       // Check whether the connection has switched to another protocol.
       if(this->m_upgrade_ack.load()) {
-        this->m_req_parser.reset();
+        this->m_req_parser.deallocate();
         this->do_on_https_upgraded_stream(data, eof);
         return;
       }
 
       // If something has gone wrong, ignore further incoming data.
-      if(this->m_req_parser->error()) {
+      if(this->m_req_parser.error()) {
         data.clear();
         return;
       }
 
-      if(!this->m_req_parser->headers_complete()) {
-        this->m_req_parser->parse_headers_from_stream(data, eof);
+      if(!this->m_req_parser.headers_complete()) {
+        this->m_req_parser.parse_headers_from_stream(data, eof);
 
-        if(this->m_req_parser->error()) {
+        if(this->m_req_parser.error()) {
           data.clear();
-          this->do_on_https_request_error(this->m_req_parser->http_status_from_error());
+          this->do_on_https_request_error(this->m_req_parser.http_status_from_error());
           return;
         }
 
-        if(!this->m_req_parser->headers_complete())
+        if(!this->m_req_parser.headers_complete())
           return;
 
         // Check headers.
-        auto& headers = this->m_req_parser->mut_headers();
+        auto& headers = this->m_req_parser.mut_headers();
 
         if(headers.is_proxy == false)
           headers.is_ssl = true;
@@ -61,7 +65,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
           return;
         }
 
-        bool fin = this->m_req_parser->should_close_after_payload();
+        bool fin = this->m_req_parser.should_close_after_payload();
         auto payload_type = this->do_on_https_request_headers(headers, fin);
         switch(payload_type)
           {
@@ -70,9 +74,10 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
             break;
 
           case http_payload_connect:
-            this->m_req_parser.reset();
             this->m_upgrade_ack.store(true);
-            return this->do_on_https_upgraded_stream(data, eof);
+            this->m_req_parser.deallocate();
+            this->do_on_https_upgraded_stream(data, eof);
+            return;
 
           default:
             POSEIDON_THROW((
@@ -82,27 +87,27 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
           }
       }
 
-      if(!this->m_req_parser->payload_complete()) {
-        this->m_req_parser->parse_payload_from_stream(data, eof);
+      if(!this->m_req_parser.payload_complete()) {
+        this->m_req_parser.parse_payload_from_stream(data, eof);
 
-        if(this->m_req_parser->error()) {
+        if(this->m_req_parser.error()) {
           data.clear();
-          this->do_on_https_request_error(this->m_req_parser->http_status_from_error());
+          this->do_on_https_request_error(this->m_req_parser.http_status_from_error());
           return;
         }
 
-        this->do_on_https_request_payload_stream(this->m_req_parser->mut_payload());
+        this->do_on_https_request_payload_stream(this->m_req_parser.mut_payload());
 
-        if(!this->m_req_parser->payload_complete())
+        if(!this->m_req_parser.payload_complete())
           return;
 
         // The message is complete now.
-        this->do_on_https_request_finish(move(this->m_req_parser->mut_headers()),
-                                         move(this->m_req_parser->mut_payload()),
-                                         this->m_req_parser->should_close_after_payload());
+        this->do_on_https_request_finish(move(this->m_req_parser.mut_headers()),
+                                         move(this->m_req_parser.mut_payload()),
+                                         this->m_req_parser.should_close_after_payload());
       }
 
-      this->m_req_parser->next_message();
+      this->m_req_parser.next_message();
       POSEIDON_LOG_TRACE(("HTTP parser done: data.size = $1, eof = $2"), data.size(), eof);
     }
   }
@@ -145,11 +150,11 @@ do_on_https_request_payload_stream(linear_buffer& data)
     // Leave `data` alone for consumption by `do_on_https_request_finish()`,
     // but perform some security checks, so we won't be affected by compromised
     // 3rd-party servers.
-    if(data.size() > this->m_req_parser->max_content_length())
+    if(data.size() > this->m_req_parser.max_content_length())
       POSEIDON_THROW((
           "HTTP request payload too large: `$3` > `$4`",
           "[HTTPS server session `$1` (class `$2`)]"),
-          this, typeid(*this), data.size(), this->m_req_parser->max_content_length());
+          this, typeid(*this), data.size(), this->m_req_parser.max_content_length());
   }
 
 __attribute__((__noreturn__))

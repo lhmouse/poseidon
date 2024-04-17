@@ -60,6 +60,10 @@ class HTTP_Response_Parser
     void
     clear() noexcept;
 
+    // Deallocate dynamic memory, if any.
+    void
+    deallocate() noexcept;
+
     // Parses the response line and headers of an HTTP response from a stream.
     // `data` may be consumed partially, and must be preserved between calls. If
     // `headers_complete()` returns `true` before the call, this function does

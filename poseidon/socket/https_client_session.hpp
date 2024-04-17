@@ -16,7 +16,7 @@ class HTTPS_Client_Session
     public virtual SSL_Socket
   {
   private:
-    opt<HTTP_Response_Parser> m_resp_parser;
+    HTTP_Response_Parser m_resp_parser;
     atomic_relaxed<bool> m_upgrade_ack;
 
   public:

@@ -9,7 +9,6 @@ namespace poseidon {
 HTTP_Client_Session::
 HTTP_Client_Session()
   {
-    this->m_resp_parser.emplace();
   }
 
 HTTP_Client_Session::
@@ -21,47 +20,53 @@ void
 HTTP_Client_Session::
 do_on_tcp_stream(linear_buffer& data, bool eof)
   {
+    if(this->m_upgrade_ack.load()) {
+      this->do_on_http_upgraded_stream(data, eof);
+      return;
+    }
+
     for(;;) {
       // Check whether the connection has switched to another protocol.
       if(this->m_upgrade_ack.load()) {
-        this->m_resp_parser.reset();
+        this->m_resp_parser.deallocate();
         this->do_on_http_upgraded_stream(data, eof);
         return;
       }
 
       // If something has gone wrong, ignore further incoming data.
-      if(this->m_resp_parser->error()) {
+      if(this->m_resp_parser.error()) {
         data.clear();
         return;
       }
 
-      if(!this->m_resp_parser->headers_complete()) {
-        this->m_resp_parser->parse_headers_from_stream(data, eof);
+      if(!this->m_resp_parser.headers_complete()) {
+        this->m_resp_parser.parse_headers_from_stream(data, eof);
 
-        if(this->m_resp_parser->error()) {
+        if(this->m_resp_parser.error()) {
           data.clear();
           this->quick_close();
           return;
         }
 
-        if(!this->m_resp_parser->headers_complete())
+        if(!this->m_resp_parser.headers_complete())
           return;
 
         // Check headers.
-        auto payload_type = this->do_on_http_response_headers(this->m_resp_parser->mut_headers());
+        auto payload_type = this->do_on_http_response_headers(this->m_resp_parser.mut_headers());
         switch(payload_type)
           {
           case http_payload_normal:
             break;
 
           case http_payload_empty:
-            this->m_resp_parser->set_no_payload();
+            this->m_resp_parser.set_no_payload();
             break;
 
           case http_payload_connect:
-            this->m_resp_parser.reset();
             this->m_upgrade_ack.store(true);
-            return this->do_on_http_upgraded_stream(data, eof);
+            this->m_resp_parser.deallocate();
+            this->do_on_http_upgraded_stream(data, eof);
+            return;
 
           default:
             POSEIDON_THROW((
@@ -71,35 +76,35 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
           }
       }
 
-      if(!this->m_resp_parser->payload_complete()) {
-        this->m_resp_parser->parse_payload_from_stream(data, eof);
+      if(!this->m_resp_parser.payload_complete()) {
+        this->m_resp_parser.parse_payload_from_stream(data, eof);
 
-        if(this->m_resp_parser->error()) {
+        if(this->m_resp_parser.error()) {
           data.clear();
           this->quick_close();
           return;
         }
 
-        this->do_on_http_response_payload_stream(this->m_resp_parser->mut_payload());
+        this->do_on_http_response_payload_stream(this->m_resp_parser.mut_payload());
 
-        if(!this->m_resp_parser->payload_complete())
+        if(!this->m_resp_parser.payload_complete())
           return;
 
         // The message is complete now.
-        uint32_t status = this->m_resp_parser->headers().status;
+        uint32_t status = this->m_resp_parser.headers().status;
 
-        this->do_on_http_response_finish(move(this->m_resp_parser->mut_headers()),
-                                         move(this->m_resp_parser->mut_payload()),
-                                         this->m_resp_parser->should_close_after_payload());
+        this->do_on_http_response_finish(move(this->m_resp_parser.mut_headers()),
+                                         move(this->m_resp_parser.mut_payload()),
+                                         this->m_resp_parser.should_close_after_payload());
 
-        // For WebSocket and HTTP 2.0, this indiciates the server has switched to
+        // For WebSocket and HTTP 2.0, this indicates the server has switched to
         // another protocol. CONNECT responses are handled differently after the
         // headers; see above.
         if(status == 101)
           this->m_upgrade_ack.store(true);
       }
 
-      this->m_resp_parser->next_message();
+      this->m_resp_parser.next_message();
       POSEIDON_LOG_TRACE(("HTTP parser done: data.size = $1, eof = $2"), data.size(), eof);
     }
   }
@@ -124,11 +129,11 @@ do_on_http_response_payload_stream(linear_buffer& data)
     // Leave `data` alone for consumption by `do_on_http_response_finish()`,
     // but perform some security checks, so we won't be affected by compromised
     // 3rd-party servers.
-    if(data.size() > this->m_resp_parser->max_content_length())
+    if(data.size() > this->m_resp_parser.max_content_length())
       POSEIDON_THROW((
           "HTTP response payload too large: `$3` > `$4`",
           "[HTTP client session `$1` (class `$2`)]"),
-          this, typeid(*this), data.size(), this->m_resp_parser->max_content_length());
+          this, typeid(*this), data.size(), this->m_resp_parser.max_content_length());
   }
 
 __attribute__((__noreturn__))

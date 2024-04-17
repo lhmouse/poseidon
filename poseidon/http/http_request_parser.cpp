@@ -242,6 +242,18 @@ clear() noexcept
 
 void
 HTTP_Request_Parser::
+deallocate() noexcept
+  {
+    ::rocket::exchange(this->m_headers.uri_host);
+    ::rocket::exchange(this->m_headers.uri_userinfo);
+    ::rocket::exchange(this->m_headers.uri_path);
+    ::rocket::exchange(this->m_headers.uri_query);
+    ::rocket::exchange(this->m_headers.headers);
+    ::rocket::exchange(this->m_payload);
+  }
+
+void
+HTTP_Request_Parser::
 parse_headers_from_stream(linear_buffer& data, bool eof)
   {
     if(this->m_hreq >= hreq_headers_done)

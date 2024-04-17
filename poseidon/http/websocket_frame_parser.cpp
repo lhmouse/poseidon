@@ -175,6 +175,13 @@ clear() noexcept
 
 void
 WebSocket_Frame_Parser::
+deallocate() noexcept
+  {
+    ::rocket::exchange(this->m_frm_payload);
+  }
+
+void
+WebSocket_Frame_Parser::
 create_handshake_request(HTTP_Request_Headers& req)
   {
     if((this->m_wshs != wshs_pending) && (this->m_wshs != wshs_c_req_sent))
