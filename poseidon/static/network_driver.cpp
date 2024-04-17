@@ -64,7 +64,7 @@ do_epoll_ctl(int op, shptrR<Abstract_Socket> socket, uint32_t events)
 POSEIDON_VISIBILITY_HIDDEN
 wkptr<Abstract_Socket>&
 Network_Driver::
-do_linear_probe_socket_no_lock(const volatile Abstract_Socket* socket) noexcept
+do_find_socket_nolock(const volatile Abstract_Socket* socket) noexcept
   {
     ROCKET_ASSERT(socket);
 
@@ -262,26 +262,31 @@ reload(const Config_File& conf_file)
       ::SSL_CTX_set_mode(server_ssl_ctx, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
 
       // Load the certificate and private key.
-      if(!::SSL_CTX_use_certificate_chain_file(server_ssl_ctx, default_certificate.safe_c_str()))
+      if(!::SSL_CTX_use_certificate_chain_file(server_ssl_ctx,
+                                               default_certificate.safe_c_str()))
         POSEIDON_THROW((
             "Could not load default server SSL certificate file '$3'",
             "[`SSL_CTX_use_certificate_chain_file()` failed: $1]",
             "[in configuration file '$2']"),
-            ::ERR_reason_error_string(::ERR_peek_error()), conf_file.path(), default_certificate);
+            ::ERR_reason_error_string(::ERR_peek_error()), conf_file.path(),
+            default_certificate);
 
-      if(!::SSL_CTX_use_PrivateKey_file(server_ssl_ctx, default_private_key.safe_c_str(), SSL_FILETYPE_PEM))
+      if(!::SSL_CTX_use_PrivateKey_file(server_ssl_ctx, default_private_key.safe_c_str(),
+                                        SSL_FILETYPE_PEM))
         POSEIDON_THROW((
             "Could not load default server SSL private key file '$3'",
             "[`SSL_CTX_use_PrivateKey_file()` failed: $1]",
             "[in configuration file '$2']"),
-            ::ERR_reason_error_string(::ERR_peek_error()), conf_file.path(), default_private_key);
+            ::ERR_reason_error_string(::ERR_peek_error()), conf_file.path(),
+            default_private_key);
 
       if(!::SSL_CTX_check_private_key(server_ssl_ctx))
         POSEIDON_THROW((
             "Error validating default server SSL certificate '$3' and SSL private key '$4'",
             "[`SSL_CTX_check_private_key()` failed: $1]",
             "[in configuration file '$2']"),
-            ::ERR_reason_error_string(::ERR_peek_error()), conf_file.path(), default_certificate, default_private_key);
+            ::ERR_reason_error_string(::ERR_peek_error()), conf_file.path(),
+            default_certificate, default_private_key);
 
       // The session context ID is composed from the DNS name of the running
       // machine. This determines which SSL sessions can be reused to improve
@@ -321,7 +326,8 @@ reload(const Config_File& conf_file)
 
     if(!trusted_ca_path.empty()) {
       // Load trusted CA certificates from the given directory.
-      if(!::SSL_CTX_load_verify_locations(client_ssl_ctx, nullptr, trusted_ca_path.safe_c_str()))
+      if(!::SSL_CTX_load_verify_locations(client_ssl_ctx, nullptr,
+                                          trusted_ca_path.safe_c_str()))
         POSEIDON_THROW((
             "Could not set path to trusted CA certificates",
             "[`SSL_CTX_load_verify_locations()` failed: $1]",
@@ -373,14 +379,14 @@ thread_loop()
 
       // Collect more events from the epoll.
       size_t cap = evbuf.reserve_after_end(event_buffer_size * sizeof(event));
-      int r = ::epoll_wait(efd, reinterpret_cast<::epoll_event*>(evbuf.mut_end()), static_cast<int>(cap), 5000);
+      int r = ::epoll_wait(efd, (::epoll_event*) evbuf.mut_end(), (int) cap, 5000);
       if(r <= 0) {
         POSEIDON_LOG_TRACE(("`epoll_wait()` wait: ${errno:full}"));
         return;
       }
 
-      POSEIDON_LOG_TRACE(("Collected $1$2 from epoll"), r, ROCKET_TINYFMT_NOUN_REGULAR(r, "socket event"));
-      evbuf.accept(static_cast<uint32_t>(r) * sizeof(event));
+      POSEIDON_LOG_TRACE(("Collected $1 event(s) from epoll"), r);
+      evbuf.accept((uint32_t) r * sizeof(event));
 
       lock.lock(this->m_epoll_mutex);
       splice_buffers(this->m_epoll_events, move(evbuf));
@@ -393,7 +399,7 @@ thread_loop()
     if(this->m_epoll_map_stor.size() == 0)
       return;
 
-    auto socket = this->do_linear_probe_socket_no_lock(static_cast<Abstract_Socket*>(event.data.ptr)).lock();
+    auto socket = this->do_find_socket_nolock((Abstract_Socket*) event.data.ptr).lock();
     if(!socket)
       return;
 
@@ -493,7 +499,7 @@ insert(shptrR<Abstract_Socket> socket)
           // Move this socket into the new map.
           // HACK: Get the socket pointer without tampering with the reference
           // counter. The pointer itself will never be dereferenced.
-          this->do_linear_probe_socket_no_lock(do_get_weak_(old_map_stor[k])).swap(old_map_stor[k]);
+          this->do_find_socket_nolock(do_get_weak_(old_map_stor[k])).swap(old_map_stor[k]);
           this->m_epoll_map_used ++;
         }
     }
@@ -506,7 +512,7 @@ insert(shptrR<Abstract_Socket> socket)
 
     // Insert the socket.
     this->do_epoll_ctl(EPOLL_CTL_ADD, socket, EPOLLIN | EPOLLPRI | EPOLLOUT | EPOLLET);
-    this->do_linear_probe_socket_no_lock(socket.get()) = socket;
+    this->do_find_socket_nolock(socket.get()) = socket;
     this->m_epoll_map_used ++;
   }
 
