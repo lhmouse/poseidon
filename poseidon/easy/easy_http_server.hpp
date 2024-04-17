@@ -27,7 +27,7 @@ class Easy_HTTP_Server
 
     struct X_Session_Table;
     shptr<X_Session_Table> m_sessions;
-    shptr<Listen_Socket> m_socket;
+    shptr<Listen_Socket> m_listener;
 
   public:
     // Constructs a server. The argument shall be an invocable object taking

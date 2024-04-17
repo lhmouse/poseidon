@@ -244,11 +244,11 @@ start(chars_view addr)
 
     // Initiate the server.
     auto sessions = new_sh<X_Session_Table>();
-    auto socket = new_sh<Final_Listener>(this->m_thunk, saddr, sessions);
+    auto listener = new_sh<Final_Listener>(this->m_thunk, saddr, sessions);
 
-    network_driver.insert(socket);
+    network_driver.insert(listener);
     this->m_sessions = move(sessions);
-    this->m_socket = move(socket);
+    this->m_listener = move(listener);
   }
 
 void
@@ -256,17 +256,17 @@ Easy_TCP_Server::
 stop() noexcept
   {
     this->m_sessions = nullptr;
-    this->m_socket = nullptr;
+    this->m_listener = nullptr;
   }
 
 const IPv6_Address&
 Easy_TCP_Server::
 local_address() const noexcept
   {
-    if(!this->m_socket)
+    if(!this->m_listener)
       return ipv6_invalid;
 
-    return this->m_socket->local_address();
+    return this->m_listener->local_address();
   }
 
 }  // namespace poseidon
