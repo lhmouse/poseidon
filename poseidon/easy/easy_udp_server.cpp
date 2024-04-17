@@ -73,7 +73,7 @@ struct Final_Fiber final : Abstract_Fiber
           }
           catch(exception& stdex) {
             POSEIDON_LOG_ERROR((
-                "Unhandled exception thrown from easy UDP server: $1"),
+                "Unhandled exception thrown from UDP server: $1"),
                 stdex);
           }
         }

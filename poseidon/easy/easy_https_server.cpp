@@ -110,7 +110,7 @@ struct Final_Fiber final : Abstract_Fiber
           catch(exception& stdex) {
             // Shut the connection down with a message.
             // XXX: The user-defined callback may have sent a response...?
-            POSEIDON_LOG_ERROR(("Unhandled exception thrown from easy HTTP client: $1"), stdex);
+            POSEIDON_LOG_ERROR(("Unhandled exception thrown from1"), stdex);
             HTTP_Response_Headers resp;
             resp.status = 500;
             resp.headers.emplace_back(&"Connection", &"close");

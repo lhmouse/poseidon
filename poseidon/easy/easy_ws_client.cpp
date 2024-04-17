@@ -96,7 +96,7 @@ struct Final_Fiber final : Abstract_Fiber
           }
           catch(exception& stdex) {
             // Shut the connection down with a message.
-            POSEIDON_LOG_ERROR(("Unhandled exception thrown from easy WS client: $1"), stdex);
+            POSEIDON_LOG_ERROR(("Unhandled exception thrown fromlient: $1"), stdex);
             session->ws_shut_down(1015);
           }
         }
@@ -208,27 +208,23 @@ connect(chars_view addr)
     // port to connect, followed by an optional path and an optional query string.
     // If no port is specified, 80 is implied.
     Network_Reference caddr;
-    caddr.port_num = 80;
     if(parse_network_reference(caddr, addr) != addr.n)
       POSEIDON_THROW(("Invalid connect address `$1`"), addr);
 
     if(caddr.port.n == 0)
-      POSEIDON_THROW(("No port specified in address `$1`"), addr);
+      caddr.port_num = 80;
 
     // Disallow superfluous components.
     if(caddr.fragment.p != nullptr)
-      POSEIDON_THROW(("URI fragments shall not be specified in address `$1`"), addr);
+      POSEIDON_THROW(("URI fragment shall not be specified in address `$1`"), addr);
 
     // Pre-allocate necessary objects. The entire operation will be atomic.
     if(!this->m_sessions)
       this->m_sessions = new_sh<X_Session_Table>();
 
-    tinyfmt_str host_fmt;
-    host_fmt << caddr.host << ':' << caddr.port_num;
-
     auto session = new_sh<Final_Session>(this->m_thunk, this->m_sessions,
-             host_fmt.extract_string(), cow_string(caddr.path), cow_string(caddr.query));
-
+                                 format_string("$1:$2", caddr.host, caddr.port_num),
+                                 cow_string(caddr.path), cow_string(caddr.query));
     auto dns_task = new_sh<DNS_Connect_Task>(network_driver, session,
                                  cow_string(caddr.host), caddr.port_num);
 
