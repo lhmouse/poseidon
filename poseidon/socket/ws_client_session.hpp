@@ -39,7 +39,7 @@ class WS_Client_Session
 
     virtual
     void
-    do_on_tcp_connected();
+    do_on_tcp_connected() override;
 
     virtual
     void

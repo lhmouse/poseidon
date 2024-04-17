@@ -263,4 +263,3 @@ local_address() const noexcept
   }
 
 }  // namespace poseidon
-

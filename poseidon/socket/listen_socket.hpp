@@ -59,5 +59,4 @@ class Listen_Socket
   };
 
 }  // namespace poseidon
-
 #endif

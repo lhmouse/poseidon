@@ -46,7 +46,7 @@ class TCP_Socket
 
     // This callback is invoked by the network thread after a full-duplex
     // connection has been established.
-    // The default implemention merely prints a message.
+    // The default implementation merely prints a message.
     virtual
     void
     do_on_tcp_connected();
@@ -61,7 +61,7 @@ class TCP_Socket
 
     // This callback is invoked by the network thread when an out-of-band byte
     // has been received, and is intended to be overriden by derived classes.
-    // The default implemention merely prints a message.
+    // The default implementation merely prints a message.
     virtual
     void
     do_on_tcp_oob_byte(char data);

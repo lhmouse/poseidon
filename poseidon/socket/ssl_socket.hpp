@@ -52,7 +52,7 @@ class SSL_Socket
 
     // This callback is invoked by the network thread after a full-duplex
     // connection has been established.
-    // The default implemention merely prints a message.
+    // The default implementation merely prints a message.
     virtual
     void
     do_on_ssl_connected();
@@ -67,7 +67,7 @@ class SSL_Socket
 
     // This callback is invoked by the network thread when an out-of-band byte
     // has been received, and is intended to be overriden by derived classes.
-    // The default implemention merely prints a message.
+    // The default implementation merely prints a message.
     virtual
     void
     do_on_ssl_oob_byte(char data);
@@ -77,7 +77,7 @@ class SSL_Socket
     // the name of protocol being selected. If an empty string is returned, no
     // ALPN protocol will be selected. The argument is the list of protocols
     // that have been offered by the client.
-    // The default implemention returns an empty string.
+    // The default implementation returns an empty string.
     virtual
     char256
     do_on_ssl_alpn_request(vector<char256>&& protos);

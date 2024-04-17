@@ -39,7 +39,7 @@ class WSS_Client_Session
 
     virtual
     void
-    do_on_ssl_connected();
+    do_on_ssl_connected() override;
 
     virtual
     void
