@@ -214,13 +214,13 @@ connect(chars_view addr)
 
     // Disallow superfluous components.
     if(caddr.path.p != nullptr)
-      POSEIDON_THROW(("URI paths shall not be in address `$1`"), addr);
+      POSEIDON_THROW(("URI path shall not be specified in address `$1`"), addr);
 
     if(caddr.query.p != nullptr)
-      POSEIDON_THROW(("URI queries shall not be specified in address `$1`"), addr);
+      POSEIDON_THROW(("URI query shall not be specified in address `$1`"), addr);
 
     if(caddr.fragment.p != nullptr)
-      POSEIDON_THROW(("URI fragments shall not be specified in address `$1`"), addr);
+      POSEIDON_THROW(("URI fragment shall not be specified in address `$1`"), addr);
 
     // Pre-allocate necessary objects. The entire operation will be atomic.
     if(!this->m_sessions)

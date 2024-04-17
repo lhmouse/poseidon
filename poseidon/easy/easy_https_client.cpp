@@ -12,34 +12,42 @@
 namespace poseidon {
 namespace {
 
-struct Event_Queue
+struct Session_Table
   {
-    // read-only fields; no locking needed
-    wkptr<HTTPS_Client_Session> wsession;
-    cacheline_barrier xcb_1;
-
-    // shared fields between threads
-    struct Event
+    struct Event_Queue
       {
-        Easy_HTTP_Event type;
-        HTTP_Response_Headers resp;
-        linear_buffer data;
-        bool close_now = false;
+        // read-only fields; no locking needed
+        shptr<HTTPS_Client_Session> session;
+        shptr<DNS_Connect_Task> dns_task;
+        cacheline_barrier xcb_1;
+
+        // shared fields between threads
+        struct Event
+          {
+            Easy_HTTP_Event type;
+            HTTP_Response_Headers resp;
+            linear_buffer data;
+            bool close_now = false;
+          };
+
+        deque<Event> events;
+        bool fiber_active = false;
       };
 
     mutable plain_mutex mutex;
-    deque<Event> events;
-    bool fiber_active = false;
+    unordered_map<const volatile HTTPS_Client_Session*, Event_Queue> session_map;
   };
 
 struct Final_Fiber final : Abstract_Fiber
   {
     Easy_HTTPS_Client::thunk_type m_thunk;
-    wkptr<Event_Queue> m_wqueue;
+    wkptr<Session_Table> m_wsessions;
+    const volatile HTTPS_Client_Session* m_refptr;
 
-    Final_Fiber(const Easy_HTTPS_Client::thunk_type& thunk, shptrR<Event_Queue> queue)
+    Final_Fiber(const Easy_HTTPS_Client::thunk_type& thunk, shptrR<Session_Table> sessions,
+                const volatile HTTPS_Client_Session* refptr)
       :
-        m_thunk(thunk), m_wqueue(queue)
+        m_thunk(thunk), m_wsessions(sessions), m_refptr(refptr)
       { }
 
     virtual
@@ -49,43 +57,55 @@ struct Final_Fiber final : Abstract_Fiber
         for(;;) {
           // The event callback may stop this client, so we have to check for
           // expiry in every iteration.
-          auto queue = this->m_wqueue.lock();
-          if(!queue)
-            return;
-
-          auto session = queue->wsession.lock();
-          if(!session)
+          auto sessions = this->m_wsessions.lock();
+          if(!sessions)
             return;
 
           // Pop an event and invoke the user-defined callback here in the
           // main thread. Exceptions are ignored.
-          plain_mutex::unique_lock lock(queue->mutex);
+          plain_mutex::unique_lock lock(sessions->mutex);
 
-          if(queue->events.empty()) {
+          auto session_iter = sessions->session_map.find(this->m_refptr);
+          if(session_iter == sessions->session_map.end())
+            return;
+
+          if(session_iter->second.events.empty()) {
             // Terminate now.
-            queue->fiber_active = false;
+            session_iter->second.fiber_active = false;
             return;
           }
 
+          // After `sessions->mutex` is unlocked, other threads may modify
+          // `sessions->session_map` and invalidate all iterators, so maintain a
+          // reference outside it for safety.
+          auto queue = &(session_iter->second);
           ROCKET_ASSERT(queue->fiber_active);
+          auto session = queue->session;
           auto event = move(queue->events.front());
           queue->events.pop_front();
+
+          if(ROCKET_UNEXPECT(event.type == easy_http_close)) {
+            // This will be the last event on this session.
+            queue = nullptr;
+            sessions->session_map.erase(session_iter);
+          }
+          session_iter = sessions->session_map.end();
           lock.unlock();
 
           try {
             // Process a response.
             this->m_thunk(session, *this, event.type, move(event.resp), move(event.data));
-
-            if(event.close_now)
-              session->ssl_shut_down();
           }
           catch(exception& stdex) {
             // Shut the connection down asynchronously. Pending output data
             // are discarded, but the user-defined callback will still be called
             // for remaining input data, in case there is something useful.
-            POSEIDON_LOG_ERROR(("Unhandled exception thrown fromS client: $1"), stdex);
+            POSEIDON_LOG_ERROR(("Unhandled exception thrown from HTTP client: $1"), stdex);
             session->quick_close();
           }
+
+          if(event.close_now)
+            session->ssl_shut_down();
         }
       }
   };
@@ -93,37 +113,40 @@ struct Final_Fiber final : Abstract_Fiber
 struct Final_Session final : HTTPS_Client_Session
   {
     Easy_HTTPS_Client::thunk_type m_thunk;
-    wkptr<Event_Queue> m_wqueue;
-    cow_string m_host;
+    wkptr<Session_Table> m_wsessions;
 
-    Final_Session(const Easy_HTTPS_Client::thunk_type& thunk, shptrR<Event_Queue> queue,
-                  cow_stringR host)
+    Final_Session(const Easy_HTTPS_Client::thunk_type& thunk, shptrR<Session_Table> sessions)
       :
-        SSL_Socket(network_driver), m_thunk(thunk), m_wqueue(queue), m_host(host)
+        SSL_Socket(network_driver), HTTPS_Client_Session(), m_thunk(thunk), m_wsessions(sessions)
       { }
 
     void
-    do_push_event_common(Event_Queue::Event&& event)
+    do_push_event_common(Session_Table::Event_Queue::Event&& event)
       {
-        auto queue = this->m_wqueue.lock();
-        if(!queue)
+        auto sessions = this->m_wsessions.lock();
+        if(!sessions)
           return;
 
         // We are in the network thread here.
-        plain_mutex::unique_lock lock(queue->mutex);
+        plain_mutex::unique_lock lock(sessions->mutex);
+
+        auto session_iter = sessions->session_map.find(this);
+        if(session_iter == sessions->session_map.end())
+          return;
 
         try {
-          if(!queue->fiber_active) {
+          if(!session_iter->second.fiber_active) {
             // Create a new fiber, if none is active. The fiber shall only reset
             // `m_fiber_private_buffer` if no event is pending.
-            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, queue));
-            queue->fiber_active = true;
+            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, sessions, this));
+            session_iter->second.fiber_active = true;
           }
 
-          queue->events.push_back(move(event));
+          session_iter->second.events.push_back(move(event));
         }
         catch(exception& stdex) {
           POSEIDON_LOG_ERROR(("Could not push network event: $1"), stdex);
+          sessions->session_map.erase(session_iter);
           this->quick_close();
         }
       }
@@ -132,7 +155,7 @@ struct Final_Session final : HTTPS_Client_Session
     void
     do_on_ssl_connected() override
       {
-        Event_Queue::Event event;
+        Session_Table::Event_Queue::Event event;
         event.type = easy_http_open;
         this->do_push_event_common(move(event));
       }
@@ -142,7 +165,7 @@ struct Final_Session final : HTTPS_Client_Session
     do_on_https_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data,
                                 bool close_now) override
       {
-        Event_Queue::Event event;
+        Session_Table::Event_Queue::Event event;
         event.type = easy_http_message;
         event.resp = move(resp);
         event.data = move(data);
@@ -158,29 +181,17 @@ struct Final_Session final : HTTPS_Client_Session
         int err_code = errno;
         const char* err_str = ::strerror_r(err_code, sbuf, sizeof(sbuf));
 
-        Event_Queue::Event event;
+        Session_Table::Event_Queue::Event event;
         event.type = easy_http_close;
         event.data.puts(err_str);
         this->do_push_event_common(move(event));
-      }
-
-    void
-    fix_headers(HTTP_Request_Headers& req) const
-      {
-        // Erase bad headers.
-        for(size_t hindex = 0;  hindex < req.headers.size();  hindex ++)
-          if(ascii_ci_equal(req.headers.at(hindex).first, "Host"))
-            req.headers.erase(hindex --);
-
-        // Add required headers.
-        req.headers.emplace_back(&"Host", this->m_host);
       }
   };
 
 }  // namespace
 
 POSEIDON_HIDDEN_X_STRUCT(Easy_HTTPS_Client,
-  Event_Queue);
+  Session_Table);
 
 Easy_HTTPS_Client::
 ~Easy_HTTPS_Client()
@@ -192,112 +203,48 @@ Easy_HTTPS_Client::
 connect(chars_view addr)
   {
     // Parse the address string, which shall contain a host name and an optional
-    // port to connect. If no port is specified, 443 is implied.
+    // port to connect, followed by an optional path and an optional query string.
+    // If no port is specified, 443 is implied.
     Network_Reference caddr;
-    caddr.port_num = 443;
     if(parse_network_reference(caddr, addr) != addr.n)
       POSEIDON_THROW(("Invalid connect address `$1`"), addr);
 
+    if(caddr.port.n == 0)
+      caddr.port_num = 443;
+
     // Disallow superfluous components.
     if(caddr.path.p != nullptr)
-      POSEIDON_THROW(("URI paths shall not be specified in connect address `$1`"), addr);
+      POSEIDON_THROW(("URI path shall not be specified in address `$1`"), addr);
 
     if(caddr.query.p != nullptr)
-      POSEIDON_THROW(("URI queries shall not be specified in connect address `$1`"), addr);
+      POSEIDON_THROW(("URI query shall not be specified in address `$1`"), addr);
 
     if(caddr.fragment.p != nullptr)
-      POSEIDON_THROW(("URI fragments shall not be specified in connect address `$1`"), addr);
+      POSEIDON_THROW(("URI fragment shall not be specified in address `$1`"), addr);
+
+    // Pre-allocate necessary objects. The entire operation will be atomic.
+    if(!this->m_sessions)
+      this->m_sessions = new_sh<X_Session_Table>();
+
+    auto session = new_sh<Final_Session>(this->m_thunk, this->m_sessions);
+    auto dns_task = new_sh<DNS_Connect_Task>(network_driver, session,
+                                 cow_string(caddr.host), caddr.port_num);
 
     // Initiate the connection.
-    auto queue = new_sh<X_Event_Queue>();
-    auto session = new_sh<Final_Session>(this->m_thunk, queue,
-                      format_string("$1:$2", caddr.host, caddr.port_num));
-
-    queue->wsession = session;
-    auto dns_task = new_sh<DNS_Connect_Task>(network_driver, session,
-                       cow_string(caddr.host), caddr.port_num);
+    plain_mutex::unique_lock lock(this->m_sessions->mutex);
 
     task_executor.enqueue(dns_task);
-    this->m_dns_task = move(dns_task);
-    this->m_queue = move(queue);
-    this->m_session = move(session);
+    auto r = this->m_sessions->session_map.try_emplace(session.get());
+    ROCKET_ASSERT(r.second);
+    r.first->second.session = session;
+    r.first->second.dns_task = dns_task;
   }
 
 void
 Easy_HTTPS_Client::
-close() noexcept
+close_all() noexcept
   {
-    this->m_dns_task = nullptr;
-    this->m_queue = nullptr;
-    this->m_session = nullptr;
-  }
-
-const IPv6_Address&
-Easy_HTTPS_Client::
-local_address() const noexcept
-  {
-    if(!this->m_session)
-      return ipv6_invalid;
-
-    return this->m_session->local_address();
-  }
-
-const IPv6_Address&
-Easy_HTTPS_Client::
-remote_address() const noexcept
-  {
-    if(!this->m_session)
-      return ipv6_invalid;
-
-    return this->m_session->remote_address();
-  }
-
-bool
-Easy_HTTPS_Client::
-https_GET(HTTP_Request_Headers&& req)
-  {
-    if(!this->m_session)
-      return false;
-
-    ::strcpy(req.method, "GET");
-    static_cast<Final_Session*>(this->m_session.get())->fix_headers(req);
-    return this->m_session->https_request(move(req), "");
-  }
-
-bool
-Easy_HTTPS_Client::
-https_POST(HTTP_Request_Headers&& req, chars_view data)
-  {
-    if(!this->m_session)
-      return false;
-
-    ::strcpy(req.method, "POST");
-    static_cast<Final_Session*>(this->m_session.get())->fix_headers(req);
-    return this->m_session->https_request(move(req), data);
-  }
-
-bool
-Easy_HTTPS_Client::
-https_PUT(HTTP_Request_Headers&& req, chars_view data)
-  {
-    if(!this->m_session)
-      return false;
-
-    ::strcpy(req.method, "PUT");
-    static_cast<Final_Session*>(this->m_session.get())->fix_headers(req);
-    return this->m_session->https_request(move(req), data);
-  }
-
-bool
-Easy_HTTPS_Client::
-https_DELETE(HTTP_Request_Headers&& req)
-  {
-    if(!this->m_session)
-      return false;
-
-    ::strcpy(req.method, "DELETE");
-    static_cast<Final_Session*>(this->m_session.get())->fix_headers(req);
-    return this->m_session->https_request(move(req), "");
+    this->m_sessions = nullptr;
   }
 
 }  // namespace poseidon
