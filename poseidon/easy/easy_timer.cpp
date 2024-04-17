@@ -116,7 +116,8 @@ struct Final_Timer final : Abstract_Timer
 
 }  // namespace
 
-POSEIDON_HIDDEN_X_STRUCT(Easy_Timer, Event_Queue);
+POSEIDON_HIDDEN_X_STRUCT(Easy_Timer,
+  Event_Queue);
 
 Easy_Timer::
 ~Easy_Timer()

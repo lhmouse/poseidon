@@ -171,7 +171,8 @@ struct Final_Socket final : TCP_Socket
 
 }  // namespace
 
-POSEIDON_HIDDEN_X_STRUCT(Easy_TCP_Client, Event_Queue);
+POSEIDON_HIDDEN_X_STRUCT(Easy_TCP_Client,
+  Event_Queue);
 
 Easy_TCP_Client::
 ~Easy_TCP_Client()

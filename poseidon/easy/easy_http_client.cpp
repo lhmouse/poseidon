@@ -179,7 +179,8 @@ struct Final_Session final : HTTP_Client_Session
 
 }  // namespace
 
-POSEIDON_HIDDEN_X_STRUCT(Easy_HTTP_Client, Event_Queue);
+POSEIDON_HIDDEN_X_STRUCT(Easy_HTTP_Client,
+  Event_Queue);
 
 Easy_HTTP_Client::
 ~Easy_HTTP_Client()

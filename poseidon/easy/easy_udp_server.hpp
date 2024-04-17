@@ -48,7 +48,7 @@ class Easy_UDP_Server
     Easy_UDP_Server& operator=(const Easy_UDP_Server&) & = delete;
     ~Easy_UDP_Server();
 
-    // Starts listening the given address and port for incoming packets.
+    // Starts listening on the given address and port for incoming packets.
     void
     start(chars_view addr);
 

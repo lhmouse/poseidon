@@ -20,7 +20,7 @@ struct Level_Config
     bool trivial = false;
   };
 
-struct Log_Message
+struct Message
   {
     uint32_t level : 8;
     uint32_t thrd_lwpid : 24;
@@ -141,7 +141,7 @@ do_color(linear_buffer& mtext, const Level_Config& lconf, const char* code)
   }
 
 void
-do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
+do_write_nothrow(const Level_Config& lconf, const Message& msg) noexcept
   try {
     linear_buffer mtext;
     ::rocket::ascii_numput nump;
@@ -255,8 +255,11 @@ do_write_nothrow(const Level_Config& lconf, const Log_Message& msg) noexcept
 
 }  // namespace
 
-POSEIDON_HIDDEN_X_STRUCT(Logger, Level_Config);
-POSEIDON_HIDDEN_X_STRUCT(Logger, Log_Message);
+POSEIDON_HIDDEN_X_STRUCT(Logger,
+  Level_Config);
+
+POSEIDON_HIDDEN_X_STRUCT(Logger,
+  Message);
 
 Logger::
 Logger() noexcept
@@ -334,7 +337,7 @@ Logger::
 enqueue(uint8_t level, const char* func, const char* file, uint32_t line, cow_stringR text)
   {
     // Fill in the name and LWP ID of the calling thread.
-    X_Log_Message msg;
+    X_Message msg;
     msg.level = level;
     msg.thrd_lwpid = (uint32_t) ::syscall(SYS_gettid) & 0xFFFFFFU;
     ::pthread_getname_np(::pthread_self(), msg.thrd_name, sizeof(msg.thrd_name));

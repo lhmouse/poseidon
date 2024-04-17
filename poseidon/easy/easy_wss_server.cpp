@@ -223,7 +223,8 @@ struct Final_Listener final : Listen_Socket
 
 }  // namespace
 
-POSEIDON_HIDDEN_X_STRUCT(Easy_WSS_Server, Client_Table);
+POSEIDON_HIDDEN_X_STRUCT(Easy_WSS_Server,
+  Client_Table);
 
 Easy_WSS_Server::
 ~Easy_WSS_Server()

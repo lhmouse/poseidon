@@ -171,7 +171,8 @@ struct Final_Session final : WSS_Client_Session
 
 }  // namespace
 
-POSEIDON_HIDDEN_X_STRUCT(Easy_WSS_Client, Event_Queue);
+POSEIDON_HIDDEN_X_STRUCT(Easy_WSS_Client,
+  Event_Queue);
 
 Easy_WSS_Client::
 ~Easy_WSS_Client()

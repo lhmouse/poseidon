@@ -179,7 +179,8 @@ struct Final_Session final : HTTPS_Client_Session
 
 }  // namespace
 
-POSEIDON_HIDDEN_X_STRUCT(Easy_HTTPS_Client, Event_Queue);
+POSEIDON_HIDDEN_X_STRUCT(Easy_HTTPS_Client,
+  Event_Queue);
 
 Easy_HTTPS_Client::
 ~Easy_HTTPS_Client()

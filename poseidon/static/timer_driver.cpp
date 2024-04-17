@@ -34,7 +34,8 @@ struct Timer_Comparator
 
 }  // namespace
 
-POSEIDON_HIDDEN_X_STRUCT(Timer_Driver, Queued_Timer);
+POSEIDON_HIDDEN_X_STRUCT(Timer_Driver,
+  Queued_Timer);
 
 Timer_Driver::
 Timer_Driver() noexcept
