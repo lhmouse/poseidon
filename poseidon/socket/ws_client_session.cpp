@@ -9,12 +9,11 @@
 namespace poseidon {
 
 WS_Client_Session::
-WS_Client_Session(cow_stringR host, cow_stringR path, cow_stringR query)
+WS_Client_Session(cow_stringR path, cow_stringR query)
   {
     if(!path.starts_with("/"))
-      POSEIDON_THROW(("Request paths must start with `/` (path `$1` not valid)"), path);
+      POSEIDON_THROW(("Absolute path `$1` not allowed"), path);
 
-    this->m_host = host;
     this->m_path = path;
     this->m_query = query;
   }
@@ -53,10 +52,9 @@ do_on_tcp_connected()
     HTTP_Request_Headers req;
     this->m_parser.create_handshake_request(req);
     req.is_ssl = false;
-    req.headers.emplace_back(&"Host", this->m_host);
     req.uri_path = this->m_path;
     req.uri_query = this->m_query;
-    this->do_http_raw_request(req, "");
+    this->http_request(move(req), "");
   }
 
 void
@@ -85,7 +83,7 @@ do_on_http_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& /*data*
       this->m_pmce_opt = new_sh<WebSocket_Deflator>(this->m_parser);
 
     // Rebuild the URI.
-    this->do_on_ws_connected(this->m_host + this->m_path + '?' + this->m_query);
+    this->do_on_ws_connected(this->http_default_host() + this->m_path + '?' + this->m_query);
   }
 
 void

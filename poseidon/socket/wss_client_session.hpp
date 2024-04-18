@@ -15,7 +15,6 @@ class WSS_Client_Session
     public HTTPS_Client_Session
   {
   private:
-    cow_string m_host;
     cow_string m_path;
     cow_string m_query;
     WebSocket_Frame_Parser m_parser;
@@ -25,7 +24,7 @@ class WSS_Client_Session
 
   public:
     // Constructs a socket for outgoing connections.
-    WSS_Client_Session(cow_stringR host, cow_stringR path, cow_stringR query);
+    WSS_Client_Session(cow_stringR path, cow_stringR query);
 
   private:
     void

@@ -109,9 +109,9 @@ struct Final_Session final : WS_Client_Session
     wkptr<Session_Table> m_wsessions;
 
     Final_Session(const Easy_WS_Client::thunk_type& thunk, shptrR<Session_Table> sessions,
-                  cow_stringR host, cow_stringR path, cow_stringR query)
+                  cow_stringR path, cow_stringR query)
       :
-        TCP_Socket(), WS_Client_Session(host, path, query),
+        TCP_Socket(), WS_Client_Session(path, query),
         m_thunk(thunk), m_wsessions(sessions)
       { }
 
@@ -223,8 +223,8 @@ connect(chars_view addr)
       this->m_sessions = new_sh<X_Session_Table>();
 
     auto session = new_sh<Final_Session>(this->m_thunk, this->m_sessions,
-                       format_string("$1:$2", caddr.host, caddr.port_num),
-                       cow_string(caddr.path), cow_string(caddr.query));
+                               cow_string(caddr.path), cow_string(caddr.query));
+    session->http_set_default_host(format_string("$1:$2", caddr.host, caddr.port_num));
     auto dns_task = new_sh<DNS_Connect_Task>(network_driver,
                        session, cow_string(caddr.host), caddr.port_num);
 
