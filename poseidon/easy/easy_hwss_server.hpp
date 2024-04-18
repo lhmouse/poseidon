@@ -26,7 +26,7 @@ class Easy_HWSS_Server
 
     struct X_Session_Table;
     shptr<X_Session_Table> m_sessions;
-    shptr<Listen_Socket> m_listener;
+    shptr<TCP_Acceptor> m_acceptor;
 
   public:
     // Constructs a server. The argument shall be an invocable object taking
@@ -60,7 +60,7 @@ class Easy_HWSS_Server
     ~Easy_HWSS_Server();
 
     // Starts listening the given address and port for incoming connections.
-    shptr<Listen_Socket>
+    shptr<TCP_Acceptor>
     start(chars_view addr);
 
     // Shuts down the listening socket, if any. All existent clients are also

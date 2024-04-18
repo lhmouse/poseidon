@@ -2,15 +2,15 @@
 // Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
 #include "../xprecompiled.hpp"
-#include "listen_socket.hpp"
+#include "tcp_acceptor.hpp"
 #include "../static/network_driver.hpp"
 #include "../utils.hpp"
 #include <sys/socket.h>
 #include <netinet/tcp.h>
 namespace poseidon {
 
-Listen_Socket::
-Listen_Socket(const IPv6_Address& addr)
+TCP_Acceptor::
+TCP_Acceptor(const IPv6_Address& addr)
   :
     Abstract_Socket(SOCK_STREAM, IPPROTO_TCP)
   {
@@ -36,13 +36,13 @@ Listen_Socket(const IPv6_Address& addr)
     POSEIDON_LOG_INFO(("TCP socket listening on `$1`"), this->local_address());
   }
 
-Listen_Socket::
-~Listen_Socket()
+TCP_Acceptor::
+~TCP_Acceptor()
   {
   }
 
 void
-Listen_Socket::
+TCP_Acceptor::
 do_abstract_socket_on_closed()
   {
     POSEIDON_LOG_INFO((
@@ -52,7 +52,7 @@ do_abstract_socket_on_closed()
   }
 
 void
-Listen_Socket::
+TCP_Acceptor::
 do_abstract_socket_on_readable()
   {
     recursive_mutex::unique_lock io_lock;
@@ -78,17 +78,18 @@ do_abstract_socket_on_readable()
         continue;
       }
 
-      try {
-        // Use `TCP_NODELAY`. Errors are ignored.
-        static constexpr int true_value = 1;
-        ::setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &true_value, sizeof(int));
+      // Use `TCP_NODELAY`. Errors are ignored.
+      static constexpr int true_value = 1;
+      ::setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &true_value, sizeof(int));
 
+      IPv6_Address taddr;
+      taddr.set_addr(sa.sin6_addr);
+      taddr.set_port(ROCKET_BETOH16(sa.sin6_port));
+
+      try {
         // Accept the client socket. If a null pointer is returned, the accepted
         // socket will be closed immediately.
-        this->m_taddr.set_addr(sa.sin6_addr);
-        this->m_taddr.set_port(ROCKET_BETOH16(sa.sin6_port));
-
-        auto client = this->do_on_listen_new_client_opt(move(this->m_taddr), move(fd));
+        auto client = this->do_accept_socket_opt(taddr, move(fd));
         if(ROCKET_UNEXPECT(!client))
           continue;
 
@@ -96,7 +97,7 @@ do_abstract_socket_on_readable()
             "Accepted new TCP connection from `$3`",
             "[accepted socket `$4` (class `$5`)]",
             "[TCP listen socket `$1` (class `$2`)]"),
-            this, typeid(*this), this->m_taddr, client, typeid(*client));
+            this, typeid(*this), taddr, client, typeid(*client));
 
         driver.insert(client);
       }
@@ -114,19 +115,19 @@ do_abstract_socket_on_readable()
   }
 
 void
-Listen_Socket::
+TCP_Acceptor::
 do_abstract_socket_on_oob_readable()
   {
   }
 
 void
-Listen_Socket::
+TCP_Acceptor::
 do_abstract_socket_on_writable()
   {
   }
 
 void
-Listen_Socket::
+TCP_Acceptor::
 defer_accept(seconds timeout)
   {
     int value = clamp_cast<int>(timeout.count(), 0, INT_MAX);

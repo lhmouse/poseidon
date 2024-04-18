@@ -382,7 +382,7 @@ enum HTTP_Payload_Type : uint8_t;
 enum WebSocket_OpCode : uint8_t;
 class IPv6_Address;
 class Abstract_Socket;
-class Listen_Socket;
+class TCP_Acceptor;
 class UDP_Socket;
 class TCP_Socket;
 class SSL_Socket;

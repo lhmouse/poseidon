@@ -3,7 +3,7 @@
 
 #include "../xprecompiled.hpp"
 #include "easy_https_server.hpp"
-#include "../socket/listen_socket.hpp"
+#include "../socket/tcp_acceptor.hpp"
 #include "../static/network_driver.hpp"
 #include "../fiber/abstract_fiber.hpp"
 #include "../static/fiber_scheduler.hpp"
@@ -210,22 +210,22 @@ struct Final_Session final : HTTPS_Server_Session
       }
   };
 
-struct Final_Listener final : Listen_Socket
+struct Final_Acceptor final : TCP_Acceptor
   {
     Easy_HTTPS_Server::thunk_type m_thunk;
     wkptr<Session_Table> m_wsessions;
 
-    Final_Listener(const Easy_HTTPS_Server::thunk_type& thunk, const IPv6_Address& addr,
+    Final_Acceptor(const Easy_HTTPS_Server::thunk_type& thunk, const IPv6_Address& addr,
                    shptrR<Session_Table> sessions)
       :
-        Listen_Socket(addr), m_thunk(thunk), m_wsessions(sessions)
+        TCP_Acceptor(addr), m_thunk(thunk), m_wsessions(sessions)
       {
         this->defer_accept(10s);
       }
 
     virtual
     shptr<Abstract_Socket>
-    do_on_listen_new_client_opt(IPv6_Address&& addr, unique_posix_fd&& fd) override
+    do_accept_socket_opt(const IPv6_Address& addr, unique_posix_fd&& fd) override
       {
         auto sessions = this->m_wsessions.lock();
         if(!sessions)
@@ -254,18 +254,18 @@ Easy_HTTPS_Server::
   {
   }
 
-shptr<Listen_Socket>
+shptr<TCP_Acceptor>
 Easy_HTTPS_Server::
 start(chars_view addr)
   {
     IPv6_Address saddr(addr);
     auto sessions = new_sh<X_Session_Table>();
-    auto listener = new_sh<Final_Listener>(this->m_thunk, saddr, sessions);
+    auto acceptor = new_sh<Final_Acceptor>(this->m_thunk, saddr, sessions);
 
-    network_driver.insert(listener);
+    network_driver.insert(acceptor);
     this->m_sessions = move(sessions);
-    this->m_listener = listener;
-    return listener;
+    this->m_acceptor = acceptor;
+    return acceptor;
   }
 
 void
@@ -273,7 +273,7 @@ Easy_HTTPS_Server::
 stop() noexcept
   {
     this->m_sessions = nullptr;
-    this->m_listener = nullptr;
+    this->m_acceptor = nullptr;
   }
 
 }  // namespace poseidon

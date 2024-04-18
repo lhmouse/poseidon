@@ -1,27 +1,25 @@
 // This file is part of Poseidon.
 // Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
 
-#ifndef POSEIDON_SOCKET_LISTEN_SOCKET_
-#define POSEIDON_SOCKET_LISTEN_SOCKET_
+#ifndef POSEIDON_SOCKET_TCP_ACCEPTOR_
+#define POSEIDON_SOCKET_TCP_ACCEPTOR_
 
 #include "../fwd.hpp"
 #include "enums.hpp"
 #include "abstract_socket.hpp"
 namespace poseidon {
 
-class Listen_Socket
+class TCP_Acceptor
   :
     public Abstract_Socket
   {
   private:
     friend class Network_Driver;
 
-    IPv6_Address m_taddr;
-
   protected:
     // Creates a TCP socket that is bound onto the given address, that accepts
     // either TCP or SSL connections.
-    explicit Listen_Socket(const IPv6_Address& addr);
+    explicit TCP_Acceptor(const IPv6_Address& addr);
 
   protected:
     // These callbacks implement `Abstract_Socket`.
@@ -46,12 +44,12 @@ class Listen_Socket
     // should return a pointer to a socket object, constructed from the given FD.
     virtual
     shptr<Abstract_Socket>
-    do_on_listen_new_client_opt(IPv6_Address&& addr, unique_posix_fd&& fd) = 0;
+    do_accept_socket_opt(const IPv6_Address& addr, unique_posix_fd&& fd) = 0;
 
   public:
-    Listen_Socket(const Listen_Socket&) = delete;
-    Listen_Socket& operator=(const Listen_Socket&) & = delete;
-    virtual ~Listen_Socket();
+    TCP_Acceptor(const TCP_Acceptor&) = delete;
+    TCP_Acceptor& operator=(const TCP_Acceptor&) & = delete;
+    virtual ~TCP_Acceptor();
 
     // Defers connection establishment until the given timeout.
     void
