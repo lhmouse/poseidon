@@ -60,19 +60,13 @@ class Easy_SSL_Server
     ~Easy_SSL_Server();
 
     // Starts listening the given address and port for incoming connections.
-    void
+    shptr<Listen_Socket>
     start(chars_view addr);
 
     // Shuts down the listening socket, if any. All existent clients are also
     // disconnected immediately.
     void
     stop() noexcept;
-
-    // Gets the bound address of this server for incoming connections. In case
-    // of errors, `ipv6_invalid` is returned.
-    ROCKET_PURE
-    const IPv6_Address&
-    local_address() const noexcept;
   };
 
 }  // namespace poseidon

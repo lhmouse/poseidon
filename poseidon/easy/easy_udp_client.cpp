@@ -124,9 +124,9 @@ Easy_UDP_Client::
   {
   }
 
-void
+shptr<UDP_Socket>
 Easy_UDP_Client::
-open()
+start()
   {
     auto queue = new_sh<X_Packet_Queue>();
     auto socket = new_sh<Final_Socket>(this->m_thunk, queue);
@@ -134,55 +134,16 @@ open()
 
     network_driver.insert(socket);
     this->m_queue = move(queue);
-    this->m_socket = move(socket);
+    this->m_socket = socket;
+    return socket;
   }
 
 void
 Easy_UDP_Client::
-close() noexcept
+stop() noexcept
   {
     this->m_queue = nullptr;
     this->m_socket = nullptr;
-  }
-
-const IPv6_Address&
-Easy_UDP_Client::
-local_address() const noexcept
-  {
-    if(!this->m_socket)
-      return ipv6_invalid;
-
-    return this->m_socket->local_address();
-  }
-
-void
-Easy_UDP_Client::
-join_multicast_group(const IPv6_Address& maddr, uint8_t ttl, bool loopback, const char* ifname_opt)
-  {
-    if(!this->m_socket)
-      POSEIDON_THROW(("Client not running"));
-
-    this->m_socket->join_multicast_group(maddr, ttl, loopback, ifname_opt);
-  }
-
-void
-Easy_UDP_Client::
-leave_multicast_group(const IPv6_Address& maddr, const char* ifname_opt)
-  {
-    if(!this->m_socket)
-      POSEIDON_THROW(("Client not running"));
-
-    this->m_socket->leave_multicast_group(maddr, ifname_opt);
-  }
-
-bool
-Easy_UDP_Client::
-udp_send(const IPv6_Address& addr, chars_view data)
-  {
-    if(!this->m_socket)
-      return false;
-
-    return this->m_socket->udp_send(addr, data);
   }
 
 }  // namespace poseidon

@@ -125,12 +125,14 @@ Easy_UDP_Server::
   {
   }
 
-void
+shptr<UDP_Socket>
 Easy_UDP_Server::
 start(chars_view addr)
   {
     // Parse the listen address string.
-    IPv6_Address saddr(addr);
+    IPv6_Address saddr;
+    if(saddr.parse(addr) != addr.n)
+      POSEIDON_THROW(("Invalid local IP address `$1`"), addr);
 
     // Initiate the server.
     auto queue = new_sh<X_Packet_Queue>();
@@ -139,7 +141,8 @@ start(chars_view addr)
 
     network_driver.insert(socket);
     this->m_queue = move(queue);
-    this->m_socket = move(socket);
+    this->m_socket = socket;
+    return socket;
   }
 
 void
@@ -148,46 +151,6 @@ stop() noexcept
   {
     this->m_queue = nullptr;
     this->m_socket = nullptr;
-  }
-
-const IPv6_Address&
-Easy_UDP_Server::
-local_address() const noexcept
-  {
-    if(!this->m_socket)
-      return ipv6_invalid;
-
-    return this->m_socket->local_address();
-  }
-
-void
-Easy_UDP_Server::
-join_multicast_group(const IPv6_Address& maddr, uint8_t ttl, bool loopback, const char* ifname_opt)
-  {
-    if(!this->m_socket)
-      POSEIDON_THROW(("Server not running"));
-
-    this->m_socket->join_multicast_group(maddr, ttl, loopback, ifname_opt);
-  }
-
-void
-Easy_UDP_Server::
-leave_multicast_group(const IPv6_Address& maddr, const char* ifname_opt)
-  {
-    if(!this->m_socket)
-      POSEIDON_THROW(("Server not running"));
-
-    this->m_socket->leave_multicast_group(maddr, ifname_opt);
-  }
-
-bool
-Easy_UDP_Server::
-udp_send(const IPv6_Address& addr, chars_view data)
-  {
-    if(!this->m_socket)
-      return false;
-
-    return this->m_socket->udp_send(addr, data);
   }
 
 }  // namespace poseidon

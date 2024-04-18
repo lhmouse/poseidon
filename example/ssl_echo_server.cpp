@@ -40,6 +40,7 @@ static Easy_SSL_Server my_server(
 void
 poseidon_module_main()
   {
-    my_server.start(&"[::]:3803");
-    POSEIDON_LOG_WARN(("example SSL server started: $1"), my_server.local_address());
+    static constexpr char bind_addr[] = "[::]:3803";
+    my_server.start(&bind_addr);
+    POSEIDON_LOG_WARN(("example SSL server started: $1"), bind_addr);
   }

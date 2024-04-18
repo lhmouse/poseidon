@@ -40,6 +40,7 @@ static Easy_TCP_Server my_server(
 void
 poseidon_module_main()
   {
-    my_server.start(&"[::]:3802");
-    POSEIDON_LOG_ERROR(("example TCP server started: $1"), my_server.local_address());
+    static constexpr char bind_addr[] = "[::]:3802";
+    my_server.start(&bind_addr);
+    POSEIDON_LOG_ERROR(("example TCP server started: $1"), bind_addr);
   }

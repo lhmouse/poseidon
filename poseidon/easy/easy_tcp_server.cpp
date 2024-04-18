@@ -235,12 +235,14 @@ Easy_TCP_Server::
   {
   }
 
-void
+shptr<Listen_Socket>
 Easy_TCP_Server::
 start(chars_view addr)
   {
     // Parse the listen address string.
-    IPv6_Address saddr(addr);
+    IPv6_Address saddr;
+    if(saddr.parse(addr) != addr.n)
+      POSEIDON_THROW(("Invalid local IP address `$1`"), addr);
 
     // Initiate the server.
     auto sessions = new_sh<X_Session_Table>();
@@ -248,7 +250,8 @@ start(chars_view addr)
 
     network_driver.insert(listener);
     this->m_sessions = move(sessions);
-    this->m_listener = move(listener);
+    this->m_listener = listener;
+    return listener;
   }
 
 void
@@ -257,16 +260,6 @@ stop() noexcept
   {
     this->m_sessions = nullptr;
     this->m_listener = nullptr;
-  }
-
-const IPv6_Address&
-Easy_TCP_Server::
-local_address() const noexcept
-  {
-    if(!this->m_listener)
-      return ipv6_invalid;
-
-    return this->m_listener->local_address();
   }
 
 }  // namespace poseidon

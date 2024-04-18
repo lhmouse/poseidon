@@ -17,13 +17,10 @@ Listen_Socket(const IPv6_Address& addr)
     static constexpr int true_value = 1;
     ::setsockopt(this->do_get_fd(), SOL_SOCKET, SO_REUSEADDR, &true_value, sizeof(int));
 
-    ::sockaddr_in6 sa;
+    ::sockaddr_in6 sa = { };
     sa.sin6_family = AF_INET6;
     sa.sin6_port = ROCKET_HTOBE16(addr.port());
-    sa.sin6_flowinfo = 0;
     sa.sin6_addr = addr.addr();
-    sa.sin6_scope_id = 0;
-
     if(::bind(this->do_get_fd(), (const ::sockaddr*) &sa, sizeof(sa)) != 0)
       POSEIDON_THROW((
           "Failed to bind TCP socket onto `$1`",

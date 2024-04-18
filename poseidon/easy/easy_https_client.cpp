@@ -238,7 +238,7 @@ connect(chars_view addr)
     auto r = this->m_sessions->session_map.try_emplace(session.get());
     ROCKET_ASSERT(r.second);
     r.first->second.session = session;
-    r.first->second.dns_task = dns_task;
+    r.first->second.dns_task = move(dns_task);
     return session;
   }
 

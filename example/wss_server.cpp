@@ -46,6 +46,7 @@ static Easy_WSS_Server my_server(
 void
 poseidon_module_main()
   {
-    my_server.start(&"[::]:3807");
-    POSEIDON_LOG_ERROR(("example WSS server started: $1"), my_server.local_address());
+    static constexpr char bind_addr[] = "[::]:3807";
+    my_server.start(&bind_addr);
+    POSEIDON_LOG_ERROR(("example WSS server started: $1"), bind_addr);
   }

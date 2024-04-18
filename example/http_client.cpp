@@ -62,7 +62,7 @@ static Easy_Timer my_timer(
       case 0:
         {
           cow_string addr = &"www.example.org";
-          my_client.connect(addr);
+          my_client_session = my_client.connect(addr);
           POSEIDON_LOG_ERROR(("example HTTP client connecting: addr = $1"), addr);
         }
         break;

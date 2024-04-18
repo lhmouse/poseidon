@@ -63,7 +63,7 @@ static Easy_Timer my_timer(
       case 0:
         {
           cow_string addr = &"localhost:3806/some/caddr?arg1=foo&arg2=bar";
-          my_client.connect(addr);
+          my_client_session = my_client.connect(addr);
           POSEIDON_LOG_WARN(("example WS client connecting: addr = $1"), addr);
         }
         break;

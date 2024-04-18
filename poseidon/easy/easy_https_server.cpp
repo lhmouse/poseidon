@@ -254,7 +254,7 @@ Easy_HTTPS_Server::
   {
   }
 
-void
+shptr<Listen_Socket>
 Easy_HTTPS_Server::
 start(chars_view addr)
   {
@@ -264,7 +264,8 @@ start(chars_view addr)
 
     network_driver.insert(listener);
     this->m_sessions = move(sessions);
-    this->m_listener = move(listener);
+    this->m_listener = listener;
+    return listener;
   }
 
 void
@@ -273,16 +274,6 @@ stop() noexcept
   {
     this->m_sessions = nullptr;
     this->m_listener = nullptr;
-  }
-
-const IPv6_Address&
-Easy_HTTPS_Server::
-local_address() const noexcept
-  {
-    if(!this->m_listener)
-      return ipv6_invalid;
-
-    return this->m_listener->local_address();
   }
 
 }  // namespace poseidon
