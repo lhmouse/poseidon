@@ -158,9 +158,9 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
         if(this->m_parser.frame_header().fin)
           switch(this->m_parser.frame_header().opcode)
           {
-            case 0:  // CONTINUATION
-            case 1:  // TEXT
-            case 2:  // BINARY
+            case websocket_continuation:
+            case websocket_text:
+            case websocket_binary:
               {
                 auto opcode = static_cast<WebSocket_OpCode>(this->m_parser.message_opcode());
                 ROCKET_ASSERT(is_any_of(opcode, { websocket_text, websocket_binary }));
@@ -168,7 +168,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
               }
               break;
 
-            case 8:  // CLOSE
+            case websocket_close:
               {
                 ROCKET_ASSERT(this->m_closure_notified == false);
                 this->m_closure_notified = true;
@@ -179,7 +179,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
               }
               return;
 
-            case 9:  // PING
+            case websocket_ping:
               {
                 POSEIDON_LOG_TRACE(("WebSocket PING from `$1`: $2"), this->remote_address(), payload);
                 this->do_on_ws_message_finish(websocket_ping, move(payload));
@@ -189,7 +189,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
               }
               break;
 
-            case 10:  // PONG
+            case websocket_pong:
               {
                 POSEIDON_LOG_TRACE(("WebSocket PONG from `$1`: $2"), this->remote_address(), payload);
                 this->do_on_ws_message_finish(websocket_pong, move(payload));
@@ -274,7 +274,7 @@ do_ws_send_raw_frame(int rsv_opcode, chars_view data)
     header.rsv1 = rsv_opcode >> 6 & 1;
     header.rsv2 = rsv_opcode >> 5 & 1;
     header.rsv3 = rsv_opcode >> 4 & 1;
-    header.opcode = rsv_opcode & 15;
+    header.opcode = static_cast<WebSocket_OpCode>(rsv_opcode & 15);
     header.payload_len = data.n;
 
     tinyfmt_ln fmt;
@@ -293,54 +293,58 @@ ws_send(WebSocket_OpCode opcode, chars_view data)
           "[WebSocket server session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    switch(opcode)
+    switch(static_cast<uint32_t>(opcode))
       {
-      case 1:  // TEXT
-      case 2:  // BINARY
-        if(this->m_pmce_opt) {
-          uint32_t pmce_threshold = this->m_parser.pmce_send_no_context_takeover() * 1024U + 16U;
-          if(data.n >= pmce_threshold) {
-            // Compress the payload and send it. When context takeover is active,
-            // compressed frames have dependency on each other, so the mutex must
-            // not be unlocked before the message is sent completely.
-            plain_mutex::unique_lock lock;
-            auto& out_buf = this->m_pmce_opt->deflate_output_buffer(lock);
-            out_buf.clear();
+      case websocket_text:
+      case websocket_binary:
+        {
+          if(this->m_pmce_opt) {
+            uint32_t pmce_threshold = this->m_parser.pmce_send_no_context_takeover() * 1024U + 16U;
+            if(data.n >= pmce_threshold) {
+              // Compress the payload and send it. When context takeover is active,
+              // compressed frames have dependency on each other, so the mutex must
+              // not be unlocked before the message is sent completely.
+              plain_mutex::unique_lock lock;
+              auto& out_buf = this->m_pmce_opt->deflate_output_buffer(lock);
+              out_buf.clear();
 
-            if(this->m_parser.pmce_send_no_context_takeover())
-              this->m_pmce_opt->deflate_reset(lock);
+              if(this->m_parser.pmce_send_no_context_takeover())
+                this->m_pmce_opt->deflate_reset(lock);
 
-            try {
-              this->m_pmce_opt->deflate_message_stream(lock, data);
-              this->m_pmce_opt->deflate_message_finish(lock);
+              try {
+                this->m_pmce_opt->deflate_message_stream(lock, data);
+                this->m_pmce_opt->deflate_message_finish(lock);
 
-              // FIN + RSV1 + opcode
-              return this->do_ws_send_raw_frame(0b11000000 | opcode, out_buf);
-            }
-            catch(exception& stdex) {
-              // When an error occurred, the deflator is left in an indeterminate
-              // state, so reset it and send the message uncompressed.
-              POSEIDON_LOG_ERROR(("Could not compress message: $1"), stdex);
-              this->m_pmce_opt->deflate_reset(lock);
+                // FIN + RSV1 + opcode
+                return this->do_ws_send_raw_frame(0b11000000 | opcode, out_buf);
+              }
+              catch(exception& stdex) {
+                // When an error occurred, the deflator is left in an indeterminate
+                // state, so reset it and send the message uncompressed.
+                POSEIDON_LOG_ERROR(("Could not compress message: $1"), stdex);
+                this->m_pmce_opt->deflate_reset(lock);
+              }
             }
           }
+
+          // Send the message uncompressed.
+          // FIN + opcode
+          return this->do_ws_send_raw_frame(0b10000000 | opcode, data);
         }
 
-        // Send the message uncompressed.
-        // FIN + opcode
-        return this->do_ws_send_raw_frame(0b10000000 | opcode, data);
+      case websocket_ping:
+      case websocket_pong:
+        {
+          if(data.n > 125)
+            POSEIDON_THROW((
+                "Control frame too large: `$3` > `125`",
+                "[WebSocket server session `$1` (class `$2`)]"),
+                this, typeid(*this), data.n);
 
-      case 9:  // PING
-      case 10:  // PONG
-        if(data.n > 125)
-          POSEIDON_THROW((
-              "Control frame too large: `$3` > `125`",
-              "[WebSocket server session `$1` (class `$2`)]"),
-              this, typeid(*this), data.n);
-
-        // Control messages can't be compressed, so send it as is.
-        // FIN + opcode
-        return this->do_ws_send_raw_frame(0b10000000 | opcode, data);
+          // Control messages can't be compressed, so send it as is.
+          // FIN + opcode
+          return this->do_ws_send_raw_frame(0b10000000 | opcode, data);
+        }
 
       default:
         POSEIDON_THROW((

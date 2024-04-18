@@ -13,7 +13,7 @@ struct HTTP_Request_Headers
     union {
       __m128i packed_fields_1 = { };
       struct {
-        uint64_t method;
+        HTTP_Method method;
         uint32_t method_ext;
         uint32_t packed_fields_2c;
       };

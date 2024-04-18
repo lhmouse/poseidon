@@ -374,10 +374,12 @@ enum HTTP_Method : uint64_t
 
 enum WebSocket_OpCode : uint8_t
   {
-    websocket_text    =  1,
-    websocket_binary  =  2,
-    websocket_ping    =  9,
-    websocket_pong    = 10,
+    websocket_continuation   =  0,
+    websocket_text           =  1,
+    websocket_binary         =  2,
+    websocket_close          =  8,
+    websocket_ping           =  9,
+    websocket_pong           = 10,
   };
 
 // Base types

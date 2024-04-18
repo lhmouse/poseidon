@@ -93,7 +93,7 @@ static Easy_Timer my_timer(
 
           // fragment 1
           header.fin = 0;
-          header.opcode = 1;
+          header.opcode = websocket_text;
           char data1[] = "fragmented";
           header.payload_len = sizeof(data1) - 1;
 
@@ -105,7 +105,7 @@ static Easy_Timer my_timer(
 
           // nested PING
           header.fin = 1;
-          header.opcode = 9;
+          header.opcode = websocket_ping;
           char ping1[] = "ping within fragmented text message";
           header.payload_len = sizeof(ping1) - 1;
 
@@ -117,7 +117,7 @@ static Easy_Timer my_timer(
 
           // fragment 2
           header.fin = 0;
-          header.opcode = 0;
+          header.opcode = websocket_continuation;
           char data2[] = " text";
           header.payload_len = sizeof(data2) - 1;
 
@@ -129,7 +129,7 @@ static Easy_Timer my_timer(
 
           // fragment 3
           header.fin = 1;
-          header.opcode = 0;
+          header.opcode = websocket_continuation;
           char data3[] = " data";
           header.payload_len = sizeof(data3) - 1;
 
@@ -150,7 +150,7 @@ static Easy_Timer my_timer(
 
           // fragment 1
           header.fin = 0;
-          header.opcode = 2;
+          header.opcode = websocket_binary;
           char data1[] = "fragmented";
           header.payload_len = sizeof(data1) - 1;
 
@@ -162,7 +162,7 @@ static Easy_Timer my_timer(
 
           // fragment 2
           header.fin = 0;
-          header.opcode = 0;
+          header.opcode = websocket_continuation;
           char data2[] = " binary";
           header.payload_len = sizeof(data2) - 1;
 
@@ -174,7 +174,7 @@ static Easy_Timer my_timer(
 
           // nested PING
           header.fin = 1;
-          header.opcode = 9;
+          header.opcode = websocket_ping;
           char ping1[] = "ping within fragmented binary message";
           header.payload_len = sizeof(ping1) - 1;
 
@@ -186,7 +186,7 @@ static Easy_Timer my_timer(
 
           // fragment 3
           header.fin = 1;
-          header.opcode = 0;
+          header.opcode = websocket_continuation;
           char data3[] = " data";
           header.payload_len = sizeof(data3) - 1;
 
