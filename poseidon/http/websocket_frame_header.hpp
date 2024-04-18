@@ -10,8 +10,7 @@ namespace poseidon {
 struct WebSocket_Frame_Header
   {
     union {
-      __m128i m_stor = { };
-
+      __m128i packed_fields_1 = { };
       struct {
         // The payload length is always stored as an `uint64_t`. The `encode()`
         // function will deduce the correct field basing on its value.
