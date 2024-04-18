@@ -6,7 +6,6 @@
 
 #include "../fwd.hpp"
 #include "enums.hpp"
-#include "../base/thunk.hpp"
 #include "../socket/wss_server_session.hpp"
 namespace poseidon {
 
@@ -14,15 +13,17 @@ class Easy_HWSS_Server
   {
   public:
     // This is also the prototype of callbacks for the constructor.
-    using thunk_type =
-      thunk<
-        shptrR<WSS_Server_Session>,  // session
-        Abstract_Fiber&,            // fiber for current callback
-        Easy_HWS_Event,              // event type; see comments above constructor
-        linear_buffer&&>;           // message payload
+    using callback_type =
+      ::rocket::shared_function<
+        void (
+          shptrR<WSS_Server_Session>,  // session
+          Abstract_Fiber&,             // fiber for current callback
+          Easy_HWS_Event,              // event type; see comments above constructor
+          linear_buffer&&              // message payload
+        )>;
 
   private:
-    thunk_type m_thunk;
+    callback_type m_callback;
 
     struct X_Session_Table;
     shptr<X_Session_Table> m_sessions;
@@ -48,10 +49,10 @@ class Easy_HWSS_Server
     // which is invoked accordingly in the main thread. The callback object is
     // never copied, and is allowed to modify itself.
     template<typename xCallback,
-    ROCKET_ENABLE_IF(thunk_type::is_viable<xCallback>::value)>
+    ROCKET_ENABLE_IF(callback_type::is_viable<xCallback>::value)>
     explicit Easy_HWSS_Server(xCallback&& cb)
       :
-        m_thunk(forward<xCallback>(cb))
+        m_callback(forward<xCallback>(cb))
       { }
 
   public:

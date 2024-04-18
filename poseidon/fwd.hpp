@@ -14,6 +14,8 @@
 #include <rocket/unique_posix_fd.hpp>
 #include <rocket/unique_posix_file.hpp>
 #include <rocket/unique_posix_dir.hpp>
+#include <rocket/shared_function.hpp>
+#include <rocket/static_char_buffer.hpp>
 #include <asteria/utils.hpp>
 #include <taxon.hpp>
 #include <array>
@@ -137,7 +139,6 @@ using ::rocket::unique_posix_fd;
 using ::rocket::unique_posix_file;
 using ::rocket::unique_posix_dir;
 
-POSEIDON_USING vfptr = void (*)(Ts...);
 POSEIDON_USING cow_bivector = ::rocket::cow_vector<::std::pair<Ts...>>;
 POSEIDON_USING opt = ::rocket::optional<Ts...>;
 POSEIDON_USING uniptr = ::std::unique_ptr<Ts...>;
@@ -146,6 +147,8 @@ POSEIDON_USING wkptr = ::std::weak_ptr<Ts...>;
 
 using cow_stringR = const ::rocket::cow_string&;
 POSEIDON_USING shptrR = const ::std::shared_ptr<Ts...>&;
+using charbuf_16 = ::rocket::static_char_buffer<16>;
+using charbuf_256 = ::rocket::static_char_buffer<256>;
 
 using ::rocket::begin;
 using ::rocket::end;
@@ -356,7 +359,6 @@ snview(const char* str, size_t n) noexcept
   { return chars_view(str, ::strnlen(str, n));  }
 
 // Base types
-class char256;
 class UUID;
 class DateTime;
 class Config_File;

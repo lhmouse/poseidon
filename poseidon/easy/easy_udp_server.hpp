@@ -6,7 +6,6 @@
 
 #include "../fwd.hpp"
 #include "enums.hpp"
-#include "../base/thunk.hpp"
 #include "../socket/udp_socket.hpp"
 namespace poseidon {
 
@@ -14,15 +13,17 @@ class Easy_UDP_Server
   {
   public:
     // This is also the prototype of callbacks for the constructor.
-    using thunk_type =
-      thunk<
-        shptrR<UDP_Socket>,  // session
-        Abstract_Fiber&,     // fiber for current callback
-        IPv6_Address&&,    // address of incoming packet
-        linear_buffer&&>;    // data of incoming packet
+    using callback_type =
+      ::rocket::shared_function<
+        void (
+          shptrR<UDP_Socket>,  // session
+          Abstract_Fiber&,     // fiber for current callback
+          IPv6_Address&&,      // address of incoming packet
+          linear_buffer&&      // data of incoming packet
+        )>;
 
   private:
-    thunk_type m_thunk;
+    callback_type m_callback;
 
     struct X_Packet_Queue;
     shptr<X_Packet_Queue> m_queue;
@@ -37,10 +38,10 @@ class Easy_UDP_Server
     // callback, which is invoked accordingly in the main thread. The callback
     // object is never copied, and is allowed to modify itself.
     template<typename xCallback,
-    ROCKET_ENABLE_IF(thunk_type::is_viable<xCallback>::value)>
+    ROCKET_ENABLE_IF(callback_type::is_viable<xCallback>::value)>
     explicit Easy_UDP_Server(xCallback&& cb)
       :
-        m_thunk(forward<xCallback>(cb))
+        m_callback(forward<xCallback>(cb))
       { }
 
   public:

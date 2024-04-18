@@ -79,8 +79,8 @@ class SSL_Socket
     // that have been offered by the client.
     // The default implementation returns an empty string.
     virtual
-    char256
-    do_on_ssl_alpn_request(vector<char256>&& protos);
+    charbuf_256
+    do_on_ssl_alpn_request(vector<charbuf_256>&& protos);
 
     // For a client-side socket, this function offers a list of protocols to the
     // server. This function must be called before SSL negotiation, for example
@@ -89,10 +89,10 @@ class SSL_Socket
     // will be offered to the server. Empty protocol names are ignored. If the
     // list is empty, ALPN is not requested.
     void
-    do_ssl_alpn_request(const char256* protos_opt, size_t protos_size);
+    do_ssl_alpn_request(const charbuf_256* protos_opt, size_t protos_size);
 
     void
-    do_ssl_alpn_request(const char256& proto);
+    do_ssl_alpn_request(const charbuf_256& proto);
 
   public:
     SSL_Socket(const SSL_Socket&) = delete;

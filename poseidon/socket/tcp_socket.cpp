@@ -13,7 +13,6 @@ TCP_Socket(unique_posix_fd&& fd)
   :
     Abstract_Socket(move(fd))
   {
-    POSEIDON_LOG_INFO(("TCP socket from `$1` accepted"), this->local_address());
   }
 
 TCP_Socket::

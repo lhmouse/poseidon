@@ -36,14 +36,15 @@ struct Session_Table
 
 struct Final_Fiber final : Abstract_Fiber
   {
-    Easy_HWSS_Server::thunk_type m_thunk;
+    Easy_HWSS_Server::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
     const volatile WSS_Server_Session* m_refptr;
 
-    Final_Fiber(const Easy_HWSS_Server::thunk_type& thunk, shptrR<Session_Table> sessions,
+    Final_Fiber(const Easy_HWSS_Server::callback_type& callback,
+                shptrR<Session_Table> sessions,
                 const volatile WSS_Server_Session* refptr)
       :
-        m_thunk(thunk), m_wsessions(sessions), m_refptr(refptr)
+        m_callback(callback), m_wsessions(sessions), m_refptr(refptr)
       { }
 
     virtual
@@ -90,7 +91,7 @@ struct Final_Fiber final : Abstract_Fiber
 
           try {
             // Process a message.
-            this->m_thunk(session, *this, event.type, move(event.data));
+            this->m_callback(session, *this, event.type, move(event.data));
           }
           catch(exception& stdex) {
             // Shut the connection down with a message.
@@ -103,13 +104,14 @@ struct Final_Fiber final : Abstract_Fiber
 
 struct Final_Session final : WSS_Server_Session
   {
-    Easy_HWSS_Server::thunk_type m_thunk;
+    Easy_HWSS_Server::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
 
-    Final_Session(const Easy_HWSS_Server::thunk_type& thunk, unique_posix_fd&& fd,
-                  shptrR<Session_Table> sessions)
+    Final_Session(const Easy_HWSS_Server::callback_type& callback,
+                  unique_posix_fd&& fd, shptrR<Session_Table> sessions)
       :
-        SSL_Socket(move(fd), network_driver), m_thunk(thunk), m_wsessions(sessions)
+        SSL_Socket(move(fd), network_driver),
+        m_callback(callback), m_wsessions(sessions)
       { }
 
     void
@@ -130,7 +132,7 @@ struct Final_Session final : WSS_Server_Session
           if(!session_iter->second.fiber_active) {
             // Create a new fiber, if none is active. The fiber shall only reset
             // `m_fiber_private_buffer` if no event is pending.
-            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, sessions, this));
+            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_callback, sessions, this));
             session_iter->second.fiber_active = true;
           }
 
@@ -232,13 +234,14 @@ struct Final_Session final : WSS_Server_Session
 
 struct Final_Acceptor final : TCP_Acceptor
   {
-    Easy_HWSS_Server::thunk_type m_thunk;
+    Easy_HWSS_Server::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
 
-    Final_Acceptor(const Easy_HWSS_Server::thunk_type& thunk, const IPv6_Address& addr,
-                   shptrR<Session_Table> sessions)
+    Final_Acceptor(const Easy_HWSS_Server::callback_type& callback,
+                   const IPv6_Address& addr, shptrR<Session_Table> sessions)
       :
-        TCP_Acceptor(addr), m_thunk(thunk), m_wsessions(sessions)
+        TCP_Acceptor(addr),
+        m_callback(callback), m_wsessions(sessions)
       {
         this->defer_accept(10s);
       }
@@ -251,7 +254,7 @@ struct Final_Acceptor final : TCP_Acceptor
         if(!sessions)
           return nullptr;
 
-        auto session = new_sh<Final_Session>(this->m_thunk, move(fd), sessions);
+        auto session = new_sh<Final_Session>(this->m_callback, move(fd), sessions);
         (void) addr;
 
         // We are in the network thread here.
@@ -280,7 +283,7 @@ start(chars_view addr)
   {
     IPv6_Address saddr(addr);
     auto sessions = new_sh<X_Session_Table>();
-    auto acceptor = new_sh<Final_Acceptor>(this->m_thunk, saddr, sessions);
+    auto acceptor = new_sh<Final_Acceptor>(this->m_callback, saddr, sessions);
 
     network_driver.insert(acceptor);
     this->m_sessions = move(sessions);

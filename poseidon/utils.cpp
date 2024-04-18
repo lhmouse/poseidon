@@ -426,11 +426,12 @@ mask_string(char* data, size_t size,  uint32_t* next_mask_key_opt, uint32_t mask
   }
 
 bool
-enqueue_log_message(vfptr<cow_string&, void*> composer_thunk, void* composer,
-                    uint8_t level, const char* func, const char* file, uint32_t line) noexcept
+enqueue_log_message(void composer_callback(cow_string&, void*), void* composer,
+                    uint8_t level, const char* func, const char* file,
+                    uint32_t line) noexcept
   try {
     cow_string sbuf;
-    composer_thunk(sbuf, composer);
+    composer_callback(sbuf, composer);
     sbuf.erase(sbuf.rfind_not_of(" \t\r\n") + 1);
 
     // Enqueue the message.
@@ -443,11 +444,11 @@ enqueue_log_message(vfptr<cow_string&, void*> composer_thunk, void* composer,
   }
 
 ::std::runtime_error
-create_runtime_error(vfptr<cow_string&, void*> composer_thunk, void* composer,
+create_runtime_error(void composer_callback(cow_string&, void*), void* composer,
                      const char* func, const char* file, uint32_t line)
   try {
     cow_string fmtbuf;
-    composer_thunk(fmtbuf, composer);
+    composer_callback(fmtbuf, composer);
     fmtbuf.erase(fmtbuf.rfind_not_of(" \t\r\n") + 1);
     ::std::string sbuf(fmtbuf.data(), fmtbuf.size());
 

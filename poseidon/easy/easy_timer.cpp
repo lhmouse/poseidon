@@ -30,12 +30,12 @@ struct Event_Queue
 
 struct Final_Fiber final : Abstract_Fiber
   {
-    Easy_Timer::thunk_type m_thunk;
+    Easy_Timer::callback_type m_callback;
     wkptr<Event_Queue> m_wqueue;
 
-    Final_Fiber(const Easy_Timer::thunk_type& thunk, shptrR<Event_Queue> queue)
+    Final_Fiber(const Easy_Timer::callback_type& callback, shptrR<Event_Queue> queue)
       :
-        m_thunk(thunk), m_wqueue(queue)
+        m_callback(callback), m_wqueue(queue)
       { }
 
     virtual
@@ -69,7 +69,7 @@ struct Final_Fiber final : Abstract_Fiber
           lock.unlock();
 
           try {
-            this->m_thunk(timer, *this, event.time);
+            this->m_callback(timer, *this, event.time);
           }
           catch(exception& stdex) {
             POSEIDON_LOG_ERROR((
@@ -82,12 +82,12 @@ struct Final_Fiber final : Abstract_Fiber
 
 struct Final_Timer final : Abstract_Timer
   {
-    Easy_Timer::thunk_type m_thunk;
+    Easy_Timer::callback_type m_callback;
     wkptr<Event_Queue> m_wqueue;
 
-    Final_Timer(const Easy_Timer::thunk_type& thunk, shptrR<Event_Queue> queue)
+    Final_Timer(const Easy_Timer::callback_type& callback, shptrR<Event_Queue> queue)
       :
-        m_thunk(thunk), m_wqueue(queue)
+        m_callback(callback), m_wqueue(queue)
       { }
 
     virtual
@@ -104,7 +104,7 @@ struct Final_Timer final : Abstract_Timer
         if(!queue->fiber_active) {
           // Create a new fiber, if none is active. The fiber shall only reset
           // `m_fiber_active` if no packet is pending.
-          fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, queue));
+          fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_callback, queue));
           queue->fiber_active = true;
         }
 
@@ -129,7 +129,7 @@ Easy_Timer::
 start(milliseconds delay, milliseconds period)
   {
     auto queue = new_sh<X_Event_Queue>();
-    auto timer = new_sh<Final_Timer>(this->m_thunk, queue);
+    auto timer = new_sh<Final_Timer>(this->m_callback, queue);
     queue->wtimer = timer;
 
     timer_driver.insert(timer, delay, period);

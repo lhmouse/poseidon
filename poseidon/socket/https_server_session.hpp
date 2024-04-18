@@ -30,8 +30,8 @@ class HTTPS_Server_Session
     do_on_ssl_stream(linear_buffer& data, bool eof) override;
 
     virtual
-    char256
-    do_on_ssl_alpn_request(vector<char256>&& protos) override;
+    charbuf_256
+    do_on_ssl_alpn_request(vector<charbuf_256>&& protos) override;
 
     // Checks whether the protocol has changed.
     bool

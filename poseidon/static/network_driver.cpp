@@ -6,7 +6,6 @@
 #include "../socket/abstract_socket.hpp"
 #include "../socket/ssl_socket.hpp"
 #include "../base/config_file.hpp"
-#include "../base/char256.hpp"
 #include "../utils.hpp"
 #include <rocket/once_flag.hpp>
 #include <sys/epoll.h>
@@ -113,8 +112,8 @@ do_alpn_callback(::SSL* ssl, const uint8_t** out, uint8_t* outlen, const uint8_t
       return SSL_TLSEXT_ERR_ALERT_FATAL;
 
     try {
-      vector<char256> alpn_req;
-      char256 alpn_resp;
+      vector<charbuf_256> alpn_req;
+      charbuf_256 alpn_resp;
 
       for(auto p = in;  (p != in + inlen) && (in + inlen - p >= 1U + *p);  p += 1U + *p) {
         // Copy a protocol name and append a zero terminator.

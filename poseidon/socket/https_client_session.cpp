@@ -3,7 +3,6 @@
 
 #include "../xprecompiled.hpp"
 #include "https_client_session.hpp"
-#include "../base/char256.hpp"
 #include "../utils.hpp"
 namespace poseidon {
 

@@ -36,6 +36,8 @@
 #include <rocket/mutex.hpp>
 #include <rocket/recursive_mutex.hpp>
 #include <rocket/condition_variable.hpp>
+#include <rocket/shared_function.hpp>
+#include <rocket/static_char_buffer.hpp>
 
 #include <iterator>
 #include <memory>

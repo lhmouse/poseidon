@@ -158,11 +158,12 @@ mask_string(char* data, size_t size, uint32_t* next_mask_key_opt, uint32_t mask_
 
 // These are internal functions.
 bool
-enqueue_log_message(vfptr<cow_string&, void*> composer_thunk, void* composer,
-                    uint8_t level, const char* func, const char* file, uint32_t line) noexcept;
+enqueue_log_message(void composer_callback(cow_string&, void*), void* composer,
+                    uint8_t level, const char* func, const char* file,
+                    uint32_t line) noexcept;
 
 ::std::runtime_error
-create_runtime_error(vfptr<cow_string&, void*> composer_thunk, void* composer,
+create_runtime_error(void composer_callback(cow_string&, void*), void* composer,
                      const char* func, const char* file, uint32_t line);
 
 // Compose a log message and enqueue it into the global logger. The `TEMPLATE`

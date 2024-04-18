@@ -41,14 +41,14 @@ struct Session_Table
 
 struct Final_Fiber final : Abstract_Fiber
   {
-    Easy_TCP_Server::thunk_type m_thunk;
+    Easy_TCP_Server::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
     const volatile TCP_Socket* m_refptr;
 
-    Final_Fiber(const Easy_TCP_Server::thunk_type& thunk, shptrR<Session_Table> sessions,
-                const volatile TCP_Socket* refptr)
+    Final_Fiber(const Easy_TCP_Server::callback_type& callback,
+                shptrR<Session_Table> sessions, const volatile TCP_Socket* refptr)
       :
-        m_thunk(thunk), m_wsessions(sessions), m_refptr(refptr)
+        m_callback(callback), m_wsessions(sessions), m_refptr(refptr)
       { }
 
     virtual
@@ -99,10 +99,10 @@ struct Final_Fiber final : Abstract_Fiber
             // `event.data`. `data_stream` may be consumed partially by user code,
             // and shall be preserved across callbacks.
             if(event.type == easy_stream_data)
-              this->m_thunk(socket, *this, event.type,
+              this->m_callback(socket, *this, event.type,
                         splice_buffers(queue->data_stream, move(event.data)), event.code);
             else
-              this->m_thunk(socket, *this, event.type, event.data, event.code);
+              this->m_callback(socket, *this, event.type, event.data, event.code);
           }
           catch(exception& stdex) {
             // Shut the connection down asynchronously. Pending output data
@@ -117,13 +117,14 @@ struct Final_Fiber final : Abstract_Fiber
 
 struct Final_Socket final : TCP_Socket
   {
-    Easy_TCP_Server::thunk_type m_thunk;
+    Easy_TCP_Server::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
 
-    Final_Socket(const Easy_TCP_Server::thunk_type& thunk, unique_posix_fd&& fd,
-                 shptrR<Session_Table> sessions)
+    Final_Socket(const Easy_TCP_Server::callback_type& callback,
+                 unique_posix_fd&& fd, shptrR<Session_Table> sessions)
       :
-        TCP_Socket(move(fd)), m_thunk(thunk), m_wsessions(sessions)
+        TCP_Socket(move(fd)),
+        m_callback(callback), m_wsessions(sessions)
       { }
 
     void
@@ -144,7 +145,7 @@ struct Final_Socket final : TCP_Socket
           if(!session_iter->second.fiber_active) {
             // Create a new fiber, if none is active. The fiber shall only reset
             // `m_fiber_private_buffer` if no event is pending.
-            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, sessions, this));
+            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_callback, sessions, this));
             session_iter->second.fiber_active = true;
           }
 
@@ -195,13 +196,14 @@ struct Final_Socket final : TCP_Socket
 
 struct Final_Acceptor final : TCP_Acceptor
   {
-    Easy_TCP_Server::thunk_type m_thunk;
+    Easy_TCP_Server::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
 
-    Final_Acceptor(const Easy_TCP_Server::thunk_type& thunk, const IPv6_Address& addr,
-                   shptrR<Session_Table> sessions)
+    Final_Acceptor(const Easy_TCP_Server::callback_type& callback,
+                   const IPv6_Address& addr, shptrR<Session_Table> sessions)
       :
-        TCP_Acceptor(addr), m_thunk(thunk), m_wsessions(sessions)
+        TCP_Acceptor(addr),
+        m_callback(callback), m_wsessions(sessions)
       { }
 
     virtual
@@ -212,7 +214,7 @@ struct Final_Acceptor final : TCP_Acceptor
         if(!sessions)
           return nullptr;
 
-        auto socket = new_sh<Final_Socket>(this->m_thunk, move(fd), sessions);
+        auto socket = new_sh<Final_Socket>(this->m_callback, move(fd), sessions);
         (void) addr;
 
         // We are in the network thread here.
@@ -246,7 +248,7 @@ start(chars_view addr)
 
     // Initiate the server.
     auto sessions = new_sh<X_Session_Table>();
-    auto acceptor = new_sh<Final_Acceptor>(this->m_thunk, saddr, sessions);
+    auto acceptor = new_sh<Final_Acceptor>(this->m_callback, saddr, sessions);
 
     network_driver.insert(acceptor);
     this->m_sessions = move(sessions);

@@ -40,14 +40,15 @@ struct Session_Table
 
 struct Final_Fiber final : Abstract_Fiber
   {
-    Easy_HTTP_Client::thunk_type m_thunk;
+    Easy_HTTP_Client::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
     const volatile HTTP_Client_Session* m_refptr;
 
-    Final_Fiber(const Easy_HTTP_Client::thunk_type& thunk, shptrR<Session_Table> sessions,
+    Final_Fiber(const Easy_HTTP_Client::callback_type& callback,
+                shptrR<Session_Table> sessions,
                 const volatile HTTP_Client_Session* refptr)
       :
-        m_thunk(thunk), m_wsessions(sessions), m_refptr(refptr)
+        m_callback(callback), m_wsessions(sessions), m_refptr(refptr)
       { }
 
     virtual
@@ -94,7 +95,7 @@ struct Final_Fiber final : Abstract_Fiber
 
           try {
             // Process a response.
-            this->m_thunk(session, *this, event.type, move(event.resp), move(event.data));
+            this->m_callback(session, *this, event.type, move(event.resp), move(event.data));
           }
           catch(exception& stdex) {
             // Shut the connection down asynchronously. Pending output data
@@ -112,12 +113,14 @@ struct Final_Fiber final : Abstract_Fiber
 
 struct Final_Session final : HTTP_Client_Session
   {
-    Easy_HTTP_Client::thunk_type m_thunk;
+    Easy_HTTP_Client::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
 
-    Final_Session(const Easy_HTTP_Client::thunk_type& thunk, shptrR<Session_Table> sessions)
+    Final_Session(const Easy_HTTP_Client::callback_type& callback,
+                  shptrR<Session_Table> sessions)
       :
-        TCP_Socket(), HTTP_Client_Session(), m_thunk(thunk), m_wsessions(sessions)
+        TCP_Socket(), HTTP_Client_Session(),
+        m_callback(callback), m_wsessions(sessions)
       { }
 
     void
@@ -138,7 +141,7 @@ struct Final_Session final : HTTP_Client_Session
           if(!session_iter->second.fiber_active) {
             // Create a new fiber, if none is active. The fiber shall only reset
             // `m_fiber_private_buffer` if no event is pending.
-            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, sessions, this));
+            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_callback, sessions, this));
             session_iter->second.fiber_active = true;
           }
 
@@ -226,7 +229,7 @@ connect(chars_view addr)
     if(!this->m_sessions)
       this->m_sessions = new_sh<X_Session_Table>();
 
-    auto session = new_sh<Final_Session>(this->m_thunk, this->m_sessions);
+    auto session = new_sh<Final_Session>(this->m_callback, this->m_sessions);
     session->http_set_default_host(format_string("$1:$2", caddr.host, caddr.port_num));
     auto dns_task = new_sh<DNS_Connect_Task>(network_driver,
                        session, cow_string(caddr.host), caddr.port_num);

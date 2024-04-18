@@ -6,21 +6,22 @@
 
 #include "../fwd.hpp"
 #include "enums.hpp"
-#include "../base/thunk.hpp"
 namespace poseidon {
 
 class Easy_Timer
   {
   public:
     // This is also the prototype of callbacks for the constructor.
-    using thunk_type =
-      thunk<
-        shptrR<Abstract_Timer>,  // timer
-        Abstract_Fiber&,         // fiber for current callback
-        steady_time>;            // time of trigger
+    using callback_type =
+      ::rocket::shared_function<
+        void (
+          shptrR<Abstract_Timer>,  // timer
+          Abstract_Fiber&,         // fiber for current callback
+          steady_time              // time of trigger
+        )>;
 
   private:
-    thunk_type m_thunk;
+    callback_type m_callback;
 
     struct X_Event_Queue;
     shptr<X_Event_Queue> m_queue;
@@ -33,10 +34,10 @@ class Easy_Timer
     // the main thread. The callback object is never copied, and is allowed to
     // modify itself.
     template<typename xCallback,
-    ROCKET_ENABLE_IF(thunk_type::is_viable<xCallback>::value)>
+    ROCKET_ENABLE_IF(callback_type::is_viable<xCallback>::value)>
     explicit Easy_Timer(xCallback&& cb)
       :
-        m_thunk(forward<xCallback>(cb))
+        m_callback(forward<xCallback>(cb))
       { }
 
   public:

@@ -6,7 +6,6 @@
 
 #include "../fwd.hpp"
 #include "enums.hpp"
-#include "../base/thunk.hpp"
 #include "../socket/http_server_session.hpp"
 namespace poseidon {
 
@@ -14,16 +13,18 @@ class Easy_HTTP_Server
   {
   public:
     // This is also the prototype of callbacks for the constructor.
-    using thunk_type =
-      thunk<
-        shptrR<HTTP_Server_Session>,  // session
-        Abstract_Fiber&,              // fiber for current callback
-        Easy_HTTP_Event,              // event type; see comments above constructor
-        HTTP_Request_Headers&&,       // request method, URI, and headers
-        linear_buffer&&>;             // request payload body
+    using callback_type =
+      ::rocket::shared_function<
+        void (
+          shptrR<HTTP_Server_Session>,  // session
+          Abstract_Fiber&,              // fiber for current callback
+          Easy_HTTP_Event,              // event type; see comments above constructor
+          HTTP_Request_Headers&&,       // request method, URI, and headers
+          linear_buffer&&               // request payload body
+        )>;
 
   private:
-    thunk_type m_thunk;
+    callback_type m_callback;
 
     struct X_Session_Table;
     shptr<X_Session_Table> m_sessions;
@@ -46,10 +47,10 @@ class Easy_HTTP_Server
     // object, which is invoked accordingly in the main thread. The callback
     // object is never copied, and is allowed to modify itself.
     template<typename xCallback,
-    ROCKET_ENABLE_IF(thunk_type::is_viable<xCallback>::value)>
+    ROCKET_ENABLE_IF(callback_type::is_viable<xCallback>::value)>
     explicit Easy_HTTP_Server(xCallback&& cb)
       :
-        m_thunk(forward<xCallback>(cb))
+        m_callback(forward<xCallback>(cb))
       { }
 
   public:

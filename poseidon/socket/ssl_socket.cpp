@@ -3,7 +3,6 @@
 
 #include "../xprecompiled.hpp"
 #include "ssl_socket.hpp"
-#include "../base/char256.hpp"
 #include "../static/network_driver.hpp"
 #include "../utils.hpp"
 #include <sys/socket.h>
@@ -30,8 +29,6 @@ SSL_Socket(unique_posix_fd&& fd, const Network_Driver& driver)
           ::ERR_reason_error_string(::ERR_peek_error()));
 
     ::SSL_set_accept_state(this->m_ssl);
-
-    POSEIDON_LOG_INFO(("SSL socket from `$1` accepted"), this->local_address());
   }
 
 SSL_Socket::
@@ -59,9 +56,9 @@ SSL_Socket::
   {
   }
 
-char256
+charbuf_256
 SSL_Socket::
-do_on_ssl_alpn_request(vector<char256>&& protos)
+do_on_ssl_alpn_request(vector<charbuf_256>&& protos)
   {
     for(const char* proto : protos)
       POSEIDON_LOG_DEBUG((
@@ -74,7 +71,7 @@ do_on_ssl_alpn_request(vector<char256>&& protos)
 
 void
 SSL_Socket::
-do_ssl_alpn_request(const char256* protos_opt, size_t protos_size)
+do_ssl_alpn_request(const charbuf_256* protos_opt, size_t protos_size)
   {
     if(protos_size == 1)
       return this->do_ssl_alpn_request(*protos_opt);
@@ -104,7 +101,7 @@ do_ssl_alpn_request(const char256* protos_opt, size_t protos_size)
 
 void
 SSL_Socket::
-do_ssl_alpn_request(const char256& proto)
+do_ssl_alpn_request(const charbuf_256& proto)
   {
     static_vector<uint8_t, 256> pbuf;
 

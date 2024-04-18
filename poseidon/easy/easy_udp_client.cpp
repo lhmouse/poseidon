@@ -30,12 +30,12 @@ struct Packet_Queue
 
 struct Final_Fiber final : Abstract_Fiber
   {
-    Easy_UDP_Client::thunk_type m_thunk;
+    Easy_UDP_Client::callback_type m_callback;
     wkptr<Packet_Queue> m_wqueue;
 
-    Final_Fiber(const Easy_UDP_Client::thunk_type& thunk, shptrR<Packet_Queue> queue)
+    Final_Fiber(const Easy_UDP_Client::callback_type& callback, shptrR<Packet_Queue> queue)
       :
-        m_thunk(thunk), m_wqueue(queue)
+        m_callback(callback), m_wqueue(queue)
       { }
 
     virtual
@@ -69,7 +69,7 @@ struct Final_Fiber final : Abstract_Fiber
           lock.unlock();
 
           try {
-            this->m_thunk(socket, *this, move(packet.addr), move(packet.data));
+            this->m_callback(socket, *this, move(packet.addr), move(packet.data));
           }
           catch(exception& stdex) {
             POSEIDON_LOG_ERROR((
@@ -82,12 +82,12 @@ struct Final_Fiber final : Abstract_Fiber
 
 struct Final_Socket final : UDP_Socket
   {
-    Easy_UDP_Client::thunk_type m_thunk;
+    Easy_UDP_Client::callback_type m_callback;
     wkptr<Packet_Queue> m_wqueue;
 
-    Final_Socket(const Easy_UDP_Client::thunk_type& thunk, shptrR<Packet_Queue> queue)
+    Final_Socket(const Easy_UDP_Client::callback_type& callback, shptrR<Packet_Queue> queue)
       :
-        m_thunk(thunk), m_wqueue(queue)
+        m_callback(callback), m_wqueue(queue)
       { }
 
     virtual
@@ -104,7 +104,7 @@ struct Final_Socket final : UDP_Socket
         if(!queue->fiber_active) {
           // Create a new fiber, if none is active. The fiber shall only reset
           // `m_fiber_active` if no packet is pending.
-          fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, queue));
+          fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_callback, queue));
           queue->fiber_active = true;
         }
 
@@ -129,7 +129,7 @@ Easy_UDP_Client::
 start()
   {
     auto queue = new_sh<X_Packet_Queue>();
-    auto socket = new_sh<Final_Socket>(this->m_thunk, queue);
+    auto socket = new_sh<Final_Socket>(this->m_callback, queue);
     queue->wsocket = socket;
 
     network_driver.insert(socket);

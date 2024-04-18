@@ -4,7 +4,6 @@
 #include "../xprecompiled.hpp"
 #include "https_server_session.hpp"
 #include "../http/http_header_parser.hpp"
-#include "../base/char256.hpp"
 #include "../utils.hpp"
 namespace poseidon {
 
@@ -112,9 +111,9 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
     }
   }
 
-char256
+charbuf_256
 HTTPS_Server_Session::
-do_on_ssl_alpn_request(vector<char256>&& protos)
+do_on_ssl_alpn_request(vector<charbuf_256>&& protos)
   {
     for(const auto& proto : protos)
       if(::strcmp(proto.c_str(), "http/1.1") == 0)

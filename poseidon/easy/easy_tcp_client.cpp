@@ -43,14 +43,14 @@ struct Session_Table
 
 struct Final_Fiber final : Abstract_Fiber
   {
-    Easy_TCP_Client::thunk_type m_thunk;
+    Easy_TCP_Client::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
     const volatile TCP_Socket* m_refptr;
 
-    Final_Fiber(const Easy_TCP_Client::thunk_type& thunk, shptrR<Session_Table> sessions,
-                const volatile TCP_Socket* refptr)
+    Final_Fiber(const Easy_TCP_Client::callback_type& callback,
+                shptrR<Session_Table> sessions, const volatile TCP_Socket* refptr)
       :
-        m_thunk(thunk), m_wsessions(sessions), m_refptr(refptr)
+        m_callback(callback), m_wsessions(sessions), m_refptr(refptr)
       { }
 
     virtual
@@ -101,10 +101,10 @@ struct Final_Fiber final : Abstract_Fiber
             // `event.data`. `data_stream` may be consumed partially by user code,
             // and shall be preserved across callbacks.
             if(event.type == easy_stream_data)
-              this->m_thunk(socket, *this, event.type,
+              this->m_callback(socket, *this, event.type,
                         splice_buffers(queue->data_stream, move(event.data)), event.code);
             else
-              this->m_thunk(socket, *this, event.type, event.data, event.code);
+              this->m_callback(socket, *this, event.type, event.data, event.code);
           }
           catch(exception& stdex) {
             // Shut the connection down asynchronously. Pending output data
@@ -119,12 +119,14 @@ struct Final_Fiber final : Abstract_Fiber
 
 struct Final_Socket final : TCP_Socket
   {
-    Easy_TCP_Client::thunk_type m_thunk;
+    Easy_TCP_Client::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
 
-    Final_Socket(const Easy_TCP_Client::thunk_type& thunk, shptrR<Session_Table> sessions)
+    Final_Socket(const Easy_TCP_Client::callback_type& callback,
+                 shptrR<Session_Table> sessions)
       :
-        TCP_Socket(), m_thunk(thunk), m_wsessions(sessions)
+        TCP_Socket(),
+        m_callback(callback), m_wsessions(sessions)
       { }
 
     void
@@ -145,7 +147,7 @@ struct Final_Socket final : TCP_Socket
           if(!session_iter->second.fiber_active) {
             // Create a new fiber, if none is active. The fiber shall only reset
             // `m_fiber_private_buffer` if no event is pending.
-            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_thunk, sessions, this));
+            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_callback, sessions, this));
             session_iter->second.fiber_active = true;
           }
 
@@ -231,7 +233,7 @@ connect(chars_view addr)
     if(!this->m_sessions)
       this->m_sessions = new_sh<X_Session_Table>();
 
-    auto socket = new_sh<Final_Socket>(this->m_thunk, this->m_sessions);
+    auto socket = new_sh<Final_Socket>(this->m_callback, this->m_sessions);
     auto dns_task = new_sh<DNS_Connect_Task>(network_driver,
                        socket, cow_string(caddr.host), caddr.port_num);
 
