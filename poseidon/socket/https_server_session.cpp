@@ -22,7 +22,7 @@ HTTPS_Server_Session::
 do_on_ssl_stream(linear_buffer& data, bool eof)
   {
     if(this->m_upgrade_ack.load()) {
-      this->do_on_https_upgraded_stream(data, eof);
+      this->do_on_http_upgraded_stream(data, eof);
       return;
     }
 
@@ -30,7 +30,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
       // Check whether the connection has switched to another protocol.
       if(this->m_upgrade_ack.load()) {
         this->m_req_parser.deallocate();
-        this->do_on_https_upgraded_stream(data, eof);
+        this->do_on_http_upgraded_stream(data, eof);
         return;
       }
 
@@ -45,7 +45,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
 
         if(this->m_req_parser.error()) {
           data.clear();
-          this->do_on_https_request_error(this->m_req_parser.http_status_from_error());
+          this->do_on_http_request_error(this->m_req_parser.http_status_from_error());
           return;
         }
 
@@ -60,12 +60,12 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
 
         if(headers.uri_host.empty()) {
           data.clear();
-          this->do_on_https_request_error(400);
+          this->do_on_http_request_error(http_status_bad_request);
           return;
         }
 
         bool fin = this->m_req_parser.should_close_after_payload();
-        auto payload_type = this->do_on_https_request_headers(headers, fin);
+        auto payload_type = this->do_on_http_request_headers(headers, fin);
         switch(payload_type)
           {
           case http_payload_normal:
@@ -75,7 +75,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
           case http_payload_connect:
             this->m_upgrade_ack.store(true);
             this->m_req_parser.deallocate();
-            this->do_on_https_upgraded_stream(data, eof);
+            this->do_on_http_upgraded_stream(data, eof);
             return;
 
           default:
@@ -91,17 +91,17 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
 
         if(this->m_req_parser.error()) {
           data.clear();
-          this->do_on_https_request_error(this->m_req_parser.http_status_from_error());
+          this->do_on_http_request_error(this->m_req_parser.http_status_from_error());
           return;
         }
 
-        this->do_on_https_request_payload_stream(this->m_req_parser.mut_payload());
+        this->do_on_http_request_payload_stream(this->m_req_parser.mut_payload());
 
         if(!this->m_req_parser.payload_complete())
           return;
 
         // The message is complete now.
-        this->do_on_https_request_finish(move(this->m_req_parser.mut_headers()),
+        this->do_on_http_request_finish(move(this->m_req_parser.mut_headers()),
                                          move(this->m_req_parser.mut_payload()),
                                          this->m_req_parser.should_close_after_payload());
       }
@@ -125,11 +125,11 @@ do_on_ssl_alpn_request(vector<charbuf_256>&& protos)
 
 HTTP_Payload_Type
 HTTPS_Server_Session::
-do_on_https_request_headers(HTTP_Request_Headers& req, bool /*close_after_payload*/)
+do_on_http_request_headers(HTTP_Request_Headers& req, bool /*close_after_payload*/)
   {
     if(req.is_proxy) {
       // Reject proxy requests.
-      this->do_on_https_request_error(403);
+      this->do_on_http_request_error(http_status_forbidden);
       return http_payload_normal;
     }
 
@@ -144,9 +144,9 @@ do_on_https_request_headers(HTTP_Request_Headers& req, bool /*close_after_payloa
 
 void
 HTTPS_Server_Session::
-do_on_https_request_payload_stream(linear_buffer& data)
+do_on_http_request_payload_stream(linear_buffer& data)
   {
-    // Leave `data` alone for consumption by `do_on_https_request_finish()`,
+    // Leave `data` alone for consumption by `do_on_http_request_finish()`,
     // but perform some security checks, so we won't be affected by compromised
     // 3rd-party servers.
     if(data.size() > this->m_req_parser.max_content_length())
@@ -159,7 +159,7 @@ do_on_https_request_payload_stream(linear_buffer& data)
 __attribute__((__noreturn__))
 void
 HTTPS_Server_Session::
-do_on_https_upgraded_stream(linear_buffer& data, bool eof)
+do_on_http_upgraded_stream(linear_buffer& data, bool eof)
   {
     POSEIDON_THROW((
         "`do_on_http_upgraded_stream()` not implemented: data.size `$3`, eof `$4`",
@@ -169,7 +169,7 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
 
 bool
 HTTPS_Server_Session::
-do_https_raw_response(const HTTP_Response_Headers& resp, chars_view data)
+do_http_raw_response(const HTTP_Response_Headers& resp, chars_view data)
   {
     // Compose the message and send it as a whole.
     tinyfmt_ln fmt;
@@ -203,7 +203,7 @@ do_https_raw_response(const HTTP_Response_Headers& resp, chars_view data)
 
 bool
 HTTPS_Server_Session::
-https_response_headers_only(HTTP_Response_Headers&& resp)
+http_response_headers_only(HTTP_Response_Headers&& resp)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -211,12 +211,12 @@ https_response_headers_only(HTTP_Response_Headers&& resp)
           "[HTTPS server session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    return this->do_https_raw_response(resp, "");
+    return this->do_http_raw_response(resp, "");
   }
 
 bool
 HTTPS_Server_Session::
-https_response(HTTP_Response_Headers&& resp, chars_view data)
+http_response(HTTP_Response_Headers&& resp, chars_view data)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -227,18 +227,18 @@ https_response(HTTP_Response_Headers&& resp, chars_view data)
     // Some responses are required to have no payload payload and require no
     // `Content-Length` header.
     if((resp.status <= 199) || (resp.status == 204) || (resp.status == 304))
-      return this->do_https_raw_response(resp, "");
+      return this->do_http_raw_response(resp, "");
 
     // Otherwise, a `Content-Length` is required; otherwise the response would
     // be interpreted as terminating by closure ofthe connection.
     resp.headers.emplace_back(&"Content-Length", (double)(int64_t) data.n);
 
-    return this->do_https_raw_response(resp, data);
+    return this->do_http_raw_response(resp, data);
   }
 
 bool
 HTTPS_Server_Session::
-https_chunked_response_start(HTTP_Response_Headers&& resp)
+http_chunked_response_start(HTTP_Response_Headers&& resp)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -249,12 +249,12 @@ https_chunked_response_start(HTTP_Response_Headers&& resp)
     // Write a chunked header.
     resp.headers.emplace_back(&"Transfer-Encoding", &"chunked");
 
-    return this->do_https_raw_response(resp, "");
+    return this->do_http_raw_response(resp, "");
   }
 
 bool
 HTTPS_Server_Session::
-https_chunked_response_send(chars_view data)
+http_chunked_response_send(chars_view data)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -280,7 +280,7 @@ https_chunked_response_send(chars_view data)
 
 bool
 HTTPS_Server_Session::
-https_chunked_response_finish()
+http_chunked_response_finish()
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((

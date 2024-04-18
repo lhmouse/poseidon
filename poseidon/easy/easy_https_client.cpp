@@ -165,7 +165,7 @@ struct Final_Session final : HTTPS_Client_Session
 
     virtual
     void
-    do_on_https_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data,
+    do_on_http_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data,
                                 bool close_now) override
       {
         Session_Table::Event_Queue::Event event;
@@ -230,7 +230,7 @@ connect(chars_view addr)
       this->m_sessions = new_sh<X_Session_Table>();
 
     auto session = new_sh<Final_Session>(this->m_callback, this->m_sessions);
-    session->https_set_default_host(format_string("$1:$2", caddr.host, caddr.port_num));
+    session->http_set_default_host(format_string("$1:$2", caddr.host, caddr.port_num));
     auto dns_task = new_sh<DNS_Connect_Task>(network_driver,
                        session, cow_string(caddr.host), caddr.port_num);
 

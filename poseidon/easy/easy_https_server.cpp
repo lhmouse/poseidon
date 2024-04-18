@@ -26,7 +26,7 @@ struct Session_Table
             HTTP_Request_Headers req;
             linear_buffer data;
             bool close_now = false;
-            uint32_t status = 0;
+            HTTP_Status status = http_status_null;
           };
 
         deque<Event> events;
@@ -98,7 +98,7 @@ struct Final_Fiber final : Abstract_Fiber
               HTTP_Response_Headers resp;
               resp.status = event.status;
               resp.headers.emplace_back(&"Connection", &"close");
-              session->https_response(move(resp), "");
+              session->http_response(move(resp), "");
             }
             else {
               // Process a request.
@@ -113,9 +113,9 @@ struct Final_Fiber final : Abstract_Fiber
             // XXX: The user-defined callback may have sent a response...?
             POSEIDON_LOG_ERROR(("Unhandled exception thrown from1"), stdex);
             HTTP_Response_Headers resp;
-            resp.status = 500;
+            resp.status = http_status_internal_server_error;
             resp.headers.emplace_back(&"Connection", &"close");
-            session->https_response(move(resp), "");
+            session->http_response(move(resp), "");
             session->ssl_shut_down();
           }
         }
@@ -176,7 +176,7 @@ struct Final_Session final : HTTPS_Server_Session
 
     virtual
     void
-    do_on_https_request_finish(HTTP_Request_Headers&& req, linear_buffer&& data,
+    do_on_http_request_finish(HTTP_Request_Headers&& req, linear_buffer&& data,
                                bool close_now) override
       {
         Session_Table::Event_Queue::Event event;
@@ -189,7 +189,7 @@ struct Final_Session final : HTTPS_Server_Session
 
     virtual
     void
-    do_on_https_request_error(uint32_t status) override
+    do_on_http_request_error(HTTP_Status status) override
       {
         Session_Table::Event_Queue::Event event;
         event.status = status;

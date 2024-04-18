@@ -96,8 +96,8 @@ struct Final_Fiber final : Abstract_Fiber
           }
           catch(exception& stdex) {
             // Shut the connection down with a message.
-            POSEIDON_LOG_ERROR(("Unhandled exception thrown fromlient: $1"), stdex);
-            session->ws_shut_down(1015);
+            POSEIDON_LOG_ERROR(("Unhandled exception thrown from easy WS client: $1"), stdex);
+            session->ws_shut_down(websocket_status_unexpected_error);
           }
         }
       }
@@ -177,7 +177,7 @@ struct Final_Session final : WS_Client_Session
 
     virtual
     void
-    do_on_ws_close(uint16_t status, chars_view reason) override
+    do_on_ws_close(WebSocket_Status status, chars_view reason) override
       {
         Session_Table::Event_Queue::Event event;
         event.type = easy_ws_close;

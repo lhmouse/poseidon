@@ -19,7 +19,7 @@ encode(tinyfmt& fmt) const
     if(!this->reason.empty())
       fmt << this->reason;
     else
-      fmt << ::http_status_str((::http_status) this->status);
+      fmt << ::http_status_str(static_cast<::http_status>(this->status));
 
     // Write response headers. Empty headers are ignored.
     for(const auto& hpair : this->headers)

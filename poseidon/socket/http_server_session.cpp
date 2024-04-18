@@ -60,7 +60,7 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
 
         if(headers.uri_host.empty()) {
           data.clear();
-          this->do_on_http_request_error(400);
+          this->do_on_http_request_error(http_status_bad_request);
           return;
         }
 
@@ -117,7 +117,7 @@ do_on_http_request_headers(HTTP_Request_Headers& req, bool /*close_after_payload
   {
     if(req.is_proxy) {
       // Reject proxy requests.
-      this->do_on_http_request_error(403);
+      this->do_on_http_request_error(http_status_forbidden);
       return http_payload_normal;
     }
 

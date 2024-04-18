@@ -96,8 +96,8 @@ struct Final_Fiber final : Abstract_Fiber
           }
           catch(exception& stdex) {
             // Shut the connection down with a message.
-            POSEIDON_LOG_ERROR(("Unhandled exception thrown fromt: $1"), stdex);
-            session->wss_shut_down(1015);
+            POSEIDON_LOG_ERROR(("Unhandled exception thrown from easy WSS client: $1"), stdex);
+            session->ws_shut_down(websocket_status_unexpected_error);
           }
         }
       }
@@ -148,7 +148,7 @@ struct Final_Session final : WSS_Client_Session
 
     virtual
     void
-    do_on_wss_connected(cow_string&& caddr) override
+    do_on_ws_connected(cow_string&& caddr) override
       {
         Session_Table::Event_Queue::Event event;
         event.type = easy_ws_open;
@@ -158,7 +158,7 @@ struct Final_Session final : WSS_Client_Session
 
     virtual
     void
-    do_on_wss_message_finish(WebSocket_OpCode opcode, linear_buffer&& data) override
+    do_on_ws_message_finish(WebSocket_OpCode opcode, linear_buffer&& data) override
       {
         Session_Table::Event_Queue::Event event;
 
@@ -177,7 +177,7 @@ struct Final_Session final : WSS_Client_Session
 
     virtual
     void
-    do_on_wss_close(uint16_t status, chars_view reason) override
+    do_on_ws_close(WebSocket_Status status, chars_view reason) override
       {
         Session_Table::Event_Queue::Event event;
         event.type = easy_ws_close;
@@ -224,7 +224,7 @@ connect(chars_view addr)
 
     auto session = new_sh<Final_Session>(this->m_callback, this->m_sessions,
                                cow_string(caddr.path), cow_string(caddr.query));
-    session->https_set_default_host(format_string("$1:$2", caddr.host, caddr.port_num));
+    session->http_set_default_host(format_string("$1:$2", caddr.host, caddr.port_num));
     auto dns_task = new_sh<DNS_Connect_Task>(network_driver,
                        session, cow_string(caddr.host), caddr.port_num);
 

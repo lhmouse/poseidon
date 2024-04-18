@@ -199,7 +199,7 @@ HTTP_Request_Parser::
   {
   }
 
-uint32_t
+HTTP_Status
 HTTP_Request_Parser::
 http_status_from_error() const noexcept
   {
@@ -207,22 +207,19 @@ http_status_from_error() const noexcept
       {
       case HPE_OK:
       case HPE_PAUSED:
-        return 200;
+        return http_status_ok;
 
       case HPE_INVALID_VERSION:
-        return 505;
+        return http_status_http_version_not_supported;
 
       case HPE_INVALID_METHOD:
-        return 405;
-
-      case HPE_HEADER_OVERFLOW:
-        return 431;
+        return http_status_method_not_allowed;
 
       case HPE_INVALID_TRANSFER_ENCODING:
-        return 411;
+        return http_status_length_required;
 
       default:
-        return 400;
+        return http_status_bad_request;
       }
   }
 

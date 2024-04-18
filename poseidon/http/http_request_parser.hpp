@@ -57,7 +57,7 @@ class HTTP_Request_Parser
 
     // Translates the error code to an HTTP status code.
     ROCKET_PURE
-    uint32_t
+    HTTP_Status
     http_status_from_error() const noexcept;
 
     // Clears all fields. This function shall not be called unless the parser is

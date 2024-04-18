@@ -220,13 +220,13 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
 
     // Compose a default response; So in case of errors, we return immediately.
     resp.clear();
-    resp.status = 400;
+    resp.status = http_status_bad_request;
     resp.headers.reserve(8);
     resp.headers.emplace_back(&"Connection", &"close");
 
     if(req.method == http_method_OPTIONS) {
       // Response with allowed methods and all CORS headers in RFC 6455.
-      resp.status = 204;
+      resp.status = http_status_no_content;
       resp.headers.reserve(8);
       resp.headers.emplace_back(&"Allow", &"GET");
       resp.headers.emplace_back(&"Date", system_clock::now());
@@ -300,7 +300,7 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
     if(!upgrade_ok || !ws_version_ok || !sec_ws.key_str[0]) {
       // Respond with `426 Upgrade Required`.
       // Reference: https://datatracker.ietf.org/doc/html/rfc6455#section-4.2.2
-      resp.status = 426;
+      resp.status = http_status_upgrade_required;
       resp.headers.emplace_back(&"Upgrade", &"websocket");
       resp.headers.emplace_back(&"Sec-WebSocket-Version", 13);
       POSEIDON_LOG_ERROR(("WebSocket handshake request not valid; failing"));
@@ -308,7 +308,7 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
     }
 
     // Compose the response.
-    resp.status = 101;
+    resp.status = http_status_switching_protocols;
     resp.headers.clear();
     resp.headers.emplace_back(&"Connection", &"Upgrade");
     resp.headers.emplace_back(&"Upgrade", &"websocket");

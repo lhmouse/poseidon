@@ -26,7 +26,7 @@ class WS_Server_Session
 
   private:
     void
-    do_call_on_ws_close_once(uint16_t status, chars_view reason);
+    do_call_on_ws_close_once(WebSocket_Status status, chars_view reason);
 
   protected:
     // This function implements `HTTP_Server_Session`.
@@ -48,7 +48,7 @@ class WS_Server_Session
 
     virtual
     void
-    do_on_http_request_error(uint32_t status) override;
+    do_on_http_request_error(HTTP_Status status) override;
 
     virtual
     void
@@ -88,9 +88,9 @@ class WS_Server_Session
     // The default implementation does nothing.
     virtual
     void
-    do_on_ws_close(uint16_t status, chars_view reason);
+    do_on_ws_close(WebSocket_Status status, chars_view reason);
 
-    // This function shall be called by `do_on_https_request_headers()` to
+    // This function shall be called by `do_on_http_request_headers()` to
     // establish a WebSocket connection.
     void
     do_ws_complete_handshake(HTTP_Request_Headers& req, bool close_after_payload);
@@ -118,7 +118,7 @@ class WS_Server_Session
     // long.
     // This function is thread-safe.
     bool
-    ws_shut_down(uint16_t status = 1000, chars_view reason = "") noexcept;
+    ws_shut_down(WebSocket_Status status = websocket_status_normal_closure, chars_view reason = "") noexcept;
   };
 
 }  // namespace poseidon

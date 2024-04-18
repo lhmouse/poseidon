@@ -28,7 +28,7 @@ class WS_Client_Session
 
   private:
     void
-    do_call_on_ws_close_once(uint16_t status, chars_view reason);
+    do_call_on_ws_close_once(WebSocket_Status status, chars_view reason);
 
   protected:
     // This function implements `HTTP_Client_Session`.
@@ -86,7 +86,7 @@ class WS_Client_Session
     // The default implementation does nothing.
     virtual
     void
-    do_on_ws_close(uint16_t status, chars_view reason);
+    do_on_ws_close(WebSocket_Status status, chars_view reason);
 
     // Sends a raw frame (not a message). No error checking is performed. This
     // function is provided for convenience only, and maybe isn't very useful
@@ -112,7 +112,7 @@ class WS_Client_Session
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    ws_shut_down(uint16_t status = 1000, chars_view reason = "") noexcept;
+    ws_shut_down(WebSocket_Status status = websocket_status_normal_closure, chars_view reason = "") noexcept;
   };
 
 }  // namespace poseidon

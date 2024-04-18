@@ -42,14 +42,14 @@ class HTTPS_Client_Session
     // header. Returning `http_payload_empty` indicates that the message
     // does not have a payload even if it appears so, such as the response to a
     // HEAD request. Returning `http_payload_connect` causes all further
-    // incoming data to be delivered via `do_on_https_upgraded_stream()`. This
+    // incoming data to be delivered via `do_on_http_upgraded_stream()`. This
     // callback is primarily used to examine the status code before processing
     // response data.
     // The default implementation does not check for HEAD or upgrade responses
     // and returns `http_payload_normal`.
     virtual
     HTTP_Payload_Type
-    do_on_https_response_headers(HTTP_Response_Headers& resp);
+    do_on_http_response_headers(HTTP_Response_Headers& resp);
 
     // This callback is invoked by the network thread for each fragment of the
     // response payload that has been received. As with `SSL_Connection::
@@ -57,12 +57,12 @@ class HTTPS_Client_Session
     // been accumulated so far and callees are supposed to remove bytes that
     // have been processed.
     // The default implementation leaves all data alone for consumption by
-    // `do_on_https_response_finish()`, but it checks the total length of the
+    // `do_on_http_response_finish()`, but it checks the total length of the
     // payload so it will not exceed `network.http.max_response_content_length`
     // in 'main.conf'.
     virtual
     void
-    do_on_https_response_payload_stream(linear_buffer& data);
+    do_on_http_response_payload_stream(linear_buffer& data);
 
     // This callback is invoked by the network thread at the end of a response
     // message. Arguments have the same semantics with the other callbacks.
@@ -70,7 +70,7 @@ class HTTPS_Client_Session
     // `Connection` header.
     virtual
     void
-    do_on_https_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data, bool close_now) = 0;
+    do_on_http_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data, bool close_now) = 0;
 
     // This callback is invoked by the network thread on a connection that has
     // switched to another protocol. Arguments have the same semantics with
@@ -78,13 +78,13 @@ class HTTPS_Client_Session
     // The default implementation throws an exception.
     virtual
     void
-    do_on_https_upgraded_stream(linear_buffer& data, bool eof);
+    do_on_http_upgraded_stream(linear_buffer& data, bool eof);
 
     // Sends request headers with some additional data. No error checking is
     // performed. This function is provided for convenience only, and maybe
     // isn't very useful unless for some low-level hacks.
     bool
-    do_https_raw_request(const HTTP_Request_Headers& req, chars_view data);
+    do_http_raw_request(const HTTP_Request_Headers& req, chars_view data);
 
   public:
     HTTPS_Client_Session(const HTTPS_Client_Session&) = delete;
@@ -94,11 +94,11 @@ class HTTPS_Client_Session
     // If no `Host:` headers is supplied for a non-proxy request, use this
     // string.
     cow_stringR
-    https_default_host() const noexcept
+    http_default_host() const noexcept
       { return this->m_default_host;  }
 
     void
-    https_set_default_host(cow_stringR host) noexcept;
+    http_set_default_host(cow_stringR host) noexcept;
 
     // Sends a simple request, possibly with a complete payload. Callers should
     // not supply `Content-Length` or `Transfer-Encoding` headers, as they
@@ -106,7 +106,7 @@ class HTTPS_Client_Session
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    https_request(HTTP_Request_Headers&& req, chars_view data);
+    http_request(HTTP_Request_Headers&& req, chars_view data);
 
     // Send a request with a chunked payload, which may contain multiple chunks.
     // Callers should not supply `Transfer-Encoding` headers, as they will be
@@ -118,13 +118,13 @@ class HTTPS_Client_Session
     // If these function throw an exception, there is no effect.
     // These functions are thread-safe.
     bool
-    https_chunked_request_start(HTTP_Request_Headers&& req);
+    http_chunked_request_start(HTTP_Request_Headers&& req);
 
     bool
-    https_chunked_request_send(chars_view data);
+    http_chunked_request_send(chars_view data);
 
     bool
-    https_chunked_request_finish();
+    http_chunked_request_finish();
   };
 
 }  // namespace poseidon

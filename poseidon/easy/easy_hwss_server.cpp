@@ -95,8 +95,8 @@ struct Final_Fiber final : Abstract_Fiber
           }
           catch(exception& stdex) {
             // Shut the connection down with a message.
-            POSEIDON_LOG_ERROR(("Unhandled exception thrown from WSS server: $1"), stdex);
-            session->wss_shut_down(1015);
+            POSEIDON_LOG_ERROR(("Unhandled exception thrown from easy HWSS server: $1"), stdex);
+            session->ws_shut_down(websocket_status_unexpected_error);
           }
         }
       }
@@ -147,11 +147,11 @@ struct Final_Session final : WSS_Server_Session
 
     virtual
     HTTP_Payload_Type
-    do_on_https_request_headers(HTTP_Request_Headers& req, bool close_after_payload) override
+    do_on_http_request_headers(HTTP_Request_Headers& req, bool close_after_payload) override
       {
         if(req.is_proxy) {
           // Reject proxy requests.
-          this->do_on_https_request_error(403);
+          this->do_on_http_request_error(http_status_forbidden);
           return http_payload_normal;
         }
 
@@ -174,13 +174,13 @@ struct Final_Session final : WSS_Server_Session
         }
 
         // default
-        this->do_wss_complete_handshake(req, close_after_payload);
+        this->do_ws_complete_handshake(req, close_after_payload);
         return http_payload_normal;
       }
 
     virtual
     void
-    do_on_wss_accepted(cow_string&& caddr) override
+    do_on_ws_accepted(cow_string&& caddr) override
       {
         Session_Table::Event_Queue::Event event;
         event.type = easy_hws_open;
@@ -190,7 +190,7 @@ struct Final_Session final : WSS_Server_Session
 
     virtual
     void
-    do_on_wss_message_finish(WebSocket_OpCode opcode, linear_buffer&& data) override
+    do_on_ws_message_finish(WebSocket_OpCode opcode, linear_buffer&& data) override
       {
         Easy_HWS_Event ev_type;
         if(opcode == websocket_text)
@@ -210,7 +210,7 @@ struct Final_Session final : WSS_Server_Session
 
     virtual
     void
-    do_on_wss_close(uint16_t status, chars_view reason) override
+    do_on_ws_close(WebSocket_Status status, chars_view reason) override
       {
         tinyfmt_ln fmt;
         fmt << status << ": " << reason;

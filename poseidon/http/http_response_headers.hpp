@@ -10,7 +10,9 @@ namespace poseidon {
 
 struct HTTP_Response_Headers
   {
-    uint32_t status = 0;
+    HTTP_Status status = http_status_null;
+    uint16_t reserved_1 = 0;
+    uint32_t reserved_2 = 0;
     cow_string reason;
     cow_bivector<cow_string, HTTP_Value> headers;
 
@@ -27,7 +29,7 @@ struct HTTP_Response_Headers
     void
     clear() noexcept
       {
-        this->status = 0;
+        this->status = http_status_null;
         this->reason.clear();
         this->headers.clear();
       }

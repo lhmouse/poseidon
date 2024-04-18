@@ -200,7 +200,7 @@ static Easy_Timer my_timer(
 
       default:
         POSEIDON_LOG_DEBUG(("example WS client shutting down"));
-        my_client_session->ws_shut_down(3456, "bye");
+        my_client_session->ws_shut_down(websocket_status_going_away, "bye");
         my_client_session.reset();
       }
   });

@@ -26,7 +26,7 @@ class WSS_Server_Session
 
   private:
     void
-    do_call_on_wss_close_once(uint16_t status, chars_view reason);
+    do_call_on_ws_close_once(WebSocket_Status status, chars_view reason);
 
   protected:
     // This function implements `HTTPS_Server_Session`.
@@ -36,30 +36,30 @@ class WSS_Server_Session
 
     virtual
     HTTP_Payload_Type
-    do_on_https_request_headers(HTTP_Request_Headers& req, bool close_after_payload) override;
+    do_on_http_request_headers(HTTP_Request_Headers& req, bool close_after_payload) override;
 
     virtual
     void
-    do_on_https_request_payload_stream(linear_buffer& data) override;
+    do_on_http_request_payload_stream(linear_buffer& data) override;
 
     virtual
     void
-    do_on_https_request_finish(HTTP_Request_Headers&& req, linear_buffer&& data, bool close_now) override;
+    do_on_http_request_finish(HTTP_Request_Headers&& req, linear_buffer&& data, bool close_now) override;
 
     virtual
     void
-    do_on_https_request_error(uint32_t status) override;
+    do_on_http_request_error(HTTP_Status status) override;
 
     virtual
     void
-    do_on_https_upgraded_stream(linear_buffer& data, bool eof) override;
+    do_on_http_upgraded_stream(linear_buffer& data, bool eof) override;
 
     // This callback is invoked by the network thread when a WebSocket connection
     // has been accepted. The argument is the request URI of the client.
     // The default implementation does nothing.
     virtual
     void
-    do_on_wss_accepted(cow_string&& caddr);
+    do_on_ws_accepted(cow_string&& caddr);
 
     // This callback is invoked by the network thread for each fragment of a data
     // message. `opcode` indicates the type of the message, which can be either
@@ -73,14 +73,14 @@ class WSS_Server_Session
     // `network.http.max_websocket_message_length` limit in 'main.conf'.
     virtual
     void
-    do_on_wss_message_data_stream(WebSocket_OpCode opcode, linear_buffer& data);
+    do_on_ws_message_data_stream(WebSocket_OpCode opcode, linear_buffer& data);
 
     // This callback is invoked by the network thread at the end of a data message
     // or a control frame. `opcode` may be `websocket_text`, `websocket_binary`,
     // `websocket_ping` or `websocket_pong`.
     virtual
     void
-    do_on_wss_message_finish(WebSocket_OpCode opcode, linear_buffer&& data) = 0;
+    do_on_ws_message_finish(WebSocket_OpCode opcode, linear_buffer&& data) = 0;
 
     // This callback is invoked by the network thread when an error occurs, or
     // after a CLOSE frame has been received. The connection will be closed after
@@ -88,18 +88,18 @@ class WSS_Server_Session
     // The default implementation does nothing.
     virtual
     void
-    do_on_wss_close(uint16_t status, chars_view reason);
+    do_on_ws_close(WebSocket_Status status, chars_view reason);
 
-    // This function shall be called by `do_on_https_request_headers()` to
+    // This function shall be called by `do_on_http_request_headers()` to
     // establish a WebSocket connection.
     void
-    do_wss_complete_handshake(HTTP_Request_Headers& req, bool close_after_payload);
+    do_ws_complete_handshake(HTTP_Request_Headers& req, bool close_after_payload);
 
     // Sends a raw frame (not a message). No error checking is performed. This
     // function is provided for convenience only, and maybe isn't very useful
     // unless for some low-level hacks.
     bool
-    do_wss_send_raw_frame(int rsv_opcode, chars_view data);
+    do_ws_send_raw_frame(int rsv_opcode, chars_view data);
 
   public:
     WSS_Server_Session(const WSS_Server_Session&) = delete;
@@ -111,14 +111,14 @@ class WSS_Server_Session
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    wss_send(WebSocket_OpCode opcode, chars_view data);
+    ws_send(WebSocket_OpCode opcode, chars_view data);
 
     // Sends a CLOSE frame with an optional error message, then shuts down the
     // connection. The reason string will be truncated to 123 bytes if it's too
     // long.
     // This function is thread-safe.
     bool
-    wss_shut_down(uint16_t status = 1000, chars_view reason = "") noexcept;
+    ws_shut_down(WebSocket_Status status = websocket_status_normal_closure, chars_view reason = "") noexcept;
   };
 
 }  // namespace poseidon

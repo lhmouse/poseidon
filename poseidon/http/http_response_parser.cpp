@@ -22,7 +22,7 @@ HTTP_Response_Parser::s_settings[1] =
     // on_status
     +[](::http_parser* ps, const char* str, size_t len)
       {
-        this->m_headers.status = ps->status_code;
+        this->m_headers.status = static_cast<HTTP_Status>(ps->status_code);
         this->m_headers.reason.append(str, len);
         return 0;
       },

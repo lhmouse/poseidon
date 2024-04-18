@@ -83,7 +83,7 @@ class HTTP_Server_Session
     // thread, after all requests, to preserve the order of responses.
     virtual
     void
-    do_on_http_request_error(uint32_t status) = 0;
+    do_on_http_request_error(HTTP_Status status) = 0;
 
     // This callback is invoked by the network thread on a connection that has
     // switched to another protocol. Arguments have the same semantics with

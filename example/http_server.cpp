@@ -29,7 +29,7 @@ static Easy_HTTP_Server my_server(
 
           // send a response
           HTTP_Response_Headers resp;
-          resp.status = 200;
+          resp.status = http_status_ok;
           resp.headers.emplace_back(&"Date", system_clock::now());
           resp.headers.emplace_back(&"Content-Type", &"text/plain");
 

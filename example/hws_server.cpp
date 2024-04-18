@@ -44,7 +44,7 @@ static Easy_HWS_Server my_server(
           POSEIDON_LOG_ERROR(("example HTTP/WS server received HTTP: $1"), data);
 
           HTTP_Response_Headers resp;
-          resp.status = 200;
+          resp.status = http_status_ok;
           resp.headers.emplace_back(&"Content-Type", &"text/plain");
 
           if(event == easy_hws_get)

@@ -95,8 +95,8 @@ struct Final_Fiber final : Abstract_Fiber
           }
           catch(exception& stdex) {
             // Shut the connection down with a message.
-            POSEIDON_LOG_ERROR(("Unhandled exception thrown fromerver: $1"), stdex);
-            session->ws_shut_down(1015);
+            POSEIDON_LOG_ERROR(("Unhandled exception thrown from easy HWS server: $1"), stdex);
+            session->ws_shut_down(websocket_status_unexpected_error);
           }
         }
       }
@@ -151,7 +151,7 @@ struct Final_Session final : WS_Server_Session
       {
         if(req.is_proxy) {
           // Reject proxy requests.
-          this->do_on_http_request_error(403);
+          this->do_on_http_request_error(http_status_forbidden);
           return http_payload_normal;
         }
 
@@ -210,7 +210,7 @@ struct Final_Session final : WS_Server_Session
 
     virtual
     void
-    do_on_ws_close(uint16_t status, chars_view reason) override
+    do_on_ws_close(WebSocket_Status status, chars_view reason) override
       {
         tinyfmt_ln fmt;
         fmt << status << ": " << reason;

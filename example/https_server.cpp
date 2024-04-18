@@ -29,14 +29,14 @@ static Easy_HTTPS_Server my_server(
 
           // send a response
           HTTP_Response_Headers resp;
-          resp.status = 200;
+          resp.status = http_status_ok;
           resp.headers.emplace_back(&"Date", system_clock::now());
           resp.headers.emplace_back(&"Content-Type", &"text/plain");
 
           tinyfmt_ln fmt;
           fmt << "request payload length = " << data.size() << "\n";
 
-          session->https_response(move(resp), fmt);
+          session->http_response(move(resp), fmt);
         }
         break;
 
