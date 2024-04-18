@@ -4,7 +4,6 @@
 #include "../xprecompiled.hpp"
 #include "ws_client_session.hpp"
 #include "../http/websocket_deflator.hpp"
-#include "../easy/enums.hpp"
 #include "../utils.hpp"
 namespace poseidon {
 
@@ -362,35 +361,6 @@ ws_shut_down(uint16_t status, chars_view reason) noexcept
     }
     succ |= this->tcp_shut_down();
     return succ;
-  }
-
-bool
-WS_Client_Session::
-ws_send(Easy_WS_Event opcode, chars_view data)
-  {
-    switch(opcode)
-      {
-      case easy_ws_text:
-        return this->ws_send(websocket_text, data);
-
-      case easy_ws_binary:
-        return this->ws_send(websocket_binary, data);
-
-      case easy_ws_ping:
-        return this->ws_send(websocket_ping, data);
-
-      case easy_ws_pong:
-        return this->ws_send(websocket_pong, data);
-
-      case easy_ws_close:
-        return this->ws_shut_down(1000, data);
-
-      default:
-        POSEIDON_THROW((
-            "Easy WebSocket event code `$3` not supported",
-            "[WebSocket client session `$1` (class `$2`)]"),
-            this, typeid(*this), opcode);
-      }
   }
 
 }  // namespace poseidon

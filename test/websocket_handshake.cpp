@@ -12,7 +12,7 @@ main()
   {
     // https://datatracker.ietf.org/doc/html/rfc6455#section-1.3
     HTTP_Request_Headers req;
-    ::memcpy(req.method, "GET", 4);
+    req.method = http_method_GET;
     req.uri_path = &"/chat";
     req.headers.emplace_back(&"Host", &"server.example.com");
     req.headers.emplace_back(&"Upgrade", &"websocket");

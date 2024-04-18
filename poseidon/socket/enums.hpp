@@ -34,13 +34,5 @@ enum HTTP_Payload_Type : uint8_t
     http_payload_connect  = 2,
   };
 
-enum WebSocket_OpCode : uint8_t
-  {
-    websocket_text    =  1,
-    websocket_binary  =  2,
-    websocket_ping    =  9,
-    websocket_pong    = 10,
-  };
-
 }  // namespace poseidon
 #endif

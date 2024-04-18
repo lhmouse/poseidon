@@ -31,7 +31,7 @@ struct WebSocket_Frame_Header
     WebSocket_Frame_Header&
     swap(WebSocket_Frame_Header& other) noexcept
       {
-        ::std::swap(this->m_stor, other.m_stor);
+        ::std::swap(this->packed_fields_1, other.packed_fields_1);
         return *this;
       }
 
@@ -39,7 +39,7 @@ struct WebSocket_Frame_Header
     void
     clear() noexcept
       {
-        this->m_stor = _mm_setzero_si128();
+        this->packed_fields_1 = _mm_setzero_si128();
       }
 
     // Encodes this frame header in wire format. The output will be suitable

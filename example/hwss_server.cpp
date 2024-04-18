@@ -22,12 +22,12 @@ static Easy_HWSS_Server my_server(
 
       case easy_hws_text:
         POSEIDON_LOG_ERROR(("example HTTPS/WSS server received TEXT data: $1"), data);
-        session->wss_send(easy_ws_text, data);
+        session->wss_send(websocket_text, data);
         break;
 
       case easy_hws_binary:
         POSEIDON_LOG_ERROR(("example HTTPS/WSS server received BINARY data: $1"), data);
-        session->wss_send(easy_ws_binary, data);
+        session->wss_send(websocket_binary, data);
         break;
 
       case easy_hws_pong:

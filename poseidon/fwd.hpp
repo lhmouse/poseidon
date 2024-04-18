@@ -358,6 +358,28 @@ chars_view
 snview(const char* str, size_t n) noexcept
   { return chars_view(str, ::strnlen(str, n));  }
 
+// Global constants
+enum HTTP_Method : uint64_t
+  {
+    http_method_NULL      = 0x0000000000000000,
+    http_method_OPTIONS   = 0x00534E4F4954504F,
+    http_method_GET       = 0x0000000000544547,
+    http_method_HEAD      = 0x0000000044414548,
+    http_method_POST      = 0x0000000054534F50,
+    http_method_PUT       = 0x0000000000545550,
+    http_method_DELETE    = 0x00004554454C4544,
+    http_method_TRACE     = 0x0000004543415254,
+    http_method_CONNECT   = 0x005443454E4E4F43,
+  };
+
+enum WebSocket_OpCode : uint8_t
+  {
+    websocket_text    =  1,
+    websocket_binary  =  2,
+    websocket_ping    =  9,
+    websocket_pong    = 10,
+  };
+
 // Base types
 class UUID;
 class DateTime;
@@ -381,7 +403,6 @@ class Redis_Query_Future;
 enum IP_Address_Class : uint8_t;
 enum Socket_State : uint8_t;
 enum HTTP_Payload_Type : uint8_t;
-enum WebSocket_OpCode : uint8_t;
 class IPv6_Address;
 class Abstract_Socket;
 class TCP_Acceptor;
@@ -398,7 +419,7 @@ class WSS_Server_Session;
 class WSS_Client_Session;
 class DNS_Connect_Task;
 
-// HTTP types
+// HTTP and WebSocket types
 class HTTP_Value;
 class HTTP_Header_Parser;
 class HTTP_Query_Parser;

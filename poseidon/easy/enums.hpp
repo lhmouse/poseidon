@@ -28,18 +28,17 @@ enum Easy_WS_Event : uint8_t
     easy_ws_binary   = 33,  // binary message received
     easy_ws_pong     = 34,  // pong notification received
     easy_ws_close    = 35,  // closure notification received
-    easy_ws_ping     = easy_ws_open,
   };
 
 enum Easy_HWS_Event : uint8_t
   {
-    easy_hws_open     = easy_ws_open,
-    easy_hws_text     = easy_ws_text,
-    easy_hws_binary   = easy_ws_binary,
-    easy_hws_pong     = easy_ws_pong,
-    easy_hws_close    = easy_ws_close,
-    easy_hws_get      = 36,  // simple HTTP GET
-    easy_hws_head     = 37,  // simple HTTP HEAD
+    easy_hws_open     = 41,  // connection established
+    easy_hws_text     = 42,  // text message received
+    easy_hws_binary   = 43,  // binary message received
+    easy_hws_pong     = 44,  // pong notification received
+    easy_hws_close    = 45,  // closure notification received
+    easy_hws_get      = 46,  // simple HTTP GET
+    easy_hws_head     = 47,  // simple HTTP HEAD
   };
 
 }  // namespace poseidon

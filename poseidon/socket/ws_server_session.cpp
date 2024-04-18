@@ -4,7 +4,6 @@
 #include "../xprecompiled.hpp"
 #include "ws_server_session.hpp"
 #include "../http/websocket_deflator.hpp"
-#include "../easy/enums.hpp"
 #include "../utils.hpp"
 namespace poseidon {
 
@@ -248,7 +247,7 @@ do_ws_complete_handshake(HTTP_Request_Headers& req, bool close_after_payload)
     this->m_parser.accept_handshake_request(resp, req);
     this->http_response_headers_only(move(resp));
 
-    if(::memcmp(req.method, "OPTIONS", 8) == 0)
+    if(req.method == http_method_OPTIONS)
       return;
 
     if(close_after_payload || !this->m_parser.is_server_mode()) {
@@ -381,35 +380,6 @@ ws_shut_down(uint16_t status, chars_view reason) noexcept
     }
     succ |= this->tcp_shut_down();
     return succ;
-  }
-
-bool
-WS_Server_Session::
-ws_send(Easy_WS_Event opcode, chars_view data)
-  {
-    switch(opcode)
-      {
-      case easy_ws_text:
-        return this->ws_send(websocket_text, data);
-
-      case easy_ws_binary:
-        return this->ws_send(websocket_binary, data);
-
-      case easy_ws_ping:
-        return this->ws_send(websocket_ping, data);
-
-      case easy_ws_pong:
-        return this->ws_send(websocket_pong, data);
-
-      case easy_ws_close:
-        return this->ws_shut_down(1000, data);
-
-      default:
-        POSEIDON_THROW((
-            "Easy WebSocket event code `$3` not supported",
-            "[WebSocket server session `$1` (class `$2`)]"),
-            this, typeid(*this), opcode);
-      }
   }
 
 }  // namespace poseidon

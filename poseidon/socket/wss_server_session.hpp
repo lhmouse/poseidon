@@ -119,10 +119,6 @@ class WSS_Server_Session
     // This function is thread-safe.
     bool
     wss_shut_down(uint16_t status = 1000, chars_view reason = "") noexcept;
-
-    // Provides a helper function for the sake of Easy classes.
-    bool
-    wss_send(Easy_WS_Event opcode, chars_view data);
   };
 
 }  // namespace poseidon

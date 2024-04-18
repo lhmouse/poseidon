@@ -19,8 +19,8 @@ HTTP_Request_Parser::s_settings[1] =
     // on_url
     +[](::http_parser* ps, const char* str, size_t len)
       {
-        const char* method = ::http_method_str((::http_method) ps->method);
-        ::memccpy(this->m_headers.method, method, 0, sizeof(this->m_headers.method));
+        const char* method_str = ::http_method_str(static_cast<::http_method>(ps->method));
+        ::memccpy(this->m_headers.method_str, method_str, 0, sizeof(this->m_headers.method_str));
         this->m_headers.uri_host.append(str, len);
         return 0;
       },

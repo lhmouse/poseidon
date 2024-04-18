@@ -13,13 +13,18 @@ struct HTTP_Request_Headers
     union {
       __m128i packed_fields_1 = { };
       struct {
-        char method[11];
-        char always_zero_2;
-        uint16_t uri_port;  // zero implies `80` or `443`, basing on `is_ssl`
+        uint64_t method;
+        uint32_t method_ext;
+        uint32_t packed_fields_2c;
+      };
+      struct {
+        char method_str[12];
+        uint16_t uri_port;
         bool is_proxy;
         bool is_ssl;
       };
     };
+
     cow_string uri_host;
     cow_string uri_userinfo;
     cow_string uri_path;

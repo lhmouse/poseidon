@@ -71,7 +71,7 @@ static Easy_Timer my_timer(
       case 1:
         {
           const char data[] = "some text data";
-          my_client_session->wss_send(easy_ws_text, data);
+          my_client_session->wss_send(websocket_text, data);
           POSEIDON_LOG_DEBUG(("example WSS client sent TEXT frame: $1"), data);
         }
         break;
@@ -79,7 +79,7 @@ static Easy_Timer my_timer(
       case 2:
         {
           const char data[] = "some binary data";
-          my_client_session->wss_send(easy_ws_binary, data);
+          my_client_session->wss_send(websocket_binary, data);
           POSEIDON_LOG_DEBUG(("example WSS client sent BINARY frame: $1"), data);
         }
         break;
