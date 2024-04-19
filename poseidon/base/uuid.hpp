@@ -114,46 +114,27 @@ class UUID
     end() const noexcept
       { return this->m_uuid + 16;  }
 
-    // Checks whether this UUID is the nil UUID.
     ROCKET_PURE
     bool
     is_nil() const noexcept
       {
         __m128i tval = _mm_load_si128(&(this->m_stor));
         __m128i oval = _mm_setzero_si128();
-
-        int eq_mask = _mm_movemask_epi8(_mm_cmpeq_epi8(tval, oval));
-        return eq_mask == 0xFFFF;
+        return _mm_movemask_epi8(_mm_cmpeq_epi8(tval, oval)) == 0xFFFF;
       }
 
-    // Performs three-way comparison.
     ROCKET_PURE
     bool
     equals(const UUID& other) const noexcept
       {
         __m128i tval = _mm_load_si128(&(this->m_stor));
         __m128i oval = _mm_load_si128(&(other.m_stor));
-
-        int eq_mask = _mm_movemask_epi8(_mm_cmpeq_epi8(tval, oval));
-        return eq_mask == 0xFFFF;
+        return _mm_movemask_epi8(_mm_cmpeq_epi8(tval, oval)) == 0xFFFF;
       }
 
     ROCKET_PURE
     int
-    compare(const UUID& other) const noexcept
-      {
-        const __m128i bits_rev = _mm_set_epi8(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15);
-        const __m128i bits_to_u8 = _mm_set1_epi8(-0x80);
-
-        __m128i tval = _mm_load_si128(&(this->m_stor));
-        __m128i oval = _mm_load_si128(&(other.m_stor));
-        tval = _mm_xor_si128(_mm_shuffle_epi8(tval, bits_rev), bits_to_u8);
-        oval = _mm_xor_si128(_mm_shuffle_epi8(oval, bits_rev), bits_to_u8);
-
-        int gt_mask = _mm_movemask_epi8(_mm_cmpgt_epi8(tval, oval));
-        int lt_mask = _mm_movemask_epi8(_mm_cmpgt_epi8(oval, tval));
-        return gt_mask - lt_mask;
-      }
+    compare(const UUID& other) const noexcept;
 
     // Tries parsing a UUID from a string in the RFC 4122 format. An example is
     // `f81d4fae-7dec-11d0-a765-00a0c91e6bf6`. If a UUID has been parsed, the number
@@ -192,9 +173,7 @@ struct UUID::hash
         __m128i tval = _mm_load_si128(&(uuid.m_stor));
         tval = _mm_hadd_epi32(tval, _mm_srli_si128(tval, 8));
         tval = _mm_hadd_epi32(tval, tval);
-
-        int64_t sum = _mm_cvtsi128_si64(tval);
-        return (size_t) sum;
+        return static_cast<size_t>(_mm_cvtsi128_si64(tval));
       }
   };
 
