@@ -78,7 +78,7 @@ do_on_http_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& /*data*
     }
 
     // Initialize extensions.
-    if(this->m_parser.pmce_send_max_window_bits() != 0)
+    if(this->m_parser.pmce_send_window_bits() != 0)
       this->m_pmce_opt = new_sh<WebSocket_Deflator>(this->m_parser);
 
     // Rebuild the URI.

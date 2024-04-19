@@ -42,11 +42,11 @@ class WebSocket_Frame_Parser
         // 0
         WSHS_State m_wshs : 2;
         uint8_t m_pmce_reserved : 2;
-        uint8_t m_pmce_send_compression_level_m2 : 3;
+        uint8_t m_pmce_compression_level_m2 : 3;
         uint8_t m_pmce_send_no_context_takeover : 1;
         // 1
-        uint8_t m_pmce_send_max_window_bits : 4;
-        uint8_t m_pmce_recv_max_window_bits : 4;
+        uint8_t m_pmce_send_window_bits : 4;
+        uint8_t m_pmce_receive_window_bits : 4;
         // 2
         WSF_State m_wsf;
         // 3
@@ -97,20 +97,20 @@ class WebSocket_Frame_Parser
     // Get parameters of the per-message compression extension (PMCE). If PMCE is
     // not active, these functions return zero.
     int
-    pmce_send_compression_level() const noexcept
-      { return this->m_pmce_send_compression_level_m2 + 2;  }
+    pmce_compression_level() const noexcept
+      { return this->m_pmce_compression_level_m2 + 2;  }
 
     bool
     pmce_send_no_context_takeover() const noexcept
       { return this->m_pmce_send_no_context_takeover;  }
 
     uint8_t
-    pmce_send_max_window_bits() const noexcept
-      { return this->m_pmce_send_max_window_bits;  }
+    pmce_send_window_bits() const noexcept
+      { return this->m_pmce_send_window_bits;  }
 
     uint8_t
-    pmce_recv_max_window_bits() const noexcept
-      { return this->m_pmce_recv_max_window_bits;  }
+    pmce_receive_window_bits() const noexcept
+      { return this->m_pmce_receive_window_bits;  }
 
     // Clears all fields. This function shall not be called unless the parser is
     // to be reused for another stream.
