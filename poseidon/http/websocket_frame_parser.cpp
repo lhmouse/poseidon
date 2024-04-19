@@ -480,7 +480,7 @@ parse_frame_header_from_stream(linear_buffer& data)
     this->m_frm_header.rsv1 = mask_len_rsv_opcode >> 6 & 1;
     this->m_frm_header.rsv2 = mask_len_rsv_opcode >> 5 & 1;
     this->m_frm_header.rsv3 = mask_len_rsv_opcode >> 4 & 1;
-    this->m_frm_header.opcode = static_cast<WebSocket_OpCode>(mask_len_rsv_opcode & 15);
+    this->m_frm_header.opcode = static_cast<WebSocket_Opcode>(mask_len_rsv_opcode & 15);
     this->m_frm_header.mask = mask_len_rsv_opcode >> 15 & 1;
     this->m_frm_header.reserved_1 = mask_len_rsv_opcode >> 8 & 127;
 

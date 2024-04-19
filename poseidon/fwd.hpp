@@ -420,14 +420,14 @@ enum HTTP_Status : uint16_t
     http_status_http_version_not_supported       = 505,
   };
 
-enum WebSocket_OpCode : uint8_t
+enum WebSocket_Opcode : uint8_t
   {
-    websocket_continuation   =  0,
-    websocket_text           =  1,
-    websocket_binary         =  2,
-    websocket_close          =  8,
-    websocket_ping           =  9,
-    websocket_pong           = 10,
+    websocket_CONTINUATION   =  0,
+    websocket_TEXT           =  1,
+    websocket_BINARY         =  2,
+    websocket_CLOSE          =  8,
+    websocket_PING           =  9,
+    websocket_PONG           = 10,
   };
 
 enum WebSocket_Status : uint16_t

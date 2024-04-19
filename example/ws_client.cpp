@@ -71,7 +71,7 @@ static Easy_Timer my_timer(
       case 1:
         {
           const char data[] = "some text data";
-          my_client_session->ws_send(websocket_text, data);
+          my_client_session->ws_send(websocket_TEXT, data);
           POSEIDON_LOG_DEBUG(("example WS client sent TEXT frame: $1"), data);
         }
         break;
@@ -79,7 +79,7 @@ static Easy_Timer my_timer(
       case 2:
         {
           const char data[] = "some binary data";
-          my_client_session->ws_send(websocket_binary, data);
+          my_client_session->ws_send(websocket_BINARY, data);
           POSEIDON_LOG_DEBUG(("example WS client sent BINARY frame: $1"), data);
         }
         break;
@@ -93,7 +93,7 @@ static Easy_Timer my_timer(
 
           // fragment 1
           header.fin = 0;
-          header.opcode = websocket_text;
+          header.opcode = websocket_TEXT;
           char data1[] = "fragmented";
           header.payload_len = sizeof(data1) - 1;
 
@@ -105,7 +105,7 @@ static Easy_Timer my_timer(
 
           // nested PING
           header.fin = 1;
-          header.opcode = websocket_ping;
+          header.opcode = websocket_PING;
           char ping1[] = "ping within fragmented text message";
           header.payload_len = sizeof(ping1) - 1;
 
@@ -117,7 +117,7 @@ static Easy_Timer my_timer(
 
           // fragment 2
           header.fin = 0;
-          header.opcode = websocket_continuation;
+          header.opcode = websocket_CONTINUATION;
           char data2[] = " text";
           header.payload_len = sizeof(data2) - 1;
 
@@ -129,7 +129,7 @@ static Easy_Timer my_timer(
 
           // fragment 3
           header.fin = 1;
-          header.opcode = websocket_continuation;
+          header.opcode = websocket_CONTINUATION;
           char data3[] = " data";
           header.payload_len = sizeof(data3) - 1;
 
@@ -150,7 +150,7 @@ static Easy_Timer my_timer(
 
           // fragment 1
           header.fin = 0;
-          header.opcode = websocket_binary;
+          header.opcode = websocket_BINARY;
           char data1[] = "fragmented";
           header.payload_len = sizeof(data1) - 1;
 
@@ -162,7 +162,7 @@ static Easy_Timer my_timer(
 
           // fragment 2
           header.fin = 0;
-          header.opcode = websocket_continuation;
+          header.opcode = websocket_CONTINUATION;
           char data2[] = " binary";
           header.payload_len = sizeof(data2) - 1;
 
@@ -174,7 +174,7 @@ static Easy_Timer my_timer(
 
           // nested PING
           header.fin = 1;
-          header.opcode = websocket_ping;
+          header.opcode = websocket_PING;
           char ping1[] = "ping within fragmented binary message";
           header.payload_len = sizeof(ping1) - 1;
 
@@ -186,7 +186,7 @@ static Easy_Timer my_timer(
 
           // fragment 3
           header.fin = 1;
-          header.opcode = websocket_continuation;
+          header.opcode = websocket_CONTINUATION;
           char data3[] = " data";
           header.payload_len = sizeof(data3) - 1;
 

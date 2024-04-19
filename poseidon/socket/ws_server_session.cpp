@@ -142,8 +142,8 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
           // If this is a data frame or continuation, its payload is part of a
           // (potentially fragmented) data message, so combine it.
-          auto opcode = static_cast<WebSocket_OpCode>(this->m_parser.message_opcode());
-          ROCKET_ASSERT(is_any_of(opcode, { websocket_text, websocket_binary }));
+          auto opcode = static_cast<WebSocket_Opcode>(this->m_parser.message_opcode());
+          ROCKET_ASSERT(is_any_of(opcode, { websocket_TEXT, websocket_BINARY }));
           this->do_on_ws_message_data_stream(opcode, splice_buffers(this->m_msg, move(payload)));
         }
 
@@ -155,17 +155,17 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
         if(this->m_parser.frame_header().fin)
           switch(this->m_parser.frame_header().opcode)
             {
-            case websocket_continuation:
-            case websocket_text:
-            case websocket_binary:
+            case websocket_CONTINUATION:
+            case websocket_TEXT:
+            case websocket_BINARY:
               {
-                auto opcode = static_cast<WebSocket_OpCode>(this->m_parser.message_opcode());
-                ROCKET_ASSERT(is_any_of(opcode, { websocket_text, websocket_binary }));
+                auto opcode = static_cast<WebSocket_Opcode>(this->m_parser.message_opcode());
+                ROCKET_ASSERT(is_any_of(opcode, { websocket_TEXT, websocket_BINARY }));
                 this->do_on_ws_message_finish(opcode, move(this->m_msg));
               }
               break;
 
-            case websocket_close:
+            case websocket_CLOSE:
               {
                 ROCKET_ASSERT(this->m_closure_notified == false);
                 this->m_closure_notified = true;
@@ -180,20 +180,20 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
               }
               return;
 
-            case websocket_ping:
+            case websocket_PING:
               {
                 POSEIDON_LOG_TRACE(("WebSocket PING from `$1`: $2"), this->remote_address(), payload);
-                this->do_on_ws_message_finish(websocket_ping, move(payload));
+                this->do_on_ws_message_finish(websocket_PING, move(payload));
 
                 // FIN + PONG
                 this->do_ws_send_raw_frame(0b10001010, payload);
               }
               break;
 
-            case websocket_pong:
+            case websocket_PONG:
               {
                 POSEIDON_LOG_TRACE(("WebSocket PONG from `$1`: $2"), this->remote_address(), payload);
-                this->do_on_ws_message_finish(websocket_pong, move(payload));
+                this->do_on_ws_message_finish(websocket_PONG, move(payload));
               }
               break;
             }
@@ -213,7 +213,7 @@ do_on_ws_accepted(cow_string&& caddr)
 
 void
 WS_Server_Session::
-do_on_ws_message_data_stream(WebSocket_OpCode /*opcode*/, linear_buffer& data)
+do_on_ws_message_data_stream(WebSocket_Opcode /*opcode*/, linear_buffer& data)
   {
     // Leave `data` alone for consumption by `do_on_ws_message_finish()`, but
     // perform some security checks, so we won't be affected by compromised
@@ -275,7 +275,7 @@ do_ws_send_raw_frame(int rsv_opcode, chars_view data)
     header.rsv1 = rsv_opcode >> 6 & 1;
     header.rsv2 = rsv_opcode >> 5 & 1;
     header.rsv3 = rsv_opcode >> 4 & 1;
-    header.opcode = static_cast<WebSocket_OpCode>(rsv_opcode & 15);
+    header.opcode = static_cast<WebSocket_Opcode>(rsv_opcode & 15);
     header.payload_len = data.n;
 
     tinyfmt_ln fmt;
@@ -286,7 +286,7 @@ do_ws_send_raw_frame(int rsv_opcode, chars_view data)
 
 bool
 WS_Server_Session::
-ws_send(WebSocket_OpCode opcode, chars_view data)
+ws_send(WebSocket_Opcode opcode, chars_view data)
   {
     if(!this->do_has_upgraded())
       POSEIDON_THROW((
@@ -296,8 +296,8 @@ ws_send(WebSocket_OpCode opcode, chars_view data)
 
     switch(static_cast<uint32_t>(opcode))
       {
-      case websocket_text:
-      case websocket_binary:
+      case websocket_TEXT:
+      case websocket_BINARY:
         {
           if(this->m_pmce_opt) {
             uint32_t pmce_threshold = this->m_parser.pmce_send_no_context_takeover() * 1024U + 16U;
@@ -333,8 +333,8 @@ ws_send(WebSocket_OpCode opcode, chars_view data)
           return this->do_ws_send_raw_frame(0b10000000 | opcode, data);
         }
 
-      case websocket_ping:
-      case websocket_pong:
+      case websocket_PING:
+      case websocket_PONG:
         {
           if(data.n > 125)
             POSEIDON_THROW((

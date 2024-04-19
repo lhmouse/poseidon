@@ -73,14 +73,14 @@ class WS_Server_Session
     // `network.http.max_websocket_message_length` limit in 'main.conf'.
     virtual
     void
-    do_on_ws_message_data_stream(WebSocket_OpCode opcode, linear_buffer& data);
+    do_on_ws_message_data_stream(WebSocket_Opcode opcode, linear_buffer& data);
 
     // This callback is invoked by the network thread at the end of a data message
     // or a control frame. `opcode` may be `websocket_text`, `websocket_binary`,
     // `websocket_ping` or `websocket_pong`.
     virtual
     void
-    do_on_ws_message_finish(WebSocket_OpCode opcode, linear_buffer&& data) = 0;
+    do_on_ws_message_finish(WebSocket_Opcode opcode, linear_buffer&& data) = 0;
 
     // This callback is invoked by the network thread when an error occurs, or
     // after a CLOSE frame has been received. The connection will be closed after
@@ -111,7 +111,7 @@ class WS_Server_Session
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    ws_send(WebSocket_OpCode opcode, chars_view data);
+    ws_send(WebSocket_Opcode opcode, chars_view data);
 
     // Sends a CLOSE frame with an optional error message, then shuts down the
     // connection. The reason string will be truncated to 123 bytes if it's too

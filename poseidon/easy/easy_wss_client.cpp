@@ -158,15 +158,15 @@ struct Final_Session final : WSS_Client_Session
 
     virtual
     void
-    do_on_ws_message_finish(WebSocket_OpCode opcode, linear_buffer&& data) override
+    do_on_ws_message_finish(WebSocket_Opcode opcode, linear_buffer&& data) override
       {
         Session_Table::Event_Queue::Event event;
 
-        if(opcode == websocket_text)
+        if(opcode == websocket_TEXT)
           event.type = easy_ws_text;
-        else if(opcode == websocket_binary)
+        else if(opcode == websocket_BINARY)
           event.type = easy_ws_binary;
-        else if(opcode == websocket_pong)
+        else if(opcode == websocket_PONG)
           event.type = easy_ws_pong;
         else
           return;
