@@ -72,9 +72,8 @@ explode(vector<cow_string>& segments, cow_stringR text, char delim, size_t limit
     segments.clear();
     size_t bpos = text.find_not_of(" \t");
     while(bpos < text.size()) {
-      // Get the end of this segment.
-      // If the delimiter is not found, make sure `epos` is reasonably large
-      // and incrementing it will not overflow.
+      // Get the end of this segment. If the delimiter is not found, make sure
+      // `epos` is reasonably large, so incrementing it will not overflow.
       size_t epos = text.npos / 2;
       if(segments.size() + 1 < limit)
         epos = text.find(bpos, delim) * 2 / 2;
@@ -447,10 +446,9 @@ enqueue_log_message(void composer_callback(cow_string&, void*), void* composer,
 create_runtime_error(void composer_callback(cow_string&, void*), void* composer,
                      const char* func, const char* file, uint32_t line)
   try {
-    cow_string fmtbuf;
-    composer_callback(fmtbuf, composer);
-    fmtbuf.erase(fmtbuf.rfind_not_of(" \t\r\n") + 1);
-    ::std::string sbuf(fmtbuf.data(), fmtbuf.size());
+    cow_string tbuf;
+    composer_callback(tbuf, composer);
+    ::std::string sbuf(tbuf.data(), tbuf.rfind_not_of(" \t\r\n") + 1);
 
     // Append the source location and function name.
     ::rocket::ascii_numput nump;
@@ -531,7 +529,7 @@ create_runtime_error(void composer_callback(cow_string&, void*), void* composer,
   }
   catch(::std::runtime_error& stdex) {
     ::fprintf(stderr, "WARNING: %s\n", stdex.what());
-    return stdex;
+    return move(stdex);
   }
   catch(exception& stdex) {
     ::fprintf(stderr, "WARNING: %s\n", stdex.what());
