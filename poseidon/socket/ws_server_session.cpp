@@ -34,9 +34,6 @@ void
 WS_Server_Session::
 do_abstract_socket_on_closed()
   {
-    if(!this->do_has_upgraded())
-      return;
-
     POSEIDON_LOG_DEBUG(("Closing WebSocket connection from `$1`: ${errno:full}"), this->remote_address());
     this->do_call_on_ws_close_once(websocket_status_no_close_frame, "no CLOSE frame received");
   }
