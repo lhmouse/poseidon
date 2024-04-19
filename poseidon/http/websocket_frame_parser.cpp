@@ -192,7 +192,7 @@ create_handshake_request(HTTP_Request_Headers& req)
 
     // Compose the handshake request.
     req.clear();
-    req.method = http_method_GET;
+    req.method = http_GET;
     req.uri_path = &"/";
     req.headers.reserve(8);
     req.headers.emplace_back(&"Connection", &"Upgrade");
@@ -224,7 +224,7 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
     resp.headers.reserve(8);
     resp.headers.emplace_back(&"Connection", &"close");
 
-    if(req.method == http_method_OPTIONS) {
+    if(req.method == http_OPTIONS) {
       // Response with allowed methods and all CORS headers in RFC 6455.
       resp.status = http_status_no_content;
       resp.headers.reserve(8);

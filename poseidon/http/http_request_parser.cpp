@@ -145,11 +145,19 @@ HTTP_Request_Parser::s_settings[1] =
     // on_body
     +[](::http_parser* ps, const char* str, size_t len)
       {
-        if(is_none_of(ps->method, { HTTP_GET, HTTP_HEAD, HTTP_DELETE, HTTP_CONNECT })) {
-          // For the methods above, the request payload is discarded.
-          this->m_payload.putn(str, len);
-        }
-        return 0;
+        switch(ps->method)
+          {
+          case HTTP_POST:
+          case HTTP_PUT:
+          case HTTP_PATCH:
+            // Accept the payload.
+            this->m_payload.putn(str, len);
+            return 0;
+
+          default:
+            // Discard the payload.
+            return 0;
+          }
       },
 
     // on_message_complete

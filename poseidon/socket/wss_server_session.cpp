@@ -248,7 +248,7 @@ do_ws_complete_handshake(HTTP_Request_Headers& req, bool close_after_payload)
     this->m_parser.accept_handshake_request(resp, req);
     this->http_response_headers_only(move(resp));
 
-    if(req.method == http_method_OPTIONS)
+    if(req.method == http_OPTIONS)
       return;
 
     if(close_after_payload || !this->m_parser.is_server_mode()) {

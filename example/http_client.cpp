@@ -70,7 +70,7 @@ static Easy_Timer my_timer(
       case 1:
         {
           HTTP_Request_Headers req;
-          req.method = http_method_GET;
+          req.method = http_GET;
           req.uri_path = &"/";
           req.headers.emplace_back(&"Connection", &"keep-alive");
           my_client_session->http_request(move(req), "");
@@ -81,7 +81,7 @@ static Easy_Timer my_timer(
       case 2:
         {
           HTTP_Request_Headers req;
-          req.method = http_method_POST;
+          req.method = http_POST;
           req.uri_path = &"/";
           my_client_session->http_request(move(req), "testdata");
           POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method, req.uri_path);
@@ -91,7 +91,7 @@ static Easy_Timer my_timer(
       case 3:
         {
           HTTP_Request_Headers req;
-          req.method = http_method_DELETE;
+          req.method = http_DELETE;
           req.uri_path = &"/";
           my_client_session->http_request(move(req), "");
           POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method, req.uri_path);

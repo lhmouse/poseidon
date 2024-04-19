@@ -155,7 +155,7 @@ struct Final_Session final : WS_Server_Session
           return http_payload_normal;
         }
 
-        if((req.method == http_method_GET) || (req.method == http_method_HEAD)) {
+        if((req.method == http_GET) || (req.method == http_HEAD)) {
           bool has_upgrade = false;
           for(const auto& r : req.headers)
             has_upgrade |= ascii_ci_equal(r.first, "Upgrade");
@@ -163,7 +163,7 @@ struct Final_Session final : WS_Server_Session
           if(!has_upgrade) {
             // Handle an HTTP request.
             Session_Table::Event_Queue::Event event;
-            event.type = (req.method == http_method_GET) ? easy_hws_get : easy_hws_head;
+            event.type = (req.method == http_GET) ? easy_hws_get : easy_hws_head;
             event.data.putn(req.uri_host.data(), req.uri_host.size());
             event.data.putn(req.uri_path.data(), req.uri_path.size());
             event.data.putc('?');

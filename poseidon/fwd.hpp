@@ -361,15 +361,16 @@ snview(const char* str, size_t n) noexcept
 // Protocol constants
 enum HTTP_Method : uint64_t
   {
-    http_method_NULL      = 0x0000000000000000,
-    http_method_OPTIONS   = 0x00534E4F4954504F,
-    http_method_GET       = 0x0000000000544547,
-    http_method_HEAD      = 0x0000000044414548,
-    http_method_POST      = 0x0000000054534F50,
-    http_method_PUT       = 0x0000000000545550,
-    http_method_DELETE    = 0x00004554454C4544,
-    http_method_TRACE     = 0x0000004543415254,
-    http_method_CONNECT   = 0x005443454E4E4F43,
+    http_NULL      = ROCKET_HTOBE64(0x0000000000000000),
+    http_OPTIONS   = ROCKET_HTOBE64(0x4F5054494F4E5300),
+    http_GET       = ROCKET_HTOBE64(0x4745540000000000),
+    http_HEAD      = ROCKET_HTOBE64(0x4845414400000000),
+    http_POST      = ROCKET_HTOBE64(0x504F535400000000),
+    http_PUT       = ROCKET_HTOBE64(0x5055540000000000),
+    http_DELETE    = ROCKET_HTOBE64(0x44454C4554450000),
+    http_TRACE     = ROCKET_HTOBE64(0x5452414345000000),
+    http_CONNECT   = ROCKET_HTOBE64(0x434F4E4E45435400),
+    http_PATCH     = ROCKET_HTOBE64(0x5041544348000000),
   };
 
 enum HTTP_Status : uint16_t
