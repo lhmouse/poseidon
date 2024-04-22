@@ -18,7 +18,7 @@ encode(tinyfmt& fmt) const
       char temp[16] = "";
       ::memcpy(temp, this->method_bytes, sizeof(this->method_bytes));
       ::strcat(temp, " ");
-       fmt << temp;
+      fmt << temp;
     }
 
     if(this->is_proxy) {
