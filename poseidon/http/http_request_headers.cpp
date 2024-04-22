@@ -12,10 +12,14 @@ encode(tinyfmt& fmt) const
   {
     // Write the request line. If `method` is an empty string, `GET` is assumed.
     // This function does not validate whether these fields contain valid values.
-    if(this->method_str[0] == 0)
+    if(this->method_bytes[0] == 0)
       fmt << "GET ";
-    else
-      fmt << this->method_str << ' ';
+    else {
+      char temp[16] = "";
+      ::memcpy(temp, this->method_bytes, sizeof(this->method_bytes));
+      ::strcat(temp, " ");
+       fmt << temp;
+    }
 
     if(this->is_proxy) {
       // Initiate an absolute URI.

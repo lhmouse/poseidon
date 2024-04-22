@@ -18,8 +18,7 @@ struct HTTP_Request_Headers
         uint32_t packed_fields_2c;
       };
       struct {
-        char method_str[11];
-        char reserved_always_null_3c;
+        char method_bytes[12];
         uint16_t uri_port;
         bool is_proxy;
         bool is_ssl;
