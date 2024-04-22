@@ -269,7 +269,7 @@ struct chars_view
 
     template<size_t N>
     constexpr chars_view(const char (*ps)[N]) noexcept
-      : p(*ps), n(::rocket::shallow_string(ps).length())  { }
+      : p(*ps), n((ROCKET_ASSERT(*(*ps + N - 1) == '\0'), N - 1))  { }
 
     template<typename allocT>
     constexpr chars_view(const ::rocket::basic_cow_string<char, allocT>& rs) noexcept

@@ -89,15 +89,17 @@ class MySQL_Value
         return *this;
       }
 
-    template<size_t N>
-    MySQL_Value(const char (*ps)[N]) noexcept
+    template<typename ycharT, size_t N,
+    ROCKET_ENABLE_IF(::std::is_same<ycharT, char>::value)>
+    MySQL_Value(const ycharT (*ps)[N]) noexcept
       {
         this->m_stor.emplace<cow_string>(ps);
       }
 
-    template<size_t N>
+    template<typename ycharT, size_t N,
+    ROCKET_ENABLE_IF(::std::is_same<ycharT, char>::value)>
     MySQL_Value&
-    operator=(const char (*ps)[N]) noexcept
+    operator=(const ycharT (*ps)[N]) noexcept
       {
         this->mut_blob() = ps;
         return *this;
