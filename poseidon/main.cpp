@@ -226,25 +226,19 @@ do_set_working_directory()
 
 [[noreturn]]
 int
-do_await_child_process_and_exit(::pid_t cpid)
+do_waitpid_and_exit(::pid_t cpid)
   {
-    ::fprintf(stderr, "Awaiting child process %d...\n", (int) cpid);
-    int wstat = 0;
-
-    ::pid_t r = POSEIDON_SYSCALL_LOOP(::waitpid(cpid, &wstat, 0));
-    if(r < 0)
+    int wstat;
+    if(POSEIDON_SYSCALL_LOOP(::waitpid(cpid, &wstat, 0)) == -1)
       do_exit_printf(exit_system_error,
-          "Failed to await child process: %m");
-
-    if(WIFEXITED(wstat))
-      do_exit_printf(WEXITSTATUS(wstat));
+          "Failed to await child process %d: %m", (int) cpid);
 
     if(WIFSIGNALED(wstat))
       do_exit_printf(128 + WTERMSIG(wstat),
           "Child process %d terminated by signal %d: %s",
           (int) cpid, WTERMSIG(wstat), ::strsignal(WTERMSIG(wstat)));
 
-    ::_Exit(1);
+    ::_Exit(WEXITSTATUS(wstat));
   }
 
 ROCKET_NEVER_INLINE
@@ -269,15 +263,13 @@ do_daemonize_start()
     //  waitpid() <------/                    v
     //  _Exit()                             loop ...
     ::fprintf(stderr, "Daemonizing process %d...\n", (int) ::getpid());
-
-    // Create the CHILD and wait.
     ::pid_t cpid = ::fork();
     if(cpid == -1)
       do_exit_printf(exit_system_error, "Could not spawn child process: %m");
-
-    if(cpid != 0) {
-      // The PARENT shall wait for CHILD and forward its exit status.
-      do_await_child_process_and_exit(cpid);
+    else if(cpid != 0) {
+      // The PARENT shall always wait for the CHILD and forward its exit
+      // status.
+      do_waitpid_and_exit(cpid);
     }
 
     // The CHILD shall create a new session and become its leader. This
@@ -285,43 +277,41 @@ do_daemonize_start()
     // will not unintentially gain a controlling terminal.
     ::setsid();
 
-    int pipefds[2];
-    if(::pipe(pipefds) != 0)
+    int pfds[2];
+    if(::pipe(pfds) != 0)
       do_exit_printf(exit_system_error, "Could not create pipe: %m");
 
-    unique_posix_fd rfd(pipefds[0]);
-    unique_posix_fd wfd(pipefds[1]);
-
-    // Create the GRANDCHILD.
     cpid = ::fork();
     if(cpid == -1)
       do_exit_printf(exit_system_error, "Could not spawn grandchild process: %m");
+    else if(cpid != 0) {
+      ::close(pfds[1]);
+      if(POSEIDON_SYSCALL_LOOP(::read(pfds[0], &(pfds[1]), 1)) <= 0) {
+        // The GRANDCHILD has not exited normally, so wait, and forward
+        // its exit status.
+        do_waitpid_and_exit(cpid);
+      }
 
-    if(cpid != 0) {
-      // The CHILD shall wait for notification from the GRANDCHILD. If no
-      // notification is received or an error occurs, the GRANDCHILD will
-      // terminate and has to be reaped.
-      char text[16];
-      if(POSEIDON_SYSCALL_LOOP(::read(pipefds[0], text, sizeof(text))) > 0)
-        ::_Exit(0);
-
-      // The GRANDCHILD has not exited normally, so wait and forward its
-      // exit status.
-      do_await_child_process_and_exit(cpid);
+      // Detach the GRANDCHILD.
+      ::fprintf(stderr, "Process %d detached successfully\n", (int) cpid);
+      ::_Exit(0);
     }
 
-    // Close standard streams in the GRANDCHILD. Errors are ignored.
-    rfd.reset(::socket(AF_UNIX, SOCK_STREAM, 0));
-    if(rfd) {
-      ::shutdown(rfd, SHUT_RDWR);
-
-      (void)! ::dup2(rfd, STDIN_FILENO);
-      (void)! ::dup2(rfd, STDOUT_FILENO);
-      (void)! ::dup2(rfd, STDERR_FILENO);
+    ::close(pfds[0]);
+    pfds[0] = ::socket(AF_UNIX, SOCK_STREAM, 0);
+    if(pfds[0] != -1) {
+      // Close standard streams in the GRANDCHILD, as it will be detached
+      // from the CHILD. An attempt to write data to these streams shall
+      // fail with `EPIPE`. Errors are ignored.
+      (void)! ::dup2(pfds[0], STDIN_FILENO);
+      (void)! ::dup2(pfds[0], STDOUT_FILENO);
+      (void)! ::dup2(pfds[0], STDERR_FILENO);
+      ::shutdown(pfds[0], SHUT_RDWR);
+      ::close(pfds[0]);
     }
 
     // The GRANDCHILD shall continue execution.
-    daemon_pipe_wfd = move(wfd);
+    daemon_pipe_wfd.reset(pfds[1]);
     return 1;
   }
 
