@@ -20,10 +20,9 @@ jobs:
 
     - name: Install dependencies
       run: >-
-           sudo apt-get update &&
-           sudo apt-get install -y --no-install-recommends g++ ninja-build
-           python3 python3-pip pkgconf libedit-dev libpcre2-dev libssl-dev
-           zlib1g-dev libunwind-dev uuid-dev
+           sudo apt-get update && sudo apt-get install -y
+           --no-install-recommends g++ ninja-build python3 python3-pip pkgconf
+           libedit-dev libpcre2-dev libssl-dev zlib1g-dev libunwind-dev uuid-dev
 
     - name: Install newest meson
       run: >-
@@ -31,21 +30,20 @@ jobs:
 
     - name: Build and install submodules
       run: >-
-           git submodule update --init && git submodule foreach
-           'rm -f *.deb && ./makedeb.sh' &&
-           sudo dpkg -i {asteria,taxon,http-parser}/*.deb
+           git submodule update --init
+           && (cd asteria && ./makedeb.sh && sudo dpkg -i *.deb)
+           && (cd http-parser && ./makedeb.sh && sudo dpkg -i *.deb)
+           && (cd taxon && ./makedeb.sh && sudo dpkg -i *.deb)
 
     - name: Run tests (minimal)
       run: >-
            meson setup -Denable-debug-checks=true build_ci
-           -Denable-{mysql,mongo,redis}=false
-           && meson test -Cbuild_ci
+           -Denable-{mysql,mongo,redis}=false && meson test -Cbuild_ci
 
     - name: Install full dependencies
       run: >-
-           sudo apt-get install -y --no-install-recommends
-           libmysqlclient-dev libmongoc-dev libhiredis-dev
-           && sudo dpkg -i libmongoc-dev-symlinks/*.deb
+           sudo apt-get install -y lib{mysqlclient,mongoc,hiredis}-dev
+           && (cd libmongoc-dev-symlinks && ./makedeb.sh && sudo dpkg -i *.deb)
 
     - name: Run tests (full)
       run: >-
