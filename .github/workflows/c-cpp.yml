@@ -47,5 +47,5 @@ jobs:
 
     - name: Run tests (full)
       run: >-
-           meson setup -Denable-debug-checks=true build_ci
+           meson setup --reconfigure -Denable-debug-checks=true build_ci
            && meson test -Cbuild_ci
