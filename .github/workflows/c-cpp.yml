@@ -32,7 +32,8 @@ jobs:
     - name: Build and install submodules
       run: >-
            git submodule update --init && git submodule foreach
-           'rm -f *.deb && ./makedeb.sh && sudo dpkg -i *.deb'
+           'rm -f *.deb && ./makedeb.sh' &&
+           sudo dpkg -i {asteria,taxon,http-parser}/*.deb
 
     - name: Run tests (minimal)
       run: >-
@@ -44,6 +45,7 @@ jobs:
       run: >-
            sudo apt-get install -y --no-install-recommends
            libmysqlclient-dev libmongoc-dev libhiredis-dev
+           && sudo dpkg -i libmongoc-dev-symlinks/*.deb
 
     - name: Run tests (full)
       run: >-
