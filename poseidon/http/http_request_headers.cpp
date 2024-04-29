@@ -17,7 +17,7 @@ encode(tinyfmt& fmt) const
     else {
       alignas(16) char method_str[16];
       __m128i t = _mm_load_si128(&(this->packed_fields_1));
-      t = _mm_and_si128(t, _mm_setr_epi32(-1, -1, -1, 0));
+      t = _mm_blend_epi16(t, _mm_setzero_si128(), 0xC0);
       _mm_store_si128(reinterpret_cast<__m128i*>(method_str), t);
       uint32_t len = static_cast<uint32_t>(_mm_cmpistri(t, _mm_setzero_si128(), 0x08));
       ::memcpy(method_str + len, " ", 2);
