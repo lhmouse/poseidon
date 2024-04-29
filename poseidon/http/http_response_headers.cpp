@@ -15,17 +15,15 @@ encode(tinyfmt& fmt) const
     // is written. This function does not validate whether these fields
     // contain valid values.
     fmt << "HTTP/1.1 " << this->status << " ";
-
-    if(!this->reason.empty())
+    if(this->reason != "")
       fmt << this->reason;
     else
       fmt << ::http_status_str(static_cast<::http_status>(this->status));
 
     // Write response headers. Empty headers are ignored.
     for(const auto& hpair : this->headers)
-      if(!hpair.first.empty()) {
+      if(hpair.first != "") {
         fmt << "\r\n" << hpair.first << ": ";
-
         if(hpair.second.is_string())
           fmt << hpair.second.as_string();
         else
