@@ -171,7 +171,7 @@ struct UUID::hash
     operator()(const UUID& uuid) const noexcept
       {
         __m128i tval = _mm_load_si128(&(uuid.m_stor));
-        tval = _mm_hadd_epi32(tval, _mm_srli_si128(tval, 8));
+        tval = _mm_hadd_epi32(tval, _mm_bsrli_si128(tval, 8));
         tval = _mm_hadd_epi32(tval, tval);
         return static_cast<size_t>(_mm_cvtsi128_si64(tval));
       }
