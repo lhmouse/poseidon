@@ -159,15 +159,6 @@ void
 MySQL_Check_Table_Future::
 do_on_abstract_future_execute()
   {
-    // Get a connection. Before this function returns, the connection should
-    // be reset and put back.
-    uniptr<MySQL_Connection> conn = this->m_ctr->allocate_default_connection();
-    const auto conn_guard = make_unique_handle(&conn,
-        [&](...) {
-          if(conn && conn->reset())
-            this->m_ctr->pool_connection(move(conn));
-        });
-
     // Compose a `CREATE TABLE` statement and execute it first. This ensures
     // the table exists for all operations later.
     const auto& table_name = this->m_res.table.name();
@@ -201,8 +192,9 @@ do_on_abstract_future_execute()
     sql << ",\n  CHARSET = 'utf8mb4'";
 
     POSEIDON_LOG_INFO(("Checking MySQL table:\n$1"), sql.get_string());
-    conn->execute(sql.get_string(), nullptr, 0);
-    this->m_res.warning_count = conn->warning_count();
+    this->m_conn = this->m_ctr->allocate_default_connection();
+    this->m_conn->execute(sql.get_string(), nullptr, 0);
+    this->m_res.warning_count = this->m_conn->warning_count();
     this->m_res.altered = false;
 
     // Fetch information about existent columns and indexes.
@@ -211,8 +203,8 @@ do_on_abstract_future_execute()
 
     sql.clear_string();
     sql << "SHOW COLUMNS FROM `" << table_name << "`";
-    conn->execute(sql.get_string(), nullptr, 0);
-    conn->fetch_fields(fields);
+    this->m_conn->execute(sql.get_string(), nullptr, 0);
+    this->m_conn->fetch_fields(fields);
 
     map<cow_string, exColumn> excolumns;
     opt<uint32_t> ix_name, ix_type, ix_nullable, ix_default_value, ix_extra;
@@ -229,7 +221,7 @@ do_on_abstract_future_execute()
       else if(ascii_ci_equal(fields[t], "extra"))
         ix_extra = t;
 
-    while(conn->fetch_row(row)) {
+    while(this->m_conn->fetch_row(row)) {
       cow_string& name = row.at(ix_name.value()).mut_blob();
       if(auto column_config = this->m_res.table.find_column_opt(name))
         name = column_config->name;
@@ -244,8 +236,8 @@ do_on_abstract_future_execute()
 
     sql.clear_string();
     sql << "SHOW INDEXES FROM `" << table_name << "`";
-    conn->execute(sql.get_string(), nullptr, 0);
-    conn->fetch_fields(fields);
+    this->m_conn->execute(sql.get_string(), nullptr, 0);
+    this->m_conn->fetch_fields(fields);
 
     map<cow_string, exIndex> exindexes;
     opt<uint32_t> ix_non_unique, ix_column_name, ix_seq_in_index;
@@ -260,7 +252,7 @@ do_on_abstract_future_execute()
       else if(ascii_ci_equal(fields[t], "seq_in_index"))
         ix_seq_in_index = t;
 
-    while(conn->fetch_row(row)) {
+    while(this->m_conn->fetch_row(row)) {
       cow_string& name = row.at(ix_name.value()).mut_blob();
       if(auto index_config = this->m_res.table.find_index_opt(name))
         name = index_config->name;
@@ -581,8 +573,16 @@ do_on_abstract_future_execute()
       return;
 
     POSEIDON_LOG_WARN(("Updating MySQL table structure:", "$1"), sql.get_string());
-    conn->execute(sql.get_string(), nullptr, 0);
+    this->m_conn->execute(sql.get_string(), nullptr, 0);
     this->m_res.altered = true;
+  }
+
+void
+MySQL_Check_Table_Future::
+do_on_abstract_future_finalize() noexcept
+  {
+    if(this->m_conn && this->m_conn->reset())
+      this->m_ctr->pool_connection(move(this->m_conn));
   }
 
 }  // namespace poseidon

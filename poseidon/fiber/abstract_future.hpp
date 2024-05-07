@@ -34,15 +34,6 @@ class Abstract_Future
     void
     do_on_abstract_task_execute() noexcept override;
 
-    // This is a convenient wrapper for `check_success()`.
-    template<typename xResult>
-    xResult&&
-    do_check_success(xResult&& res) const
-      {
-        this->check_success();
-        return forward<xResult>(res);
-      }
-
     // This callback is invoked by `do_abstract_future_request()` and is intended
     // to be overriden by derived classes to do the asynchronous work. If this
     // function throws an exception, it will be copied into `m_except` which
@@ -50,6 +41,14 @@ class Abstract_Future
     virtual
     void
     do_on_abstract_future_execute() = 0;
+
+    // This callback is invoked by `do_abstract_future_request()` after the work
+    // has been completed (either successfully or exceptionally) and all blocking
+    // fibers have been released. It's much like the `finally` block in Java,
+    // except that it shall not throw exceptions.
+    virtual
+    void
+    do_on_abstract_future_finalize() noexcept;
 
   public:
     Abstract_Future(const Abstract_Future&) = delete;

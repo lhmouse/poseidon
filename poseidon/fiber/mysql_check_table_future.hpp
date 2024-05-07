@@ -24,6 +24,7 @@ class MySQL_Check_Table_Future
 
   private:
     MySQL_Connector* m_ctr;
+    uniptr<MySQL_Connection> m_conn;
     Result m_res;
 
   public:
@@ -37,6 +38,10 @@ class MySQL_Check_Table_Future
     void
     do_on_abstract_future_execute() override;
 
+    virtual
+    void
+    do_on_abstract_future_finalize() noexcept override;
+
   public:
     MySQL_Check_Table_Future(const MySQL_Check_Table_Future&) = delete;
     MySQL_Check_Table_Future& operator=(const MySQL_Check_Table_Future&) & = delete;
@@ -46,11 +51,17 @@ class MySQL_Check_Table_Future
     // `false`, an exception is thrown, and there is no effect.
     const Result&
     result() const
-      { return this->do_check_success(this->m_res);  }
+      {
+        this->check_success();
+        return this->m_res;
+      }
 
     Result&
     mut_result()
-      { return this->do_check_success(this->m_res);  }
+      {
+        this->check_success();
+        return this->m_res;
+      }
   };
 
 }  // namespace poseidon

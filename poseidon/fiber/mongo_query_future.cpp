@@ -24,21 +24,13 @@ void
 Mongo_Query_Future::
 do_on_abstract_future_execute()
   {
-    // Get a connection. Before this function returns, the connection should
-    // be reset and put back.
-    uniptr<Mongo_Connection> conn = this->m_ctr->allocate_default_connection();
-    const auto conn_guard = make_unique_handle(&conn,
-        [&](...) {
-          if(conn && conn->reset())
-            this->m_ctr->pool_connection(move(conn));
-        });
-
     // Execute the command.
-    conn->execute(this->m_res.cmd);
+    this->m_conn = this->m_ctr->allocate_default_connection();
+    this->m_conn->execute(this->m_res.cmd);
 
     // Fetch result documents.
     Mongo_Document doc;
-    while(conn->fetch_reply(doc))
+    while(this->m_conn->fetch_reply(doc))
       this->m_res.reply_docs.push_back(move(doc));
 
     POSEIDON_LOG_DEBUG((
@@ -46,6 +38,14 @@ do_on_abstract_future_execute()
         "$2 document(s) returned"),
         this->m_res.cmd,
         this->m_res.reply_docs.size());
+  }
+
+void
+Mongo_Query_Future::
+do_on_abstract_future_finalize() noexcept
+  {
+    if(this->m_conn && this->m_conn->reset())
+      this->m_ctr->pool_connection(move(this->m_conn));
   }
 
 }  // namespace poseidon

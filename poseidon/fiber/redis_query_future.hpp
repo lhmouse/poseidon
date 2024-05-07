@@ -23,6 +23,7 @@ class Redis_Query_Future
 
   private:
     Redis_Connector* m_ctr;
+    uniptr<Redis_Connection> m_conn;
     Result m_res;
 
   public:
@@ -36,6 +37,10 @@ class Redis_Query_Future
     void
     do_on_abstract_future_execute() override;
 
+    virtual
+    void
+    do_on_abstract_future_finalize() noexcept override;
+
   public:
     Redis_Query_Future(const Redis_Query_Future&) = delete;
     Redis_Query_Future& operator=(const Redis_Query_Future&) & = delete;
@@ -45,11 +50,17 @@ class Redis_Query_Future
     // `false`, an exception is thrown, and there is no effect.
     const Result&
     result() const
-      { return this->do_check_success(this->m_res);  }
+      {
+        this->check_success();
+        return this->m_res;
+      }
 
     Result&
     mut_result()
-      { return this->do_check_success(this->m_res);  }
+      {
+        this->check_success();
+        return this->m_res;
+      }
   };
 
 }  // namespace poseidon

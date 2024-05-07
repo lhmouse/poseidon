@@ -51,11 +51,17 @@ class Read_File_Future
     // `false`, an exception is thrown, and there is no effect.
     const Result&
     result() const
-      { return this->do_check_success(this->m_res);  }
+      {
+        this->check_success();
+        return this->m_res;
+      }
 
     Result&
     mut_result()
-      { return this->do_check_success(this->m_res);  }
+      {
+        this->check_success();
+        return this->m_res;
+      }
   };
 
 }  // namespace poseidon

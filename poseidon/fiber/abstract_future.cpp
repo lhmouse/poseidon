@@ -30,7 +30,7 @@ do_on_abstract_task_execute() noexcept
           this->do_on_abstract_future_execute();
         }
         catch(exception& stdex) {
-          POSEIDON_LOG_WARN(("Future failed: `$1` (class `$2`)\n$3"), this, typeid(*this), stdex);
+          POSEIDON_LOG_WARN(("Future `$1` failed:", "$2"), typeid(*this), stdex);
           this->m_except = ::std::current_exception();
         }
 
@@ -51,7 +51,14 @@ do_on_abstract_task_execute() noexcept
         timep->store(now + steady_clock::time_point::duration(k));
 
     waiters_lock.unlock();
-    POSEIDON_LOG_TRACE(("Future completed: `$1` (class `$2`)"), this, typeid(*this));
+    this->do_on_abstract_future_finalize();
+    POSEIDON_LOG_TRACE(("Future `$1` completed"), typeid(*this));
+  }
+
+void
+Abstract_Future::
+do_on_abstract_future_finalize() noexcept
+  {
   }
 
 void
@@ -61,7 +68,7 @@ check_success() const
     // If initialization hasn't completed yet, fail.
     this->m_once.call(
       [&] {
-        POSEIDON_THROW(("Future not completed: `$1` (class `$2`)"), this, typeid(*this));
+        POSEIDON_THROW(("Future `$1` not completed"), typeid(*this));
       });
 
     // If initialization has failed, rethrow the exact exception.

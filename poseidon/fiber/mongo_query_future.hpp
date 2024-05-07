@@ -23,6 +23,7 @@ class Mongo_Query_Future
 
   private:
     Mongo_Connector* m_ctr;
+    uniptr<Mongo_Connection> m_conn;
     Result m_res;
 
   public:
@@ -36,6 +37,10 @@ class Mongo_Query_Future
     void
     do_on_abstract_future_execute() override;
 
+    virtual
+    void
+    do_on_abstract_future_finalize() noexcept override;
+
   public:
     Mongo_Query_Future(const Mongo_Query_Future&) = delete;
     Mongo_Query_Future& operator=(const Mongo_Query_Future&) & = delete;
@@ -45,11 +50,17 @@ class Mongo_Query_Future
     // `false`, an exception is thrown, and there is no effect.
     const Result&
     result() const
-      { return this->do_check_success(this->m_res);  }
+      {
+        this->check_success();
+        return this->m_res;
+      }
 
     Result&
     mut_result()
-      { return this->do_check_success(this->m_res);  }
+      {
+        this->check_success();
+        return this->m_res;
+      }
   };
 
 }  // namespace poseidon
