@@ -33,7 +33,7 @@ do_on_abstract_future_execute()
     bool fetched = this->m_conn->fetch_reply(this->m_res.reply);
 
     POSEIDON_LOG_DEBUG((
-        "Finished redis command: $1",
+        "Finished Redis command: $1",
         "$2 reply --> $3"),
         implode(this->m_res.cmd, ' '),
         fetched ? "failed to receive" : "received", this->m_res.reply);
