@@ -74,15 +74,14 @@ do_on_abstract_future_execute()
       res_it = this->m_res.pairs.begin();
       auto val_it = values.mut_begin();
       while((res_it != this->m_res.pairs.end()) && (val_it != values.end())) {
-        if(!val_it->is_string()) {
-          // The key has just been deleted...
+        if(!val_it->is_string())
           res_it = this->m_res.pairs.erase(res_it);
-          continue;
+        else {
+          POSEIDON_LOG_TRACE((" MGET <= $1 ($2)"), res_it->first, val_it->as_string_length());
+          res_it->second = move(val_it->mut_string());
+          ++ res_it;
         }
-
-        POSEIDON_LOG_TRACE((" MGET <= $1 ($2)"), res_it->first, val_it->as_string_length());
-        res_it->second = move(val_it->mut_string());
-        ++ res_it;
+        ++ val_it;
       }
     }
 
