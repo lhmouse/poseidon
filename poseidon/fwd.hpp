@@ -465,6 +465,7 @@ class MySQL_Query_Future;
 class MySQL_Check_Table_Future;
 class Mongo_Query_Future;
 class Redis_Query_Future;
+class Redis_Scan_and_Get_Future;
 
 // Socket types
 enum IP_Address_Class : uint8_t;

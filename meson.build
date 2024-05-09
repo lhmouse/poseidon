@@ -113,6 +113,7 @@ poseidon_include_redis = [
   'poseidon/redis/redis_value.hpp',
   'poseidon/redis/redis_connection.hpp',
   'poseidon/fiber/redis_query_future.hpp',
+  'poseidon/fiber/redis_scan_and_get_future.hpp',
 ]
 
 poseidon_src = [
@@ -200,6 +201,7 @@ poseidon_src_redis = [
   'poseidon/redis/redis_value.cpp',
   'poseidon/redis/redis_connection.cpp',
   'poseidon/fiber/redis_query_future.cpp',
+  'poseidon/fiber/redis_scan_and_get_future.cpp',
 ]
 
 etc_poseidon = [
