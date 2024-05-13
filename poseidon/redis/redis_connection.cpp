@@ -129,33 +129,6 @@ execute(const cow_string* cmds, size_t ncmds)
               this->m_reply->str);
       }
 
-      // Get the local address.
-      ::sockaddr_storage ss;
-      ::socklen_t sslen = sizeof(ss);
-      if(::getsockname(this->m_redis->fd, (::sockaddr*) &ss, &sslen) != 0)
-        POSEIDON_THROW((
-            "Could not get local address: ${errno:full}",
-            "[`getsockname()` failed]"));
-
-      switch(ss.ss_family)
-        {
-        case AF_INET:
-          // IPv4
-          ::memcpy(this->m_local_addr.mut_data(), ipv4_unspecified.data(), 12);
-          ::memcpy(this->m_local_addr.mut_data() + 12, &(((::sockaddr_in*) &ss)->sin_addr), 4);
-          this->m_local_addr.set_port(ROCKET_BETOH16(((::sockaddr_in*) &ss)->sin_port));
-          break;
-
-        case AF_INET6:
-          // IPv6
-          ::memcpy(this->m_local_addr.mut_data(), &(((::sockaddr_in6*) &ss)->sin6_addr), 16);
-          this->m_local_addr.set_port(ROCKET_BETOH16(((::sockaddr_in6*) &ss)->sin6_port));
-          break;
-
-        default:
-          POSEIDON_THROW(("Socket address family `$1` not supported"), ss.ss_family);
-        }
-
       this->m_password.clear();
       this->m_password.shrink_to_fit();
       this->m_connected = true;
