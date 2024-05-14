@@ -343,20 +343,18 @@ thread_loop()
       elem->sched_inner->uc_stack = do_alloc_stack(stack_vm_size);  // may throw
       elem->sched_inner->uc_link = this->m_sched_outer;
 
+      auto thunk = [](int xarg0, int xarg1)
+        {
+          Fiber_Scheduler* ythis = nullptr;
+          int yargs[2] = { xarg0, xarg1 };
+          ::memcpy(&ythis, yargs, sizeof(ythis));
+          ythis->do_fiber_function();
+        };
+
       int xargs[2] = { };
       Fiber_Scheduler* xthis = this;
       ::memcpy(xargs, &xthis, sizeof(xthis));
-
-      ::makecontext(elem->sched_inner,
-          (void (*)()) +[](int xarg0, int xarg1)
-          {
-            Fiber_Scheduler* ythis = nullptr;
-            int yargs[2] = { xarg0, xarg1 };
-            ::memcpy(&ythis, yargs, sizeof(ythis));
-
-            ythis->do_fiber_function();
-          },
-          2, xargs[0], xargs[1]);
+      ::makecontext(elem->sched_inner, reinterpret_cast<void (*)()>(+thunk), 2, xargs[0], xargs[1]);
     }
 
     // Start or resume this fiber.
