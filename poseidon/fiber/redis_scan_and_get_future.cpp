@@ -9,10 +9,10 @@
 namespace poseidon {
 
 Redis_Scan_and_Get_Future::
-Redis_Scan_and_Get_Future(Redis_Connector& connector, cow_string pattern)
+Redis_Scan_and_Get_Future(Redis_Connector& connector, cow_stringR pattern)
   {
     this->m_ctr = &connector;
-    this->m_res.pattern = move(pattern);
+    this->m_res.pattern = pattern;
   }
 
 Redis_Scan_and_Get_Future::
@@ -24,7 +24,6 @@ void
 Redis_Scan_and_Get_Future::
 do_on_abstract_future_execute()
   {
-    // Compose a command template for `pattern`.
     cow_vector<cow_string> cmd;
     cmd.resize(4);
     cmd.mut(0) = &"SCAN";
@@ -49,16 +48,15 @@ do_on_abstract_future_execute()
         this->m_res.pairs.try_emplace(move(key_it->mut_string()));
         ++ key_it;
       }
-    }
-    while(cmd[1] != "0");
+    } while(cmd[1] != "0");
 
     if(!this->m_res.pairs.empty()) {
-      // Append all unique keys in ascending order. There is a one-to-one mapping
-      // from the arguments to the elements in the reply array, so the order of
-      // keys must be preserved.
       cmd.resize(1);
       cmd.mut(0) = &"MGET";
 
+      // Append all unique keys in ascending order. There is a one-to-one mapping
+      // from the arguments to the elements in the reply array, so the order of
+      // keys must be preserved.
       cmd.reserve(cmd.size() + this->m_res.pairs.size());
       auto res_it = this->m_res.pairs.mut_begin();
       while(res_it != this->m_res.pairs.end()) {
@@ -86,8 +84,8 @@ do_on_abstract_future_execute()
     }
 
     POSEIDON_LOG_DEBUG((
-        "Found $1 key(s) by scanning Redis for pattern `$2`"),
-        this->m_res.pairs.size(), this->m_res.pattern);
+        "Found $1 key(s) from Redis: SCAN 0 MATCH $2"),
+        this->m_res.pairs.size(), Redis_Value(this->m_res.pattern));
   }
 
 void

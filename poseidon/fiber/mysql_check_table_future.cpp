@@ -159,12 +159,12 @@ void
 MySQL_Check_Table_Future::
 do_on_abstract_future_execute()
   {
-    // Compose a `CREATE TABLE` statement and execute it first. This ensures
-    // the table exists for all operations later.
     const auto& table_name = this->m_res.table.name();
     if(table_name.empty())
       POSEIDON_THROW(("Table has no name"));
 
+    // Compose a `CREATE TABLE` statement and execute it first. This ensures
+    // the table exists for all operations later.
     tinyfmt_str sql;
     sql << "CREATE TABLE IF NOT EXISTS `" << table_name << "`\n  (";
     size_t ncolumns = 0;

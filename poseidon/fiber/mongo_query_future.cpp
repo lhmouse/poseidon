@@ -9,10 +9,10 @@
 namespace poseidon {
 
 Mongo_Query_Future::
-Mongo_Query_Future(Mongo_Connector& connector, Mongo_Document cmd)
+Mongo_Query_Future(Mongo_Connector& connector, const Mongo_Document& cmd)
   {
     this->m_ctr = &connector;
-    this->m_res.cmd = move(cmd);
+    this->m_res.cmd = cmd;
   }
 
 Mongo_Query_Future::
@@ -24,20 +24,12 @@ void
 Mongo_Query_Future::
 do_on_abstract_future_execute()
   {
-    // Execute the command.
     this->m_conn = this->m_ctr->allocate_default_connection();
     this->m_conn->execute(this->m_res.cmd);
 
-    // Fetch result documents.
     Mongo_Document doc;
     while(this->m_conn->fetch_reply(doc))
       this->m_res.reply_docs.push_back(move(doc));
-
-    POSEIDON_LOG_DEBUG((
-        "Finished BSON command: $1",
-        "$2 document(s) returned"),
-        this->m_res.cmd,
-        this->m_res.reply_docs.size());
   }
 
 void

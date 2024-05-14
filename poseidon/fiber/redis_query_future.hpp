@@ -30,7 +30,7 @@ class Redis_Query_Future
     // Constructs a future for a single Redis command. This object also functions
     // as an asynchronous task, which can be enqueued into an `Task_Executor`.
     // This future will become ready once the query is complete.
-    Redis_Query_Future(Redis_Connector& connector, cow_vector<cow_string> cmd);
+    Redis_Query_Future(Redis_Connector& connector, const cow_vector<cow_string>& cmd);
 
   private:
     virtual

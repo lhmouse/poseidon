@@ -30,7 +30,7 @@ class Redis_Scan_and_Get_Future
     // Constructs a future for a single Redis command. This object also functions
     // as an asynchronous task, which can be enqueued into an `Task_Executor`.
     // This future will become ready once the query is complete.
-    Redis_Scan_and_Get_Future(Redis_Connector& connector, cow_string pattern);
+    Redis_Scan_and_Get_Future(Redis_Connector& connector, cow_stringR pattern);
 
   private:
     virtual

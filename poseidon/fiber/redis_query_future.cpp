@@ -9,10 +9,10 @@
 namespace poseidon {
 
 Redis_Query_Future::
-Redis_Query_Future(Redis_Connector& connector, cow_vector<cow_string> cmd)
+Redis_Query_Future(Redis_Connector& connector, const cow_vector<cow_string>& cmd)
   {
     this->m_ctr = &connector;
-    this->m_res.cmd = move(cmd);
+    this->m_res.cmd = cmd;
   }
 
 Redis_Query_Future::
@@ -24,19 +24,12 @@ void
 Redis_Query_Future::
 do_on_abstract_future_execute()
   {
-    // Execute the command.
     this->m_conn = this->m_ctr->allocate_default_connection();
     this->m_conn->execute(this->m_res.cmd.data(), this->m_res.cmd.size());
 
-    // Fetch its reply. We don't do pipelining, so it's assumed that there is
-    // exactly one reply for this command.
-    bool fetched = this->m_conn->fetch_reply(this->m_res.reply);
-
-    POSEIDON_LOG_DEBUG((
-        "Finished Redis command: $1",
-        "$2 reply --> $3"),
-        implode(this->m_res.cmd, ' '),
-        fetched ? "failed to receive" : "received", this->m_res.reply);
+    // We don't do pipelining, so it's assumed that there is exactly one reply
+    // for this command.
+    this->m_conn->fetch_reply(this->m_res.reply);
   }
 
 void

@@ -24,7 +24,6 @@ void
 Read_File_Future::
 do_on_abstract_future_execute()
   {
-    // Open the file and get basic information.
     unique_posix_fd fd(::open(this->m_res.path.safe_c_str(), O_RDONLY | O_NOCTTY, 0));
     if(!fd)
       POSEIDON_THROW((
@@ -32,6 +31,7 @@ do_on_abstract_future_execute()
           "[`open()` failed: ${errno:full}]"),
           this->m_res.path);
 
+    // Get basic information.
     struct ::stat64 st;
     if(::fstat64(fd, &st) != 0)
       POSEIDON_THROW((
