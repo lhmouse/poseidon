@@ -16,18 +16,11 @@
 #include <rocket/unique_posix_dir.hpp>
 #include <rocket/shared_function.hpp>
 #include <rocket/static_char_buffer.hpp>
+#include <asteria/value.hpp>
 #include <asteria/utils.hpp>
 #include <taxon.hpp>
-#include <array>
 #include <vector>
-#include <deque>
-#include <list>
-#include <forward_list>
-#include <map>
-#include <set>
-#include <unordered_map>
-#include <unordered_set>
-#include <chrono>
+#include <string>
 #include <cxxabi.h>
 #include <x86intrin.h>
 #include <emmintrin.h>
@@ -78,19 +71,6 @@ using ::std::exception;
 using ::std::exception_ptr;
 using ::std::type_info;
 using ::std::pair;
-using ::std::array;
-using ::std::vector;
-using ::std::deque;
-using ::std::list;
-using ::std::forward_list;
-using ::std::map;
-using ::std::multimap;
-using ::std::set;
-using ::std::multiset;
-using ::std::unordered_map;
-using ::std::unordered_multimap;
-using ::std::unordered_set;
-using ::std::unordered_multiset;
 
 using namespace ::std::literals;
 using ::std::chrono::duration;
@@ -121,6 +101,7 @@ using ::rocket::atomic_seq_cst;
 using plain_mutex = ::rocket::mutex;
 using ::rocket::recursive_mutex;
 using ::rocket::condition_variable;
+using ::rocket::array;
 using ::rocket::cow_vector;
 using ::rocket::cow_hashmap;
 using ::rocket::static_vector;
@@ -128,6 +109,7 @@ using ::rocket::cow_string;
 using ::rocket::cow_bstring;
 using ::rocket::cow_u16string;
 using ::rocket::cow_u32string;
+using ::rocket::prehashed_string;
 using ::rocket::linear_buffer;
 using ::rocket::tinybuf;
 using ::rocket::tinybuf_str;

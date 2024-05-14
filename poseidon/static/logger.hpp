@@ -18,10 +18,10 @@ class Logger
     mutable plain_mutex m_queue_mutex;
     condition_variable m_queue_avail;
     struct X_Message;
-    vector<X_Message> m_queue;
+    cow_vector<X_Message> m_queue;
 
     mutable recursive_mutex m_io_mutex;
-    vector<X_Message> m_io_queue;
+    cow_vector<X_Message> m_io_queue;
 
   public:
     // Creates a logger that outputs to nowhere.

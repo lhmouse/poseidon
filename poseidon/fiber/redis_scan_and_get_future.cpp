@@ -25,12 +25,12 @@ Redis_Scan_and_Get_Future::
 do_on_abstract_future_execute()
   {
     // Compose a command template for `pattern`.
-    vector<cow_string> cmd;
+    cow_vector<cow_string> cmd;
     cmd.resize(4);
-    cmd[0] = &"SCAN";
-    cmd[1] = &"0";  // cursor
-    cmd[2] = &"MATCH";
-    cmd[3] = this->m_res.pattern;
+    cmd.mut(0) = &"SCAN";
+    cmd.mut(1) = &"0";  // cursor
+    cmd.mut(2) = &"MATCH";
+    cmd.mut(3) = this->m_res.pattern;
 
     // Scan for keys until the end cursor has been reached. Each reply shall be
     // an array of two elements. The first element is the next cursor. The second
@@ -40,7 +40,7 @@ do_on_abstract_future_execute()
     Redis_Value reply;
     do {
       this->m_conn->fetch_reply(reply);
-      cmd[1] = move(reply.mut_array().mut(0).mut_string());
+      cmd.mut(1) = move(reply.mut_array().mut(0).mut_string());
       auto keys = move(reply.mut_array().mut(1).mut_array());
 
       auto key_it = keys.mut_begin();
@@ -53,14 +53,14 @@ do_on_abstract_future_execute()
     while(cmd[1] != "0");
 
     if(!this->m_res.pairs.empty()) {
-      cmd.resize(1);
-      cmd.reserve(cmd.size() + this->m_res.pairs.size());
-      cmd[0] = &"MGET";
-
       // Append all unique keys in ascending order. There is a one-to-one mapping
       // from the arguments to the elements in the reply array, so the order of
       // keys must be preserved.
-      auto res_it = this->m_res.pairs.begin();
+      cmd.resize(1);
+      cmd.mut(0) = &"MGET";
+
+      cmd.reserve(cmd.size() + this->m_res.pairs.size());
+      auto res_it = this->m_res.pairs.mut_begin();
       while(res_it != this->m_res.pairs.end()) {
         cmd.emplace_back(res_it->first);
         ++ res_it;
@@ -71,7 +71,7 @@ do_on_abstract_future_execute()
       this->m_conn->fetch_reply(reply);
       auto values = move(reply.mut_array());
 
-      res_it = this->m_res.pairs.begin();
+      res_it = this->m_res.pairs.mut_begin();
       auto val_it = values.mut_begin();
       while((res_it != this->m_res.pairs.end()) && (val_it != values.end())) {
         if(!val_it->is_string())

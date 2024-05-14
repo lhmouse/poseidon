@@ -16,11 +16,11 @@ MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt)
   }
 
 MySQL_Query_Future::
-MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt, vector<MySQL_Value> stmt_args)
+MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt, const cow_vector<MySQL_Value>& stmt_args)
   {
     this->m_ctr = &connector;
     this->m_res.stmt = stmt;
-    this->m_res.stmt_args = move(stmt_args);
+    this->m_res.stmt_args = stmt_args;
   }
 
 MySQL_Query_Future::
@@ -34,8 +34,7 @@ do_on_abstract_future_execute()
   {
     // Execute the statement.
     this->m_conn = this->m_ctr->allocate_default_connection();
-    this->m_conn->execute(this->m_res.stmt,
-           this->m_res.stmt_args.data(), this->m_res.stmt_args.size());
+    this->m_conn->execute(this->m_res.stmt, this->m_res.stmt_args.data(), this->m_res.stmt_args.size());
 
     // Fetch result metadata.
     this->m_res.warning_count = this->m_conn->warning_count();
@@ -44,7 +43,7 @@ do_on_abstract_future_execute()
     this->m_conn->fetch_fields(this->m_res.result_fields);
 
     // Fetch result rows.
-    vector<MySQL_Value> row;
+    cow_vector<MySQL_Value> row;
     while(this->m_conn->fetch_row(row))
       this->m_res.result_rows.push_back(move(row));
 

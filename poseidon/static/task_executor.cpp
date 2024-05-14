@@ -22,11 +22,14 @@ Task_Executor::
 thread_loop()
   {
     plain_mutex::unique_lock lock(this->m_queue_mutex);
-    while(this->m_queue.empty())
+    while(this->m_queue_front.empty() && this->m_queue_back.empty())
       this->m_queue_avail.wait(lock);
 
-    auto task = this->m_queue.front().lock();
-    this->m_queue.pop_front();
+    if(this->m_queue_front.empty())
+      this->m_queue_front.swap(this->m_queue_back);
+
+    auto task = this->m_queue_front.back().lock();
+    this->m_queue_front.pop_back();
     lock.unlock();
 
     if(!task)
@@ -46,7 +49,7 @@ enqueue(shptrR<Abstract_Task> task)
 
     // Insert the task.
     plain_mutex::unique_lock lock(this->m_queue_mutex);
-    this->m_queue.emplace_back(task);
+    this->m_queue_back.emplace_back(task);
     this->m_queue_avail.notify_one();
   }
 

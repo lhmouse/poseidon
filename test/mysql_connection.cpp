@@ -24,10 +24,10 @@ main()
                   :  1; // fail
     }
 
-    vector<cow_string> fields;
+    cow_vector<cow_string> fields;
     conn.fetch_fields(fields);
 
-    vector<MySQL_Value> values;
+    cow_vector<MySQL_Value> values;
     int row = 0;
     ::rocket::tinyfmt_file fmt(stderr, nullptr);
 

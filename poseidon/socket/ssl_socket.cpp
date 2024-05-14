@@ -58,7 +58,7 @@ SSL_Socket::
 
 charbuf_256
 SSL_Socket::
-do_on_ssl_alpn_request(vector<charbuf_256>&& protos)
+do_on_ssl_alpn_request(cow_vector<charbuf_256>&& protos)
   {
     for(const char* proto : protos)
       POSEIDON_LOG_DEBUG((
@@ -77,7 +77,7 @@ do_ssl_alpn_request(const charbuf_256* protos_opt, size_t protos_size)
       return this->do_ssl_alpn_request(*protos_opt);
 
     // Generate the list of protocols in wire format.
-    vector<uint8_t> pbuf;
+    ::std::vector<uint8_t> pbuf;
     pbuf.reserve(256);
 
     for(size_t k = 0;  k != protos_size;  ++k) {

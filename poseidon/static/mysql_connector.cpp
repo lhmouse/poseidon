@@ -111,11 +111,11 @@ allocate_connection(cow_stringR service_uri, cow_stringR password)
     lock.lock(this->m_pool_mutex);
     const steady_time now = steady_clock::now();
 
-    auto pos = this->m_pool.begin();
+    auto pos = this->m_pool.mut_begin();
     while((pos != this->m_pool.end()) && (now - (*pos)->m_time_pooled > idle_timeout))
       pos = this->m_pool.erase(pos);
 
-    for(pos = this->m_pool.begin();  pos != this->m_pool.end();  ++pos)
+    for(pos = this->m_pool.mut_begin();  pos != this->m_pool.end();  ++pos)
       if((*pos)->m_service_uri == service_uri) {
         auto conn = move(*pos);
         pos = this->m_pool.erase(pos);
@@ -141,11 +141,11 @@ allocate_default_connection()
     lock.lock(this->m_pool_mutex);
     const steady_time now = steady_clock::now();
 
-    auto pos = this->m_pool.begin();
+    auto pos = this->m_pool.mut_begin();
     while((pos != this->m_pool.end()) && (now - (*pos)->m_time_pooled > idle_timeout))
       pos = this->m_pool.erase(pos);
 
-    for(pos = this->m_pool.begin();  pos != this->m_pool.end();  ++pos)
+    for(pos = this->m_pool.mut_begin();  pos != this->m_pool.end();  ++pos)
       if((*pos)->m_service_uri == service_uri) {
         auto conn = move(*pos);
         pos = this->m_pool.erase(pos);
@@ -179,7 +179,7 @@ pool_connection(uniptr<MySQL_Connection>&& conn) noexcept
     lock.lock(this->m_pool_mutex);
     const steady_time now = steady_clock::now();
 
-    auto pos = this->m_pool.begin();
+    auto pos = this->m_pool.mut_begin();
     while((pos != this->m_pool.end()) && (now - (*pos)->m_time_pooled > idle_timeout))
       pos = this->m_pool.erase(pos);
 

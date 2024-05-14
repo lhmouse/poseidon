@@ -24,7 +24,7 @@ struct Packet_Queue
       };
 
     mutable plain_mutex mutex;
-    deque<Packet> packets;
+    ::std::deque<Packet> packets;
     bool fiber_active = false;
   };
 

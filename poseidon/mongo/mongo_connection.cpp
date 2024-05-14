@@ -122,7 +122,7 @@ execute(const Mongo_Document& cmd)
       };
 
     scoped_bson bson_cmd;
-    forward_list<xFrame> stack;
+    ::std::forward_list<xFrame> stack;
     bool success = true;
     size_t top_rpos = cmd.size();
     ::bson_t* pbson = bson_cmd;
@@ -320,7 +320,7 @@ fetch_reply(Mongo_Document& output)
         ::bson_iter_t parent_iter;
       };
 
-    forward_list<xFrame> stack;
+    ::std::forward_list<xFrame> stack;
     Mongo_Array* top_a = nullptr;
     Mongo_Document* top_o = &output;
 

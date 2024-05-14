@@ -61,7 +61,7 @@ thread_loop()
       return;
     }
 
-    ::std::pop_heap(this->m_pq.begin(), this->m_pq.end(), timer_comparator);
+    ::std::pop_heap(this->m_pq.mut_begin(), this->m_pq.mut_end(), timer_comparator);
     steady_time next = this->m_pq.back().next;
     auto timer = this->m_pq.back().wtimer.lock();
     if(!timer) {
@@ -71,8 +71,8 @@ thread_loop()
     }
     else if(this->m_pq.back().period != 0s) {
       // Update the next time point and insert the timer back.
-      this->m_pq.back().next += this->m_pq.back().period;
-      ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), timer_comparator);
+      this->m_pq.mut_back().next += this->m_pq.back().period;
+      ::std::push_heap(this->m_pq.mut_begin(), this->m_pq.mut_end(), timer_comparator);
     }
     else {
       // Delete the one-shot timer.
@@ -107,7 +107,7 @@ insert(shptrR<Abstract_Timer> timer, milliseconds delay, milliseconds period)
     // Insert the timer.
     plain_mutex::unique_lock lock(this->m_pq_mutex);
     this->m_pq.emplace_back(move(elem));
-    ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), timer_comparator);
+    ::std::push_heap(this->m_pq.mut_begin(), this->m_pq.mut_end(), timer_comparator);
     this->m_pq_avail.notify_one();
   }
 

@@ -13,7 +13,7 @@ Mongo_Value::
   {
     // Break deep recursion with a handwritten stack.
     struct xVariant : decltype(Mongo_Value::m_stor)  { };
-    vector<xVariant> stack;
+    ::std::vector<xVariant> stack;
 
   do_unpack_loop_:
     try {
@@ -56,7 +56,7 @@ print_to(tinyfmt& fmt) const
         Mongo_Document::const_iterator ito;
       };
 
-    vector<xFrame> stack;
+    ::std::vector<xFrame> stack;
     const Mongo_Value* pval = this;
 
   do_unpack_loop_:

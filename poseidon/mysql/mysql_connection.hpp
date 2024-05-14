@@ -69,7 +69,7 @@ class MySQL_Connection
     // the query has produced a result and all fields have been successfully
     // fetched, `true` is returned. If there is no result, `false` is returned.
     bool
-    fetch_fields(vector<cow_string>& output);
+    fetch_fields(cow_vector<cow_string>& output);
 
     // Fetches a row of the result from the previous query. This function must be
     // called after `execute()`. `output` is cleared before fetching any data. If
@@ -77,7 +77,7 @@ class MySQL_Connection
     // `true` is returned. If there is no result or the end of result has been
     // reached, `false` is returned.
     bool
-    fetch_row(vector<MySQL_Value>& output);
+    fetch_row(cow_vector<MySQL_Value>& output);
 
     // Gets the number of rows that have been affected. This function must be
     // called after `execute()`.

@@ -138,7 +138,7 @@ struct exColumn
 struct exIndex
   {
     bool multi;
-    vector<cow_string> columns;
+    ::std::vector<cow_string> columns;
   };
 
 }  // namespace
@@ -198,40 +198,44 @@ do_on_abstract_future_execute()
     this->m_res.altered = false;
 
     // Fetch information about existent columns and indexes.
-    vector<cow_string> fields;
-    vector<MySQL_Value> row;
+    cow_vector<MySQL_Value> row;
+    cow_vector<cow_string> fields;
 
     sql.clear_string();
     sql << "SHOW COLUMNS FROM `" << table_name << "`";
     this->m_conn->execute(sql.get_string(), nullptr, 0);
     this->m_conn->fetch_fields(fields);
 
-    map<cow_string, exColumn> excolumns;
-    opt<uint32_t> ix_name, ix_type, ix_nullable, ix_default_value, ix_extra;
+    uint32_t idx_name = UINT32_MAX;
+    uint32_t idx_type = UINT32_MAX;
+    uint32_t idx_nullable = UINT32_MAX;
+    uint32_t idx_default_value = UINT32_MAX;
+    uint32_t idx_extra = UINT32_MAX;
+    ::std::map<cow_string, exColumn> excolumns;
 
     for(uint32_t t = 0;  t != fields.size();  ++t)
       if(ascii_ci_equal(fields[t], "field"))
-        ix_name = t;
+        idx_name = t;
       else if(ascii_ci_equal(fields[t], "type"))
-        ix_type = t;
+        idx_type = t;
       else if(ascii_ci_equal(fields[t], "null"))
-        ix_nullable = t;
+        idx_nullable = t;
       else if(ascii_ci_equal(fields[t], "default"))
-        ix_default_value = t;
+        idx_default_value = t;
       else if(ascii_ci_equal(fields[t], "extra"))
-        ix_extra = t;
+        idx_extra = t;
 
     while(this->m_conn->fetch_row(row)) {
-      cow_string& name = row.at(ix_name.value()).mut_blob();
+      cow_string& name = row.mut(idx_name).mut_blob();
       if(auto column_config = this->m_res.table.find_column_opt(name))
         name = column_config->name;
 
       // Save this column.
       exColumn& r = excolumns[name];
-      r.type = row.at(ix_type.value()).as_blob();
-      r.nullable = ascii_ci_equal(row.at(ix_nullable.value()).as_blob(), "yes");
-      r.default_value = move(row.at(ix_default_value.value()));
-      r.extra = row.at(ix_extra.value()).as_blob();
+      r.type = row.at(idx_type).as_blob();
+      r.nullable = ascii_ci_equal(row.at(idx_nullable).as_blob(), "yes");
+      r.default_value = move(row.at(idx_default_value));
+      r.extra = row.at(idx_extra).as_blob();
     }
 
     sql.clear_string();
@@ -239,30 +243,32 @@ do_on_abstract_future_execute()
     this->m_conn->execute(sql.get_string(), nullptr, 0);
     this->m_conn->fetch_fields(fields);
 
-    map<cow_string, exIndex> exindexes;
-    opt<uint32_t> ix_non_unique, ix_column_name, ix_seq_in_index;
+    uint32_t idx_non_unique = UINT32_MAX;
+    uint32_t idx_column_name = UINT32_MAX;
+    uint32_t idx_seq_in_index = UINT32_MAX;
+    ::std::map<cow_string, exIndex> exindexes;
 
     for(uint32_t t = 0;  t != fields.size();  ++t)
       if(ascii_ci_equal(fields[t], "key_name"))
-        ix_name = t;
+        idx_name = t;
       else if(ascii_ci_equal(fields[t], "non_unique"))
-        ix_non_unique = t;
+        idx_non_unique = t;
       else if(ascii_ci_equal(fields[t], "column_name"))
-        ix_column_name = t;
+        idx_column_name = t;
       else if(ascii_ci_equal(fields[t], "seq_in_index"))
-        ix_seq_in_index = t;
+        idx_seq_in_index = t;
 
     while(this->m_conn->fetch_row(row)) {
-      cow_string& name = row.at(ix_name.value()).mut_blob();
+      cow_string& name = row.mut(idx_name).mut_blob();
       if(auto index_config = this->m_res.table.find_index_opt(name))
         name = index_config->name;
 
       // Save this index.
       exIndex& r = exindexes[name];
-      r.multi = row.at(ix_non_unique.value()).as_integer() != 0;
-      size_t column_seq = static_cast<size_t>(row.at(ix_seq_in_index.value()).as_integer());
+      r.multi = row.at(idx_non_unique).as_integer() != 0;
+      size_t column_seq = static_cast<size_t>(row.at(idx_seq_in_index).as_integer());
       r.columns.resize(::std::max(r.columns.size(), column_seq));
-      r.columns.at(column_seq - 1) = row.at(ix_column_name.value()).as_blob();
+      r.columns.at(column_seq - 1) = row.at(idx_column_name).as_blob();
     }
 
     // Compare the existent columns and indexes with the requested ones,

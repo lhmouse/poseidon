@@ -18,12 +18,12 @@ class MySQL_Query_Future
     struct Result
       {
         cow_string stmt;  // input
-        vector<MySQL_Value> stmt_args;  // input
+        cow_vector<MySQL_Value> stmt_args;  // input
         uint32_t warning_count;
         uint64_t affected_rows;
         uint64_t insert_id;
-        vector<cow_string> result_fields;
-        vector<vector<MySQL_Value>> result_rows;
+        cow_vector<cow_string> result_fields;
+        cow_vector<cow_vector<MySQL_Value>> result_rows;
       };
 
   private:
@@ -37,7 +37,7 @@ class MySQL_Query_Future
     // This future will become ready once the query is complete.
     MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt);
 
-    MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt, vector<MySQL_Value> stmt_args);
+    MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt, const cow_vector<MySQL_Value>& stmt_args);
 
   private:
     virtual

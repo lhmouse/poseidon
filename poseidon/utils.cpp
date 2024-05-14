@@ -67,7 +67,7 @@ ascii_trim(cow_string text)
   }
 
 void
-explode(vector<cow_string>& segments, cow_stringR text, char delim, size_t limit)
+explode(cow_vector<cow_string>& segments, cow_stringR text, char delim, size_t limit)
   {
     segments.clear();
     size_t bpos = text.find_not_of(" \t");
@@ -88,10 +88,10 @@ explode(vector<cow_string>& segments, cow_stringR text, char delim, size_t limit
     }
   }
 
-vector<cow_string>
+cow_vector<cow_string>
 explode(cow_stringR text, char delim, size_t limit)
   {
-    vector<cow_string> segments;
+    cow_vector<cow_string> segments;
     explode(segments, text, delim, limit);
     return segments;
   }
@@ -119,13 +119,13 @@ implode(const cow_string* segment_ptr, size_t segment_count, char delim)
   }
 
 void
-implode(cow_string& text, const vector<cow_string>& segments, char delim)
+implode(cow_string& text, const cow_vector<cow_string>& segments, char delim)
   {
     implode(text, segments.data(), segments.size(), delim);
   }
 
 cow_string
-implode(const vector<cow_string>& segments, char delim)
+implode(const cow_vector<cow_string>& segments, char delim)
   {
     cow_string text;
     implode(text, segments, delim);

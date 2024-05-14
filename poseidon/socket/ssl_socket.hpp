@@ -80,7 +80,7 @@ class SSL_Socket
     // The default implementation returns an empty string.
     virtual
     charbuf_256
-    do_on_ssl_alpn_request(vector<charbuf_256>&& protos);
+    do_on_ssl_alpn_request(cow_vector<charbuf_256>&& protos);
 
     // For a client-side socket, this function offers a list of protocols to the
     // server. This function must be called before SSL negotiation, for example

@@ -20,7 +20,7 @@ class Abstract_Future
     ::std::exception_ptr m_except;
 
     mutable plain_mutex m_waiters_mutex;
-    vector<wkptr<atomic_relaxed<steady_time>>> m_waiters;
+    cow_vector<wkptr<atomic_relaxed<steady_time>>> m_waiters;
 
   protected:
     // Constructs an empty future that has not completed.

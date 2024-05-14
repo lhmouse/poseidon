@@ -77,6 +77,7 @@
 #include <nmmintrin.h>
 #include <immintrin.h>
 
+#include <asteria/value.hpp>
 #include <asteria/utils.hpp>
 #include <taxon.hpp>
 

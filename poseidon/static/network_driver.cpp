@@ -112,7 +112,7 @@ do_alpn_callback(::SSL* ssl, const uint8_t** out, uint8_t* outlen, const uint8_t
       return SSL_TLSEXT_ERR_ALERT_FATAL;
 
     try {
-      vector<charbuf_256> alpn_req;
+      cow_vector<charbuf_256> alpn_req;
       charbuf_256 alpn_resp;
 
       for(auto p = in;  (p != in + inlen) && (in + inlen - p >= 1U + *p);  p += 1U + *p) {

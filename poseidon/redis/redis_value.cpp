@@ -11,7 +11,7 @@ Redis_Value::
   {
     // Break deep recursion with a handwritten stack.
     struct xVariant : decltype(Redis_Value::m_stor)  { };
-    vector<xVariant> stack;
+    ::std::vector<xVariant> stack;
 
   do_unpack_loop_:
     try {
@@ -46,7 +46,7 @@ print_to(tinyfmt& fmt) const
         Redis_Array::const_iterator ita;
       };
 
-    vector<xFrame> stack;
+    ::std::vector<xFrame> stack;
     const Redis_Value* pval = this;
 
   do_unpack_loop_:

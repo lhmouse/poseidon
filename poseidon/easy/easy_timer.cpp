@@ -24,7 +24,7 @@ struct Event_Queue
       };
 
     mutable plain_mutex mutex;
-    deque<Event> events;
+    ::std::deque<Event> events;
     bool fiber_active = false;
   };
 

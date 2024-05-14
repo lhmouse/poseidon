@@ -154,7 +154,7 @@ execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)
           "No enough arguments for MySQL statement (`$1` < `$2`)"),
           nargs, nparams);
 
-    vector<::MYSQL_BIND> binds(nparams);
+    ::std::vector<::MYSQL_BIND> binds(nparams);
 
     for(unsigned col = 0;  col != nparams;  ++col)
       switch(args_opt[col].type())
@@ -227,7 +227,7 @@ execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)
 
 bool
 MySQL_Connection::
-fetch_fields(vector<cow_string>& output)
+fetch_fields(cow_vector<cow_string>& output)
   {
     output.clear();
 
@@ -241,18 +241,20 @@ fetch_fields(vector<cow_string>& output)
       return false;
 
     ::MYSQL_FIELD* meta_fields = ::mysql_fetch_fields(this->m_meta);
-    unsigned long nfields = ::mysql_stmt_field_count(this->m_stmt);
+    size_t nfields = ::mysql_stmt_field_count(this->m_stmt);
 
     output.resize(nfields);
-    for(unsigned col = 0;  col != nfields;  ++col)
-      output[col].assign(meta_fields[col].name, meta_fields[col].name_length);
+    for(size_t col = 0;  col != nfields;  ++col) {
+      // The field name can't be a null pointer, can it?
+      output.mut(col).assign(meta_fields[col].name, meta_fields[col].name_length);
+    }
 
     return true;
   }
 
 bool
 MySQL_Connection::
-fetch_row(vector<MySQL_Value>& output)
+fetch_row(cow_vector<MySQL_Value>& output)
   {
     output.clear();
 
@@ -260,8 +262,8 @@ fetch_row(vector<MySQL_Value>& output)
       return false;
 
     ::MYSQL_FIELD* meta_fields = nullptr;
-    unsigned long nfields = ::mysql_stmt_field_count(this->m_stmt);
-    vector<::MYSQL_BIND> binds(nfields);
+    size_t nfields = ::mysql_stmt_field_count(this->m_stmt);
+    ::std::vector<::MYSQL_BIND> binds(nfields);
 
     if(!this->m_meta)
       this->m_meta.reset(::mysql_stmt_result_metadata(this->m_stmt));
@@ -270,7 +272,7 @@ fetch_row(vector<MySQL_Value>& output)
       meta_fields = ::mysql_fetch_fields(this->m_meta);
 
     output.resize(nfields);
-    for(unsigned col = 0;  col != nfields;  ++col) {
+    for(size_t col = 0;  col != nfields;  ++col) {
       // Prepare output buffers. When there is no metadata o we can't know the
       // type of this field, the output is written as an omnipotent string.
       uint32_t field_type = meta_fields ? meta_fields[col].type : MYSQL_TYPE_BLOB;
@@ -288,14 +290,14 @@ fetch_row(vector<MySQL_Value>& output)
         case MYSQL_TYPE_LONG:
         case MYSQL_TYPE_LONGLONG:
           binds[col].buffer_type = MYSQL_TYPE_LONGLONG;
-          binds[col].buffer = &(output[col].mut_integer());
+          binds[col].buffer = &(output.mut(col).mut_integer());
           binds[col].buffer_length = sizeof(int64_t);
           break;
 
         case MYSQL_TYPE_FLOAT:
         case MYSQL_TYPE_DOUBLE:
           binds[col].buffer_type = MYSQL_TYPE_DOUBLE;
-          binds[col].buffer = &(output[col].mut_double());
+          binds[col].buffer = &(output.mut(col).mut_double());
           binds[col].buffer_length = sizeof(double);
           break;
 
@@ -304,7 +306,7 @@ fetch_row(vector<MySQL_Value>& output)
         case MYSQL_TYPE_DATE:
         case MYSQL_TYPE_TIME:
           binds[col].buffer_type = MYSQL_TYPE_DATETIME;
-          binds[col].buffer = &(output[col].m_stor.emplace<DateTime_with_MYSQL_TIME>().get_mysql_time());
+          binds[col].buffer = &(output.mut(col).m_stor.emplace<DateTime_with_MYSQL_TIME>().get_mysql_time());
           binds[col].buffer_length = sizeof(::MYSQL_TIME);
           break;
 
@@ -312,9 +314,9 @@ fetch_row(vector<MySQL_Value>& output)
           // Reserve a small amount of memory for BLOB fields. If it's not
           // large enough, it will be extended later.
           binds[col].buffer_type = MYSQL_TYPE_LONG_BLOB;
-          output[col].mut_blob().resize(64);
-          binds[col].buffer = output[col].mut_blob().mut_data();
-          binds[col].buffer_length = output[col].mut_blob().size();
+          output.mut(col).mut_blob().resize(64);
+          binds[col].buffer = output.mut(col).mut_blob().mut_data();
+          binds[col].buffer_length = output.mut(col).mut_blob().size();
           break;
         }
 
@@ -344,11 +346,11 @@ fetch_row(vector<MySQL_Value>& output)
     for(unsigned col = 0;  col != output.size();  ++col)
       if(binds[col].is_null_value) {
         // Set it to an explicit `NULL`.
-        output[col].clear();
+        output.mut(col).clear();
       }
       else if(binds[col].buffer_type == MYSQL_TYPE_DATETIME) {
         // Assemble the timestamp.
-        auto& output_mdt = output[col].m_stor.mut<DateTime_with_MYSQL_TIME>();
+        auto& output_mdt = output.mut(col).m_stor.mut<DateTime_with_MYSQL_TIME>();
         ::MYSQL_TIME& myt = output_mdt.get_mysql_time();
 
         ::tm tm;
@@ -366,7 +368,7 @@ fetch_row(vector<MySQL_Value>& output)
       }
       else if(binds[col].buffer_type == MYSQL_TYPE_LONG_BLOB) {
         // Check whether the value has been truncated.
-        auto& output_str = output[col].mut_blob();
+        auto& output_str = output.mut(col).mut_blob();
         output_str.resize(binds[col].length_value);
 
         if(binds[col].error_value) {

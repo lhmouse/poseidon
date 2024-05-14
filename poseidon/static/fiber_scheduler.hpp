@@ -19,7 +19,7 @@ class Fiber_Scheduler
     seconds m_conf_fail_timeout = 0s;
 
     mutable plain_mutex m_pq_mutex;
-    vector<shptr<X_Queued_Fiber>> m_pq;
+    cow_vector<shptr<X_Queued_Fiber>> m_pq;
     ::timespec m_pq_wait = { };
 
     mutable recursive_mutex m_sched_mutex;

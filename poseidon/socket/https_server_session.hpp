@@ -31,7 +31,7 @@ class HTTPS_Server_Session
 
     virtual
     charbuf_256
-    do_on_ssl_alpn_request(vector<charbuf_256>&& protos) override;
+    do_on_ssl_alpn_request(cow_vector<charbuf_256>&& protos) override;
 
     // Checks whether the protocol has changed.
     bool

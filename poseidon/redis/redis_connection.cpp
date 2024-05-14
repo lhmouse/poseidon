@@ -140,7 +140,7 @@ execute(const cow_string* cmds, size_t ncmds)
     this->m_reset_clear = false;
 
     // Compose the argument and length vector.
-    vector<uintptr_t> argv;
+    ::std::vector<uintptr_t> argv;
     argv.resize(ncmds * 2);
 
     for(size_t t = 0;  t != ncmds;  ++t) {
@@ -181,7 +181,7 @@ fetch_reply(Redis_Value& output)
         const ::redisReply* parent;
       };
 
-    vector<xFrame> stack;
+    ::std::vector<xFrame> stack;
     Redis_Value* pval = &output;
     const ::redisReply* reply = unique_reply;
 

@@ -12,7 +12,8 @@ class Task_Executor
   private:
     mutable plain_mutex m_queue_mutex;
     condition_variable m_queue_avail;
-    deque<wkptr<Abstract_Task>> m_queue;
+    cow_vector<wkptr<Abstract_Task>> m_queue_front;
+    cow_vector<wkptr<Abstract_Task>> m_queue_back;
 
   public:
     // Creates an empty task executor.

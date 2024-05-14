@@ -12,7 +12,7 @@ main()
   {
     // Try connecting to localhost. If the server is offline, skip the test.
     Redis_Connection conn(&"localhost:6379", &"123456", 0);
-    vector<cow_string> cmds;
+    ::std::vector<cow_string> cmds;
     try {
       cmds = { &"echo", &"meow" };
       conn.execute(cmds.data(), cmds.size());

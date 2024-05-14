@@ -19,7 +19,7 @@ class DNS_Query_Future
       {
         cow_string host;
         uint16_t port;
-        vector<IPv6_Address> addrs;
+        cow_vector<IPv6_Address> addrs;
       };
 
   private:

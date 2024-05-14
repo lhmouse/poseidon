@@ -13,7 +13,7 @@ class Timer_Driver
     mutable plain_mutex m_pq_mutex;
     condition_variable m_pq_avail;
     struct X_Queued_Timer;
-    vector<X_Queued_Timer> m_pq;
+    cow_vector<X_Queued_Timer> m_pq;
 
   public:
     // Constructs an empty driver.

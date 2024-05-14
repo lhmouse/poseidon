@@ -18,7 +18,7 @@ class Mongo_Query_Future
     struct Result
       {
         Mongo_Document cmd;  // input
-        vector<Mongo_Document> reply_docs;
+        cow_vector<Mongo_Document> reply_docs;
       };
 
   private:

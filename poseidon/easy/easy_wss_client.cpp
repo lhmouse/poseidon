@@ -28,12 +28,12 @@ struct Session_Table
             linear_buffer data;
           };
 
-        deque<Event> events;
+        ::std::deque<Event> events;
         bool fiber_active = false;
       };
 
     mutable plain_mutex mutex;
-    unordered_map<const volatile WSS_Client_Session*, Event_Queue> session_map;
+    ::std::unordered_map<const volatile WSS_Client_Session*, Event_Queue> session_map;
   };
 
 struct Final_Fiber final : Abstract_Fiber

@@ -272,7 +272,7 @@ thread_loop()
           }
 
           if(remake_heap) {
-            ::std::make_heap(this->m_pq.begin(), this->m_pq.end(), s_fiber_comparator);
+            ::std::make_heap(this->m_pq.mut_begin(), this->m_pq.mut_end(), s_fiber_comparator);
             timeout_ns = duration_cast<nanoseconds>(this->m_pq.front()->check_time - now).count();
           }
         }
@@ -290,7 +290,7 @@ thread_loop()
       }
     }
 
-    ::std::pop_heap(this->m_pq.begin(), this->m_pq.end(), s_fiber_comparator);
+    ::std::pop_heap(this->m_pq.mut_begin(), this->m_pq.mut_end(), s_fiber_comparator);
     auto elem = this->m_pq.back();
     const auto& fiber = elem->fiber;
     if(elem->state == fiber_terminated) {
@@ -307,7 +307,7 @@ thread_loop()
     steady_time next_check_time = min(elem->check_time + warn_timeout, elem->yield_time + real_fail_timeout);
     elem->async_time.cmpxchg(elem->check_time, next_check_time);
     elem->check_time = next_check_time;
-    ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), s_fiber_comparator);
+    ::std::push_heap(this->m_pq.mut_begin(), this->m_pq.mut_end(), s_fiber_comparator);
 
     recursive_mutex::unique_lock sched_lock(this->m_sched_mutex);
     auto futr = elem->wfutr.lock();
@@ -398,7 +398,7 @@ launch(shptrR<Abstract_Fiber> fiber)
     // Insert it.
     plain_mutex::unique_lock lock(this->m_pq_mutex);
     this->m_pq.emplace_back(move(elem));
-    ::std::push_heap(this->m_pq.begin(), this->m_pq.end(), s_fiber_comparator);
+    ::std::push_heap(this->m_pq.mut_begin(), this->m_pq.mut_end(), s_fiber_comparator);
   }
 
 void
