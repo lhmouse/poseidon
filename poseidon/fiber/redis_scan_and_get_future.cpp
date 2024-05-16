@@ -50,42 +50,39 @@ do_on_abstract_future_execute()
       }
     } while(cmd[1] != "0");
 
-    if(!this->m_res.pairs.empty()) {
-      cmd.resize(1);
-      cmd.mut(0) = &"MGET";
+    if(this->m_res.pairs.empty())
+      return;
 
-      // Append all unique keys in ascending order. There is a one-to-one mapping
-      // from the arguments to the elements in the reply array, so the order of
-      // keys must be preserved.
-      cmd.reserve(cmd.size() + this->m_res.pairs.size());
-      auto res_it = this->m_res.pairs.mut_begin();
-      while(res_it != this->m_res.pairs.end()) {
-        cmd.emplace_back(res_it->first);
-        ++ res_it;
-      }
+    // Append all unique keys in ascending order. There is a one-to-one mapping
+    // from the arguments to the elements in the reply array, so the order of
+    // keys must be preserved.
+    cmd.resize(1);
+    cmd.mut(0) = &"MGET";
 
-      // Get them. The reply shall be an array.
-      this->m_conn->execute(cmd.data(), cmd.size());
-      this->m_conn->fetch_reply(reply);
-      auto values = move(reply.mut_array());
-
-      res_it = this->m_res.pairs.mut_begin();
-      auto val_it = values.mut_begin();
-      while((res_it != this->m_res.pairs.end()) && (val_it != values.end())) {
-        if(!val_it->is_string())
-          res_it = this->m_res.pairs.erase(res_it);
-        else {
-          POSEIDON_LOG_TRACE((" MGET <= $1 ($2)"), res_it->first, val_it->as_string_length());
-          res_it->second = move(val_it->mut_string());
-          ++ res_it;
-        }
-        ++ val_it;
-      }
+    cmd.reserve(cmd.size() + this->m_res.pairs.size());
+    auto res_it = this->m_res.pairs.mut_begin();
+    while(res_it != this->m_res.pairs.end()) {
+      cmd.emplace_back(res_it->first);
+      ++ res_it;
     }
 
-    POSEIDON_LOG_DEBUG((
-        "Found $1 key(s) from Redis: SCAN 0 MATCH $2"),
-        this->m_res.pairs.size(), Redis_Value(this->m_res.pattern));
+    // Get them. The reply shall be an array.
+    this->m_conn->execute(cmd.data(), cmd.size());
+    this->m_conn->fetch_reply(reply);
+    auto values = move(reply.mut_array());
+
+    res_it = this->m_res.pairs.mut_begin();
+    auto val_it = values.mut_begin();
+    while((res_it != this->m_res.pairs.end()) && (val_it != values.end())) {
+      if(!val_it->is_string())
+        res_it = this->m_res.pairs.erase(res_it);
+      else {
+        POSEIDON_LOG_TRACE((" MGET <= $1 ($2)"), res_it->first, val_it->as_string_length());
+        res_it->second = move(val_it->mut_string());
+        ++ res_it;
+      }
+      ++ val_it;
+    }
   }
 
 void
