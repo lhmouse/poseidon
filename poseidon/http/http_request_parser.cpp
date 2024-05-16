@@ -56,9 +56,9 @@ HTTP_Request_Parser::s_settings[1] =
     +[](::http_parser* ps)
       {
         // Set the method string. This might not be null-terminated.
-        const char* method_str = ::http_method_str(static_cast<::http_method>(ps->method));
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstringop-truncation"
+        const char* method_str = ::http_method_str(static_cast<::http_method>(ps->method));
         ::strncpy(this->m_headers.method_bytes, method_str, sizeof(this->m_headers.method_bytes));
 #pragma GCC diagnostic pop
 
