@@ -228,17 +228,20 @@ do_set_working_directory()
 int
 do_waitpid_and_exit(::pid_t cpid)
   {
-    int wstat;
-    if(POSEIDON_SYSCALL_LOOP(::waitpid(cpid, &wstat, 0)) == -1)
-      do_exit_printf(exit_system_error,
-          "Failed to await child process %d: %m", (int) cpid);
+    for(;;) {
+      int wstat;
+      if(POSEIDON_SYSCALL_LOOP(::waitpid(cpid, &wstat, 0)) == -1)
+        do_exit_printf(exit_system_error,
+            "Failed to await child process %d: %m", (int) cpid);
 
-    if(WIFSIGNALED(wstat))
-      do_exit_printf(128 + WTERMSIG(wstat),
-          "Child process %d terminated by signal %d: %s",
-          (int) cpid, WTERMSIG(wstat), ::strsignal(WTERMSIG(wstat)));
+      if(WIFEXITED(wstat))
+        ::_Exit(WEXITSTATUS(wstat));
 
-    ::_Exit(WEXITSTATUS(wstat));
+      if(WIFSIGNALED(wstat))
+        do_exit_printf(128 + WTERMSIG(wstat),
+            "Child process %d terminated by signal %d: %s",
+            (int) cpid, WTERMSIG(wstat), ::strsignal(WTERMSIG(wstat)));
+    }
   }
 
 ROCKET_NEVER_INLINE
