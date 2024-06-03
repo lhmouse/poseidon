@@ -22,7 +22,6 @@ poseidon_include = [
   'poseidon/utils.hpp',
   'poseidon/third/openssl_fwd.hpp',
   'poseidon/third/zlib_fwd.hpp',
-  'poseidon/third/asan_fwd.hpp',
   'poseidon/static/main_config.hpp',
   'poseidon/static/logger.hpp',
   'poseidon/static/timer_driver.hpp',
