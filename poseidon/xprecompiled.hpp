@@ -47,6 +47,7 @@
 #include <type_traits>
 #include <functional>
 #include <algorithm>
+#include <numeric>
 #include <string>
 #include <bitset>
 #include <chrono>
