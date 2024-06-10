@@ -471,6 +471,7 @@ class DNS_Connect_Task;
 
 // HTTP and WebSocket types
 class HTTP_Value;
+class HTTP_Field_Name;
 class HTTP_Header_Parser;
 class HTTP_Query_Parser;
 struct HTTP_Request_Headers;
