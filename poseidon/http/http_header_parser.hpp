@@ -5,6 +5,7 @@
 #define POSEIDON_HTTP_HTTP_HEADER_PARSER_
 
 #include "../fwd.hpp"
+#include "http_field_name.hpp"
 #include "http_value.hpp"
 namespace poseidon {
 
@@ -17,7 +18,7 @@ class HTTP_Header_Parser
     size_t m_hpos = 0;
 
     // name and value of current attribute
-    cow_string m_name;
+    HTTP_Field_Name m_name;
     HTTP_Value m_value;
 
   public:
@@ -61,11 +62,11 @@ class HTTP_Header_Parser
     next_element();
 
     // Get the name of the current attribute.
-    cow_stringR
+    const HTTP_Field_Name&
     current_name() const noexcept
       { return this->m_name;  }
 
-    cow_string&
+    HTTP_Field_Name&
     mut_current_name() noexcept
       { return this->m_name;  }
 

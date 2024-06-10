@@ -76,7 +76,7 @@ struct PerMessage_Deflate
         // PMCE is accepted only if all parameters are valid and accepted.
         // Reference: https://datatracker.ietf.org/doc/html/rfc7692
         while(hparser.next_attribute())
-          if(ascii_ci_equal(hparser.current_name(), "server_no_context_takeover")) {
+          if(hparser.current_name() == "server_no_context_takeover") {
             if(!hparser.current_value().is_null())
               return;
 
@@ -85,7 +85,7 @@ struct PerMessage_Deflate
             // window when compressing a message. Ignored by clients.
             this->server_no_context_takeover = true;
           }
-          else if(ascii_ci_equal(hparser.current_name(), "client_no_context_takeover")) {
+          else if(hparser.current_name() == "client_no_context_takeover") {
             if(!hparser.current_value().is_null())
               return;
 
@@ -94,7 +94,7 @@ struct PerMessage_Deflate
             // window when compressing a message. Ignored by servers.
             this->client_no_context_takeover = true;
           }
-          else if(ascii_ci_equal(hparser.current_name(), "server_max_window_bits")) {
+          else if(hparser.current_name() == "server_max_window_bits") {
             if(hparser.current_value().is_null())
               continue;
             else if(!hparser.current_value().is_number())
@@ -109,7 +109,7 @@ struct PerMessage_Deflate
             // will use, in number of bits.
             this->server_max_window_bits = static_cast<int>(value);
           }
-          else if(ascii_ci_equal(hparser.current_name(), "client_max_window_bits")) {
+          else if(hparser.current_name() == "client_max_window_bits") {
             if(hparser.current_value().is_null())
               continue;
             else if(!hparser.current_value().is_number())
@@ -250,25 +250,25 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
     PerMessage_Deflate pmce;
 
     for(const auto& hpair : req.headers)
-      if(ascii_ci_equal(hpair.first, "Connection")) {
+      if(hpair.first == "Connection") {
         if(!hpair.second.is_string())
           return;
 
         // Connection: Upgrade
         hparser.reload(hpair.second.as_string());
         while(hparser.next_element())
-          if(ascii_ci_equal(hparser.current_name(), "close"))
+          if(hparser.current_name() == "close")
             return;
       }
-      else if(ascii_ci_equal(hpair.first, "Upgrade")) {
+      else if(hpair.first == "Upgrade") {
         if(!hpair.second.is_string())
           return;
 
         // Upgrade: websocket
-        if(ascii_ci_equal(hpair.second.as_string(), "websocket"))
+        if(hpair.second.as_string() == "websocket")
           upgrade_ok = true;
       }
-      else if(ascii_ci_equal(hpair.first, "Sec-WebSocket-Version")) {
+      else if(hpair.first == "Sec-WebSocket-Version") {
         if(!hpair.second.is_number())
           return;
 
@@ -276,7 +276,7 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
         if(hpair.second.as_number() == 13)
           ws_version_ok = true;
       }
-      else if(ascii_ci_equal(hpair.first, "Sec-WebSocket-Key")) {
+      else if(hpair.first == "Sec-WebSocket-Key") {
         if(!hpair.second.is_string())
           return;
 
@@ -284,7 +284,7 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
         if(hpair.second.as_string().length() == 24)
           ::memcpy(sec_ws.key_str, hpair.second.str_data(), 25);
       }
-      else if(ascii_ci_equal(hpair.first, "Sec-WebSocket-Extensions")) {
+      else if(hpair.first == "Sec-WebSocket-Extensions") {
         if(hpair.second.is_null())
           continue;
         else if(!hpair.second.is_string())
@@ -293,7 +293,7 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
         // Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits
         hparser.reload(hpair.second.as_string());
         while(hparser.next_element())
-          if(ascii_ci_equal(hparser.current_name(), "permessage-deflate"))
+          if(hparser.current_name() == "permessage-deflate")
             pmce.use_permessage_deflate(hparser, this->m_default_compression_level);
       }
 
@@ -373,25 +373,25 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
     PerMessage_Deflate pmce;
 
     for(const auto& hpair : resp.headers)
-      if(ascii_ci_equal(hpair.first, "Connection")) {
+      if(hpair.first == "Connection") {
         if(!hpair.second.is_string())
           return;
 
         // Connection: Upgrade
         hparser.reload(hpair.second.as_string());
         while(hparser.next_element())
-          if(ascii_ci_equal(hparser.current_name(), "close"))
+          if(hparser.current_name() == "close")
             return;
       }
-      else if(ascii_ci_equal(hpair.first, "Upgrade")) {
+      else if(hpair.first == "Upgrade") {
         if(!hpair.second.is_string())
           return;
 
         // Upgrade: websocket
-        if(ascii_ci_equal(hpair.second.as_string(), "websocket"))
+        if(hpair.second.as_string() == "websocket")
           upgrade_ok = true;
       }
-      else if(ascii_ci_equal(hpair.first, "Sec-WebSocket-Accept")) {
+      else if(hpair.first == "Sec-WebSocket-Accept") {
         if(!hpair.second.is_string())
           return;
 
@@ -399,14 +399,14 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
         if(hpair.second.as_string().length() == 28)
           ::memcpy(sec_ws_accept_resp, hpair.second.str_data(), 29);
       }
-      else if(ascii_ci_equal(hpair.first, "Sec-WebSocket-Extensions")) {
+      else if(hpair.first == "Sec-WebSocket-Extensions") {
         if(!hpair.second.is_string())
           return;
 
         // Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits
         hparser.reload(hpair.second.as_string());
         while(hparser.next_element())
-          if(ascii_ci_equal(hparser.current_name(), "permessage-deflate"))
+          if(hparser.current_name() == "permessage-deflate")
             pmce.use_permessage_deflate(hparser, this->m_default_compression_level);
           else
             return;  // unknown extension; fail

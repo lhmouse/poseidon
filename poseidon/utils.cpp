@@ -9,63 +9,6 @@
 #include <libunwind.h>
 namespace poseidon {
 
-cow_string
-ascii_uppercase(cow_string text)
-  {
-    // Only modify the string when it really has to modified.
-    for(size_t k = 0;  k != text.size();  ++k) {
-      char32_t ch = (uint8_t) text[k];
-      if(('a' <= ch) && (ch <= 'z'))
-        text.mut(k) = (char) (ch - 0x20);
-    }
-    return move(text);
-  }
-
-cow_string
-ascii_lowercase(cow_string text)
-  {
-    // Only modify the string when it really has to modified.
-    for(size_t k = 0;  k != text.size();  ++k) {
-      char32_t ch = (uint8_t) text[k];
-      if(('A' <= ch) && (ch <= 'Z'))
-        text.mut(k) = (char) (ch + 0x20);
-    }
-    return move(text);
-  }
-
-cow_string
-ascii_trim(cow_string text)
-  {
-    // Remove leading blank characters.
-    // Return an empty string if all characters are blank.
-    size_t k = cow_string::npos;
-    for(;;) {
-      if(++k == text.size())
-        return { };
-
-      char32_t ch = (uint8_t) text[k];
-      if((ch != ' ') && (ch != '\t'))
-        break;
-    }
-    if(k != 0)
-      text.erase(0, k);
-
-    // Remove trailing blank characters.
-    k = text.size();
-    for(;;) {
-      if(--k == 0)
-        break;
-
-      char32_t ch = (uint8_t) text[k];
-      if((ch != ' ') && (ch != '\t'))
-        break;
-    }
-    if(++k != text.size())
-      text.erase(k);
-
-    return move(text);
-  }
-
 void
 explode(cow_vector<cow_string>& segments, cow_stringR text, char delim, size_t limit)
   {

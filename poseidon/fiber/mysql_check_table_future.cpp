@@ -58,14 +58,14 @@ do_append_column_definition(tinyfmt_str& sql, const MySQL_Table_Structure::Colum
     if(column.nullable == false)
       sql << " NOT NULL";
 
-    if(!column.default_value.is_null())
+    if(column.default_value.is_null() == false)
       sql << " DEFAULT " << column.default_value;
   }
 
 void
 do_append_index_definition(tinyfmt_str& sql, const MySQL_Table_Structure::Index& index)
   {
-    if(ascii_ci_equal(index.name, "PRIMARY"))
+    if(index.name == "PRIMARY")
       sql << "PRIMARY KEY";
     else
       switch(index.type)
@@ -214,15 +214,15 @@ do_on_abstract_future_execute()
     ::std::map<cow_string, exColumn> excolumns;
 
     for(uint32_t t = 0;  t != fields.size();  ++t)
-      if(ascii_ci_equal(fields[t], "field"))
+      if(fields[t]== "Field")
         idx_name = t;
-      else if(ascii_ci_equal(fields[t], "type"))
+      else if(fields[t] == "Type")
         idx_type = t;
-      else if(ascii_ci_equal(fields[t], "null"))
+      else if(fields[t] == "Null")
         idx_nullable = t;
-      else if(ascii_ci_equal(fields[t], "default"))
+      else if(fields[t] == "Default")
         idx_default_value = t;
-      else if(ascii_ci_equal(fields[t], "extra"))
+      else if(fields[t] == "Extra")
         idx_extra = t;
 
     while(this->m_conn->fetch_row(row)) {
@@ -233,7 +233,7 @@ do_on_abstract_future_execute()
       // Save this column.
       exColumn& r = excolumns[name];
       r.type = row.at(idx_type).as_blob();
-      r.nullable = ascii_ci_equal(row.at(idx_nullable).as_blob(), "yes");
+      r.nullable = row.at(idx_nullable).as_blob() == "YES";
       r.default_value = move(row.at(idx_default_value));
       r.extra = row.at(idx_extra).as_blob();
     }
@@ -249,13 +249,13 @@ do_on_abstract_future_execute()
     ::std::map<cow_string, exIndex> exindexes;
 
     for(uint32_t t = 0;  t != fields.size();  ++t)
-      if(ascii_ci_equal(fields[t], "key_name"))
+      if(fields[t] == "key_name")
         idx_name = t;
-      else if(ascii_ci_equal(fields[t], "non_unique"))
+      else if(fields[t] == "non_unique")
         idx_non_unique = t;
-      else if(ascii_ci_equal(fields[t], "column_name"))
+      else if(fields[t] == "column_name")
         idx_column_name = t;
-      else if(ascii_ci_equal(fields[t], "seq_in_index"))
+      else if(fields[t] == "seq_in_index")
         idx_seq_in_index = t;
 
     while(this->m_conn->fetch_row(row)) {
@@ -293,10 +293,10 @@ do_on_abstract_future_execute()
           case mysql_column_varchar:
             {
               // The type shall be an exact match.
-              if(!ascii_ci_equal(ex->second.type, "varchar(255)"))
+              if(ex->second.type != "varchar(255)")
                 goto do_alter_table_column_;
 
-              if(!column.default_value.is_null()) {
+              if(column.default_value.is_null() == false) {
                 // The default value is a string and shall be an exact match of
                 // the configuration.
                 if(!ex->second.default_value.is_blob())
@@ -306,7 +306,7 @@ do_on_abstract_future_execute()
                   goto do_alter_table_column_;
               }
 
-              if(!ascii_ci_equal(ex->second.extra, ""))
+              if(ex->second.extra != "")
                 goto do_alter_table_column_;
             }
             break;
@@ -316,10 +316,10 @@ do_on_abstract_future_execute()
               // MySQL does not have a real boolean type, so we use an integer.
               // Some old MySQL versions include a display width in the type,
               // which is deprecated since 8.0 anyway. Both forms are accepted.
-              if(!ascii_ci_equal(ex->second.type, "tinyint(1)") && !ascii_ci_equal(ex->second.type, "tinyint"))
+              if((ex->second.type != "tinyint(1)") && (ex->second.type != "tinyint"))
                 goto do_alter_table_column_;
 
-              if(!column.default_value.is_null()) {
+              if(column.default_value.is_null() == false) {
                 // The default value is an integer and shall be an exact match
                 // of the configuration. The MySQL server returns the default as
                 // a generic string, so parse it first.
@@ -335,7 +335,7 @@ do_on_abstract_future_execute()
                   goto do_alter_table_column_;
               }
 
-              if(!ascii_ci_equal(ex->second.extra, ""))
+              if(ex->second.extra != "")
                 goto do_alter_table_column_;
             }
             break;
@@ -344,10 +344,10 @@ do_on_abstract_future_execute()
             {
               // Some old MySQL versions include a display width in the type,
               // which is deprecated since 8.0 anyway. Both forms are accepted.
-              if(!ascii_ci_equal(ex->second.type, "int(11)") && !ascii_ci_equal(ex->second.type, "int"))
+              if((ex->second.type != "int(11)") && (ex->second.type != "int"))
                 goto do_alter_table_column_;
 
-              if(!column.default_value.is_null()) {
+              if(column.default_value.is_null() == false) {
                 // The default value is an integer and shall be an exact match
                 // of the configuration. The MySQL server returns the default as
                 // a generic string, so parse it first.
@@ -363,7 +363,7 @@ do_on_abstract_future_execute()
                   goto do_alter_table_column_;
               }
 
-              if(!ascii_ci_equal(ex->second.extra, ""))
+              if(ex->second.extra != "")
                 goto do_alter_table_column_;
             }
             break;
@@ -372,10 +372,10 @@ do_on_abstract_future_execute()
             {
               // Some old MySQL versions include a display width in the type,
               // which is deprecated since 8.0 anyway. Both forms are accepted.
-              if(!ascii_ci_equal(ex->second.type, "bigint(20)") && !ascii_ci_equal(ex->second.type, "bigint"))
+              if((ex->second.type != "bigint(20)") && (ex->second.type != "bigint"))
                 goto do_alter_table_column_;
 
-              if(!column.default_value.is_null()) {
+              if(column.default_value.is_null() == false) {
                 // The default value is an integer and shall be an exact match
                 // of the configuration. The MySQL server returns the default as
                 // a generic string, so parse it first.
@@ -391,7 +391,7 @@ do_on_abstract_future_execute()
                   goto do_alter_table_column_;
               }
 
-              if(!ascii_ci_equal(ex->second.extra, ""))
+              if(ex->second.extra != "")
                 goto do_alter_table_column_;
             }
             break;
@@ -399,10 +399,10 @@ do_on_abstract_future_execute()
           case mysql_column_double:
             {
               // The type shall be an exact match.
-              if(!ascii_ci_equal(ex->second.type, "double"))
+              if(ex->second.type != "double")
                 goto do_alter_table_column_;
 
-              if(!column.default_value.is_null()) {
+              if(column.default_value.is_null() == false) {
                 // The default value is a double and shall be an exact match of
                 // the configuration. The MySQL server returns the default as a
                 // generic string, so parse it first.
@@ -418,7 +418,7 @@ do_on_abstract_future_execute()
                   goto do_alter_table_column_;
               }
 
-              if(!ascii_ci_equal(ex->second.extra, ""))
+              if(ex->second.extra != "")
                 goto do_alter_table_column_;
             }
             break;
@@ -427,10 +427,10 @@ do_on_abstract_future_execute()
             {
               // The type shall be an exact match. BLOB and TEXT fields cannot
               // have a default value, so there is no need to check it.
-              if(!ascii_ci_equal(ex->second.type, "longblob"))
+              if(ex->second.type != "longblob")
                 goto do_alter_table_column_;
 
-              if(!ascii_ci_equal(ex->second.extra, ""))
+              if(ex->second.extra != "")
                 goto do_alter_table_column_;
             }
             break;
@@ -438,10 +438,10 @@ do_on_abstract_future_execute()
           case mysql_column_datetime:
             {
               // The type shall be an exact match.
-              if(!ascii_ci_equal(ex->second.type, "datetime"))
+              if(ex->second.type != "datetime")
                 goto do_alter_table_column_;
 
-              if(!column.default_value.is_null()) {
+              if(column.default_value.is_null() == false) {
                 // The default value is a broken-down date/time and shall be an
                 // exact match of the configuration. The MySQL server returns
                 // the default as a generic string, so parse it first.
@@ -461,7 +461,7 @@ do_on_abstract_future_execute()
                   goto do_alter_table_column_;
               }
 
-              if(!ascii_ci_equal(ex->second.extra, ""))
+              if(ex->second.extra != "")
                 goto do_alter_table_column_;
             }
             break;
@@ -472,10 +472,10 @@ do_on_abstract_future_execute()
               // which is deprecated since 8.0 anyway. Both forms are accepted.
               // Auto-increment fields cannot have a default value, so there is
               // no need to check it.
-              if(!ascii_ci_equal(ex->second.type, "bigint(20)") && !ascii_ci_equal(ex->second.type, "bigint"))
+              if((ex->second.type != "bigint(20)") && (ex->second.type != "bigint"))
                 goto do_alter_table_column_;
 
-              if(!ascii_ci_equal(ex->second.extra, "AUTO_INCREMENT"))
+              if(ex->second.extra != "AUTO_INCREMENT")
                 goto do_alter_table_column_;
             }
             break;
@@ -563,7 +563,7 @@ do_on_abstract_future_execute()
         do_append_index_definition(sql, index);
       }
       else {
-        if(ascii_ci_equal(index.name, "PRIMARY"))
+        if(index.name == "PRIMARY")
           sql << "DROP PRIMARY KEY";
         else
           sql << "DROP INDEX `" << index.name << "`";

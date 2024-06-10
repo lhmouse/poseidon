@@ -5,6 +5,7 @@
 #define POSEIDON_HTTP_HTTP_RESPONSE_HEADERS_
 
 #include "../fwd.hpp"
+#include "http_field_name.hpp"
 #include "http_value.hpp"
 namespace poseidon {
 
@@ -14,7 +15,7 @@ struct HTTP_Response_Headers
     uint16_t reserved_1 = 0;
     uint32_t reserved_2 = 0;
     cow_string reason;
-    cow_bivector<cow_string, HTTP_Value> headers;
+    cow_bivector<HTTP_Field_Name, HTTP_Value> headers;
 
     HTTP_Response_Headers&
     swap(HTTP_Response_Headers& other) noexcept

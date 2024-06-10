@@ -115,7 +115,7 @@ next_element()
           }
 
           // Accept this sequence.
-          this->m_name.push_back((char) ch);
+          this->m_name.mut_str() += (char) ch;
           sptr += 3;
           continue;
         }
@@ -129,7 +129,7 @@ next_element()
       }
 
       // Accpet this character verbatim.
-      this->m_name.push_back((char) ch);
+      this->m_name.mut_str() += (char) ch;
       sptr ++;
     }
 
@@ -146,7 +146,7 @@ next_element()
       else
         this->m_value.mut_string().assign(vstr, vlen);
 
-      this->m_name.erase(name_len);
+      this->m_name.mut_str().erase(name_len);
     }
 
     // Accept this name-value pair.

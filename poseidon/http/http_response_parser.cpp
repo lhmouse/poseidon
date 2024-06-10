@@ -37,7 +37,7 @@ HTTP_Response_Parser::s_settings[1] =
 
         // Append the header name to the last key, as this callback might be
         // invoked repeatedly.
-        this->m_headers.headers.mut_back().first.append(str, len);
+        this->m_headers.headers.mut_back().first.mut_str().append(str, len);
         return 0;
       },
 

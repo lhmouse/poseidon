@@ -66,7 +66,7 @@ do_next_attribute_from_separator()
     }
 
     sptr += tlen;
-    this->m_name.swap(this->m_value.mut_string());
+    this->m_name = move(this->m_value.mut_string());
     this->m_value = nullptr;
 
     // If an equals sign is encountered, then there will be a value, so

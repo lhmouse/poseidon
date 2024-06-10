@@ -25,7 +25,7 @@ do_add_element(cow_vector<elementT>& container, const elementT& element)
   {
     // Find and update.
     for(size_t k = 0;  k != container.size();  ++k)
-      if(ascii_ci_equal(container[k].name, element.name)) {
+      if(container[k].name == element.name) {
         container.mut(k) = element;
         return k;
       }
@@ -76,7 +76,7 @@ MySQL_Table_Structure::
 find_column_opt(cow_stringR name) const noexcept
   {
     return ::rocket::find_if(this->m_columns,
-             [&](const Column& r) { return ascii_ci_equal(r.name, name);  });
+               [&](const Column& r) { return r.name == name;  });
   }
 
 size_t
@@ -98,7 +98,7 @@ add_column(const Column& column)
           // Drop all indexes that contain this column.
           for(size_t t = 0;  t != this->m_indexes.size();  ++t)
             for(const auto& col_name : this->m_indexes[t].columns)
-              if(ascii_ci_equal(col_name, column.name)) {
+              if(col_name == column.name) {
                 this->m_indexes.mut(t).type = mysql_index_dropped;
                 break;
               }
@@ -115,10 +115,10 @@ add_column(const Column& column)
                 "Invalid default value for column `$1`"),
                 column.name);
 
-          // Verify the default value. MySQL store a VARCHAR value as a series
-          // of UTF characters, so count them.
           const cow_string& val = column.default_value.as_blob();
 
+          // Verify the default value. MySQL store a VARCHAR value as a series
+          // of UTF characters, so count them.
           size_t offset = 0, count = 0;
           char32_t cp;
           while(::asteria::utf8_decode(cp, val, offset))
@@ -141,10 +141,10 @@ add_column(const Column& column)
                 "Invalid default value for column `$1`"),
                 column.name);
 
-          // Verify the default value, which shall be an integer of zero for
-          // `false` and one for `true`.
           const int64_t val = column.default_value.as_integer();
 
+          // Verify the default value, which shall be an integer of zero for
+          // `false` and one for `true`.
           if((val != 0) && (val != 1))
             POSEIDON_THROW((
                 "Default value `$2` for column `$1` is out of range"),
@@ -162,9 +162,9 @@ add_column(const Column& column)
                 "Invalid default value for column `$1`"),
                 column.name);
 
-          // Verify the default value, which shall be a 32-bit signed integer.
           const int64_t val = column.default_value.as_integer();
 
+          // Verify the default value, which shall be a 32-bit signed integer.
           if((val < INT32_MIN) && (val > INT32_MAX))
             POSEIDON_THROW((
                 "Default value `$2` for column `$1` is out of range"),
@@ -194,10 +194,10 @@ add_column(const Column& column)
                 "Invalid default value for column `$1`"),
                 column.name);
 
-          // Verify the default value, which shall be a finite double value.
-          // MySQL does not support infinities or NaNs.
           const double val = column.default_value.as_double();
 
+          // Verify the default value, which shall be a finite double value.
+          // MySQL does not support infinities or NaNs.
           if(!::std::isfinite(val))
             POSEIDON_THROW((
                 "Default value for column `$1` shall be finite"),
@@ -224,13 +224,13 @@ add_column(const Column& column)
                 "Invalid default value for column `$1`"),
                 column.name);
 
-          // Verify the default value, which shall be a timestamp between
-          // '1900-01-01 00:00:00 UTC' and '9999-12-31 23:59:59 UTC', with no
-          // fractional part.
           ::timespec ts;
           timespec_from_system_time(ts, column.default_value.as_system_time());
           const system_time val = system_clock::from_time_t(ts.tv_sec);
 
+          // Verify the default value, which shall be a timestamp between
+          // '1900-01-01 00:00:00 UTC' and '9999-12-31 23:59:59 UTC', with no
+          // fractional part.
           if((ts.tv_sec < -2208988800) || (ts.tv_sec > 253402300799))
             POSEIDON_THROW((
                 "Default value for column `$1` is out of range"),
@@ -257,7 +257,7 @@ add_column(const Column& column)
 
           // There shall be no more than one auto-increment column.
           for(const auto& other : this->m_columns)
-            if((other.type == mysql_column_auto_increment) && !ascii_ci_equal(other.name, column.name))
+            if((other.type == mysql_column_auto_increment) && (other.name != column.name))
               POSEIDON_THROW((
                   "Another auto-increment column `$1` already exists"),
                   other.name);
@@ -276,7 +276,7 @@ MySQL_Table_Structure::
 find_index_opt(cow_stringR name) const noexcept
   {
     return ::rocket::find_if(this->m_indexes,
-             [&](const Index& r) { return ascii_ci_equal(r.name, name);  });
+               [&](const Index& r) { return r.name == name;  });
   }
 
 size_t
@@ -313,7 +313,7 @@ add_index(const Index& index)
                 "Non-unique index `$1` shall comprise at least one column"),
                 index.name);
 
-          if(ascii_ci_equal(index.name, "PRIMARY"))
+          if(index.name == "PRIMARY")
             POSEIDON_THROW((
                 "A primary key must be unique"));
         }
@@ -331,13 +331,13 @@ add_index(const Index& index)
             "Index `$1` references non-existent column `$2`"),
             index.name, col_name);
 
-      if(col->nullable && ascii_ci_equal(index.name, "PRIMARY"))
+      if(col->nullable && (index.name == "PRIMARY"))
         POSEIDON_THROW((
             "Primary key shall not contain nullable column `$1`"),
             col_name);
 
       for(const auto& other : index.columns)
-        if((&other < &col_name) && ascii_ci_equal(other, col_name))
+        if((&other < &col_name) && (other == col_name))
           POSEIDON_THROW((
               "Index `$1` contains duplicate column `$2`"),
               index.name, col_name);

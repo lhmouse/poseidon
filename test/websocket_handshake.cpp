@@ -30,11 +30,11 @@ main()
     POSEIDON_TEST_CHECK(resp.status == 101);
 
     for(const auto& hr : resp.headers)
-      if(ascii_ci_equal(hr.first, "Upgrade"))
-        POSEIDON_TEST_CHECK(ascii_ci_equal(hr.second.as_string(), "websocket"));
-      else if(ascii_ci_equal(hr.first, "Connection"))
-        POSEIDON_TEST_CHECK(ascii_ci_equal(hr.second.as_string(), "Upgrade"));
-      else if(ascii_ci_equal(hr.first, "Sec-WebSocket-Accept"))
+      if(hr.first == "Upgrade")
+        POSEIDON_TEST_CHECK(hr.second.as_string() == "websocket");
+      else if(hr.first == "Connection")
+        POSEIDON_TEST_CHECK(hr.second.as_string() == "Upgrade");
+      else if(hr.first == "Sec-WebSocket-Accept")
         POSEIDON_TEST_CHECK(hr.second.as_string() == "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=");
 
     // self

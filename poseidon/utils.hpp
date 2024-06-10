@@ -8,33 +8,6 @@
 #include "static/logger.hpp"
 namespace poseidon {
 
-// Converts all ASCII letters in a string into uppercase.
-cow_string
-ascii_uppercase(cow_string text);
-
-// Converts all ASCII letters in a string into lowercase.
-cow_string
-ascii_lowercase(cow_string text);
-
-// Removes all leading and trailing blank characters.
-cow_string
-ascii_trim(cow_string text);
-
-// Checks whether two strings compare equal.
-constexpr
-bool
-ascii_ci_equal(cow_stringR str, cow_stringR cmp) noexcept
-  {
-    return ::rocket::ascii_ci_equal(str.data(), str.size(), cmp.data(), cmp.size());
-  }
-
-constexpr
-bool
-ascii_ci_equal(cow_stringR str, const char* sp) noexcept
-  {
-    return ::rocket::ascii_ci_equal(str.data(), str.size(), sp, ::rocket::xstrlen(sp));
-  }
-
 // Splits a string into a vector of tokens, and vice versa.
 void
 explode(cow_vector<cow_string>& segments, cow_stringR text, char delim = ',', size_t limit = SIZE_MAX);

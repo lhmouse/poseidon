@@ -5,6 +5,7 @@
 #define POSEIDON_HTTP_HTTP_REQUEST_HEADERS_
 
 #include "../fwd.hpp"
+#include "http_field_name.hpp"
 #include "http_value.hpp"
 namespace poseidon {
 
@@ -29,7 +30,7 @@ struct HTTP_Request_Headers
     cow_string uri_userinfo;
     cow_string uri_path;
     cow_string uri_query;
-    cow_bivector<cow_string, HTTP_Value> headers;
+    cow_bivector<HTTP_Field_Name, HTTP_Value> headers;
 
     HTTP_Request_Headers&
     swap(HTTP_Request_Headers& other) noexcept
