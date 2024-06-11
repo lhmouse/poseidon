@@ -173,10 +173,10 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
                 // Get the status code in big-endian order..
                 uint16_t bestatus;
+                WebSocket_Status status = websocket_status_no_status_code;
                 if(payload.getn(reinterpret_cast<char*>(&bestatus), 2) >= 2)
-                  this->do_on_ws_close(static_cast<WebSocket_Status>(ROCKET_BETOH16(bestatus)), payload);
-                else
-                  this->do_on_ws_close(websocket_status_no_status_code, payload);
+                  status = static_cast<WebSocket_Status>(ROCKET_BETOH16(bestatus));
+                this->do_on_ws_close(status, payload);
               }
               return;
 
