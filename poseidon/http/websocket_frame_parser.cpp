@@ -505,19 +505,19 @@ parse_frame_header_from_stream(linear_buffer& data)
             return;
           }
 
-          // Check for extension bits. At the moment only the per-message compression
-          // extension (PMCE) is supported, which uses the RSV1 bit to indicate a
-          // compressed message.
-          int rsv_mask = 0b01110000;
+          int rsv_reject = mask_len_rsv_opcode & 0b01110000;
+          if(rsv_reject != 0) {
+            // If PMCE has been enabled, the RSV1 bit is accepted, so remove it
+            // from this mask.
+            if(this->m_pmce_send_window_bits != 0)
+              rsv_reject &= 0b00110000;
 
-          if(this->m_pmce_send_window_bits != 0)
-            rsv_mask &= 0b00110000;
-
-          if(mask_len_rsv_opcode & rsv_mask) {
-            // Reject unknown RSV bits.
-            this->m_wsf = wsf_error;
-            this->m_error_desc = "invalid RSV bits in data frame";
-            return;
+            if(rsv_reject != 0) {
+              // Reject unknown RSV bits.
+              this->m_wsf = wsf_error;
+              this->m_error_desc = "invalid RSV bits in data frame";
+              return;
+            }
           }
 
           // Copy fields for later use.
