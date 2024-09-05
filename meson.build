@@ -376,12 +376,11 @@ import('pkgconfig').generate(lib_poseidon,
 #===========================================================
 # Rules for 'bin/poseidon'
 #===========================================================
-executable('poseidon',
-           cpp_pch: 'poseidon/xprecompiled.hpp',
-           sources: [ 'poseidon/main.cpp' ],
-           dependencies: [ dep_pthread, dep_asteria, dep_taxon ],
-           link_with: lib_poseidon,
-           install: true)
+executable('poseidon', 'poseidon/main.cpp',
+      cpp_pch: 'poseidon/xprecompiled.hpp',
+      dependencies: [ dep_pthread, dep_asteria, dep_taxon ],
+      link_with: lib_poseidon,
+      install: true)
 
 #===========================================================
 # Rules for default configuration files
@@ -392,19 +391,21 @@ install_data(etc_poseidon, install_dir: '.', preserve_path: true)
 # Rules for example libraries
 #===========================================================
 foreach src: example_src
-  shared_module('poseidon-' + src.replace('.cpp', '').underscorify(),
-                src,
-                dependencies: [ dep_pthread, dep_asteria, dep_taxon ],
-                link_with: lib_poseidon,
-                install: true)
+  shared_module('poseidon-' + src.replace('.cpp', '').underscorify(), src,
+      dependencies: [ dep_pthread, dep_asteria, dep_taxon ],
+      link_with: lib_poseidon,
+      install: true)
 endforeach
 
 #===========================================================
 # Rules for tests
 #===========================================================
 foreach src: test_src
-  test(src, executable(src.replace('.cpp', '').underscorify(), src,
-                       dependencies: [ dep_asteria, dep_taxon, dep_mysqlclient,
-                                       dep_mongoc, dep_hiredis ],
-                       link_with: lib_poseidon))
+  test_exe = executable(src.underscorify(), src,
+      dependencies: [ dep_asteria, dep_taxon, dep_mysqlclient, dep_mongoc,
+                      dep_hiredis ],
+      link_with: lib_poseidon,
+      install: false)
+
+  test('..' / src, test_exe)
 endforeach
