@@ -103,6 +103,7 @@ using ::rocket::recursive_mutex;
 using ::rocket::condition_variable;
 using ::rocket::array;
 using ::rocket::cow_vector;
+using ::asteria::cow_dictionary;
 using ::rocket::cow_hashmap;
 using ::rocket::static_vector;
 using ::rocket::cow_string;

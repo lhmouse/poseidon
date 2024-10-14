@@ -18,7 +18,7 @@ class Redis_Scan_and_Get_Future
     struct Result
       {
         cow_string pattern;  // input
-        ::asteria::cow_dictionary<cow_string> pairs;
+        cow_dictionary<cow_string> pairs;
       };
 
   private:

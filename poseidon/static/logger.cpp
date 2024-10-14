@@ -17,7 +17,7 @@ struct Level_Config
     bool p_stderr = false;
     bool trivial = false;
     cow_string color;
-    cow_string file;
+    prehashed_string file;
   };
 
 struct Message
@@ -126,7 +126,6 @@ do_load_level_config(Level_Config& lconf, const Config_File& conf_file, const ch
           name, conf_value, conf_file.path());
   }
 
-inline
 void
 do_color(linear_buffer& mtext, const Level_Config& lconf, const char* code)
   {
@@ -141,7 +140,7 @@ do_color(linear_buffer& mtext, const Level_Config& lconf, const char* code)
   }
 
 void
-do_write_nothrow(const Level_Config& lconf, const Message& msg) noexcept
+do_write_nothrow(cow_dictionary<unique_posix_fd>& io_files, const Level_Config& lconf, const Message& msg) noexcept
   try {
     linear_buffer mtext;
     ::rocket::ascii_numput nump;
@@ -241,10 +240,13 @@ do_write_nothrow(const Level_Config& lconf, const Message& msg) noexcept
     if(lconf.p_stderr)
       (void)! ::write(STDERR_FILENO, mtext.data(), mtext.size());
 
-    if(lconf.file != "")
-      if(const auto fd = unique_posix_fd(::open(lconf.file.c_str(),
-                                    O_WRONLY | O_APPEND | O_CREAT, 0644)))
-        (void)! ::write(fd, mtext.data(), mtext.size());
+    if(lconf.file != "") {
+      auto r = io_files.try_emplace(lconf.file);
+      if(r.second)
+        r.first->second.reset(::open(lconf.file.c_str(), O_WRONLY | O_APPEND | O_CREAT, 0644));
+      if(r.first->second)
+        (void)! ::write(r.first->second, mtext.data(), mtext.size());
+    }
   }
   catch(exception& stdex) {
     ::fprintf(stderr,
@@ -330,9 +332,10 @@ thread_loop()
     // Write all elements.
     for(const auto& msg : this->m_io_queue)
       if((msg.level < levels.size()) && (!levels[msg.level].trivial || (queue_size < 1000)))
-        do_write_nothrow(levels[msg.level], msg);
+        do_write_nothrow(this->m_io_files, levels[msg.level], msg);
 
     this->m_io_queue.clear();
+    this->m_io_files.clear();
     io_sync_lock.unlock();
     ::sync();
   }
@@ -379,9 +382,10 @@ synchronize() noexcept
     // Write all elements.
     for(const auto& msg : this->m_io_queue)
       if(msg.level < levels.size())
-        do_write_nothrow(levels[msg.level], msg);
+        do_write_nothrow(this->m_io_files, levels[msg.level], msg);
 
     this->m_io_queue.clear();
+    this->m_io_files.clear();
     io_sync_lock.unlock();
     ::sync();
   }
