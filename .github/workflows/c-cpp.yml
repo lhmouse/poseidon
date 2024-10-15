@@ -37,7 +37,7 @@ jobs:
 
     - name: Run tests (minimal)
       run: >-
-           meson setup -Denable-debug-checks=true build_ci
+           meson setup -Denable-debug-checks=true -Doptimization=1 build_ci
            -Denable-{mysql,mongo,redis}=false && meson test -Cbuild_ci
 
     - name: Install full dependencies
@@ -47,5 +47,5 @@ jobs:
 
     - name: Run tests (full)
       run: >-
-           meson setup --reconfigure -Denable-debug-checks=true build_ci
+           meson setup --reconfigure -Denable-debug-checks=true -Doptimization=1 build_ci
            && meson test -Cbuild_ci
