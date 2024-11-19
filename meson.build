@@ -279,7 +279,7 @@ install_data(etc_poseidon, install_dir: '.', preserve_path: true)
 #===========================================================
 # Rules for example libraries
 #===========================================================
-foreach src: example_src
+foreach src : example_src
   shared_module('poseidon-' + src.replace('.cpp', '').underscorify(), src,
       dependencies: [ dep_pthread, dep_asteria, dep_taxon ],
       link_with: lib_poseidon,
@@ -289,7 +289,7 @@ endforeach
 #===========================================================
 # Rules for tests
 #===========================================================
-foreach src: test_src
+foreach src : test_src
   test_exe = executable(src.underscorify(), src,
       dependencies: [ dep_asteria, dep_taxon, dep_mysqlclient, dep_mongoc,
                       dep_hiredis ],
