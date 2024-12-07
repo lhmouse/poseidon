@@ -38,6 +38,7 @@ jobs:
            && (cd asteria && ./makedeb.sh && sudo dpkg -i *.deb)
            && (cd http-parser && ./makedeb.sh && sudo dpkg -i *.deb)
            && (cd taxon && ./makedeb.sh && sudo dpkg -i *.deb)
+           && (cd libmongoc-dev-symlinks && ./makedeb.sh && sudo dpkg -i *.deb)
 
     - name: Run tests (minimal)
       run: >-
