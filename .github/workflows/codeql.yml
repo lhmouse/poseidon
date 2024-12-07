@@ -46,6 +46,13 @@ jobs:
       run: >-
            sudo PIP_BREAK_SYSTEM_PACKAGES=1 pip3 install meson
 
+    - name: Build and install submodules
+      run: >-
+           git submodule update --init
+           && (cd asteria && ./makedeb.sh && sudo dpkg -i *.deb)
+           && (cd http-parser && ./makedeb.sh && sudo dpkg -i *.deb)
+           && (cd taxon && ./makedeb.sh && sudo dpkg -i *.deb)
+
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
       with:
