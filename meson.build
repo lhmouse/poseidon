@@ -294,6 +294,7 @@ foreach src : test_src
       dependencies: [ dep_asteria, dep_taxon, dep_mysqlclient, dep_mongoc,
                       dep_hiredis ],
       link_with: lib_poseidon,
+      build_by_default: false,
       install: false)
 
   test('..' / src, test_exe)
