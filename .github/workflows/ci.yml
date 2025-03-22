@@ -28,7 +28,7 @@ jobs:
            --no-install-recommends g++ ninja-build python3 python3-pip pkgconf
            libedit-dev libpcre2-dev libssl-dev zlib1g-dev libunwind-dev uuid-dev
 
-    - name: Install newest meson
+    - name: Install newest Meson
       run: >-
            sudo PIP_BREAK_SYSTEM_PACKAGES=1 pip3 install meson
 
@@ -39,17 +39,29 @@ jobs:
            && (cd http-parser && ./makedeb.sh && sudo dpkg -i *.deb)
            && (cd taxon && ./makedeb.sh && sudo dpkg -i *.deb)
 
-    - name: Run tests (minimal)
+    - name: Configure (minimal)
       run: >-
            meson setup -Denable-debug-checks=true -Doptimization=1 build_ci
-           -Denable-{mysql,mongo,redis}=false && meson test -Cbuild_ci --print-errorlogs
+           -Denable-{mysql,mongo,redis}=false
 
-    - name: Install full dependencies
+    - name: Build (minimal)
+      run: meson compile -Cbuild_ci
+
+    - name: Run tests (minimal)
+      run: meson test -Cbuild_ci --print-errorlogs
+
+    - name: Install more dependencies
       run: >-
            sudo apt-get install -y lib{mysqlclient,mongoc,hiredis}-dev
            && (cd libmongoc-dev-symlinks && ./makedeb.sh && sudo dpkg -i *.deb)
 
-    - name: Run tests (full)
+    - name: Configure (full)
       run: >-
-           meson setup --reconfigure -Denable-debug-checks=true -Doptimization=1 build_ci
-           && meson test -Cbuild_ci --print-errorlogs
+           meson setup -Denable-debug-checks=true -Doptimization=1 build_ci
+           -Denable-{mysql,mongo,redis}=true
+
+    - name: Build (full)
+      run: meson compile -Cbuild_ci
+
+    - name: Run tests (full)
+      run: meson test -Cbuild_ci --print-errorlogs
