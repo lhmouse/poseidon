@@ -306,7 +306,7 @@ thread_loop()
 
     ::std::pop_heap(this->m_pq.mut_begin(), this->m_pq.mut_end(), s_fiber_comparator);
     auto elem = this->m_pq.back();
-    const auto& fiber = elem->fiber;
+    const auto fiber = elem->fiber;
     if(elem->state == fiber_terminated) {
       this->m_pq.pop_back();
       lock.unlock();
