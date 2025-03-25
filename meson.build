@@ -199,17 +199,14 @@ dep_uuid = dependency('uuid', version: '>= 2.36.0')
 #===========================================================
 # Optional dependencies
 #===========================================================
-dep_mysqlclient = disabler()
-dep_mongoc = disabler()
-dep_hiredis = disabler()
+dep_mysqlclient = dependency('', required: false)
+dep_mongoc = dependency('', required: false)
+dep_hiredis = dependency('', required: false)
 
 if get_option('enable-mysql')
   dep_mysqlclient = dependency('mysqlclient').partial_dependency(
-         compile_args: true,
-         link_args: true,
-         links: true)
-
-  add_project_arguments('-DPOSEIDON_ENABLE_MYSQL', language: [ 'c', 'cpp' ])
+                    compile_args: true, link_args: true, links: true)
+  add_project_arguments('-DPOSEIDON_ENABLE_MYSQL', language: 'cpp')
 
   poseidon_include += poseidon_include_mysql
   poseidon_src += poseidon_src_mysql
@@ -218,11 +215,8 @@ endif
 
 if get_option('enable-mongo')
   dep_mongoc = dependency('libmongoc-1.0').partial_dependency(
-         compile_args: true,
-         link_args: true,
-         links: true)
-
-  add_project_arguments('-DPOSEIDON_ENABLE_MONGO', language: [ 'c', 'cpp' ])
+                    compile_args: true, link_args: true, links: true)
+  add_project_arguments('-DPOSEIDON_ENABLE_MONGO', language: 'cpp')
 
   poseidon_include += poseidon_include_mongo
   poseidon_src += poseidon_src_mongo
@@ -231,11 +225,8 @@ endif
 
 if get_option('enable-redis')
   dep_hiredis = dependency('hiredis').partial_dependency(
-         compile_args: true,
-         link_args: true,
-         links: true)
-
-  add_project_arguments('-DPOSEIDON_ENABLE_REDIS', language: [ 'c', 'cpp' ])
+                    compile_args: true, link_args: true, links: true)
+  add_project_arguments('-DPOSEIDON_ENABLE_REDIS', language: 'cpp')
 
   poseidon_include += poseidon_include_redis
   poseidon_src += poseidon_src_redis
