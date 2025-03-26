@@ -153,18 +153,6 @@ ver.set('abi_major', meson.project_version().split('.')[0])
 ver.set('abi_minor', meson.project_version().split('.')[1])
 ver.set_quoted('abi_string', meson.project_version())
 
-if get_option('enable-avx')
-  add_project_arguments('-mavx', language: [ 'c', 'cpp' ])
-endif
-
-if get_option('enable-debug-checks')
-  add_project_arguments('-D_GLIBCXX_DEBUG', '-D_LIBCPP_DEBUG', language: 'cpp')
-endif
-
-if get_option('b_sanitize').contains('address')
-  add_project_arguments('-DPOSEIDON_ENABLE_ADDRESS_SANITIZER', language: 'cpp')
-endif
-
 add_project_arguments(
     '-Wall', '-Wextra', '-masm=intel', '-msse4.2', '-ffast-math',
     '-D_FILE_OFFSET_BITS=64', '-D_POSIX_C_SOURCE=200809', '-D_DEFAULT_SOURCE',
@@ -182,7 +170,19 @@ add_project_arguments(
     '-std=c++17', '-fno-elide-constructors', '-fvisibility-inlines-hidden',
     '-fnothrow-opt', '-fno-enforce-eh-specs', '-Wzero-as-null-pointer-constant',
     '-Wno-redundant-move', '-Werror=non-virtual-dtor',
-    language: [ 'cpp' ])
+    language: 'cpp')
+
+if get_option('enable-avx')
+  add_project_arguments('-mavx', language: [ 'c', 'cpp' ])
+endif
+
+if get_option('enable-debug-checks')
+  add_project_arguments('-D_GLIBCXX_DEBUG', '-D_LIBCPP_DEBUG', language: 'cpp')
+endif
+
+if get_option('b_sanitize').contains('address')
+  add_project_arguments('-DPOSEIDON_ENABLE_ADDRESS_SANITIZER', language: 'cpp')
+endif
 
 #===========================================================
 # Dependencies
