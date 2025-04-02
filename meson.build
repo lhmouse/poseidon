@@ -294,8 +294,8 @@ endforeach
 #===========================================================
 foreach src : test_src
   test_exe = executable(src.underscorify(), src,
-      dependencies: [ dep_asteria, dep_taxon, dep_mysqlclient, dep_mongoc,
-                      dep_hiredis ],
+      dependencies: [ dep_pthread, dep_asteria, dep_taxon, dep_mysqlclient,
+                      dep_mongoc, dep_hiredis ],
       link_with: lib_poseidon,
       build_by_default: false,
       install: false)
