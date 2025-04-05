@@ -157,7 +157,7 @@ add_project_arguments(
     '-Wall', '-Wextra', '-masm=intel', '-msse4.2', '-ffast-math',
     '-D_FILE_OFFSET_BITS=64', '-D_POSIX_C_SOURCE=200809', '-D_DEFAULT_SOURCE',
     '-fstrict-aliasing', '-fstrict-overflow', '-fmerge-all-constants',
-    '-fno-devirtualize-speculatively', '-fno-semantic-interposition',
+    '-fno-devirtualize-speculatively', '-fno-semantic-interposition', '-fno-plt',
     '-Werror=conversion', '-Werror=sign-compare', '-Werror=sign-conversion',
     '-Werror=write-strings', '-Werror=return-type', '-Werror=double-promotion',
     '-Wmissing-declarations', '-Wmissing-field-initializers', '-Wshadow',
