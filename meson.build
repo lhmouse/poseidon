@@ -153,27 +153,36 @@ ver.set('abi_major', meson.project_version().split('.')[0])
 ver.set('abi_minor', meson.project_version().split('.')[1])
 ver.set_quoted('abi_string', meson.project_version())
 
-add_project_arguments(
-    '-Wall', '-Wextra', '-masm=intel', '-msse4.2', '-ffast-math',
-    '-D_FILE_OFFSET_BITS=64', '-D_POSIX_C_SOURCE=200809', '-D_DEFAULT_SOURCE',
-    '-fstrict-aliasing', '-fstrict-overflow', '-fmerge-all-constants',
-    '-fno-devirtualize-speculatively', '-fno-semantic-interposition', '-fno-plt',
-    '-Werror=conversion', '-Werror=sign-compare', '-Werror=sign-conversion',
-    '-Werror=write-strings', '-Werror=return-type', '-Werror=double-promotion',
-    '-Wmissing-declarations', '-Wmissing-field-initializers', '-Wshadow',
-    '-Wsuggest-attribute=noreturn', '-Wswitch-enum', '-Wunused-function',
-    '-Wunused-label', '-Wunused-local-typedefs', '-Wunused-but-set-variable',
-    '-Wunused-but-set-parameter', '-Wno-stringop-overflow', '-Wno-array-bounds',
-    language: [ 'c', 'cpp' ])
+cxx = meson.get_compiler('cpp')
+cxx_is_i386 = cxx.has_define('__i386__')
+cxx_is_amd64 = cxx.has_define('__amd64__')
 
 add_project_arguments(
-    '-std=c++17', '-fno-elide-constructors', '-fvisibility-inlines-hidden',
-    '-fnothrow-opt', '-fno-enforce-eh-specs', '-Wzero-as-null-pointer-constant',
-    '-Wno-redundant-move', '-Werror=non-virtual-dtor',
+    '-Wall', '-Wextra', '-Winvalid-pch', '-std=c++17', '-D_FILE_OFFSET_BITS=64',
+    '-D_POSIX_C_SOURCE=200809', '-D_DEFAULT_SOURCE', '-D_DARWIN_C_SOURCE',
+    cxx.get_supported_arguments(
+      '-fno-elide-constructors', '-fvisibility-inlines-hidden', '-fstrict-aliasing',
+      '-fno-stack-protector', '-fstrict-overflow', '-fmerge-all-constants',
+      '-frounding-math', '-fno-math-errno', '-fno-ident', '-fno-trapping-math',
+      '-fno-devirtualize-speculatively', '-fno-semantic-interposition', '-fno-plt',
+      '-fnothrow-opt', '-fno-enforce-eh-specs',
+      '-Werror=conversion', '-Werror=sign-compare', '-Werror=sign-conversion',
+      '-Werror=write-strings', '-Werror=return-type', '-Werror=double-promotion',
+      '-Werror=non-virtual-dtor', '-Wzero-as-null-pointer-constant',
+      '-Wmissing-declarations', '-Wmissing-field-initializers', '-Wshadow',
+      '-Wsuggest-attribute=noreturn', '-Wswitch-enum', '-Wunused-function',
+      '-Wunused-label', '-Wunused-local-typedefs', '-Wunused-but-set-variable',
+      '-Wunused-but-set-parameter', '-Wno-array-bounds', '-Wno-stringop-overflow',
+      '-Wno-redundant-move', '-Wno-unqualified-std-cast-call', '-Wno-string-plus-int',
+      '-Wno-bitwise-instead-of-logical', '-Wno-missing-braces'),
     language: 'cpp')
 
-if get_option('enable-avx')
-  add_project_arguments('-mavx', language: [ 'c', 'cpp' ])
+if get_option('enable-avx') and (cxx_is_i386 or cxx_is_amd64)
+  add_project_arguments('-mavx', language: 'cpp')
+endif
+
+if cxx.has_argument('-masm=intel')
+  add_project_arguments('-masm=intel', language: 'cpp')
 endif
 
 if get_option('enable-debug-checks')
