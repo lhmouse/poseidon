@@ -11,7 +11,7 @@
 #include <sys/mman.h>  // mmap(), munmap()
 
 #ifdef __SANITIZE_ADDRESS__
-#  include <sanitizer/common_interface_defs.h>
+#  include <sanitizer/asan_interface.h>
 #  define POSEIDON_SANITIZER_START_SWITCH_FIBER(this, elem)  \
       ::__sanitizer_start_switch_fiber(&(this->m_sched_asan_save),  \
             (elem)->sched_inner->uc_link->uc_stack.ss_sp,  \
