@@ -9,12 +9,22 @@
 #include <time.h>  // clock_gettime()
 #include <sys/resource.h>  // getrlimit()
 #include <sys/mman.h>  // mmap(), munmap()
-#ifdef POSEIDON_ENABLE_ADDRESS_SANITIZER
-extern "C" {
-void __sanitizer_start_switch_fiber(void**, const void*, size_t) noexcept;
-void __sanitizer_finish_switch_fiber(void*, const void**, size_t*) noexcept;
-}  // extern "C"
+
+#ifdef __SANITIZE_ADDRESS__
+#  include <sanitizer/common_interface_defs.h>
+#  define POSEIDON_SANITIZER_START_SWITCH_FIBER(this, elem)  \
+      ::__sanitizer_start_switch_fiber(&(this->m_sched_asan_save),  \
+            (elem)->sched_inner->uc_link->uc_stack.ss_sp,  \
+            (elem)->sched_inner->uc_link->uc_stack.ss_size)  // no semicolon
+#  define POSEIDON_SANITIZER_FINISH_SWITCH_FIBER(this)  \
+    ::__sanitizer_finish_switch_fiber(this->m_sched_asan_save,  \
+          const_cast<const void**>(&(this->m_sched_outer->uc_stack.ss_sp)),  \
+          &(this->m_sched_outer->uc_stack.ss_size))  // no semicolon
+#else
+#  define POSEIDON_SANITIZER_START_SWITCH_FIBER(this, elem)
+#  define POSEIDON_SANITIZER_FINISH_SWITCH_FIBER(this)
 #endif
+
 namespace poseidon {
 namespace {
 
@@ -140,12 +150,7 @@ void
 Fiber_Scheduler::
 do_fiber_function() noexcept
   {
-#ifdef POSEIDON_ENABLE_ADDRESS_SANITIZER
-    ::__sanitizer_finish_switch_fiber(
-          this->m_sched_asan_save,
-          const_cast<const void**>(&(this->m_sched_outer->uc_stack.ss_sp)),
-          this->m_sched_outer->uc_stack.ss_size);
-#endif
+    POSEIDON_SANITIZER_FINISH_SWITCH_FIBER(this);
     auto elem = this->m_sched_elem;
     ROCKET_ASSERT(elem);
     const auto& fiber = elem->fiber;
@@ -164,12 +169,7 @@ do_fiber_function() noexcept
 
     // Return to the scheduler.
     elem->async_time.store(steady_clock::now());
-#ifdef POSEIDON_ENABLE_ADDRESS_SANITIZER
-    ::__sanitizer_start_switch_fiber(
-          &(this->m_sched_asan_save),
-          elem->sched_inner->uc_link->uc_stack.ss_sp),
-          elem->sched_inner->uc_link->uc_stack.ss_size);
-#endif
+    POSEIDON_SANITIZER_START_SWITCH_FIBER(this, elem);
   }
 
 void
@@ -376,19 +376,9 @@ thread_loop()
     this->m_sched_elem = elem;
     POSEIDON_LOG_TRACE(("Resuming fiber `$1` (class `$2`)"), fiber, typeid(*fiber));
 
-#ifdef POSEIDON_ENABLE_ADDRESS_SANITIZER
-    ::__sanitizer_start_switch_fiber(
-          &(this->m_sched_asan_save),
-          elem->sched_inner->uc_stack.ss_sp),
-          elem->sched_inner->uc_stack.ss_size);
-#endif
+    POSEIDON_SANITIZER_START_SWITCH_FIBER(this, elem);
     ::swapcontext(this->m_sched_outer, elem->sched_inner);
-#ifdef POSEIDON_ENABLE_ADDRESS_SANITIZER
-    ::__sanitizer_finish_switch_fiber(
-          this->m_sched_asan_save,
-          const_cast<const void**>(&(elem->sched_inner->uc_stack.ss_sp)),
-          elem->sched_inner->uc_stack.ss_size);
-#endif
+    POSEIDON_SANITIZER_FINISH_SWITCH_FIBER(this);
 
     ROCKET_ASSERT(this->m_sched_elem == elem);
     this->m_sched_elem = nullptr;
@@ -458,19 +448,9 @@ yield(const Abstract_Fiber& tfiber, shptrR<Abstract_Future> futr_opt, millisecon
     elem->state = fiber_suspended;
     POSEIDON_CATCH_EVERYTHING(fiber->do_on_abstract_fiber_suspended());
 
-#ifdef POSEIDON_ENABLE_ADDRESS_SANITIZER
-    ::__sanitizer_start_switch_fiber(
-          &(this->m_sched_asan_save),
-          this->m_sched_outer->uc_stack.ss_sp),
-          this->m_sched_outer->uc_stack.ss_size);
-#endif
+    POSEIDON_SANITIZER_START_SWITCH_FIBER(this, elem);
     ::swapcontext(elem->sched_inner, this->m_sched_outer);
-#ifdef POSEIDON_ENABLE_ADDRESS_SANITIZER
-    ::__sanitizer_finish_switch_fiber(
-          this->m_sched_asan_save,
-          const_cast<const void**>(&(this->m_sched_outer->uc_stack.ss_sp)),
-          this->m_sched_outer->uc_stack.ss_size);
-#endif
+    POSEIDON_SANITIZER_FINISH_SWITCH_FIBER(this);
 
     elem->wfutr.reset();
 

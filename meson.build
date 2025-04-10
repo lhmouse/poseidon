@@ -189,10 +189,6 @@ if get_option('enable-debug-checks')
   add_project_arguments('-D_GLIBCXX_DEBUG', '-D_LIBCPP_DEBUG', language: 'cpp')
 endif
 
-if get_option('b_sanitize').contains('address')
-  add_project_arguments('-DPOSEIDON_ENABLE_ADDRESS_SANITIZER', language: 'cpp')
-endif
-
 #===========================================================
 # Dependencies
 #===========================================================
