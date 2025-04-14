@@ -5,4 +5,4 @@ export CXX=${CXX:-"g++"}
 
 find ~+/"poseidon" -name "*.[hc]pp"  \
   | xargs -n 1 -P $(nproc) --  \
-    sh -xec '${CXX} ${CPPFLAGS} -x c++ -std=c++17 $1 -S -o /dev/null' 0
+    sh -xec '${CXX} ${CPPFLAGS} -x c++ -std=c++17 -mavx $1 -S -o /dev/null' 0
