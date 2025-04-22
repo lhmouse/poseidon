@@ -367,28 +367,30 @@ thread_loop()
     lock.lock(this->m_epoll_mutex);
     ::epoll_event event = { };
     if(this->m_epoll_events.empty()) {
-      int efd = this->m_epoll_fd;
-      linear_buffer evbuf = move(this->m_epoll_events);
+      linear_buffer events = move(this->m_epoll_events);
       lock.unlock();
 
-      if(ROCKET_UNEXPECT(efd == -1)) {
+      if(ROCKET_UNEXPECT(!this->m_epoll_fd)) {
         ::sleep(1);
         return;
       }
 
       // Collect more events from the epoll.
-      size_t cap = evbuf.reserve_after_end(event_buffer_size * sizeof(event));
-      int r = ::epoll_wait(efd, (::epoll_event*) evbuf.mut_end(), (int) cap, 5000);
-      if(r <= 0) {
+      events.reserve_after_end(event_buffer_size * sizeof(::epoll_event));
+      int res = ::epoll_wait(this->m_epoll_fd,
+                             reinterpret_cast<::epoll_event*>(events.mut_end()),
+                             static_cast<int>(events.capacity_after_end() / sizeof(::epoll_event)),
+                             5000);
+      if(res <= 0) {
         POSEIDON_LOG_TRACE(("`epoll_wait()` wait: ${errno:full}"));
         return;
       }
 
-      POSEIDON_LOG_TRACE(("Collected $1 event(s) from epoll"), r);
-      evbuf.accept((uint32_t) r * sizeof(event));
+      POSEIDON_LOG_TRACE(("Collected $1 events from epoll"), res);
+      events.accept(static_cast<uint32_t>(res) * sizeof(::epoll_event));
 
       lock.lock(this->m_epoll_mutex);
-      splice_buffers(this->m_epoll_events, move(evbuf));
+      splice_buffers(this->m_epoll_events, move(events));
     }
 
     ROCKET_ASSERT(this->m_epoll_events.size() >= sizeof(event));
