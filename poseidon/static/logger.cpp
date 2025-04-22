@@ -213,9 +213,9 @@ do_write_nothrow(cow_dictionary<unique_posix_fd>& io_files, const Level_Config& 
     mtext.puts("@@ thread ");
     nump.put_DU(msg.thrd_lwpid);
     mtext.putn(nump.data(), nump.size());
-    mtext.puts(" '");
+    mtext.puts(" [");
     mtext.puts(msg.thrd_name);
-    mtext.puts("' ");
+    mtext.puts("] ");
 
     // Write the source location and enclosing function.
     do_color(mtext, lconf, "34");  // blue
