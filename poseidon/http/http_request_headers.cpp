@@ -15,13 +15,13 @@ encode(tinyfmt& fmt) const
     if(this->method_bytes[0] == 0)
       fmt << "GET ";
     else {
-      alignas(16) char method_str[16];
+      const __m128i zr = _mm_setzero_si128();
+      alignas(16) char str[16];
       __m128i t = _mm_load_si128(&(this->packed_fields_1));
-      t = _mm_blend_epi16(t, _mm_setzero_si128(), 0xC0);
-      _mm_store_si128(reinterpret_cast<__m128i*>(method_str), t);
-      int len = _mm_cmpistri(t, _mm_setzero_si128(), 0x08);
-      ::memcpy(method_str + len, " ", 2);
-      fmt << method_str;
+      t = _mm_blend_epi16(t, zr, 0xC0);
+      _mm_store_si128(reinterpret_cast<__m128i*>(str), t);
+      ::memcpy(str + static_cast<uint32_t>(_mm_cmpistri(t, zr, 0x08)), " ", 2);
+      fmt << str;
     }
 
     if(this->is_proxy) {
