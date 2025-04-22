@@ -27,8 +27,8 @@ class HTTP_Response_Parser
         hresp_payload_done  = 2,
       };
 
-    HRESP_State m_hresp;
-    bool m_close_after_payload;
+    HRESP_State m_hresp = hresp_new;
+    bool m_close_after_payload = false;
     char m_reserved_1;
     char m_reserved_2;
 
