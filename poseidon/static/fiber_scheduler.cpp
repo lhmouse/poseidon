@@ -28,6 +28,77 @@
 namespace poseidon {
 namespace {
 
+struct Cached_Stack
+  {
+    Cached_Stack* next;
+    size_t vm_size;
+  };
+
+plain_mutex s_stack_cache_mutex;
+Cached_Stack* s_stack_cache = nullptr;
+const uint32_t s_page_size = (uint32_t) ::sysconf(_SC_PAGESIZE);
+
+::stack_t
+do_allocate_stack(size_t vm_size)
+  {
+    const plain_mutex::unique_lock lock(s_stack_cache_mutex);
+
+    while(s_stack_cache && (s_stack_cache->vm_size < vm_size)) {
+      // This is not large enough. Deallocate it.
+      void* map_base = (char*) s_stack_cache - s_page_size;
+      size_t map_size = s_stack_cache->vm_size + 2 * s_page_size;
+      s_stack_cache = s_stack_cache->next;
+
+      if(::munmap(map_base, map_size) != 0)
+        POSEIDON_LOG_FATAL((
+            "Failed to unmap stack memory: map_base `$1`, map_size `$2`",
+            "[`munmap()` failed: ${errno:full}]"),
+            map_base, map_size);
+    }
+
+    if(!s_stack_cache) {
+      // Allocate a new block of memory.
+      size_t map_size = vm_size + 2 * s_page_size;
+      void* map_base = ::mmap(nullptr, map_size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+      if(map_base == MAP_FAILED)
+        POSEIDON_THROW((
+            "Could not allocate stack memory: map_size `$1`",
+            "[`mmap()` failed: ${errno:full}]"),
+            map_size);
+
+      s_stack_cache = (Cached_Stack*) ((char*) map_base + s_page_size);
+      ::mprotect(s_stack_cache, vm_size, PROT_READ | PROT_WRITE);
+      s_stack_cache->vm_size = vm_size;
+    }
+
+    // Pop a stack from the cache.
+    ROCKET_ASSERT(s_stack_cache && (s_stack_cache->vm_size >= vm_size));
+    ::stack_t st;
+    st.ss_sp = s_stack_cache;
+    st.ss_size = s_stack_cache->vm_size;
+    s_stack_cache = s_stack_cache->next;
+#ifdef ROCKET_DEBUG
+    ::memset(st.ss_sp, 0xD9, st.ss_size);
+#endif
+    return st;
+  }
+
+void
+do_free_stack_nonnull(::stack_t st) noexcept
+  {
+    const plain_mutex::unique_lock lock(s_stack_cache_mutex);
+
+    // Push the stack into the cache.
+    ROCKET_ASSERT(st.ss_sp);
+#ifdef ROCKET_DEBUG
+    ::memset(st.ss_sp, 0xB5, st.ss_size);
+#endif
+    auto cst = (Cached_Stack*) st.ss_sp;
+    cst->next = s_stack_cache;
+    cst->vm_size = st.ss_size;
+    s_stack_cache = cst;
+  }
+
 enum Fiber_State : uint8_t
   {
     fiber_pending     = 0,
@@ -248,7 +319,7 @@ thread_loop()
       lock.unlock();
 
       elem->fiber.reset();
-      ::operator delete(elem->sched_inner->uc_stack.ss_sp);
+      do_free_stack_nonnull(elem->sched_inner->uc_stack);
       return;
     }
 
@@ -289,22 +360,23 @@ thread_loop()
 
       // Initialize the fiber procedure and its stack.
       ::getcontext(elem->sched_inner);
-      elem->sched_inner->uc_stack.ss_sp = ::operator new(stack_vm_size);
-      elem->sched_inner->uc_stack.ss_size = stack_vm_size;
+      elem->sched_inner->uc_stack = do_allocate_stack(stack_vm_size);
       elem->sched_inner->uc_link = this->m_sched_outer;
-
-      auto thunk = [](int xarg0, int xarg1)
-        {
-          Fiber_Scheduler* ythis = nullptr;
-          int yargs[2] = { xarg0, xarg1 };
-          ::memcpy(&ythis, yargs, sizeof(ythis));
-          ythis->do_fiber_function();
-        };
 
       int xargs[2] = { };
       Fiber_Scheduler* xthis = this;
       ::memcpy(xargs, &xthis, sizeof(xthis));
-      ::makecontext(elem->sched_inner, reinterpret_cast<void (*)()>(+thunk), 2, xargs[0], xargs[1]);
+
+      ::makecontext(
+          elem->sched_inner,
+          reinterpret_cast<void (*)()>(+[](int xarg0, int xarg1) {
+            Fiber_Scheduler* ythis = nullptr;
+            int yargs[2] = { xarg0, xarg1 };
+            ::memcpy(&ythis, yargs, sizeof(ythis));
+            ythis->do_fiber_function();
+          }),
+          2,
+          xargs[0], xargs[1]);
     }
 
     // Start or resume this fiber.
