@@ -28,70 +28,6 @@
 namespace poseidon {
 namespace {
 
-plain_mutex s_stack_pool_mutex;
-const uint32_t s_page_size = (uint32_t) ::sysconf(_SC_PAGESIZE);
-::stack_t s_stack_pool;
-
-::stack_t
-do_alloc_stack(size_t stack_vm_size)
-  {
-    if(stack_vm_size > 0x7F000000)
-      POSEIDON_THROW(("Invalid stack size: $1"), stack_vm_size);
-
-    const plain_mutex::unique_lock lock(s_stack_pool_mutex);
-
-    while(s_stack_pool.ss_sp && (s_stack_pool.ss_size != stack_vm_size)) {
-      // This cached stack is not large enough. Deallocate it.
-      ::stack_t ss = s_stack_pool;
-      s_stack_pool = *(const ::stack_t*) ss.ss_sp;
-
-      if(::munmap((char*) ss.ss_sp - s_page_size, ss.ss_size + s_page_size * 2) != 0)
-        POSEIDON_LOG_FATAL((
-            "Failed to unmap fiber stack memory: ss_sp `$1`, ss_size `$2`",
-            "[`munmap()` failed: ${errno:full}]"),
-            ss.ss_sp, ss.ss_size);
-    }
-
-    if(!s_stack_pool.ss_sp) {
-      // The pool has been exhausted. Allocate a new stack.
-      void* addr = ::mmap(nullptr, stack_vm_size + s_page_size * 2, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-      if(addr == MAP_FAILED)
-        POSEIDON_THROW((
-            "Could not allocate fiber stack memory: size `$1`",
-            "[`mmap()` failed: ${errno:full}]"),
-            stack_vm_size);
-
-      s_stack_pool.ss_sp = (char*) addr + s_page_size;
-      s_stack_pool.ss_size = stack_vm_size;
-      ::mprotect(s_stack_pool.ss_sp, s_stack_pool.ss_size, PROT_READ | PROT_WRITE);
-    }
-
-    // Pop the first stack from the pool.
-    ROCKET_ASSERT(s_stack_pool.ss_sp && (s_stack_pool.ss_size >= stack_vm_size));
-    ::stack_t ss = s_stack_pool;
-    s_stack_pool = *(const ::stack_t*) ss.ss_sp;
-#ifdef ROCKET_DEBUG
-    ::memset(ss.ss_sp, 0xE9, ss.ss_size);
-#endif
-    return ss;
-  }
-
-void
-do_free_stack(::stack_t ss) noexcept
-  {
-    if(!ss.ss_sp)
-      return;
-
-    const plain_mutex::unique_lock lock(s_stack_pool_mutex);
-
-    // Prepend the stack to the pool.
-#ifdef ROCKET_DEBUG
-    ::memset(ss.ss_sp, 0xCD, ss.ss_size);
-#endif
-    *(::stack_t*) ss.ss_sp = s_stack_pool;
-    s_stack_pool = ss;
-  }
-
 enum Fiber_State : uint8_t
   {
     fiber_pending     = 0,
@@ -258,7 +194,7 @@ Fiber_Scheduler::
 thread_loop()
   {
     plain_mutex::unique_lock lock(this->m_conf_mutex);
-    const size_t stack_vm_size = this->m_conf_stack_vm_size;
+    const uint32_t stack_vm_size = this->m_conf_stack_vm_size;
     const seconds warn_timeout = this->m_conf_warn_timeout;
     const seconds fail_timeout = this->m_conf_fail_timeout;
     lock.unlock();
@@ -312,8 +248,7 @@ thread_loop()
       lock.unlock();
 
       elem->fiber.reset();
-      ROCKET_ASSERT(elem->sched_inner->uc_stack.ss_sp != nullptr);
-      do_free_stack(elem->sched_inner->uc_stack);
+      ::operator delete(elem->sched_inner->uc_stack.ss_sp);
       return;
     }
 
@@ -354,7 +289,8 @@ thread_loop()
 
       // Initialize the fiber procedure and its stack.
       ::getcontext(elem->sched_inner);
-      elem->sched_inner->uc_stack = do_alloc_stack(stack_vm_size);  // may throw
+      elem->sched_inner->uc_stack.ss_sp = ::operator new(stack_vm_size);
+      elem->sched_inner->uc_stack.ss_size = stack_vm_size;
       elem->sched_inner->uc_link = this->m_sched_outer;
 
       auto thunk = [](int xarg0, int xarg1)
