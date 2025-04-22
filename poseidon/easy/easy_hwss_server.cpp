@@ -162,8 +162,10 @@ struct Final_Session final : WSS_Server_Session
           event.type = (req.method == http_GET) ? easy_hws_get : easy_hws_head;
           event.data.putn(req.uri_host.data(), req.uri_host.size());
           event.data.putn(req.uri_path.data(), req.uri_path.size());
-          event.data.putc('?');
-          event.data.putn(req.uri_query.data(), req.uri_query.size());
+          if(req.uri_query.size() != 0) {
+            event.data.putc('?');
+            event.data.putn(req.uri_query.data(), req.uri_query.size());
+          }
           this->do_push_event_common(move(event));
           return http_payload_normal;
         }
