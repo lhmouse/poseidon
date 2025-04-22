@@ -154,7 +154,7 @@ void
 hex_encode_16_partial(char* str, const void* data) noexcept
   {
     // Split the higher and lower halves into two SSE registers.
-    __m128i tval = _mm_loadu_si128((const __m128i*) data);
+    __m128i tval = _mm_loadu_si128(static_cast<const __m128i*>(data));
     __m128i hi = _mm_and_si128(_mm_srli_epi64(tval, 4), _mm_set1_epi8(15));
     __m128i lo = _mm_and_si128(tval, _mm_set1_epi8(15));
 
@@ -166,8 +166,8 @@ hex_encode_16_partial(char* str, const void* data) noexcept
     lo = _mm_add_epi8(_mm_add_epi8(lo, _mm_set1_epi8('0')), tval);
 
     // Rearrange digits in the correct order.
-    _mm_storeu_si128((__m128i*) str, _mm_unpacklo_epi8(hi, lo));
-    _mm_storeu_si128((__m128i*) (str + 16), _mm_unpackhi_epi8(hi, lo));
+    _mm_storeu_si128(reinterpret_cast<__m128i*>(str), _mm_unpacklo_epi8(hi, lo));
+    _mm_storeu_si128(reinterpret_cast<__m128i*>(str + 16), _mm_unpackhi_epi8(hi, lo));
     str[32] = 0;
   }
 
