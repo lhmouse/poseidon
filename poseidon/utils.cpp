@@ -404,33 +404,28 @@ create_runtime_error(void composer_callback(cow_string&, void*), void* composer,
     sbuf.append(nump.data(), nump.size());
     sbuf += "']";
 
-    // Calculate the number of stack frames.
-    ::unw_context_t unw_ctx[1];
-    ::unw_cursor_t unw_cur[1];
-    size_t nframes = 0;
+    ::unw_context_t unw_ctx;
+    ::unw_cursor_t unw_top;
+    if((::unw_getcontext(&unw_ctx) == 0) && (::unw_init_local(&unw_top, &unw_ctx) == 0)) {
+      sbuf += "\n[stack backtrace:";
 
-    if((::unw_getcontext(unw_ctx) == 0) && (::unw_init_local(unw_cur, unw_ctx) == 0))
-      while(::unw_step(unw_cur) > 0)
-        ++ nframes;
+      // Calculate the number of caller frames.
+      size_t nframes = 0;
+      ::unw_cursor_t unw_cur = unw_top;
+      while(::unw_step(&unw_cur) > 0)
+        nframes ++;
 
-    if(nframes != 0) {
-      // Determine the width of the frame index field.
       nump.put_DU(nframes);
       static_vector<char, 8> numfield(nump.size(), ' ');
 
+      // Don't leak the buffer that will be returned by `__cxa_demangle()`.
+      ::rocket::unique_ptr<char, void (void*)> demangle_buf(nullptr, ::free);
+      size_t demangle_size = 0;
+
       // Append frames to the exception message.
-      sbuf += "\n[stack backtrace:";
       nframes = 0;
-      ::unw_init_local(unw_cur, unw_ctx);
-
-      char* fn_ptr = nullptr;
-      size_t fn_size = 0;
-      const auto fn_guard = make_unique_handle(&fn_ptr, [](char** p) { ::free(*p);  });
-
-      char unw_name[1024];
-      ::unw_word_t unw_offset;
-
-      while(::unw_step(unw_cur) > 0) {
+      unw_cur = unw_top;
+      while(::unw_step(&unw_cur) > 0) {
         // * frame index
         nump.put_DU(++ nframes);
         ::std::reverse_copy(nump.begin(), nump.end(), numfield.mut_rbegin());
@@ -439,19 +434,25 @@ create_runtime_error(void composer_callback(cow_string&, void*), void* composer,
         sbuf += ") ";
 
         // * instruction pointer
-        ::unw_get_reg(unw_cur, UNW_REG_IP, &unw_offset);
+        ::unw_word_t unw_offset;
+        ::unw_get_reg(&unw_cur, UNW_REG_IP, &unw_offset);
         nump.put_XU(unw_offset);
         sbuf.append(nump.data(), nump.size());
 
-        if(::unw_get_proc_name(unw_cur, unw_name, sizeof(unw_name), &unw_offset) == 0) {
-          // Demangle the function name. If `__cxa_demangle()` returns a non-null
-          // pointer, `fn_ptr` will have been reallocated to `fn` and it will
-          // point to the demangled name.
-          char* fn = ::abi::__cxa_demangle(unw_name, fn_ptr, &fn_size, nullptr);
-          if(fn)
-            fn_ptr = fn;
-          else
+        char unw_name[1024];
+        if(::unw_get_proc_name(&unw_cur, unw_name, sizeof(unw_name), &unw_offset) != 0)
+          sbuf += " (unknown)";
+        else {
+          // Demangle the function name. If `__cxa_demangle()` returns a
+          // non-null pointer, `demangle_buf` will have been reallocated to
+          // `fn` which will point to the demangled name.
+          char* fn = ::abi::__cxa_demangle(unw_name, demangle_buf, &demangle_size, nullptr);
+          if(!fn)
             fn = unw_name;
+          else {
+            demangle_buf.release();
+            demangle_buf.reset(fn);
+          }
 
           // * function name and offset
           sbuf += " `";
@@ -460,14 +461,11 @@ create_runtime_error(void composer_callback(cow_string&, void*), void* composer,
           nump.put_XU(unw_offset);
           sbuf.append(nump.data(), nump.size());
         }
-        else
-          sbuf += " (unknown function)";
       }
 
       sbuf += "\n  -- end of stack backtrace]";
     }
 
-    // Compose an exception object.
     return ::std::runtime_error(sbuf);
   }
   catch(::std::runtime_error& stdex) {
