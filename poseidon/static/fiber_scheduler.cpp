@@ -82,7 +82,7 @@ do_allocate_stack(size_t vm_size)
     ::__asan_unpoison_memory_region(cst + 1, st.ss_size - sizeof(*cst));
 #endif
 #ifdef ROCKET_DEBUG
-    ::memset(st.ss_sp, 0xD9, st.ss_size);
+    ::memset(cst, 0xD9, st.ss_size);
 #endif
     return st;
   }
@@ -95,7 +95,7 @@ do_free_stack(::stack_t st) noexcept
       return;
 
 #ifdef ROCKET_DEBUG
-    ::memset(st.ss_sp, 0xB5, st.ss_size);
+    ::memset(cst, 0xB5, st.ss_size);
 #endif
 #ifdef __SANITIZE_ADDRESS__
     ::__asan_poison_memory_region(cst + 1, st.ss_size - sizeof(*cst));
