@@ -34,20 +34,22 @@ struct Cached_Stack
     size_t vm_size;
   };
 
-plain_mutex s_stack_cache_mutex;
-Cached_Stack* s_stack_cache = nullptr;
 const uint32_t s_page_size = (uint32_t) ::sysconf(_SC_PAGESIZE);
+atomic<Cached_Stack*> s_stack_cache;
 
 ::stack_t
 do_allocate_stack(size_t vm_size)
   {
-    const plain_mutex::unique_lock lock(s_stack_cache_mutex);
+    auto cst = s_stack_cache.xchg(nullptr);
+    if(cst && cst->next)
+      cst->next = s_stack_cache.xchg(cst->next);
 
-    while(s_stack_cache && (s_stack_cache->vm_size < vm_size)) {
-      // This is not large enough. Deallocate it.
-      void* map_base = (char*) s_stack_cache - s_page_size;
-      size_t map_size = s_stack_cache->vm_size + 2 * s_page_size;
-      s_stack_cache = s_stack_cache->next;
+    // Deallocate anything which another thread might have put in between,
+    // or when reconfiguration was requested.
+    while(cst && (cst->next || (cst->vm_size != vm_size))) {
+      void* map_base = (char*) cst - s_page_size;
+      size_t map_size = cst->vm_size + 2 * s_page_size;
+      cst = cst->next;
 
       if(::munmap(map_base, map_size) != 0)
         POSEIDON_LOG_FATAL((
@@ -56,27 +58,29 @@ do_allocate_stack(size_t vm_size)
             map_base, map_size);
     }
 
-    if(!s_stack_cache) {
-      // Allocate a new block of memory.
+    // If the cache has been exhausted, allocate a new block of memory from
+    // the system. This is allowed to throw exceptions.
+    if(!cst) {
       size_t map_size = vm_size + 2 * s_page_size;
-      void* map_base = ::mmap(nullptr, map_size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+      void* map_base = ::mmap(nullptr, map_size, PROT_NONE,
+                              MAP_PRIVATE | MAP_ANONYMOUS | MAP_STACK, -1, 0);
       if(map_base == MAP_FAILED)
         POSEIDON_THROW((
             "Could not allocate stack memory: map_size `$1`",
             "[`mmap()` failed: ${errno:full}]"),
             map_size);
 
-      s_stack_cache = (Cached_Stack*) ((char*) map_base + s_page_size);
-      ::mprotect(s_stack_cache, vm_size, PROT_READ | PROT_WRITE);
-      s_stack_cache->vm_size = vm_size;
+      cst = (Cached_Stack*) ((char*) map_base + s_page_size);
+      ::mprotect(cst, vm_size, PROT_READ | PROT_WRITE);
+      cst->vm_size = vm_size;
     }
 
-    // Pop a stack from the cache.
-    ROCKET_ASSERT(s_stack_cache && (s_stack_cache->vm_size >= vm_size));
     ::stack_t st;
-    st.ss_sp = s_stack_cache;
-    st.ss_size = s_stack_cache->vm_size;
-    s_stack_cache = s_stack_cache->next;
+    st.ss_sp = cst;
+    st.ss_size = cst->vm_size;
+#ifdef __SANITIZE_ADDRESS__
+    ::__asan_unpoison_memory_region(cst + 1, st.ss_size - sizeof(*cst));
+#endif
 #ifdef ROCKET_DEBUG
     ::memset(st.ss_sp, 0xD9, st.ss_size);
 #endif
@@ -84,19 +88,24 @@ do_allocate_stack(size_t vm_size)
   }
 
 void
-do_free_stack_nonnull(::stack_t st) noexcept
+do_free_stack(::stack_t st) noexcept
   {
-    const plain_mutex::unique_lock lock(s_stack_cache_mutex);
+    auto cst = (Cached_Stack*) st.ss_sp;
+    if(!st.ss_sp)
+      return;
 
-    // Push the stack into the cache.
-    ROCKET_ASSERT(st.ss_sp);
 #ifdef ROCKET_DEBUG
     ::memset(st.ss_sp, 0xB5, st.ss_size);
 #endif
-    auto cst = (Cached_Stack*) st.ss_sp;
-    cst->next = s_stack_cache;
+#ifdef __SANITIZE_ADDRESS__
+    ::__asan_poison_memory_region(cst + 1, st.ss_size - sizeof(*cst));
+#endif
+    cst->next = nullptr;
     cst->vm_size = st.ss_size;
-    s_stack_cache = cst;
+
+    // Put the stack back into the cache.
+    cst->next = s_stack_cache.load();
+    while(!s_stack_cache.cmpxchg_weak(cst->next, cst));
   }
 
 enum Fiber_State : uint8_t
@@ -319,7 +328,7 @@ thread_loop()
       lock.unlock();
 
       elem->fiber.reset();
-      do_free_stack_nonnull(elem->sched_inner->uc_stack);
+      do_free_stack(elem->sched_inner->uc_stack);
       return;
     }
 
