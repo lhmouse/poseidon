@@ -181,7 +181,6 @@ create_runtime_error(void composer_callback(cow_string&, void*), void* composer,
     __extension__  \
       ({  \
         try { (void) (__VA_ARGS__);  }  \
-        catch(::abi::__forced_unwind&) { throw; }  \
         catch(::std::exception& af9cohMo)  \
           { POSEIDON_LOG_ERROR(("Ignoring exception: $1"), af9cohMo);  }  \
         (void) 0;  \
