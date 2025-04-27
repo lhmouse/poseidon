@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyleft 2022 - 2024, LH_Mouse. All wrongs reserved.
+// Copyright (C) 2022-2025, LH_Mouse. All wrongs reserved.
 
 #ifndef POSEIDON_MYSQL_MYSQL_TABLE_STRUCTURE_
 #define POSEIDON_MYSQL_MYSQL_TABLE_STRUCTURE_

@@ -3,4 +3,4 @@
 meson compile -Cbuild_debug
 
 export LD_LIBRARY_PATH=$(realpath -e build_debug)
-valgrind -- ./build_debug/poseidon ./etc/poseidon
+valgrind --leak-check=full -- ./build_debug/poseidon ./etc/poseidon
