@@ -29,8 +29,8 @@ jobs:
     - name: Install dependencies
       run: >-
            sudo apt-get install -y --no-install-recommends g++ meson
-           ninja-build python3 python3-pip pkgconf libedit-dev libpcre2-dev
-           libssl-dev zlib1g-dev libunwind-dev uuid-dev
+           ninja-build python3 python3-pip pkgconf zlib1g-dev uuid-dev
+           lib{edit,pcre2,ssl,unwind,mysqlclient,mongoc,hiredis}-dev
 
     - name: Build and install submodules
       run: >-
@@ -39,10 +39,6 @@ jobs:
            && (cd asteria && ./makedeb.sh && sudo dpkg -i *.deb)
            && (cd http-parser && ./makedeb.sh && sudo dpkg -i *.deb)
            && (cd taxon && ./makedeb.sh && sudo dpkg -i *.deb)
-
-    - name: Install dependencies
-      run: >-
-           sudo apt-get install -y lib{mysqlclient,mongoc,hiredis}-dev
 
     - name: Configure
       run: >-
