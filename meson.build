@@ -244,10 +244,26 @@ endforeach
 # Rules for tests
 #===========================================================
 foreach src : test_src
+  basename = src.replace('test/', '')
+  test_deps = [ dep_pthread, dep_asteria, dep_taxon ]
+
+  if basename.startswith('mysql_')
+    test_deps += [ dep_mysqlclient ]
+  endif
+
+  if basename.startswith('mongo_')
+    test_deps += [ dep_bson, dep_mongoc ]
+  endif
+
+  if basename.startswith('redis_')
+    test_deps += [ dep_hiredis ]
+  endif
+
   test_exe = executable(src.underscorify(), src,
-                link_with: lib_poseidon,
-                build_by_default: false,
-                install: false)
+      dependencies: test_deps,
+      link_with: lib_poseidon,
+      build_by_default: false,
+      install: false)
 
   test('..' / src, test_exe)
 endforeach
