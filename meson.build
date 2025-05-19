@@ -1,4 +1,4 @@
-## Copyright (C) 2024 by LH_Mouse <lh_mouse@126.com>
+## Copyright (C) 2024-2025 by LH_Mouse <lh_mouse@126.com>
 ##
 ## Permission to use, copy, modify, and/or distribute this
 ## software for any purpose with or without fee is hereby granted.
@@ -222,7 +222,7 @@ import('pkgconfig').generate(lib_poseidon,
 #===========================================================
 executable('poseidon', 'poseidon/main.cpp',
       cpp_pch: 'poseidon/xprecompiled.hpp',
-      dependencies: [ dep_pthread, dep_asteria, dep_taxon ],
+      dependencies: [ dep_pthread, dep_openssl ],
       link_with: lib_poseidon,
       install: true)
 
@@ -236,9 +236,8 @@ install_data(poseidon_etc, install_dir: '.', preserve_path: true)
 #===========================================================
 foreach src : example_src
   shared_module('poseidon-' + src.replace('.cpp', '').underscorify(), src,
-      dependencies: [ dep_pthread, dep_asteria, dep_taxon ],
-      link_with: lib_poseidon,
-      install: true)
+                link_with: lib_poseidon,
+                install: true)
 endforeach
 
 #===========================================================
@@ -246,11 +245,9 @@ endforeach
 #===========================================================
 foreach src : test_src
   test_exe = executable(src.underscorify(), src,
-      dependencies: [ dep_pthread, dep_asteria, dep_taxon, dep_mysqlclient,
-                      dep_mongoc, dep_hiredis ],
-      link_with: lib_poseidon,
-      build_by_default: false,
-      install: false)
+                link_with: lib_poseidon,
+                build_by_default: false,
+                install: false)
 
   test('..' / src, test_exe)
 endforeach

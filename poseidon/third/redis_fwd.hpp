@@ -5,7 +5,7 @@
 #define POSEIDON_THIRD_REDIS_FWD_
 
 #include "../fwd.hpp"
-#include "hiredis/hiredis.h"
+#include <hiredis/hiredis.h>
 namespace poseidon {
 
 struct redisContext_deleter

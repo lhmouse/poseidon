@@ -35,6 +35,7 @@ jobs:
     - name: Build and install submodules
       run: >-
            git submodule update --init
+           && (cd libmongoc-dev-symlinks && ./makedeb.sh && sudo dpkg -i *.deb)
            && (cd asteria && ./makedeb.sh && sudo dpkg -i *.deb)
            && (cd http-parser && ./makedeb.sh && sudo dpkg -i *.deb)
            && (cd taxon && ./makedeb.sh && sudo dpkg -i *.deb)
