@@ -55,20 +55,14 @@ poseidon_include = [
   'poseidon/easy/easy_wss_server.hpp', 'poseidon/easy/easy_tcp_client.hpp',
   'poseidon/easy/easy_http_client.hpp', 'poseidon/easy/easy_ws_client.hpp',
   'poseidon/easy/easy_ssl_client.hpp', 'poseidon/easy/easy_https_client.hpp',
-  'poseidon/easy/easy_wss_client.hpp' ]
-
-poseidon_include_mysql = [
+  'poseidon/easy/easy_wss_client.hpp',
   'poseidon/third/mysql_fwd.hpp', 'poseidon/static/mysql_connector.hpp',
   'poseidon/mysql/enums.hpp', 'poseidon/mysql/mysql_table_structure.hpp',
   'poseidon/mysql/mysql_value.hpp', 'poseidon/mysql/mysql_connection.hpp',
-  'poseidon/fiber/mysql_query_future.hpp', 'poseidon/fiber/mysql_check_table_future.hpp' ]
-
-poseidon_include_mongo = [
+  'poseidon/fiber/mysql_query_future.hpp', 'poseidon/fiber/mysql_check_table_future.hpp',
   'poseidon/third/mongo_fwd.hpp', 'poseidon/static/mongo_connector.hpp',
   'poseidon/mongo/enums.hpp', 'poseidon/mongo/mongo_value.hpp',
-  'poseidon/mongo/mongo_connection.hpp', 'poseidon/fiber/mongo_query_future.hpp' ]
-
-poseidon_include_redis = [
+  'poseidon/mongo/mongo_connection.hpp', 'poseidon/fiber/mongo_query_future.hpp',
   'poseidon/third/redis_fwd.hpp', 'poseidon/static/redis_connector.hpp',
   'poseidon/redis/enums.hpp', 'poseidon/redis/redis_value.hpp',
   'poseidon/redis/redis_connection.hpp', 'poseidon/fiber/redis_query_future.hpp',
@@ -105,46 +99,33 @@ poseidon_src = [
   'poseidon/easy/easy_wss_server.cpp', 'poseidon/easy/easy_tcp_client.cpp',
   'poseidon/easy/easy_http_client.cpp', 'poseidon/easy/easy_ws_client.cpp',
   'poseidon/easy/easy_ssl_client.cpp', 'poseidon/easy/easy_https_client.cpp',
-  'poseidon/easy/easy_wss_client.cpp' ]
-
-poseidon_src_mysql = [
+  'poseidon/easy/easy_wss_client.cpp',
   'poseidon/static/mysql_connector.cpp', 'poseidon/mysql/mysql_table_structure.cpp',
   'poseidon/mysql/mysql_value.cpp', 'poseidon/mysql/mysql_connection.cpp',
-  'poseidon/fiber/mysql_query_future.cpp', 'poseidon/fiber/mysql_check_table_future.cpp' ]
-
-poseidon_src_mongo = [
+  'poseidon/fiber/mysql_query_future.cpp', 'poseidon/fiber/mysql_check_table_future.cpp',
   'poseidon/static/mongo_connector.cpp', 'poseidon/mongo/mongo_value.cpp',
-  'poseidon/mongo/mongo_connection.cpp', 'poseidon/fiber/mongo_query_future.cpp' ]
-
-poseidon_src_redis = [
+  'poseidon/mongo/mongo_connection.cpp', 'poseidon/fiber/mongo_query_future.cpp',
   'poseidon/static/redis_connector.cpp', 'poseidon/redis/redis_value.cpp',
   'poseidon/redis/redis_connection.cpp', 'poseidon/fiber/redis_query_future.cpp',
   'poseidon/fiber/redis_scan_and_get_future.cpp' ]
 
-etc_poseidon = [
+poseidon_etc = [
   'etc/poseidon/main.conf', 'etc/poseidon/ssl/test.crt', 'etc/poseidon/ssl/test.key' ]
 
 example_src = [
   'example/udp_echo_server.cpp', 'example/tcp_echo_server.cpp',
-  'example/ssl_echo_server.cpp', 'example/http_server.cpp',
-  'example/http_client.cpp', 'example/https_server.cpp', 'example/https_client.cpp',
-  'example/ws_server.cpp', 'example/hws_server.cpp', 'example/ws_client.cpp',
-  'example/wss_server.cpp', 'example/hwss_server.cpp', 'example/wss_client.cpp' ]
+  'example/ssl_echo_server.cpp', 'example/http_server.cpp', 'example/http_client.cpp',
+  'example/https_server.cpp', 'example/https_client.cpp', 'example/ws_server.cpp',
+  'example/hws_server.cpp', 'example/ws_client.cpp', 'example/wss_server.cpp',
+  'example/hwss_server.cpp', 'example/wss_client.cpp' ]
 
 test_src = [
   'test/utils.cpp', 'test/ipv6_address.cpp', 'test/uuid.cpp', 'test/datetime.cpp',
   'test/http_value.cpp', 'test/http_field_name.cpp', 'test/http_header_parser.cpp',
   'test/http_query_parser.cpp', 'test/websocket_frame_header.cpp',
-  'test/websocket_handshake.cpp' ]
-
-test_src_mysql = [
-  'test/mysql_table_structure.cpp', 'test/mysql_value.cpp', 'test/mysql_connection.cpp' ]
-
-test_src_mongo = [
-  'test/mongo_value.cpp', 'test/mongo_connection.cpp' ]
-
-test_src_redis = [
-  'test/redis_value.cpp', 'test/redis_connection.cpp' ]
+  'test/websocket_handshake.cpp', 'test/mysql_table_structure.cpp',
+  'test/mysql_value.cpp', 'test/mysql_connection.cpp', 'test/mongo_value.cpp',
+  'test/mongo_connection.cpp', 'test/redis_value.cpp', 'test/redis_connection.cpp' ]
 
 #===========================================================
 # Global configuration
@@ -199,42 +180,9 @@ dep_zlib = dependency('zlib', version: '>= 1.2.9')
 dep_http_parser = dependency('http-parser')
 dep_uuid = dependency('uuid', version: '>= 2.36.0')
 
-#===========================================================
-# Optional dependencies
-#===========================================================
-dep_mysqlclient = dependency('', required: false)
-dep_mongoc = dependency('', required: false)
-dep_hiredis = dependency('', required: false)
-
-if get_option('enable-mysql')
-  dep_mysqlclient = dependency('mysqlclient').partial_dependency(
-                    compile_args: true, link_args: true, links: true)
-  add_project_arguments('-DPOSEIDON_ENABLE_MYSQL', language: 'cpp')
-
-  poseidon_include += poseidon_include_mysql
-  poseidon_src += poseidon_src_mysql
-  test_src += test_src_mysql
-endif
-
-if get_option('enable-mongo')
-  dep_mongoc = dependency('libmongoc-1.0').partial_dependency(
-                    compile_args: true, link_args: true, links: true)
-  add_project_arguments('-DPOSEIDON_ENABLE_MONGO', language: 'cpp')
-
-  poseidon_include += poseidon_include_mongo
-  poseidon_src += poseidon_src_mongo
-  test_src += test_src_mongo
-endif
-
-if get_option('enable-redis')
-  dep_hiredis = dependency('hiredis').partial_dependency(
-                    compile_args: true, link_args: true, links: true)
-  add_project_arguments('-DPOSEIDON_ENABLE_REDIS', language: 'cpp')
-
-  poseidon_include += poseidon_include_redis
-  poseidon_src += poseidon_src_redis
-  test_src += test_src_redis
-endif
+dep_mysqlclient = dependency('mysqlclient')
+dep_mongoc = dependency('libmongoc-1.0')
+dep_hiredis = dependency('hiredis')
 
 #===========================================================
 # Rules for headers
@@ -280,7 +228,7 @@ executable('poseidon', 'poseidon/main.cpp',
 #===========================================================
 # Rules for default configuration files
 #===========================================================
-install_data(etc_poseidon, install_dir: '.', preserve_path: true)
+install_data(poseidon_etc, install_dir: '.', preserve_path: true)
 
 #===========================================================
 # Rules for example libraries

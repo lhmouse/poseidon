@@ -19,15 +19,3 @@ option('enable-avx',
 option('enable-debug-checks',
        type: 'boolean', value: false,
        description: 'enable run-time assertions')
-
-option('enable-mysql',
-       type: 'boolean', value: true,
-       description: 'enable access to MySQL servers')
-
-option('enable-mongo',
-       type: 'boolean', value: true,
-       description: 'enable access to MongoDB servers')
-
-option('enable-redis',
-       type: 'boolean', value: true,
-       description: 'enable access to redis servers')
