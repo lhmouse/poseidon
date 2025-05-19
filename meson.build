@@ -222,7 +222,7 @@ import('pkgconfig').generate(lib_poseidon,
 #===========================================================
 executable('poseidon', 'poseidon/main.cpp',
       cpp_pch: 'poseidon/xprecompiled.hpp',
-      dependencies: [ dep_pthread, dep_openssl ],
+      dependencies: [ dep_pthread, dep_asteria, dep_taxon ],
       link_with: lib_poseidon,
       install: true)
 

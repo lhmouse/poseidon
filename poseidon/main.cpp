@@ -19,8 +19,6 @@
 #include <sys/file.h>
 #include <sys/socket.h>
 #include <sys/resource.h>
-#include <openssl/rand.h>
-#include <openssl/err.h>
 #include "static/mysql_connector.hpp"
 #include "static/mongo_connector.hpp"
 #include "static/redis_connector.hpp"
