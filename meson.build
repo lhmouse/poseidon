@@ -181,6 +181,7 @@ dep_http_parser = dependency('http-parser')
 dep_uuid = dependency('uuid', version: '>= 2.36.0')
 
 dep_mysqlclient = dependency('mysqlclient')
+dep_bson = dependency('libbson-1.0')
 dep_mongoc = dependency('libmongoc-1.0')
 dep_hiredis = dependency('hiredis')
 
@@ -203,7 +204,7 @@ lib_poseidon = shared_library('poseidon',
       sources: [ poseidon_src ],
       dependencies: [ dep_pthread, dep_asteria, dep_taxon, dep_libunwind,
                       dep_openssl, dep_zlib, dep_http_parser, dep_uuid,
-                      dep_mysqlclient, dep_mongoc, dep_hiredis ],
+                      dep_mysqlclient, dep_bson, dep_mongoc, dep_hiredis ],
       soversion: ver.get('abi_major'),
       version: '.'.join([ ver.get('abi_major'), ver.get('abi_minor'), '0' ]),
       install: true)
