@@ -21,17 +21,16 @@ on:
 jobs:
   ubuntu:
     name: Ubuntu native build (x86-64)
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
     - uses: actions/checkout@v4
 
     - name: Install dependencies
       run: >-
-           sudo apt-get install -y --no-install-recommends g++ ninja-build
-           python3 python3-pip pkgconf libedit-dev libpcre2-dev libssl-dev
-           zlib1g-dev libunwind-dev uuid-dev &&
-           sudo PIP_BREAK_SYSTEM_PACKAGES=1 pip3 install meson
+           sudo apt-get install -y --no-install-recommends g++ meson
+           ninja-build python3 python3-pip pkgconf libedit-dev libpcre2-dev
+           libssl-dev zlib1g-dev libunwind-dev uuid-dev
 
     - name: Build and install submodules
       run: >-
@@ -43,12 +42,10 @@ jobs:
     - name: Install dependencies
       run: >-
            sudo apt-get install -y lib{mysqlclient,mongoc,hiredis}-dev
-           && (cd libmongoc-dev-symlinks && ./makedeb.sh && sudo dpkg -i *.deb)
 
     - name: Configure
       run: >-
            meson setup -Denable-debug-checks=true -Doptimization=1 build_ci
-           -Denable-{mysql,mongo,redis}=true
 
     - name: Build
       run: meson compile -Cbuild_ci
