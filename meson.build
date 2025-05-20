@@ -148,7 +148,7 @@ add_project_arguments(
       '-frounding-math', '-fno-math-errno', '-fno-ident', '-fno-trapping-math',
       '-fno-devirtualize-speculatively', '-fno-semantic-interposition', '-fno-plt',
       '-fno-omit-frame-pointer', '-momit-leaf-frame-pointer', '-masm=intel',
-      '-mno-outline-atomics', '-Wno-option-ignored',
+      '-mno-outline-atomics', '-Wno-option-ignored', '-Wno-unknown-warning-option',
       '-Werror=conversion', '-Werror=sign-compare', '-Werror=sign-conversion',
       '-Werror=write-strings', '-Werror=return-type', '-Werror=double-promotion',
       '-Werror=non-virtual-dtor', '-Wzero-as-null-pointer-constant',
@@ -157,7 +157,8 @@ add_project_arguments(
       '-Wunused-label', '-Wunused-local-typedefs', '-Wunused-but-set-variable',
       '-Wunused-but-set-parameter', '-Wno-array-bounds', '-Wno-stringop-overflow',
       '-Wno-redundant-move', '-Wno-unqualified-std-cast-call', '-Wno-string-plus-int',
-      '-Wno-bitwise-instead-of-logical', '-Wno-missing-braces'),
+      '-Wno-bitwise-instead-of-logical', '-Wno-potentially-evaluated-expression',
+      '-Wno-unused-private-field', '-Wno-missing-braces'),
     language: 'cpp')
 
 if get_option('enable-avx') and (cxx_is_i386 or cxx_is_amd64)

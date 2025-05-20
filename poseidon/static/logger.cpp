@@ -70,63 +70,6 @@ constexpr char s_escapes[][5] =
   };
 
 void
-do_load_level_config(Level_Config& lconf, const Config_File& conf_file, const char* name)
-  {
-    // Set the tag. Three characters shall be reserved for the pair of brackets
-    // and the null terminator.
-    char* tag_wp = lconf.tag;
-    xstrrpcpy(tag_wp, "[");
-    xmemrpcpy(tag_wp, name, min(xstrlen(name), sizeof(lconf.tag) - 3));
-    xstrrpcpy(tag_wp, "]");
-
-    // Read settings.
-    auto conf_value = conf_file.query("logger", name, "color");
-    if(conf_value.is_string())
-      lconf.color = conf_value.as_string();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `logger.$1.color`: expecting a `string`, got `$2`",
-          "[in configuration file '$3']"),
-          name, conf_value, conf_file.path());
-
-    conf_value = conf_file.query("logger", name, "file");
-    if(conf_value.is_string())
-      lconf.file = conf_value.as_string();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `logger.$1.file`: expecting a `string`, got `$2`",
-          "[in configuration file '$3']"),
-          name, conf_value, conf_file.path());
-
-    conf_value = conf_file.query("logger", name, "stdout");
-    if(conf_value.is_boolean())
-      lconf.p_stdout = conf_value.as_boolean();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `logger.$1.stdout`: expecting a `boolean`, got `$2`",
-          "[in configuration file '$3']"),
-          name, conf_value, conf_file.path());
-
-    conf_value = conf_file.query("logger", name, "stderr");
-    if(conf_value.is_boolean())
-      lconf.p_stderr = conf_value.as_boolean();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `logger.$1.stderr`: expecting a `boolean`, got `$2`",
-          "[in configuration file '$3']"),
-          name, conf_value, conf_file.path());
-
-    conf_value = conf_file.query("logger", name, "trivial");
-    if(conf_value.is_boolean())
-      lconf.trivial = conf_value.as_boolean();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `logger.$1.trivial`: expecting a `boolean`, got `$2`",
-          "[in configuration file '$3']"),
-          name, conf_value, conf_file.path());
-  }
-
-void
 do_color(linear_buffer& mtext, const Level_Config& lconf, const char* code)
   {
     if(lconf.color.empty())
@@ -283,13 +226,68 @@ reload(const Config_File& conf_file, bool verbose)
 
     // Parse new configuration.
     cow_vector<X_Level_Config> levels;
-    levels.resize(6);
-    do_load_level_config(levels.mut(0), conf_file, "fatal");
-    do_load_level_config(levels.mut(1), conf_file, "error");
-    do_load_level_config(levels.mut(2), conf_file, "warn");
-    do_load_level_config(levels.mut(3), conf_file, "info");
-    do_load_level_config(levels.mut(4), conf_file, "debug");
-    do_load_level_config(levels.mut(5), conf_file, "trace");
+    static const char names[][8] = { "fatal", "error", "warn", "info", "debug", "trace" };
+    levels.reserve(size(names));
+    for(const char* name : names) {
+      auto& lconf = levels.emplace_back();
+      ::snprintf(lconf.tag, sizeof(lconf.tag), "[%s]", name);
+
+      // Read settings.
+      ::rocket::tinyfmt_str fmt;
+      format(fmt, "logger.$1.color", name);
+      auto conf_value = conf_file.query(fmt.get_string());
+      if(conf_value.is_string())
+        lconf.color = conf_value.as_string();
+      else if(!conf_value.is_null())
+        POSEIDON_THROW((
+            "Invalid `logger.$1.color`: expecting a `string`, got `$2`",
+            "[in configuration file '$3']"),
+            name, conf_value, conf_file.path());
+
+      fmt.clear_string();
+      format(fmt, "logger.$1.file", name);
+      conf_value = conf_file.query(fmt.get_string());
+      if(conf_value.is_string())
+        lconf.file = conf_value.as_string();
+      else if(!conf_value.is_null())
+        POSEIDON_THROW((
+            "Invalid `logger.$1.file`: expecting a `string`, got `$2`",
+            "[in configuration file '$3']"),
+            name, conf_value, conf_file.path());
+
+      fmt.clear_string();
+      format(fmt, "logger.$1.stdout", name);
+      conf_value = conf_file.query(fmt.get_string());
+      if(conf_value.is_boolean())
+        lconf.p_stdout = conf_value.as_boolean();
+      else if(!conf_value.is_null())
+        POSEIDON_THROW((
+            "Invalid `logger.$1.stdout`: expecting a `boolean`, got `$2`",
+            "[in configuration file '$3']"),
+            name, conf_value, conf_file.path());
+
+      fmt.clear_string();
+      format(fmt, "logger.$1.stderr", name);
+      conf_value = conf_file.query(fmt.get_string());
+      if(conf_value.is_boolean())
+        lconf.p_stderr = conf_value.as_boolean();
+      else if(!conf_value.is_null())
+        POSEIDON_THROW((
+            "Invalid `logger.$1.stderr`: expecting a `boolean`, got `$2`",
+            "[in configuration file '$3']"),
+            name, conf_value, conf_file.path());
+
+      fmt.clear_string();
+      format(fmt, "logger.$1.trivial", name);
+      conf_value = conf_file.query(fmt.get_string());
+      if(conf_value.is_boolean())
+        lconf.trivial = conf_value.as_boolean();
+      else if(!conf_value.is_null())
+        POSEIDON_THROW((
+            "Invalid `logger.$1.trivial`: expecting a `boolean`, got `$2`",
+            "[in configuration file '$3']"),
+            name, conf_value, conf_file.path());
+    }
 
     if(verbose)
       for(size_t k = 0;  k != levels.size();  ++k)
@@ -302,7 +300,7 @@ reload(const Config_File& conf_file, bool verbose)
         level_bits |= 1U << k;
 
     if(level_bits == 0)
-      ::fputs("WARNING: Logger disabled\n", stderr);
+      ::fputs("WARNING: Logger is disabled.\n", stderr);
 
     // Set up new data.
     plain_mutex::unique_lock lock(this->m_conf_mutex);

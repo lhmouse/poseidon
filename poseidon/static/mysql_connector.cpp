@@ -35,7 +35,7 @@ reload(const Config_File& conf_file)
 
     // Read the server name from configuration. The MySQL client library is able
     // to perform DNS lookup as necessary, so this need not be an IP address.
-    auto conf_value = conf_file.query("mysql", "default_service_uri");
+    auto conf_value = conf_file.query(&"mysql.default_service_uri");
     if(conf_value.is_string())
       default_service_uri = conf_value.as_string();
     else if(!conf_value.is_null())
@@ -46,7 +46,7 @@ reload(const Config_File& conf_file)
 
     // Read the password from configuration. The password is not to be stored
     // as plaintext in memory.
-    conf_value = conf_file.query("mysql", "default_password");
+    conf_value = conf_file.query(&"mysql.default_password");
     if(conf_value.is_string())
       default_password = conf_value.as_string();
     else if(!conf_value.is_null())
@@ -59,7 +59,7 @@ reload(const Config_File& conf_file)
     mask_string(default_password.mut_data(), default_password.size(), nullptr, default_password_mask);
 
     // Read the connection pool size from configuration.
-    conf_value = conf_file.query("mysql", "connection_pool_size");
+    conf_value = conf_file.query(&"mysql.connection_pool_size");
     if(conf_value.is_integer())
       connection_pool_size = conf_value.as_integer();
     else if(!conf_value.is_null())
@@ -75,7 +75,7 @@ reload(const Config_File& conf_file)
           connection_pool_size, conf_file.path());
 
     // Read the idle timeout from configuration, as the number of seconds.
-    conf_value = conf_file.query("mysql", "connection_idle_timeout");
+    conf_value = conf_file.query(&"mysql.connection_idle_timeout");
     if(conf_value.is_integer())
       connection_idle_timeout = conf_value.as_integer();
     else if(!conf_value.is_null())

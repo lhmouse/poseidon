@@ -53,20 +53,15 @@ class Config_File
     void
     reload(cow_stringR path);
 
-    // Gets a value denoted by a path, which shall not be empty.
-    // If the path does not denote an existent value, a statically allocated
-    // null value is returned. If during path resolution, an attempt is made
-    // to get a field of a non-object, an exception is thrown.
+    // Gets a value denoted by a path, which may look like `foo.bar.value` or
+    // `foo.bar[42].value` to access individual fields of objects or arrays.
+    // Space characters are ignored. Double quotes are not allowed and are not
+    // necessary. The path must not otherwise be empty. If the path does not
+    // denote an existent value, a statically allocated null value is returned.
+    // If during path resolution, an attempt is made to get a field of a
+    // non-object, an exception is thrown.
     const ::asteria::Value&
-    queryv(const char* first, const char* const* psegs, size_t nsegs) const;
-
-    template<typename... xNext>
-    const ::asteria::Value&
-    query(const char* first, const xNext&... xnext) const
-      {
-        const char* segs[] = { xnext... };
-        return this->queryv(first, segs, sizeof...(xNext));
-      }
+    query(cow_stringR value_path) const;
   };
 
 inline

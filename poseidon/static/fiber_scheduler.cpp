@@ -198,7 +198,7 @@ reload(const Config_File& conf_file)
     int64_t fail_timeout = 300;
 
     // Read the stack size from configuration.
-    auto conf_value = conf_file.query("fiber", "stack_vm_size");
+    auto conf_value = conf_file.query(&"fiber.stack_vm_size");
     if(conf_value.is_integer())
       stack_vm_size = conf_value.as_integer();
     else if(!conf_value.is_null())
@@ -232,7 +232,7 @@ reload(const Config_File& conf_file)
           stack_vm_size, conf_file.path());
 
     // Read scheduler timeouts inseconds.
-    conf_value = conf_file.query("fiber", "warn_timeout");
+    conf_value = conf_file.query(&"fiber.warn_timeout");
     if(conf_value.is_integer())
       warn_timeout = conf_value.as_integer();
     else if(!conf_value.is_null())
@@ -247,7 +247,7 @@ reload(const Config_File& conf_file)
           "[in configuration file '$2']"),
           warn_timeout, conf_file.path());
 
-    conf_value = conf_file.query("fiber", "fail_timeout");
+    conf_value = conf_file.query(&"fiber.fail_timeout");
     if(conf_value.is_integer())
       fail_timeout = conf_value.as_integer();
     else if(!conf_value.is_null())

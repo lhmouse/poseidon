@@ -392,37 +392,6 @@ do_init_signal_handlers()
     ::sigaction(SIGPIPE, &sigact, nullptr);
     ::sigaction(SIGCHLD, &sigact, nullptr);
 
-#ifdef POSEIDON_USE_NON_CALL_EXCEPTIONS
-    // Install fault handlers. Errors are ignored.
-    sigact.sa_flags = SA_SIGINFO;
-    sigact.sa_sigaction = +[](int sig, ::siginfo_t* info, void* /*uctx*/)
-      {
-        const char* sig_name = "unknown";
-        const char* sig_desc = "Unknown signal";
-
-        switch(sig) {
-#define do_signal_case_(name, desc)  \
-          case (name):  sig_name = #name;  sig_desc = desc;  break  // no semicolon
-
-          do_signal_case_(SIGTRAP, "Breakpoint");
-          do_signal_case_(SIGBUS, "Alignment fault");
-          do_signal_case_(SIGFPE, "Arithmetic exception");
-          do_signal_case_(SIGILL, "Illegal instruction");
-          do_signal_case_(SIGSEGV, "General protection fault");
-        };
-
-        POSEIDON_THROW((
-            "Deadly signal $1 ($2) received: $3 at address $4"),
-            sig, sig_name, sig_desc, info->si_addr);
-      };
-
-    ::sigaction(SIGTRAP, &sigact, nullptr);
-    ::sigaction(SIGBUS, &sigact, nullptr);
-    ::sigaction(SIGFPE, &sigact, nullptr);
-    ::sigaction(SIGILL, &sigact, nullptr);
-    ::sigaction(SIGSEGV, &sigact, nullptr);
-#endif
-
     // Install termination handlers. Errors are ignored.
     sigact.sa_flags = 0;
     sigact.sa_handler = +[](int n) { exit_signal.store(n);  };
@@ -444,7 +413,7 @@ do_write_pid_file()
     cow_string pid_file;
     const auto conf = main_config.copy();
 
-    auto conf_value = conf.query("pid_file");
+    auto conf_value = conf.query(&"pid_file");
     if(conf_value.is_string())
       pid_file = conf_value.as_string();
     else if(!conf_value.is_null())
@@ -523,7 +492,7 @@ do_load_modules()
       ::asteria::V_array mods;
       const auto conf = main_config.copy();
 
-      auto conf_value = conf.query("modules");
+      auto conf_value = conf.query(&"modules");
       if(conf_value.is_array())
         mods = conf_value.as_array();
       else if(!conf_value.is_null())

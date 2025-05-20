@@ -188,7 +188,7 @@ HTTP_Request_Parser()
     this->m_parser->data = this;
 
     const auto conf_file = main_config.copy();
-    auto conf_value = conf_file.query("network", "http", "default_compression_level");
+    auto conf_value = conf_file.query(&"network.http.default_compression_level");
     if(conf_value.is_integer())
       this->m_default_compression_level = clamp_cast<int>(conf_value.as_integer(), 0, 9);
     else if(!conf_value.is_null())
@@ -197,7 +197,7 @@ HTTP_Request_Parser()
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
 
-    conf_value = conf_file.query("network", "http", "max_request_content_length");
+    conf_value = conf_file.query(&"network.http.max_request_content_length");
     if(conf_value.is_integer())
       this->m_max_content_length = clamp_cast<uint32_t>(conf_value.as_integer(), 0x100, 0x10000000);
     else if(!conf_value.is_null())

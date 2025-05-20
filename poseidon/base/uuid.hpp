@@ -35,6 +35,7 @@ class UUID
     // Constructs a UUID from individual fields.
     constexpr UUID(const fields& f) noexcept
       {
+#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
         this->m_uuid[0] = f.xh >> 24;

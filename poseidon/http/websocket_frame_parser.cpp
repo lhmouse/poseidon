@@ -138,7 +138,7 @@ WebSocket_Frame_Parser::
 WebSocket_Frame_Parser()
   {
     const auto conf_file = main_config.copy();
-    auto conf_value = conf_file.query("network", "http", "default_compression_level");
+    auto conf_value = conf_file.query(&"network.http.default_compression_level");
     if(conf_value.is_integer())
       this->m_default_compression_level = clamp_cast<int>(conf_value.as_integer(), 0, 9);
     else if(!conf_value.is_null())
@@ -147,7 +147,7 @@ WebSocket_Frame_Parser()
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
 
-    conf_value = conf_file.query("network", "http", "max_websocket_message_length");
+    conf_value = conf_file.query(&"network.http.max_websocket_message_length");
     if(conf_value.is_integer())
       this->m_max_message_length = clamp_cast<uint32_t>(conf_value.as_integer(), 0x100, 0x10000000);
     else if(!conf_value.is_null())

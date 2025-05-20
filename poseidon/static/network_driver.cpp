@@ -186,7 +186,7 @@ reload(const Config_File& conf_file)
     uniptr_SSL_CTX server_ssl_ctx, client_ssl_ctx;
 
     // Read the event buffer size from configuration.
-    auto conf_value = conf_file.query("network", "poll", "event_buffer_size");
+    auto conf_value = conf_file.query(&"network.poll.event_buffer_size");
     if(conf_value.is_integer())
       event_buffer_size = conf_value.as_integer();
     else if(!conf_value.is_null())
@@ -202,7 +202,7 @@ reload(const Config_File& conf_file)
           event_buffer_size, conf_file.path());
 
     // Read the throttle size from configuration.
-    conf_value = conf_file.query("network", "poll", "throttle_size");
+    conf_value = conf_file.query(&"network.poll.throttle_size");
     if(conf_value.is_integer())
       throttle_size = conf_value.as_integer();
     else if(!conf_value.is_null())
@@ -218,7 +218,7 @@ reload(const Config_File& conf_file)
           throttle_size, conf_file.path());
 
     // Get the path to the default server certificate and private key.
-    conf_value = conf_file.query("network", "ssl", "default_certificate");
+    conf_value = conf_file.query(&"network.ssl.default_certificate");
     if(conf_value.is_string())
       default_certificate = conf_value.as_string();
     else if(!conf_value.is_null())
@@ -227,7 +227,7 @@ reload(const Config_File& conf_file)
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
 
-    conf_value = conf_file.query("network", "ssl", "default_private_key");
+    conf_value = conf_file.query(&"network.ssl.default_private_key");
     if(conf_value.is_string())
       default_private_key = conf_value.as_string();
     else if(!conf_value.is_null())
@@ -314,7 +314,7 @@ reload(const Config_File& conf_file)
     ::SSL_CTX_set_mode(client_ssl_ctx, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
 
     // Get the path to trusted CA certificates.
-    conf_value = conf_file.query("network", "ssl", "trusted_ca_path");
+    conf_value = conf_file.query(&"network.ssl.trusted_ca_path");
     if(conf_value.is_string())
       trusted_ca_path = conf_value.as_string();
     else if(!conf_value.is_null())
