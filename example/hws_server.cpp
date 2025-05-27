@@ -40,6 +40,7 @@ static Easy_HWS_Server my_server(
 
       case easy_hws_get:
       case easy_hws_head:
+      case easy_hws_post:
         {
           POSEIDON_LOG_ERROR(("example HTTP/WS server received HTTP: $1"), data);
 

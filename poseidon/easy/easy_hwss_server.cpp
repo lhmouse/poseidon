@@ -155,23 +155,56 @@ struct Final_Session final : WSS_Server_Session
           return http_payload_normal;
         }
 
-        if(((req.method == http_GET) || (req.method == http_HEAD))
-           && none_of(req.headers, [&](const auto& r) { return r.first == "Upgrade";  })) {
-          // Handle an HTTP request.
-          Session_Table::Event_Queue::Event event;
-          event.type = (req.method == http_GET) ? easy_hws_get : easy_hws_head;
-          event.data.putn(req.uri_host.data(), req.uri_host.size());
-          event.data.putn(req.uri_path.data(), req.uri_path.size());
-          if(req.uri_query.size() != 0) {
-            event.data.putc('?');
-            event.data.putn(req.uri_query.data(), req.uri_query.size());
-          }
-          this->do_push_event_common(move(event));
+        if((req.method == http_OPTIONS)
+           || any_of(req.headers, [&](const auto& r) { return r.first == "Upgrade";  })) {
+          // Try upgrading to WebSocket.
+          this->do_ws_complete_handshake(req, close_after_payload);
           return http_payload_normal;
         }
 
-        // default
-        this->do_ws_complete_handshake(req, close_after_payload);
+        Session_Table::Event_Queue::Event event;
+        switch((uint64_t) req.method)
+          {
+          case http_OPTIONS:
+            // Respond to an XSS check.
+            this->do_ws_complete_handshake(req, close_after_payload);
+            return http_payload_normal;
+
+          case http_GET:
+            if(any_of(req.headers, [&](const auto& r) { return r.first == "Upgrade";  })) {
+              // Try upgrading to WebSocket.
+              this->do_ws_complete_handshake(req, close_after_payload);
+              return http_payload_normal;
+            }
+
+            // Handle a plain HTTP GET request.
+            event.type = easy_hws_get;
+            break;
+
+          case http_HEAD:
+            // Handle a plain HTTP HEAD request.
+            event.type = easy_hws_head;
+            break;
+
+          case http_POST:
+            // Handle a plain HTTP POST request.
+            event.type = easy_hws_post;
+            break;
+
+          default:
+            // Reject all the other.
+            this->do_on_http_request_error(http_status_method_not_allowed);
+            this->quick_close();
+            return http_payload_normal;
+          }
+
+        event.data.putn(req.uri_host.data(), req.uri_host.size());
+        event.data.putn(req.uri_path.data(), req.uri_path.size());
+
+        if(req.uri_query != "")
+          event.data.putc('?').putn(req.uri_query.data(), req.uri_query.size());
+
+        this->do_push_event_common(move(event));
         return http_payload_normal;
       }
 

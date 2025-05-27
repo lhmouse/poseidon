@@ -39,6 +39,7 @@ enum Easy_HWS_Event : uint8_t
     easy_hws_close    = 45,  // closure notification received
     easy_hws_get      = 46,  // simple HTTP GET
     easy_hws_head     = 47,  // simple HTTP HEAD
+    easy_hws_post     = 48,  // simple HTTP POST
   };
 
 }  // namespace poseidon
