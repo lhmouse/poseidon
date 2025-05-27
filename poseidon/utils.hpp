@@ -177,6 +177,19 @@ create_runtime_error(void composer_callback(cow_string&, void*), void* composer,
             __func__, __FILE__, __LINE__);  \
       }))
 
+#define POSEIDON_CHECK(...)  \
+    (bool(__VA_ARGS__) ? (void) 0 :  \
+      throw (__extension__  \
+        ({  \
+          using ::asteria::format;  \
+          auto Vai4feeP = [&](::asteria::cow_string& Pha2Ae5i)  \
+            { Pha2Ae5i = &"POSEIDON_CHECK failed: " #__VA_ARGS__;  };  \
+          auto iez4eeY9 = [](::asteria::cow_string& hohv8Ing, void* fi8OhNgo)  \
+            { (*static_cast<decltype(Vai4feeP)*>(fi8OhNgo)) (hohv8Ing);  };  \
+          ::poseidon::create_runtime_error(+iez4eeY9, &Vai4feeP,  \
+              __func__, __FILE__, __LINE__);  \
+        })))
+
 #define POSEIDON_CATCH_EVERYTHING(...)  \
     __extension__  \
       ({  \

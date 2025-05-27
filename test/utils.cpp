@@ -16,4 +16,15 @@ int main()
       POSEIDON_TEST_CHECK(::std::strstr(e.what(),
           "test exception: 42 $/end") != nullptr);
     }
+
+    POSEIDON_CHECK(1 + 1);
+    POSEIDON_CHECK(true);
+
+    try {
+      POSEIDON_CHECK(0+0);
+    }
+    catch(exception& e) {
+      POSEIDON_TEST_CHECK(::std::strstr(e.what(),
+          "POSEIDON_CHECK failed: 0+0") != nullptr);
+    }
   }
