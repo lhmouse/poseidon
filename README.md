@@ -1,11 +1,6 @@
 # The Poseidon Server Framework
 
-|Compiler     |Category                   |
-|:------------|:--------------------------|
-|**GCC 10**   |:1st_place_medal:Primary   |
-|**Clang 11** |:2nd_place_medal:Secondary |
-
-![GNU nano for the win!](GNU-nano-FTW.png)
+![poseidon](poseidon.png)
 
 # Features
 
