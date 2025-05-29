@@ -168,7 +168,6 @@ do_on_abstract_future_execute()
     tinyfmt_str sql;
     sql << "CREATE TABLE IF NOT EXISTS `" << table_name << "`\n  (";
     size_t ncolumns = 0;
-    size_t nindexes = 0;
 
     for(const auto& column : this->m_res.table.columns())
       if(column.type != mysql_column_dropped) {
@@ -182,7 +181,6 @@ do_on_abstract_future_execute()
 
     for(const auto& index : this->m_res.table.indexes())
       if(index.type != mysql_index_dropped) {
-        ++ nindexes;
         sql << ",\n   ";
         do_append_index_definition(sql, index);
       }
