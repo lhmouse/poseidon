@@ -51,35 +51,25 @@ execute(const cow_string* cmds, size_t ncmds)
 
     if(!this->m_connected) {
       // Parse the service URI in a hacky way.
-      linear_buffer uri_buf;
-      uri_buf.putn("t://", 4);
-      uri_buf.putn(this->m_service_uri.data(), this->m_service_uri.size() + 1);
-
+      auto full_uri = "redis://" + this->m_service_uri;
       ::http_parser_url uri_hp;
       ::http_parser_url_init(&uri_hp);
-      if(::http_parser_parse_url(uri_buf.mut_data(), uri_buf.size() - 1, false, &uri_hp) != 0)
+      if(::http_parser_parse_url(full_uri.c_str(), full_uri.size(), false, &uri_hp) != 0)
         POSEIDON_THROW((
             "Invalid Redis service URI `$1`",
             "[`http_parser_parse_url()` failed]"),
             this->m_service_uri);
 
-      if(uri_hp.field_set & (1 << UF_PATH | 1 << UF_QUERY))
-        POSEIDON_THROW((
-            "Path or options not allowed in Redis service URI `$1`"),
-            this->m_service_uri);
-
       const char* user_str = "default";
-      size_t user_len = 7;
       if(uri_hp.field_set & (1 << UF_USERINFO)) {
-        char* s = uri_buf.mut_data() + uri_hp.field_data[UF_USERINFO].off;
+        char* s = full_uri.mut_data() + uri_hp.field_data[UF_USERINFO].off;
         *(s + uri_hp.field_data[UF_USERINFO].len) = 0;
         user_str = s;
-        user_len = uri_hp.field_data[UF_USERINFO].len;
       }
 
       const char* host = "localhost";
       if(uri_hp.field_set & (1 << UF_HOST)) {
-        char* s = uri_buf.mut_data() + uri_hp.field_data[UF_HOST].off;
+        char* s = full_uri.mut_data() + uri_hp.field_data[UF_HOST].off;
         *(s + uri_hp.field_data[UF_HOST].len) = 0;
         host = s;
       }
@@ -87,6 +77,13 @@ execute(const cow_string* cmds, size_t ncmds)
       uint16_t port = 6379;
       if(uri_hp.field_set & (1 << UF_PORT))
         port = uri_hp.port;
+
+      const char* database = "";
+      if(uri_hp.field_set & (1 << UF_PATH)) {
+        char* s = full_uri.mut_data() + uri_hp.field_data[UF_PATH].off;
+        *(s + uri_hp.field_data[UF_PATH].len) = 0;
+        database = s + 1;  // skip initial slash
+      }
 
       // Unmask the password which is sensitive data, so erasure shall be ensured.
       linear_buffer passwd_buf;
@@ -114,18 +111,31 @@ execute(const cow_string* cmds, size_t ncmds)
 
       if(passwd_buf.size() > 1) {
         // `AUTH user password`
-        const char* argv[] = { "AUTH", user_str, passwd_buf.data() };
-        size_t lenv[] = { 4, user_len, passwd_buf.size() - 1 };
-        if(!this->m_reply.reset(static_cast<::redisReply*>(::redisCommandArgv(
-                                   this->m_redis, 3, argv, lenv))))
+        if(!this->m_reply.reset(static_cast<::redisReply*>(::redisCommand(
+                             this->m_redis, "AUTH %s %s", user_str, passwd_buf.data()))))
           POSEIDON_THROW((
               "Could not execute Redis command: ERROR $1: $2",
-              "[`redisCommandArgv()` failed]"),
+              "[`redisCommand()` failed]"),
               this->m_redis->err, this->m_redis->errstr);
 
         if(this->m_reply->type == REDIS_REPLY_ERROR)
           POSEIDON_THROW((
               "Failed to authenticate with Redis server: $1"),
+              this->m_reply->str);
+      }
+
+      if(database[0]) {
+        // `SELECT index`
+        if(!this->m_reply.reset(static_cast<::redisReply*>(::redisCommand(
+                                         this->m_redis, "SELECT %s", database))))
+          POSEIDON_THROW((
+              "Could not execute Redis command: ERROR $1: $2",
+              "[`redisCommand()` failed]"),
+              this->m_redis->err, this->m_redis->errstr);
+
+        if(this->m_reply->type == REDIS_REPLY_ERROR)
+          POSEIDON_THROW((
+              "Could not set logical database: $1"),
               this->m_reply->str);
       }
 
