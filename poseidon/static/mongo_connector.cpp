@@ -27,7 +27,7 @@ reload(const Config_File& conf_file)
     s_mongoc_init_once.call(::mongoc_init);
 
     // Parse new configuration. Default ones are defined here.
-    cow_string default_service_uri = &"mongodb://root@localhost:27017/admin";
+    cow_string default_service_uri = &"root@localhost:27017/admin";
     cow_string default_password;
     uint32_t default_password_mask = 0;
     int64_t connection_pool_size = 0;
