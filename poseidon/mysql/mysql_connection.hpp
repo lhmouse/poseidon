@@ -62,7 +62,7 @@ class MySQL_Connection
     // established yet, this function initiates a new connection before the query
     // is executed.
     void
-    execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs);
+    execute(cow_stringR stmt, const cow_vector<MySQL_Value>& args);
 
     // Fetches the names of all fields of the result set. This function must be
     // called after `execute()`. `output` is cleared before fetching any data. If

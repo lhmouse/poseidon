@@ -53,20 +53,17 @@ warning_count() const noexcept
 
 void
 MySQL_Connection::
-execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)
+execute(cow_stringR stmt, const cow_vector<MySQL_Value>& args)
   {
     if(stmt.empty())
       POSEIDON_THROW(("Empty SQL statement"));
 
     if(!this->m_connected) {
       // Parse the service URI in a hacky way.
-      linear_buffer uri_buf;
-      uri_buf.putn("t://", 4);
-      uri_buf.putn(this->m_service_uri.data(), this->m_service_uri.size() + 1);
-
+      auto full_uri = "t://" + this->m_service_uri;
       ::http_parser_url uri_hp;
       ::http_parser_url_init(&uri_hp);
-      if(::http_parser_parse_url(uri_buf.mut_data(), uri_buf.size() - 1, false, &uri_hp) != 0)
+      if(::http_parser_parse_url(full_uri.c_str(), full_uri.size(), false, &uri_hp) != 0)
         POSEIDON_THROW((
             "Invalid MySQL service URI `$1`",
             "[`http_parser_parse_url()` failed]"),
@@ -79,14 +76,14 @@ execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)
 
       const char* user = "root";
       if(uri_hp.field_set & (1 << UF_USERINFO)) {
-        char* s = uri_buf.mut_data() + uri_hp.field_data[UF_USERINFO].off;
+        char* s = full_uri.mut_data() + uri_hp.field_data[UF_USERINFO].off;
         *(s + uri_hp.field_data[UF_USERINFO].len) = 0;
         user = s;
       }
 
       const char* host = "localhost";
       if(uri_hp.field_set & (1 << UF_HOST)) {
-        char* s = uri_buf.mut_data() + uri_hp.field_data[UF_HOST].off;
+        char* s = full_uri.mut_data() + uri_hp.field_data[UF_HOST].off;
         *(s + uri_hp.field_data[UF_HOST].len) = 0;
         host = s;
       }
@@ -97,7 +94,7 @@ execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)
 
       const char* database = "admin";
       if(uri_hp.field_set & (1 << UF_PATH)) {
-        char* s = uri_buf.mut_data() + uri_hp.field_data[UF_PATH].off;
+        char* s = full_uri.mut_data() + uri_hp.field_data[UF_PATH].off;
         *(s + uri_hp.field_data[UF_PATH].len) = 0;
         database = s + 1;  // skip initial slash
       }
@@ -149,15 +146,14 @@ execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)
 
     // Bind arguments.
     unsigned long nparams = ::mysql_stmt_param_count(this->m_stmt);
-    if(nargs < nparams)
+    if(args.size() < nparams)
       POSEIDON_THROW((
           "No enough arguments for MySQL statement (`$1` < `$2`)"),
-          nargs, nparams);
+          args.size(), nparams);
 
     ::std::vector<::MYSQL_BIND> binds(nparams);
-
-    for(unsigned col = 0;  col != nparams;  ++col)
-      switch(args_opt[col].type())
+    for(uint32_t col = 0;  col != binds.size();  ++col)
+      switch(args.at(col).type())
         {
         case mysql_value_null:
           binds[col].buffer_type = MYSQL_TYPE_NULL;
@@ -165,25 +161,25 @@ execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)
 
         case mysql_value_integer:
           binds[col].buffer_type = MYSQL_TYPE_LONGLONG;
-          binds[col].buffer = const_cast<int64_t*>(&(args_opt[col].as_integer()));
+          binds[col].buffer = const_cast<int64_t*>(&(args[col].as_integer()));
           binds[col].buffer_length = sizeof(int64_t);
           break;
 
         case mysql_value_double:
           binds[col].buffer_type = MYSQL_TYPE_DOUBLE;
-          binds[col].buffer = const_cast<double*>(&(args_opt[col].as_double()));
+          binds[col].buffer = const_cast<double*>(&(args[col].as_double()));
           binds[col].buffer_length = sizeof(double);
           break;
 
         case mysql_value_blob:
           binds[col].buffer_type = MYSQL_TYPE_BLOB;
-          binds[col].buffer = const_cast<char*>(args_opt[col].as_blob_data());
-          binds[col].buffer_length = args_opt[col].as_blob_size();
+          binds[col].buffer = const_cast<char*>(args[col].as_blob_data());
+          binds[col].buffer_length = args[col].as_blob_size();
           break;
 
         case mysql_value_datetime:
           {
-            const auto& input_mdt = args_opt[col].m_stor.as<DateTime_with_MYSQL_TIME>();
+            const auto& input_mdt = args[col].m_stor.as<DateTime_with_MYSQL_TIME>();
             ::MYSQL_TIME& myt = input_mdt.get_mysql_time();
 
             ::timespec ts;
@@ -207,7 +203,7 @@ execute(cow_stringR stmt, const MySQL_Value* args_opt, size_t nargs)
           break;
 
         default:
-          ASTERIA_TERMINATE(("Corrupted MySQL value type `$1`"), args_opt[col].type());
+          ASTERIA_TERMINATE(("Corrupted MySQL value type `$1`"), args[col].type());
         }
 
     if(::mysql_stmt_bind_param(this->m_stmt, binds.data()) != 0)

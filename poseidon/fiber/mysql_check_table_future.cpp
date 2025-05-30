@@ -191,7 +191,7 @@ do_on_abstract_future_execute()
 
     POSEIDON_LOG_INFO(("Checking MySQL table:\n$1"), sql.get_string());
     this->m_conn = this->m_ctr->allocate_default_connection();
-    this->m_conn->execute(sql.get_string(), nullptr, 0);
+    this->m_conn->execute(sql.get_string(), { });
     this->m_res.warning_count = this->m_conn->warning_count();
     this->m_res.altered = false;
 
@@ -201,7 +201,7 @@ do_on_abstract_future_execute()
 
     sql.clear_string();
     sql << "SHOW COLUMNS FROM `" << table_name << "`";
-    this->m_conn->execute(sql.get_string(), nullptr, 0);
+    this->m_conn->execute(sql.get_string(), { });
     this->m_conn->fetch_fields(fields);
 
     uint32_t idx_name = UINT32_MAX;
@@ -238,7 +238,7 @@ do_on_abstract_future_execute()
 
     sql.clear_string();
     sql << "SHOW INDEXES FROM `" << table_name << "`";
-    this->m_conn->execute(sql.get_string(), nullptr, 0);
+    this->m_conn->execute(sql.get_string(), { });
     this->m_conn->fetch_fields(fields);
 
     uint32_t idx_non_unique = UINT32_MAX;
@@ -577,7 +577,7 @@ do_on_abstract_future_execute()
       return;
 
     POSEIDON_LOG_WARN(("Updating MySQL table structure:", "$1"), sql.get_string());
-    this->m_conn->execute(sql.get_string(), nullptr, 0);
+    this->m_conn->execute(sql.get_string(), { });
     this->m_res.altered = true;
   }
 
