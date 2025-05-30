@@ -35,9 +35,8 @@ class MySQL_Query_Future
     // Constructs a future for a single MySQL statement. This object also functions
     // as an asynchronous task, which can be enqueued into an `Task_Executor`.
     // This future will become ready once the query is complete.
-    MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt);
-
-    MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt, const cow_vector<MySQL_Value>& stmt_args);
+    MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt,
+                       const cow_vector<MySQL_Value>& stmt_args);
 
   private:
     virtual

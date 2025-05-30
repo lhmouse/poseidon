@@ -9,14 +9,8 @@
 namespace poseidon {
 
 MySQL_Query_Future::
-MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt)
-  {
-    this->m_ctr = &connector;
-    this->m_res.stmt = stmt;
-  }
-
-MySQL_Query_Future::
-MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt, const cow_vector<MySQL_Value>& stmt_args)
+MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt,
+                   const cow_vector<MySQL_Value>& stmt_args)
   {
     this->m_ctr = &connector;
     this->m_res.stmt = stmt;
