@@ -87,7 +87,7 @@ execute(cow_stringR stmt, const cow_vector<MySQL_Value>& args)
       if(uri_hp.field_set & (1 << UF_PORT))
         port = uri_hp.port;
 
-      const char* database = "admin";
+      const char* database = "";
       if(uri_hp.field_set & (1 << UF_PATH)) {
         char* s = full_uri.mut_data() + uri_hp.field_data[UF_PATH].off;
         *(s + uri_hp.field_data[UF_PATH].len) = 0;
