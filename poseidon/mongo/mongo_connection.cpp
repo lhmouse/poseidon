@@ -14,13 +14,10 @@ Mongo_Connection(cow_stringR service_uri, cow_stringR password, uint32_t passwor
     this->m_reset_clear = true;
 
     // Parse the service URI.
-    linear_buffer uri_buf;
-    uri_buf.putn("mongodb://", 10);
-    uri_buf.putn(this->m_service_uri.data(), this->m_service_uri.size() + 1);
-
+    auto full_uri = "mongodb://" + service_uri;
     ::bson_error_t error;
     uniptr_mongoc_uri uri;
-    if(!uri.reset(::mongoc_uri_new_with_error(uri_buf.data(), &error)))
+    if(!uri.reset(::mongoc_uri_new_with_error(full_uri.c_str(), &error)))
       POSEIDON_THROW((
           "Invalid Mongo service URI: ERROR $1.$2: $3",
           "[`mongoc_uri_new_with_error()` failed]"),
