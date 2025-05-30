@@ -240,21 +240,31 @@ Easy_SSL_Server::
 
 shptr<TCP_Acceptor>
 Easy_SSL_Server::
-start(chars_view addr)
+start(const IPv6_Address& addr)
   {
-    // Parse the listen address string.
-    IPv6_Address saddr;
-    if(saddr.parse(addr) != addr.n)
-      POSEIDON_THROW(("Invalid local IP address `$1`"), addr);
-
-    // Initiate the server.
     auto sessions = new_sh<X_Session_Table>();
-    auto acceptor = new_sh<Final_Acceptor>(this->m_callback, saddr, sessions);
+    auto acceptor = new_sh<Final_Acceptor>(this->m_callback, addr, sessions);
 
     network_driver.insert(acceptor);
     this->m_sessions = move(sessions);
     this->m_acceptor = acceptor;
     return acceptor;
+  }
+
+shptr<TCP_Acceptor>
+Easy_SSL_Server::
+start(cow_stringR addr)
+  {
+    IPv6_Address v6addr(addr);
+    return this->start(v6addr);
+  }
+
+shptr<TCP_Acceptor>
+Easy_SSL_Server::
+start_any(uint16_t port)
+  {
+    IPv6_Address v6addr(ipv6_unspecified, port);
+    return this->start(v6addr);
   }
 
 void

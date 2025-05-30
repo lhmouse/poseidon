@@ -51,7 +51,13 @@ class Easy_UDP_Server
 
     // Starts listening on the given address and port for incoming packets.
     shptr<UDP_Socket>
-    start(chars_view addr);
+    start(const IPv6_Address& addr);
+
+    shptr<UDP_Socket>
+    start(cow_stringR addr);
+
+    shptr<UDP_Socket>
+    start_any(uint16_t port);
 
     // Shuts down the socket, if any.
     void

@@ -128,22 +128,32 @@ Easy_UDP_Server::
 
 shptr<UDP_Socket>
 Easy_UDP_Server::
-start(chars_view addr)
+start(const IPv6_Address& addr)
   {
-    // Parse the listen address string.
-    IPv6_Address saddr;
-    if(saddr.parse(addr) != addr.n)
-      POSEIDON_THROW(("Invalid local IP address `$1`"), addr);
-
-    // Initiate the server.
     auto queue = new_sh<X_Packet_Queue>();
-    auto socket = new_sh<Final_Socket>(this->m_callback, saddr, queue);
+    auto socket = new_sh<Final_Socket>(this->m_callback, addr, queue);
     queue->wsocket = socket;
 
     network_driver.insert(socket);
     this->m_queue = move(queue);
     this->m_socket = socket;
     return socket;
+  }
+
+shptr<UDP_Socket>
+Easy_UDP_Server::
+start(cow_stringR addr)
+  {
+    IPv6_Address v6addr(addr);
+    return this->start(v6addr);
+  }
+
+shptr<UDP_Socket>
+Easy_UDP_Server::
+start_any(uint16_t port)
+  {
+    IPv6_Address v6addr(ipv6_unspecified, port);
+    return this->start(v6addr);
   }
 
 void

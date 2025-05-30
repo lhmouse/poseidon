@@ -62,7 +62,13 @@ class Easy_WSS_Server
 
     // Starts listening the given address and port for incoming connections.
     shptr<TCP_Acceptor>
-    start(chars_view addr);
+    start(const IPv6_Address& addr);
+
+    shptr<TCP_Acceptor>
+    start(cow_stringR addr);
+
+    shptr<TCP_Acceptor>
+    start_any(uint16_t port);
 
     // Shuts down the listening socket, if any. All existent clients are also
     // disconnected immediately.

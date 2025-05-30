@@ -259,16 +259,31 @@ Easy_HTTPS_Server::
 
 shptr<TCP_Acceptor>
 Easy_HTTPS_Server::
-start(chars_view addr)
+start(const IPv6_Address& addr)
   {
-    IPv6_Address saddr(addr);
     auto sessions = new_sh<X_Session_Table>();
-    auto acceptor = new_sh<Final_Acceptor>(this->m_callback, saddr, sessions);
+    auto acceptor = new_sh<Final_Acceptor>(this->m_callback, addr, sessions);
 
     network_driver.insert(acceptor);
     this->m_sessions = move(sessions);
     this->m_acceptor = acceptor;
     return acceptor;
+  }
+
+shptr<TCP_Acceptor>
+Easy_HTTPS_Server::
+start(cow_stringR addr)
+  {
+    IPv6_Address v6addr(addr);
+    return this->start(v6addr);
+  }
+
+shptr<TCP_Acceptor>
+Easy_HTTPS_Server::
+start_any(uint16_t port)
+  {
+    IPv6_Address v6addr(ipv6_unspecified, port);
+    return this->start(v6addr);
   }
 
 void
