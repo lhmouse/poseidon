@@ -60,18 +60,13 @@ execute(cow_stringR stmt, const cow_vector<MySQL_Value>& args)
 
     if(!this->m_connected) {
       // Parse the service URI in a hacky way.
-      auto full_uri = "t://" + this->m_service_uri;
+      auto full_uri = "mysql://" + this->m_service_uri;
       ::http_parser_url uri_hp;
       ::http_parser_url_init(&uri_hp);
       if(::http_parser_parse_url(full_uri.c_str(), full_uri.size(), false, &uri_hp) != 0)
         POSEIDON_THROW((
             "Invalid MySQL service URI `$1`",
             "[`http_parser_parse_url()` failed]"),
-            this->m_service_uri);
-
-      if(uri_hp.field_set & (1 << UF_QUERY))
-        POSEIDON_THROW((
-            "Options not allowed in MySQL service URI `$1`"),
             this->m_service_uri);
 
       const char* user = "root";
