@@ -68,7 +68,6 @@ struct DateTime_with_MYSQL_TIME
       }
   };
 
-
 struct MYSQL_STMT_deleter
   {
     void
