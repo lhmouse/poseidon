@@ -24,6 +24,10 @@ class Redis_Connector
     // Constructs an empty connector.
     Redis_Connector() noexcept;
 
+  private:
+    uniptr<Redis_Connection>
+    do_get_pooled_connection_opt(seconds idle_timeout, cow_stringR service_uri);
+
   public:
     Redis_Connector(const Redis_Connector&) = delete;
     Redis_Connector& operator=(const Redis_Connector&) & = delete;

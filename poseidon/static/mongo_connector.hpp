@@ -24,6 +24,10 @@ class Mongo_Connector
     // Constructs an empty connector.
     Mongo_Connector() noexcept;
 
+  private:
+    uniptr<Mongo_Connection>
+    do_get_pooled_connection_opt(seconds idle_timeout, cow_stringR service_uri);
+
   public:
     Mongo_Connector(const Mongo_Connector&) = delete;
     Mongo_Connector& operator=(const Mongo_Connector&) & = delete;

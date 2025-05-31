@@ -24,6 +24,10 @@ class MySQL_Connector
     // Constructs an empty connector.
     MySQL_Connector() noexcept;
 
+  private:
+    uniptr<MySQL_Connection>
+    do_get_pooled_connection_opt(seconds idle_timeout, cow_stringR service_uri);
+
   public:
     MySQL_Connector(const MySQL_Connector&) = delete;
     MySQL_Connector& operator=(const MySQL_Connector&) & = delete;

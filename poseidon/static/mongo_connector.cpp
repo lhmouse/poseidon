@@ -94,6 +94,30 @@ reload(const Config_File& conf_file)
     this->m_conf_connection_idle_timeout = static_cast<seconds>(connection_idle_timeout);
   }
 
+POSEIDON_VISIBILITY_HIDDEN
+uniptr<Mongo_Connection>
+Mongo_Connector::
+do_get_pooled_connection_opt(seconds idle_timeout, cow_stringR service_uri)
+  {
+    plain_mutex::unique_lock lock(this->m_pool_mutex);
+    const steady_time now = steady_clock::now();
+
+    // Close idle connections.
+    auto pos = this->m_pool.mut_begin();
+    while((pos != this->m_pool.end()) && (now - (*pos)->m_time_pooled > idle_timeout))
+      pos = this->m_pool.erase(pos);
+
+    // Look for a matching connection with minimum timestamp.
+    for(pos = this->m_pool.mut_begin();  pos != this->m_pool.end();  ++pos)
+      if((*pos)->m_service_uri == service_uri) {
+        auto conn = move(*pos);
+        pos = this->m_pool.erase(pos);
+        return conn;
+      }
+
+    return nullptr;
+  }
+
 uniptr<Mongo_Connection>
 Mongo_Connector::
 allocate_connection(cow_stringR service_uri, cow_stringR password)
@@ -102,23 +126,10 @@ allocate_connection(cow_stringR service_uri, cow_stringR password)
     const seconds idle_timeout = this->m_conf_connection_idle_timeout;
     lock.unlock();
 
-    // Look for a matching connection with minimum timestamp.
-    lock.lock(this->m_pool_mutex);
-    const steady_time now = steady_clock::now();
-
-    auto pos = this->m_pool.mut_begin();
-    while((pos != this->m_pool.end()) && (now - (*pos)->m_time_pooled > idle_timeout))
-      pos = this->m_pool.erase(pos);
-
-    for(pos = this->m_pool.mut_begin();  pos != this->m_pool.end();  ++pos)
-      if((*pos)->m_service_uri == service_uri) {
-        auto conn = move(*pos);
-        pos = this->m_pool.erase(pos);
-        return conn;
-      }
-
-    lock.unlock();
-    return new_uni<Mongo_Connection>(service_uri, password);
+    auto conn = this->do_get_pooled_connection_opt(idle_timeout, service_uri);
+    if(!conn)
+      conn = new_uni<Mongo_Connection>(service_uri, password);
+    return conn;
   }
 
 uniptr<Mongo_Connection>
@@ -131,23 +142,10 @@ allocate_default_connection()
     const seconds idle_timeout = this->m_conf_connection_idle_timeout;
     lock.unlock();
 
-    // Look for a matching connection with minimum timestamp.
-    lock.lock(this->m_pool_mutex);
-    const steady_time now = steady_clock::now();
-
-    auto pos = this->m_pool.mut_begin();
-    while((pos != this->m_pool.end()) && (now - (*pos)->m_time_pooled > idle_timeout))
-      pos = this->m_pool.erase(pos);
-
-    for(pos = this->m_pool.mut_begin();  pos != this->m_pool.end();  ++pos)
-      if((*pos)->m_service_uri == service_uri) {
-        auto conn = move(*pos);
-        pos = this->m_pool.erase(pos);
-        return conn;
-      }
-
-    lock.unlock();
-    return new_uni<Mongo_Connection>(service_uri, password);
+    auto conn = this->do_get_pooled_connection_opt(idle_timeout, service_uri);
+    if(!conn)
+      conn = new_uni<Mongo_Connection>(service_uri, password);
+    return conn;
   }
 
 bool
