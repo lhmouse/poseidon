@@ -151,6 +151,8 @@ pool_connection(uniptr<Redis_Connection>&& conn) noexcept
     if(!conn)
       return false;
 
+    conn->m_time_pooled = steady_clock::now();
+
     if(!conn->m_reset_clear) {
       // If `.reset()` has not been called or has failed, the connection cannot
       // be reused safely, so ignore the request.
@@ -165,16 +167,6 @@ pool_connection(uniptr<Redis_Connection>&& conn) noexcept
 
     // Append the connection to the end.
     lock.lock(this->m_pool_mutex);
-    const steady_time now = steady_clock::now();
-
-    auto pos = this->m_pool.mut_begin();
-    while((pos != this->m_pool.end()) && (now - (*pos)->m_time_pooled > idle_timeout))
-      pos = this->m_pool.erase(pos);
-
-    while(this->m_pool.end() - pos >= static_cast<ptrdiff_t>(pool_size))
-      pos = this->m_pool.erase(pos);
-
-    conn->m_time_pooled = steady_clock::now();
     this->m_pool.emplace_back(move(conn));
     return true;
   }
