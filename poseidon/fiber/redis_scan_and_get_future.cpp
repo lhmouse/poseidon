@@ -9,6 +9,15 @@
 namespace poseidon {
 
 Redis_Scan_and_Get_Future::
+Redis_Scan_and_Get_Future(Redis_Connector& connector, uniptr<Redis_Connection>&& conn_opt,
+                          cow_stringR pattern)
+  {
+    this->m_ctr = &connector;
+    this->m_conn = move(conn_opt);
+    this->m_res.pattern = pattern;
+  }
+
+Redis_Scan_and_Get_Future::
 Redis_Scan_and_Get_Future(Redis_Connector& connector, cow_stringR pattern)
   {
     this->m_ctr = &connector;
@@ -24,6 +33,12 @@ void
 Redis_Scan_and_Get_Future::
 do_on_abstract_future_execute()
   {
+    if(!this->m_conn)
+      this->m_conn = this->m_ctr->allocate_default_connection();
+
+    // Scan for keys until the end cursor has been reached. Each reply shall be
+    // an array of two elements. The first element is the next cursor. The second
+    // element is an array of matching keys.
     cow_vector<cow_string> cmd;
     cmd.resize(4);
     cmd.mut(0) = &"SCAN";
@@ -31,10 +46,6 @@ do_on_abstract_future_execute()
     cmd.mut(2) = &"MATCH";
     cmd.mut(3) = this->m_res.pattern;
 
-    // Scan for keys until the end cursor has been reached. Each reply shall be
-    // an array of two elements. The first element is the next cursor. The second
-    // element is an array of matching keys.
-    this->m_conn = this->m_ctr->allocate_default_connection();
     this->m_conn->execute(cmd);
     Redis_Value reply;
     do {

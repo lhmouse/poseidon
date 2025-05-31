@@ -9,6 +9,15 @@
 namespace poseidon {
 
 Redis_Query_Future::
+Redis_Query_Future(Redis_Connector& connector, uniptr<Redis_Connection>&& conn_opt,
+                   const cow_vector<cow_string>& cmd)
+  {
+    this->m_ctr = &connector;
+    this->m_conn = move(conn_opt);
+    this->m_res.cmd = cmd;
+  }
+
+Redis_Query_Future::
 Redis_Query_Future(Redis_Connector& connector, const cow_vector<cow_string>& cmd)
   {
     this->m_ctr = &connector;
@@ -24,7 +33,9 @@ void
 Redis_Query_Future::
 do_on_abstract_future_execute()
   {
-    this->m_conn = this->m_ctr->allocate_default_connection();
+    if(!this->m_conn)
+      this->m_conn = this->m_ctr->allocate_default_connection();
+
     this->m_conn->execute(this->m_res.cmd);
 
     // We don't do pipelining, so it's assumed that there is exactly one reply

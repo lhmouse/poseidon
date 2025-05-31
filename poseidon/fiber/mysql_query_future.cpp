@@ -9,6 +9,16 @@
 namespace poseidon {
 
 MySQL_Query_Future::
+MySQL_Query_Future(MySQL_Connector& connector, uniptr<MySQL_Connection>&& conn_opt,
+                   cow_stringR stmt, const cow_vector<MySQL_Value>& stmt_args)
+  {
+    this->m_ctr = &connector;
+    this->m_conn = move(conn_opt);
+    this->m_res.stmt = stmt;
+    this->m_res.stmt_args = stmt_args;
+  }
+
+MySQL_Query_Future::
 MySQL_Query_Future(MySQL_Connector& connector, cow_stringR stmt,
                    const cow_vector<MySQL_Value>& stmt_args)
   {
@@ -26,7 +36,9 @@ void
 MySQL_Query_Future::
 do_on_abstract_future_execute()
   {
-    this->m_conn = this->m_ctr->allocate_default_connection();
+    if(!this->m_conn)
+      this->m_conn = this->m_ctr->allocate_default_connection();
+
     this->m_conn->execute(this->m_res.stmt, this->m_res.stmt_args);
 
     this->m_res.warning_count = this->m_conn->warning_count();
