@@ -155,8 +155,6 @@ pool_connection(uniptr<MySQL_Connection>&& conn) noexcept
     if(!conn)
       return false;
 
-    conn->m_time_pooled = steady_clock::now();
-
     if(!conn->m_reset_clear) {
       // If `.reset()` has not been called or has failed, the connection cannot
       // be reused safely, so ignore the request.
@@ -164,13 +162,9 @@ pool_connection(uniptr<MySQL_Connection>&& conn) noexcept
       return false;
     }
 
-    plain_mutex::unique_lock lock(this->m_conf_mutex);
-    const uint32_t pool_size = this->m_conf_connection_pool_size;
-    const seconds idle_timeout = this->m_conf_connection_idle_timeout;
-    lock.unlock();
-
     // Append the connection to the end.
-    lock.lock(this->m_pool_mutex);
+    plain_mutex::unique_lock lock(this->m_pool_mutex);
+    conn->m_time_pooled = steady_clock::now();
     this->m_pool.emplace_back(move(conn));
     return true;
   }
