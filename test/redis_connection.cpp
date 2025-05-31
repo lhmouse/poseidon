@@ -12,10 +12,10 @@ main()
   {
     // Try connecting to localhost. If the server is offline, skip the test.
     Redis_Connection conn(&"localhost:6379", &"123456", 0);
-    ::std::vector<cow_string> cmds;
+    cow_vector<cow_string> cmd;
     try {
-      cmds = { &"echo", &"meow" };
-      conn.execute(cmds.data(), cmds.size());
+      cmd = { &"echo", &"meow" };
+      conn.execute(cmd);
     }
     catch(exception& e) {
       ::fprintf(stderr, "could not connect to server: %s\n", e.what());
@@ -29,8 +29,8 @@ main()
     Redis_Value value;
 
     // `client list`
-    cmds = { &"client", &"list" };
-    conn.execute(cmds.data(), cmds.size());
+    cmd = { &"client", &"list" };
+    conn.execute(cmd);
 
     num = 0;
     format(fmt, "client list -->\n");
@@ -41,8 +41,8 @@ main()
     }
 
     // `keys *`
-    cmds = { &"keys", &"*" };
-    conn.execute(cmds.data(), cmds.size());
+    cmd = { &"keys", &"*" };
+    conn.execute(cmd);
 
     num = 0;
     format(fmt, "keys * -->\n");

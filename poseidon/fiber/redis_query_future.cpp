@@ -25,7 +25,7 @@ Redis_Query_Future::
 do_on_abstract_future_execute()
   {
     this->m_conn = this->m_ctr->allocate_default_connection();
-    this->m_conn->execute(this->m_res.cmd.data(), this->m_res.cmd.size());
+    this->m_conn->execute(this->m_res.cmd);
 
     // We don't do pipelining, so it's assumed that there is exactly one reply
     // for this command.

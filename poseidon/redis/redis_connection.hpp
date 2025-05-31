@@ -51,7 +51,7 @@ class Redis_Connection
 
     // Executes a command as an array of strings.
     void
-    execute(const cow_string* cmds, size_t ncmds);
+    execute(const cow_vector<cow_string>& cmd);
 
     // Gets the reply of the previous command. `output` is cleared before any
     // operation. If the reply has been stored into `output`, `true` is returned.

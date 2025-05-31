@@ -35,7 +35,7 @@ do_on_abstract_future_execute()
     // an array of two elements. The first element is the next cursor. The second
     // element is an array of matching keys.
     this->m_conn = this->m_ctr->allocate_default_connection();
-    this->m_conn->execute(cmd.data(), cmd.size());
+    this->m_conn->execute(cmd);
     Redis_Value reply;
     do {
       this->m_conn->fetch_reply(reply);
@@ -67,7 +67,7 @@ do_on_abstract_future_execute()
     }
 
     // Get them. The reply shall be an array.
-    this->m_conn->execute(cmd.data(), cmd.size());
+    this->m_conn->execute(cmd);
     this->m_conn->fetch_reply(reply);
     auto values = move(reply.mut_array());
 

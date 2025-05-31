@@ -44,9 +44,9 @@ reset() noexcept
 
 void
 Redis_Connection::
-execute(const cow_string* cmds, size_t ncmds)
+execute(const cow_vector<cow_string>& cmd)
   {
-    if(!cmds || (ncmds == 0))
+    if(cmd.empty())
       POSEIDON_THROW(("Empty Redis command"));
 
     if(!this->m_connected) {
@@ -141,17 +141,17 @@ execute(const cow_string* cmds, size_t ncmds)
 
     // Compose the argument and length vector.
     ::std::vector<uintptr_t> argv;
-    argv.resize(ncmds * 2);
+    argv.resize(cmd.size() * 2);
 
-    for(size_t t = 0;  t != ncmds;  ++t) {
-      argv.at(t) = reinterpret_cast<uintptr_t>(cmds[t].data());
-      argv.at(ncmds + t) = cmds[t].size();
+    for(size_t t = 0;  t != cmd.size();  ++t) {
+      argv.at(t) = reinterpret_cast<uintptr_t>(cmd.at(t).data());
+      argv.at(cmd.size() + t) = cmd.at(t).size();
     }
 
     if(!this->m_reply.reset(static_cast<::redisReply*>(::redisCommandArgv(
-                               this->m_redis, static_cast<int>(ncmds),
+                               this->m_redis, static_cast<int>(cmd.size()),
                                reinterpret_cast<const char**>(argv.data()),
-                               reinterpret_cast<size_t*>(argv.data() + ncmds)))))
+                               reinterpret_cast<size_t*>(argv.data() + cmd.size())))))
       POSEIDON_THROW((
           "Could not execute Redis command: ERROR $1: $2",
           "[`redisCommandArgv()` failed]"),
