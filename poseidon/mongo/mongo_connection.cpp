@@ -7,7 +7,7 @@
 namespace poseidon {
 
 Mongo_Connection::
-Mongo_Connection(cow_stringR service_uri, cow_stringR password, uint32_t password_mask)
+Mongo_Connection(cow_stringR service_uri, cow_stringR password)
   {
     this->m_service_uri = service_uri;
     this->m_reply_available = false;
@@ -26,9 +26,7 @@ Mongo_Connection(cow_stringR service_uri, cow_stringR password, uint32_t passwor
     ::mongoc_uri_set_option_as_utf8(uri, MONGOC_URI_COMPRESSORS, "zlib");
     this->m_db.assign(::mongoc_uri_get_database(uri));
 
-    // Unmask the password which is sensitive data, so erasure shall be ensured.
-    Unmasked_Password real_password(password, password_mask);
-    if(!::mongoc_uri_set_password(uri, real_password.c_str()))
+    if(!::mongoc_uri_set_password(uri, password.c_str()))
       POSEIDON_THROW((
           "Invalid Mongo password (maybe it's not valid UTF-8?)",
           "[`mongoc_uri_set_password()` failed]"));

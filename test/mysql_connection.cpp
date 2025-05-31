@@ -13,7 +13,7 @@ main()
     ::mysql_library_init(0, nullptr, nullptr);
 
     // Try connecting to localhost. If the server is offline, skip the test.
-    MySQL_Connection conn(&"root@localhost/mysql", &"123456", 0);
+    MySQL_Connection conn(&"root@localhost/mysql", &"123456");
     try {
       conn.execute(&"select * from `engine_cost`", {});
     }

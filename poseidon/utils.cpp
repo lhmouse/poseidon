@@ -341,32 +341,6 @@ parse_network_reference(Network_Reference& caddr, chars_view str) noexcept
     return (size_t) (mptr - str.p);
   }
 
-void
-mask_string(char* data, size_t size,  uint32_t* next_mask_key_opt, uint32_t mask_key) noexcept
-  {
-    char* cur = data;
-    char* esdata = data + size;
-    uint32_t mask = ROCKET_LETOH32(mask_key);
-    __m128i xmm_mask = _mm_set1_epi32((int) mask);
-
-    while(esdata - cur >= 16) {
-      // XMMWORD-wise
-      __m128i* xcur = (__m128i*) cur;
-      _mm_storeu_si128(xcur, xmm_mask ^ _mm_loadu_si128(xcur));
-      cur += 16;
-    }
-
-    while(cur != esdata) {
-      // bytewise
-      *cur = (char) (mask ^ (uint8_t) *cur);
-      cur ++;
-      mask = mask << 24 | mask >> 8;
-    }
-
-    if(next_mask_key_opt)
-      *next_mask_key_opt = ROCKET_HTOLE32(mask);
-  }
-
 bool
 enqueue_log_message(void composer_callback(cow_string&, void*), void* composer,
                     uint8_t level, const char* func, const char* file,

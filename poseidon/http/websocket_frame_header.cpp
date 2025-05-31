@@ -39,15 +39,31 @@ encode(tinyfmt& fmt) const
       fmt.putn((const char*) &(this->mask_key), 4);
   }
 
-size_t
+void
 WebSocket_Frame_Header::
 mask_payload(char* data, size_t size) noexcept
   {
     if(!this->mask)
-      return 0;
+      return;
 
-    mask_string(data, size, &(this->mask_key), this->mask_key);
-    return size;
+    char* cur = data;
+    char* esdata = data + size;
+    uint32_t mask = ROCKET_LETOH32(mask_key);
+    __m128i xmm_mask = _mm_set1_epi32((int) mask);
+
+    while(esdata - cur >= 16) {
+      // XMMWORD-wise
+      __m128i* xcur = (__m128i*) cur;
+      _mm_storeu_si128(xcur, _mm_xor_si128(xmm_mask, _mm_loadu_si128(xcur)));
+      cur += 16;
+    }
+
+    while(cur != esdata) {
+      // bytewise
+      *cur = (char) (mask ^ (uint8_t) *cur);
+      cur ++;
+      mask = mask << 24 | mask >> 8;
+    }
   }
 
 }  // namespace poseidon

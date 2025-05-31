@@ -29,7 +29,6 @@ reload(const Config_File& conf_file)
     // Parse new configuration. Default ones are defined here.
     cow_string default_service_uri = &"root@localhost:3306/admin";
     cow_string default_password;
-    uint32_t default_password_mask = 0;
     int64_t connection_pool_size = 0;
     int64_t connection_idle_timeout = 60;
 
@@ -54,9 +53,6 @@ reload(const Config_File& conf_file)
           "Invalid `mysql.default_password`: expecting a `string`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
-
-    default_password_mask = random_uint32() | 0x80;
-    mask_string(default_password.mut_data(), default_password.size(), nullptr, default_password_mask);
 
     // Read the connection pool size from configuration.
     conf_value = conf_file.query(&"mysql.connection_pool_size");
@@ -94,7 +90,6 @@ reload(const Config_File& conf_file)
     plain_mutex::unique_lock lock(this->m_conf_mutex);
     this->m_conf_default_service_uri.swap(default_service_uri);
     this->m_conf_default_password.swap(default_password);
-    this->m_conf_default_password_mask = default_password_mask;
     this->m_conf_connection_pool_size = static_cast<uint32_t>(connection_pool_size);
     this->m_conf_connection_idle_timeout = static_cast<seconds>(connection_idle_timeout);
   }
@@ -123,7 +118,7 @@ allocate_connection(cow_stringR service_uri, cow_stringR password)
       }
 
     lock.unlock();
-    return new_uni<MySQL_Connection>(service_uri, password, 0);
+    return new_uni<MySQL_Connection>(service_uri, password);
   }
 
 uniptr<MySQL_Connection>
@@ -133,7 +128,6 @@ allocate_default_connection()
     plain_mutex::unique_lock lock(this->m_conf_mutex);
     const cow_string service_uri = this->m_conf_default_service_uri;
     const cow_string password = this->m_conf_default_password;
-    const uint32_t password_mask = this->m_conf_default_password_mask;
     const seconds idle_timeout = this->m_conf_connection_idle_timeout;
     lock.unlock();
 
@@ -153,7 +147,7 @@ allocate_default_connection()
       }
 
     lock.unlock();
-    return new_uni<MySQL_Connection>(service_uri, password, password_mask);
+    return new_uni<MySQL_Connection>(service_uri, password);
   }
 
 bool

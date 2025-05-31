@@ -16,7 +16,6 @@ class MySQL_Connection
 
     cow_string m_service_uri;
     cow_string m_password;
-    uint32_t m_password_mask;
     bool m_connected;
     bool m_reset_clear;
     char m_reserved_1;
@@ -30,9 +29,8 @@ class MySQL_Connection
 
   public:
     // Sets connection parameters. This function does not attempt to connect
-    // to the server, and is not blocking. If you need to set a password in
-    // plaintext, set `password_mask` to zero.
-    MySQL_Connection(cow_stringR service_uri, cow_stringR password, uint32_t password_mask);
+    // to the server, and is not blocking.
+    MySQL_Connection(cow_stringR service_uri, cow_stringR password);
 
   public:
     MySQL_Connection(const MySQL_Connection&) = delete;

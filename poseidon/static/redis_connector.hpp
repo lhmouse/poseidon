@@ -14,7 +14,6 @@ class Redis_Connector
     mutable plain_mutex m_conf_mutex;
     cow_string m_conf_default_service_uri;
     cow_string m_conf_default_password;
-    uint32_t m_conf_default_password_mask = 0;
     uint32_t m_conf_connection_pool_size = 0;
     seconds m_conf_connection_idle_timeout = 0s;
 

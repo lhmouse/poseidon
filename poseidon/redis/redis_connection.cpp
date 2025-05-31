@@ -9,11 +9,10 @@
 namespace poseidon {
 
 Redis_Connection::
-Redis_Connection(cow_stringR service_uri, cow_stringR password, uint32_t password_mask)
+Redis_Connection(cow_stringR service_uri, cow_stringR password)
   {
     this->m_service_uri = service_uri;
     this->m_password = password;
-    this->m_password_mask = password_mask;
     this->m_connected = false;
     this->m_reset_clear = true;
   }
@@ -100,9 +99,8 @@ execute(const cow_vector<cow_string>& cmd)
 
       if(this->m_password.size() != 0) {
         // `AUTH user password`
-        Unmasked_Password real_password(this->m_password, this->m_password_mask);
-        if(!this->m_reply.reset(static_cast<::redisReply*>(::redisCommand(
-                             this->m_redis, "AUTH %s %s", user_str, real_password.c_str()))))
+        if(!this->m_reply.reset(static_cast<::redisReply*>(::redisCommand(this->m_redis,
+                                   "AUTH %s %s", user_str, this->m_password.c_str()))))
           POSEIDON_THROW((
               "Could not execute Redis command: ERROR $1: $2",
               "[`redisCommand()` failed]"),
@@ -116,8 +114,8 @@ execute(const cow_vector<cow_string>& cmd)
 
       if(database[0] != 0) {
         // `SELECT index`
-        if(!this->m_reply.reset(static_cast<::redisReply*>(::redisCommand(
-                                         this->m_redis, "SELECT %s", database))))
+        if(!this->m_reply.reset(static_cast<::redisReply*>(::redisCommand(this->m_redis,
+                                   "SELECT %s", database))))
           POSEIDON_THROW((
               "Could not execute Redis command: ERROR $1: $2",
               "[`redisCommand()` failed]"),

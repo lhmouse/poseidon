@@ -49,7 +49,7 @@ struct WebSocket_Frame_Header
 
     // Masks a part (or unmasks a masked part) of the frame payload, and update
     // `mask_key` incrementally. If `mask` is unset, this function does nothing.
-    size_t
+    void
     mask_payload(char* data, size_t size) noexcept;
   };
 

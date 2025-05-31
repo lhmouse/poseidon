@@ -29,9 +29,8 @@ class Mongo_Connection
 
   public:
     // Sets connection parameters. This function does not attempt to connect
-    // to the server, and is not blocking. If you need to set a password in
-    // plaintext, set `password_mask` to zero.
-    Mongo_Connection(cow_stringR service_uri, cow_stringR password, uint32_t password_mask);
+    // to the server, and is not blocking.
+    Mongo_Connection(cow_stringR service_uri, cow_stringR password);
 
   public:
     Mongo_Connection(const Mongo_Connection&) = delete;

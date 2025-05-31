@@ -9,11 +9,10 @@
 namespace poseidon {
 
 MySQL_Connection::
-MySQL_Connection(cow_stringR service_uri, cow_stringR password, uint32_t password_mask)
+MySQL_Connection(cow_stringR service_uri, cow_stringR password)
   {
     this->m_service_uri = service_uri;
     this->m_password = password;
-    this->m_password_mask = password_mask;
     this->m_connected = false;
     this->m_reset_clear = true;
   }
@@ -94,10 +93,8 @@ execute(cow_stringR stmt, const cow_vector<MySQL_Value>& args)
         database = s + 1;  // skip initial slash
       }
 
-      // Unmask the password which is sensitive data, so erasure shall be ensured.
-      Unmasked_Password real_password(this->m_password, this->m_password_mask);
-      if(!::mysql_real_connect(this->m_mysql, host, user, real_password.c_str(), database, port,
-                               nullptr, CLIENT_IGNORE_SIGPIPE | CLIENT_COMPRESS))
+      if(!::mysql_real_connect(this->m_mysql, host, user, this->m_password.c_str(),
+                               database, port, nullptr, CLIENT_COMPRESS))
         POSEIDON_THROW((
             "Could not connect to MySQL server `$1`: ERROR $2: $3",
             "[`mysql_real_connect()` failed]"),
