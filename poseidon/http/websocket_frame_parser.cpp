@@ -631,9 +631,9 @@ parse_frame_header_from_stream(linear_buffer& data)
       if(data.size() < ntotal)
         return;
 
-      uint32_t lekey;
-      ::memcpy(&lekey, bptr + ntotal - 4, 4);
-      this->m_frm_header.mask_key = ROCKET_LETOH32(lekey);
+      uint32_t bekey;
+      ::memcpy(&bekey, bptr + ntotal - 4, 4);
+      this->m_frm_header.mask_key = ROCKET_BETOH32(bekey);
     }
 
     data.discard(ntotal);

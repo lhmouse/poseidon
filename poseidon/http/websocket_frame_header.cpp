@@ -43,8 +43,8 @@ encode(tinyfmt& fmt) const
     if(this->mask) {
       // four-byte masking key
       ntotal += 4;
-      uint32_t lekey = ROCKET_HTOLE32(this->mask_key);
-      ::memcpy(bytes + ntotal - 4, &lekey, 4);
+      uint32_t bekey = ROCKET_HTOBE32(this->mask_key);
+      ::memcpy(bytes + ntotal - 4, &bekey, 4);
     }
 #pragma GCC diagnostic pop
 
@@ -60,26 +60,46 @@ mask_payload(char* data, size_t size) noexcept
 
     char* cur = data;
     char* esdata = data + size;
-    uint32_t dw_key = this->mask_key;
-    __m128i xmm_key = _mm_set1_epi32(static_cast<int>(dw_key));
+    uint32_t key = this->mask_key;
 
-    while(esdata - cur >= 16) {
-      __m128i* xmmp = reinterpret_cast<__m128i*>(cur);
-      _mm_storeu_si128(xmmp, _mm_xor_si128(xmm_key, _mm_loadu_si128(xmmp)));
-      cur += 16;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+    // Align the pointer.
+    while(reinterpret_cast<uintptr_t>(cur) % 4 != 0)
+      if(cur == esdata)
+        return;
+      else {
+        key = key << 8 | key >> 24;
+        *cur ^= key;
+        cur ++;
+      }
+
+    uint32_t bekey = ROCKET_HTOBE32(key);
+#if defined __AVX__
+    __m256 ymask = _mm256_broadcast_ss(reinterpret_cast<float*>(&bekey));
+
+    while(esdata - cur >= 32) {
+      float* ycur = reinterpret_cast<float*>(cur);
+      _mm256_storeu_ps(ycur, _mm256_xor_ps(_mm256_loadu_ps(ycur), ymask));
+      cur += 32;
     }
+#endif
 
     while(esdata - cur >= 4) {
-      uint32_t* dp = reinterpret_cast<uint32_t*>(cur);
-      *dp = *dp ^ dw_key;
+      uint32_t* wcur = reinterpret_cast<uint32_t*>(cur);
+      *wcur ^= bekey;
       cur += 4;
     }
 
-    while(esdata != cur) {
-      *cur = static_cast<char>(static_cast<uint8_t>(*cur) ^ dw_key);
-      dw_key = dw_key << 24 | dw_key >> 8;
+    while(esdata - cur >= 1) {
+      key = key << 8 | key >> 24;
+      *cur ^= key;
       cur ++;
     }
+#pragma GCC diagnostic pop
+
+    ROCKET_ASSERT(cur == esdata);
   }
 
 }  // namespace poseidon
