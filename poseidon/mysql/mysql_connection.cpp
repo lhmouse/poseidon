@@ -95,18 +95,8 @@ execute(cow_stringR stmt, const cow_vector<MySQL_Value>& args)
       }
 
       // Unmask the password which is sensitive data, so erasure shall be ensured.
-      linear_buffer passwd_buf;
-      passwd_buf.putn(this->m_password.data(), this->m_password.size() + 1);
-      mask_string(passwd_buf.mut_data(), passwd_buf.size() - 1, nullptr, this->m_password_mask);
-
-      const auto passwd_buf_guard = make_unique_handle(&passwd_buf,
-          [&](...) {
-            ::std::fill_n(static_cast<volatile char*>(passwd_buf.mut_begin()),
-                          passwd_buf.size(), '\x9F');
-          });
-
-      // Try connecting to the server.
-      if(!::mysql_real_connect(this->m_mysql, host, user, passwd_buf.data(), database, port,
+      Unmasked_Password real_password(this->m_password, this->m_password_mask);
+      if(!::mysql_real_connect(this->m_mysql, host, user, real_password.c_str(), database, port,
                                nullptr, CLIENT_IGNORE_SIGPIPE | CLIENT_COMPRESS))
         POSEIDON_THROW((
             "Could not connect to MySQL server `$1`: ERROR $2: $3",

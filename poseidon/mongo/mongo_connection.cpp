@@ -27,17 +27,8 @@ Mongo_Connection(cow_stringR service_uri, cow_stringR password, uint32_t passwor
     this->m_db.assign(::mongoc_uri_get_database(uri));
 
     // Unmask the password which is sensitive data, so erasure shall be ensured.
-    linear_buffer passwd_buf;
-    passwd_buf.putn(password.data(), password.size() + 1);
-    mask_string(passwd_buf.mut_data(), passwd_buf.size() - 1, nullptr, password_mask);
-
-    const auto passwd_buf_guard = make_unique_handle(&passwd_buf,
-        [&](...) {
-          ::std::fill_n(static_cast<volatile char*>(passwd_buf.mut_begin()),
-                        passwd_buf.size(), '\x9F');
-        });
-
-    if(!::mongoc_uri_set_password(uri, password.safe_c_str()))
+    Unmasked_Password real_password(password, password_mask);
+    if(!::mongoc_uri_set_password(uri, real_password.c_str()))
       POSEIDON_THROW((
           "Invalid Mongo password (maybe it's not valid UTF-8?)",
           "[`mongoc_uri_set_password()` failed]"));

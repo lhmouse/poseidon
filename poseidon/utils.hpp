@@ -129,6 +129,33 @@ parse_network_reference(Network_Reference& caddr, chars_view str) noexcept;
 void
 mask_string(char* data, size_t size, uint32_t* next_mask_key_opt, uint32_t mask_key) noexcept;
 
+// Unmasks a password so it may be passed to other APIs. Upon destruction the
+// password is erased from memory.
+class Unmasked_Password
+  {
+  private:
+    linear_buffer m_buf;
+
+  public:
+    Unmasked_Password(cow_stringR pwd, uint32_t mask)
+      {
+        this->m_buf.putn(pwd.c_str(), pwd.length() + 1);
+        mask_string(this->m_buf.mut_data(), pwd.length(), nullptr, mask);
+      }
+
+    ~Unmasked_Password()
+      {
+        ::std::fill_n(static_cast<volatile char*>(this->m_buf.mut_data()),
+                      this->m_buf.size(), '\x9f');
+      }
+
+    const char* c_str() const noexcept { return this->m_buf.data();  }
+    operator const char* () const noexcept { return this->m_buf.data();  }
+
+    Unmasked_Password(const Unmasked_Password&) = delete;
+    Unmasked_Password& operator=(const Unmasked_Password&) = delete;
+  };
+
 // These are internal functions.
 bool
 enqueue_log_message(void composer_callback(cow_string&, void*), void* composer,

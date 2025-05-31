@@ -85,17 +85,6 @@ execute(const cow_string* cmds, size_t ncmds)
         database = s + 1;  // skip initial slash
       }
 
-      // Unmask the password which is sensitive data, so erasure shall be ensured.
-      linear_buffer passwd_buf;
-      passwd_buf.putn(this->m_password.data(), this->m_password.size() + 1);
-      mask_string(passwd_buf.mut_data(), passwd_buf.size() - 1, nullptr, this->m_password_mask);
-
-      const auto passwd_buf_guard = make_unique_handle(&passwd_buf,
-          [&](...) {
-            ::std::fill_n(static_cast<volatile char*>(passwd_buf.mut_begin()),
-                          passwd_buf.size(), '\x9F');
-          });
-
       // Try connecting to the server.
       if(!this->m_redis.reset(::redisConnect(host, port)))
         POSEIDON_THROW((
@@ -109,10 +98,11 @@ execute(const cow_string* cmds, size_t ncmds)
             "[`redisConnect()` failed]"),
             this->m_service_uri, this->m_redis->err, this->m_redis->errstr);
 
-      if(passwd_buf.size() > 1) {
+      if(this->m_password.size() != 0) {
         // `AUTH user password`
+        Unmasked_Password real_password(this->m_password, this->m_password_mask);
         if(!this->m_reply.reset(static_cast<::redisReply*>(::redisCommand(
-                             this->m_redis, "AUTH %s %s", user_str, passwd_buf.data()))))
+                             this->m_redis, "AUTH %s %s", user_str, real_password.c_str()))))
           POSEIDON_THROW((
               "Could not execute Redis command: ERROR $1: $2",
               "[`redisCommand()` failed]"),
@@ -124,7 +114,7 @@ execute(const cow_string* cmds, size_t ncmds)
               this->m_reply->str);
       }
 
-      if(database[0]) {
+      if(database[0] != 0) {
         // `SELECT index`
         if(!this->m_reply.reset(static_cast<::redisReply*>(::redisCommand(
                                          this->m_redis, "SELECT %s", database))))
