@@ -20,7 +20,6 @@ class MySQL_Connection
     bool m_reset_clear;
     char m_reserved_1;
     char m_reserved_2;
-    steady_time m_time_pooled;
 
     scoped_MYSQL m_mysql;
     uniptr_MYSQL_STMT m_stmt;

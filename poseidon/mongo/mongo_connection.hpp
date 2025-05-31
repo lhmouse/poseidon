@@ -21,7 +21,6 @@ class Mongo_Connection
     bool m_reset_clear;
     char m_reserved_1;
     char m_reserved_2;
-    steady_time m_time_pooled;
 
     uniptr_mongoc_client m_mongo;
     scoped_bson m_reply;

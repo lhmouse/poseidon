@@ -18,7 +18,8 @@ class Redis_Connector
     seconds m_conf_connection_idle_timeout = 0s;
 
     mutable plain_mutex m_pool_mutex;
-    cow_vector<uniptr<Redis_Connection>> m_pool;
+    struct X_Pooled_Connection;
+    cow_vector<X_Pooled_Connection> m_pool;
 
   public:
     // Constructs an empty connector.

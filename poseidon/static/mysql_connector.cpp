@@ -8,6 +8,18 @@
 #include "../utils.hpp"
 #include <rocket/once_flag.hpp>
 namespace poseidon {
+namespace {
+
+struct Pooled_Connection
+  {
+    steady_time time;
+    uniptr<MySQL_Connection> conn;
+  };
+
+}  // namespace
+
+POSEIDON_HIDDEN_X_STRUCT(MySQL_Connector,
+  Pooled_Connection);
 
 MySQL_Connector::
 MySQL_Connector() noexcept
@@ -103,15 +115,14 @@ do_get_pooled_connection_opt(seconds idle_timeout, cow_stringR service_uri)
     const steady_time now = steady_clock::now();
 
     // Close idle connections.
-    auto pos = this->m_pool.mut_begin();
-    while((pos != this->m_pool.end()) && (now - (*pos)->m_time_pooled > idle_timeout))
-      pos = this->m_pool.erase(pos);
+    while(!this->m_pool.empty() && (now - this->m_pool.back().time > idle_timeout))
+      this->m_pool.pop_back();
 
-    // Look for a matching connection with minimum timestamp.
-    for(pos = this->m_pool.mut_begin();  pos != this->m_pool.end();  ++pos)
-      if((*pos)->m_service_uri == service_uri) {
-        auto conn = move(*pos);
-        pos = this->m_pool.erase(pos);
+    // Look for a matching connection.
+    for(auto pos = this->m_pool.mut_begin();  pos != this->m_pool.end();  ++pos)
+      if(pos->conn->m_service_uri == service_uri) {
+        auto conn = move(pos->conn);
+        this->m_pool.erase(pos);
         return conn;
       }
 
@@ -162,10 +173,33 @@ pool_connection(uniptr<MySQL_Connection>&& conn) noexcept
       return false;
     }
 
-    // Append the connection to the end.
-    plain_mutex::unique_lock lock(this->m_pool_mutex);
-    conn->m_time_pooled = steady_clock::now();
-    this->m_pool.emplace_back(move(conn));
+    plain_mutex::unique_lock lock(this->m_conf_mutex);
+    const uint32_t pool_size = this->m_conf_connection_pool_size;
+    const seconds idle_timeout = this->m_conf_connection_idle_timeout;
+    lock.unlock();
+
+    if(pool_size == 0) {
+      // The connection pool is disabled.
+      POSEIDON_LOG_WARN(("MySQL connection pool disabled"));
+      return false;
+    }
+
+    lock.lock(this->m_pool_mutex);
+    const steady_time now = steady_clock::now();
+
+    // Close idle connections.
+    while(!this->m_pool.empty() && (now - this->m_pool.back().time > idle_timeout))
+      this->m_pool.pop_back();
+
+    // Trim the pool.
+    if(this->m_pool.size() + 1 > pool_size)
+      this->m_pool.pop_back(this->m_pool.size() + 1 - pool_size);
+
+    // Insert the connection in the beginning.
+    X_Pooled_Connection elem;
+    elem.time = now;
+    elem.conn = move(conn);
+    this->m_pool.insert(this->m_pool.begin(), move(elem));
     return true;
   }
 

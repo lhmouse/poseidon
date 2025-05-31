@@ -20,7 +20,6 @@ class Redis_Connection
     bool m_reset_clear;
     char m_reserved_1;
     char m_reserved_2;
-    steady_time m_time_pooled;
 
     uniptr_redisContext m_redis;
     uniptr_redisReply m_reply;
