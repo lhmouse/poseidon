@@ -626,12 +626,14 @@ parse_frame_header_from_stream(linear_buffer& data)
     }
 
     if(this->m_frm_header.mask) {
-      // Get the masking key as four bytes; not as an integer.
+      // four-byte masking key
       ntotal += 4;
       if(data.size() < ntotal)
         return;
 
-      ::memcpy(&(this->m_frm_header.mask_key), bptr + ntotal - 4, 4);
+      uint32_t lekey;
+      ::memcpy(&lekey, bptr + ntotal - 4, 4);
+      this->m_frm_header.mask_key = ROCKET_LETOH32(lekey);
     }
 
     data.discard(ntotal);
