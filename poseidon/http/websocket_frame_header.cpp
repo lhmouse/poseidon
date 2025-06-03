@@ -60,7 +60,7 @@ mask_payload(char* data, size_t size) noexcept
 
     char* cur = data;
     char* esdata = data + size;
-    uint32_t key = this->mask_key;
+    uint32_t& key = this->mask_key;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
@@ -75,21 +75,24 @@ mask_payload(char* data, size_t size) noexcept
         cur ++;
       }
 
-    uint32_t bekey = ROCKET_HTOBE32(key);
+    if(esdata - cur >= 4) {
+      // Do it in the SIMD way. This branch must not alter `key`.
+      uint32_t bekey = ROCKET_HTOBE32(key);
 #if defined __AVX__
-    __m256 ymask = _mm256_broadcast_ss(reinterpret_cast<float*>(&bekey));
+      __m256 ymask = _mm256_broadcast_ss(reinterpret_cast<float*>(&bekey));
 
-    while(esdata - cur >= 32) {
-      float* ycur = reinterpret_cast<float*>(cur);
-      _mm256_storeu_ps(ycur, _mm256_xor_ps(_mm256_loadu_ps(ycur), ymask));
-      cur += 32;
-    }
+      while(esdata - cur >= 32) {
+        float* ycur = reinterpret_cast<float*>(cur);
+        _mm256_storeu_ps(ycur, _mm256_xor_ps(_mm256_loadu_ps(ycur), ymask));
+        cur += 32;
+      }
 #endif
 
-    while(esdata - cur >= 4) {
-      uint32_t* wcur = reinterpret_cast<uint32_t*>(cur);
-      *wcur ^= bekey;
-      cur += 4;
+      while(esdata - cur >= 4) {
+        uint32_t* wcur = reinterpret_cast<uint32_t*>(cur);
+        *wcur ^= bekey;
+        cur += 4;
+      }
     }
 
     while(esdata - cur >= 1) {
