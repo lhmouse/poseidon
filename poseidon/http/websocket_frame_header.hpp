@@ -5,6 +5,7 @@
 #define POSEIDON_HTTP_WEBSOCKET_FRAME_HEADER_
 
 #include "../fwd.hpp"
+#include "enums.hpp"
 namespace poseidon {
 
 struct WebSocket_Frame_Header

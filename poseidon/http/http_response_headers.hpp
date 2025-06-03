@@ -7,6 +7,7 @@
 #include "../fwd.hpp"
 #include "http_field_name.hpp"
 #include "http_value.hpp"
+#include "enums.hpp"
 namespace poseidon {
 
 struct HTTP_Response_Headers
