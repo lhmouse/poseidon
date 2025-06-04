@@ -112,15 +112,6 @@ main()
     header.mask_payload(xhello3, 283);
     fmt.putn(xhello3, 283);
 
-cow_string str;
-for(const char* p = fmt.c_str(); *p; ++p)
-{
-  char temp[10];
-  ::sprintf(temp, "\\x%.2hhx", *p);
-  str += temp;
-}
-::printf("%s\n", str.c_str());
-
     POSEIDON_TEST_CHECK(xmemeq(fmt.c_str(),
         "\x8a\xfe\x01\x1b\x37\xfa\x21\x3d\x7b\x95\x53\x58\x5a\xda\x48\x4d\x44\x8f\x4c\x1d\x53"
         "\x95\x4d\x52\x45\xda\x52\x54\x43\xda\x40\x50\x52\x8e\x0d\x1d\x54\x95\x4f\x4e\x52\x99"
