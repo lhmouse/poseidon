@@ -28,24 +28,12 @@ main()
     ::rocket::tinyfmt_file fmt(stderr, nullptr);
     Redis_Value value;
 
-    // `client list`
-    cmd = { &"client", &"list" };
+    // `scan 0 match *`
+    cmd = { &"scan", &"0", &"match", &"*" };
     conn.execute(cmd);
 
     num = 0;
-    format(fmt, "client list -->\n");
-
-    while(conn.fetch_reply(value)) {
-      format(fmt, "[$1] --->\n", ++num);
-      format(fmt, "  $1\n", value);
-    }
-
-    // `keys *`
-    cmd = { &"keys", &"*" };
-    conn.execute(cmd);
-
-    num = 0;
-    format(fmt, "keys * -->\n");
+    format(fmt, "scan 0 match * -->\n");
 
     while(conn.fetch_reply(value)) {
       format(fmt, "[$1] --->\n", ++num);
