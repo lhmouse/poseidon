@@ -93,7 +93,7 @@ struct Final_Fiber final : Abstract_Fiber
           lock.unlock();
 
           try {
-            if(event.status != 0) {
+            if(event.status != http_status_null) {
               // Send a bad request response.
               HTTP_Response_Headers resp;
               resp.status = event.status;
