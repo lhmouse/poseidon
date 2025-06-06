@@ -157,27 +157,9 @@ class HTTP_Field_Name
     operator[](size_t pos) const noexcept
       { return this->m_str[pos];  }
 
-    constexpr
-    const char&
-    front() const noexcept
-      { return this->m_str.front();  }
-
-    constexpr
-    const char&
-    back() const noexcept
-      { return this->m_str.back();  }
-
     char&
     mut(size_t pos)
       { return this->m_str.mut(pos);  }
-
-    char&
-    mut_front()
-      { return this->m_str.mut_front();  }
-
-    char&
-    mut_back()
-      { return this->m_str.mut_back();  }
 
     template<typename... xParams>
     void
