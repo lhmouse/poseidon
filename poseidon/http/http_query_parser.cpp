@@ -134,18 +134,8 @@ next_element()
     }
 
     if(name_len != SIZE_MAX) {
-      // Split the value from the name.
-      const char* vstr = this->m_name.data() + name_len;
-      size_t vlen = this->m_name.size() - name_len;
-      ::rocket::ascii_numget numg;
-
-      // If the value looks like a number, accept it as a number; otherwise,
-      // accept it as a string.
-      if((vlen != 0) && (numg.parse_D(vstr, vlen) == vlen))
-        numg.cast_D(this->m_value.mut_number(), -HUGE_VAL, HUGE_VAL);
-      else
-        this->m_value.mut_string().assign(vstr, vlen);
-
+      // Split the string.
+      this->m_value.mut_str().assign(this->m_name.str(), name_len);
       this->m_name.mut_str().erase(name_len);
     }
 
