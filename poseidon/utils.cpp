@@ -179,13 +179,13 @@ random_bytes(void* ptr, size_t size) noexcept
       ASTERIA_TERMINATE((
           "Could not get OpenSSL global context: $1",
           "[`OSSL_LIB_CTX_get0_global_default()` failed]"),
-          ::ERR_reason_error_string(::ERR_peek_error()));
+          ::ERR_reason_error_string(::ERR_get_error()));
 
     if(::RAND_bytes_ex(ctx, static_cast<unsigned char*>(ptr), size, 0) != 1)
       ASTERIA_TERMINATE((
           "Could not generate random bytes: $1",
           "[`RAND_bytes()` failed]"),
-          ::ERR_reason_error_string(::ERR_peek_error()));
+          ::ERR_reason_error_string(::ERR_get_error()));
   }
 
 size_t

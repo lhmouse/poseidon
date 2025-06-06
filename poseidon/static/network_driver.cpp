@@ -255,7 +255,7 @@ reload(const Config_File& conf_file)
         POSEIDON_THROW((
             "Could not allocate server SSL context",
             "[`SSL_CTX_new()` failed]: $1"),
-            ::ERR_reason_error_string(::ERR_peek_error()));
+            ::ERR_reason_error_string(::ERR_get_error()));
 
       ::SSL_CTX_set_mode(server_ssl_ctx, SSL_MODE_ENABLE_PARTIAL_WRITE);
       ::SSL_CTX_set_mode(server_ssl_ctx, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
@@ -267,7 +267,7 @@ reload(const Config_File& conf_file)
             "Could not load default server SSL certificate file '$3'",
             "[`SSL_CTX_use_certificate_chain_file()` failed: $1]",
             "[in configuration file '$2']"),
-            ::ERR_reason_error_string(::ERR_peek_error()), conf_file.path(),
+            ::ERR_reason_error_string(::ERR_get_error()), conf_file.path(),
             default_certificate);
 
       if(!::SSL_CTX_use_PrivateKey_file(server_ssl_ctx, default_private_key.safe_c_str(),
@@ -276,7 +276,7 @@ reload(const Config_File& conf_file)
             "Could not load default server SSL private key file '$3'",
             "[`SSL_CTX_use_PrivateKey_file()` failed: $1]",
             "[in configuration file '$2']"),
-            ::ERR_reason_error_string(::ERR_peek_error()), conf_file.path(),
+            ::ERR_reason_error_string(::ERR_get_error()), conf_file.path(),
             default_private_key);
 
       if(!::SSL_CTX_check_private_key(server_ssl_ctx))
@@ -284,7 +284,7 @@ reload(const Config_File& conf_file)
             "Error validating default server SSL certificate '$3' and SSL private key '$4'",
             "[`SSL_CTX_check_private_key()` failed: $1]",
             "[in configuration file '$2']"),
-            ::ERR_reason_error_string(::ERR_peek_error()), conf_file.path(),
+            ::ERR_reason_error_string(::ERR_get_error()), conf_file.path(),
             default_certificate, default_private_key);
 
       // The session context ID is composed from the DNS name of the running
@@ -298,7 +298,7 @@ reload(const Config_File& conf_file)
             "Could not set SSL session ID context",
             "[`SSL_set_session_id_context()` failed: $1]",
             "[in configuration file '$2']"),
-            ::ERR_reason_error_string(::ERR_peek_error()), conf_file.path());
+            ::ERR_reason_error_string(::ERR_get_error()), conf_file.path());
 
       ::SSL_CTX_set_verify(server_ssl_ctx, SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE, nullptr);
     }
@@ -308,7 +308,7 @@ reload(const Config_File& conf_file)
       POSEIDON_THROW((
           "Could not allocate client SSL context: $1",
           "[`SSL_CTX_new()` failed]"),
-          ::ERR_reason_error_string(::ERR_peek_error()));
+          ::ERR_reason_error_string(::ERR_get_error()));
 
     ::SSL_CTX_set_mode(client_ssl_ctx, SSL_MODE_ENABLE_PARTIAL_WRITE);
     ::SSL_CTX_set_mode(client_ssl_ctx, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
@@ -331,7 +331,7 @@ reload(const Config_File& conf_file)
             "Could not set path to trusted CA certificates",
             "[`SSL_CTX_load_verify_locations()` failed: $1]",
             "[in configuration file '$2']"),
-            ::ERR_reason_error_string(::ERR_peek_error()), conf_file.path());
+            ::ERR_reason_error_string(::ERR_get_error()), conf_file.path());
 
       ::SSL_CTX_set_verify(client_ssl_ctx, SSL_VERIFY_PEER, nullptr);
     }

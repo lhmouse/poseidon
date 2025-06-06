@@ -20,13 +20,13 @@ SSL_Socket(unique_posix_fd&& fd, const Network_Driver& driver)
       POSEIDON_THROW((
           "Could not allocate client SSL structure",
           "[`SSL_new()` failed: $1])"),
-          ::ERR_reason_error_string(::ERR_peek_error()));
+          ::ERR_reason_error_string(::ERR_get_error()));
 
     if(!::SSL_set_fd(this->m_ssl, this->do_get_fd()))
       POSEIDON_THROW((
           "Could not allocate SSL BIO for outgoing connection",
           "[`SSL_set_fd()` failed: $1]"),
-          ::ERR_reason_error_string(::ERR_peek_error()));
+          ::ERR_reason_error_string(::ERR_get_error()));
 
     ::SSL_set_accept_state(this->m_ssl);
   }
@@ -40,13 +40,13 @@ SSL_Socket(const Network_Driver& driver)
       POSEIDON_THROW((
           "Could not allocate client SSL structure",
           "[`SSL_new()` failed: $1])"),
-          ::ERR_reason_error_string(::ERR_peek_error()));
+          ::ERR_reason_error_string(::ERR_get_error()));
 
     if(!::SSL_set_fd(this->m_ssl, this->do_get_fd()))
       POSEIDON_THROW((
           "Could not allocate SSL BIO for outgoing connection",
           "[`SSL_set_fd()` failed: $1]"),
-          ::ERR_reason_error_string(::ERR_peek_error()));
+          ::ERR_reason_error_string(::ERR_get_error()));
 
     ::SSL_set_connect_state(this->m_ssl);
   }
@@ -159,7 +159,7 @@ do_abstract_socket_on_readable()
         POSEIDON_LOG_ERROR((
             "Failed to read SSL socket: $3: ${errno:full}]",
             "[SSL socket `$1` (class `$2`)]"),
-            this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
+            this, typeid(*this), ::ERR_reason_error_string(::ERR_get_error()));
 
         // The connection is now broken.
         this->quick_close();
@@ -225,7 +225,7 @@ do_abstract_socket_on_writable()
       POSEIDON_LOG_ERROR((
           "Failed to perform SSL handshake: $3: ${errno:full}]",
           "[SSL socket `$1` (class `$2`)]"),
-          this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
+          this, typeid(*this), ::ERR_reason_error_string(::ERR_get_error()));
 
       // The connection is now broken.
       this->quick_close();
@@ -248,7 +248,7 @@ do_abstract_socket_on_writable()
         POSEIDON_LOG_ERROR((
             "Failed to write SSL socket: $3: ${errno:full}]",
             "[SSL socket `$1` (class `$2`)]"),
-            this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
+            this, typeid(*this), ::ERR_reason_error_string(::ERR_get_error()));
 
         // The connection is now broken.
         this->quick_close();
@@ -406,7 +406,7 @@ ssl_send(chars_view data)
             "Failed to write SSL socket: $3",
             "[errno `${errno:full}`]",
             "[SSL socket `$1` (class `$2`)]"),
-            this, typeid(*this), ::ERR_reason_error_string(::ERR_peek_error()));
+            this, typeid(*this), ::ERR_reason_error_string(::ERR_get_error()));
 
         // The connection is now broken.
         this->quick_close();
