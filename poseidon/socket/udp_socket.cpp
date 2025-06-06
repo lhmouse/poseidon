@@ -72,7 +72,7 @@ do_abstract_socket_on_readable()
         if((errno == EAGAIN) || (errno == EWOULDBLOCK))
           break;
 
-        POSEIDON_LOG_ERROR((
+        POSEIDON_LOG_DEBUG((
             "Error reading UDP socket",
             "[`recvfrom()` failed: ${errno:full}]",
             "[UDP socket `$1` (class `$2`)]"),
@@ -286,7 +286,19 @@ udp_send(const IPv6_Address& addr, chars_view data)
     sa.sin6_addr = addr.addr();
     sa.sin6_scope_id = 0;
     ::ssize_t io_result = ::sendto(this->do_get_fd(), data.p, data.n, 0, (const ::sockaddr*) &sa, sizeof(sa));
-    return io_result >= 0;
+
+    if(io_result < 0) {
+      POSEIDON_LOG_DEBUG((
+          "Error writing UDP socket",
+          "[`sendto()` failed: ${errno:full}]",
+          "[UDP socket `$1` (class `$2`)]"),
+          this, typeid(*this));
+
+      // Errors are ignored.
+      return false;
+    }
+
+    return true;
   }
 
 }  // namespace poseidon

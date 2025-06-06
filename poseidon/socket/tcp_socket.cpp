@@ -54,7 +54,7 @@ do_abstract_socket_on_readable()
         if((errno == EAGAIN) || (errno == EWOULDBLOCK))
           break;
 
-        POSEIDON_LOG_ERROR((
+        POSEIDON_LOG_DEBUG((
             "Error reading TCP socket",
             "[`recv()` failed: ${errno:full}]",
             "[TCP socket `$1` (class `$2`)]"),
@@ -127,7 +127,7 @@ do_abstract_socket_on_writable()
         if((errno == EAGAIN) || (errno == EWOULDBLOCK))
           break;
 
-        POSEIDON_LOG_ERROR((
+        POSEIDON_LOG_DEBUG((
             "Error writing TCP socket",
             "[`send()` failed: ${errno:full}]",
             "[TCP socket `$1` (class `$2`)]"),
@@ -269,7 +269,7 @@ tcp_send(chars_view data)
         if((errno == EAGAIN) || (errno == EWOULDBLOCK))
           break;
 
-        POSEIDON_LOG_ERROR((
+        POSEIDON_LOG_DEBUG((
             "Error writing TCP socket",
             "[`send()` failed: ${errno:full}]",
             "[TCP socket `$1` (class `$2`)]"),
