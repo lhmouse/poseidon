@@ -16,10 +16,10 @@ class Easy_UDP_Server
     using callback_type =
       ::rocket::shared_function<
         void (
-          shptrR<UDP_Socket>,  // session
-          Abstract_Fiber&,     // fiber for current callback
-          IPv6_Address&&,      // address of incoming packet
-          linear_buffer&&      // data of incoming packet
+          const shptr<UDP_Socket>&,  // session
+          Abstract_Fiber&,  // fiber for current callback
+          IPv6_Address&&,  // address of incoming packet
+          linear_buffer&&  // data of incoming packet
         )>;
 
   private:
@@ -31,7 +31,7 @@ class Easy_UDP_Server
 
   public:
     // Constructs a server. The argument shall be an invocable object taking
-    // `(shptrR<UDP_Socket> socket, Abstract_Fiber& fiber, IPv6_Address&& addr,
+    // `(const shptr<UDP_Socket>& socket, Abstract_Fiber& fiber, IPv6_Address&& addr,
     // linear_buffer&& data)`, where `socket` is a pointer to the server socket,
     // and `addr` and `data` are the source address and payload of the current
     // UDP packet, respectively. This server object stores a copy of the
@@ -54,7 +54,7 @@ class Easy_UDP_Server
     start(const IPv6_Address& addr);
 
     shptr<UDP_Socket>
-    start(cow_stringR addr);
+    start(const cow_string& addr);
 
     shptr<UDP_Socket>
     start_any(uint16_t port);

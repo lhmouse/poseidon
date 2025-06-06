@@ -8,7 +8,7 @@
 namespace poseidon {
 
 WS_Client_Session::
-WS_Client_Session(cow_stringR path, cow_stringR query)
+WS_Client_Session(const cow_string& path, const cow_string& query)
   {
     if(!path.starts_with("/"))
       POSEIDON_THROW(("Absolute path `$1` not allowed"), path);

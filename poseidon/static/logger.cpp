@@ -17,7 +17,7 @@ struct Level_Config
     bool p_stderr = false;
     bool trivial = false;
     cow_string color;
-    prehashed_string file;
+    phcow_string file;
   };
 
 struct Message
@@ -82,8 +82,9 @@ do_color(linear_buffer& mtext, const Level_Config& lconf, const char* code)
     mtext.putc('m');
   }
 
+template<typename xFiles>
 void
-do_write_nothrow(cow_dictionary<unique_posix_fd>& io_files, const Level_Config& lconf, const Message& msg) noexcept
+do_write_nothrow(xFiles& io_files,  const Level_Config& lconf, const Message& msg) noexcept
   try {
     linear_buffer mtext;
     ::rocket::ascii_numput nump;
@@ -340,7 +341,7 @@ thread_loop()
 
 void
 Logger::
-enqueue(uint8_t level, const char* func, const char* file, uint32_t line, cow_stringR text)
+enqueue(uint8_t level, const char* func, const char* file, uint32_t line, const cow_string& text)
   {
     // Fill in the name and LWP ID of the calling thread.
     X_Message msg;

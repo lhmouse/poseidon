@@ -9,7 +9,7 @@
 namespace poseidon {
 
 DNS_Query_Future::
-DNS_Query_Future(cow_stringR host, uint16_t port)
+DNS_Query_Future(const cow_string& host, uint16_t port)
   {
     this->m_res.host = host;
     this->m_res.port = port;

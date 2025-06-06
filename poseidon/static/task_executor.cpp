@@ -42,7 +42,7 @@ thread_loop()
 
 void
 Task_Executor::
-enqueue(shptrR<Abstract_Task> task)
+enqueue(const shptr<Abstract_Task>& task)
   {
     if(!task)
       POSEIDON_THROW(("Null task pointer not valid"));

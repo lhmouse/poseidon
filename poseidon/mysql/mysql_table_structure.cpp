@@ -8,7 +8,7 @@ namespace poseidon {
 namespace {
 
 bool
-do_is_name_valid(cow_stringR name)
+do_is_name_valid(const cow_string& name)
   {
     return (name.size() != 0)
         && ::rocket::all_of(name,
@@ -44,7 +44,7 @@ MySQL_Table_Structure::
 
 void
 MySQL_Table_Structure::
-set_name(cow_stringR name)
+set_name(const cow_string& name)
   {
     if(!do_is_name_valid(name))
       POSEIDON_THROW(("Invalid MySQL table name `$1`"), name);
@@ -73,7 +73,7 @@ set_engine(MySQL_Engine_Type engine)
 
 const MySQL_Table_Structure::Column*
 MySQL_Table_Structure::
-find_column_opt(cow_stringR name) const noexcept
+find_column_opt(const cow_string& name) const noexcept
   {
     return ::rocket::find_if(this->m_columns,
                [&](const Column& r) { return r.name == name;  });
@@ -273,7 +273,7 @@ add_column(const Column& column)
 
 const MySQL_Table_Structure::Index*
 MySQL_Table_Structure::
-find_index_opt(cow_stringR name) const noexcept
+find_index_opt(const cow_string& name) const noexcept
   {
     return ::rocket::find_if(this->m_indexes,
                [&](const Index& r) { return r.name == name;  });

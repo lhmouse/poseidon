@@ -27,7 +27,7 @@ class Redis_Connector
 
   private:
     uniptr<Redis_Connection>
-    do_get_pooled_connection_opt(seconds idle_timeout, cow_stringR service_uri);
+    do_get_pooled_connection_opt(seconds idle_timeout, const cow_string& service_uri);
 
   public:
     Redis_Connector(const Redis_Connector&) = delete;
@@ -44,7 +44,7 @@ class Redis_Connector
     // idle connection exists in the pool, it is returned; otherwise a new
     // connection is created.
     uniptr<Redis_Connection>
-    allocate_connection(cow_stringR service_uri, cow_stringR password);
+    allocate_connection(const cow_string& service_uri, const cow_string& password);
 
     // Allocates a connection using arguments from 'main.conf'. This function
     // is otherwise the same as `allocate_connection_explicit()`.

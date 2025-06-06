@@ -9,8 +9,8 @@ using namespace ::poseidon;
 
 static Easy_HTTPS_Client my_client(
   // callback
-  *[](shptrR<HTTPS_Client_Session> session, Abstract_Fiber& fiber, Easy_HTTP_Event event,
-      HTTP_Response_Headers&& resp, linear_buffer&& data)
+  *[](const shptr<HTTPS_Client_Session>& session, Abstract_Fiber& fiber,
+      Easy_HTTP_Event event, HTTP_Response_Headers&& resp, linear_buffer&& data)
   {
     (void) fiber;
 
@@ -43,7 +43,7 @@ static Easy_HTTPS_Client my_client(
 
 static Easy_Timer my_timer(
   // callback
-  *[](shptrR<Abstract_Timer> timer, Abstract_Fiber& fiber, steady_time now)
+  *[](const shptr<Abstract_Timer>& timer, Abstract_Fiber& fiber, steady_time now)
   {
     (void) timer;
     (void) fiber;

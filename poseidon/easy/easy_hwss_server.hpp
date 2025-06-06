@@ -16,10 +16,10 @@ class Easy_HWSS_Server
     using callback_type =
       ::rocket::shared_function<
         void (
-          shptrR<WSS_Server_Session>,  // session
-          Abstract_Fiber&,             // fiber for current callback
-          Easy_HWS_Event,              // event type; see comments above constructor
-          linear_buffer&&              // message payload
+          const shptr<WSS_Server_Session>&,  // session
+          Abstract_Fiber&,  // fiber for current callback
+          Easy_HWS_Event,  // event type; see comments above constructor
+          linear_buffer&&  // message payload
         )>;
 
   private:
@@ -31,7 +31,7 @@ class Easy_HWSS_Server
 
   public:
     // Constructs a server. The argument shall be an invocable object taking
-    // `(shptrR<WSS_Server_Session> session, Abstract_Fiber& fiber,
+    // `(const shptr<WSS_Server_Session>& session, Abstract_Fiber& fiber,
     // Easy_HWS_Event event, linear_buffer&& data)`, where `session` is a
     // pointer to a client session object, and if `event` is
     //  1) `easy_hws_open`, then `data` is the request URI; or
@@ -65,7 +65,7 @@ class Easy_HWSS_Server
     start(const IPv6_Address& addr);
 
     shptr<TCP_Acceptor>
-    start(cow_stringR addr);
+    start(const cow_string& addr);
 
     shptr<TCP_Acceptor>
     start_any(uint16_t port);

@@ -29,7 +29,7 @@ clear() noexcept
 
 void
 HTTP_Header_Parser::
-reload(cow_stringR hstr)
+reload(const cow_string& hstr)
   {
     this->m_hstr = hstr;
     this->m_hpos = SIZE_MAX;

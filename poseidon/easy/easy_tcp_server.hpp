@@ -16,11 +16,11 @@ class Easy_TCP_Server
     using callback_type =
       ::rocket::shared_function<
         void (
-          shptrR<TCP_Socket>,  // session
-          Abstract_Fiber&,     // fiber for current callback
-          Easy_Stream_Event,   // event type; see comments above constructor
-          linear_buffer&,      // accumulative data that have been received
-          int                  // event code; see comments above constructor
+          const shptr<TCP_Socket>&,  // session
+          Abstract_Fiber&,  // fiber for current callback
+          Easy_Stream_Event,  // event type; see comments above constructor
+          linear_buffer&,  // accumulative data that have been received
+          int  // event code; see comments above constructor
         )>;
 
   private:
@@ -32,7 +32,7 @@ class Easy_TCP_Server
 
   public:
     // Constructs a server. The argument shall be an invocable object taking
-    // `(shptrR<TCP_Socket> socket, Abstract_Fiber& fiber, Easy_Stream_Event
+    // `(const shptr<TCP_Socket>& socket, Abstract_Fiber& fiber, Easy_Stream_Event
     // event, linear_buffer& data, int code)`, where `socket` is a pointer to
     // a client socket object, and if `event` is
     //  1) `easy_stream_open`, then `data` is empty; or
@@ -65,7 +65,7 @@ class Easy_TCP_Server
     start(const IPv6_Address& addr);
 
     shptr<TCP_Acceptor>
-    start(cow_stringR addr);
+    start(const cow_string& addr);
 
     shptr<TCP_Acceptor>
     start_any(uint16_t port);

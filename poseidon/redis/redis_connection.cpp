@@ -9,7 +9,7 @@
 namespace poseidon {
 
 Redis_Connection::
-Redis_Connection(cow_stringR service_uri, cow_stringR password)
+Redis_Connection(const cow_string& service_uri, const cow_string& password)
   {
     this->m_service_uri = service_uri;
     this->m_password = password;

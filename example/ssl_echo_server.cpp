@@ -8,8 +8,8 @@ using namespace ::poseidon;
 
 static Easy_SSL_Server my_server(
   // callback
-  *[](shptrR<SSL_Socket> socket, Abstract_Fiber& fiber, Easy_Stream_Event event,
-      linear_buffer& data, int code)
+  *[](const shptr<SSL_Socket>& socket, Abstract_Fiber& fiber,
+      Easy_Stream_Event event, linear_buffer& data, int code)
   {
     (void) fiber;
 

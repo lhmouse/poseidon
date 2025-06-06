@@ -10,10 +10,10 @@ namespace poseidon {
 
 // Splits a string into a vector of tokens, and vice versa.
 void
-explode(cow_vector<cow_string>& segments, cow_stringR text, char delim = ',', size_t limit = SIZE_MAX);
+explode(cow_vector<cow_string>& segments, const cow_string& text, char delim = ',', size_t limit = SIZE_MAX);
 
 cow_vector<cow_string>
-explode(cow_stringR text, char delim = ',', size_t limit = SIZE_MAX);
+explode(const cow_string& text, char delim = ',', size_t limit = SIZE_MAX);
 
 void
 implode(cow_string& text, const cow_string* segment_ptr, size_t segment_count, char delim = ',');
@@ -29,10 +29,10 @@ implode(const cow_vector<cow_string>& segments, char delim = ',');
 
 // Prints a quoted UTF-8 string, like in JSON.
 void
-quote_json_string(tinybuf& buf, cow_stringR str);
+quote_json_string(tinybuf& buf, const cow_string& str);
 
 void
-quote_json_string(tinyfmt& fmt, cow_stringR str);
+quote_json_string(tinyfmt& fmt, const cow_string& str);
 
 // Splices two buffers. After this function returns, `in` will be empty.
 inline

@@ -26,7 +26,7 @@ Network_Driver::
 POSEIDON_VISIBILITY_HIDDEN
 void
 Network_Driver::
-do_epoll_ctl(int op, shptrR<Abstract_Socket> socket, uint32_t events)
+do_epoll_ctl(int op, const shptr<Abstract_Socket>& socket, uint32_t events)
   {
     ::epoll_event event;
     event.events = events;
@@ -490,7 +490,7 @@ thread_loop()
 
 void
 Network_Driver::
-insert(shptrR<Abstract_Socket> socket)
+insert(const shptr<Abstract_Socket>& socket)
   {
     if(!socket)
       POSEIDON_THROW(("Null socket pointer not valid"));

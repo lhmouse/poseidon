@@ -110,7 +110,7 @@ using ::rocket::cow_string;
 using ::rocket::cow_bstring;
 using ::rocket::cow_u16string;
 using ::rocket::cow_u32string;
-using ::rocket::prehashed_string;
+using ::rocket::phcow_string;
 using ::rocket::linear_buffer;
 using ::rocket::tinybuf;
 using ::rocket::tinybuf_str;
@@ -121,17 +121,14 @@ using ::rocket::tinyfmt_ln;
 using ::rocket::unique_posix_fd;
 using ::rocket::unique_posix_file;
 using ::rocket::unique_posix_dir;
+using charbuf_16 = ::rocket::static_char_buffer<16>;
+using charbuf_256 = ::rocket::static_char_buffer<256>;
 
 POSEIDON_USING cow_bivector = ::rocket::cow_vector<::std::pair<Ts...>>;
 POSEIDON_USING opt = ::rocket::optional<Ts...>;
 POSEIDON_USING uniptr = ::std::unique_ptr<Ts...>;
 POSEIDON_USING shptr = ::std::shared_ptr<Ts...>;
 POSEIDON_USING wkptr = ::std::weak_ptr<Ts...>;
-
-using cow_stringR = const ::rocket::cow_string&;
-POSEIDON_USING shptrR = const ::std::shared_ptr<Ts...>&;
-using charbuf_16 = ::rocket::static_char_buffer<16>;
-using charbuf_256 = ::rocket::static_char_buffer<256>;
 
 using ::rocket::begin;
 using ::rocket::end;

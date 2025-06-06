@@ -16,10 +16,10 @@ class Easy_UDP_Client
     using callback_type =
       ::rocket::shared_function<
         void (
-          shptrR<UDP_Socket>,  // session
-          Abstract_Fiber&,     // fiber for current callback
-          IPv6_Address&&,      // address of incoming packet
-          linear_buffer&&      // data of incoming packet
+          const shptr<UDP_Socket>&,  // session
+          Abstract_Fiber&,  // fiber for current callback
+          IPv6_Address&&,  // address of incoming packet
+          linear_buffer&&  // data of incoming packet
         )>;
 
   private:
@@ -31,7 +31,7 @@ class Easy_UDP_Client
 
   public:
     // Constructs a client. The argument shall be an invocable object taking
-    // `(shptrR<UDP_Socket> socket, Abstract_Fiber& fiber, IPv6_Address&& addr,
+    // `(const shptr<UDP_Socket>& socket, Abstract_Fiber& fiber, IPv6_Address&& addr,
     // linear_buffer&& data)`, where `socket` is a pointer to the client socket,
     // and `addr` and `data` are the source address and payload of the current
     // UDP packet, respectively. This client object stores a copy of the

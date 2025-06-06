@@ -29,7 +29,7 @@ class Mongo_Connection
   public:
     // Sets connection parameters. This function does not attempt to connect
     // to the server, and is not blocking.
-    Mongo_Connection(cow_stringR service_uri, cow_stringR password);
+    Mongo_Connection(const cow_string& service_uri, const cow_string& password);
 
   public:
     Mongo_Connection(const Mongo_Connection&) = delete;
@@ -37,7 +37,7 @@ class Mongo_Connection
     ~Mongo_Connection();
 
     // Gets the URI from the constructor.
-    cow_stringR
+    const cow_string&
     service_uri() const noexcept
       { return this->m_service_uri;  }
 

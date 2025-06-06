@@ -7,7 +7,7 @@
 namespace poseidon {
 
 Mongo_Connection::
-Mongo_Connection(cow_stringR service_uri, cow_stringR password)
+Mongo_Connection(const cow_string& service_uri, const cow_string& password)
   {
     this->m_service_uri = service_uri;
     this->m_reply_available = false;

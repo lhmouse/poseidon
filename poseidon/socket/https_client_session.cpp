@@ -164,7 +164,7 @@ do_http_raw_request(const HTTP_Request_Headers& req, chars_view data)
 
 void
 HTTPS_Client_Session::
-http_set_default_host(cow_stringR host) noexcept
+http_set_default_host(const cow_string& host) noexcept
   {
     this->m_default_host = host;
   }

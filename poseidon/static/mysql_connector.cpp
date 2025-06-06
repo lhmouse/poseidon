@@ -109,7 +109,7 @@ reload(const Config_File& conf_file)
 POSEIDON_VISIBILITY_HIDDEN
 uniptr<MySQL_Connection>
 MySQL_Connector::
-do_get_pooled_connection_opt(seconds idle_timeout, cow_stringR service_uri)
+do_get_pooled_connection_opt(seconds idle_timeout, const cow_string& service_uri)
   {
     plain_mutex::unique_lock lock(this->m_pool_mutex);
     const steady_time now = steady_clock::now();
@@ -131,7 +131,7 @@ do_get_pooled_connection_opt(seconds idle_timeout, cow_stringR service_uri)
 
 uniptr<MySQL_Connection>
 MySQL_Connector::
-allocate_connection(cow_stringR service_uri, cow_stringR password)
+allocate_connection(const cow_string& service_uri, const cow_string& password)
   {
     plain_mutex::unique_lock lock(this->m_conf_mutex);
     const seconds idle_timeout = this->m_conf_connection_idle_timeout;

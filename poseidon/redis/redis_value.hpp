@@ -44,13 +44,13 @@ class Redis_Value
         return *this;
       }
 
-    Redis_Value(cow_stringR str) noexcept
+    Redis_Value(const cow_string& str) noexcept
       {
         this->m_stor.emplace<cow_string>(str);
       }
 
     Redis_Value&
-    operator=(cow_stringR str) noexcept
+    operator=(const cow_string& str) noexcept
       {
         this->m_stor = str;
         return *this;
@@ -132,7 +132,7 @@ class Redis_Value
     is_string() const noexcept
       { return this->m_stor.index() == redis_value_string;  }
 
-    cow_stringR
+    const cow_string&
     as_string() const
       { return this->m_stor.as<cow_string>();  }
 

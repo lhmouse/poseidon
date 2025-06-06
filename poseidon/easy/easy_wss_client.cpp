@@ -43,7 +43,7 @@ struct Final_Fiber final : Abstract_Fiber
     const volatile WSS_Client_Session* m_refptr;
 
     Final_Fiber(const Easy_WSS_Client::callback_type& callback,
-                shptrR<Session_Table> sessions, const volatile WSS_Client_Session* refptr)
+                const shptr<Session_Table>& sessions, const volatile WSS_Client_Session* refptr)
       :
         m_callback(callback), m_wsessions(sessions), m_refptr(refptr)
       { }
@@ -109,7 +109,7 @@ struct Final_Session final : WSS_Client_Session
     wkptr<Session_Table> m_wsessions;
 
     Final_Session(const Easy_WSS_Client::callback_type& callback,
-                  shptrR<Session_Table> sessions, cow_stringR path, cow_stringR query)
+                  const shptr<Session_Table>& sessions, const cow_string& path, const cow_string& query)
       :
         SSL_Socket(network_driver), WSS_Client_Session(path, query),
         m_callback(callback), m_wsessions(sessions)

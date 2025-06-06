@@ -71,13 +71,13 @@ class Mongo_Value
         return *this;
       }
 
-    Mongo_Value(cow_stringR utf8) noexcept
+    Mongo_Value(const cow_string& utf8) noexcept
       {
         this->m_stor.emplace<cow_string>(utf8);
       }
 
     Mongo_Value&
-    operator=(cow_stringR utf8) noexcept
+    operator=(const cow_string& utf8) noexcept
       {
         this->m_stor = utf8;
         return *this;
@@ -253,7 +253,7 @@ class Mongo_Value
     is_utf8() const noexcept
       { return this->m_stor.index() == mongo_value_utf8;  }
 
-    cow_stringR
+    const cow_string&
     as_utf8() const
       { return this->m_stor.as<cow_string>();  }
 

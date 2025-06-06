@@ -9,8 +9,8 @@ using namespace ::poseidon;
 
 static Easy_WS_Client my_client(
   // callback
-  *[](shptrR<WS_Client_Session> session, Abstract_Fiber& fiber, Easy_WS_Event event,
-      linear_buffer&& data)
+  *[](const shptr<WS_Client_Session>& session, Abstract_Fiber& fiber,
+      Easy_WS_Event event, linear_buffer&& data)
   {
     (void) fiber;
 
@@ -44,7 +44,7 @@ static Easy_WS_Client my_client(
 
 static Easy_Timer my_timer(
   // callback
-  *[](shptrR<Abstract_Timer> timer, Abstract_Fiber& fiber, steady_time now)
+  *[](const shptr<Abstract_Timer>& timer, Abstract_Fiber& fiber, steady_time now)
   {
     (void) timer;
     (void) fiber;

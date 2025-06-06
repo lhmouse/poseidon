@@ -51,7 +51,7 @@ class Config_File
     // Loads the file denoted by `path`. In case of an error, an exception is
     // thrown, and there is no effect.
     void
-    reload(cow_stringR path);
+    reload(const cow_string& conf_path);
 
     // Gets a value denoted by a path, which may look like `foo.bar.value` or
     // `foo.bar[42].value` to access individual fields of objects or arrays.
@@ -61,7 +61,7 @@ class Config_File
     // If during path resolution, an attempt is made to get a field of a
     // non-object, an exception is thrown.
     const ::asteria::Value&
-    query(cow_stringR value_path) const;
+    query(const cow_string& value_path) const;
   };
 
 inline

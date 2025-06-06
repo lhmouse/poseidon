@@ -29,9 +29,9 @@ clear() noexcept
 
 void
 Config_File::
-reload(cow_stringR path)
+reload(const cow_string& conf_path)
   {
-    auto real_path = ::asteria::get_real_path(path);
+    auto real_path = ::asteria::get_real_path(conf_path);
     auto real_root = ::asteria::std_system_load_conf(real_path);
 
     // This will not throw exceptions.
@@ -41,7 +41,7 @@ reload(cow_stringR path)
 
 const ::asteria::Value&
 Config_File::
-query(cow_stringR value_path) const
+query(const cow_string& value_path) const
   {
     enum Parser_State
       {

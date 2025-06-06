@@ -8,8 +8,8 @@ using namespace ::poseidon;
 
 static Easy_UDP_Server my_server(
   // callback
-  *[](shptrR<UDP_Socket> socket, Abstract_Fiber& fiber, IPv6_Address&& addr,
-      linear_buffer&& data)
+  *[](const shptr<UDP_Socket>& socket, Abstract_Fiber& fiber,
+      IPv6_Address&& addr, linear_buffer&& data)
   {
     (void) fiber;
 

@@ -8,8 +8,8 @@ using namespace ::poseidon;
 
 static Easy_HWS_Server my_server(
   // callback
-  *[](shptrR<WS_Server_Session> session, Abstract_Fiber& fiber, Easy_HWS_Event event,
-      linear_buffer&& data)
+  *[](const shptr<WS_Server_Session>& session, Abstract_Fiber& fiber,
+      Easy_HWS_Event event, linear_buffer&& data)
   {
     (void) fiber;
 

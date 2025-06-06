@@ -16,11 +16,11 @@ class Easy_HTTPS_Client
     using callback_type =
       ::rocket::shared_function<
         void (
-          shptrR<HTTPS_Client_Session>,  // session
-          Abstract_Fiber&,               // fiber for current callback
-          Easy_HTTP_Event,               // event type; see comments above constructor
-          HTTP_Response_Headers&&,       // response status code and headers
-          linear_buffer&&                // response payload body
+          const shptr<HTTPS_Client_Session>&,  // session
+          Abstract_Fiber&,  // fiber for current callback
+          Easy_HTTP_Event,  // event type; see comments above constructor
+          HTTP_Response_Headers&&,  // response status code and headers
+          linear_buffer&&  // response payload body
         )>;
 
   private:
@@ -31,7 +31,7 @@ class Easy_HTTPS_Client
 
   public:
     // Constructs a client. The argument shall be an invocable object taking
-    // `(shptrR<HTTPS_Client_Session> session, Abstract_Fiber& fiber,
+    // `(const shptr<HTTPS_Client_Session>& session, Abstract_Fiber& fiber,
     // Easy_HTTP_Event event, HTTP_Response_Headers&& resp, linear_buffer&&
     // data)`, where `session` is a pointer to a client socket object, and if
     // `event` is

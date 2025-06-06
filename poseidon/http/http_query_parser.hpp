@@ -43,7 +43,7 @@ class HTTP_Query_Parser
 
     // Reloads a new string. All existent contents are destroyed.
     void
-    reload(cow_stringR hstr);
+    reload(const cow_string& hstr);
 
     // Advances to the next element, separated by an ampersand.
     // Returns whether an element has been fetched and no error has occurred.

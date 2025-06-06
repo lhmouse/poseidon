@@ -93,12 +93,12 @@ class HTTP_Client_Session
 
     // If no `Host:` headers is supplied for a non-proxy request, use this
     // string.
-    cow_stringR
+    const cow_string&
     http_default_host() const noexcept
       { return this->m_default_host;  }
 
     void
-    http_set_default_host(cow_stringR host) noexcept;
+    http_set_default_host(const cow_string& host) noexcept;
 
     // Sends a simple request, possibly with a complete payload. Callers should
     // not supply `Content-Length` or `Transfer-Encoding` headers, as they

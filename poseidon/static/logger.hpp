@@ -57,7 +57,7 @@ class Logger
     // If this function fails, an exception is thrown, and there is no effect.
     // This function is thread-safe.
     void
-    enqueue(uint8_t level, const char* func, const char* file, uint32_t line, cow_stringR text);
+    enqueue(uint8_t level, const char* func, const char* file, uint32_t line, const cow_string& text);
 
     // Waits until all pending log entries are delivered to output devices.
     // This function is thread-safe.

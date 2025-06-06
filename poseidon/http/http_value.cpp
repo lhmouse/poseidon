@@ -183,7 +183,7 @@ print_to(tinyfmt& fmt) const
           }
 
         void
-        operator()(cow_stringR str)
+        operator()(const cow_string& str)
           {
             auto pos = ::std::find_if(str.begin(), str.end(), do_is_ctl_or_sep);
             if(pos == str.end()) {

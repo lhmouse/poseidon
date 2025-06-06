@@ -61,14 +61,14 @@ class Fiber_Scheduler
     // can only be deleted after it finishes execution.
     // This function is thread-safe.
     void
-    launch(shptrR<Abstract_Fiber> fiber);
+    launch(const shptr<Abstract_Fiber>& fiber);
 
     // Suspends execution of the current fiber. If `futr_opt` is not null, it
     // is suspended until `*futr_opt` becomes ready. If `fail_timeout_override`
     // is not zero, it specifies the maximum timeout that the current fiber
     // can be suspended.
     void
-    yield(const Abstract_Fiber& tfiber, shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override = -1s);
+    yield(const Abstract_Fiber& tfiber, const shptr<Abstract_Future>& futr_opt, milliseconds fail_timeout_override = -1s);
   };
 
 }  // namespace poseidon

@@ -196,7 +196,7 @@ class HTTP_Field_Name
 
     constexpr ROCKET_PURE
     bool
-    equals(cow_stringR str) const noexcept
+    equals(const cow_string& str) const noexcept
       {
         if(this->m_str.size() != str.size())
           return false;
@@ -218,7 +218,7 @@ class HTTP_Field_Name
 
     ROCKET_PURE
     int
-    compare(cow_stringR cmps) const noexcept;
+    compare(const cow_string& cmps) const noexcept;
 
     ROCKET_PURE
     int
@@ -255,7 +255,7 @@ operator==(const HTTP_Field_Name& lhs, const HTTP_Field_Name& rhs) noexcept
 
 inline
 bool
-operator==(const HTTP_Field_Name& lhs, cow_stringR rhs) noexcept
+operator==(const HTTP_Field_Name& lhs, const cow_string& rhs) noexcept
   { return lhs.equals(rhs);  }
 
 inline
@@ -265,7 +265,7 @@ operator==(const HTTP_Field_Name& lhs, const char* rhs) noexcept
 
 inline
 bool
-operator==(cow_stringR lhs, const HTTP_Field_Name& rhs) noexcept
+operator==(const cow_string& lhs, const HTTP_Field_Name& rhs) noexcept
   { return rhs.equals(lhs);  }
 
 inline
@@ -280,7 +280,7 @@ operator!=(const HTTP_Field_Name& lhs, const HTTP_Field_Name& rhs) noexcept
 
 inline
 bool
-operator!=(const HTTP_Field_Name& lhs, cow_stringR rhs) noexcept
+operator!=(const HTTP_Field_Name& lhs, const cow_string& rhs) noexcept
   { return !lhs.equals(rhs);  }
 
 inline
@@ -290,7 +290,7 @@ operator!=(const HTTP_Field_Name& lhs, const char* rhs) noexcept
 
 inline
 bool
-operator!=(cow_stringR lhs, const HTTP_Field_Name& rhs) noexcept
+operator!=(const cow_string& lhs, const HTTP_Field_Name& rhs) noexcept
   { return !rhs.equals(lhs);  }
 
 inline
@@ -305,7 +305,7 @@ operator<(const HTTP_Field_Name& lhs, const HTTP_Field_Name& rhs) noexcept
 
 inline
 bool
-operator<(const HTTP_Field_Name& lhs, cow_stringR rhs) noexcept
+operator<(const HTTP_Field_Name& lhs, const cow_string& rhs) noexcept
   { return lhs.compare(rhs) < 0;  }
 
 inline
@@ -315,7 +315,7 @@ operator<(const HTTP_Field_Name& lhs, const char* rhs) noexcept
 
 inline
 bool
-operator<(cow_stringR lhs, const HTTP_Field_Name& rhs) noexcept
+operator<(const cow_string& lhs, const HTTP_Field_Name& rhs) noexcept
   { return rhs.compare(lhs) > 0;  }
 
 inline
@@ -330,7 +330,7 @@ operator<=(const HTTP_Field_Name& lhs, const HTTP_Field_Name& rhs) noexcept
 
 inline
 bool
-operator<=(const HTTP_Field_Name& lhs, cow_stringR rhs) noexcept
+operator<=(const HTTP_Field_Name& lhs, const cow_string& rhs) noexcept
   { return lhs.compare(rhs) <= 0;  }
 
 inline
@@ -340,7 +340,7 @@ operator<=(const HTTP_Field_Name& lhs, const char* rhs) noexcept
 
 inline
 bool
-operator<=(cow_stringR lhs, const HTTP_Field_Name& rhs) noexcept
+operator<=(const cow_string& lhs, const HTTP_Field_Name& rhs) noexcept
   { return rhs.compare(lhs) >= 0;  }
 
 inline
@@ -355,7 +355,7 @@ operator>(const HTTP_Field_Name& lhs, const HTTP_Field_Name& rhs) noexcept
 
 inline
 bool
-operator>(const HTTP_Field_Name& lhs, cow_stringR rhs) noexcept
+operator>(const HTTP_Field_Name& lhs, const cow_string& rhs) noexcept
   { return lhs.compare(rhs) > 0;  }
 
 inline
@@ -365,7 +365,7 @@ operator>(const HTTP_Field_Name& lhs, const char* rhs) noexcept
 
 inline
 bool
-operator>(cow_stringR lhs, const HTTP_Field_Name& rhs) noexcept
+operator>(const cow_string& lhs, const HTTP_Field_Name& rhs) noexcept
   { return rhs.compare(lhs) < 0;  }
 
 inline
@@ -380,7 +380,7 @@ operator>=(const HTTP_Field_Name& lhs, const HTTP_Field_Name& rhs) noexcept
 
 inline
 bool
-operator>=(const HTTP_Field_Name& lhs, cow_stringR rhs) noexcept
+operator>=(const HTTP_Field_Name& lhs, const cow_string& rhs) noexcept
   { return lhs.compare(rhs) >= 0;  }
 
 inline
@@ -390,7 +390,7 @@ operator>=(const HTTP_Field_Name& lhs, const char* rhs) noexcept
 
 inline
 bool
-operator>=(cow_stringR lhs, const HTTP_Field_Name& rhs) noexcept
+operator>=(const cow_string& lhs, const HTTP_Field_Name& rhs) noexcept
   { return rhs.compare(lhs) <= 0;  }
 
 inline

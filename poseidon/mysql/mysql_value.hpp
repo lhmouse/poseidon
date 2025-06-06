@@ -77,13 +77,13 @@ class MySQL_Value
         return *this;
       }
 
-    MySQL_Value(cow_stringR str) noexcept
+    MySQL_Value(const cow_string& str) noexcept
       {
         this->m_stor.emplace<cow_string>(str);
       }
 
     MySQL_Value&
-    operator=(cow_stringR str) & noexcept
+    operator=(const cow_string& str) & noexcept
       {
         this->m_stor = str;
         return *this;
@@ -194,7 +194,7 @@ class MySQL_Value
     is_blob() const noexcept
       { return this->m_stor.index() == mysql_value_blob;  }
 
-    cow_stringR
+    const cow_string&
     as_blob() const
       { return this->m_stor.as<cow_string>();  }
 

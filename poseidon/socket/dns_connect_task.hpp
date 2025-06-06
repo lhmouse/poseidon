@@ -24,7 +24,7 @@ class DNS_Connect_Task
     // `connect()` is called on `socket`. If both IPv4 and IPv6 addresses are
     // found, an IPv4 address is preferred to an IPv6 address. If no address can
     // be found, the socket is closed immediately.
-    DNS_Connect_Task(Network_Driver& driver, shptrR<Abstract_Socket> socket, cow_stringR host, uint16_t port);
+    DNS_Connect_Task(Network_Driver& driver, const shptr<Abstract_Socket>& socket, const cow_string& host, uint16_t port);
 
   protected:
     // This class implements `Abstract_Task`.
@@ -41,7 +41,7 @@ class DNS_Connect_Task
     socket_opt() const noexcept
       { return this->m_wsock.lock();  }
 
-    cow_stringR
+    const cow_string&
     host() const noexcept
       { return this->m_host;  }
 

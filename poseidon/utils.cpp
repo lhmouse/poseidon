@@ -10,7 +10,7 @@
 namespace poseidon {
 
 void
-explode(cow_vector<cow_string>& segments, cow_stringR text, char delim, size_t limit)
+explode(cow_vector<cow_string>& segments, const cow_string& text, char delim, size_t limit)
   {
     segments.clear();
     size_t bpos = text.find_not_of(" \t");
@@ -32,7 +32,7 @@ explode(cow_vector<cow_string>& segments, cow_stringR text, char delim, size_t l
   }
 
 cow_vector<cow_string>
-explode(cow_stringR text, char delim, size_t limit)
+explode(const cow_string& text, char delim, size_t limit)
   {
     cow_vector<cow_string> segments;
     explode(segments, text, delim, limit);
@@ -76,7 +76,7 @@ implode(const cow_vector<cow_string>& segments, char delim)
   }
 
 void
-quote_json_string(tinybuf& buf, cow_stringR str)
+quote_json_string(tinybuf& buf, const cow_string& str)
   {
     buf.putc('"');
     size_t offset = 0;
@@ -145,7 +145,7 @@ quote_json_string(tinybuf& buf, cow_stringR str)
   }
 
 void
-quote_json_string(tinyfmt& fmt, cow_stringR str)
+quote_json_string(tinyfmt& fmt, const cow_string& str)
   {
     quote_json_string(fmt.mut_buf(), str);
   }

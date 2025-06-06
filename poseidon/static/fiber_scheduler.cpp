@@ -133,15 +133,15 @@ struct Fiber_Comparator
   {
     // We have to build a minheap here.
     bool
-    operator()(shptrR<Queued_Fiber> lhs, shptrR<Queued_Fiber> rhs) noexcept
+    operator()(const shptr<Queued_Fiber>& lhs, const shptr<Queued_Fiber>& rhs) noexcept
       { return lhs->check_time > rhs->check_time;  }
 
     bool
-    operator()(shptrR<Queued_Fiber> lhs, steady_time rhs) noexcept
+    operator()(const shptr<Queued_Fiber>& lhs, steady_time rhs) noexcept
       { return lhs->check_time > rhs;  }
 
     bool
-    operator()(steady_time lhs, shptrR<Queued_Fiber> rhs) noexcept
+    operator()(steady_time lhs, const shptr<Queued_Fiber>& rhs) noexcept
       { return lhs > rhs->check_time;  }
   }
   constexpr s_fiber_comparator;
@@ -412,7 +412,7 @@ size() const noexcept
 
 void
 Fiber_Scheduler::
-launch(shptrR<Abstract_Fiber> fiber)
+launch(const shptr<Abstract_Fiber>& fiber)
   {
     if(!fiber)
       POSEIDON_THROW(("Null fiber pointer not valid"));
@@ -432,7 +432,7 @@ launch(shptrR<Abstract_Fiber> fiber)
 
 void
 Fiber_Scheduler::
-yield(const Abstract_Fiber& tfiber, shptrR<Abstract_Future> futr_opt, milliseconds fail_timeout_override)
+yield(const Abstract_Fiber& tfiber, const shptr<Abstract_Future>& futr_opt, milliseconds fail_timeout_override)
   {
     auto elem = this->m_sched_elem;
     if(!elem)

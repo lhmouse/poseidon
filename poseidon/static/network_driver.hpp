@@ -30,7 +30,7 @@ class Network_Driver
 
   private:
     void
-    do_epoll_ctl(int op, shptrR<Abstract_Socket> socket, uint32_t events);
+    do_epoll_ctl(int op, const shptr<Abstract_Socket>& socket, uint32_t events);
 
     wkptr<Abstract_Socket>&
     do_find_socket_nolock(const volatile Abstract_Socket* socket) noexcept;
@@ -76,7 +76,7 @@ class Network_Driver
     // to this socket.
     // This function is thread-safe.
     void
-    insert(shptrR<Abstract_Socket> socket);
+    insert(const shptr<Abstract_Socket>& socket);
   };
 
 }  // namespace poseidon

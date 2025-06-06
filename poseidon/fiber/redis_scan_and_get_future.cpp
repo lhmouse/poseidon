@@ -10,7 +10,7 @@ namespace poseidon {
 
 Redis_Scan_and_Get_Future::
 Redis_Scan_and_Get_Future(Redis_Connector& connector, uniptr<Redis_Connection>&& conn_opt,
-                          cow_stringR pattern)
+                          const cow_string& pattern)
   {
     this->m_ctr = &connector;
     this->m_conn = move(conn_opt);
@@ -18,7 +18,7 @@ Redis_Scan_and_Get_Future(Redis_Connector& connector, uniptr<Redis_Connection>&&
   }
 
 Redis_Scan_and_Get_Future::
-Redis_Scan_and_Get_Future(Redis_Connector& connector, cow_stringR pattern)
+Redis_Scan_and_Get_Future(Redis_Connector& connector, const cow_string& pattern)
   {
     this->m_ctr = &connector;
     this->m_res.pattern = pattern;

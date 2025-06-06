@@ -8,8 +8,8 @@ using namespace ::poseidon;
 
 static Easy_TCP_Server my_server(
   // callback
-  *[](shptrR<TCP_Socket> socket, Abstract_Fiber& fiber, Easy_Stream_Event event,
-      linear_buffer& data, int code)
+  *[](const shptr<TCP_Socket>& socket, Abstract_Fiber& fiber,
+      Easy_Stream_Event event, linear_buffer& data, int code)
   {
     (void) fiber;
 

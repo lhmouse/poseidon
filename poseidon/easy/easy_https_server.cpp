@@ -44,7 +44,7 @@ struct Final_Fiber final : Abstract_Fiber
     const volatile HTTPS_Server_Session* m_refptr;
 
     Final_Fiber(const Easy_HTTPS_Server::callback_type& callback,
-                shptrR<Session_Table> sessions,
+                const shptr<Session_Table>& sessions,
                 const volatile HTTPS_Server_Session* refptr)
       :
         m_callback(callback), m_wsessions(sessions), m_refptr(refptr)
@@ -128,7 +128,7 @@ struct Final_Session final : HTTPS_Server_Session
     wkptr<Session_Table> m_wsessions;
 
     Final_Session(const Easy_HTTPS_Server::callback_type& callback,
-                  unique_posix_fd&& fd, shptrR<Session_Table> sessions)
+                  unique_posix_fd&& fd, const shptr<Session_Table>& sessions)
       :
         SSL_Socket(move(fd), network_driver),
         m_callback(callback), m_wsessions(sessions)
@@ -218,7 +218,7 @@ struct Final_Acceptor final : TCP_Acceptor
     wkptr<Session_Table> m_wsessions;
 
     Final_Acceptor(const Easy_HTTPS_Server::callback_type& callback,
-                   const IPv6_Address& addr, shptrR<Session_Table> sessions)
+                   const IPv6_Address& addr, const shptr<Session_Table>& sessions)
       :
         TCP_Acceptor(addr),
         m_callback(callback), m_wsessions(sessions)
@@ -272,7 +272,7 @@ start(const IPv6_Address& addr)
 
 shptr<TCP_Acceptor>
 Easy_HTTPS_Server::
-start(cow_stringR addr)
+start(const cow_string& addr)
   {
     IPv6_Address v6addr(addr);
     return this->start(v6addr);

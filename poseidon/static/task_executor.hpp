@@ -33,7 +33,7 @@ class Task_Executor
     // If this function fails, an exception is thrown, and there is no effect.
     // This function is thread-safe.
     void
-    enqueue(shptrR<Abstract_Task> task);
+    enqueue(const shptr<Abstract_Task>& task);
   };
 
 }  // namespace poseidon

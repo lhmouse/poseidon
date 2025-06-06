@@ -9,7 +9,7 @@
 namespace poseidon {
 
 MySQL_Connection::
-MySQL_Connection(cow_stringR service_uri, cow_stringR password)
+MySQL_Connection(const cow_string& service_uri, const cow_string& password)
   {
     this->m_service_uri = service_uri;
     this->m_password = password;
@@ -52,7 +52,7 @@ warning_count() const noexcept
 
 void
 MySQL_Connection::
-execute(cow_stringR stmt, const cow_vector<MySQL_Value>& args)
+execute(const cow_string& stmt, const cow_vector<MySQL_Value>& args)
   {
     if(stmt.empty())
       POSEIDON_THROW(("Empty SQL statement"));

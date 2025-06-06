@@ -29,7 +29,7 @@ class MySQL_Connection
   public:
     // Sets connection parameters. This function does not attempt to connect
     // to the server, and is not blocking.
-    MySQL_Connection(cow_stringR service_uri, cow_stringR password);
+    MySQL_Connection(const cow_string& service_uri, const cow_string& password);
 
   public:
     MySQL_Connection(const MySQL_Connection&) = delete;
@@ -37,7 +37,7 @@ class MySQL_Connection
     ~MySQL_Connection();
 
     // Gets the URI from the constructor.
-    cow_stringR
+    const cow_string&
     service_uri() const noexcept
       { return this->m_service_uri;  }
 
@@ -59,7 +59,7 @@ class MySQL_Connection
     // established yet, this function initiates a new connection before the query
     // is executed.
     void
-    execute(cow_stringR stmt, const cow_vector<MySQL_Value>& args);
+    execute(const cow_string& stmt, const cow_vector<MySQL_Value>& args);
 
     // Fetches the names of all fields of the result set. This function must be
     // called after `execute()`. `output` is cleared before fetching any data. If

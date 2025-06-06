@@ -16,10 +16,10 @@ class Easy_WSS_Client
     using callback_type =
       ::rocket::shared_function<
         void (
-          shptrR<WSS_Client_Session>,  // session
-          Abstract_Fiber&,             // fiber for current callback
-          Easy_WS_Event,               // event type; see comments above constructor
-          linear_buffer&&              // message payload
+          const shptr<WSS_Client_Session>&,  // session
+          Abstract_Fiber&,  // fiber for current callback
+          Easy_WS_Event,  // event type; see comments above constructor
+          linear_buffer&&  // message payload
         )>;
 
   private:
@@ -30,7 +30,7 @@ class Easy_WSS_Client
 
   public:
     // Constructs a client. The argument shall be an invocable object taking
-    // `(shptrR<WSS_Client_Session> session, Abstract_Fiber& fiber,
+    // `(const shptr<WSS_Client_Session>& session, Abstract_Fiber& fiber,
     // Easy_WS_Event event, linear_buffer&& data)`, where `session` is a
     // pointer to a client session object, and if `event` is
     //  1) `easy_ws_open`, then `data` is the request URI; or

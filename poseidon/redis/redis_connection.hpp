@@ -27,7 +27,7 @@ class Redis_Connection
   public:
     // Sets connection parameters. This function does not attempt to connect
     // to the server, and is not blocking.
-    Redis_Connection(cow_stringR service_uri, cow_stringR password);
+    Redis_Connection(const cow_string& service_uri, const cow_string& password);
 
   public:
     Redis_Connection(const Redis_Connection&) = delete;
@@ -35,7 +35,7 @@ class Redis_Connection
     ~Redis_Connection();
 
     // Gets the URI from the constructor.
-    cow_stringR
+    const cow_string&
     service_uri() const noexcept
       { return this->m_service_uri;  }
 

@@ -58,12 +58,12 @@ class MySQL_Table_Structure
     // Gets and sets the table name.
     // If the table name is not a valid identifier, an exception is thrown, and
     // there is no effect.
-    cow_stringR
+    const cow_string&
     name() const noexcept
       { return this->m_name;  }
 
     void
-    set_name(cow_stringR name);
+    set_name(const cow_string& name);
 
     // Gets and sets the storage engine.
     // If the storage engine is not valid, an exception is thrown, and there is
@@ -90,7 +90,7 @@ class MySQL_Table_Structure
       { return this->m_columns.at(pos);  }
 
     const Column*
-    find_column_opt(cow_stringR name) const noexcept;
+    find_column_opt(const cow_string& name) const noexcept;
 
     // Adds a column. If a column with the same name already exists, it will be
     // updated in place. Setting a column to `mysql_column_dropped` automatically
@@ -116,7 +116,7 @@ class MySQL_Table_Structure
       { return this->m_indexes.at(pos);  }
 
     const Index*
-    find_index_opt(cow_stringR name) const noexcept;
+    find_index_opt(const cow_string& name) const noexcept;
 
     // Adds an index. If an index with the same name already exists, it will be
     // updated in place. If `index.name` equals `"primary"`, it denotes the

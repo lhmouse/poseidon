@@ -47,7 +47,7 @@ class HTTP_Header_Parser
 
     // Reloads a new string. All existent contents are destroyed.
     void
-    reload(cow_stringR hstr);
+    reload(const cow_string& hstr);
 
     // Advances to the next attribute of the current element, separated by a
     // semicolon. This function will not advance pass a comma.

@@ -16,11 +16,11 @@ class Easy_SSL_Client
     using callback_type =
       ::rocket::shared_function<
         void (
-          shptrR<SSL_Socket>,  // session
-          Abstract_Fiber&,     // fiber for current callback
-          Easy_Stream_Event,   // event type; see comments above constructor
-          linear_buffer&,      // accumulative data that have been received
-          int                  // event code; see comments above constructor
+          const shptr<SSL_Socket>&,  // session
+          Abstract_Fiber&,  // fiber for current callback
+          Easy_Stream_Event,  // event type; see comments above constructor
+          linear_buffer&,  // accumulative data that have been received
+          int  // event code; see comments above constructor
         )>;
 
   private:
@@ -31,7 +31,7 @@ class Easy_SSL_Client
 
   public:
     // Constructs a client. The argument shall be an invocable object taking
-    // `(shptrR<SSL_Socket> socket, Abstract_Fiber& fiber, Easy_Stream_Event
+    // `(const shptr<SSL_Socket>& socket, Abstract_Fiber& fiber, Easy_Stream_Event
     // event, linear_buffer& data, int code)`, where `socket` is a pointer to
     // a client socket object, and if `event` is
     //  1) `easy_stream_open`, then `data` is empty; or

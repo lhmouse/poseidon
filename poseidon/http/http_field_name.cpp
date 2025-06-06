@@ -41,7 +41,7 @@ compare(const char* cmps) const noexcept
 
 int
 HTTP_Field_Name::
-compare(cow_stringR cmps) const noexcept
+compare(const cow_string& cmps) const noexcept
   {
     for(size_t k = 0;  k != this->m_str.size();  ++k)
       if(k == cmps.size())

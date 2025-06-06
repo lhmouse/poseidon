@@ -33,7 +33,7 @@ struct Final_Fiber final : Abstract_Fiber
     Easy_UDP_Server::callback_type m_callback;
     wkptr<Packet_Queue> m_wqueue;
 
-    Final_Fiber(const Easy_UDP_Server::callback_type& callback, shptrR<Packet_Queue> queue)
+    Final_Fiber(const Easy_UDP_Server::callback_type& callback, const shptr<Packet_Queue>& queue)
       :
         m_callback(callback), m_wqueue(queue)
       { }
@@ -86,7 +86,7 @@ struct Final_Socket final : UDP_Socket
     wkptr<Packet_Queue> m_wqueue;
 
     Final_Socket(const Easy_UDP_Server::callback_type& callback,
-                 const IPv6_Address& addr, shptrR<Packet_Queue> queue)
+                 const IPv6_Address& addr, const shptr<Packet_Queue>& queue)
       :
         UDP_Socket(addr),
         m_callback(callback), m_wqueue(queue)
@@ -142,7 +142,7 @@ start(const IPv6_Address& addr)
 
 shptr<UDP_Socket>
 Easy_UDP_Server::
-start(cow_stringR addr)
+start(const cow_string& addr)
   {
     IPv6_Address v6addr(addr);
     return this->start(v6addr);

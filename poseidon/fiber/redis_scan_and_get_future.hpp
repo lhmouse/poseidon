@@ -31,9 +31,9 @@ class Redis_Scan_and_Get_Future
     // as an asynchronous task, which can be enqueued into an `Task_Executor`.
     // This future will become ready once the query is complete.
     Redis_Scan_and_Get_Future(Redis_Connector& connector, uniptr<Redis_Connection>&& conn_opt,
-                              cow_stringR pattern);
+                              const cow_string& pattern);
 
-    Redis_Scan_and_Get_Future(Redis_Connector& connector, cow_stringR pattern);
+    Redis_Scan_and_Get_Future(Redis_Connector& connector, const cow_string& pattern);
 
   private:
     virtual
