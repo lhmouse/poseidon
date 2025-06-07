@@ -95,7 +95,7 @@ struct Final_Fiber final : Abstract_Fiber
           }
           catch(exception& stdex) {
             // Shut the connection down with a message.
-            POSEIDON_LOG_ERROR(("Unhandled exception thrown from easy HWS server: $1"), stdex);
+            POSEIDON_LOG_ERROR(("Unhandled exception: $1"), stdex);
             session->ws_shut_down(websocket_status_unexpected_error);
           }
         }
@@ -107,8 +107,9 @@ struct Final_Session final : WS_Server_Session
     Easy_HWS_Server::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
 
-    Final_Session(const Easy_HWS_Server::callback_type& callback,
-                  unique_posix_fd&& fd, const shptr<Session_Table>& sessions)
+    Final_Session(unique_posix_fd&& fd,
+                  const Easy_HWS_Server::callback_type& callback,
+                  const shptr<Session_Table>& sessions)
       :
         TCP_Socket(move(fd)),
         m_callback(callback), m_wsessions(sessions)
@@ -193,9 +194,8 @@ struct Final_Session final : WS_Server_Session
 
         event.data.putn(req.uri_host.data(), req.uri_host.size());
         event.data.putn(req.uri_path.data(), req.uri_path.size());
-
-        if(req.uri_query != "")
-          event.data.putc('?').putn(req.uri_query.data(), req.uri_query.size());
+        event.data.putc('?');
+        event.data.putn(req.uri_query.data(), req.uri_query.size());
 
         this->do_push_event_common(move(event));
         return http_payload_normal;
@@ -250,8 +250,9 @@ struct Final_Acceptor final : TCP_Acceptor
     Easy_HWS_Server::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
 
-    Final_Acceptor(const Easy_HWS_Server::callback_type& callback,
-                   const IPv6_Address& addr, const shptr<Session_Table>& sessions)
+    Final_Acceptor(const IPv6_Address& addr,
+                   const Easy_HWS_Server::callback_type& callback,
+                   const shptr<Session_Table>& sessions)
       :
         TCP_Acceptor(addr),
         m_callback(callback), m_wsessions(sessions)
@@ -267,7 +268,7 @@ struct Final_Acceptor final : TCP_Acceptor
         if(!sessions)
           return nullptr;
 
-        auto session = new_sh<Final_Session>(this->m_callback, move(fd), sessions);
+        auto session = new_sh<Final_Session>(move(fd), this->m_callback, sessions);
         (void) addr;
 
         // We are in the network thread here.
@@ -292,10 +293,10 @@ Easy_HWS_Server::
 
 shptr<TCP_Acceptor>
 Easy_HWS_Server::
-start(const IPv6_Address& addr)
+start(const IPv6_Address& addr, const callback_type& callback)
   {
     auto sessions = new_sh<X_Session_Table>();
-    auto acceptor = new_sh<Final_Acceptor>(this->m_callback, addr, sessions);
+    auto acceptor = new_sh<Final_Acceptor>(addr, callback, sessions);
 
     network_driver.insert(acceptor);
     this->m_sessions = move(sessions);
@@ -305,18 +306,16 @@ start(const IPv6_Address& addr)
 
 shptr<TCP_Acceptor>
 Easy_HWS_Server::
-start(const cow_string& addr)
+start(const cow_string& addr, const callback_type& callback)
   {
-    IPv6_Address v6addr(addr);
-    return this->start(v6addr);
+    return this->start(IPv6_Address(addr), callback);
   }
 
 shptr<TCP_Acceptor>
 Easy_HWS_Server::
-start_any(uint16_t port)
+start_any(uint16_t port, const callback_type& callback)
   {
-    IPv6_Address v6addr(ipv6_unspecified, port);
-    return this->start(v6addr);
+    return this->start(IPv6_Address(ipv6_unspecified, port), callback);
   }
 
 void

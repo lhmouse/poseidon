@@ -33,7 +33,8 @@ struct Final_Fiber final : Abstract_Fiber
     Easy_UDP_Server::callback_type m_callback;
     wkptr<Packet_Queue> m_wqueue;
 
-    Final_Fiber(const Easy_UDP_Server::callback_type& callback, const shptr<Packet_Queue>& queue)
+    Final_Fiber(const Easy_UDP_Server::callback_type& callback,
+                const shptr<Packet_Queue>& queue)
       :
         m_callback(callback), m_wqueue(queue)
       { }
@@ -72,9 +73,7 @@ struct Final_Fiber final : Abstract_Fiber
             this->m_callback(socket, *this, move(packet.addr), move(packet.data));
           }
           catch(exception& stdex) {
-            POSEIDON_LOG_ERROR((
-                "Unhandled exception thrown from UDP server: $1"),
-                stdex);
+            POSEIDON_LOG_ERROR(("Unhandled exception: $1"), stdex);
           }
         }
       }
@@ -85,8 +84,9 @@ struct Final_Socket final : UDP_Socket
     Easy_UDP_Server::callback_type m_callback;
     wkptr<Packet_Queue> m_wqueue;
 
-    Final_Socket(const Easy_UDP_Server::callback_type& callback,
-                 const IPv6_Address& addr, const shptr<Packet_Queue>& queue)
+    Final_Socket(const IPv6_Address& addr,
+                 const Easy_UDP_Server::callback_type& callback,
+                 const shptr<Packet_Queue>& queue)
       :
         UDP_Socket(addr),
         m_callback(callback), m_wqueue(queue)
@@ -128,10 +128,10 @@ Easy_UDP_Server::
 
 shptr<UDP_Socket>
 Easy_UDP_Server::
-start(const IPv6_Address& addr)
+start(const IPv6_Address& addr, const callback_type& callback)
   {
     auto queue = new_sh<X_Packet_Queue>();
-    auto socket = new_sh<Final_Socket>(this->m_callback, addr, queue);
+    auto socket = new_sh<Final_Socket>(addr, callback, queue);
     queue->wsocket = socket;
 
     network_driver.insert(socket);
@@ -142,18 +142,16 @@ start(const IPv6_Address& addr)
 
 shptr<UDP_Socket>
 Easy_UDP_Server::
-start(const cow_string& addr)
+start(const cow_string& addr, const callback_type& callback)
   {
-    IPv6_Address v6addr(addr);
-    return this->start(v6addr);
+    return this->start(IPv6_Address(addr), callback);
   }
 
 shptr<UDP_Socket>
 Easy_UDP_Server::
-start_any(uint16_t port)
+start_any(uint16_t port, const callback_type& callback)
   {
-    IPv6_Address v6addr(ipv6_unspecified, port);
-    return this->start(v6addr);
+    return this->start(IPv6_Address(ipv6_unspecified, port), callback);
   }
 
 void

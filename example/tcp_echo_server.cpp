@@ -6,10 +6,13 @@
 #include "../poseidon/utils.hpp"
 using namespace ::poseidon;
 
-static Easy_TCP_Server my_server(
-  // callback
-  *[](const shptr<TCP_Socket>& socket, Abstract_Fiber& fiber,
-      Easy_Stream_Event event, linear_buffer& data, int code)
+static constexpr char bind_addr[] = "[::]:3802";
+static Easy_TCP_Server my_server;
+
+static void
+my_server_callback(const shptr<TCP_Socket>& socket,
+                   Abstract_Fiber& fiber, Easy_Stream_Event event,
+                   linear_buffer& data, int code)
   {
     (void) fiber;
 
@@ -35,12 +38,11 @@ static Easy_TCP_Server my_server(
       default:
         ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
       }
-  });
+  }
 
 void
 poseidon_module_main()
   {
-    static constexpr char bind_addr[] = "[::]:3802";
-    my_server.start(&bind_addr);
+    my_server.start(&bind_addr, my_server_callback);
     POSEIDON_LOG_ERROR(("example TCP server started: $1"), bind_addr);
   }

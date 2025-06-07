@@ -43,7 +43,8 @@ struct Final_Fiber final : Abstract_Fiber
     const volatile WSS_Client_Session* m_refptr;
 
     Final_Fiber(const Easy_WSS_Client::callback_type& callback,
-                const shptr<Session_Table>& sessions, const volatile WSS_Client_Session* refptr)
+                const shptr<Session_Table>& sessions,
+                const volatile WSS_Client_Session* refptr)
       :
         m_callback(callback), m_wsessions(sessions), m_refptr(refptr)
       { }
@@ -96,7 +97,7 @@ struct Final_Fiber final : Abstract_Fiber
           }
           catch(exception& stdex) {
             // Shut the connection down with a message.
-            POSEIDON_LOG_ERROR(("Unhandled exception thrown from easy WSS client: $1"), stdex);
+            POSEIDON_LOG_ERROR(("Unhandled exception: $1"), stdex);
             session->ws_shut_down(websocket_status_unexpected_error);
           }
         }
@@ -108,8 +109,9 @@ struct Final_Session final : WSS_Client_Session
     Easy_WSS_Client::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
 
-    Final_Session(const Easy_WSS_Client::callback_type& callback,
-                  const shptr<Session_Table>& sessions, const cow_string& path, const cow_string& query)
+    Final_Session(const cow_string& path, const cow_string& query,
+                  const Easy_WSS_Client::callback_type& callback,
+                  const shptr<Session_Table>& sessions)
       :
         SSL_Socket(network_driver), WSS_Client_Session(path, query),
         m_callback(callback), m_wsessions(sessions)
@@ -202,14 +204,14 @@ Easy_WSS_Client::
 
 shptr<WSS_Client_Session>
 Easy_WSS_Client::
-connect(chars_view addr)
+connect(const cow_string& addr, const callback_type& callback)
   {
     // Parse the address string, which shall contain a host name and an optional
     // port to connect, followed by an optional path and an optional query string.
     // If no port is specified, 443 is implied.
     Network_Reference caddr;
-    if(parse_network_reference(caddr, addr) != addr.n)
-      POSEIDON_THROW(("Invalid connect address `$1`"), addr);
+    if(parse_network_reference(caddr, addr) != addr.size())
+      POSEIDON_THROW(("Invalid address `$1`"), addr);
 
     if(caddr.port.n == 0)
       caddr.port_num = 443;
@@ -222,8 +224,8 @@ connect(chars_view addr)
     if(!this->m_sessions)
       this->m_sessions = new_sh<X_Session_Table>();
 
-    auto session = new_sh<Final_Session>(this->m_callback, this->m_sessions,
-                               cow_string(caddr.path), cow_string(caddr.query));
+    auto session = new_sh<Final_Session>(cow_string(caddr.path), cow_string(caddr.query),
+                                         callback, this->m_sessions);
     session->http_set_default_host(format_string("$1:$2", caddr.host, caddr.port_num));
     auto dns_task = new_sh<DNS_Connect_Task>(network_driver,
                        session, cow_string(caddr.host), caddr.port_num);

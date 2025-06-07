@@ -7,10 +7,14 @@
 #include "../poseidon/utils.hpp"
 using namespace ::poseidon;
 
-static Easy_WS_Client my_client(
-  // callback
-  *[](const shptr<WS_Client_Session>& session, Abstract_Fiber& fiber,
-      Easy_WS_Event event, linear_buffer&& data)
+static constexpr char connect_addr[] = "localhost:3806/some/caddr?arg1=foo&arg2=bar";
+static Easy_WS_Client my_client;
+static Easy_Timer my_timer;
+
+static void
+my_client_callback(const shptr<WS_Client_Session>& session,
+                   Abstract_Fiber& fiber, Easy_WS_Event event,
+                   linear_buffer&& data)
   {
     (void) fiber;
 
@@ -40,11 +44,11 @@ static Easy_WS_Client my_client(
       default:
         ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
       }
-  });
+  }
 
-static Easy_Timer my_timer(
-  // callback
-  *[](const shptr<Abstract_Timer>& timer, Abstract_Fiber& fiber, steady_time now)
+static void
+my_timer_callback(const shptr<Abstract_Timer>& timer,
+                  Abstract_Fiber& fiber, steady_time now)
   {
     (void) timer;
     (void) fiber;
@@ -62,9 +66,8 @@ static Easy_Timer my_timer(
       {
       case 0:
         {
-          cow_string addr = &"localhost:3806/some/caddr?arg1=foo&arg2=bar";
-          my_client_session = my_client.connect(addr);
-          POSEIDON_LOG_WARN(("example WS client connecting: addr = $1"), addr);
+          my_client_session = my_client.connect(&connect_addr, my_client_callback);
+          POSEIDON_LOG_WARN(("example WS client connecting: $1"), connect_addr);
         }
         break;
 
@@ -203,10 +206,10 @@ static Easy_Timer my_timer(
         my_client_session->ws_shut_down(websocket_status_going_away, "bye");
         my_client_session.reset();
       }
-  });
+  }
 
 void
 poseidon_module_main()
   {
-    my_timer.start(1s, 2s);
+    my_timer.start(1s, 2s, my_timer_callback);
   }

@@ -12,45 +12,31 @@ namespace poseidon {
 class Easy_HTTP_Client
   {
   public:
-    // This is also the prototype of callbacks for the constructor.
-    using callback_type =
-      ::rocket::shared_function<
-        void (
-          const shptr<HTTP_Client_Session>&,  // session
-          Abstract_Fiber&,  // fiber for current callback
-          Easy_HTTP_Event,  // event type; see comments above constructor
-          HTTP_Response_Headers&&,  // response status code and headers
-          linear_buffer&&  // response payload body
-        )>;
+    // This is the user-defined callback, where `session` points to an internal
+    // client session object, and if `event` is
+    // 1) `easy_http_open`, then `data` is empty; or
+    // 2) `easy_http_message`, then `req` and `data` are the headers and body
+    //    of a response message, respectively; or
+    // 3) `easy_http_close`, then `resp` is empty and `data` is the error
+    //    description.
+    //
+    // This client object stores a copy of the callback object, which is invoked
+    // accordingly in the main thread. The callback object is never copied, and
+    // is allowed to modify itself.
+    using callback_type = ::rocket::shared_function<
+            void (
+              const shptr<HTTP_Client_Session>&  session,
+              Abstract_Fiber& fiber,
+              Easy_HTTP_Event event,
+              HTTP_Response_Headers&& resp,
+              linear_buffer&& data)>;
 
   private:
-    callback_type m_callback;
-
     struct X_Session_Table;
     shptr<X_Session_Table> m_sessions;
 
   public:
-    // Constructs a client. The argument shall be an invocable object taking
-    // `(const shptr<HTTP_Client_Session>& session, Abstract_Fiber& fiber,
-    // Easy_HTTP_Event event, HTTP_Response_Headers&& resp, linear_buffer&&
-    // data)`, where `session` is a pointer to a client socket object, and if
-    // `event` is
-    //  1) `easy_http_open`, then `data` is empty; or
-    //  2) `easy_http_message`, then `req` and `data` are the headers and body
-    //     of a response message, respectively; or
-    //  3) `easy_http_close`, then `resp` is empty and `data` is the error
-    //     description.
-    // This client object stores a copy of the callback object, which is invoked
-    // accordingly in the main thread. The callback object is never copied, and
-    // is allowed to modify itself.
-    template<typename xCallback,
-    ROCKET_ENABLE_IF(callback_type::is_viable<xCallback>::value)>
-    explicit Easy_HTTP_Client(xCallback&& cb)
-      :
-        m_callback(forward<xCallback>(cb))
-      { }
-
-  public:
+    Easy_HTTP_Client() noexcept = default;
     Easy_HTTP_Client(const Easy_HTTP_Client&) = delete;
     Easy_HTTP_Client& operator=(const Easy_HTTP_Client&) & = delete;
     ~Easy_HTTP_Client();
@@ -59,7 +45,7 @@ class Easy_HTTP_Client
     // host name and (optional) port number. User names, paths, query parameters
     // or fragments are not allowed. If no port number is given, 80 is implied.
     shptr<HTTP_Client_Session>
-    connect(chars_view addr);
+    connect(const cow_string& addr, const callback_type& callback);
 
     // Shuts down all connections.
     void

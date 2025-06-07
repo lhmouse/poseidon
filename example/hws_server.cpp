@@ -6,10 +6,13 @@
 #include "../poseidon/utils.hpp"
 using namespace ::poseidon;
 
-static Easy_HWS_Server my_server(
-  // callback
-  *[](const shptr<WS_Server_Session>& session, Abstract_Fiber& fiber,
-      Easy_HWS_Event event, linear_buffer&& data)
+static constexpr char bind_addr[] = "[::]:3806";
+static Easy_HWS_Server my_server;
+
+static void
+my_server_callback(const shptr<WS_Server_Session>& session,
+                   Abstract_Fiber& fiber, Easy_HWS_Event event,
+                   linear_buffer&& data)
   {
     (void) fiber;
 
@@ -58,12 +61,11 @@ static Easy_HWS_Server my_server(
       default:
         ASTERIA_TERMINATE(("shouldn't happen: event = $1"), event);
       }
-  });
+  }
 
 void
 poseidon_module_main()
   {
-    static constexpr char bind_addr[] = "[::]:3806";
-    my_server.start(&bind_addr);
+    my_server.start(&bind_addr, my_server_callback);
     POSEIDON_LOG_ERROR(("example HTTP/WS server started: $1"), bind_addr);
   }

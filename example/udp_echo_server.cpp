@@ -6,22 +6,23 @@
 #include "../poseidon/utils.hpp"
 using namespace ::poseidon;
 
-static Easy_UDP_Server my_server(
-  // callback
-  *[](const shptr<UDP_Socket>& socket, Abstract_Fiber& fiber,
-      IPv6_Address&& addr, linear_buffer&& data)
+static constexpr char bind_addr[] = "[::]:3801";
+static Easy_UDP_Server my_server;
+
+static void
+my_server_callback(const shptr<UDP_Socket>& socket, Abstract_Fiber& fiber,
+                   IPv6_Address&& addr, linear_buffer&& data)
   {
     (void) fiber;
 
     POSEIDON_LOG_FATAL(("example UDP server received data from `$1`: $2"), addr, data);
     socket->udp_send(addr, data);
     data.clear();
-  });
+  }
 
 void
 poseidon_module_main()
   {
-    static constexpr char bind_addr[] = "[::]:3801";
-    my_server.start(&bind_addr);
+    my_server.start(&bind_addr, my_server_callback);
     POSEIDON_LOG_FATAL(("example UDP server started: $1"), bind_addr);
   }

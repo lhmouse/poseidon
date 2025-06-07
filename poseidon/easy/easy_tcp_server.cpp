@@ -46,7 +46,8 @@ struct Final_Fiber final : Abstract_Fiber
     const volatile TCP_Socket* m_refptr;
 
     Final_Fiber(const Easy_TCP_Server::callback_type& callback,
-                const shptr<Session_Table>& sessions, const volatile TCP_Socket* refptr)
+                const shptr<Session_Table>& sessions,
+                const volatile TCP_Socket* refptr)
       :
         m_callback(callback), m_wsessions(sessions), m_refptr(refptr)
       { }
@@ -100,7 +101,7 @@ struct Final_Fiber final : Abstract_Fiber
             // and shall be preserved across callbacks.
             if(event.type == easy_stream_data)
               this->m_callback(socket, *this, event.type,
-                        splice_buffers(queue->data_stream, move(event.data)), event.code);
+                     splice_buffers(queue->data_stream, move(event.data)), event.code);
             else
               this->m_callback(socket, *this, event.type, event.data, event.code);
           }
@@ -108,7 +109,7 @@ struct Final_Fiber final : Abstract_Fiber
             // Shut the connection down asynchronously. Pending output data
             // are discarded, but the user-defined callback will still be called
             // for remaining input data, in case there is something useful.
-            POSEIDON_LOG_ERROR(("Unhandled exception thrown fromt: $1"), stdex);
+            POSEIDON_LOG_ERROR(("Unhandled exception: $1"), stdex);
             socket->quick_close();
           }
         }
@@ -120,8 +121,9 @@ struct Final_Socket final : TCP_Socket
     Easy_TCP_Server::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
 
-    Final_Socket(const Easy_TCP_Server::callback_type& callback,
-                 unique_posix_fd&& fd, const shptr<Session_Table>& sessions)
+    Final_Socket(unique_posix_fd&& fd,
+                 const Easy_TCP_Server::callback_type& callback,
+                 const shptr<Session_Table>& sessions)
       :
         TCP_Socket(move(fd)),
         m_callback(callback), m_wsessions(sessions)
@@ -199,8 +201,9 @@ struct Final_Acceptor final : TCP_Acceptor
     Easy_TCP_Server::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
 
-    Final_Acceptor(const Easy_TCP_Server::callback_type& callback,
-                   const IPv6_Address& addr, const shptr<Session_Table>& sessions)
+    Final_Acceptor(const IPv6_Address& addr,
+                   const Easy_TCP_Server::callback_type& callback,
+                   const shptr<Session_Table>& sessions)
       :
         TCP_Acceptor(addr),
         m_callback(callback), m_wsessions(sessions)
@@ -214,7 +217,7 @@ struct Final_Acceptor final : TCP_Acceptor
         if(!sessions)
           return nullptr;
 
-        auto socket = new_sh<Final_Socket>(this->m_callback, move(fd), sessions);
+        auto socket = new_sh<Final_Socket>(move(fd), this->m_callback, sessions);
         (void) addr;
 
         // We are in the network thread here.
@@ -239,10 +242,10 @@ Easy_TCP_Server::
 
 shptr<TCP_Acceptor>
 Easy_TCP_Server::
-start(const IPv6_Address& addr)
+start(const IPv6_Address& addr, const callback_type& callback)
   {
     auto sessions = new_sh<X_Session_Table>();
-    auto acceptor = new_sh<Final_Acceptor>(this->m_callback, addr, sessions);
+    auto acceptor = new_sh<Final_Acceptor>(addr, callback, sessions);
 
     network_driver.insert(acceptor);
     this->m_sessions = move(sessions);
@@ -252,18 +255,16 @@ start(const IPv6_Address& addr)
 
 shptr<TCP_Acceptor>
 Easy_TCP_Server::
-start(const cow_string& addr)
+start(const cow_string& addr, const callback_type& callback)
   {
-    IPv6_Address v6addr(addr);
-    return this->start(v6addr);
+    return this->start(IPv6_Address(addr), callback);
   }
 
 shptr<TCP_Acceptor>
 Easy_TCP_Server::
-start_any(uint16_t port)
+start_any(uint16_t port, const callback_type& callback)
   {
-    IPv6_Address v6addr(ipv6_unspecified, port);
-    return this->start(v6addr);
+    return this->start(IPv6_Address(ipv6_unspecified, port), callback);
   }
 
 void

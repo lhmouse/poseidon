@@ -114,10 +114,9 @@ poseidon_etc = [
 
 example_src = [
   'example/udp_echo_server.cpp', 'example/tcp_echo_server.cpp',
-  'example/ssl_echo_server.cpp', 'example/http_server.cpp', 'example/http_client.cpp',
-  'example/https_server.cpp', 'example/https_client.cpp', 'example/ws_server.cpp',
-  'example/hws_server.cpp', 'example/ws_client.cpp', 'example/wss_server.cpp',
-  'example/hwss_server.cpp', 'example/wss_client.cpp' ]
+  'example/ssl_echo_server.cpp',
+  'example/hws_server.cpp', 'example/http_client.cpp', 'example/ws_client.cpp',
+  'example/hwss_server.cpp', 'example/https_client.cpp', 'example/wss_client.cpp' ]
 
 test_src = [
   'test/utils.cpp', 'test/ipv6_address.cpp', 'test/uuid.cpp', 'test/datetime.cpp',

@@ -109,14 +109,9 @@ struct Final_Fiber final : Abstract_Fiber
               session->ssl_shut_down();
           }
           catch(exception& stdex) {
-            // Shut the connection down with a message.
-            // XXX: The user-defined callback may have sent a response...?
-            POSEIDON_LOG_ERROR(("Unhandled exception thrown from1"), stdex);
-            HTTP_Response_Headers resp;
-            resp.status = http_status_internal_server_error;
-            resp.headers.emplace_back(&"Connection", &"close");
-            session->http_response(move(resp), "");
-            session->ssl_shut_down();
+            // Shut the connection down without a message.
+            POSEIDON_LOG_ERROR(("Unhandled exception: $1"), stdex);
+            session->quick_close();
           }
         }
       }
@@ -127,8 +122,9 @@ struct Final_Session final : HTTPS_Server_Session
     Easy_HTTPS_Server::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
 
-    Final_Session(const Easy_HTTPS_Server::callback_type& callback,
-                  unique_posix_fd&& fd, const shptr<Session_Table>& sessions)
+    Final_Session(unique_posix_fd&& fd,
+                  const Easy_HTTPS_Server::callback_type& callback,
+                  const shptr<Session_Table>& sessions)
       :
         SSL_Socket(move(fd), network_driver),
         m_callback(callback), m_wsessions(sessions)
@@ -176,8 +172,8 @@ struct Final_Session final : HTTPS_Server_Session
 
     virtual
     void
-    do_on_http_request_finish(HTTP_Request_Headers&& req, linear_buffer&& data,
-                               bool close_now) override
+    do_on_http_request_finish(HTTP_Request_Headers&& req,
+                              linear_buffer&& data, bool close_now) override
       {
         Session_Table::Event_Queue::Event event;
         event.type = easy_http_message;
@@ -217,8 +213,9 @@ struct Final_Acceptor final : TCP_Acceptor
     Easy_HTTPS_Server::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
 
-    Final_Acceptor(const Easy_HTTPS_Server::callback_type& callback,
-                   const IPv6_Address& addr, const shptr<Session_Table>& sessions)
+    Final_Acceptor(const IPv6_Address& addr,
+                   const Easy_HTTPS_Server::callback_type& callback,
+                   const shptr<Session_Table>& sessions)
       :
         TCP_Acceptor(addr),
         m_callback(callback), m_wsessions(sessions)
@@ -234,7 +231,7 @@ struct Final_Acceptor final : TCP_Acceptor
         if(!sessions)
           return nullptr;
 
-        auto session = new_sh<Final_Session>(this->m_callback, move(fd), sessions);
+        auto session = new_sh<Final_Session>(move(fd), this->m_callback, sessions);
         (void) addr;
 
         // We are in the network thread here.
@@ -259,10 +256,10 @@ Easy_HTTPS_Server::
 
 shptr<TCP_Acceptor>
 Easy_HTTPS_Server::
-start(const IPv6_Address& addr)
+start(const IPv6_Address& addr, const callback_type& callback)
   {
     auto sessions = new_sh<X_Session_Table>();
-    auto acceptor = new_sh<Final_Acceptor>(this->m_callback, addr, sessions);
+    auto acceptor = new_sh<Final_Acceptor>(addr, callback, sessions);
 
     network_driver.insert(acceptor);
     this->m_sessions = move(sessions);
@@ -272,18 +269,16 @@ start(const IPv6_Address& addr)
 
 shptr<TCP_Acceptor>
 Easy_HTTPS_Server::
-start(const cow_string& addr)
+start(const cow_string& addr, const callback_type& callback)
   {
-    IPv6_Address v6addr(addr);
-    return this->start(v6addr);
+    return this->start(IPv6_Address(addr), callback);
   }
 
 shptr<TCP_Acceptor>
 Easy_HTTPS_Server::
-start_any(uint16_t port)
+start_any(uint16_t port, const callback_type& callback)
   {
-    IPv6_Address v6addr(ipv6_unspecified, port);
-    return this->start(v6addr);
+    return this->start(IPv6_Address(ipv6_unspecified, port), callback);
   }
 
 void

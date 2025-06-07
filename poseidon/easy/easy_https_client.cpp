@@ -101,7 +101,7 @@ struct Final_Fiber final : Abstract_Fiber
             // Shut the connection down asynchronously. Pending output data
             // are discarded, but the user-defined callback will still be called
             // for remaining input data, in case there is something useful.
-            POSEIDON_LOG_ERROR(("Unhandled exception thrown from HTTP client: $1"), stdex);
+            POSEIDON_LOG_ERROR(("Unhandled exception: $1"), stdex);
             session->quick_close();
           }
 
@@ -165,8 +165,8 @@ struct Final_Session final : HTTPS_Client_Session
 
     virtual
     void
-    do_on_http_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data,
-                                bool close_now) override
+    do_on_http_response_finish(HTTP_Response_Headers&& resp,
+                               linear_buffer&& data, bool close_now) override
       {
         Session_Table::Event_Queue::Event event;
         event.type = easy_http_message;
@@ -203,14 +203,14 @@ Easy_HTTPS_Client::
 
 shptr<HTTPS_Client_Session>
 Easy_HTTPS_Client::
-connect(chars_view addr)
+connect(const cow_string& addr, const callback_type& callback)
   {
     // Parse the address string, which shall contain a host name and an optional
     // port to connect, followed by an optional path and an optional query string.
     // If no port is specified, 443 is implied.
     Network_Reference caddr;
-    if(parse_network_reference(caddr, addr) != addr.n)
-      POSEIDON_THROW(("Invalid connect address `$1`"), addr);
+    if(parse_network_reference(caddr, addr) != addr.size())
+      POSEIDON_THROW(("Invalid address `$1`"), addr);
 
     if(caddr.port.n == 0)
       caddr.port_num = 443;
@@ -229,7 +229,7 @@ connect(chars_view addr)
     if(!this->m_sessions)
       this->m_sessions = new_sh<X_Session_Table>();
 
-    auto session = new_sh<Final_Session>(this->m_callback, this->m_sessions);
+    auto session = new_sh<Final_Session>(callback, this->m_sessions);
     session->http_set_default_host(format_string("$1:$2", caddr.host, caddr.port_num));
     auto dns_task = new_sh<DNS_Connect_Task>(network_driver,
                        session, cow_string(caddr.host), caddr.port_num);

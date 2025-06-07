@@ -33,7 +33,8 @@ struct Final_Fiber final : Abstract_Fiber
     Easy_Timer::callback_type m_callback;
     wkptr<Event_Queue> m_wqueue;
 
-    Final_Fiber(const Easy_Timer::callback_type& callback, const shptr<Event_Queue>& queue)
+    Final_Fiber(const Easy_Timer::callback_type& callback,
+                const shptr<Event_Queue>& queue)
       :
         m_callback(callback), m_wqueue(queue)
       { }
@@ -69,12 +70,12 @@ struct Final_Fiber final : Abstract_Fiber
           lock.unlock();
 
           try {
+            // Call the user-defined callback.
             this->m_callback(timer, *this, event.time);
           }
           catch(exception& stdex) {
-            POSEIDON_LOG_ERROR((
-                "Unhandled exception thrown from timer: $1"),
-                stdex);
+            // Ignore this exception.
+            POSEIDON_LOG_ERROR(("Unhandled exception: $1"), stdex);
           }
         }
       }
@@ -85,7 +86,8 @@ struct Final_Timer final : Abstract_Timer
     Easy_Timer::callback_type m_callback;
     wkptr<Event_Queue> m_wqueue;
 
-    Final_Timer(const Easy_Timer::callback_type& callback, const shptr<Event_Queue>& queue)
+    Final_Timer(const Easy_Timer::callback_type& callback,
+                const shptr<Event_Queue>& queue)
       :
         m_callback(callback), m_wqueue(queue)
       { }
@@ -124,17 +126,25 @@ Easy_Timer::
   {
   }
 
-void
+shptr<Abstract_Timer>
 Easy_Timer::
-start(milliseconds delay, milliseconds period)
+start(milliseconds delay, milliseconds period, const callback_type& callback)
   {
     auto queue = new_sh<X_Event_Queue>();
-    auto timer = new_sh<Final_Timer>(this->m_callback, queue);
+    auto timer = new_sh<Final_Timer>(callback, queue);
     queue->wtimer = timer;
 
     timer_driver.insert(timer, delay, period);
     this->m_queue = move(queue);
-    this->m_timer = move(timer);
+    this->m_timer = timer;
+    return timer;
+  }
+
+shptr<Abstract_Timer>
+Easy_Timer::
+start(milliseconds period, const callback_type& callback)
+  {
+    return this->start(period, period, callback);
   }
 
 void

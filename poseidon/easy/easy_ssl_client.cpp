@@ -103,7 +103,7 @@ struct Final_Fiber final : Abstract_Fiber
             // and shall be preserved across callbacks.
             if(event.type == easy_stream_data)
               this->m_callback(socket, *this, event.type,
-                        splice_buffers(queue->data_stream, move(event.data)), event.code);
+                      splice_buffers(queue->data_stream, move(event.data)), event.code);
             else
               this->m_callback(socket, *this, event.type, event.data, event.code);
           }
@@ -111,7 +111,7 @@ struct Final_Fiber final : Abstract_Fiber
             // Shut the connection down asynchronously. Pending output data
             // are discarded, but the user-defined callback will still be called
             // for remaining input data, in case there is something useful.
-            POSEIDON_LOG_ERROR(("Unhandled exception thrown fromclient: $1"), stdex);
+            POSEIDON_LOG_ERROR(("Unhandled exception: $1"), stdex);
             socket->quick_close();
           }
         }
@@ -209,13 +209,13 @@ Easy_SSL_Client::
 
 shptr<SSL_Socket>
 Easy_SSL_Client::
-connect(chars_view addr)
+connect(const cow_string& addr, const callback_type& callback)
   {
     // Parse the address string, which shall contain a host name and an optional
     // port to connect. A port is required.
     Network_Reference caddr;
-    if(parse_network_reference(caddr, addr) != addr.n)
-      POSEIDON_THROW(("Invalid connect address `$1`"), addr);
+    if(parse_network_reference(caddr, addr) != addr.size())
+      POSEIDON_THROW(("Invalid address `$1`"), addr);
 
     if(caddr.port.n == 0)
       POSEIDON_THROW(("No port specified in address `$1`"), addr);
@@ -234,7 +234,7 @@ connect(chars_view addr)
     if(!this->m_sessions)
       this->m_sessions = new_sh<X_Session_Table>();
 
-    auto socket = new_sh<Final_Socket>(this->m_callback, this->m_sessions);
+    auto socket = new_sh<Final_Socket>(callback, this->m_sessions);
     auto dns_task = new_sh<DNS_Connect_Task>(network_driver,
                        socket, cow_string(caddr.host), caddr.port_num);
 
