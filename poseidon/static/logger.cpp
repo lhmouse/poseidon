@@ -24,7 +24,7 @@ struct Message
   {
     uint32_t level : 8;
     uint32_t thrd_lwpid : 24;
-    char thrd_name[16] = "unknown";
+    char thrd_name[16];
     const char* func;
     const char* file;
     uint32_t line;
@@ -119,7 +119,7 @@ do_write_nothrow(xFiles& io_files,  const Level_Config& lconf, const Message& ms
     mtext.putn(nump.data(), 9);
     mtext.putc(' ');
     do_color(mtext, lconf, "22;7");  // no bright; inverse
-    mtext.puts(lconf.tag);
+    mtext.putn(lconf.tag, ::strnlen(lconf.tag, sizeof(lconf.tag)));
     do_color(mtext, lconf, "0");  // reset
     mtext.putc(' ');
 
@@ -158,7 +158,7 @@ do_write_nothrow(xFiles& io_files,  const Level_Config& lconf, const Message& ms
     nump.put_DU(msg.thrd_lwpid);
     mtext.putn(nump.data(), nump.size());
     mtext.puts(" [");
-    mtext.puts(msg.thrd_name);
+    mtext.putn(msg.thrd_name, ::strnlen(msg.thrd_name, sizeof(msg.thrd_name)));
     mtext.puts("] ");
 
     // Write the source location and enclosing function.
@@ -347,7 +347,10 @@ enqueue(uint8_t level, const char* func, const char* file, uint32_t line, const 
     X_Message msg;
     msg.level = level;
     msg.thrd_lwpid = (uint32_t) ::syscall(SYS_gettid) & 0xFFFFFFU;
-    ::pthread_getname_np(::pthread_self(), msg.thrd_name, sizeof(msg.thrd_name));
+
+    if(::pthread_getname_np(::pthread_self(), msg.thrd_name, sizeof(msg.thrd_name)) != 0)
+      ::strcpy(msg.thrd_name, "unknown");
+
     msg.func = func;
     msg.file = file;
     msg.line = line;
