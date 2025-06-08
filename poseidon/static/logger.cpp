@@ -12,12 +12,10 @@ namespace {
 
 struct Level_Config
   {
-    char tag[13];
-    bool p_stdout = false;
-    bool p_stderr = false;
-    bool trivial = false;
+    char tag[15];
+    bool expendable = false;
     cow_string color;
-    phcow_string file;
+    cow_vector<phcow_string> files;
   };
 
 struct Message
@@ -177,20 +175,23 @@ do_write_nothrow(xFiles& io_files,  const Level_Config& lconf, const Message& ms
     do_color(mtext, lconf, "0");  // reset
     mtext.putc('\n');
 
-    // Write the message. Errors are ignored.
-    if(lconf.p_stdout)
-      (void)! ::write(STDOUT_FILENO, mtext.data(), mtext.size());
+    // Write the message to all output files. Errors are ignored.
+    for(const auto& file : lconf.files)
+      if(file != "") {
+        auto r = io_files.try_emplace(file);
+        if(r.second) {
+          // A new element has just been inserted, so open the file.
+          if(file == "/dev/stdout")
+            r.first->second.reset(STDOUT_FILENO, nullptr);  // no close
+          else if(file == "/dev/stderr")
+            r.first->second.reset(STDERR_FILENO, nullptr);  // no close
+          else
+            r.first->second.reset(::open(file.c_str(), O_WRONLY | O_APPEND | O_CREAT, 0644));
+        }
 
-    if(lconf.p_stderr)
-      (void)! ::write(STDERR_FILENO, mtext.data(), mtext.size());
-
-    if(lconf.file != "") {
-      auto r = io_files.try_emplace(lconf.file);
-      if(r.second)
-        r.first->second.reset(::open(lconf.file.c_str(), O_WRONLY | O_APPEND | O_CREAT, 0644));
-      if(r.first->second)
-        (void)! ::write(r.first->second, mtext.data(), mtext.size());
-    }
+        if(r.first->second)
+          (void)! ::write(r.first->second, mtext.data(), mtext.size());
+      }
   }
   catch(exception& stdex) {
     ::fprintf(stderr,
@@ -246,59 +247,56 @@ reload(const Config_File& conf_file, bool verbose)
             name, conf_value, conf_file.path());
 
       fmt.clear_string();
-      format(fmt, "logger.$1.file", name);
+      format(fmt, "logger.$1.expendable", name);
       conf_value = conf_file.query(fmt.get_string());
-      if(conf_value.is_string())
-        lconf.file = conf_value.as_string();
+      if(conf_value.is_boolean())
+        lconf.expendable = conf_value.as_boolean();
       else if(!conf_value.is_null())
         POSEIDON_THROW((
-            "Invalid `logger.$1.file`: expecting a `string`, got `$2`",
+            "Invalid `logger.$1.expendable`: expecting a `boolean`, got `$2`",
             "[in configuration file '$3']"),
             name, conf_value, conf_file.path());
 
+      ::asteria::V_array files;
       fmt.clear_string();
-      format(fmt, "logger.$1.stdout", name);
+      format(fmt, "logger.$1.files", name);
       conf_value = conf_file.query(fmt.get_string());
-      if(conf_value.is_boolean())
-        lconf.p_stdout = conf_value.as_boolean();
+      if(conf_value.is_array())
+        files = conf_value.as_array();
       else if(!conf_value.is_null())
         POSEIDON_THROW((
-            "Invalid `logger.$1.stdout`: expecting a `boolean`, got `$2`",
+            "Invalid `logger.$1.files`: expecting an `array`, got `$2`",
             "[in configuration file '$3']"),
             name, conf_value, conf_file.path());
 
-      fmt.clear_string();
-      format(fmt, "logger.$1.stderr", name);
-      conf_value = conf_file.query(fmt.get_string());
-      if(conf_value.is_boolean())
-        lconf.p_stderr = conf_value.as_boolean();
-      else if(!conf_value.is_null())
-        POSEIDON_THROW((
-            "Invalid `logger.$1.stderr`: expecting a `boolean`, got `$2`",
-            "[in configuration file '$3']"),
-            name, conf_value, conf_file.path());
-
-      fmt.clear_string();
-      format(fmt, "logger.$1.trivial", name);
-      conf_value = conf_file.query(fmt.get_string());
-      if(conf_value.is_boolean())
-        lconf.trivial = conf_value.as_boolean();
-      else if(!conf_value.is_null())
-        POSEIDON_THROW((
-            "Invalid `logger.$1.trivial`: expecting a `boolean`, got `$2`",
-            "[in configuration file '$3']"),
-            name, conf_value, conf_file.path());
+      for(size_t k = 0;  k < files.size();  ++k)
+        if(files[k].is_string())
+          lconf.files.emplace_back(files[k].as_string());
+        else if(!files[k].is_null())
+          POSEIDON_THROW((
+              "Invalid `logger.$1.files[$2]`: expecting a `string`, got `$3`",
+              "[in configuration file '$4']"),
+              name, k, files[k], conf_file.path());
     }
 
-    if(verbose)
-      for(size_t k = 0;  k != levels.size();  ++k)
-        if(levels[k].p_stderr == false)
-          levels.mut(k).p_stdout = true;
-
     uint32_t level_bits = 0;
-    for(size_t k = 0;  k != levels.size();  ++k)
-      if((levels[k].file != "") || levels[k].p_stdout || levels[k].p_stderr)
+    for(size_t k = 0;  k != levels.size();  ++k) {
+      if(verbose) {
+        // Apply `/dev/stdout` to all levels, so they are all visible.
+        bool has_stdout = false;
+        for(const auto& file : levels[k].files)
+          if((file == "/dev/stdout") || (file == "/dev/stderr"))
+            has_stdout = true;
+
+        if(!has_stdout)
+          levels.mut(k).files.emplace_back(&"/dev/stdout");
+
+        levels.mut(k).expendable = false;
+      }
+
+      if(levels[k].files.size() != 0)
         level_bits |= 1U << k;
+    }
 
     if(level_bits == 0)
       ::fputs("WARNING: Logger is disabled.\n", stderr);
@@ -330,7 +328,11 @@ thread_loop()
 
     // Write all elements.
     for(const auto& msg : this->m_io_queue)
-      if((msg.level < levels.size()) && (!levels[msg.level].trivial || (queue_size < 1000)))
+      if(msg.level >= levels.size())
+        continue;
+      else if((queue_size > 1000) && levels[msg.level].expendable)
+        continue;
+      else
         do_write_nothrow(this->m_io_files, levels[msg.level], msg);
 
     this->m_io_queue.clear();
