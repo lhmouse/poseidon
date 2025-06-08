@@ -501,14 +501,14 @@ do_load_modules()
             "[in configuration file '$2']"),
             conf_value, conf.path());
 
-      for(const auto& r : mods)
-        if(r.is_string())
-          modules.emplace_back(r.as_string());
-        else if(!r.is_null())
+      for(size_t k = 0;  k < mods.size();  ++k)
+        if(mods[k].is_string())
+          modules.emplace_back(mods[k].as_string());
+        else if(!mods[k].is_null())
           POSEIDON_THROW((
-              "Invalid module name: expecting a `string`, got `$1`",
-              "[in configuration file '$2']"),
-              r, conf.path());
+              "Invalid `modules[$1]`:: expecting a `string`, got `$2`",
+              "[in configuration file '$3']"),
+              k, mods[k], conf.path());
     }
 
     for(const auto& name : modules) {
