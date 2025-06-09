@@ -84,11 +84,11 @@ do_on_abstract_task_execute()
       if(dns_result)
         socket->connect(*dns_result);
       else
-        socket->quick_close();
+        socket->close();
     }
     catch(exception& stdex) {
       POSEIDON_LOG_ERROR(("Could not initiate connection: $1"), stdex);
-      socket->quick_close();
+      socket->close();
     }
 
     // Insert the socket. Even in case of a failure, a closure notification

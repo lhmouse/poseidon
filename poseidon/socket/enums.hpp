@@ -21,10 +21,10 @@ enum IP_Address_Class : uint8_t
 
 enum Socket_State : uint8_t
   {
-    socket_pending      = 0,
-    socket_established  = 1,
-    socket_closing      = 2,
-    socket_closed       = 3,
+    socket_pending      = 0,  // TCP, SSL
+    socket_established  = 1,  // TCP, SSL, UDP
+    socket_closing      = 2,  // TCP, SSL
+    socket_closed       = 3,  // TCP, SSL, UDP
   };
 
 enum HTTP_Payload_Type : uint8_t

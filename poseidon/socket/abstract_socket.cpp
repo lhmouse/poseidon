@@ -15,18 +15,18 @@ Abstract_Socket(unique_posix_fd&& fd)
     // Take ownership the socket handle.
     this->m_fd = move(fd);
     if(!this->m_fd)
-      POSEIDON_THROW(("Null socket handle not valid"));
+      POSEIDON_THROW(("Null socket descriptor"));
 
-    // Check the address family.
-    if(this->local_address() == ipv6_invalid)
-      POSEIDON_THROW(("Could not get socket local address"));
+    // Require the socket be non-blocking here for simplicity.
+    int fl_old = ::fcntl(this->m_fd, F_GETFL);
+    if(fl_old == -1)
+      POSEIDON_THROW(("Could not get socket flags: ${errno:full}]"));
 
-#ifdef ROCKET_DEBUG
-    // Require the socket be non-blocking here.
-    int fl = ::fcntl(this->m_fd, F_GETFL);
-    ROCKET_ASSERT(fl != -1);
-    ROCKET_ASSERT(fl & O_NONBLOCK);
-#endif
+    int fl_new = fl_old | O_NONBLOCK;
+    if((fl_new != fl_old) && (::fcntl(this->m_fd, F_SETFL, fl_new) != 0))
+      POSEIDON_THROW(("Could not set socket flags: ${errno:full}]"));
+
+    this->m_io_driver = reinterpret_cast<Network_Driver*>(-1);
   }
 
 Abstract_Socket::
@@ -36,14 +36,16 @@ Abstract_Socket(int type, int protocol)
     this->m_fd.reset(::socket(AF_INET6, type | SOCK_NONBLOCK, protocol));
     if(!this->m_fd)
       POSEIDON_THROW((
-          "Could not create IPv6 socket: type `$1`, protocol `$2`",
+          "Could not create IPv6 socket of type `$1` and protocol `$2`",
           "[`socket()` failed: ${errno:full}]"),
           type, protocol);
 
-    // Use `TCP_NODELAY`. Errors are ignored.
-    static constexpr int true_value = 1;
-    if(type == SOCK_STREAM)
-      ::setsockopt(this->m_fd, IPPROTO_TCP, TCP_NODELAY, &true_value, sizeof(int));
+    // Use `TCP_QUICKACK`. Errors are ignored.
+    static constexpr int one = 1;
+    if((type == SOCK_STREAM) && is_any_of(protocol, { IPPROTO_IP, IPPROTO_TCP }))
+      ::setsockopt(this->m_fd, IPPROTO_TCP, TCP_QUICKACK, &one, sizeof(one));
+
+    this->m_io_driver = reinterpret_cast<Network_Driver*>(-3);
   }
 
 Abstract_Socket::
@@ -76,14 +78,6 @@ do_abstract_socket_lock_write_queue(recursive_mutex::unique_lock& lock) noexcept
     return this->m_io_write_queue;
   }
 
-bool
-Abstract_Socket::
-do_abstract_socket_change_state(Socket_State from, Socket_State to) noexcept
-  {
-    auto cmp = from;
-    return this->m_state.cmpxchg(cmp, to);
-  }
-
 const IPv6_Address&
 Abstract_Socket::
 local_address() const noexcept
@@ -91,74 +85,60 @@ local_address() const noexcept
     if(this->m_sockname_ready.load())
       return this->m_sockname;
 
-    // Try getting the address now.
-    static plain_mutex s_mutex;
-    plain_mutex::unique_lock lock(s_mutex);
-
-    if(this->m_sockname_ready.load())
-      return this->m_sockname;
-
+    // Try getting the local address now.
     ::sockaddr_in6 sa;
     ::socklen_t salen = sizeof(sa);
-    if(::getsockname(this->m_fd, (::sockaddr*) &sa, &salen) != 0)
+    if(::getsockname(this->m_fd, reinterpret_cast<::sockaddr*>(&sa), &salen) != 0)
       return ipv6_invalid;
 
-    ROCKET_ASSERT(sa.sin6_family == AF_INET6);
-    ROCKET_ASSERT(salen == sizeof(sa));
+    if((sa.sin6_family != AF_INET6) || (salen < sizeof(sa)))
+      return ipv6_invalid;
 
+    // If this is an unspecified address, don't cache it.
     if(sa.sin6_port == ROCKET_HTOBE16(0))
       return ipv6_unspecified;
 
-    // Cache the address.
+    // Save the result.
     this->m_sockname.set_addr(sa.sin6_addr);
-    this->m_sockname.set_port(ROCKET_BETOH16(sa.sin6_port));
-    ::std::atomic_thread_fence(::std::memory_order_release);
-    this->m_sockname_ready.store(true);
+    this->m_sockname.set_port(sa.sin6_port);
+    this->m_sockname_ready.store(true);  // release
     return this->m_sockname;
   }
 
-bool
+const IPv6_Address&
 Abstract_Socket::
-idle() const noexcept
+remote_address() const noexcept
   {
-    recursive_mutex::unique_lock lock(this->m_io_mutex);
-    return this->m_io_write_queue.empty();
-  }
+    if(this->m_peername_ready.load())
+      return this->m_peername;
 
-void
-Abstract_Socket::
-connect(const IPv6_Address& addr)
-  {
+    // Try getting the local address now.
     ::sockaddr_in6 sa;
-    sa.sin6_family = AF_INET6;
-    sa.sin6_port = ROCKET_HTOBE16(addr.port());
-    sa.sin6_flowinfo = 0;
-    sa.sin6_addr = addr.addr();
-    sa.sin6_scope_id = 0;
-    if((::connect(this->m_fd, (const ::sockaddr*) &sa, sizeof(sa)) != 0) && (errno != EINPROGRESS))
-      POSEIDON_THROW((
-          "Failed to initiate TCP connection to `$3`",
-          "[`connect()` failed: ${errno:full}]",
-          "[TCP socket `$1` (class `$2`)]"),
-          this, typeid(*this), addr);
+    ::socklen_t salen = sizeof(sa);
+    if(::getpeername(this->m_fd, reinterpret_cast<::sockaddr*>(&sa), &salen) != 0)
+      return (errno == ENOTCONN) ? ipv6_unspecified : ipv6_invalid;
+
+    if((sa.sin6_family != AF_INET6) || (salen < sizeof(sa)))
+      return ipv6_invalid;
+
+    // If this is an unspecified address, don't cache it.
+    if(sa.sin6_port == ROCKET_HTOBE16(0))
+      return ipv6_unspecified;
+
+    // Save the result.
+    this->m_peername.set_addr(sa.sin6_addr);
+    this->m_peername.set_port(sa.sin6_port);
+    this->m_peername_ready.store(true);  // release
+    return this->m_peername;
   }
 
 bool
 Abstract_Socket::
-quick_close() noexcept
+close() noexcept
   {
-    if(this->m_state.load() == socket_closed)
-      return true;
-
-    // It doesn't matter if this gets called multiple times.
+    int r = ::shutdown(this->m_fd, SHUT_RDWR);
     this->m_state.store(socket_closed);
-
-    // Discard pending data.
-    ::linger lng;
-    lng.l_onoff = 1;
-    lng.l_linger = 0;
-    ::setsockopt(this->m_fd, SOL_SOCKET, SO_LINGER, &lng, sizeof(lng));
-    return ::shutdown(this->m_fd, SHUT_RDWR) == 0;
+    return r == 0;
   }
 
 }  // namespace poseidon

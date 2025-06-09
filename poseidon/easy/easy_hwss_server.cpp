@@ -142,7 +142,7 @@ struct Final_Session final : WSS_Server_Session
         catch(exception& stdex) {
           POSEIDON_LOG_ERROR(("Could not push network event: $1"), stdex);
           sessions->session_map.erase(session_iter);
-          this->quick_close();
+          this->close();
         }
       }
 
@@ -188,7 +188,7 @@ struct Final_Session final : WSS_Server_Session
           default:
             // Reject all the other.
             this->do_on_https_request_error(http_status_method_not_allowed);
-            this->quick_close();
+            this->close();
             return http_payload_normal;
           }
 
@@ -257,7 +257,6 @@ struct Final_Acceptor final : TCP_Acceptor
         TCP_Acceptor(addr),
         m_callback(callback), m_wsessions(sessions)
       {
-        this->defer_accept(10s);
       }
 
     virtual

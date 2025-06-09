@@ -45,7 +45,7 @@ class SSL_Socket
 
     virtual
     void
-    do_abstract_socket_on_writable() override;
+    do_abstract_socket_on_writeable() override;
 
     // This callback is invoked by the network thread after a full-duplex
     // connection has been established.
@@ -63,14 +63,13 @@ class SSL_Socket
     do_on_ssl_stream(linear_buffer& data, bool eof) = 0;
 
     // For a server-side socket, this callback is invoked by the network thread
-    // when ALPN has been requested by the client. This function should return
-    // the name of protocol being selected. If an empty string is returned, no
-    // ALPN protocol will be selected. The argument is the list of protocols
+    // when ALPN has been requested by the client. This function should write
+    // the selected protocol into `proto`. The argument is the list of protocols
     // that have been offered by the client.
     // The default implementation returns an empty string.
     virtual
-    charbuf_256
-    do_on_ssl_alpn_request(cow_vector<charbuf_256>&& protos);
+    void
+    do_on_ssl_alpn_request(charbuf_256& proto, cow_vector<charbuf_256>&& protos);
 
     // For a client-side socket, this function offers a list of protocols to the
     // server. This function must be called before SSL negotiation, for example

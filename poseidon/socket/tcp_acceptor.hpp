@@ -34,7 +34,7 @@ class TCP_Acceptor
 
     virtual
     void
-    do_abstract_socket_on_writable() override;
+    do_abstract_socket_on_writeable() override;
 
     // This callback is invoked by the network thread when a connection has been
     // received, and is intended to be overriden by derived classes. This function

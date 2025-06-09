@@ -16,9 +16,6 @@ class TCP_Socket
   private:
     friend class Network_Driver;
 
-    mutable atomic_relaxed<bool> m_peername_ready;
-    mutable IPv6_Address m_peername;
-
   protected:
     // Takes ownership of an accepted socket. [server-side constructor]
     explicit
@@ -39,7 +36,7 @@ class TCP_Socket
 
     virtual
     void
-    do_abstract_socket_on_writable() override;
+    do_abstract_socket_on_writeable() override;
 
     // This callback is invoked by the network thread after a full-duplex
     // connection has been established.

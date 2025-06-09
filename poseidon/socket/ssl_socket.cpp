@@ -162,7 +162,7 @@ do_abstract_socket_on_readable()
             this, typeid(*this), ::ERR_reason_error_string(::ERR_get_error()));
 
         // The connection is now broken.
-        this->quick_close();
+        this->close();
         return;
       }
 
@@ -188,7 +188,7 @@ do_abstract_socket_on_readable()
 
 void
 SSL_Socket::
-do_abstract_socket_on_writable()
+do_abstract_socket_on_writeable()
   {
     recursive_mutex::unique_lock io_lock;
     auto& queue = this->do_abstract_socket_lock_write_queue(io_lock);
@@ -206,7 +206,7 @@ do_abstract_socket_on_writable()
           this, typeid(*this), ::ERR_reason_error_string(::ERR_get_error()));
 
       // The connection is now broken.
-      this->quick_close();
+      this->close();
       return;
     }
 
@@ -229,7 +229,7 @@ do_abstract_socket_on_writable()
             this, typeid(*this), ::ERR_reason_error_string(::ERR_get_error()));
 
         // The connection is now broken.
-        this->quick_close();
+        this->close();
         return;
       }
 
@@ -261,7 +261,7 @@ do_abstract_socket_on_writable()
     }
 
     POSEIDON_LOG_TRACE((
-        "SSL socket `$1` (class `$2`): `do_abstract_socket_on_writable()` done"),
+        "SSL socket `$1` (class `$2`): `do_abstract_socket_on_writeable()` done"),
         this, typeid(*this));
   }
 
@@ -376,7 +376,7 @@ ssl_send(chars_view data)
             this, typeid(*this), ::ERR_reason_error_string(::ERR_get_error()));
 
         // The connection is now broken.
-        this->quick_close();
+        this->close();
         return false;
       }
 

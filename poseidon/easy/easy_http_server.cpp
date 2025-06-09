@@ -111,7 +111,7 @@ struct Final_Fiber final : Abstract_Fiber
           catch(exception& stdex) {
             // Shut the connection down without a message.
             POSEIDON_LOG_ERROR(("Unhandled exception: $1"), stdex);
-            session->quick_close();
+            session->close();
           }
         }
       }
@@ -157,7 +157,7 @@ struct Final_Session final : HTTP_Server_Session
         catch(exception& stdex) {
           POSEIDON_LOG_ERROR(("Could not push network event: $1"), stdex);
           sessions->session_map.erase(session_iter);
-          this->quick_close();
+          this->close();
         }
       }
 
@@ -220,7 +220,6 @@ struct Final_Acceptor final : TCP_Acceptor
         TCP_Acceptor(addr),
         m_callback(callback), m_wsessions(sessions)
       {
-        this->defer_accept(10s);
       }
 
     virtual

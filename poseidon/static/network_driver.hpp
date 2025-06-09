@@ -19,10 +19,12 @@ class Network_Driver
     uniptr_SSL_CTX m_client_ssl_ctx;
 
     mutable plain_mutex m_epoll_mutex;
-    linear_buffer m_epoll_events;
     unique_posix_fd m_epoll_fd;
     uint32_t m_epoll_map_used = 0;
     ::std::valarray<wkptr<Abstract_Socket>> m_epoll_map_stor;
+
+    mutable plain_mutex m_event_mutex;
+    linear_buffer m_event_buf;
 
   public:
     // Constructs an empty driver.
@@ -30,15 +32,15 @@ class Network_Driver
 
   private:
     void
-    do_epoll_ctl(int op, const shptr<Abstract_Socket>& socket, uint32_t events);
+    do_epoll_ctl(int op, Abstract_Socket* socket, uint32_t events);
 
     wkptr<Abstract_Socket>&
     do_find_socket_nolock(const volatile Abstract_Socket* socket) noexcept;
 
     static
     int
-    do_alpn_callback(::SSL* ssl, const uint8_t** out, uint8_t* outlen, const uint8_t* in,
-                     unsigned int inlen, void* arg);
+    do_alpn_select_cb(::SSL* ssl, const unsigned char** out, unsigned char* outlen,
+                      const unsigned char* in, unsigned int inlen, void* arg);
 
   public:
     Network_Driver(const Network_Driver&) = delete;
@@ -47,7 +49,7 @@ class Network_Driver
 
     // Gets the server SSL context for incoming connections, which is available
     // only if a certificate and a private key have been specified in 'main.conf'.
-    // The certificate is sent to clients for verfication. If the server SSL
+    // The certificate is sent to clients for verification. If the server SSL
     // context is not available, an exception is thrown.
     // This function is thread-safe.
     uniptr_SSL_CTX
@@ -55,8 +57,8 @@ class Network_Driver
 
     // Gets the client SSL context for outgoing connections, which is always
     // available after `reload()`. If a path to trusted CA certificates is
-    // specified in 'main.conf', server certificate verfication is enabled;
-    // otherwise, a warning is printed and no verfication is performed.
+    // specified in 'main.conf', server certificate verification is enabled;
+    // otherwise, a warning is printed and no verification is performed.
     // This function is thread-safe.
     uniptr_SSL_CTX
     client_ssl_ctx() const;
@@ -72,8 +74,8 @@ class Network_Driver
     void
     thread_loop();
 
-    // Inserts a socket for polling. The network driver will hold a weak reference
-    // to this socket.
+    // Inserts a socket for polling. The network driver will hold a weak
+    // reference to this socket.
     // This function is thread-safe.
     void
     insert(const shptr<Abstract_Socket>& socket);

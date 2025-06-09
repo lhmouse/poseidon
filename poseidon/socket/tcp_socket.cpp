@@ -88,7 +88,7 @@ do_abstract_socket_on_readable()
 
 void
 TCP_Socket::
-do_abstract_socket_on_writable()
+do_abstract_socket_on_writeable()
   {
     recursive_mutex::unique_lock io_lock;
     auto& queue = this->do_abstract_socket_lock_write_queue(io_lock);
@@ -132,7 +132,7 @@ do_abstract_socket_on_writable()
     }
 
     POSEIDON_LOG_TRACE((
-        "TCP socket `$1` (class `$2`): `do_abstract_socket_on_writable()` done"),
+        "TCP socket `$1` (class `$2`): `do_abstract_socket_on_writeable()` done"),
         this, typeid(*this));
   }
 

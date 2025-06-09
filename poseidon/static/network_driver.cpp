@@ -26,25 +26,23 @@ Network_Driver::
 POSEIDON_VISIBILITY_HIDDEN
 void
 Network_Driver::
-do_epoll_ctl(int op, const shptr<Abstract_Socket>& socket, uint32_t events)
+do_epoll_ctl(int op, Abstract_Socket* socket, uint32_t events)
   {
+    ROCKET_ASSERT(this->m_epoll_fd);
+
     ::epoll_event event;
     event.events = events;
-    event.data.ptr = socket.get();
-
-    if(!this->m_epoll_fd)
-      return;
-
+    event.data.ptr = socket;
     if(::epoll_ctl(this->m_epoll_fd, op, socket->fd(), &event) != 0) {
-      // When adding a socket, if the operation has failed, an exception shall be
-      // thrown. For the other operations, errors are ignored.
+      // When adding a socket, if the operation has failed, an exception shall
+      // be thrown. For the other operations, errors are ignored.
       if(op == EPOLL_CTL_ADD)
         POSEIDON_THROW((
             "Could not add socket `$1` (class `$2`)",
             "[`epoll_ctl()` failed: ${errno:full}]"),
             socket, typeid(*socket));
 
-      POSEIDON_LOG_ERROR((
+      POSEIDON_LOG_FATAL((
           "Could not modify socket `$1` (class `$2`)",
           "[`epoll_ctl()` failed: ${errno:full}]"),
           socket, typeid(*socket));
@@ -52,11 +50,11 @@ do_epoll_ctl(int op, const shptr<Abstract_Socket>& socket, uint32_t events)
 
     if((op == EPOLL_CTL_ADD) || (op == EPOLL_CTL_MOD))
       POSEIDON_LOG_TRACE((
-          "Updated epoll flags for socket `$1` (class `$2`):$3$4$5$6"),
+          "Updated epoll flags for socket `$1` (class `$2`): $3 $4 $5"),
           socket, typeid(*socket),
-          (event.events & EPOLLET)  ? " ET"  : "",
-          (event.events & EPOLLIN)  ? " IN"  : "",
-          (event.events & EPOLLOUT) ? " OUT" : "");
+          (event.events & EPOLLET)  ? "ET"  : "",
+          (event.events & EPOLLIN)  ? "IN"  : "",
+          (event.events & EPOLLOUT) ? "OUT" : "");
   }
 
 POSEIDON_VISIBILITY_HIDDEN
@@ -93,51 +91,61 @@ do_find_socket_nolock(const volatile Abstract_Socket* socket) noexcept
       if((do_get_weak_(*elem) == nullptr) || (do_get_weak_(*elem) == socket))
         return *elem;
 
-    ROCKET_UNREACHABLE();
+    __builtin_unreachable();
   }
 
 POSEIDON_VISIBILITY_HIDDEN
 int
 Network_Driver::
-do_alpn_callback(::SSL* ssl, const uint8_t** out, uint8_t* outlen, const uint8_t* in,
-                 unsigned int inlen, void* arg)
+do_alpn_select_cb(::SSL* ssl, const unsigned char** out, unsigned char* outlen,
+                  const unsigned char* in, unsigned int inlen, void* arg)
   {
-    // Verify the socket. These errors shouldn't happen unless we have really
-    // messed things up e.g. when `arg` is a dangling pointer.
-    auto ssl_socket = static_cast<SSL_Socket*>(arg);
-    ROCKET_ASSERT(ssl_socket);
+    auto socket = static_cast<SSL_Socket*>(arg);
+    ROCKET_ASSERT(socket);
 
-    if(ssl_socket->m_ssl != ssl)
+    if(socket->m_ssl != ssl)
       return SSL_TLSEXT_ERR_ALERT_FATAL;
 
-    try {
-      cow_vector<charbuf_256> alpn_req;
-      charbuf_256 alpn_resp;
+    if(inlen == 0)
+      return SSL_TLSEXT_ERR_NOACK;
 
-      for(auto p = in;  (p != in + inlen) && (in + inlen - p >= 1U + *p);  p += 1U + *p) {
-        // Copy a protocol name and append a zero terminator.
-        char* str = alpn_req.emplace_back();
-        ::memcpy(str, p + 1, *p);
-        str[*p] = 0;
-        POSEIDON_LOG_TRACE(("Received ALPN protocol: $1"), str);
+    charbuf_256 resp;
+    cow_vector<charbuf_256> req;
+
+    try {
+      // Parse ALPN request.
+      const unsigned char* inp = in;
+      while(inp != in + inlen) {
+        size_t len = *inp;
+        inp ++;
+
+        // If the input is invalid, then fail the connection.
+        if(static_cast<size_t>(in + inlen - inp) < len)
+          return SSL_TLSEXT_ERR_ALERT_FATAL;
+
+        char* sreq = req.emplace_back().mut_data();
+        ::memcpy(sreq, inp, len);
+        sreq[len] = 0;
+        inp += len;
+        POSEIDON_LOG_TRACE(("Received ALPN protocol: $1"), sreq);
       }
 
-      alpn_resp = ssl_socket->do_on_ssl_alpn_request(move(alpn_req));
-      ssl_socket->m_alpn_proto.assign(alpn_resp);
+      socket->do_on_ssl_alpn_request(resp, move(req));
+      socket->m_alpn_proto.assign(resp.c_str());
     }
     catch(exception& stdex) {
       POSEIDON_LOG_ERROR((
           "Unhandled exception thrown from socket ALPN callback: $1",
           "[socket class `$2`]"),
-          stdex, typeid(*ssl_socket));
+          stdex, typeid(*socket));
     }
 
-    if(ssl_socket->m_alpn_proto.empty())  // no protocol
+    if(socket->m_alpn_proto.size() == 0)
       return SSL_TLSEXT_ERR_NOACK;
 
-    POSEIDON_LOG_TRACE(("Responding ALPN protocol: $1"), ssl_socket->m_alpn_proto);
-    *out = reinterpret_cast<const uint8_t*>(ssl_socket->m_alpn_proto.data());
-    *outlen = ::rocket::clamp_cast<uint8_t>(ssl_socket->m_alpn_proto.size(), 0U, 0xFFU);
+    POSEIDON_LOG_TRACE(("Accepting ALPN protocol: $1"), socket->m_alpn_proto);
+    *out = reinterpret_cast<const uint8_t*>(socket->m_alpn_proto.data());
+    *outlen = static_cast<uint8_t>(socket->m_alpn_proto.size());
     return SSL_TLSEXT_ERR_OK;
   }
 
@@ -151,7 +159,7 @@ server_ssl_ctx() const
       POSEIDON_THROW(("Server SSL not configured"));
 
     // Increment the reference count of the SSL context, as configuration may
-    // be reloaded after once this function returns.
+    // be reloaded once this function returns.
     ::SSL_CTX_up_ref(ptr);
     return uniptr_SSL_CTX(ptr);
   }
@@ -166,7 +174,7 @@ client_ssl_ctx() const
       POSEIDON_THROW(("Client SSL not configured"));
 
     // Increment the reference count of the SSL context, as configuration may
-    // be reloaded after once this function returns.
+    // be reloaded once this function returns.
     ::SSL_CTX_up_ref(ptr);
     return uniptr_SSL_CTX(ptr);
   }
@@ -347,8 +355,8 @@ reload(const Config_File& conf_file)
 
     // Set up new data.
     plain_mutex::unique_lock lock(this->m_conf_mutex);
-    this->m_event_buffer_size = (uint32_t) event_buffer_size;
-    this->m_throttle_size = (uint32_t) throttle_size;
+    this->m_event_buffer_size = static_cast<uint32_t>(event_buffer_size);
+    this->m_throttle_size = static_cast<uint32_t>(throttle_size);
     this->m_server_ssl_ctx.swap(server_ssl_ctx);
     this->m_client_ssl_ctx.swap(client_ssl_ctx);
   }
@@ -362,103 +370,100 @@ thread_loop()
     const uint32_t throttle_size = this->m_throttle_size;
     lock.unlock();
 
-    // Get an epoll event from the queue.
     lock.lock(this->m_epoll_mutex);
-    ::epoll_event event = { };
-    if(this->m_epoll_events.empty()) {
-      linear_buffer events = move(this->m_epoll_events);
+    if(ROCKET_UNEXPECT(!this->m_epoll_fd)) {
+      // Safety is on.
       lock.unlock();
+      ::sleep(1);
+      return;
+    }
 
-      if(ROCKET_UNEXPECT(!this->m_epoll_fd)) {
-        ::sleep(1);
-        return;
-      }
+    lock.lock(this->m_event_mutex);
+    if(this->m_event_buf.size() == 0) {
+      this->m_event_buf.reserve_after_end(event_buffer_size * sizeof(::epoll_event));
+      size_t real_capacity = this->m_event_buf.capacity_after_end() / sizeof(::epoll_event);
 
-      // Collect more events from the epoll.
-      events.reserve_after_end(event_buffer_size * sizeof(::epoll_event));
       int res = ::epoll_wait(this->m_epoll_fd,
-                             reinterpret_cast<::epoll_event*>(events.mut_end()),
-                             static_cast<int>(events.capacity_after_end() / sizeof(::epoll_event)),
-                             5000);
+                             reinterpret_cast<::epoll_event*>(this->m_event_buf.mut_end()),
+                             static_cast<int>(real_capacity), 5000);
       if(res <= 0) {
-        POSEIDON_LOG_TRACE(("`epoll_wait()` wait: ${errno:full}"));
+        POSEIDON_LOG_TRACE(("`epoll_wait()` returned nothing: ${errno:full}"));
         return;
       }
 
       POSEIDON_LOG_TRACE(("Collected $1 events from epoll"), res);
-      events.accept(static_cast<uint32_t>(res) * sizeof(::epoll_event));
-
-      lock.lock(this->m_epoll_mutex);
-      splice_buffers(this->m_epoll_events, move(events));
+      this->m_event_buf.accept(static_cast<uint32_t>(res) * sizeof(::epoll_event));
     }
 
-    ROCKET_ASSERT(this->m_epoll_events.size() >= sizeof(event));
-    this->m_epoll_events.getn((char*) &event, sizeof(event));
+    ::epoll_event epoll_ev;
+    ROCKET_ASSERT(this->m_event_buf.size() >= sizeof(epoll_ev));
+    this->m_event_buf.getn(reinterpret_cast<char*>(&epoll_ev), sizeof(epoll_ev));
+    lock.unlock();
 
-    // Find the socket.
+    lock.lock(this->m_epoll_mutex);
     if(this->m_epoll_map_stor.size() == 0)
       return;
 
-    auto socket = this->do_find_socket_nolock((Abstract_Socket*) event.data.ptr).lock();
+    auto socket = this->do_find_socket_nolock(
+                          static_cast<Abstract_Socket*>(epoll_ev.data.ptr)).lock();
     if(!socket)
       return;
 
-    auto ssl_socket = dynamic_cast<SSL_Socket*>(socket.get());
-    if(ssl_socket && ssl_socket->m_ssl)
-      if(auto ssl_ctx = ::SSL_get_SSL_CTX(ssl_socket->m_ssl))
-        ::SSL_CTX_set_alpn_select_cb(ssl_ctx, do_alpn_callback, ssl_socket);
+    if(auto ssl_socket = dynamic_cast<SSL_Socket*>(socket.get()))
+      ::SSL_CTX_set_alpn_select_cb(::SSL_get_SSL_CTX(ssl_socket->m_ssl),
+                                   do_alpn_select_cb, ssl_socket);
 
     recursive_mutex::unique_lock io_lock(socket->m_io_mutex);
     socket->m_io_driver = this;
     lock.unlock();
 
-    // `EPOLLOUT` must be the very first event, as it also delivers connection
-    // establishment notifications.
-    if(event.events & EPOLLOUT)
+    // `EPOLLOUT` must be the very first event to process, as it also delivers
+    // connection establishment notifications.
+    if(epoll_ev.events & EPOLLOUT)
       try {
-        POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): OUT"), socket, typeid(*socket));
-        socket->do_abstract_socket_on_writable();
+        socket->do_socket_test_change(socket_pending, socket_established);
+        socket->do_abstract_socket_on_writeable();
       }
       catch(exception& stdex) {
-        POSEIDON_LOG_ERROR(("`do_abstract_socket_on_writable()` error: $1"), stdex);
-        socket->quick_close();
-        event.events |= EPOLLHUP;
+        POSEIDON_LOG_ERROR(("Socket error: $1"), stdex);
+        socket->close();
+        epoll_ev.events |= EPOLLHUP;
       }
 
-    if(event.events & EPOLLIN)
+    if(epoll_ev.events & EPOLLIN)
       try {
-        POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): IN"), socket, typeid(*socket));
         socket->do_abstract_socket_on_readable();
       }
       catch(exception& stdex) {
-        POSEIDON_LOG_ERROR(("`do_abstract_socket_on_readable()` error: $1"), stdex);
-        socket->quick_close();
-        event.events |= EPOLLHUP;
+        POSEIDON_LOG_ERROR(("Socket error: $1"), stdex);
+        socket->close();
+        epoll_ev.events |= EPOLLHUP;
       }
 
-    // If either `EPOLLHUP` or `EPOLLERR` is set, deliver a notification and
-    // then remove the socket.
-    if(event.events & (EPOLLHUP | EPOLLERR)) {
+    // If either `EPOLLHUP` or `EPOLLERR` is set, deliver a shutdown
+    // notification and remove the socket. Error codes are passed through the
+    // system `errno` variable.
+    if(epoll_ev.events & (EPOLLHUP | EPOLLERR))
       try {
-        POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): HUP | ERR"), socket, typeid(*socket));
         socket->m_state.store(socket_closed);
 
-        ::socklen_t optlen = sizeof(int);
-        errno = 0;
-        if(event.events & EPOLLERR)
+        if(epoll_ev.events & EPOLLERR) {
+          ::socklen_t optlen = sizeof(int);
           ::getsockopt(socket->m_fd, SOL_SOCKET, SO_ERROR, &errno, &optlen);
+        } else
+          errno = 0;
         socket->do_abstract_socket_on_closed();
+
+        this->do_epoll_ctl(EPOLL_CTL_DEL, socket.get(), 0);
+        socket->m_io_driver = reinterpret_cast<Network_Driver*>(-9);
+        return;
       }
       catch(exception& stdex) {
-        POSEIDON_LOG_ERROR(("`do_abstract_socket_on_closed()` error: $1"), stdex);
+        POSEIDON_LOG_ERROR(("Socket error: $1"), stdex);
+        this->do_epoll_ctl(EPOLL_CTL_DEL, socket.get(), 0);
+        socket->m_io_driver = reinterpret_cast<Network_Driver*>(-5);
+        return;
       }
-
-      // Stop listening on the file descriptor. The socket object will be deleted
-      // upon the next rehash operation.
-      this->do_epoll_ctl(EPOLL_CTL_DEL, socket, 0);
-      socket->m_io_driver = (Network_Driver*) 123456789;
-      return;
-    }
 
     // When there are too many pending bytes, as a safety measure, EPOLLIN
     // notifications are disabled until some bytes can be transferred.
@@ -466,10 +471,8 @@ thread_loop()
     if(socket->m_io_throttled != should_throttle) {
       socket->m_io_throttled = should_throttle;
 
-      uint32_t epoll_inflags = 0;
-      if(!should_throttle)
-        epoll_inflags |= EPOLLIN | EPOLLET;
-      this->do_epoll_ctl(EPOLL_CTL_MOD, socket, EPOLLOUT | epoll_inflags);
+      this->do_epoll_ctl(EPOLL_CTL_MOD, socket.get(),
+                         !should_throttle * (EPOLLIN | EPOLLET) | EPOLLOUT);
     }
 
     POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`) I/O complete"), socket, typeid(*socket));
@@ -485,6 +488,11 @@ insert(const shptr<Abstract_Socket>& socket)
 
     // Register the socket. Note exception safety.
     plain_mutex::unique_lock lock(this->m_epoll_mutex);
+
+    if(!this->m_epoll_fd && !this->m_epoll_fd.reset(::epoll_create(100)))
+      POSEIDON_THROW((
+          "Could not allocate epoll object",
+          "[`epoll_create()` failed: ${errno:full}]"));
 
     if(this->m_epoll_map_used >= this->m_epoll_map_stor.size() / 2) {
       // When the map is empty or the load factor would exceed 0.5, allocate a
@@ -508,14 +516,8 @@ insert(const shptr<Abstract_Socket>& socket)
         }
     }
 
-    // Allocate the static epoll object.
-    if(!this->m_epoll_fd && !this->m_epoll_fd.reset(::epoll_create(100)))
-      POSEIDON_THROW((
-          "Could not allocate epoll object",
-          "[`epoll_create()` failed: ${errno:full}]"));
-
     // Insert the socket.
-    this->do_epoll_ctl(EPOLL_CTL_ADD, socket, EPOLLIN | EPOLLOUT | EPOLLET);
+    this->do_epoll_ctl(EPOLL_CTL_ADD, socket.get(), EPOLLIN | EPOLLOUT | EPOLLET);
     this->do_find_socket_nolock(socket.get()) = socket;
     this->m_epoll_map_used ++;
   }

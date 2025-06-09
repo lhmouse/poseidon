@@ -142,7 +142,7 @@ struct Final_Session final : WS_Server_Session
         catch(exception& stdex) {
           POSEIDON_LOG_ERROR(("Could not push network event: $1"), stdex);
           sessions->session_map.erase(session_iter);
-          this->quick_close();
+          this->close();
         }
       }
 
@@ -202,7 +202,6 @@ struct Final_Acceptor final : TCP_Acceptor
         TCP_Acceptor(addr),
         m_callback(callback), m_wsessions(sessions)
       {
-        this->defer_accept(10s);
       }
 
     virtual
