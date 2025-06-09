@@ -15,7 +15,7 @@
 #include "static/redis_connector.hpp"
 namespace poseidon {
 
-const ::locale_t c_locale = ::newlocale(0, "C", nullptr);
+const ::locale_t c_locale = ::newlocale(0, "C.UTF-8", nullptr);
 const cow_string empty_cow_string;
 const phcow_string empty_phcow_string;
 
