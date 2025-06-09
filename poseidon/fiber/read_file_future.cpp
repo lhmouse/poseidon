@@ -41,7 +41,7 @@ do_on_abstract_future_execute()
 
     if(S_ISREG(st.st_mode) == false)
       POSEIDON_THROW((
-          "Reading non-regular file `$1` not allowed"),
+          "Could not read non-regular file `$1`"),
           this->m_res.path);
 
     this->m_res.accessed_on = system_time_from_timespec(st.st_atim);
@@ -49,21 +49,23 @@ do_on_abstract_future_execute()
     this->m_res.file_size = st.st_size;
 
     if(this->m_res.offset != 0) {
-      // Seek to the given offset. Negative values denote offsets from the end.
-      ::off_t abs_off = ::lseek64(fd, this->m_res.offset, (this->m_res.offset >= 0) ? SEEK_SET : SEEK_END);
-      if(abs_off == -1)
+      // Seek to the requested offset. Negative values denote offsets from
+      // the end of the file.
+      int whence = (this->m_res.offset >= 0) ? SEEK_SET : SEEK_END;
+      ::off_t r = ::lseek64(fd, this->m_res.offset, whence);
+      if(r == -1)
         POSEIDON_THROW((
             "Could not reposition file `$1`",
             "[`lseek64()` failed: ${errno:full}]"),
             this->m_res.path);
 
       // Update `m_res.offset` to the absolute value.
-      this->m_res.offset = abs_off;
+      this->m_res.offset = r;
     }
 
     while(this->m_res.data.size() < this->m_res.limit) {
       // Read bytes and append them to `m_res.data`.
-      uint32_t rlimit = clamp_cast<uint32_t>(this->m_res.limit - this->m_res.data.size(), 0, INT_MAX);
+      size_t rlimit = min(this->m_res.limit - this->m_res.data.size(), UINT_MAX);
       this->m_res.data.reserve_after_end(rlimit);
       ::ssize_t nread = POSEIDON_SYSCALL_LOOP(::read(fd, this->m_res.data.mut_end(), rlimit));
       if(nread == 0)
