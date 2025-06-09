@@ -5,6 +5,14 @@
 #include "uuid.hpp"
 #include "../utils.hpp"
 namespace poseidon {
+namespace {
+
+constexpr UUID s_uuid_min = POSEIDON_UUID(00000000,0000,0000,0000,000000000000);
+constexpr UUID s_uuid_max = POSEIDON_UUID(ffffffff,ffff,ffff,ffff,ffffffffffff);
+
+atomic_relaxed<uint64_t> s_serial;
+
+}  // namespace
 
 UUID::
 UUID(chars_view str)
@@ -17,16 +25,14 @@ const UUID&
 UUID::
 min() noexcept
   {
-    static constexpr UUID st = POSEIDON_UUID(00000000,0000,0000,0000,000000000000);
-    return st;
+    return s_uuid_min;
   }
 
 const UUID&
 UUID::
 max() noexcept
   {
-    static constexpr UUID st = POSEIDON_UUID(ffffffff,ffff,ffff,ffff,ffffffffffff);
-    return st;
+    return s_uuid_max;
   }
 
 UUID
@@ -41,8 +47,6 @@ random() noexcept
     ::clock_gettime(CLOCK_REALTIME, &ts);
     uint64_t high = static_cast<uint64_t>(ts.tv_sec - 983404800) * 30518 << 16;
     high += static_cast<uint32_t>(ts.tv_nsec) / 32768 << 16;
-
-    static atomic_relaxed<uint64_t> s_serial;
     high += s_serial.xadd(1) << 16;
 
     // Then, set the `M` field, which is always `4` (UUID version 4).
