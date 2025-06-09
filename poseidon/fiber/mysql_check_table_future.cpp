@@ -358,8 +358,8 @@ do_on_abstract_future_execute()
 
                 int64_t def_value;
                 ::rocket::ascii_numget numg;
-                numg.parse_DI(ex->second.default_value.as_blob_data(), ex->second.default_value.as_blob_size());
-                numg.cast_I(def_value, INT64_MIN, INT64_MAX);
+                numg.get(def_value, ex->second.default_value.as_blob_data(),
+                         ex->second.default_value.as_blob_size());
 
                 if(def_value != column.default_value.as_integer())
                   goto do_alter_table_column_;
@@ -386,8 +386,8 @@ do_on_abstract_future_execute()
 
                 int64_t def_value;
                 ::rocket::ascii_numget numg;
-                numg.parse_DI(ex->second.default_value.as_blob_data(), ex->second.default_value.as_blob_size());
-                numg.cast_I(def_value, INT64_MIN, INT64_MAX);
+                numg.get(def_value, ex->second.default_value.as_blob_data(),
+                         ex->second.default_value.as_blob_size());
 
                 if(def_value != column.default_value.as_integer())
                   goto do_alter_table_column_;
@@ -413,8 +413,8 @@ do_on_abstract_future_execute()
 
                 double def_value;
                 ::rocket::ascii_numget numg;
-                numg.parse_DD(ex->second.default_value.as_blob_data(), ex->second.default_value.as_blob_size());
-                numg.cast_D(def_value, -HUGE_VAL, HUGE_VAL);
+                numg.get(def_value, ex->second.default_value.as_blob_data(),
+                         ex->second.default_value.as_blob_size());
 
                 if(def_value != column.default_value.as_double())
                   goto do_alter_table_column_;
@@ -492,7 +492,7 @@ do_on_abstract_future_execute()
         if(ex->second.default_value.is_null() != column.default_value.is_null())
           goto do_alter_table_column_;
 
-        POSEIDON_LOG_DEBUG(("Verified: table `$1` column `$2`"), this->m_res.table.name(), column.name);
+        POSEIDON_LOG_DEBUG(("Verified column `$1.$2`"), this->m_res.table.name(), column.name);
         continue;
       }
 
@@ -551,7 +551,7 @@ do_on_abstract_future_execute()
           if(ex->second.columns[t] != index.columns[t])
             goto do_alter_table_index_;
 
-        POSEIDON_LOG_DEBUG(("Verified: table `$1` index `$2`"), this->m_res.table.name(), index.name);
+        POSEIDON_LOG_DEBUG(("Verified index `$1.$2`"), this->m_res.table.name(), index.name);
         continue;
       }
 
