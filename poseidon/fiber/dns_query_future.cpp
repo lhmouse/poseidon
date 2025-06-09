@@ -35,30 +35,32 @@ do_on_abstract_future_execute()
           "[`getaddrinfo()` failed: $2]"),
           this->m_res.host, ::gai_strerror(err));
 
-    // Copy records into `m_res`.
     const auto guard = make_unique_handle(res, ::freeaddrinfo);
-    IPv6_Address saddr;
 
-    for(res = guard; res;  res = res->ai_next)
+    for(res = guard;  res;  res = res->ai_next) {
+      IPv6_Address addr;
       if(res->ai_family == AF_INET) {
         // IPv4
-        ::memcpy(saddr.mut_data(), ipv4_unspecified.data(), 12);
-        ::memcpy(saddr.mut_data() + 12, &(((::sockaddr_in*) res->ai_addr)->sin_addr), 4);
-        saddr.set_port(this->m_res.port);
-        POSEIDON_LOG_DEBUG(("Using IPv4: `$1` => `$2`"), m_res.host, saddr);
-
-        if(::rocket::none_of(this->m_res.addrs, [&](const auto& r) { return r == saddr;  }))
-          this->m_res.addrs.push_back(saddr);
+        auto sa = reinterpret_cast<::sockaddr_in*>(res->ai_addr);
+        ::memcpy(addr.mut_data(), ipv4_unspecified.data(), 12);
+        ::memcpy(addr.mut_data() + 12, &(sa->sin_addr), 4);
+        addr.set_port(this->m_res.port);
       }
       else if(res->ai_family == AF_INET6) {
         // IPv6
-        ::memcpy(saddr.mut_data(), &(((::sockaddr_in6*) res->ai_addr)->sin6_addr), 16);
-        saddr.set_port(this->m_res.port);
-        POSEIDON_LOG_DEBUG(("Using IPv6: `$1` => `$2`"), this->m_res.host, saddr);
-
-        if(::rocket::none_of(this->m_res.addrs, [&](const auto& r) { return r == saddr;  }))
-          this->m_res.addrs.push_back(saddr);
+        auto sa = reinterpret_cast<::sockaddr_in6*>(res->ai_addr);
+        ::memcpy(addr.mut_data(), &(sa->sin6_addr), 16);
+        addr.set_port(this->m_res.port);
       }
+      else
+        continue;
+
+      if(is_any_of(addr, this->m_res.addrs))
+        continue;
+
+      POSEIDON_LOG_DEBUG(("DNS lookup: `$1` => `$2`"), this->m_res.host, addr);
+      this->m_res.addrs.push_back(addr);
+    }
   }
 
 }  // namespace poseidon
