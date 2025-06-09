@@ -29,7 +29,7 @@ Mongo_Value::
     }
     catch(::std::exception& stdex) {
       // Ignore this exception.
-      ::std::fprintf(stderr, "WARNING: %s\n", stdex.what());
+      ::fprintf(stderr, "WARNING: %s\n", stdex.what());
     }
 
     if(!stack.empty()) {
