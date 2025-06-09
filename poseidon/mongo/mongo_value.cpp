@@ -90,8 +90,8 @@ print_to(tinyfmt& fmt) const
             unsigned char output[68];
             uint32_t bsize = clamp_cast<uint32_t>(pval->as_binary_size() - offset, 0, 48);
             ::EVP_EncodeBlock(output, pval->as_binary_data() + offset, static_cast<int>(bsize));
-            offset += bsize;
             fmt.putn(reinterpret_cast<const char*>(output), (bsize + 2) / 3 * 4);
+            offset += bsize;
           }
           fmt.putn("\"}", 2);
         }
