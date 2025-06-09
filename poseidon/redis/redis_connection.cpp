@@ -26,19 +26,13 @@ bool
 Redis_Connection::
 reset() noexcept
   {
-    if(!this->m_connected)
-      return true;
-
     // Discard the current reply.
     this->m_reply.reset();
-    this->m_reset_clear = false;
 
     // Check whether an error has occurred.
-    if(this->m_redis->err != 0)
-      return false;
-
-    this->m_reset_clear = true;
-    return true;
+    bool error = this->m_connected && (this->m_redis->err != 0);
+    this->m_reset_clear = !error;
+    return !error;
   }
 
 void
@@ -50,7 +44,7 @@ execute(const cow_vector<cow_string>& cmd)
 
     if(!this->m_connected) {
       // Parse the service URI in a hacky way.
-      auto full_uri = "redis://" + this->m_service_uri;
+      cow_string full_uri = "redis://" + this->m_service_uri;
       ::http_parser_url uri_hp;
       ::http_parser_url_init(&uri_hp);
       if(::http_parser_parse_url(full_uri.c_str(), full_uri.size(), false, &uri_hp) != 0)
@@ -99,8 +93,8 @@ execute(const cow_vector<cow_string>& cmd)
 
       if(this->m_password.size() != 0) {
         // `AUTH user password`
-        if(!this->m_reply.reset(static_cast<::redisReply*>(::redisCommand(this->m_redis,
-                                   "AUTH %s %s", user_str, this->m_password.c_str()))))
+        if(!this->m_reply.reset(static_cast<::redisReply*>(::redisCommand(
+                            this->m_redis, "AUTH %s %s", user_str, this->m_password.c_str()))))
           POSEIDON_THROW((
               "Could not execute Redis command: ERROR $1: $2",
               "[`redisCommand()` failed]"),
@@ -114,8 +108,8 @@ execute(const cow_vector<cow_string>& cmd)
 
       if(database[0] != 0) {
         // `SELECT index`
-        if(!this->m_reply.reset(static_cast<::redisReply*>(::redisCommand(this->m_redis,
-                                   "SELECT %s", database))))
+        if(!this->m_reply.reset(static_cast<::redisReply*>(::redisCommand(
+                            this->m_redis, "SELECT %s", database))))
           POSEIDON_THROW((
               "Could not execute Redis command: ERROR $1: $2",
               "[`redisCommand()` failed]"),
@@ -127,8 +121,7 @@ execute(const cow_vector<cow_string>& cmd)
               this->m_reply->str);
       }
 
-      this->m_password.clear();
-      this->m_password.shrink_to_fit();
+      cow_string().swap(this->m_password);
       this->m_connected = true;
       POSEIDON_LOG_INFO(("Connected to Redis server `$1`"), this->m_service_uri);
     }
