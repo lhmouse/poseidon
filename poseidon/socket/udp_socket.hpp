@@ -20,7 +20,8 @@ class UDP_Socket
 
   protected:
     // Creates a socket that is bound onto `addr`. [server-side constructor]
-    explicit UDP_Socket(const IPv6_Address& addr);
+    explicit
+    UDP_Socket(const IPv6_Address& addr);
 
     // Creates an unbound socket. [client-side constructor]
     UDP_Socket();

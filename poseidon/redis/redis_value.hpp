@@ -18,7 +18,8 @@ class Redis_Value
 
   public:
     // Value constructors
-    constexpr Redis_Value(nullptr_t = nullptr) noexcept { }
+    constexpr
+    Redis_Value(nullptr_t = nullptr) noexcept { }
 
     Redis_Value(int num) noexcept
       {

@@ -36,7 +36,8 @@ class MySQL_Table_Structure
 
   public:
     // Constructs an empty table.
-    constexpr MySQL_Table_Structure() noexcept = default;
+    constexpr
+    MySQL_Table_Structure() noexcept = default;
 
     MySQL_Table_Structure&
     swap(MySQL_Table_Structure& other) noexcept

@@ -21,22 +21,26 @@ class IPv6_Address
 
   public:
     // Initializes an unspecified (all-zero) address.
-    constexpr IPv6_Address() noexcept = default;
+    constexpr
+    IPv6_Address() noexcept = default;
 
     // Initializes an address from a foreign source.
-    constexpr IPv6_Address(const ::in6_addr& addr, uint16_t port) noexcept
+    constexpr
+    IPv6_Address(const ::in6_addr& addr, uint16_t port) noexcept
       :
         m_addr(addr), m_port(port)
       { }
 
-    constexpr IPv6_Address(const IPv6_Address& other, uint16_t port) noexcept
+    constexpr
+    IPv6_Address(const IPv6_Address& other, uint16_t port) noexcept
       :
         m_addr(other.m_addr), m_port(port)
       { }
 
     // Parses an address from a string, like `parse()`.
     // An exception is thrown if the address string is not valid.
-    explicit IPv6_Address(chars_view str);
+    explicit
+    IPv6_Address(chars_view str);
 
     IPv6_Address&
     swap(IPv6_Address& other) noexcept

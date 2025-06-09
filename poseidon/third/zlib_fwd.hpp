@@ -49,7 +49,8 @@ class scoped_deflate_stream
         else if(fmt == zlib_gzip)
           fmt_wbits += 16;
 
-        if(::deflateInit2(this->m_strm, level, Z_DEFLATED, fmt_wbits, 9, Z_DEFAULT_STRATEGY) != Z_OK)
+        if(::deflateInit2(this->m_strm, level, Z_DEFLATED, fmt_wbits, 9,
+                          Z_DEFAULT_STRATEGY) != Z_OK)
           ::rocket::sprintf_and_throw<::std::runtime_error>(
                 "scoped_deflate_stream: insufficient memory");
       }

@@ -21,7 +21,8 @@ class TCP_Socket
 
   protected:
     // Takes ownership of an accepted socket. [server-side constructor]
-    explicit TCP_Socket(unique_posix_fd&& fd);
+    explicit
+    TCP_Socket(unique_posix_fd&& fd);
 
     // Creates a socket for outgoing connections. [client-side constructor]
     TCP_Socket();

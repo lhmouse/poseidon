@@ -35,7 +35,8 @@ class Read_File_Future
     // must exist, and shall be a regular file. This object also functions as an
     // asynchronous task, which can be enqueued into an `Task_Executor`. This
     // future will become ready once the read operation is complete.
-    explicit Read_File_Future(const cow_string& path, int64_t offset = 0, size_t limit = INT_MAX);
+    explicit
+    Read_File_Future(const cow_string& path, int64_t offset = 0, size_t limit = INT_MAX);
 
   private:
     virtual

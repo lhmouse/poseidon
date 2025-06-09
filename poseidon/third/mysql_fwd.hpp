@@ -19,7 +19,7 @@ class scoped_MYSQL
       {
         if(::mysql_init(this->m_mysql) == nullptr)
           ::rocket::sprintf_and_throw<::std::runtime_error>(
-                "mysql_Client: insufficient memory");
+                "scoped_MYSQL: insufficient memory");
 
         ::mysql_options(this->m_mysql, MYSQL_OPT_COMPRESS, "1");
         ::mysql_options(this->m_mysql, MYSQL_SET_CHARSET_NAME , "utf8mb4");
@@ -42,9 +42,11 @@ struct DateTime_with_MYSQL_TIME
     DateTime datetime;
     mutable uniptr<::MYSQL_TIME> cached_mysql_time;
 
-    constexpr DateTime_with_MYSQL_TIME() noexcept = default;
+    constexpr
+    DateTime_with_MYSQL_TIME() noexcept = default;
 
-    constexpr DateTime_with_MYSQL_TIME(const DateTime_with_MYSQL_TIME& other) noexcept
+    constexpr
+    DateTime_with_MYSQL_TIME(const DateTime_with_MYSQL_TIME& other) noexcept
       : datetime(other.datetime)
       { }
 

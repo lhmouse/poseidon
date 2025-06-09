@@ -16,11 +16,13 @@ class HTTP_Field_Name
     cow_string m_str;
 
   public:
-    constexpr HTTP_Field_Name() noexcept { }
+    constexpr
+    HTTP_Field_Name() noexcept { }
 
     template<typename xstringT,
     ROCKET_ENABLE_IF(::std::is_constructible<cow_string, xstringT&&>::value)>
-    constexpr HTTP_Field_Name(xstringT&& xstr)
+    constexpr
+    HTTP_Field_Name(xstringT&& xstr)
       noexcept(::std::is_nothrow_constructible<cow_string, xstringT&&>::value)
       :
         m_str(forward<xstringT>(xstr))

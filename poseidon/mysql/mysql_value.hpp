@@ -20,7 +20,8 @@ class MySQL_Value
 
   public:
     // Value constructors
-    constexpr MySQL_Value(nullptr_t = nullptr) noexcept { }
+    constexpr
+    MySQL_Value(nullptr_t = nullptr) noexcept { }
 
     MySQL_Value&
     operator=(nullptr_t) & noexcept

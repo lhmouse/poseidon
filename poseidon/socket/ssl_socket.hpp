@@ -30,7 +30,8 @@ class SSL_Socket
 
     // Creates a socket for outgoing connections, using SSL configuration
     // from `driver`. [client-side constructor]
-    explicit SSL_Socket(const Network_Driver& driver);
+    explicit
+    SSL_Socket(const Network_Driver& driver);
 
   protected:
     // These callbacks implement `Abstract_Socket`.

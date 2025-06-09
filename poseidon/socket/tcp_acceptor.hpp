@@ -19,7 +19,8 @@ class TCP_Acceptor
   protected:
     // Creates a TCP socket that is bound onto the given address, that accepts
     // either TCP or SSL connections.
-    explicit TCP_Acceptor(const IPv6_Address& addr);
+    explicit
+    TCP_Acceptor(const IPv6_Address& addr);
 
   protected:
     // These callbacks implement `Abstract_Socket`.

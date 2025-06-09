@@ -28,7 +28,8 @@ class Abstract_Socket
 
   protected:
     // Takes ownership of an existent IPv6 socket. [server-side constructor]
-    explicit Abstract_Socket(unique_posix_fd&& fd);
+    explicit
+    Abstract_Socket(unique_posix_fd&& fd);
 
     // Creates a new non-blocking IPv6 socket. [client-side constructor]
     Abstract_Socket(int type, int protocol);

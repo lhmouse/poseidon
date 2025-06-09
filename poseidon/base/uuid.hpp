@@ -30,10 +30,12 @@ class UUID
 
   public:
     // Constructs an all-zero UUID.
-    constexpr UUID() noexcept = default;
+    constexpr
+    UUID() noexcept = default;
 
     // Constructs a UUID from individual fields.
-    constexpr UUID(const fields& f) noexcept
+    constexpr
+    UUID(const fields& f) noexcept
       {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
