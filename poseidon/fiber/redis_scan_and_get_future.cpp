@@ -40,26 +40,29 @@ do_on_abstract_future_execute()
     // an array of two elements. The first element is the next cursor. The second
     // element is an array of matching keys.
     cow_vector<cow_string> cmd;
+    Redis_Value reply;
+
     cmd.resize(4);
     cmd.mut(0) = &"SCAN";
     cmd.mut(1) = &"0";  // cursor
     cmd.mut(2) = &"MATCH";
     cmd.mut(3) = this->m_res.pattern;
 
+  do_scan_more_:
     this->m_conn->execute(cmd);
-    Redis_Value reply;
-    do {
-      this->m_conn->fetch_reply(reply);
-      cmd.mut(1) = move(reply.mut_array().mut(0).mut_string());
-      auto keys = move(reply.mut_array().mut(1).mut_array());
+    this->m_conn->fetch_reply(reply);
 
-      auto key_it = keys.mut_begin();
-      while(key_it != keys.end()) {
-        POSEIDON_LOG_TRACE((" SCAN => $1"), *key_it);
-        this->m_res.pairs.try_emplace(move(key_it->mut_string()));
-        ++ key_it;
-      }
-    } while(cmd[1] != "0");
+    auto replies = move(reply.mut_array().mut(1).mut_array());
+    auto reply_it = replies.mut_begin();
+    while(reply_it != replies.end()) {
+      POSEIDON_LOG_TRACE((" SCAN => $1"), *reply_it);
+      this->m_res.pairs.try_emplace(move(reply_it->mut_string()));
+      ++ reply_it;
+    }
+
+    cmd.mut(1) = move(reply.mut_array().mut(0).mut_string());
+    if(cmd[1] != "0")
+      goto do_scan_more_;
 
     if(this->m_res.pairs.empty())
       return;
@@ -77,22 +80,22 @@ do_on_abstract_future_execute()
       ++ res_it;
     }
 
-    // Get them. The reply shall be an array.
+    // Get values. The reply shall be an array.
     this->m_conn->execute(cmd);
     this->m_conn->fetch_reply(reply);
-    auto values = move(reply.mut_array());
 
     res_it = this->m_res.pairs.mut_begin();
-    auto val_it = values.mut_begin();
-    while((res_it != this->m_res.pairs.end()) && (val_it != values.end())) {
-      if(!val_it->is_string())
+    replies = move(reply.mut_array());
+    reply_it = replies.mut_begin();
+    while((res_it != this->m_res.pairs.end()) && (reply_it != replies.end())) {
+      if(!reply_it->is_string())
         res_it = this->m_res.pairs.erase(res_it);
       else {
-        POSEIDON_LOG_TRACE((" MGET <= $1 ($2)"), res_it->first, val_it->as_string_length());
-        res_it->second = move(val_it->mut_string());
+        POSEIDON_LOG_TRACE((" MGET => $1 ($2)"), res_it->first, reply_it->as_string_length());
+        res_it->second = move(reply_it->mut_string());
         ++ res_it;
       }
-      ++ val_it;
+      ++ reply_it;
     }
   }
 
