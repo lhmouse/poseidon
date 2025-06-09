@@ -21,7 +21,7 @@ HTTPS_Client_Session::
 do_on_ssl_stream(linear_buffer& data, bool eof)
   {
     if(this->m_upgrade_ack.load()) {
-      this->do_on_http_upgraded_stream(data, eof);
+      this->do_on_https_upgraded_stream(data, eof);
       return;
     }
 
@@ -29,7 +29,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
       // Check whether the connection has switched to another protocol.
       if(this->m_upgrade_ack.load()) {
         this->m_resp_parser.deallocate();
-        this->do_on_http_upgraded_stream(data, eof);
+        this->do_on_https_upgraded_stream(data, eof);
         return;
       }
 
@@ -52,7 +52,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
           return;
 
         // Check headers.
-        auto payload_type = this->do_on_http_response_headers(this->m_resp_parser.mut_headers());
+        auto payload_type = this->do_on_https_response_headers(this->m_resp_parser.mut_headers());
         switch(payload_type)
           {
           case http_payload_normal:
@@ -65,12 +65,12 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
           case http_payload_connect:
             this->m_upgrade_ack.store(true);
             this->m_resp_parser.deallocate();
-            this->do_on_http_upgraded_stream(data, eof);
+            this->do_on_https_upgraded_stream(data, eof);
             return;
 
           default:
             POSEIDON_THROW((
-                "Invalid payload type `$3` returned from `do_http_parser_on_headers_complete()`",
+                "Invalid payload type `$3` returned from `do_https_parser_on_headers_complete()`",
                 "[HTTPS client session `$1` (class `$2`)]"),
                 this, typeid(*this), payload_type);
           }
@@ -85,7 +85,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
           return;
         }
 
-        this->do_on_http_response_payload_stream(this->m_resp_parser.mut_payload());
+        this->do_on_https_response_payload_stream(this->m_resp_parser.mut_payload());
 
         if(!this->m_resp_parser.payload_complete())
           return;
@@ -93,7 +93,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
         // The message is complete now.
         uint32_t status = this->m_resp_parser.headers().status;
 
-        this->do_on_http_response_finish(move(this->m_resp_parser.mut_headers()),
+        this->do_on_https_response_finish(move(this->m_resp_parser.mut_headers()),
                                           move(this->m_resp_parser.mut_payload()),
                                           this->m_resp_parser.should_close_after_payload());
 
@@ -111,7 +111,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
 
 HTTP_Payload_Type
 HTTPS_Client_Session::
-do_on_http_response_headers(HTTP_Response_Headers& resp)
+do_on_https_response_headers(HTTP_Response_Headers& resp)
   {
     POSEIDON_LOG_DEBUG((
         "HTTPS client received response: $3 $4",
@@ -124,9 +124,9 @@ do_on_http_response_headers(HTTP_Response_Headers& resp)
 
 void
 HTTPS_Client_Session::
-do_on_http_response_payload_stream(linear_buffer& data)
+do_on_https_response_payload_stream(linear_buffer& data)
   {
-    // Leave `data` alone for consumption by `do_on_http_response_finish()`,
+    // Leave `data` alone for consumption by `do_on_https_response_finish()`,
     // but perform some security checks, so we won't be affected by compromised
     // 3rd-party servers.
     if(data.size() > this->m_resp_parser.max_content_length())
@@ -139,17 +139,17 @@ do_on_http_response_payload_stream(linear_buffer& data)
 __attribute__((__noreturn__))
 void
 HTTPS_Client_Session::
-do_on_http_upgraded_stream(linear_buffer& data, bool eof)
+do_on_https_upgraded_stream(linear_buffer& data, bool eof)
   {
     POSEIDON_THROW((
-        "`do_on_http_upgraded_stream()` not implemented: data.size `$3`, eof `$4`",
+        "`do_on_https_upgraded_stream()` not implemented: data.size `$3`, eof `$4`",
         "[HTTPS client session `$1` (class `$2`)]"),
         this, typeid(*this), data.size(), eof);
   }
 
 bool
 HTTPS_Client_Session::
-do_http_raw_request(const HTTP_Request_Headers& req, chars_view data)
+do_https_raw_request(const HTTP_Request_Headers& req, chars_view data)
   {
     // Compose the message and send it as a whole.
     tinyfmt_ln fmt;
@@ -188,7 +188,7 @@ http_request(HTTP_Request_Headers&& req, chars_view data)
     if(data.n != 0)
       req.headers.emplace_back(&"Content-Length", (double)(int64_t) data.n);
 
-    return this->do_http_raw_request(req, data);
+    return this->do_https_raw_request(req, data);
   }
 
 bool
@@ -208,7 +208,7 @@ http_chunked_request_start(HTTP_Request_Headers&& req)
     // Write a chunked header.
     req.headers.emplace_back(&"Transfer-Encoding", &"chunked");
 
-    return this->do_http_raw_request(req, "");
+    return this->do_https_raw_request(req, "");
   }
 
 bool

@@ -172,8 +172,8 @@ struct Final_Session final : HTTPS_Server_Session
 
     virtual
     void
-    do_on_http_request_finish(HTTP_Request_Headers&& req,
-                              linear_buffer&& data, bool close_now) override
+    do_on_https_request_finish(HTTP_Request_Headers&& req,
+                               linear_buffer&& data, bool close_now) override
       {
         Session_Table::Event_Queue::Event event;
         event.type = easy_http_message;
@@ -185,7 +185,7 @@ struct Final_Session final : HTTPS_Server_Session
 
     virtual
     void
-    do_on_http_request_error(HTTP_Status status) override
+    do_on_https_request_error(HTTP_Status status) override
       {
         Session_Table::Event_Queue::Event event;
         event.status = status;

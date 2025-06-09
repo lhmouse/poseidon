@@ -148,11 +148,11 @@ struct Final_Session final : WSS_Server_Session
 
     virtual
     HTTP_Payload_Type
-    do_on_http_request_headers(HTTP_Request_Headers& req, bool close_after_payload) override
+    do_on_https_request_headers(HTTP_Request_Headers& req, bool close_after_payload) override
       {
         if(req.is_proxy) {
           // Reject proxy requests.
-          this->do_on_http_request_error(http_status_forbidden);
+          this->do_on_https_request_error(http_status_forbidden);
           return http_payload_normal;
         }
 
@@ -161,13 +161,13 @@ struct Final_Session final : WSS_Server_Session
           {
           case http_OPTIONS:
             // Respond to an XSS check.
-            this->do_ws_complete_handshake(req, close_after_payload);
+            this->do_wss_complete_handshake(req, close_after_payload);
             return http_payload_normal;
 
           case http_GET:
             if(any_of(req.headers, [&](const auto& r) { return r.first == "Upgrade";  })) {
               // Try upgrading to WebSocket.
-              this->do_ws_complete_handshake(req, close_after_payload);
+              this->do_wss_complete_handshake(req, close_after_payload);
               return http_payload_normal;
             }
 
@@ -187,7 +187,7 @@ struct Final_Session final : WSS_Server_Session
 
           default:
             // Reject all the other.
-            this->do_on_http_request_error(http_status_method_not_allowed);
+            this->do_on_https_request_error(http_status_method_not_allowed);
             this->quick_close();
             return http_payload_normal;
           }
@@ -203,7 +203,7 @@ struct Final_Session final : WSS_Server_Session
 
     virtual
     void
-    do_on_ws_accepted(cow_string&& caddr) override
+    do_on_wss_accepted(cow_string&& caddr) override
       {
         Session_Table::Event_Queue::Event event;
         event.type = easy_hws_open;
@@ -213,7 +213,7 @@ struct Final_Session final : WSS_Server_Session
 
     virtual
     void
-    do_on_ws_message_finish(WebSocket_Opcode opcode, linear_buffer&& data) override
+    do_on_wss_message_finish(WebSocket_Opcode opcode, linear_buffer&& data) override
       {
         Easy_HWS_Event ev_type;
         if(opcode == websocket_TEXT)
@@ -233,7 +233,7 @@ struct Final_Session final : WSS_Server_Session
 
     virtual
     void
-    do_on_ws_close(WebSocket_Status status, chars_view reason) override
+    do_on_wss_close(WebSocket_Status status, chars_view reason) override
       {
         tinyfmt_ln fmt;
         fmt << status << ": " << reason;

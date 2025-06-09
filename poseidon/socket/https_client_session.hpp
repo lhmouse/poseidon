@@ -42,14 +42,14 @@ class HTTPS_Client_Session
     // header. Returning `http_payload_empty` indicates that the message
     // does not have a payload even if it appears so, such as the response to a
     // HEAD request. Returning `http_payload_connect` causes all further
-    // incoming data to be delivered via `do_on_http_upgraded_stream()`. This
+    // incoming data to be delivered via `do_on_https_upgraded_stream()`. This
     // callback is primarily used to examine the status code before processing
     // response data.
     // The default implementation does not check for HEAD or upgrade responses
     // and returns `http_payload_normal`.
     virtual
     HTTP_Payload_Type
-    do_on_http_response_headers(HTTP_Response_Headers& resp);
+    do_on_https_response_headers(HTTP_Response_Headers& resp);
 
     // This callback is invoked by the network thread for each fragment of the
     // response payload that has been received. As with `SSL_Connection::
@@ -57,12 +57,12 @@ class HTTPS_Client_Session
     // been accumulated so far and callees are supposed to remove bytes that
     // have been processed.
     // The default implementation leaves all data alone for consumption by
-    // `do_on_http_response_finish()`, but it checks the total length of the
+    // `do_on_https_response_finish()`, but it checks the total length of the
     // payload so it will not exceed `network.http.max_response_content_length`
     // in 'main.conf'.
     virtual
     void
-    do_on_http_response_payload_stream(linear_buffer& data);
+    do_on_https_response_payload_stream(linear_buffer& data);
 
     // This callback is invoked by the network thread at the end of a response
     // message. Arguments have the same semantics with the other callbacks.
@@ -70,7 +70,7 @@ class HTTPS_Client_Session
     // `Connection` header.
     virtual
     void
-    do_on_http_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data, bool close_now) = 0;
+    do_on_https_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data, bool close_now) = 0;
 
     // This callback is invoked by the network thread on a connection that has
     // switched to another protocol. Arguments have the same semantics with
@@ -78,13 +78,13 @@ class HTTPS_Client_Session
     // The default implementation throws an exception.
     virtual
     void
-    do_on_http_upgraded_stream(linear_buffer& data, bool eof);
+    do_on_https_upgraded_stream(linear_buffer& data, bool eof);
 
     // Sends request headers with some additional data. No error checking is
     // performed. This function is provided for convenience only, and maybe
     // isn't very useful unless for some low-level hacks.
     bool
-    do_http_raw_request(const HTTP_Request_Headers& req, chars_view data);
+    do_https_raw_request(const HTTP_Request_Headers& req, chars_view data);
 
   public:
     HTTPS_Client_Session(const HTTPS_Client_Session&) = delete;

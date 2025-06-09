@@ -43,15 +43,15 @@ class HTTPS_Server_Session
     // `http_payload_normal` indicates that the request has a payload whose length
     // is described by the `Content-Length` or `Transfer-Encoding` header.
     // Returning `http_payload_connect` causes all further incoming data to
-    // be delivered via `do_on_http_upgraded_stream()`. This callback is
+    // be delivered via `do_on_https_upgraded_stream()`. This callback is
     // primarily used to examine request paths and headers before payload bodies.
-    // The default implementation invokes `do_on_http_request_error()` if the
+    // The default implementation invokes `do_on_https_request_error()` if the
     // request method is CONNECT or the request URI is absolute (this usually
     // causes shutdown of the connection), ignores upgrade requests, and returns
     // `http_payload_normal`.
     virtual
     HTTP_Payload_Type
-    do_on_http_request_headers(HTTP_Request_Headers& req, bool close_after_payload);
+    do_on_https_request_headers(HTTP_Request_Headers& req, bool close_after_payload);
 
     // This callback is invoked by the network thread for each fragment of the
     // request payload that has been received. As with `SSL_Connection::
@@ -60,12 +60,12 @@ class HTTPS_Server_Session
     // processed. This callback will not not invoked for GET, HEAD, DELETE or
     // CONNECT methods.
     // The default implementation leaves all data alone for consumption by
-    // `do_on_http_request_finish()`. For security reasons, the length of the
+    // `do_on_https_request_finish()`. For security reasons, the length of the
     // payload body is checked; an error is reported if it exceeds the
     // `network.http.max_request_content_length` limit in 'main.conf'.
     virtual
     void
-    do_on_http_request_payload_stream(linear_buffer& data);
+    do_on_https_request_payload_stream(linear_buffer& data);
 
     // This callback is invoked by the network thread at the end of a request
     // message. Arguments have the same semantics with the other callbacks.
@@ -74,7 +74,7 @@ class HTTPS_Server_Session
     // `Connection` header.
     virtual
     void
-    do_on_http_request_finish(HTTP_Request_Headers&& req, linear_buffer&& data, bool close_now) = 0;
+    do_on_https_request_finish(HTTP_Request_Headers&& req, linear_buffer&& data, bool close_now) = 0;
 
     // This callback is invoked when an HTTP parser error happens. Why must we
     // dedicate an error callback for server sessions? Well, it's because HTTP
@@ -87,7 +87,7 @@ class HTTPS_Server_Session
     // thread, after all requests, to preserve the order of responses.
     virtual
     void
-    do_on_http_request_error(HTTP_Status status) = 0;
+    do_on_https_request_error(HTTP_Status status) = 0;
 
     // This callback is invoked by the network thread on a connection that has
     // switched to another protocol. Arguments have the same semantics with
@@ -95,13 +95,13 @@ class HTTPS_Server_Session
     // The default implementation throws an exception.
     virtual
     void
-    do_on_http_upgraded_stream(linear_buffer& data, bool eof);
+    do_on_https_upgraded_stream(linear_buffer& data, bool eof);
 
     // Sends response headers with some additional data. No error checking is
     // performed. This function is provided for convenience only, and maybe
     // isn't very useful unless for some low-level hacks.
     bool
-    do_http_raw_response(const HTTP_Response_Headers& resp, chars_view data);
+    do_https_raw_response(const HTTP_Response_Headers& resp, chars_view data);
 
   public:
     HTTPS_Server_Session(const HTTPS_Server_Session&) = delete;

@@ -28,7 +28,7 @@ class WSS_Client_Session
 
   private:
     void
-    do_call_on_ws_close_once(WebSocket_Status status, chars_view reason);
+    do_call_on_wss_close_once(WebSocket_Status status, chars_view reason);
 
   protected:
     // This function implements `HTTPS_Client_Session`.
@@ -42,22 +42,22 @@ class WSS_Client_Session
 
     virtual
     void
-    do_on_http_response_payload_stream(linear_buffer& data) override;
+    do_on_https_response_payload_stream(linear_buffer& data) override;
 
     virtual
     void
-    do_on_http_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data, bool close_now) override;
+    do_on_https_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data, bool close_now) override;
 
     virtual
     void
-    do_on_http_upgraded_stream(linear_buffer& data, bool eof) override;
+    do_on_https_upgraded_stream(linear_buffer& data, bool eof) override;
 
     // This callback is invoked by the network thread when a WebSocket connection
     // has been established. The argument is the request URI of the client.
     // The default implementation does nothing.
     virtual
     void
-    do_on_ws_connected(cow_string&& caddr);
+    do_on_wss_connected(cow_string&& caddr);
 
     // This callback is invoked by the network thread for each fragment of a data
     // message. `opcode` indicates the type of the message, which can be either
@@ -66,19 +66,19 @@ class WSS_Client_Session
     // buffer contains all data that have been accumulated so far and callees are
     // supposed to remove bytes that have been processed.
     // The default implementations leave all data alone for consumption by
-    // `do_on_ws_text_data()`. For security reasons, the total length of the
+    // `do_on_wss_text_data()`. For security reasons, the total length of the
     // message payload is checked; an error is reported if it exceeds the
     // `network.http.max_websocket_message_length` limit in 'main.conf'.
     virtual
     void
-    do_on_ws_message_data_stream(WebSocket_Opcode opcode, linear_buffer& data);
+    do_on_wss_message_data_stream(WebSocket_Opcode opcode, linear_buffer& data);
 
     // This callback is invoked by the network thread at the end of a data message
     // or a control frame. `opcode` may be `websocket_text`, `websocket_binary`,
     // `websocket_ping` or `websocket_pong`.
     virtual
     void
-    do_on_ws_message_finish(WebSocket_Opcode opcode, linear_buffer&& data) = 0;
+    do_on_wss_message_finish(WebSocket_Opcode opcode, linear_buffer&& data) = 0;
 
     // This callback is invoked by the network thread when an error occurs, or
     // after a CLOSE frame has been received. The connection will be closed after
@@ -86,13 +86,13 @@ class WSS_Client_Session
     // The default implementation does nothing.
     virtual
     void
-    do_on_ws_close(WebSocket_Status status, chars_view reason);
+    do_on_wss_close(WebSocket_Status status, chars_view reason);
 
     // Sends a raw frame (not a message). No error checking is performed. This
     // function is provided for convenience only, and maybe isn't very useful
     // unless for some low-level hacks.
     bool
-    do_ws_send_raw_frame(int rsv_opcode, chars_view data);
+    do_wss_send_raw_frame(int rsv_opcode, chars_view data);
 
   public:
     WSS_Client_Session(const WSS_Client_Session&) = delete;

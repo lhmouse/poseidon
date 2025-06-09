@@ -15,9 +15,9 @@ class Easy_WSS_Server
     // This is the user-defined callback, where `session` points to an internal
     // client session object, and if `event` is
     // 1) `easy_ws_open`, then `data` is the request URI; or
-    // 2) `easy_ws_msg_text`, then `data` is a complete text message that has
-    //    been received; or
-    // 3) `easy_ws_msg_bin`, then `data` is a complete binary message that has
+    // 2) `easy_ws_text`, then `data` is a complete text message that has been
+    //    received; or
+    // 3) `easy_ws_binary`, then `data` is a complete binary message that has
     //    been received; or
     // 4) `easy_ws_pong`, then `data` is a PONG notification that has been
     //    received, usually a copy of a previous PING notification; or

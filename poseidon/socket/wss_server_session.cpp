@@ -20,13 +20,13 @@ WSS_Server_Session::
 POSEIDON_VISIBILITY_HIDDEN
 void
 WSS_Server_Session::
-do_call_on_ws_close_once(WebSocket_Status status, chars_view reason)
+do_call_on_wss_close_once(WebSocket_Status status, chars_view reason)
   {
     if(this->m_closure_notified)
       return;
 
     this->m_closure_notified = true;
-    this->do_on_ws_close(status, reason);
+    this->do_on_wss_close(status, reason);
     this->ws_shut_down(websocket_status_normal_closure, "");
   }
 
@@ -35,33 +35,33 @@ WSS_Server_Session::
 do_abstract_socket_on_closed()
   {
     POSEIDON_LOG_DEBUG(("Closing WebSocket connection from `$1`: ${errno:full}"), this->remote_address());
-    this->do_call_on_ws_close_once(websocket_status_no_close_frame, "no CLOSE frame received");
+    this->do_call_on_wss_close_once(websocket_status_no_close_frame, "no CLOSE frame received");
   }
 
 HTTP_Payload_Type
 WSS_Server_Session::
-do_on_http_request_headers(HTTP_Request_Headers& req, bool close_after_payload)
+do_on_https_request_headers(HTTP_Request_Headers& req, bool close_after_payload)
   {
-    this->do_ws_complete_handshake(req, close_after_payload);
+    this->do_wss_complete_handshake(req, close_after_payload);
     return http_payload_normal;
   }
 
 void
 WSS_Server_Session::
-do_on_http_request_payload_stream(linear_buffer& data)
+do_on_https_request_payload_stream(linear_buffer& data)
   {
     data.clear();
   }
 
 void
 WSS_Server_Session::
-do_on_http_request_finish(HTTP_Request_Headers&& /*req*/, linear_buffer&& /*data*/, bool /*close_now*/)
+do_on_https_request_finish(HTTP_Request_Headers&& /*req*/, linear_buffer&& /*data*/, bool /*close_now*/)
   {
   }
 
 void
 WSS_Server_Session::
-do_on_http_request_error(HTTP_Status status)
+do_on_https_request_error(HTTP_Status status)
   {
     // This error can be reported synchronously.
     HTTP_Response_Headers resp;
@@ -70,12 +70,12 @@ do_on_http_request_error(HTTP_Status status)
     this->http_response(move(resp), "");
 
     // Close the connection.
-    this->do_call_on_ws_close_once(websocket_status_no_close_frame, "handshake rejected by HTTP error");
+    this->do_call_on_wss_close_once(websocket_status_no_close_frame, "handshake rejected by HTTP error");
   }
 
 void
 WSS_Server_Session::
-do_on_http_upgraded_stream(linear_buffer& data, bool eof)
+do_on_https_upgraded_stream(linear_buffer& data, bool eof)
   {
     for(;;) {
       // If something has gone wrong, ignore further incoming data.
@@ -89,7 +89,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
         if(this->m_parser.error()) {
           data.clear();
-          this->do_call_on_ws_close_once(websocket_status_protocol_error, this->m_parser.error_description());
+          this->do_call_on_wss_close_once(websocket_status_protocol_error, this->m_parser.error_description());
           return;
         }
 
@@ -102,7 +102,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
         if(this->m_parser.error()) {
           data.clear();
-          this->do_call_on_ws_close_once(websocket_status_protocol_error, this->m_parser.error_description());
+          this->do_call_on_wss_close_once(websocket_status_protocol_error, this->m_parser.error_description());
           return;
         }
 
@@ -125,7 +125,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
           if(this->m_parser.message_rsv1()) {
             if(!this->m_pmce_opt) {
               data.clear();
-              this->do_call_on_ws_close_once(websocket_status_unexpected_error, "PMCE not initialized");
+              this->do_call_on_wss_close_once(websocket_status_unexpected_error, "PMCE not initialized");
               return;
             }
 
@@ -144,7 +144,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
           // (potentially fragmented) data message, so combine it.
           auto opcode = static_cast<WebSocket_Opcode>(this->m_parser.message_opcode());
           ROCKET_ASSERT(is_any_of(opcode, { websocket_TEXT, websocket_BINARY }));
-          this->do_on_ws_message_data_stream(opcode, splice_buffers(this->m_msg, move(payload)));
+          this->do_on_wss_message_data_stream(opcode, splice_buffers(this->m_msg, move(payload)));
         }
 
         if(!this->m_parser.frame_payload_complete())
@@ -161,7 +161,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
               {
                 auto opcode = static_cast<WebSocket_Opcode>(this->m_parser.message_opcode());
                 ROCKET_ASSERT(is_any_of(opcode, { websocket_TEXT, websocket_BINARY }));
-                this->do_on_ws_message_finish(opcode, move(this->m_msg));
+                this->do_on_wss_message_finish(opcode, move(this->m_msg));
               }
               break;
 
@@ -176,24 +176,24 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
                 WebSocket_Status status = websocket_status_no_status_code;
                 if(payload.getn(reinterpret_cast<char*>(&bestatus), 2) >= 2)
                   status = static_cast<WebSocket_Status>(ROCKET_BETOH16(bestatus));
-                this->do_on_ws_close(status, payload);
+                this->do_on_wss_close(status, payload);
               }
               return;
 
             case 9:  // PING
               {
                 POSEIDON_LOG_TRACE(("WebSocket PING from `$1`: $2"), this->remote_address(), payload);
-                this->do_on_ws_message_finish(websocket_PING, move(payload));
+                this->do_on_wss_message_finish(websocket_PING, move(payload));
 
                 // FIN + PONG
-                this->do_ws_send_raw_frame(0b10001010, payload);
+                this->do_wss_send_raw_frame(0b10001010, payload);
               }
               break;
 
             case 10:  // PONG
               {
                 POSEIDON_LOG_TRACE(("WebSocket PONG from `$1`: $2"), this->remote_address(), payload);
-                this->do_on_ws_message_finish(websocket_PONG, move(payload));
+                this->do_on_wss_message_finish(websocket_PONG, move(payload));
               }
               break;
             }
@@ -206,16 +206,16 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
 void
 WSS_Server_Session::
-do_on_ws_accepted(cow_string&& caddr)
+do_on_wss_accepted(cow_string&& caddr)
   {
     POSEIDON_LOG_DEBUG(("Accepted WebSocket from `$1`: $2"), this->remote_address(), caddr);
   }
 
 void
 WSS_Server_Session::
-do_on_ws_message_data_stream(WebSocket_Opcode /*opcode*/, linear_buffer& data)
+do_on_wss_message_data_stream(WebSocket_Opcode /*opcode*/, linear_buffer& data)
   {
-    // Leave `data` alone for consumption by `do_on_ws_message_finish()`, but
+    // Leave `data` alone for consumption by `do_on_wss_message_finish()`, but
     // perform some security checks, so we won't be affected by compromised
     // 3rd-party servers.
     if(data.size() > this->m_parser.max_message_length())
@@ -227,7 +227,7 @@ do_on_ws_message_data_stream(WebSocket_Opcode /*opcode*/, linear_buffer& data)
 
 void
 WSS_Server_Session::
-do_on_ws_close(WebSocket_Status status, chars_view reason)
+do_on_wss_close(WebSocket_Status status, chars_view reason)
   {
     POSEIDON_LOG_DEBUG(("WebSocket CLOSE from `$1` (status $2): $3"),
                         this->remote_address(), status, reason);
@@ -235,11 +235,11 @@ do_on_ws_close(WebSocket_Status status, chars_view reason)
 
 void
 WSS_Server_Session::
-do_ws_complete_handshake(HTTP_Request_Headers& req, bool close_after_payload)
+do_wss_complete_handshake(HTTP_Request_Headers& req, bool close_after_payload)
   {
     if(req.is_proxy) {
       // Reject proxy requests.
-      this->do_on_http_request_error(http_status_forbidden);
+      this->do_on_https_request_error(http_status_forbidden);
       return;
     }
 
@@ -253,7 +253,7 @@ do_ws_complete_handshake(HTTP_Request_Headers& req, bool close_after_payload)
 
     if(close_after_payload || !this->m_parser.is_server_mode()) {
       // The handshake failed.
-      this->do_call_on_ws_close_once(websocket_status_protocol_error, this->m_parser.error_description());
+      this->do_call_on_wss_close_once(websocket_status_protocol_error, this->m_parser.error_description());
       return;
     }
 
@@ -262,12 +262,12 @@ do_ws_complete_handshake(HTTP_Request_Headers& req, bool close_after_payload)
       this->m_pmce_opt = new_sh<WebSocket_Deflator>(this->m_parser);
 
     // Rebuild the URI.
-    this->do_on_ws_accepted(req.uri_host + req.uri_path + '?' + req.uri_query);
+    this->do_on_wss_accepted(req.uri_host + req.uri_path + '?' + req.uri_query);
   }
 
 bool
 WSS_Server_Session::
-do_ws_send_raw_frame(int rsv_opcode, chars_view data)
+do_wss_send_raw_frame(int rsv_opcode, chars_view data)
   {
     // Compose a single frame and send it. Frames to clients will not be masked.
     WebSocket_Frame_Header header;
@@ -317,7 +317,7 @@ ws_send(WebSocket_Opcode opcode, chars_view data)
                 this->m_pmce_opt->deflate_message_finish(lock);
 
                 // FIN + RSV1 + opcode
-                return this->do_ws_send_raw_frame(0b11000000 | opcode, out_buf);
+                return this->do_wss_send_raw_frame(0b11000000 | opcode, out_buf);
               }
               catch(exception& stdex) {
                 // When an error occurred, the deflator is left in an indeterminate
@@ -330,7 +330,7 @@ ws_send(WebSocket_Opcode opcode, chars_view data)
 
           // Send the message uncompressed.
           // FIN + opcode
-          return this->do_ws_send_raw_frame(0b10000000 | opcode, data);
+          return this->do_wss_send_raw_frame(0b10000000 | opcode, data);
         }
 
       case websocket_PING:
@@ -344,7 +344,7 @@ ws_send(WebSocket_Opcode opcode, chars_view data)
 
           // Control messages can't be compressed, so send it as is.
           // FIN + opcode
-          return this->do_ws_send_raw_frame(0b10000000 | opcode, data);
+          return this->do_wss_send_raw_frame(0b10000000 | opcode, data);
         }
 
       default:
@@ -375,7 +375,7 @@ ws_shut_down(WebSocket_Status status, chars_view reason) noexcept
       data.append(reason.p, eptr);
 
       // FIN + CLOSE
-      succ = this->do_ws_send_raw_frame(0b10000000 | 8, data);
+      succ = this->do_wss_send_raw_frame(0b10000000 | 8, data);
     }
     catch(exception& stdex) {
       POSEIDON_LOG_ERROR((
