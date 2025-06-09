@@ -17,7 +17,6 @@ class Abstract_Socket
     unique_posix_fd m_fd;
     atomic_relaxed<Socket_State> m_state;
     bool m_io_throttled = false;  // protected by `m_io_mutex`
-    char m_reserved_1;
     mutable atomic_relaxed<bool> m_sockname_ready;
     mutable IPv6_Address m_sockname;
 

@@ -18,8 +18,6 @@ class Redis_Connection
     cow_string m_password;
     bool m_connected;
     bool m_reset_clear;
-    char m_reserved_1;
-    char m_reserved_2;
 
     uniptr_redisContext m_redis;
     uniptr_redisReply m_reply;

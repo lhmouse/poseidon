@@ -29,8 +29,6 @@ class HTTP_Response_Parser
 
     HRESP_State m_hresp = hresp_new;
     bool m_close_after_payload = false;
-    char m_reserved_1;
-    char m_reserved_2;
 
   public:
     // Constructs a parser for incoming responses.
