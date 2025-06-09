@@ -444,6 +444,9 @@ class Easy_WSS_Client;
 
 // Singletons
 extern const ::locale_t c_locale;
+extern const cow_string empty_cow_string;
+extern const phcow_string empty_phcow_string;
+
 extern atomic_relaxed<int> exit_signal;
 extern class Main_Config& main_config;
 extern class Logger& logger;

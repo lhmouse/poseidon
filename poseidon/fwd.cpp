@@ -16,6 +16,9 @@
 namespace poseidon {
 
 const ::locale_t c_locale = ::newlocale(0, "C", nullptr);
+const cow_string empty_cow_string;
+const phcow_string empty_phcow_string;
+
 atomic_relaxed<int> exit_signal;
 Main_Config& main_config = *new Main_Config;
 Logger& logger = *new Logger;
