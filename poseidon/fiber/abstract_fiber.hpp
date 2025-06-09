@@ -25,12 +25,6 @@ class Abstract_Fiber
     void
     do_on_abstract_fiber_resumed();
 
-    // This callback is invoked by the fiber scheduler and is intended to be
-    // overriden by derived classes to perform useful operation.
-    virtual
-    void
-    do_on_abstract_fiber_execute() = 0;
-
     // This callback is invoked after `do_on_abstract_fiber_execute()`, and
     // before it is suspended by a yield operation.
     // This function should not throw exceptions; exceptions are ignored.
@@ -38,6 +32,12 @@ class Abstract_Fiber
     virtual
     void
     do_on_abstract_fiber_suspended();
+
+    // This callback is invoked by the fiber scheduler and is intended to be
+    // overriden by derived classes to perform useful operation.
+    virtual
+    void
+    do_on_abstract_fiber_execute() = 0;
 
   public:
     Abstract_Fiber(const Abstract_Fiber&) = delete;
