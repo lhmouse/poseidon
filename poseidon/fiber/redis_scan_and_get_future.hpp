@@ -42,7 +42,7 @@ class Redis_Scan_and_Get_Future
 
     virtual
     void
-    do_on_abstract_future_finalize() noexcept override;
+    do_on_abstract_future_finalize() override;
 
   public:
     Redis_Scan_and_Get_Future(const Redis_Scan_and_Get_Future&) = delete;

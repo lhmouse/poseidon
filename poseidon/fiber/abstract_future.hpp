@@ -6,7 +6,6 @@
 
 #include "../fwd.hpp"
 #include "../base/abstract_task.hpp"
-#include <rocket/once_flag.hpp>
 namespace poseidon {
 
 class Abstract_Future
@@ -16,10 +15,9 @@ class Abstract_Future
   private:
     friend class Fiber_Scheduler;
 
-    mutable ::rocket::once_flag m_once;
-    ::std::exception_ptr m_except;
-
-    mutable plain_mutex m_waiters_mutex;
+    atomic_acq_rel<bool> m_init_completed;
+    mutable plain_mutex m_init_mutex;
+    ::std::exception_ptr m_init_except;
     cow_vector<wkptr<atomic_relaxed<steady_time>>> m_waiters;
 
   protected:
@@ -48,7 +46,7 @@ class Abstract_Future
     // except that it shall not throw exceptions.
     virtual
     void
-    do_on_abstract_future_finalize() noexcept;
+    do_on_abstract_future_finalize();
 
   public:
     Abstract_Future(const Abstract_Future&) = delete;
@@ -59,11 +57,11 @@ class Abstract_Future
     // result or an exception will have been set.
     bool
     completed() const noexcept
-      { return this->m_once.test();  }
+      { return this->m_init_completed.load();  }
 
     bool
     successful() const noexcept
-      { return this->m_once.test() && !this->m_except;  }
+      { return this->m_init_completed.load() && !this->m_init_except;  }
 
     // Checks whether this future has completed with no exception being thrown.
     void

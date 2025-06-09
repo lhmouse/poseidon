@@ -43,7 +43,7 @@ class MySQL_Check_Table_Future
 
     virtual
     void
-    do_on_abstract_future_finalize() noexcept override;
+    do_on_abstract_future_finalize() override;
 
   public:
     MySQL_Check_Table_Future(const MySQL_Check_Table_Future&) = delete;

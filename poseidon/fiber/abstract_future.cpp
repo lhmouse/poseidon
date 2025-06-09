@@ -20,44 +20,46 @@ void
 Abstract_Future::
 do_on_abstract_task_execute() noexcept
   {
-    // The completion state can only be updated with `m_waiters_mutex` locked.
     cow_vector<wkptr<atomic_relaxed<steady_time>>> waiters;
-    plain_mutex::unique_lock waiters_lock;
+    plain_mutex::unique_lock lock(this->m_init_mutex);
 
-    this->m_once.call(
-      [&] {
-        try {
-          this->do_on_abstract_future_execute();
-        }
-        catch(exception& stdex) {
-          POSEIDON_LOG_WARN(("Future `$1` failed:", "$2"), typeid(*this), stdex);
-          this->m_except = ::std::current_exception();
-        }
-
-        // This indicates something has been done and all waiters shall be
-        // released.
-        waiters_lock.lock(this->m_waiters_mutex);
-      });
-
-    if(!waiters_lock)
+    if(this->m_init_completed.load())
       return;
 
-    // Notify all waiters.
-    steady_time now = steady_clock::now();
+    try {
+      // Perform initialization.
+      this->do_on_abstract_future_execute();
+
+      POSEIDON_LOG_DEBUG((
+          "Future initialization completed",
+          "[future `$1` (class `$2`)]"),
+          this, typeid(*this));
+    }
+    catch(exception& stdex) {
+      POSEIDON_LOG_WARN((
+          "Future initialization failed: $3",
+          "[future `$1` (class `$2`)]"),
+          this, typeid(*this), stdex);
+
+      // Save the exception so it will be rethrown later.
+      this->m_init_except = ::std::current_exception();
+    }
+
+    this->m_init_completed.store(true);
     waiters.swap(this->m_waiters);
+    lock.unlock();
 
-    for(uint32_t k = 0;  k != waiters.size();  ++k)
-      if(auto timep = waiters[k].lock())
-        timep->store(now + steady_clock::time_point::duration(k));
+    POSEIDON_CATCH_EVERYTHING(this->do_on_abstract_future_finalize());
 
-    waiters_lock.unlock();
-    this->do_on_abstract_future_finalize();
-    POSEIDON_LOG_TRACE(("Future `$1` completed"), typeid(*this));
+    // Notify all waiters.
+    for(const auto& weakp : waiters)
+      if(auto timep = weakp.lock())
+        timep->store(steady_clock::now());
   }
 
 void
 Abstract_Future::
-do_on_abstract_future_finalize() noexcept
+do_on_abstract_future_finalize()
   {
   }
 
@@ -65,15 +67,14 @@ void
 Abstract_Future::
 check_success() const
   {
-    // If initialization hasn't completed yet, fail.
-    this->m_once.call(
-      [&] {
-        POSEIDON_THROW(("Future `$1` not completed"), typeid(*this));
-      });
+    if(!this->m_init_completed.load())
+      POSEIDON_THROW((
+          "Future not completed",
+          "[future `$1` (class `$2`)]"),
+          this, typeid(*this));
 
-    // If initialization has failed, rethrow the exact exception.
-    if(this->m_except)
-      ::std::rethrow_exception(this->m_except);
+    if(this->m_init_except)
+      ::std::rethrow_exception(this->m_init_except);
   }
 
 }  // namespace poseidon

@@ -161,7 +161,7 @@ allocate_default_connection()
 
 bool
 MySQL_Connector::
-pool_connection(uniptr<MySQL_Connection>&& conn) noexcept
+pool_connection(uniptr<MySQL_Connection>&& conn)
   {
     if(!conn)
       return false;

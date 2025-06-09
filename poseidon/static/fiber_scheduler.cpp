@@ -339,12 +339,16 @@ thread_loop()
     ::std::push_heap(this->m_pq.mut_begin(), this->m_pq.mut_end(), s_fiber_comparator);
 
     recursive_mutex::unique_lock sched_lock(this->m_sched_mutex);
-    auto futr = elem->wfutr.lock();
+    auto futr_opt = elem->wfutr.lock();
     lock.unlock();
 
-    if(futr && !futr->m_once.test()) {
-      // Wait for the future. In case of a shutdown request or timeout, ignore the
-      // future and move on anyway.
+    if(futr_opt) {
+      // Wait for the future. In case of a shutdown request or timeout, ignore
+      // the future and move on anyway.
+      plain_mutex::unique_lock futr_lock(futr_opt->m_init_mutex);
+      if(futr_opt->m_init_completed.load())
+        return;
+
       bool should_warn = now >= elem->yield_time + warn_timeout;
       bool should_fail = now >= elem->yield_time + real_fail_timeout;
 
@@ -384,8 +388,7 @@ thread_loop()
             ::memcpy(&ythis, yargs, sizeof(ythis));
             ythis->do_fiber_function();
           }),
-          2,
-          xargs[0], xargs[1]);
+          2, xargs[0], xargs[1]);
     }
 
     // Start or resume this fiber.
@@ -451,13 +454,12 @@ yield(const Abstract_Fiber& tfiber, const shptr<Abstract_Future>& futr_opt, mill
     if(futr_opt) {
       // Associate the future. If the future is already in the READY state,
       // don't block at all.
-      plain_mutex::unique_lock lock(futr_opt->m_waiters_mutex);
-      if(futr_opt->m_once.test())
+      plain_mutex::unique_lock futr_lock(futr_opt->m_init_mutex);
+      if(futr_opt->m_init_completed.load())
         return;
 
       shptr<atomic_relaxed<steady_time>> async_time_ptr(elem, &(elem->async_time));
-      futr_opt->m_waiters.emplace_back(async_time_ptr);
-      lock.unlock();
+      futr_opt->m_waiters.push_back(async_time_ptr);
     }
 
     POSEIDON_LOG_TRACE(("Suspending fiber `$1` (class `$2`)"), fiber, typeid(*fiber));

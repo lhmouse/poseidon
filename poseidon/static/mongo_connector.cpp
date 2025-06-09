@@ -161,7 +161,7 @@ allocate_default_connection()
 
 bool
 Mongo_Connector::
-pool_connection(uniptr<Mongo_Connection>&& conn) noexcept
+pool_connection(uniptr<Mongo_Connection>&& conn)
   {
     if(!conn)
       return false;

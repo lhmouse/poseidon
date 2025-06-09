@@ -57,7 +57,7 @@ class Mongo_Connector
     // reset, a warning is printed, and the request is ignored, and `false` is
     // returned.
     bool
-    pool_connection(uniptr<Mongo_Connection>&& conn) noexcept;
+    pool_connection(uniptr<Mongo_Connection>&& conn);
   };
 
 }  // namespace poseidon

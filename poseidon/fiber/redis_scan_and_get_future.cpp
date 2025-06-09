@@ -98,7 +98,7 @@ do_on_abstract_future_execute()
 
 void
 Redis_Scan_and_Get_Future::
-do_on_abstract_future_finalize() noexcept
+do_on_abstract_future_finalize()
   {
     if(this->m_conn && this->m_conn->reset())
       this->m_ctr->pool_connection(move(this->m_conn));

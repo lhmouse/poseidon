@@ -157,7 +157,7 @@ allocate_default_connection()
 
 bool
 Redis_Connector::
-pool_connection(uniptr<Redis_Connection>&& conn) noexcept
+pool_connection(uniptr<Redis_Connection>&& conn)
   {
     if(!conn)
       return false;

@@ -45,7 +45,7 @@ do_on_abstract_future_execute()
 
 void
 Mongo_Query_Future::
-do_on_abstract_future_finalize() noexcept
+do_on_abstract_future_finalize()
   {
     if(this->m_conn && this->m_conn->reset())
       this->m_ctr->pool_connection(move(this->m_conn));

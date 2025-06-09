@@ -42,7 +42,7 @@ class Mongo_Query_Future
 
     virtual
     void
-    do_on_abstract_future_finalize() noexcept override;
+    do_on_abstract_future_finalize() override;
 
   public:
     Mongo_Query_Future(const Mongo_Query_Future&) = delete;
