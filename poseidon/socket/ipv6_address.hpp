@@ -17,7 +17,6 @@ class IPv6_Address
       __m128i m_addr_stor;
     };
     uint16_t m_port = 0;
-    char m_padding[14] = { };
 
   public:
     // Initializes an unspecified (all-zero) address.
