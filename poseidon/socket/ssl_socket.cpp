@@ -188,28 +188,6 @@ do_abstract_socket_on_readable()
 
 void
 SSL_Socket::
-do_abstract_socket_on_oob_readable()
-  {
-    recursive_mutex::unique_lock io_lock;
-    this->do_abstract_socket_lock_driver(io_lock);
-    ::ssize_t io_result;
-
-    // Try reading. When there is no OOB byte, `recv()` fails with `EINVAL`.
-    char data;
-    io_result = ::recv(this->do_get_fd(), &data, 1, MSG_OOB);
-    if(io_result <= 0)
-      return;
-
-    // Process received byte.
-    this->do_on_ssl_oob_byte(data);
-
-    POSEIDON_LOG_TRACE((
-        "SSL socket `$1` (class `$2`): `do_abstract_socket_on_oob_readable()` done"),
-        this, typeid(*this));
-  }
-
-void
-SSL_Socket::
 do_abstract_socket_on_writable()
   {
     recursive_mutex::unique_lock io_lock;
@@ -295,16 +273,6 @@ do_on_ssl_connected()
         "SSL connection to `$3` established",
         "[SSL socket `$1` (class `$2`)]"),
         this, typeid(*this), this->remote_address());
-  }
-
-void
-SSL_Socket::
-do_on_ssl_oob_byte(char data)
-  {
-    POSEIDON_LOG_INFO((
-        "SSL connection received out-of-band data: $3 ($4)",
-        "[SSL socket `$1` (class `$2`)]"),
-        this, typeid(*this), (int) data, (char) data);
   }
 
 const IPv6_Address&
@@ -421,13 +389,6 @@ ssl_send(chars_view data)
     ::memcpy(queue.mut_end(), data.p + nskip, data.n - nskip);
     queue.accept(data.n - nskip);
     return true;
-  }
-
-bool
-SSL_Socket::
-ssl_send_oob(char data) noexcept
-  {
-    return ::send(this->do_get_fd(), &data, 1, MSG_OOB) > 0;
   }
 
 bool

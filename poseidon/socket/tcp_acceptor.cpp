@@ -116,12 +116,6 @@ do_abstract_socket_on_readable()
 
 void
 TCP_Acceptor::
-do_abstract_socket_on_oob_readable()
-  {
-  }
-
-void
-TCP_Acceptor::
 do_abstract_socket_on_writable()
   {
   }

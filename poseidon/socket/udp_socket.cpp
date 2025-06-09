@@ -108,12 +108,6 @@ do_abstract_socket_on_readable()
 
 void
 UDP_Socket::
-do_abstract_socket_on_oob_readable()
-  {
-  }
-
-void
-UDP_Socket::
 do_abstract_socket_on_writable()
   {
     this->do_abstract_socket_change_state(socket_pending, socket_established);

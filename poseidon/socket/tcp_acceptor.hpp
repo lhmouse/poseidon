@@ -33,10 +33,6 @@ class TCP_Acceptor
 
     virtual
     void
-    do_abstract_socket_on_oob_readable() override;
-
-    virtual
-    void
     do_abstract_socket_on_writable() override;
 
     // This callback is invoked by the network thread when a connection has been

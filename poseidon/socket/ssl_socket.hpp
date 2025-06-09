@@ -44,10 +44,6 @@ class SSL_Socket
 
     virtual
     void
-    do_abstract_socket_on_oob_readable() override;
-
-    virtual
-    void
     do_abstract_socket_on_writable() override;
 
     // This callback is invoked by the network thread after a full-duplex
@@ -64,13 +60,6 @@ class SSL_Socket
     virtual
     void
     do_on_ssl_stream(linear_buffer& data, bool eof) = 0;
-
-    // This callback is invoked by the network thread when an out-of-band byte
-    // has been received, and is intended to be overriden by derived classes.
-    // The default implementation merely prints a message.
-    virtual
-    void
-    do_on_ssl_oob_byte(char data);
 
     // For a server-side socket, this callback is invoked by the network thread
     // when ALPN has been requested by the client. This function should return
@@ -127,13 +116,6 @@ class SSL_Socket
     // This function is thread-safe.
     bool
     ssl_send(chars_view data);
-
-    // Sends an out-of-band byte. OOB bytes can be sent even when there are
-    // pending normal data. This function never blocks. If the OOB byte cannot
-    // be sent, `false` is returned and there is no effect.
-    // This function is thread-safe.
-    bool
-    ssl_send_oob(char data) noexcept;
 
     // Shuts the socket down gracefully. Errors during the shutdown operation
     // are ignored.

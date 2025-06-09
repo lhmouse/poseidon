@@ -56,7 +56,6 @@ do_epoll_ctl(int op, const shptr<Abstract_Socket>& socket, uint32_t events)
           socket, typeid(*socket),
           (event.events & EPOLLET)  ? " ET"  : "",
           (event.events & EPOLLIN)  ? " IN"  : "",
-          (event.events & EPOLLPRI) ? " PRI" : "",
           (event.events & EPOLLOUT) ? " OUT" : "");
   }
 
@@ -437,17 +436,6 @@ thread_loop()
         event.events |= EPOLLHUP;
       }
 
-    if(event.events & EPOLLPRI)
-      try {
-        POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`): PRI"), socket, typeid(*socket));
-        socket->do_abstract_socket_on_oob_readable();
-      }
-      catch(exception& stdex) {
-        POSEIDON_LOG_ERROR(("`do_abstract_socket_on_oob_readable()` error: $1"), stdex);
-        socket->quick_close();
-        event.events |= EPOLLHUP;
-      }
-
     // If either `EPOLLHUP` or `EPOLLERR` is set, deliver a notification and
     // then remove the socket.
     if(event.events & (EPOLLHUP | EPOLLERR)) {
@@ -480,7 +468,7 @@ thread_loop()
 
       uint32_t epoll_inflags = 0;
       if(!should_throttle)
-        epoll_inflags |= EPOLLIN | EPOLLPRI | EPOLLET;
+        epoll_inflags |= EPOLLIN | EPOLLET;
       this->do_epoll_ctl(EPOLL_CTL_MOD, socket, EPOLLOUT | epoll_inflags);
     }
 
@@ -527,7 +515,7 @@ insert(const shptr<Abstract_Socket>& socket)
           "[`epoll_create()` failed: ${errno:full}]"));
 
     // Insert the socket.
-    this->do_epoll_ctl(EPOLL_CTL_ADD, socket, EPOLLIN | EPOLLPRI | EPOLLOUT | EPOLLET);
+    this->do_epoll_ctl(EPOLL_CTL_ADD, socket, EPOLLIN | EPOLLOUT | EPOLLET);
     this->do_find_socket_nolock(socket.get()) = socket;
     this->m_epoll_map_used ++;
   }
