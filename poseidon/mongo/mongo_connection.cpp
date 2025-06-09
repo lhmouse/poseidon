@@ -14,7 +14,7 @@ Mongo_Connection(const cow_string& service_uri, const cow_string& password)
     this->m_reset_clear = true;
 
     // Parse the service URI.
-    auto full_uri = "mongodb://" + service_uri;
+    cow_string full_uri = "mongodb://" + service_uri;
     ::bson_error_t error;
     uniptr_mongoc_uri uri;
     if(!uri.reset(::mongoc_uri_new_with_error(full_uri.c_str(), &error)))
@@ -53,15 +53,8 @@ reset() noexcept
     // Discard the current reply and cursor.
     this->m_cursor.reset();
     this->m_reply_available = false;
-    this->m_reset_clear = false;
 
-    // Check whether the server is still active. This is a blocking function.
-    auto servers = make_unique_handle(::mongoc_client_select_server(this->m_mongo,
-                                                            false, nullptr, nullptr),
-                                      ::mongoc_server_description_destroy);
-    if(!servers)
-      return false;
-
+    // MongoDB is stateless.
     this->m_reset_clear = true;
     return true;
   }
@@ -70,23 +63,23 @@ void
 Mongo_Connection::
 execute_bson(const ::bson_t* bson_cmd)
   {
-    if(!bson_cmd)
-      POSEIDON_THROW(("Null BSON pointer"));
+    if(!bson_cmd || (bson_cmd->len == 0))
+      POSEIDON_THROW(("Null or empty BSON query"));
 
     // Discard the current reply and cursor.
     this->m_cursor.reset();
     this->m_reply_available = false;
     this->m_reset_clear = false;
 
-    // Execute the command. `mongoc_client_command_with_opts()` always recreate
+    // Execute the command. `mongoc_client_command_simple()` always recreate
     // the reply object, so destroy it first.
-    ::bson_error_t error;
     ::bson_destroy(this->m_reply);
-    if(!::mongoc_client_command_with_opts(this->m_mongo, this->m_db.c_str(), bson_cmd,
-                                          nullptr, nullptr, this->m_reply, &error))
+    ::bson_error_t error;
+    if(!::mongoc_client_command_simple(this->m_mongo, this->m_db.c_str(), bson_cmd,
+                                       nullptr, this->m_reply, &error))
       POSEIDON_THROW((
-          "Could not execute Mongo command: ERROR $1.$2: $3",
-          "[`mongoc_client_command_with_opts()` failed]"),
+          "MongoDB command failed: ERROR $1.$2: $3",
+          "[`mongoc_client_command_simple()` failed]"),
           error.domain, error.code, error.message);
 
     // This will be checked in `fetch_reply_bson_opt()`.
@@ -101,7 +94,8 @@ execute(const Mongo_Document& cmd)
     struct xFrame
       {
         ::bson_t* parent_bson;
-        decltype(::bson_append_array_end)* append_end_fn;
+        using append_end_fn_type = bool (bson_t*, bson_t*);
+        append_end_fn_type* append_end_fn;
         const Mongo_Value* parent;
         size_t parent_rpos;
         ::bson_t temp;
@@ -121,7 +115,6 @@ execute(const Mongo_Document& cmd)
       const char* key;
       int key_len;
       const Mongo_Value* pval;
-      int32_t int32;
       milliseconds dur;
 
       if(top_a) {
@@ -153,9 +146,8 @@ execute(const Mongo_Document& cmd)
           break;
 
         case mongo_value_integer:
-          int32 = static_cast<int32_t>(pval->as_integer());
-          success = (int32 == pval->as_integer())
-                    ? ::bson_append_int32(pbson, key, key_len, int32)
+          success = (pval->as_integer() == (int32_t) pval->as_integer())
+                    ? ::bson_append_int32(pbson, key, key_len, (int32_t) pval->as_integer())
                     : ::bson_append_int64(pbson, key, key_len, pval->as_integer());
           break;
 
@@ -166,14 +158,14 @@ execute(const Mongo_Document& cmd)
         case mongo_value_utf8:
           success = (pval->as_utf8_length() <= INT_MAX)
                     && ::bson_append_utf8(pbson, key, key_len, pval->as_utf8_c_str(),
-                                          static_cast<int>(pval->as_utf8_length()));
+                                          (int) pval->as_utf8_length());
           break;
 
         case mongo_value_binary:
-          success = (pval->as_binary_size() <= INT_MAX)
+          success = (pval->as_binary_size() <= UINT_MAX)
                     && ::bson_append_binary(pbson, key, key_len, BSON_SUBTYPE_BINARY,
                                             pval->as_binary_data(),
-                                            static_cast<uint32_t>(pval->as_binary_size()));
+                                            (unsigned int) pval->as_binary_size());
           break;
 
         case mongo_value_array:
@@ -262,22 +254,23 @@ fetch_reply_bson_opt()
         return nullptr;
 
       if(!::bson_has_field(this->m_reply, "cursor")) {
-        // If the reply contains no cursor, assign it directly to `bson_output`.
+        // If the reply contains no cursor, return it directly.
         this->m_reply_available = false;
         return this->m_reply;
       }
 
       // Create the cursor. `mongoc_cursor_new_from_command_reply_with_opts()`
-      // destroys the reply object, so it has to be recreated afterwards.
+      // destroys the reply object, so it has to be recreated.
       this->m_cursor.reset(::mongoc_cursor_new_from_command_reply_with_opts(
-                                            this->m_mongo, this->m_reply, nullptr));
+                                         this->m_mongo, this->m_reply, nullptr));
       ::bson_init(this->m_reply);
       this->m_reply_available = false;
     }
 
     const ::bson_t* bson_output;
     if(!::mongoc_cursor_next(this->m_cursor, &bson_output)) {
-      // An error may have been stored in the cursor.
+      bson_output = nullptr;
+
       ::bson_error_t error;
       if(::mongoc_cursor_error(this->m_cursor, &error))
         POSEIDON_THROW((
@@ -295,7 +288,7 @@ fetch_reply(Mongo_Document& output)
   {
     output.clear();
 
-    const auto bson_output = this->fetch_reply_bson_opt();
+    auto bson_output = this->fetch_reply_bson_opt();
     if(!bson_output)
       return false;
 
