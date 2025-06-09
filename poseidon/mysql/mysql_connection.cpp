@@ -26,21 +26,15 @@ bool
 MySQL_Connection::
 reset() noexcept
   {
-    if(!this->m_connected)
-      return true;
-
     // Discard the current result set.
     this->m_res.reset();
     this->m_meta.reset();
     this->m_stmt.reset();
-    this->m_reset_clear = false;
 
     // Reset the connection on the server. This is a blocking function.
-    if(::mysql_reset_connection(this->m_mysql) != 0)
-      return false;
-
-    this->m_reset_clear = true;
-    return true;
+    bool error = this->m_connected && (::mysql_reset_connection(this->m_mysql) != 0);
+    this->m_reset_clear = !error;
+    return !error;
   }
 
 uint32_t
@@ -59,7 +53,7 @@ execute(const cow_string& stmt, const cow_vector<MySQL_Value>& args)
 
     if(!this->m_connected) {
       // Parse the service URI in a hacky way.
-      auto full_uri = "mysql://" + this->m_service_uri;
+      cow_string full_uri = "mysql://" + this->m_service_uri;
       ::http_parser_url uri_hp;
       ::http_parser_url_init(&uri_hp);
       if(::http_parser_parse_url(full_uri.c_str(), full_uri.size(), false, &uri_hp) != 0)
@@ -98,20 +92,13 @@ execute(const cow_string& stmt, const cow_vector<MySQL_Value>& args)
         POSEIDON_THROW((
             "Could not connect to MySQL server `$1`: ERROR $2: $3",
             "[`mysql_real_connect()` failed]"),
-            this->m_service_uri,
-            ::mysql_errno(this->m_mysql), ::mysql_error(this->m_mysql));
+            this->m_service_uri, ::mysql_errno(this->m_mysql),
+            ::mysql_error(this->m_mysql));
 
-      this->m_password.clear();
-      this->m_password.shrink_to_fit();
+      cow_string().swap(this->m_password);
       this->m_connected = true;
       POSEIDON_LOG_INFO(("Connected to MySQL server `$1`"), this->m_service_uri);
     }
-
-    // Discard the current result set.
-    this->m_res.reset();
-    this->m_meta.reset();
-    this->m_stmt.reset();
-    this->m_reset_clear = false;
 
     // Create a prepared statement.
     if(!this->m_stmt.reset(::mysql_stmt_init(this->m_mysql)))
@@ -193,6 +180,11 @@ execute(const cow_string& stmt, const cow_vector<MySQL_Value>& args)
           "Could not bind arguments onto MySQL statement: ERROR $1: $2",
           "[`mysql_stmt_bind_param()` failed]"),
           ::mysql_stmt_errno(this->m_stmt), ::mysql_stmt_error(this->m_stmt));
+
+    // Discard the current result set.
+    this->m_res.reset();
+    this->m_meta.reset();
+    this->m_reset_clear = false;
 
     // Execute the bound statement. While this function is blocking, we don't
     // fetch its result here; it's done in `fetch()`.
@@ -283,19 +275,24 @@ fetch_row(cow_vector<MySQL_Value>& output)
         case MYSQL_TYPE_DATETIME:
         case MYSQL_TYPE_DATE:
         case MYSQL_TYPE_TIME:
-          binds[col].buffer_type = MYSQL_TYPE_DATETIME;
-          binds[col].buffer = &(output.mut(col).m_stor.emplace<DateTime_with_MYSQL_TIME>().get_mysql_time());
-          binds[col].buffer_length = sizeof(::MYSQL_TIME);
-          break;
+          {
+            binds[col].buffer_type = MYSQL_TYPE_DATETIME;
+            auto& output_mdt = output.mut(col).m_stor.emplace<DateTime_with_MYSQL_TIME>();
+            binds[col].buffer = &(output_mdt.get_mysql_time());
+            binds[col].buffer_length = sizeof(::MYSQL_TIME);
+            break;
+          }
 
         default:
-          // Reserve a small amount of memory for BLOB fields. If it's not
-          // large enough, it will be extended later.
-          binds[col].buffer_type = MYSQL_TYPE_LONG_BLOB;
-          output.mut(col).mut_blob().resize(64);
-          binds[col].buffer = output.mut(col).mut_blob().mut_data();
-          binds[col].buffer_length = output.mut(col).mut_blob().size();
-          break;
+          {
+            // Reserve a small amount of memory for BLOB fields. If it's not
+            // large enough, it will be resized later.
+            binds[col].buffer_type = MYSQL_TYPE_LONG_BLOB;
+            output.mut(col).mut_blob().resize(64);
+            binds[col].buffer = output.mut(col).mut_blob().mut_data();
+            binds[col].buffer_length = output.mut(col).mut_blob().size();
+            break;
+          }
         }
 
       // XXX: What are these fields used for? Why aren't they used by default?
