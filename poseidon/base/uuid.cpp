@@ -68,17 +68,14 @@ int
 UUID::
 compare(const UUID& other) const noexcept
   {
-    const __m128i bswap = _mm_setr_epi8(15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0);
-    const __m128i shift = _mm_set1_epi8(-128);
+    __m128i bswap = _mm_setr_epi8(15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0);
+    __m128i shift = _mm_set1_epi8(-128);
+    __m128i tval = _mm_xor_si128(_mm_shuffle_epi8(this->m_stor, bswap), shift);
+    __m128i oval = _mm_xor_si128(_mm_shuffle_epi8(other.m_stor, bswap), shift);
 
-    __m128i tval = _mm_load_si128(&(this->m_stor));
-    tval = _mm_xor_si128(_mm_shuffle_epi8(tval, bswap), shift);
-    __m128i oval = _mm_load_si128(&(other.m_stor));
-    oval = _mm_xor_si128(_mm_shuffle_epi8(oval, bswap), shift);
-
-    int mgt = _mm_movemask_epi8(_mm_cmpgt_epi8(tval, oval));
-    int mlt = _mm_movemask_epi8(_mm_cmpgt_epi8(oval, tval));
-    return mgt - mlt;
+    int gt = _mm_movemask_epi8(_mm_cmpgt_epi8(tval, oval));
+    int lt = _mm_movemask_epi8(_mm_cmpgt_epi8(oval, tval));
+    return gt - lt;
   }
 
 size_t
