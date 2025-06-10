@@ -56,12 +56,11 @@ HTTP_Request_Parser::s_settings[1] =
     +[](::http_parser* ps)
       {
         // Set the method string. This might not be null-terminated.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstringop-truncation"
-        ::strncpy(this->m_headers.method_bytes,
-                  ::http_method_str(static_cast<::http_method>(ps->method)),
-                  sizeof(this->m_headers.method_bytes));
-#pragma GCC diagnostic pop
+        const char* method_str = ::http_method_str(static_cast<::http_method>(ps->method));
+        if(!::memccpy(this->m_headers.method_str, method_str, 0, sizeof(this->m_headers.method_str))) {
+          ps->http_errno = HPE_INVALID_METHOD;
+          return 0;
+        }
 
         // Convert header values from strings to their presumed form.
         HTTP_Value value;

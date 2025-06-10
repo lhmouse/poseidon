@@ -14,16 +14,14 @@ struct HTTP_Request_Headers
   {
     union {
       __m128i packed_fields_1 = { };
+      HTTP_Method method;
       struct {
-        HTTP_Method method;
-        uint32_t method_ext;
-        uint32_t packed_fields_2c;
-      };
-      struct {
-        char method_bytes[12];
+        char method_str[8];
+        char method_nul_do_not_use;
+        uint8_t is_proxy : 1;
+        uint8_t is_ssl : 1;
         uint16_t uri_port;
-        bool is_proxy;
-        bool is_ssl;
+        uint32_t reserved_1;
       };
     };
 

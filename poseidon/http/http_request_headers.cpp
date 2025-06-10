@@ -12,7 +12,7 @@ encode(tinyfmt& fmt) const
   {
     // Write the request line. If `method` is an empty string, `GET` is assumed.
     // This function does not validate whether these fields contain valid values.
-    if(this->method_bytes[0] == 0)
+    if(this->method_str[0] == 0)
       fmt << "GET ";
     else {
       const __m128i zr = _mm_setzero_si128();

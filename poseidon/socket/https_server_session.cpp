@@ -133,7 +133,7 @@ do_on_https_request_headers(HTTP_Request_Headers& req, bool /*close_after_payloa
     POSEIDON_LOG_DEBUG((
         "HTTPS server received request: $3 $4",
         "[HTTPS server session `$1` (class `$2`)]"),
-        this, typeid(*this), req.method, req.uri_path);
+        this, typeid(*this), req.method_str, req.uri_path);
 
     // The default handler doesn't handle Upgrade requests.
     return http_payload_normal;

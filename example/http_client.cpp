@@ -77,7 +77,7 @@ my_timer_callback(const shptr<Abstract_Timer>& timer,
           req.uri_path = &"/";
           req.headers.emplace_back(&"Connection", &"keep-alive");
           my_client_session->http_request(move(req), "");
-          POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method, req.uri_path);
+          POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method_str, req.uri_path);
         }
         break;
 
@@ -87,7 +87,7 @@ my_timer_callback(const shptr<Abstract_Timer>& timer,
           req.method = http_POST;
           req.uri_path = &"/";
           my_client_session->http_request(move(req), "testdata");
-          POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method, req.uri_path);
+          POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method_str, req.uri_path);
         }
         break;
 
@@ -97,7 +97,7 @@ my_timer_callback(const shptr<Abstract_Timer>& timer,
           req.method = http_DELETE;
           req.uri_path = &"/";
           my_client_session->http_request(move(req), "");
-          POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method, req.uri_path);
+          POSEIDON_LOG_ERROR(("example HTTP client: $1 $2"), req.method_str, req.uri_path);
         }
         break;
 
