@@ -164,14 +164,14 @@ do_https_raw_request(const HTTP_Request_Headers& req, chars_view data)
 
 void
 HTTPS_Client_Session::
-http_set_default_host(const cow_string& host) noexcept
+https_set_default_host(const cow_string& host) noexcept
   {
     this->m_default_host = host;
   }
 
 bool
 HTTPS_Client_Session::
-http_request(HTTP_Request_Headers&& req, chars_view data)
+https_request(HTTP_Request_Headers&& req, chars_view data)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -193,7 +193,7 @@ http_request(HTTP_Request_Headers&& req, chars_view data)
 
 bool
 HTTPS_Client_Session::
-http_chunked_request_start(HTTP_Request_Headers&& req)
+https_chunked_request_start(HTTP_Request_Headers&& req)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -213,7 +213,7 @@ http_chunked_request_start(HTTP_Request_Headers&& req)
 
 bool
 HTTPS_Client_Session::
-http_chunked_request_send(chars_view data)
+https_chunked_request_send(chars_view data)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -239,7 +239,7 @@ http_chunked_request_send(chars_view data)
 
 bool
 HTTPS_Client_Session::
-http_chunked_request_finish()
+https_chunked_request_finish()
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((

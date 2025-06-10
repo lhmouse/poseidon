@@ -117,7 +117,7 @@ class HTTPS_Server_Session
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    http_response_headers_only(HTTP_Response_Headers&& resp);
+    https_response_headers_only(HTTP_Response_Headers&& resp);
 
     // Sends a simple response, possibly with a complete payload. Callers should
     // not supply `Content-Length` or `Transfer-Encoding` headers, as they
@@ -127,7 +127,7 @@ class HTTPS_Server_Session
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    http_response(HTTP_Response_Headers&& resp, chars_view data);
+    https_response(HTTP_Response_Headers&& resp, chars_view data);
 
     // Send a response with a chunked payload, which may contain multiple chunks.
     // Callers should not supply `Transfer-Encoding` headers, as they will be
@@ -140,13 +140,13 @@ class HTTPS_Server_Session
     // If these function throw an exception, there is no effect.
     // These functions are thread-safe.
     bool
-    http_chunked_response_start(HTTP_Response_Headers&& resp);
+    https_chunked_response_start(HTTP_Response_Headers&& resp);
 
     bool
-    http_chunked_response_send(chars_view data);
+    https_chunked_response_send(chars_view data);
 
     bool
-    http_chunked_response_finish();
+    https_chunked_response_finish();
   };
 
 }  // namespace poseidon

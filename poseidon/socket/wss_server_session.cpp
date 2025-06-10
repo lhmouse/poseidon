@@ -27,7 +27,7 @@ do_call_on_wss_close_once(WebSocket_Status status, chars_view reason)
 
     this->m_closure_notified = true;
     this->do_on_wss_close(status, reason);
-    this->ws_shut_down(websocket_status_normal_closure, "");
+    this->wss_shut_down(websocket_status_normal_closure, "");
   }
 
 void
@@ -67,7 +67,7 @@ do_on_https_request_error(HTTP_Status status)
     HTTP_Response_Headers resp;
     resp.status = status;
     resp.headers.emplace_back(&"Connection", &"close");
-    this->http_response(move(resp), "");
+    this->https_response(move(resp), "");
 
     // Close the connection.
     this->do_call_on_wss_close_once(websocket_status_no_close_frame, "handshake rejected by HTTP error");
@@ -245,7 +245,7 @@ do_wss_complete_handshake(HTTP_Request_Headers& req, bool close_after_payload)
     // Send the handshake response.
     HTTP_Response_Headers resp;
     this->m_parser.accept_handshake_request(resp, req);
-    this->http_response_headers_only(move(resp));
+    this->https_response_headers_only(move(resp));
 
     if(req.method == http_OPTIONS)
       return;
@@ -285,7 +285,7 @@ do_wss_send_raw_frame(int rsv_opcode, chars_view data)
 
 bool
 WSS_Server_Session::
-ws_send(WebSocket_Opcode opcode, chars_view data)
+wss_send(WebSocket_Opcode opcode, chars_view data)
   {
     if(!this->do_has_upgraded())
       POSEIDON_THROW((
@@ -354,7 +354,7 @@ ws_send(WebSocket_Opcode opcode, chars_view data)
 
 bool
 WSS_Server_Session::
-ws_shut_down(WebSocket_Status status, chars_view reason) noexcept
+wss_shut_down(WebSocket_Status status, chars_view reason) noexcept
   {
     if(!this->do_has_upgraded() || (this->socket_state() >= socket_closing))
       return this->ssl_shut_down();

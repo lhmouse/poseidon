@@ -95,11 +95,11 @@ class HTTPS_Client_Session
     // If no `Host:` headers is supplied for a non-proxy request, use this
     // string.
     const cow_string&
-    http_default_host() const noexcept
+    https_default_host() const noexcept
       { return this->m_default_host;  }
 
     void
-    http_set_default_host(const cow_string& host) noexcept;
+    https_set_default_host(const cow_string& host) noexcept;
 
     // Sends a simple request, possibly with a complete payload. Callers should
     // not supply `Content-Length` or `Transfer-Encoding` headers, as they
@@ -107,7 +107,7 @@ class HTTPS_Client_Session
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    http_request(HTTP_Request_Headers&& req, chars_view data);
+    https_request(HTTP_Request_Headers&& req, chars_view data);
 
     // Send a request with a chunked payload, which may contain multiple chunks.
     // Callers should not supply `Transfer-Encoding` headers, as they will be
@@ -119,13 +119,13 @@ class HTTPS_Client_Session
     // If these function throw an exception, there is no effect.
     // These functions are thread-safe.
     bool
-    http_chunked_request_start(HTTP_Request_Headers&& req);
+    https_chunked_request_start(HTTP_Request_Headers&& req);
 
     bool
-    http_chunked_request_send(chars_view data);
+    https_chunked_request_send(chars_view data);
 
     bool
-    http_chunked_request_finish();
+    https_chunked_request_finish();
   };
 
 }  // namespace poseidon

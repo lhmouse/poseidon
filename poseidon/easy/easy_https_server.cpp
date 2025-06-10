@@ -98,7 +98,7 @@ struct Final_Fiber final : Abstract_Fiber
               HTTP_Response_Headers resp;
               resp.status = event.status;
               resp.headers.emplace_back(&"Connection", &"close");
-              session->http_response(move(resp), "");
+              session->https_response(move(resp), "");
             }
             else {
               // Process a request.

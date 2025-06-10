@@ -74,7 +74,7 @@ my_timer_callback(const shptr<Abstract_Timer>& timer,
       case 1:
         {
           const char data[] = "some text data";
-          my_client_session->ws_send(websocket_TEXT, data);
+          my_client_session->wss_send(websocket_TEXT, data);
           POSEIDON_LOG_DEBUG(("example WSS client sent TEXT frame: $1"), data);
         }
         break;
@@ -82,7 +82,7 @@ my_timer_callback(const shptr<Abstract_Timer>& timer,
       case 2:
         {
           const char data[] = "some binary data";
-          my_client_session->ws_send(websocket_BINARY, data);
+          my_client_session->wss_send(websocket_BINARY, data);
           POSEIDON_LOG_DEBUG(("example WSS client sent BINARY frame: $1"), data);
         }
         break;
@@ -203,7 +203,7 @@ my_timer_callback(const shptr<Abstract_Timer>& timer,
 
       default:
         POSEIDON_LOG_DEBUG(("example WSS client shutting down"));
-        my_client_session->ws_shut_down(websocket_status_going_away, "bye");
+        my_client_session->wss_shut_down(websocket_status_going_away, "bye");
         my_client_session.reset();
       }
   }

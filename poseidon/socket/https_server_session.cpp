@@ -200,7 +200,7 @@ do_https_raw_response(const HTTP_Response_Headers& resp, chars_view data)
 
 bool
 HTTPS_Server_Session::
-http_response_headers_only(HTTP_Response_Headers&& resp)
+https_response_headers_only(HTTP_Response_Headers&& resp)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -213,7 +213,7 @@ http_response_headers_only(HTTP_Response_Headers&& resp)
 
 bool
 HTTPS_Server_Session::
-http_response(HTTP_Response_Headers&& resp, chars_view data)
+https_response(HTTP_Response_Headers&& resp, chars_view data)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -235,7 +235,7 @@ http_response(HTTP_Response_Headers&& resp, chars_view data)
 
 bool
 HTTPS_Server_Session::
-http_chunked_response_start(HTTP_Response_Headers&& resp)
+https_chunked_response_start(HTTP_Response_Headers&& resp)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -251,7 +251,7 @@ http_chunked_response_start(HTTP_Response_Headers&& resp)
 
 bool
 HTTPS_Server_Session::
-http_chunked_response_send(chars_view data)
+https_chunked_response_send(chars_view data)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -277,7 +277,7 @@ http_chunked_response_send(chars_view data)
 
 bool
 HTTPS_Server_Session::
-http_chunked_response_finish()
+https_chunked_response_finish()
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((

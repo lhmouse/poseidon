@@ -98,7 +98,7 @@ struct Final_Fiber final : Abstract_Fiber
           catch(exception& stdex) {
             // Shut the connection down with a message.
             POSEIDON_LOG_ERROR(("Unhandled exception: $1"), stdex);
-            session->ws_shut_down(websocket_status_unexpected_error);
+            session->wss_shut_down(websocket_status_unexpected_error);
           }
         }
       }
@@ -226,7 +226,7 @@ connect(const cow_string& addr, const callback_type& callback)
 
     auto session = new_sh<Final_Session>(cow_string(caddr.path), cow_string(caddr.query),
                                          callback, this->m_sessions);
-    session->http_set_default_host(format_string("$1:$2", caddr.host, caddr.port_num));
+    session->https_set_default_host(format_string("$1:$2", caddr.host, caddr.port_num));
     auto dns_task = new_sh<DNS_Connect_Task>(network_driver,
                        session, cow_string(caddr.host), caddr.port_num);
 

@@ -32,7 +32,7 @@ do_call_on_wss_close_once(WebSocket_Status status, chars_view reason)
 
     this->m_closure_notified = true;
     this->do_on_wss_close(status, reason);
-    this->ws_shut_down(websocket_status_normal_closure, "");
+    this->wss_shut_down(websocket_status_normal_closure, "");
   }
 
 void
@@ -53,7 +53,7 @@ do_on_ssl_connected()
     req.is_ssl = true;
     req.uri_path = this->m_path;
     req.uri_query = this->m_query;
-    this->http_request(move(req), "");
+    this->https_request(move(req), "");
   }
 
 void
@@ -82,7 +82,7 @@ do_on_https_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& /*data
       this->m_pmce_opt = new_sh<WebSocket_Deflator>(this->m_parser);
 
     // Rebuild the URI.
-    this->do_on_wss_connected(this->http_default_host() + this->m_path + '?' + this->m_query);
+    this->do_on_wss_connected(this->https_default_host() + this->m_path + '?' + this->m_query);
   }
 
 void
@@ -269,7 +269,7 @@ do_wss_send_raw_frame(int rsv_opcode, chars_view data)
 
 bool
 WSS_Client_Session::
-ws_send(WebSocket_Opcode opcode, chars_view data)
+wss_send(WebSocket_Opcode opcode, chars_view data)
   {
     if(!this->do_has_upgraded())
       POSEIDON_THROW((
@@ -339,7 +339,7 @@ ws_send(WebSocket_Opcode opcode, chars_view data)
 
 bool
 WSS_Client_Session::
-ws_shut_down(WebSocket_Status status, chars_view reason) noexcept
+wss_shut_down(WebSocket_Status status, chars_view reason) noexcept
   {
     if(!this->do_has_upgraded() || (this->socket_state() >= socket_closing))
       return this->ssl_shut_down();

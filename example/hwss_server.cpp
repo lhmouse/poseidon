@@ -25,12 +25,12 @@ my_server_callback(const shptr<WSS_Server_Session>& session,
 
       case easy_hws_text:
         POSEIDON_LOG_ERROR(("example HTTPS/WSS server received TEXT data: $1"), data);
-        session->ws_send(websocket_TEXT, data);
+        session->wss_send(websocket_TEXT, data);
         break;
 
       case easy_hws_binary:
         POSEIDON_LOG_ERROR(("example HTTPS/WSS server received BINARY data: $1"), data);
-        session->ws_send(websocket_BINARY, data);
+        session->wss_send(websocket_BINARY, data);
         break;
 
       case easy_hws_pong:
@@ -52,9 +52,9 @@ my_server_callback(const shptr<WSS_Server_Session>& session,
           resp.headers.emplace_back(&"Content-Type", &"text/plain");
 
           if(event == easy_hws_head)
-            session->http_response_headers_only(move(resp));
+            session->https_response_headers_only(move(resp));
           else
-            session->http_response(move(resp), "response from example HTTPS/WSS server\n");
+            session->https_response(move(resp), "response from example HTTPS/WSS server\n");
         }
         break;
 

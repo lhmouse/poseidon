@@ -96,7 +96,7 @@ struct Final_Fiber final : Abstract_Fiber
           catch(exception& stdex) {
             // Shut the connection down with a message.
             POSEIDON_LOG_ERROR(("Unhandled exception: $1"), stdex);
-            session->ws_shut_down(websocket_status_unexpected_error);
+            session->wss_shut_down(websocket_status_unexpected_error);
           }
         }
       }

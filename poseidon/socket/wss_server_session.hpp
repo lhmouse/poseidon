@@ -112,14 +112,14 @@ class WSS_Server_Session
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    ws_send(WebSocket_Opcode opcode, chars_view data);
+    wss_send(WebSocket_Opcode opcode, chars_view data);
 
     // Sends a CLOSE frame with an optional error message, then shuts down the
     // connection. The reason string will be truncated to 123 bytes if it's too
     // long.
     // This function is thread-safe.
     bool
-    ws_shut_down(WebSocket_Status status = websocket_status_normal_closure,
+    wss_shut_down(WebSocket_Status status = websocket_status_normal_closure,
                  chars_view reason = "") noexcept;
   };
 
