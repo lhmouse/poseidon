@@ -58,13 +58,6 @@ class TCP_Socket
     TCP_Socket& operator=(const TCP_Socket&) & = delete;
     virtual ~TCP_Socket();
 
-    // Gets the remote or connected address of this socket. In case of errors,
-    // `ipv6_invalid` is returned. The result is cached and will not
-    // reflect changes that other APIs may have made.
-    ROCKET_PURE
-    const IPv6_Address&
-    remote_address() const noexcept;
-
     // Gets the maximum segment size (MSS) for outgoing packets.
     uint32_t
     max_segment_size() const;

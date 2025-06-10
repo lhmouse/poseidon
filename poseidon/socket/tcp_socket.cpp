@@ -43,47 +43,53 @@ do_abstract_socket_on_readable()
   {
     recursive_mutex::unique_lock io_lock;
     auto& queue = this->do_abstract_socket_lock_read_queue(io_lock);
-    ::ssize_t io_result = 0;
 
     for(;;) {
-      // Read bytes and append them to `queue`.
-      queue.reserve_after_end(0xFFFFU);
-      io_result = ::recv(this->do_get_fd(), queue.mut_end(), queue.capacity_after_end(), 0);
-
-      if(io_result < 0) {
+      queue.clear();
+      queue.reserve_after_end(0xFFFF);
+      ::ssize_t ior = ::recv(this->do_socket_fd(), queue.mut_end(),
+                             queue.capacity_after_end(), 0);
+      if(ior < 0) {
         if((errno == EAGAIN) || (errno == EWOULDBLOCK))
-          break;
+          return;
 
         POSEIDON_LOG_DEBUG((
-            "Error reading TCP socket",
-            "[`recv()` failed: ${errno:full}]",
+            "TCP socket read error: ${errno:full}",
             "[TCP socket `$1` (class `$2`)]"),
             this, typeid(*this));
 
-        this->quick_close();
+        // The connection is now broken.
+        this->close();
         return;
       }
 
-      if(io_result == 0)
-        break;
+      queue.accept(static_cast<size_t>(ior));
+      bool eof = ior == 0;
 
-      // Accept incoming data.
-      queue.accept((size_t) io_result);
+      try {
+        // Call the user-defined data callback.
+        this->do_on_tcp_stream(queue, eof);
+      }
+      catch(exception& stdex) {
+        POSEIDON_LOG_ERROR((
+            "Unhandled exception: $3",
+            "[TCP socket `$1` (class `$2`)]"),
+            this, typeid(*this), stdex);
+
+        // The connection is now broken.
+        this->close();
+        return;
+      }
+
+      if(eof) {
+        // Close the connection passively.
+        POSEIDON_LOG_DEBUG(("Received EOF from `$1`"), this->remote_address());
+        this->close();
+        return;
+      }
+
+      POSEIDON_LOG_TRACE(("TCP socket `$1` (class `$2`) IN"), this, typeid(*this));
     }
-
-    // Process received data.
-    this->do_on_tcp_stream(queue, io_result == 0);
-
-    if(io_result == 0) {
-      // If the end of stream has been reached, shut the connection down anyway.
-      // Half-open connections are not supported.
-      POSEIDON_LOG_INFO(("Closing TCP connection: remote = $1"), this->remote_address());
-      ::shutdown(this->do_get_fd(), SHUT_RDWR);
-    }
-
-    POSEIDON_LOG_TRACE((
-        "TCP socket `$1` (class `$2`): `do_abstract_socket_on_readable()` done"),
-        this, typeid(*this));
   }
 
 void
@@ -92,48 +98,55 @@ do_abstract_socket_on_writeable()
   {
     recursive_mutex::unique_lock io_lock;
     auto& queue = this->do_abstract_socket_lock_write_queue(io_lock);
-    ::ssize_t io_result = 0;
 
-    for(;;) {
-      // Write bytes from `queue` and remove those written.
-      if(queue.size() == 0)
-        break;
-
-      io_result = ::send(this->do_get_fd(), queue.begin(), queue.size(), 0);
-
-      if(io_result < 0) {
-        if((errno == EAGAIN) || (errno == EWOULDBLOCK))
-          break;
-
-        POSEIDON_LOG_DEBUG((
-            "Error writing TCP socket",
-            "[`send()` failed: ${errno:full}]",
+    if(this->do_socket_test_change(socket_pending, socket_established))
+      try {
+        // Call the user-defined establishment callback.
+        this->do_on_tcp_connected();
+      }
+      catch(exception& stdex) {
+        POSEIDON_LOG_ERROR((
+            "Unhandled exception: $3",
             "[TCP socket `$1` (class `$2`)]"),
-            this, typeid(*this));
+            this, typeid(*this), stdex);
 
-        this->quick_close();
+        // The connection is now broken.
+        this->close();
         return;
       }
 
-      // Discard data that have been sent.
-      queue.discard((size_t) io_result);
-    }
+    for(;;) {
+      if(queue.empty()) {
+        if(!this->do_socket_test_change(socket_closing, socket_closed))
+          return;
 
-    if(this->do_abstract_socket_change_state(socket_pending, socket_established)) {
-      // Deliver the establishment notification.
-      POSEIDON_LOG_DEBUG(("TCP connection established: remote = $1"), this->remote_address());
-      this->do_on_tcp_connected();
-    }
+        // The socket state has been changed from CLOSING to CLOSED, so close
+        // the connection.
+        POSEIDON_LOG_DEBUG(("Sending EOF to `$1`"), this->remote_address());
+        ::shutdown(this->do_socket_fd(), SHUT_RDWR);
+        return;
+      }
 
-    if(queue.empty() && this->do_abstract_socket_change_state(socket_closing, socket_closed)) {
-      // If the socket has been marked closing and there are no more data, perform
-      // complete shutdown.
-      ::shutdown(this->do_get_fd(), SHUT_RDWR);
-    }
+      ::ssize_t ior = ::send(this->do_socket_fd(), queue.begin(), queue.size(), 0);
+      if(ior < 0) {
+        if((errno == EAGAIN) || (errno == EWOULDBLOCK))
+          return;
 
-    POSEIDON_LOG_TRACE((
-        "TCP socket `$1` (class `$2`): `do_abstract_socket_on_writeable()` done"),
-        this, typeid(*this));
+        POSEIDON_LOG_DEBUG((
+            "TCP socket write error: ${errno:full}",
+            "[TCP socket `$1` (class `$2`)]"),
+            this, typeid(*this));
+
+        // The connection is now broken.
+        this->close();
+        return;
+      }
+
+      // Discard sent data.
+      queue.discard(static_cast<size_t>(ior));
+
+      POSEIDON_LOG_TRACE(("TCP socket `$1` (class `$2`) OUT"), this, typeid(*this));
+    }
   }
 
 void
@@ -146,138 +159,102 @@ do_on_tcp_connected()
         this, typeid(*this), this->remote_address());
   }
 
-const IPv6_Address&
-TCP_Socket::
-remote_address() const noexcept
-  {
-    if(this->m_peername_ready.load())
-      return this->m_peername;
-
-    // Try getting the address now.
-    static plain_mutex s_mutex;
-    plain_mutex::unique_lock lock(s_mutex);
-
-    if(this->m_peername_ready.load())
-      return this->m_peername;
-
-    ::sockaddr_in6 sa;
-    ::socklen_t salen = sizeof(sa);
-    if(::getpeername(this->do_get_fd(), (::sockaddr*) &sa, &salen) != 0)
-      return ipv6_invalid;
-
-    ROCKET_ASSERT(sa.sin6_family == AF_INET6);
-    ROCKET_ASSERT(salen == sizeof(sa));
-
-    if(sa.sin6_port == ROCKET_HTOBE16(0))
-      return ipv6_unspecified;
-
-    // Cache the address.
-    this->m_peername.set_addr(sa.sin6_addr);
-    this->m_peername.set_port(ROCKET_BETOH16(sa.sin6_port));
-    ::std::atomic_thread_fence(::std::memory_order_release);
-    this->m_peername_ready.store(true);
-    return this->m_peername;
-  }
-
 uint32_t
 TCP_Socket::
 max_segment_size() const
   {
     int optval;
     ::socklen_t optlen = sizeof(optval);
-    if(::getsockopt(this->do_get_fd(), IPPROTO_TCP, TCP_MAXSEG, &optval, &optlen) != 0)
+    if(::getsockopt(this->do_socket_fd(), IPPROTO_TCP, TCP_MAXSEG, &optval,
+                    &optlen) != 0)
       POSEIDON_THROW((
-          "Failed to get MSS value",
+          "Could not get MSS value",
           "[`getsockopt()` failed: ${errno:full}]",
           "[TCP socket `$1` (class `$2`)]"),
           this, typeid(*this));
 
     ROCKET_ASSERT(optlen == sizeof(optval));
-    return (uint32_t) optval;
+    return static_cast<uint32_t>(optval);
   }
 
 bool
 TCP_Socket::
 tcp_send(chars_view data)
   {
-    if((data.p == nullptr) && (data.n != 0))
-      POSEIDON_THROW((
-          "Null data pointer",
-          "[TCP socket `$1` (class `$2`)]"),
-          this, typeid(*this));
-
-    // If this socket has been marked closing, fail immediately.
     if(this->socket_state() >= socket_closing)
       return false;
 
     recursive_mutex::unique_lock io_lock;
     auto& queue = this->do_abstract_socket_lock_write_queue(io_lock);
-    ::ssize_t io_result = 0;
 
-    // Reserve backup space in case of partial writes.
-    size_t nskip = 0;
+    // Reserve storage for the sake of exception safety.
     queue.reserve_after_end(data.n);
 
-    if(queue.size() != 0) {
-      // If there have been data pending, append new data to the end.
+    if(queue.empty() && (this->socket_state() == socket_established)) {
+      // Send until the operation would block.
+      chars_view window = data;
+      for(;;) {
+        if(window.n == 0)
+          return true;
+
+        ::ssize_t ior = ::send(this->do_socket_fd(), window.p, window.n, 0);
+        if(ior < 0) {
+          if((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
+            // Stash remaining data, and wait for the next writability
+            // notification. Storage has been reserved so this will not throw
+            // any exceptions.
+            ::memcpy(queue.mut_end(), window.p, window.n);
+            queue.accept(window.n);
+            return true;
+          }
+
+          POSEIDON_LOG_DEBUG((
+              "TCP socket write error: ${errno:full}",
+              "[TCP socket `$1` (class `$2`)]"),
+              this, typeid(*this));
+
+          // The connection is now broken.
+          this->close();
+          return false;
+        }
+
+        // Discard sent data;
+        window >>= static_cast<size_t>(ior);
+
+        POSEIDON_LOG_TRACE(("TCP socket `$1` (class `$2`) W"), this, typeid(*this));
+      }
+    }
+    else {
+      // If a previous write operation would have blocked, append `data` to
+      // `queue`, and wait for the next writability notification.
       ::memcpy(queue.mut_end(), data.p, data.n);
       queue.accept(data.n);
       return true;
     }
-
-    for(;;) {
-      // Try writing until the operation would block. This is essential for the
-      // edge-triggered epoll to work reliably.
-      if(nskip == data.n)
-        break;
-
-      io_result = ::send(this->do_get_fd(), data.p + nskip, data.n - nskip, 0);
-
-      if(io_result < 0) {
-        if((errno == EAGAIN) || (errno == EWOULDBLOCK))
-          break;
-
-        POSEIDON_LOG_DEBUG((
-            "Error writing TCP socket",
-            "[`send()` failed: ${errno:full}]",
-            "[TCP socket `$1` (class `$2`)]"),
-            this, typeid(*this));
-
-        this->quick_close();
-        return false;
-      }
-
-      // Discard data that have been sent.
-      nskip += (size_t) io_result;
-    }
-
-    // If the operation has completed only partially, buffer remaining data.
-    // Space has already been reserved so this will not throw exceptions.
-    ::memcpy(queue.mut_end(), data.p + nskip, data.n - nskip);
-    queue.accept(data.n - nskip);
-    return true;
   }
 
 bool
 TCP_Socket::
 tcp_shut_down() noexcept
   {
-    // If this socket has been marked closing, return immediately.
     if(this->socket_state() >= socket_closing)
-      return true;
+      return false;
 
     recursive_mutex::unique_lock io_lock;
     auto& queue = this->do_abstract_socket_lock_write_queue(io_lock);
 
-    // If there are data pending, mark this socket as being closed. If a full
-    // connection has been established, wait until all pending data have been
-    // sent. The connection should be closed thereafter.
-    if(!queue.empty() && this->do_abstract_socket_change_state(socket_established, socket_closing))
+    if(queue.empty()) {
+      // Close the connection immediately.
+      this->close();
       return true;
-
-    // If there are no data pending, close it immediately.
-    this->do_abstract_socket_set_closed();
-    return ::shutdown(this->do_get_fd(), SHUT_RDWR) == 0;
+    }
+    else {
+      // If a previous write operation would have blocked, mark the socket to
+      // be closed once all data have been sent. The socket state shall not go
+      // backwards.
+      return this->do_socket_test_change(socket_pending, socket_closing)
+             || this->do_socket_test_change(socket_established, socket_closing);
+    }
   }
 
 }  // namespace poseidon
