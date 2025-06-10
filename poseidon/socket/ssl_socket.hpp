@@ -18,10 +18,7 @@ class SSL_Socket
     friend class Network_Driver;
 
     uniptr_SSL m_ssl;
-    cow_string m_alpn_proto;
-
-    mutable atomic_relaxed<bool> m_peername_ready;
-    mutable IPv6_Address m_peername;
+    charbuf_256 m_alpn_proto;
 
   protected:
     // Takes ownership of an accepted socket, using SSL configuration from
@@ -64,36 +61,26 @@ class SSL_Socket
 
     // For a server-side socket, this callback is invoked by the network thread
     // when ALPN has been requested by the client. This function should write
-    // the selected protocol into `proto`. The argument is the list of protocols
-    // that have been offered by the client.
-    // The default implementation returns an empty string.
+    // the selected protocol into `res`. `protos` is the list of protocols that
+    // have been offered by the client.
+    // The default implementation does nothing.
     virtual
     void
-    do_on_ssl_alpn_request(charbuf_256& proto, cow_vector<charbuf_256>&& protos);
+    do_on_ssl_alpn_request(charbuf_256& res, cow_vector<charbuf_256>&& protos);
 
-    // For a client-side socket, this function offers a list of protocols to the
-    // server. This function must be called before SSL negotiation, for example
-    // inside the constructor of a derived class or just before assigning this
-    // socket to the network driver. The argument is the list of protocols that
-    // will be offered to the server. Empty protocol names are ignored. If the
-    // list is empty, ALPN is not requested.
+    // For a client-side socket, this function sets a list of protocols to offer
+    // to the server. This function must be called before SSL negotiation, for
+    // example inside the constructor of a derived class or just before assigning
+    // this socket to the network driver. The argument is the list of protocols
+    // that will be offered to the server. Empty protocol names are ignored. If
+    // the list is empty, ALPN will not be negotiated.
     void
-    do_ssl_alpn_request(const charbuf_256* protos_opt, size_t protos_size);
-
-    void
-    do_ssl_alpn_request(const charbuf_256& proto);
+    do_ssl_alpn_request(const cow_vector<charbuf_256>& protos);
 
   public:
     SSL_Socket(const SSL_Socket&) = delete;
     SSL_Socket& operator=(const SSL_Socket&) & = delete;
     virtual ~SSL_Socket();
-
-    // Gets the remote or connected address of this socket. In case of errors,
-    // `ipv6_invalid` is returned. The result is cached and will not
-    // reflect changes that other APIs may have made.
-    ROCKET_PURE
-    const IPv6_Address&
-    remote_address() const noexcept;
 
     // Gets the maximum segment size (MSS) for outgoing packets.
     uint32_t
@@ -104,9 +91,9 @@ class SSL_Socket
     // `do_on_ssl_alpn_request()` callback. For a client-side socket, this
     // string is only available since the `do_on_ssl_connected()` callback.
     // If no ALPN protocol has been selected, an empty string is returned.
-    cow_string
+    const char*
     alpn_protocol() const noexcept
-      { return this->m_alpn_proto;  }
+      { return this->m_alpn_proto.c_str();  }
 
     // Enqueues some bytes for sending.
     // If this function returns `true`, data will have been enqueued; however it

@@ -261,7 +261,7 @@ struct Final_Acceptor final : TCP_Acceptor
 
     virtual
     shptr<Abstract_Socket>
-    do_accept_socket_opt(const IPv6_Address& addr, unique_posix_fd&& fd) override
+    do_accept_socket_opt(IPv6_Address&& addr, unique_posix_fd&& fd) override
       {
         auto sessions = this->m_wsessions.lock();
         if(!sessions)

@@ -111,16 +111,13 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
     }
   }
 
-charbuf_256
+void
 HTTPS_Server_Session::
-do_on_ssl_alpn_request(cow_vector<charbuf_256>&& protos)
+do_on_ssl_alpn_request(charbuf_256& res, cow_vector<charbuf_256>&& protos)
   {
-    for(const auto& proto : protos)
-      if(::strcmp(proto.c_str(), "http/1.1") == 0)
-        return proto;
-
-    // Select no protocol.
-    return "";
+    for(const auto& req : protos)
+      if(::strcmp(req.c_str(), "http/1.1") == 0)
+        res = "http/1.1";
   }
 
 HTTP_Payload_Type
