@@ -130,16 +130,16 @@ do_write_nothrow(xFiles& io_files,  const Level_Config& lconf, const Message& ms
       uint32_t uch = static_cast<uint8_t>(msg.text[k]);
       const char* seq = s_escapes[uch];
 
-      if(seq[0] == '\\') {
+      if(seq[0] != '\\')
+        mtext.puts(seq);
+      else if(seq[1] == 0)
+        mtext.putc(seq[0]);
+      else {
         // non-printable
         do_color(mtext, lconf, "7");
         mtext.puts(seq);
         do_color(mtext, lconf, "27");
       }
-      else if(ROCKET_EXPECT(seq[1] == 0))
-        mtext.putc(seq[0]);
-      else
-        mtext.puts(seq);
     }
 
     // Remove trailing space characters.
