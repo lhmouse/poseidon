@@ -210,8 +210,8 @@ do_abstract_socket_on_writeable()
         return;
       }
 
-      size_t written = queue.size();
-      int ret = ::SSL_write_ex(this->m_ssl, queue.begin(), written, &written);
+      size_t written = 0;
+      int ret = ::SSL_write_ex(this->m_ssl, queue.begin(), queue.size(), &written);
       if(ret <= 0)
         switch(::SSL_get_error(this->m_ssl, ret))
           {
@@ -286,7 +286,7 @@ ssl_send(chars_view data)
         if(window.n == 0)
           return true;
 
-        size_t written = queue.size();
+        size_t written = 0;
         int ret = ::SSL_write_ex(this->m_ssl, window.p, window.n, &written);
         if(ret <= 0)
           switch(::SSL_get_error(this->m_ssl, ret))
