@@ -292,6 +292,11 @@ ssl_send(chars_view data)
             {
             case SSL_ERROR_WANT_READ:
             case SSL_ERROR_WANT_WRITE:
+              // Stash remaining data, and wait for the next writability
+              // notification. Storage has been reserved so this will not throw
+              // any exceptions.
+              ::memcpy(queue.mut_end(), window.p, window.n);
+              queue.accept(window.n);
               return true;
 
             default:
