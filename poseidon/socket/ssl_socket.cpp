@@ -254,8 +254,7 @@ max_segment_size() const
   {
     int optval;
     ::socklen_t optlen = sizeof(optval);
-    if(::getsockopt(this->do_socket_fd(), IPPROTO_TCP, TCP_MAXSEG, &optval,
-                    &optlen) != 0)
+    if(::getsockopt(this->do_socket_fd(), IPPROTO_TCP, TCP_MAXSEG, &optval, &optlen) != 0)
       POSEIDON_THROW((
           "Could not get MSS value",
           "[`getsockopt()` failed: ${errno:full}]",
