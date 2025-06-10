@@ -397,7 +397,7 @@ thread_loop()
       this->m_event_buf.accept(static_cast<uint32_t>(res) * sizeof(::epoll_event));
     }
 
-    ::epoll_event epoll_ev;
+    ::epoll_event epoll_ev = { };
     ROCKET_ASSERT(this->m_event_buf.size() >= sizeof(epoll_ev));
     this->m_event_buf.getn(reinterpret_cast<char*>(&epoll_ev), sizeof(epoll_ev));
     lock.unlock();
@@ -406,8 +406,7 @@ thread_loop()
     if(this->m_epoll_map_stor.size() == 0)
       return;
 
-    auto socket = this->do_find_socket_nolock(
-                          static_cast<Abstract_Socket*>(epoll_ev.data.ptr)).lock();
+    auto socket = this->do_find_socket_nolock(static_cast<Abstract_Socket*>(epoll_ev.data.ptr)).lock();
     if(!socket)
       return;
 
