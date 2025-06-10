@@ -14,20 +14,23 @@ UDP_Socket(const IPv6_Address& addr)
   :
     Abstract_Socket(SOCK_DGRAM, IPPROTO_UDP)
   {
-    static constexpr int true_value = 1;
-    ::setsockopt(this->do_get_fd(), SOL_SOCKET, SO_REUSEADDR, &true_value, sizeof(int));
+    static constexpr int one = 1;
+    ::setsockopt(this->do_socket_fd(), SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
 
     ::sockaddr_in6 sa = { };
     sa.sin6_family = AF_INET6;
     sa.sin6_port = ROCKET_HTOBE16(addr.port());
     sa.sin6_addr = addr.addr();
-    if(::bind(this->do_get_fd(), (const ::sockaddr*) &sa, sizeof(sa)) != 0)
+    if(::bind(this->do_socket_fd(), reinterpret_cast<::sockaddr*>(&sa), sizeof(sa)) != 0)
       POSEIDON_THROW((
-          "Failed to bind UDP socket onto `$1`",
+          "Could not bind UDP socket to address `$1`",
           "[`bind()` failed: ${errno:full}]"),
           addr);
 
-    POSEIDON_LOG_INFO(("UDP socket listening on `$1`"), this->local_address());
+    POSEIDON_LOG_INFO((
+        "UDP socket started listening on `$3`",
+        "[UDP socket `$1` (class `$2`)]"),
+        this, typeid(*this), this->local_address());
   }
 
 UDP_Socket::
@@ -47,7 +50,7 @@ UDP_Socket::
 do_abstract_socket_on_closed()
   {
     POSEIDON_LOG_INFO((
-        "UDP socket on `$3` closed: ${errno:full}",
+        "UDP socket closed on `$3`: ${errno:full}",
         "[UDP socket `$1` (class `$2`)]"),
         this, typeid(*this), this->local_address());
   }
@@ -58,233 +61,193 @@ do_abstract_socket_on_readable()
   {
     recursive_mutex::unique_lock io_lock;
     auto& queue = this->do_abstract_socket_lock_read_queue(io_lock);
-    ::ssize_t io_result = 0;
 
     for(;;) {
-      // Try getting a packet.
       queue.clear();
-      queue.reserve_after_end(0xFFFFU);
+      queue.reserve_after_end(0xFFFF);
       ::sockaddr_in6 sa;
       ::socklen_t salen = sizeof(sa);
-      io_result = ::recvfrom(this->do_get_fd(), queue.mut_end(), queue.capacity_after_end(), 0, (::sockaddr*) &sa, &salen);
-
-      if(io_result < 0) {
+      ::ssize_t ior = ::recvfrom(this->do_socket_fd(), queue.mut_end(),
+                                 queue.capacity_after_end(), 0,
+                                 reinterpret_cast<::sockaddr*>(&sa), &salen);
+      if(ior < 0) {
         if((errno == EAGAIN) || (errno == EWOULDBLOCK))
-          break;
+          return;
 
         POSEIDON_LOG_DEBUG((
-            "Error reading UDP socket",
-            "[`recvfrom()` failed: ${errno:full}]",
+            "UDP socket read error: ${errno:full}",
             "[UDP socket `$1` (class `$2`)]"),
             this, typeid(*this));
 
-        // Errors are ignored.
+        // For UDP sockets, errors are ignored.
         continue;
       }
 
-      if((sa.sin6_family != AF_INET6) || (salen != sizeof(sa)))
-        continue;
+      queue.accept(static_cast<size_t>(ior));
+      IPv6_Address addr(sa.sin6_addr, ROCKET_BETOH16(sa.sin6_port));
 
       try {
-        // Accept this incoming packet.
-        this->m_taddr.set_addr(sa.sin6_addr);
-        this->m_taddr.set_port(ROCKET_BETOH16(sa.sin6_port));
-        queue.accept((size_t) io_result);
-
-        this->do_on_udp_packet(move(this->m_taddr), move(queue));
+        // Call the user-defined data callback.
+        this->do_on_udp_packet(move(addr), move(queue));
       }
       catch(exception& stdex) {
         POSEIDON_LOG_ERROR((
-            "Unhandled exception thrown from `do_on_udp_packet()`: $3",
+            "Unhandled exception: $3",
             "[UDP socket `$1` (class `$2`)]"),
             this, typeid(*this), stdex);
+
+        // For UDP sockets, errors are ignored.
+        continue;
       }
-    }
 
-    POSEIDON_LOG_TRACE((
-        "UDP socket `$1` (class `$2`): `do_abstract_socket_on_readable()` done"),
-        this, typeid(*this));
+      POSEIDON_LOG_TRACE(("UDP socket `$1` (class `$2`) IN"), this, typeid(*this));
+    }
   }
 
 void
 UDP_Socket::
-do_abstract_socket_on_writable()
+do_abstract_socket_on_writeable()
   {
-    this->do_abstract_socket_change_state(socket_pending, socket_established);
+    this->do_socket_test_change(socket_pending, socket_established);
   }
 
 void
 UDP_Socket::
-join_multicast_group(const IPv6_Address& maddr, uint8_t ttl, bool loopback, const char* ifname_opt)
+join_multicast_group(const IPv6_Address& maddr, const cow_string& ifname,
+                     uint8_t ttl, bool loopback)
   {
-    // If no interface name is given, the second one is used, as the first one
-    // is typically the loopback interface `lo`.
-    unsigned ifindex = 2;
-    if(ifname_opt) {
-      // Get its index.
-      ifindex = ::if_nametoindex(ifname_opt);
-      if(ifindex <= 0)
-        POSEIDON_THROW((
-            "Failed to get index of interface `$3`",
-            "[`ioctl()` failed: ${errno:full}]",
-            "[UDP socket `$1` (class `$2`)]"),
-            this, typeid(*this), ifname_opt);
-    }
+    unsigned ifindex = ::if_nametoindex(ifname.safe_c_str());
+    if(ifindex == 0)
+      POSEIDON_THROW((
+          "Unknown network interface interface `$3`",
+          "[`if_nametoindex()` failed: ${errno:full}]",
+          "[UDP socket `$1` (class `$2`)]"),
+          this, typeid(*this), ifname);
 
-    // IPv6 doesn't take IPv4-mapped multicast addresses, so there has to be
-    // special treatement. `sendto()` is not affected.
     if(::memcmp(maddr.data(), ipv4_unspecified.data(), 12) == 0) {
-      // Join the multicast group.
-      ::ip_mreqn mreq;
-      ::memcpy(&(mreq.imr_multiaddr.s_addr), maddr.data() + 12, 4);
-      mreq.imr_address.s_addr = INADDR_ANY;
-      mreq.imr_ifindex = (int) ifindex;
-      if(::setsockopt(this->do_get_fd(), IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) != 0)
+      // IPv4
+      ::ip_mreqn mr;
+      ::memcpy(&(mr.imr_multiaddr.s_addr), maddr.data() + 12, 4);
+      mr.imr_address.s_addr = INADDR_ANY;
+      mr.imr_ifindex = static_cast<int>(ifindex);
+      if(::setsockopt(this->do_socket_fd(), IPPROTO_IP, IP_ADD_MEMBERSHIP, &mr, sizeof(mr)) != 0)
         POSEIDON_THROW((
-            "Failed to join IPv4 multicast group `$3`",
+            "Could not join IPv4 multicast group `$3`",
             "[`setsockopt()` failed: ${errno:full}]",
             "[UDP socket `$1` (class `$2`)]"),
             this, typeid(*this), maddr);
 
-      // Set multicast parameters.
-      int value = ttl;
-      if(::setsockopt(this->do_get_fd(), IPPROTO_IP, IP_MULTICAST_TTL, &value, sizeof(int)) != 0)
+      int iv = ttl;
+      if(::setsockopt(this->do_socket_fd(), IPPROTO_IP, IP_MULTICAST_TTL, &iv, sizeof(iv)) != 0)
         POSEIDON_THROW((
-            "Failed to set TTL of IPv4 multicast packets",
+            "Could not set IPv4 multicast TTL to `$3`",
             "[`setsockopt()` failed: ${errno:full}]",
             "[UDP socket `$1` (class `$2`)]"),
-            this, typeid(*this));
+            this, typeid(*this), static_cast<int>(ttl));
 
-      value = loopback;
-      if(::setsockopt(this->do_get_fd(), IPPROTO_IP, IP_MULTICAST_LOOP, &value, sizeof(int)) != 0)
+      iv = loopback;
+      if(::setsockopt(this->do_socket_fd(), IPPROTO_IP, IP_MULTICAST_LOOP, &iv, sizeof(iv)) != 0)
         POSEIDON_THROW((
-            "Failed to set loopback of IPv4 multicast packets",
+            "Could not set IPv4 multicast loopback to `$3`",
             "[`setsockopt()` failed: ${errno:full}]",
             "[UDP socket `$1` (class `$2`)]"),
-            this, typeid(*this));
+            this, typeid(*this), static_cast<int>(loopback));
     }
     else {
-      // Join the multicast group.
-      ::ipv6_mreq mreq;
-      mreq.ipv6mr_multiaddr = maddr.addr();
-      mreq.ipv6mr_interface = ifindex;
-      if(::setsockopt(this->do_get_fd(), IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) != 0)
+      // IPv6
+      ::ipv6_mreq mr;
+      mr.ipv6mr_multiaddr = maddr.addr();
+      mr.ipv6mr_interface = ifindex;
+      if(::setsockopt(this->do_socket_fd(), IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mr, sizeof(mr)) != 0)
         POSEIDON_THROW((
-            "Failed to join IPv6 multicast group `$3`",
+            "Could not join IPv6 multicast group `$3`",
             "[`setsockopt()` failed: ${errno:full}]",
             "[UDP socket `$1` (class `$2`)]"),
             this, typeid(*this), maddr);
 
-      // Set multicast parameters.
-      int value = ttl;
-      if(::setsockopt(this->do_get_fd(), IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &value, sizeof(int)) != 0)
+      int iv = ttl;
+      if(::setsockopt(this->do_socket_fd(), IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &iv, sizeof(iv)) != 0)
         POSEIDON_THROW((
-            "Failed to set TTL of IPv6 multicast packets",
+            "Could not set IPv6 multicast TTL to `$3`",
             "[`setsockopt()` failed: ${errno:full}]",
             "[UDP socket `$1` (class `$2`)]"),
-            this, typeid(*this));
+            this, typeid(*this), static_cast<int>(ttl));
 
-      value = loopback;
-      if(::setsockopt(this->do_get_fd(), IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &value, sizeof(int)) != 0)
+      iv = loopback;
+      if(::setsockopt(this->do_socket_fd(), IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &iv, sizeof(iv)) != 0)
         POSEIDON_THROW((
-            "Failed to set loopback of IPv6 multicast packets",
+            "Could not set IPv6 multicast loopback to `$3`",
             "[`setsockopt()` failed: ${errno:full}]",
             "[UDP socket `$1` (class `$2`)]"),
-            this, typeid(*this));
+            this, typeid(*this), static_cast<int>(loopback));
     }
 
     POSEIDON_LOG_INFO((
-        "UDP socket has joined multicast group: address = `$3`, interface = `$4`",
+        "UDP socket joined multicast group `$3` on interface `$4`",
         "[UDP socket `$1` (class `$2`)]"),
-        this, typeid(*this), maddr, ifname_opt);
+        this, typeid(*this), maddr, ifname);
   }
 
 void
 UDP_Socket::
-leave_multicast_group(const IPv6_Address& maddr, const char* ifname_opt)
+leave_multicast_group(const IPv6_Address& maddr, const cow_string& ifname)
   {
-    // If no interface name is given, the second one is used, as the first one
-    // is typically the loopback interface `lo`.
-    unsigned ifindex = 2;
-    if(ifname_opt) {
-      // Get its index.
-      ifindex = ::if_nametoindex(ifname_opt);
-      if(ifindex <= 0)
-        POSEIDON_THROW((
-            "Failed to get index of interface `$3`",
-            "[`ioctl()` failed: ${errno:full}]",
-            "[UDP socket `$1` (class `$2`)]"),
-            this, typeid(*this), ifname_opt);
-    }
+    unsigned ifindex = ::if_nametoindex(ifname.safe_c_str());
+    if(ifindex == 0)
+      POSEIDON_THROW((
+          "Unknown network interface interface `$3`",
+          "[`if_nametoindex()` failed: ${errno:full}]",
+          "[UDP socket `$1` (class `$2`)]"),
+          this, typeid(*this), ifname);
 
-    // IPv6 doesn't take IPv4-mapped multicast addresses, so there has to be
-    // special treatement. `sendto()` is not affected.
     if(::memcmp(maddr.data(), ipv4_unspecified.data(), 12) == 0) {
-      // Leave the multicast group.
-      ::ip_mreqn mreq;
-      ::memcpy(&(mreq.imr_multiaddr.s_addr), maddr.data() + 12, 4);
-      mreq.imr_address.s_addr = INADDR_ANY;
-      mreq.imr_ifindex = (int) ifindex;
-      if(::setsockopt(this->do_get_fd(), IPPROTO_IP, IP_DROP_MEMBERSHIP, &mreq, sizeof(mreq)) != 0)
+      // IPv4
+      ::ip_mreqn mr;
+      ::memcpy(&(mr.imr_multiaddr.s_addr), maddr.data() + 12, 4);
+      mr.imr_address.s_addr = INADDR_ANY;
+      mr.imr_ifindex = static_cast<int>(ifindex);
+      if(::setsockopt(this->do_socket_fd(), IPPROTO_IP, IP_DROP_MEMBERSHIP, &mr, sizeof(mr)) != 0)
         POSEIDON_THROW((
-            "Failed to leave IPv4 multicast group `$3`",
+            "Could not leave IPv4 multicast group `$3`",
             "[`setsockopt()` failed: ${errno:full}]",
             "[UDP socket `$1` (class `$2`)]"),
             this, typeid(*this), maddr);
     }
     else {
-      // Leave the multicast group.
-      ::ipv6_mreq mreq;
-      mreq.ipv6mr_multiaddr = maddr.addr();
-      mreq.ipv6mr_interface = ifindex;
-      if(::setsockopt(this->do_get_fd(), IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, &mreq, sizeof(mreq)) != 0)
+      // IPv6
+      ::ipv6_mreq mr;
+      mr.ipv6mr_multiaddr = maddr.addr();
+      mr.ipv6mr_interface = ifindex;
+      if(::setsockopt(this->do_socket_fd(), IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mr, sizeof(mr)) != 0)
         POSEIDON_THROW((
-            "Failed to leave IPv6 multicast group `$3`",
+            "Could not leave IPv6 multicast group `$3`",
             "[`setsockopt()` failed: ${errno:full}]",
             "[UDP socket `$1` (class `$2`)]"),
             this, typeid(*this), maddr);
     }
 
     POSEIDON_LOG_INFO((
-        "UDP socket has left multicast group: address = `$3`, interface = `$4`",
+        "UDP socket left multicast group `$3` on interface `$4`",
         "[UDP socket `$1` (class `$2`)]"),
-        this, typeid(*this), maddr, ifname_opt);
+        this, typeid(*this), maddr, ifname);
   }
 
 bool
 UDP_Socket::
 udp_send(const IPv6_Address& addr, chars_view data)
   {
-    if((data.p == nullptr) && (data.n != 0))
-      POSEIDON_THROW((
-          "Null data pointer",
-          "[UDP socket `$1` (class `$2`)]"),
-          this, typeid(*this));
-
-    if(data.n > UINT16_MAX)
-      POSEIDON_THROW((
-          "`$3` bytes is too large for a UDP packet",
-          "[UDP socket `$1` (class `$2`)]"),
-          this, typeid(*this), data.n);
-
-    // If this socket has been marked closed, fail immediately.
-    if(this->socket_state() == socket_closed)
+    if(this->socket_state() >= socket_closing)
       return false;
 
-    // Try sending the packet immediately.
-    // This is valid because UDP packets can be transmitted out of order.
-    ::sockaddr_in6 sa;
+    ::sockaddr_in6 sa = { };
     sa.sin6_family = AF_INET6;
     sa.sin6_port = ROCKET_HTOBE16(addr.port());
-    sa.sin6_flowinfo = 0;
     sa.sin6_addr = addr.addr();
-    sa.sin6_scope_id = 0;
-    ::ssize_t io_result = ::sendto(this->do_get_fd(), data.p, data.n, 0, (const ::sockaddr*) &sa, sizeof(sa));
-
-    if(io_result < 0) {
+    ::ssize_t ior = ::sendto(this->do_socket_fd(), data.p, data.n, 0,
+                             reinterpret_cast<::sockaddr*>(&sa), sizeof(sa));
+    if(ior < 0) {
       POSEIDON_LOG_DEBUG((
-          "Error writing UDP socket",
-          "[`sendto()` failed: ${errno:full}]",
+          "UDP socket write error: ${errno:full}",
           "[UDP socket `$1` (class `$2`)]"),
           this, typeid(*this));
 

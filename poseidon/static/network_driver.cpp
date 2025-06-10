@@ -110,6 +110,7 @@ do_alpn_select_cb(::SSL* ssl, const unsigned char** out, unsigned char* outlen,
       return SSL_TLSEXT_ERR_NOACK;
 
     charbuf_256 resp;
+    size_t resp_len = 0;
     cow_vector<charbuf_256> req;
 
     try {
@@ -131,7 +132,8 @@ do_alpn_select_cb(::SSL* ssl, const unsigned char** out, unsigned char* outlen,
       }
 
       socket->do_on_ssl_alpn_request(resp, move(req));
-      socket->m_alpn_proto.assign(resp.c_str());
+      resp_len = ::strlen(resp.c_str());
+      socket->m_alpn_proto = resp;
     }
     catch(exception& stdex) {
       POSEIDON_LOG_ERROR((
@@ -140,12 +142,12 @@ do_alpn_select_cb(::SSL* ssl, const unsigned char** out, unsigned char* outlen,
           stdex, typeid(*socket));
     }
 
-    if(socket->m_alpn_proto.size() == 0)
+    if(resp_len == 0)
       return SSL_TLSEXT_ERR_NOACK;
 
     POSEIDON_LOG_TRACE(("Accepting ALPN protocol: $1"), socket->m_alpn_proto);
     *out = reinterpret_cast<const uint8_t*>(socket->m_alpn_proto.data());
-    *outlen = static_cast<uint8_t>(socket->m_alpn_proto.size());
+    *outlen = static_cast<uint8_t>(resp_len);
     return SSL_TLSEXT_ERR_OK;
   }
 
@@ -421,7 +423,6 @@ thread_loop()
     // connection establishment notifications.
     if(epoll_ev.events & EPOLLOUT)
       try {
-        socket->do_socket_test_change(socket_pending, socket_established);
         socket->do_abstract_socket_on_writeable();
       }
       catch(exception& stdex) {
