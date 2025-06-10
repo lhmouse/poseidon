@@ -249,49 +249,49 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
     Sec_WebSocket sec_ws;
     PerMessage_Deflate pmce;
 
-    for(const auto& hpair : req.headers)
-      if(hpair.first == "Connection") {
-        if(!hpair.second.is_string())
+    for(const auto& hr : req.headers)
+      if(hr.first == "Connection") {
+        if(!hr.second.is_string())
           return;
 
         // Connection: Upgrade
-        hparser.reload(hpair.second.as_string());
+        hparser.reload(hr.second.as_string());
         while(hparser.next_element())
           if(hparser.current_name() == "close")
             return;
       }
-      else if(hpair.first == "Upgrade") {
-        if(!hpair.second.is_string())
+      else if(hr.first == "Upgrade") {
+        if(!hr.second.is_string())
           return;
 
         // Upgrade: websocket
-        if(hpair.second.as_string() == "websocket")
+        if(hr.second.as_string() == "websocket")
           upgrade_ok = true;
       }
-      else if(hpair.first == "Sec-WebSocket-Version") {
-        if(!hpair.second.is_number())
+      else if(hr.first == "Sec-WebSocket-Version") {
+        if(!hr.second.is_number())
           return;
 
         // Sec-WebSocket-Version: 13
-        if(hpair.second.as_number() == 13)
+        if(hr.second.as_number() == 13)
           ws_version_ok = true;
       }
-      else if(hpair.first == "Sec-WebSocket-Key") {
-        if(!hpair.second.is_string())
+      else if(hr.first == "Sec-WebSocket-Key") {
+        if(!hr.second.is_string())
           return;
 
         // Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
-        if(hpair.second.as_string().length() == 24)
-          ::memcpy(sec_ws.key_str, hpair.second.str_data(), 25);
+        if(hr.second.as_string().length() == 24)
+          ::memcpy(sec_ws.key_str, hr.second.str_data(), 25);
       }
-      else if(hpair.first == "Sec-WebSocket-Extensions") {
-        if(hpair.second.is_null())
+      else if(hr.first == "Sec-WebSocket-Extensions") {
+        if(hr.second.is_null())
           continue;
-        else if(!hpair.second.is_string())
+        else if(!hr.second.is_string())
           return;
 
         // Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits
-        hparser.reload(hpair.second.as_string());
+        hparser.reload(hr.second.as_string());
         while(hparser.next_element())
           if(hparser.current_name() == "permessage-deflate")
             pmce.use_permessage_deflate(hparser, this->m_default_compression_level);
@@ -358,7 +358,8 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
   {
     if(this->m_wshs != wshs_c_req_sent)
       POSEIDON_THROW((
-          "`accept_handshake_response()` must be called after `create_handshake_request()` (state `$1` not valid)"),
+          "`accept_handshake_response()` must be called after "
+              "`create_handshake_request()` (state `$1` not valid)"),
           this->m_wshs);
 
     // Set a default state, so in case of errors, we return immediately.
@@ -372,39 +373,39 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
     char sec_ws_accept_resp[29] = "";
     PerMessage_Deflate pmce;
 
-    for(const auto& hpair : resp.headers)
-      if(hpair.first == "Connection") {
-        if(!hpair.second.is_string())
+    for(const auto& hr : resp.headers)
+      if(hr.first == "Connection") {
+        if(!hr.second.is_string())
           return;
 
         // Connection: Upgrade
-        hparser.reload(hpair.second.as_string());
+        hparser.reload(hr.second.as_string());
         while(hparser.next_element())
           if(hparser.current_name() == "close")
             return;
       }
-      else if(hpair.first == "Upgrade") {
-        if(!hpair.second.is_string())
+      else if(hr.first == "Upgrade") {
+        if(!hr.second.is_string())
           return;
 
         // Upgrade: websocket
-        if(hpair.second.as_string() == "websocket")
+        if(hr.second.as_string() == "websocket")
           upgrade_ok = true;
       }
-      else if(hpair.first == "Sec-WebSocket-Accept") {
-        if(!hpair.second.is_string())
+      else if(hr.first == "Sec-WebSocket-Accept") {
+        if(!hr.second.is_string())
           return;
 
         // Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
-        if(hpair.second.as_string().length() == 28)
-          ::memcpy(sec_ws_accept_resp, hpair.second.str_data(), 29);
+        if(hr.second.as_string().length() == 28)
+          ::memcpy(sec_ws_accept_resp, hr.second.str_data(), 29);
       }
-      else if(hpair.first == "Sec-WebSocket-Extensions") {
-        if(!hpair.second.is_string())
+      else if(hr.first == "Sec-WebSocket-Extensions") {
+        if(!hr.second.is_string())
           return;
 
         // Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits
-        hparser.reload(hpair.second.as_string());
+        hparser.reload(hr.second.as_string());
         while(hparser.next_element())
           if(hparser.current_name() == "permessage-deflate")
             pmce.use_permessage_deflate(hparser, this->m_default_compression_level);
@@ -529,7 +530,7 @@ parse_frame_header_from_stream(linear_buffer& data)
         }
 
         // There shall be a message payload.
-        POSEIDON_LOG_TRACE(("WebSocket data frame: opcode = $1, rsv1 = $2"), this->m_opcode, this->m_rsv1);
+        POSEIDON_LOG_TRACE(("Data frame: opcode = $1"), this->m_opcode);
         break;
 
       case 0:  // continuation
@@ -555,7 +556,7 @@ parse_frame_header_from_stream(linear_buffer& data)
         }
 
         // There shall be a message payload.
-        POSEIDON_LOG_TRACE(("WebSocket data continuation: opcode = $1"), this->m_opcode);
+        POSEIDON_LOG_TRACE(("Data continuation: opcode = $1"), this->m_opcode);
         break;
 
       case 8:  // close
@@ -590,7 +591,7 @@ parse_frame_header_from_stream(linear_buffer& data)
         }
 
         // There shall be a message payload.
-        POSEIDON_LOG_TRACE(("WebSocket control frame: opcode = $1"), this->m_opcode);
+        POSEIDON_LOG_TRACE(("Control frame: opcode = $1"), this->m_opcode);
         break;
 
       default:

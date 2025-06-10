@@ -56,19 +56,20 @@ HTTP_Request_Parser::s_settings[1] =
     +[](::http_parser* ps)
       {
         // Set the method string. This might not be null-terminated.
-        const char* method_str = ::http_method_str(static_cast<::http_method>(ps->method));
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstringop-truncation"
-        ::strncpy(this->m_headers.method_bytes, method_str, sizeof(this->m_headers.method_bytes));
+        ::strncpy(this->m_headers.method_bytes,
+                  ::http_method_str(static_cast<::http_method>(ps->method)),
+                  sizeof(this->m_headers.method_bytes));
 #pragma GCC diagnostic pop
 
         // Convert header values from strings to their presumed form.
         HTTP_Value value;
-        for(auto ht = this->m_headers.headers.mut_begin();  ht != this->m_headers.headers.end();  ++ ht)
-          if(ht->second.is_null())
-            ht->second = &"";
-          else if(value.parse(ht->second.as_string()) == ht->second.str_size())
-            ht->second = move(value);
+        for(auto t = this->m_headers.headers.mut_begin();  t != this->m_headers.headers.end();  ++t)
+          if(t->second.is_null())
+            t->second = &"";
+          else if(value.parse(t->second.as_string()) == t->second.str_size())
+            t->second = move(value);
 
         // Parse the URI.
         cow_string caddr;
@@ -114,11 +115,11 @@ HTTP_Request_Parser::s_settings[1] =
           // Get the `Host:` header. Multiple `Host:` headers are not allowed.
           bool host_header_found = false;
 
-          for(const auto& hpair : this->m_headers.headers)
-            if(hpair.first == "Host") {
-              if(hpair.second.is_string() && !host_header_found) {
+          for(const auto& hr : this->m_headers.headers)
+            if(hr.first == "Host") {
+              if(hr.second.is_string() && !host_header_found) {
                 host_header_found = true;
-                this->m_headers.uri_host = hpair.second.as_string();
+                this->m_headers.uri_host = hr.second.as_string();
               }
               else {
                 ps->http_errno = HPE_INVALID_URL;

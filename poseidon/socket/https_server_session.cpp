@@ -182,12 +182,12 @@ do_https_raw_response(const HTTP_Response_Headers& resp, chars_view data)
 
     // If `Connection:` contains `close`, the connection should be closed.
     HTTP_Header_Parser hparser;
-    for(const auto& hpair : resp.headers)
-      if(hpair.first == "Connection") {
-        if(!hpair.second.is_string())
+    for(const auto& hr : resp.headers)
+      if(hr.first == "Connection") {
+        if(!hr.second.is_string())
           continue;
 
-        hparser.reload(hpair.second.as_string());
+        hparser.reload(hr.second.as_string());
         while(hparser.next_element())
           if(hparser.current_name() == "close")
             this->ssl_shut_down();

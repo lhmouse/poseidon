@@ -21,13 +21,13 @@ encode(tinyfmt& fmt) const
       fmt << ::http_status_str(static_cast<::http_status>(this->status));
 
     // Write response headers. Empty headers are ignored.
-    for(const auto& hpair : this->headers)
-      if(hpair.first != "") {
-        fmt << "\r\n" << hpair.first << ": ";
-        if(hpair.second.is_string())
-          fmt << hpair.second.as_string();
+    for(const auto& hr : this->headers)
+      if(hr.first != "") {
+        fmt << "\r\n" << hr.first << ": ";
+        if(hr.second.is_string())
+          fmt << hr.second.as_string();
         else
-          fmt << hpair.second;
+          fmt << hr.second;
       }
 
     // Terminate the response with an empty line.
