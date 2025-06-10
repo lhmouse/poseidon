@@ -41,7 +41,7 @@ class TCP_Acceptor
     // should return a pointer to a socket object, constructed from the given FD.
     virtual
     shptr<Abstract_Socket>
-    do_accept_socket_opt(const IPv6_Address& addr, unique_posix_fd&& fd) = 0;
+    do_accept_socket_opt(IPv6_Address&& addr, unique_posix_fd&& fd) = 0;
 
   public:
     TCP_Acceptor(const TCP_Acceptor&) = delete;
