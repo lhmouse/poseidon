@@ -30,7 +30,15 @@ class Abstract_Future
     // do the work; otherwise, this function returns immediately.
     virtual
     void
-    do_on_abstract_task_execute() noexcept override;
+    do_on_abstract_task_execute() override;
+
+    // This callback is invoked after the work has been completed (either
+    // successfully or exceptionally) and all blocking fibers have been released.
+    // It's much like the `finally` block in Java.
+    // The default implementation does nothing.
+    virtual
+    void
+    do_on_abstract_task_finalize() override;
 
     // This callback is invoked by `do_abstract_future_request()` and is intended
     // to be overriden by derived classes to do the asynchronous work. If this
@@ -39,14 +47,6 @@ class Abstract_Future
     virtual
     void
     do_on_abstract_future_execute() = 0;
-
-    // This callback is invoked by `do_abstract_future_request()` after the work
-    // has been completed (either successfully or exceptionally) and all blocking
-    // fibers have been released. It's much like the `finally` block in Java,
-    // except that it shall not throw exceptions.
-    virtual
-    void
-    do_on_abstract_future_finalize();
 
   public:
     Abstract_Future(const Abstract_Future&) = delete;

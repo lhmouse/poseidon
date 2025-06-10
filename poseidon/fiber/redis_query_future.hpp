@@ -42,7 +42,7 @@ class Redis_Query_Future
 
     virtual
     void
-    do_on_abstract_future_finalize() override;
+    do_on_abstract_task_finalize() override;
 
   public:
     Redis_Query_Future(const Redis_Query_Future&) = delete;

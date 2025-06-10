@@ -45,9 +45,12 @@ do_on_abstract_future_execute()
 
 void
 Redis_Query_Future::
-do_on_abstract_future_finalize()
+do_on_abstract_task_finalize()
   {
-    if(this->m_conn && this->m_conn->reset())
+    if(!this->m_conn)
+      return;
+
+    if(this->m_conn->reset())
       this->m_ctr->pool_connection(move(this->m_conn));
   }
 

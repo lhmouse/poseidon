@@ -18,7 +18,7 @@ Abstract_Future::
 
 void
 Abstract_Future::
-do_on_abstract_task_execute() noexcept
+do_on_abstract_task_execute()
   {
     cow_vector<wkptr<atomic_relaxed<steady_time>>> waiters;
     plain_mutex::unique_lock lock(this->m_init_mutex);
@@ -29,27 +29,16 @@ do_on_abstract_task_execute() noexcept
     try {
       // Perform initialization.
       this->do_on_abstract_future_execute();
-
-      POSEIDON_LOG_DEBUG((
-          "Future initialization completed",
-          "[future `$1` (class `$2`)]"),
-          this, typeid(*this));
     }
     catch(exception& stdex) {
-      POSEIDON_LOG_WARN((
-          "Future initialization failed: $3",
-          "[future `$1` (class `$2`)]"),
-          this, typeid(*this), stdex);
-
-      // Save the exception so it will be rethrown later.
+      POSEIDON_LOG_ERROR(("Unhandled exception: $1"), stdex);
       this->m_init_except = ::std::current_exception();
     }
 
+    POSEIDON_LOG_DEBUG(("Completing `$1` (class `$2`)"), this, typeid(*this));
     this->m_init_completed.store(true);
     waiters.swap(this->m_waiters);
     lock.unlock();
-
-    POSEIDON_CATCH_EVERYTHING(this->do_on_abstract_future_finalize());
 
     // Notify all waiters.
     for(const auto& weakp : waiters)
@@ -59,7 +48,7 @@ do_on_abstract_task_execute() noexcept
 
 void
 Abstract_Future::
-do_on_abstract_future_finalize()
+do_on_abstract_task_finalize()
   {
   }
 
