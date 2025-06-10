@@ -74,7 +74,8 @@ class HTTPS_Server_Session
     // `Connection` header.
     virtual
     void
-    do_on_https_request_finish(HTTP_Request_Headers&& req, linear_buffer&& data, bool close_now) = 0;
+    do_on_https_request_finish(HTTP_Request_Headers&& req, linear_buffer&& data,
+                               bool close_now) = 0;
 
     // This callback is invoked when an HTTP parser error happens. Why must we
     // dedicate an error callback for server sessions? Well, it's because HTTP

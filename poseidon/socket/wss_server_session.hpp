@@ -44,7 +44,8 @@ class WSS_Server_Session
 
     virtual
     void
-    do_on_https_request_finish(HTTP_Request_Headers&& req, linear_buffer&& data, bool close_now) override;
+    do_on_https_request_finish(HTTP_Request_Headers&& req, linear_buffer&& data,
+                               bool close_now) override;
 
     virtual
     void
@@ -118,7 +119,8 @@ class WSS_Server_Session
     // long.
     // This function is thread-safe.
     bool
-    ws_shut_down(WebSocket_Status status = websocket_status_normal_closure, chars_view reason = "") noexcept;
+    ws_shut_down(WebSocket_Status status = websocket_status_normal_closure,
+                 chars_view reason = "") noexcept;
   };
 
 }  // namespace poseidon

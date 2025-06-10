@@ -46,7 +46,8 @@ class WS_Client_Session
 
     virtual
     void
-    do_on_http_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data, bool close_now) override;
+    do_on_http_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data,
+                               bool close_now) override;
 
     virtual
     void
@@ -112,7 +113,8 @@ class WS_Client_Session
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    ws_shut_down(WebSocket_Status status = websocket_status_normal_closure, chars_view reason = "") noexcept;
+    ws_shut_down(WebSocket_Status status = websocket_status_normal_closure,
+                 chars_view reason = "") noexcept;
   };
 
 }  // namespace poseidon

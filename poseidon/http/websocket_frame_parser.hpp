@@ -94,8 +94,8 @@ class WebSocket_Frame_Parser
     is_server_mode() const noexcept
       { return this->m_wshs == wshs_s_accepted;  }
 
-    // Get parameters of the per-message compression extension (PMCE). If PMCE is
-    // not active, these functions return zero.
+    // Get parameters of the per-message compression extension (PMCE). If PMCE
+    // is not active, these functions return zero.
     int
     pmce_compression_level() const noexcept
       { return this->m_pmce_compression_level_m2 + 2;  }
@@ -111,6 +111,10 @@ class WebSocket_Frame_Parser
     uint8_t
     pmce_receive_window_bits() const noexcept
       { return this->m_pmce_receive_window_bits;  }
+
+    size_t
+    pmce_threshold() const noexcept
+      { return this->m_pmce_send_no_context_takeover * 1024UL + 16UL;  }
 
     // Clears all fields. This function shall not be called unless the parser is
     // to be reused for another stream.

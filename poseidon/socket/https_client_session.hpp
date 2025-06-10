@@ -70,7 +70,8 @@ class HTTPS_Client_Session
     // `Connection` header.
     virtual
     void
-    do_on_https_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data, bool close_now) = 0;
+    do_on_https_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data,
+                                bool close_now) = 0;
 
     // This callback is invoked by the network thread on a connection that has
     // switched to another protocol. Arguments have the same semantics with
