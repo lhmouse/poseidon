@@ -26,10 +26,9 @@ class Abstract_Future
     // intended to be overriden by derived classes to do asynchronous work. If
     // an exception is thrown, it will be caught and stored into `m_except`,
     // which can be rethrown by `check_result()`.
-    // The default implementation does nothing.
     virtual
     void
-    do_on_abstract_future_initialize();
+    do_on_abstract_future_initialize() = 0;
 
     // This callback is invoked by `do_abstract_future_initialize_once()` and is
     // intended to be overriden by derived classes to do cleanup work. If an

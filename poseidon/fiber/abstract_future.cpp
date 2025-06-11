@@ -18,12 +18,6 @@ Abstract_Future::
 
 void
 Abstract_Future::
-do_on_abstract_future_initialize()
-  {
-  }
-
-void
-Abstract_Future::
 do_on_abstract_future_finalize()
   {
   }
