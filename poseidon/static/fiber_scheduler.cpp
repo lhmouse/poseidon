@@ -341,12 +341,6 @@ thread_loop()
     lock.unlock();
 
     if(futr_opt) {
-      // Wait for the future. In case of a shutdown request or timeout, ignore
-      // the future and move on anyway.
-      plain_mutex::unique_lock futr_lock(futr_opt->m_init_mutex);
-      if(futr_opt->m_init.load())
-        return;
-
       bool should_warn = now >= elem->yield_time + warn_timeout;
       bool should_fail = now >= elem->yield_time + fail_timeout;
 
@@ -361,7 +355,9 @@ thread_loop()
             "This circumstance looks permanent. Please check for deadlocks."),
             fiber, typeid(*fiber), duration_cast<milliseconds>(now - elem->yield_time));
 
-      if((signal == 0) && !should_fail)
+      // Wait for the future. In case of a shutdown request or timeout, ignore
+      // the future and move on anyway.
+      if((signal == 0) && !should_fail && !futr_opt->m_init.load())
         return;
     }
 
