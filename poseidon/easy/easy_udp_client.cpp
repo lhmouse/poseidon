@@ -124,6 +124,16 @@ Easy_UDP_Client::
   {
   }
 
+const IPv6_Address&
+Easy_UDP_Client::
+local_address() const noexcept
+  {
+    if(!this->m_socket)
+      return ipv6_unspecified;
+
+    return this->m_socket->local_address();
+  }
+
 shptr<UDP_Socket>
 Easy_UDP_Client::
 start(const callback_type& callback)

@@ -36,6 +36,11 @@ class Easy_UDP_Server
     Easy_UDP_Server& operator=(const Easy_UDP_Server&) & = delete;
     ~Easy_UDP_Server();
 
+    // Gets the local address of the listening socket. If the server is not
+    // active, `ipv6_unspecified` is returned.
+    const IPv6_Address&
+    local_address() const noexcept;
+
     // Starts listening on the given address and port for incoming packets.
     shptr<UDP_Socket>
     start(const IPv6_Address& addr, const callback_type& callback);

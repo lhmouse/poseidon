@@ -235,6 +235,16 @@ Easy_WS_Server::
   {
   }
 
+const IPv6_Address&
+Easy_WS_Server::
+local_address() const noexcept
+  {
+    if(!this->m_acceptor)
+      return ipv6_unspecified;
+
+    return this->m_acceptor->local_address();
+  }
+
 shptr<TCP_Acceptor>
 Easy_WS_Server::
 start(const IPv6_Address& addr, const callback_type& callback)

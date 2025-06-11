@@ -47,6 +47,11 @@ class Easy_TCP_Server
     Easy_TCP_Server& operator=(const Easy_TCP_Server&) & = delete;
     ~Easy_TCP_Server();
 
+    // Gets the local address of the listening socket. If the server is not
+    // active, `ipv6_unspecified` is returned.
+    const IPv6_Address&
+    local_address() const noexcept;
+
     // Starts listening the given address and port for incoming connections.
     shptr<TCP_Acceptor>
     start(const IPv6_Address& addr, const callback_type& callback);
