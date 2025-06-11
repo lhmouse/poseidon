@@ -3,6 +3,7 @@
 
 #include "xprecompiled.hpp"
 #include "utils.hpp"
+#include "static/logger.hpp"
 #include <openssl/rand.h>
 #include <openssl/err.h>
 #define UNW_LOCAL_ONLY  1
@@ -342,30 +343,33 @@ parse_network_reference(Network_Reference& caddr, chars_view str) noexcept
   }
 
 bool
-enqueue_log_message(void composer_callback(cow_string&, void*), void* composer,
-                    uint8_t level, const char* func, const char* file,
-                    uint32_t line) noexcept
-  try {
-    cow_string sbuf;
-    composer_callback(sbuf, composer);
+is_log_level_enabled(uint8_t level) noexcept
+  {
+    return logger.enabled(level);
+  }
+
+bool
+push_log_message(uint8_t level, const char* func, const char* file, uint32_t line,
+                 const void* composer, message_composer_fn* composer_fn)
+  {
+    ::rocket::tinyfmt_str fmt;
+    (* composer_fn) (fmt, composer);
+    cow_string sbuf = fmt.extract_string();
     sbuf.erase(sbuf.rfind_not_of(" \t\r\n") + 1);
 
     // Enqueue the message.
     logger.enqueue(level, func, file, line, sbuf);
     return true;
   }
-  catch(exception& stdex) {
-    ::fprintf(stderr, "WARNING: %s\n", stdex.what());
-    return false;
-  }
 
 ::std::runtime_error
-create_runtime_error(void composer_callback(cow_string&, void*), void* composer,
-                     const char* func, const char* file, uint32_t line)
-  try {
-    cow_string tbuf;
-    composer_callback(tbuf, composer);
-    ::std::string sbuf(tbuf.data(), tbuf.rfind_not_of(" \t\r\n") + 1);
+create_runtime_error(const char* func, const char* file, uint32_t line,
+                     const void* composer, message_composer_fn* composer_fn)
+  {
+    ::rocket::tinyfmt_str fmt;
+    (* composer_fn) (fmt, composer);
+    ::std::string sbuf(fmt.c_str(), fmt.length());
+    sbuf.erase(sbuf.find_last_not_of(" \t\r\n") + 1);
 
     // Append the source location and function name.
     ::rocket::ascii_numput nump;
@@ -441,14 +445,6 @@ create_runtime_error(void composer_callback(cow_string&, void*), void* composer,
     }
 
     return ::std::runtime_error(sbuf);
-  }
-  catch(::std::runtime_error& stdex) {
-    ::fprintf(stderr, "WARNING: %s\n", stdex.what());
-    return move(stdex);
-  }
-  catch(exception& stdex) {
-    ::fprintf(stderr, "WARNING: %s\n", stdex.what());
-    return ::std::runtime_error(stdex.what());
   }
 
 }  // namespace poseidon

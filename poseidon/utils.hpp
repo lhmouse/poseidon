@@ -5,7 +5,6 @@
 #define POSEIDON_UTILS_
 
 #include "fwd.hpp"
-#include "static/logger.hpp"
 namespace poseidon {
 
 // Splits a string into a vector of tokens, and vice versa.
@@ -125,74 +124,86 @@ size_t
 parse_network_reference(Network_Reference& caddr, chars_view str) noexcept;
 
 // These are internal functions.
+using message_composer_fn = void (tinyfmt&, const void*);
+
 bool
-enqueue_log_message(void composer_callback(cow_string&, void*), void* composer,
-                    uint8_t level, const char* func, const char* file,
-                    uint32_t line) noexcept;
+is_log_level_enabled(uint8_t level) noexcept __attribute__((__pure__));
+
+bool
+push_log_message(uint8_t level, const char* func, const char* file, uint32_t line,
+                 const void* composer, message_composer_fn* composer_fn);
 
 ::std::runtime_error
-create_runtime_error(void composer_callback(cow_string&, void*), void* composer,
-                     const char* func, const char* file, uint32_t line);
+create_runtime_error(const char* func, const char* file, uint32_t line,
+                     const void* composer, message_composer_fn* composer_fn);
 
 // Compose a log message and enqueue it into the global logger. The `TEMPLATE`
 // argument shall be a list of string literals in parentheses. Multiple strings
 // are joined with line separators. `format()` is to be found via ADL.
 #define POSEIDON_LOG_(LEVEL, TEMPLATE, ...)  \
-    (::poseidon::logger.enabled(LEVEL)  \
-     && __extension__  \
-      ({  \
-        using ::asteria::format;  \
-        auto IuChah0u = [&](::asteria::cow_string& quu1Opae)  \
-          { format(quu1Opae, (::asteria::make_string_template TEMPLATE), ##__VA_ARGS__);  };  \
-        auto ohng0Ohh = [](::asteria::cow_string& iughih5B, void* fi8OhNgo)  \
-          { (*static_cast<decltype(IuChah0u)*>(fi8OhNgo)) (iughih5B);  };  \
-        ::poseidon::enqueue_log_message(+ohng0Ohh, &IuChah0u, LEVEL,  \
-            __func__, __FILE__, __LINE__);  \
-      }))
+  (::poseidon::is_log_level_enabled(LEVEL)  \
+   &&  \
+   ([&](const char* func_ce7d) -> bool  \
+      __attribute__((__nothrow__, __noinline__))  \
+    {  \
+      try {  \
+        const auto c_Ru6q = [&](::rocket::tinyfmt& fmt_Ko0i)  \
+        {  \
+          using ::asteria::format;  \
+          format(fmt_Ko0i, (::asteria::make_string_template TEMPLATE),  \
+                  ##__VA_ARGS__);  \
+        };  \
+        \
+        ::poseidon::push_log_message(\
+            LEVEL, func_ce7d, __FILE__, __LINE__,  \
+            &c_Ru6q,  \
+            [](::rocket::tinyfmt& fmt_Ko0i, const void* p_5Gae)  \
+              { (* static_cast<decltype(c_Ru6q)*>(p_5Gae)) (fmt_Ko0i);  });  \
+      }  \
+      catch(...) { }  \
+      return true;  \
+    } (ROCKET_FUNCSIG)))
 
-#define POSEIDON_LOG_FATAL(...)   POSEIDON_LOG_(0U, __VA_ARGS__)
-#define POSEIDON_LOG_ERROR(...)   POSEIDON_LOG_(1U, __VA_ARGS__)
-#define POSEIDON_LOG_WARN(...)    POSEIDON_LOG_(2U, __VA_ARGS__)
-#define POSEIDON_LOG_INFO(...)    POSEIDON_LOG_(3U, __VA_ARGS__)
-#define POSEIDON_LOG_DEBUG(...)   POSEIDON_LOG_(4U, __VA_ARGS__)
-#define POSEIDON_LOG_TRACE(...)   POSEIDON_LOG_(5U, __VA_ARGS__)
+#define POSEIDON_LOG_FATAL(...)   POSEIDON_LOG_(0, __VA_ARGS__)
+#define POSEIDON_LOG_ERROR(...)   POSEIDON_LOG_(1, __VA_ARGS__)
+#define POSEIDON_LOG_WARN(...)    POSEIDON_LOG_(2, __VA_ARGS__)
+#define POSEIDON_LOG_INFO(...)    POSEIDON_LOG_(3, __VA_ARGS__)
+#define POSEIDON_LOG_DEBUG(...)   POSEIDON_LOG_(4, __VA_ARGS__)
+#define POSEIDON_LOG_TRACE(...)   POSEIDON_LOG_(5, __VA_ARGS__)
 
 // Throws an `std::runtime_error` object. The `TEMPLATE` argument shall be a
 // list of string literals in parentheses. Multiple strings are joined with
 // line separators. `format()` is to be found via ADL.
 #define POSEIDON_THROW(TEMPLATE, ...)  \
-    throw (__extension__  \
-      ({  \
-        using ::asteria::format;  \
-        auto IuChah0u = [&](::asteria::cow_string& quu1Opae)  \
-          { format(quu1Opae, (::asteria::make_string_template TEMPLATE), ##__VA_ARGS__);  };  \
-        auto ohng0Ohh = [](::asteria::cow_string& iughih5B, void* fi8OhNgo)  \
-          { (*static_cast<decltype(IuChah0u)*>(fi8OhNgo)) (iughih5B);  };  \
-        ::poseidon::create_runtime_error(+ohng0Ohh, &IuChah0u,  \
-            __func__, __FILE__, __LINE__);  \
-      }))
-
-#define POSEIDON_CHECK(...)  \
-    (bool(__VA_ARGS__) ? (void) 0 :  \
-      throw (__extension__  \
-        ({  \
+  (throw \
+   ([&](const char* func_ce7d) -> ::std::runtime_error  \
+      __attribute__((__noinline__))  \
+    {  \
+      const auto c_Ru6q = [&](::rocket::tinyfmt& fmt_Ko0i)  \
+        {  \
           using ::asteria::format;  \
-          auto Vai4feeP = [&](::asteria::cow_string& Pha2Ae5i)  \
-            { Pha2Ae5i = &"POSEIDON_CHECK failed: " #__VA_ARGS__;  };  \
-          auto iez4eeY9 = [](::asteria::cow_string& hohv8Ing, void* fi8OhNgo)  \
-            { (*static_cast<decltype(Vai4feeP)*>(fi8OhNgo)) (hohv8Ing);  };  \
-          ::poseidon::create_runtime_error(+iez4eeY9, &Vai4feeP,  \
-              __func__, __FILE__, __LINE__);  \
-        })))
+          format(fmt_Ko0i, (::asteria::make_string_template TEMPLATE),  \
+                  ##__VA_ARGS__);  \
+        };  \
+      \
+      return ::poseidon::create_runtime_error(\
+          func_ce7d, __FILE__, __LINE__,  \
+          &c_Ru6q,  \
+          [](::rocket::tinyfmt& fmt_Ko0i, const void* p_5Gae)  \
+            { (* static_cast<decltype(c_Ru6q)*>(p_5Gae)) (fmt_Ko0i);  });  \
+    } (ROCKET_FUNCSIG)))
 
 #define POSEIDON_CATCH_EVERYTHING(...)  \
-    __extension__  \
-      ({  \
-        try { (void) (__VA_ARGS__);  }  \
-        catch(::std::exception& af9cohMo)  \
-          { POSEIDON_LOG_ERROR(("Ignoring exception: $1"), af9cohMo);  }  \
-        (void) 0;  \
-      })
+  do  \
+    try { static_cast<void>(__VA_ARGS__);  }  \
+    catch(::std::exception& ex_si8R)  \
+    { POSEIDON_LOG_WARN(("POSEIDON_CATCH_EVERYTHING: $1"), ex_si8R);  }  \
+  while(false)  // no semicolon
+
+#define POSEIDON_CHECK(...)  \
+  (static_cast<bool>(__VA_ARGS__)  \
+    ? void()  \
+    : POSEIDON_THROW(("POSEIDON_CHECK: " #__VA_ARGS__)));
 
 }  // namespace poseidon
 #endif

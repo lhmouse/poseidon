@@ -25,6 +25,6 @@ int main()
     }
     catch(exception& e) {
       POSEIDON_TEST_CHECK(::std::strstr(e.what(),
-          "POSEIDON_CHECK failed: 0+0") != nullptr);
+          "POSEIDON_CHECK: 0+0") != nullptr);
     }
   }

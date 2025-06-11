@@ -46,7 +46,6 @@ class Logger
 
     // Checks whether a given level is enabled.
     // This function is thread-safe.
-    ROCKET_PURE
     bool
     enabled(uint8_t level) const noexcept
       {
