@@ -22,7 +22,7 @@ Read_File_Future::
 
 void
 Read_File_Future::
-do_on_abstract_future_execute()
+do_on_abstract_future_initialize()
   {
     unique_posix_fd fd(::open(this->m_res.path.safe_c_str(), O_RDONLY | O_NOCTTY, 0));
     if(!fd)
@@ -65,20 +65,27 @@ do_on_abstract_future_execute()
 
     while(this->m_res.data.size() < this->m_res.limit) {
       // Read bytes and append them to `m_res.data`.
-      size_t rlimit = min(this->m_res.limit - this->m_res.data.size(), UINT_MAX);
-      this->m_res.data.reserve_after_end(rlimit);
-      ::ssize_t nread = POSEIDON_SYSCALL_LOOP(::read(fd, this->m_res.data.mut_end(), rlimit));
-      if(nread == 0)
+      size_t rlim = min(this->m_res.limit - this->m_res.data.size(), INT_MAX);
+      this->m_res.data.reserve_after_end(rlim);
+      ::ssize_t ior = POSEIDON_SYSCALL_LOOP(::read(fd, this->m_res.data.mut_end(), rlim));
+      if(ior == 0)
         break;
-      else if(nread < 0)
+      else if(ior < 0)
         POSEIDON_THROW((
             "Could not read file `$1`",
             "[`read()` failed: ${errno:full}]"),
             this->m_res.path);
 
       // Accept bytes that have been read.
-      this->m_res.data.accept(static_cast<size_t>(nread));
+      this->m_res.data.accept(static_cast<size_t>(ior));
     }
+  }
+
+void
+Read_File_Future::
+do_on_abstract_task_execute()
+  {
+    this->do_abstract_future_initialize_once();
   }
 
 }  // namespace poseidon

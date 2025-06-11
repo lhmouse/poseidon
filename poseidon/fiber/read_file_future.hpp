@@ -6,13 +6,14 @@
 
 #include "../fwd.hpp"
 #include "abstract_future.hpp"
+#include "../base/abstract_task.hpp"
 namespace poseidon {
 
 class Read_File_Future
   :
-    public Abstract_Future
+    public Abstract_Future,
+    public Abstract_Task
   {
-  public:
   public:
     // This is actually an input/output type.
     struct Result
@@ -41,7 +42,11 @@ class Read_File_Future
   private:
     virtual
     void
-    do_on_abstract_future_execute() override;
+    do_on_abstract_future_initialize() override;
+
+    virtual
+    void
+    do_on_abstract_task_execute() override;
 
   public:
     Read_File_Future(const Read_File_Future&) = delete;

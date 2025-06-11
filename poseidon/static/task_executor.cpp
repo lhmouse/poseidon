@@ -38,7 +38,6 @@ thread_loop()
     // Execute it. Exceptions are ignored.
     POSEIDON_LOG_TRACE(("Executing task `$1` (class `$2`)"), task, typeid(*task));
     POSEIDON_CATCH_EVERYTHING(task->do_on_abstract_task_execute());
-    POSEIDON_CATCH_EVERYTHING(task->do_on_abstract_task_finalize());
   }
 
 void

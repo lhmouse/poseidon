@@ -6,12 +6,14 @@
 
 #include "../fwd.hpp"
 #include "abstract_future.hpp"
+#include "../base/abstract_task.hpp"
 #include "../mysql/mysql_table_structure.hpp"
 namespace poseidon {
 
 class MySQL_Check_Table_Future
   :
-    public Abstract_Future
+    public Abstract_Future,
+    public Abstract_Task
   {
   public:
     // This is actually an input/output type.
@@ -39,11 +41,15 @@ class MySQL_Check_Table_Future
   private:
     virtual
     void
-    do_on_abstract_future_execute() override;
+    do_on_abstract_future_initialize() override;
 
     virtual
     void
-    do_on_abstract_task_finalize() override;
+    do_on_abstract_future_finalize() override;
+
+    virtual
+    void
+    do_on_abstract_task_execute() override;
 
   public:
     MySQL_Check_Table_Future(const MySQL_Check_Table_Future&) = delete;

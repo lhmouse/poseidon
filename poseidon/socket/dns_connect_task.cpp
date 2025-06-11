@@ -32,57 +32,63 @@ void
 DNS_Connect_Task::
 do_on_abstract_task_execute()
   {
-    // Perform DNS query. This will block the worker thread.
-    ::addrinfo hints = { };
-    hints.ai_flags = AI_V4MAPPED | AI_ADDRCONFIG | AI_NUMERICSERV;
-    ::addrinfo* res;
-    int err = ::getaddrinfo(this->m_host.safe_c_str(), nullptr, &hints, &res);
-    if(err != 0)
-      POSEIDON_THROW((
-          "Could not resolve host `$1`",
-          "[`getaddrinfo()` failed: $2]"),
-          this->m_host, ::gai_strerror(err));
+    shptr<Abstract_Socket> socket;
+    bool success = false;
 
-    const auto guard = make_unique_handle(res, ::freeaddrinfo);
+    try {
+      // Perform DNS query. This will block the worker thread.
+      ::addrinfo hints = { };
+      hints.ai_flags = AI_V4MAPPED | AI_ADDRCONFIG | AI_NUMERICSERV;
+      ::addrinfo* res;
+      int err = ::getaddrinfo(this->m_host.safe_c_str(), nullptr, &hints, &res);
+      if(err != 0)
+        POSEIDON_THROW((
+            "Could not resolve host `$1`",
+            "[`getaddrinfo()` failed: $2]"),
+            this->m_host, ::gai_strerror(err));
 
-    auto socket = this->m_wsock.lock();
-    if(!socket)
-      return;
+      const auto guard = make_unique_handle(res, ::freeaddrinfo);
 
-    for(res = guard;  !this->m_success && res;  res = res->ai_next)
-      if(res->ai_family == AF_INET) {
-        // IPv4
-        auto sa = reinterpret_cast<::sockaddr_in*>(res->ai_addr);
-        ::sockaddr_in6 v6addr = { };
-        v6addr.sin6_family = AF_INET6;
-        ::memcpy(v6addr.sin6_addr.s6_addr, ipv4_unspecified.data(), 12);
-        ::memcpy(v6addr.sin6_addr.s6_addr + 12, &(sa->sin_addr), 4);
-        v6addr.sin6_port = ROCKET_HTOBE16(this->m_port);
-        this->m_success = (::connect(socket->fd(),
-                                     reinterpret_cast<const sockaddr*>(&v6addr),
-                                     sizeof(::sockaddr_in6)) == 0)
-                          || (errno == EINPROGRESS);
-      }
-      else if(res->ai_family == AF_INET6) {
-        // IPv6
-        auto sa = reinterpret_cast<::sockaddr_in6*>(res->ai_addr);
-        sa->sin6_port = ROCKET_HTOBE16(this->m_port);
-        this->m_success = (::connect(socket->fd(),
-                                     reinterpret_cast<const sockaddr*>(sa),
-                                     sizeof(::sockaddr_in6)) == 0)
-                          || (errno == EINPROGRESS);
-      }
-  }
+      socket = this->m_wsock.lock();
+      if(!socket)
+        return;
 
-void
-DNS_Connect_Task::
-do_on_abstract_task_finalize()
-  {
-    auto socket = this->m_wsock.lock();
-    if(!socket)
-      return;
+      for(res = guard;  !success && res;  res = res->ai_next)
+        if(res->ai_family == AF_INET) {
+          // IPv4
+          auto sa = reinterpret_cast<::sockaddr_in*>(res->ai_addr);
+          ::sockaddr_in6 v6addr = { };
+          v6addr.sin6_family = AF_INET6;
+          ::memcpy(v6addr.sin6_addr.s6_addr, ipv4_unspecified.data(), 12);
+          ::memcpy(v6addr.sin6_addr.s6_addr + 12, &(sa->sin_addr), 4);
+          v6addr.sin6_port = ROCKET_HTOBE16(this->m_port);
+          success = (::connect(socket->fd(),
+                               reinterpret_cast<const ::sockaddr*>(&v6addr),
+                               sizeof(::sockaddr_in6)) == 0)
+                    || (errno == EINPROGRESS);
+        }
+        else if(res->ai_family == AF_INET6) {
+          // IPv6
+          auto sa = reinterpret_cast<::sockaddr_in6*>(res->ai_addr);
+          sa->sin6_port = ROCKET_HTOBE16(this->m_port);
+          success = (::connect(socket->fd(),
+                               reinterpret_cast<const ::sockaddr*>(sa),
+                               sizeof(::sockaddr_in6)) == 0)
+                    || (errno == EINPROGRESS);
+        }
+    }
+    catch(exception& stdex) {
+      POSEIDON_LOG_ERROR(("DNS lookup error: $1"), stdex);
+      success = false;
+    }
 
-    if(!this->m_success) {
+    if(!socket) {
+      socket = this->m_wsock.lock();
+      if(!socket)
+        return;
+    }
+
+    if(!success) {
       // Abandon the socket for good.
       POSEIDON_LOG_WARN(("DNS lookup failed for `$1`"), this->m_host);
       socket->close();
@@ -90,7 +96,7 @@ do_on_abstract_task_finalize()
 
     // Insert the socket. Even in the case of a failure, a closure
     // notification shall be delivered.
-    this->m_driver->insert(socket);
+    POSEIDON_CATCH_EVERYTHING(this->m_driver->insert(socket));
   }
 
 }  // namespace poseidon

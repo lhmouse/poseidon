@@ -166,7 +166,7 @@ MySQL_Check_Table_Future::
 
 void
 MySQL_Check_Table_Future::
-do_on_abstract_future_execute()
+do_on_abstract_future_initialize()
   {
     if(!this->m_conn)
       this->m_conn = this->m_ctr->allocate_default_connection();
@@ -330,8 +330,8 @@ do_on_abstract_future_execute()
 
                 int64_t def_value;
                 ::rocket::ascii_numget numg;
-                numg.parse_DI(ex->second.default_value.as_blob_data(), ex->second.default_value.as_blob_size());
-                numg.cast_I(def_value, INT64_MIN, INT64_MAX);
+                numg.get(def_value, ex->second.default_value.as_blob_data(),
+                         ex->second.default_value.as_blob_size());
 
                 if(def_value != column.default_value.as_integer())
                   goto do_alter_table_column_;
@@ -587,13 +587,20 @@ do_on_abstract_future_execute()
 
 void
 MySQL_Check_Table_Future::
-do_on_abstract_task_finalize()
+do_on_abstract_future_finalize()
   {
     if(!this->m_conn)
       return;
 
     if(this->m_conn->reset())
       this->m_ctr->pool_connection(move(this->m_conn));
+  }
+
+void
+MySQL_Check_Table_Future::
+do_on_abstract_task_execute()
+  {
+    this->do_abstract_future_initialize_once();
   }
 
 }  // namespace poseidon

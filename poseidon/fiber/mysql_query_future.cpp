@@ -34,7 +34,7 @@ MySQL_Query_Future::
 
 void
 MySQL_Query_Future::
-do_on_abstract_future_execute()
+do_on_abstract_future_initialize()
   {
     if(!this->m_conn)
       this->m_conn = this->m_ctr->allocate_default_connection();
@@ -53,13 +53,20 @@ do_on_abstract_future_execute()
 
 void
 MySQL_Query_Future::
-do_on_abstract_task_finalize()
+do_on_abstract_future_finalize()
   {
     if(!this->m_conn)
       return;
 
     if(this->m_conn->reset())
       this->m_ctr->pool_connection(move(this->m_conn));
+  }
+
+void
+MySQL_Query_Future::
+do_on_abstract_task_execute()
+  {
+    this->do_abstract_future_initialize_once();
   }
 
 }  // namespace poseidon

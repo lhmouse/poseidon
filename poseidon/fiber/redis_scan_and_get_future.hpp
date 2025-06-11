@@ -6,12 +6,14 @@
 
 #include "../fwd.hpp"
 #include "abstract_future.hpp"
+#include "../base/abstract_task.hpp"
 #include "../redis/redis_value.hpp"
 namespace poseidon {
 
 class Redis_Scan_and_Get_Future
   :
-    public Abstract_Future
+    public Abstract_Future,
+    public Abstract_Task
   {
   public:
     // This is actually an input/output type.
@@ -38,11 +40,15 @@ class Redis_Scan_and_Get_Future
   private:
     virtual
     void
-    do_on_abstract_future_execute() override;
+    do_on_abstract_future_initialize() override;
 
     virtual
     void
-    do_on_abstract_task_finalize() override;
+    do_on_abstract_future_finalize() override;
+
+    virtual
+    void
+    do_on_abstract_task_execute() override;
 
   public:
     Redis_Scan_and_Get_Future(const Redis_Scan_and_Get_Future&) = delete;

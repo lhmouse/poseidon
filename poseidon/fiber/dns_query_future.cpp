@@ -22,7 +22,7 @@ DNS_Query_Future::
 
 void
 DNS_Query_Future::
-do_on_abstract_future_execute()
+do_on_abstract_future_initialize()
   {
     // Perform DNS query. This will block the worker thread.
     ::addrinfo hints = { };
@@ -61,6 +61,13 @@ do_on_abstract_future_execute()
       POSEIDON_LOG_DEBUG(("DNS lookup: `$1` => `$2`"), this->m_res.host, addr);
       this->m_res.addrs.push_back(addr);
     }
+  }
+
+void
+DNS_Query_Future::
+do_on_abstract_task_execute()
+  {
+    this->do_abstract_future_initialize_once();
   }
 
 }  // namespace poseidon

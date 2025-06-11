@@ -6,12 +6,14 @@
 
 #include "../fwd.hpp"
 #include "abstract_future.hpp"
+#include "../base/abstract_task.hpp"
 #include "../socket/ipv6_address.hpp"
 namespace poseidon {
 
 class DNS_Query_Future
   :
-    public Abstract_Future
+    public Abstract_Future,
+    public Abstract_Task
   {
   public:
     // This is actually an input/output type.
@@ -34,7 +36,11 @@ class DNS_Query_Future
   private:
     virtual
     void
-    do_on_abstract_future_execute() override;
+    do_on_abstract_future_initialize() override;
+
+    virtual
+    void
+    do_on_abstract_task_execute() override;
 
   public:
     DNS_Query_Future(const DNS_Query_Future&) = delete;

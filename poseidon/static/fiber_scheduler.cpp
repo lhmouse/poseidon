@@ -344,7 +344,7 @@ thread_loop()
       // Wait for the future. In case of a shutdown request or timeout, ignore
       // the future and move on anyway.
       plain_mutex::unique_lock futr_lock(futr_opt->m_init_mutex);
-      if(futr_opt->m_init_completed.load())
+      if(futr_opt->m_init.load())
         return;
 
       bool should_warn = now >= elem->yield_time + warn_timeout;
@@ -452,7 +452,7 @@ yield(const Abstract_Fiber& tfiber, const shptr<Abstract_Future>& futr_opt)
       // Associate the future. If the future is already in the READY state,
       // don't block at all.
       plain_mutex::unique_lock futr_lock(futr_opt->m_init_mutex);
-      if(futr_opt->m_init_completed.load())
+      if(futr_opt->m_init.load())
         return;
 
       shptr<atomic_relaxed<steady_time>> async_time_ptr(elem, &(elem->async_time));

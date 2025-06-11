@@ -18,7 +18,6 @@ class DNS_Connect_Task
     wkptr<Abstract_Socket> m_wsock;
     cow_string m_host;
     uint16_t m_port;
-    bool m_success = false;
 
   public:
     // Performs asynchronous DNS lookup. If at least one address is found,
@@ -33,10 +32,6 @@ class DNS_Connect_Task
     virtual
     void
     do_on_abstract_task_execute() override;
-
-    virtual
-    void
-    do_on_abstract_task_finalize() override;
 
   public:
     DNS_Connect_Task(const DNS_Connect_Task&) = delete;

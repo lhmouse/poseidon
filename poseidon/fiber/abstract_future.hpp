@@ -5,65 +5,66 @@
 #define POSEIDON_FIBER_ABSTRACT_FUTURE_
 
 #include "../fwd.hpp"
-#include "../base/abstract_task.hpp"
 namespace poseidon {
 
 class Abstract_Future
-  :
-    public Abstract_Task
   {
   private:
     friend class Fiber_Scheduler;
 
-    atomic_acq_rel<bool> m_init_completed;
+    atomic_acq_rel<bool> m_init;
     mutable plain_mutex m_init_mutex;
     ::std::exception_ptr m_init_except;
     cow_vector<wkptr<atomic_relaxed<steady_time>>> m_waiters;
 
   protected:
-    // Constructs an empty future that has not completed.
+    // Constructs an uninitialized future.
     Abstract_Future() noexcept;
 
   protected:
-    // Requests the asynchronous work and sets the completion state. If the work
-    // has not been done yet, this function calls `do_on_abstract_future_execute()`
-    // do the work; otherwise, this function returns immediately.
-    virtual
-    void
-    do_on_abstract_task_execute() override;
-
-    // This callback is invoked after the work has been completed (either
-    // successfully or exceptionally) and all blocking fibers have been released.
-    // It's much like the `finally` block in Java.
+    // This callback is invoked by `do_abstract_future_initialize_once()` and is
+    // intended to be overriden by derived classes to do asynchronous work. If
+    // an exception is thrown, it will be caught and stored into `m_except`,
+    // which can be rethrown by `check_result()`.
     // The default implementation does nothing.
     virtual
     void
-    do_on_abstract_task_finalize() override;
+    do_on_abstract_future_initialize();
 
-    // This callback is invoked by `do_abstract_future_request()` and is intended
-    // to be overriden by derived classes to do the asynchronous work. If this
-    // function throws an exception, it will be copied into `m_except` which
-    // can be examined with `check_result()`.
+    // This callback is invoked by `do_abstract_future_initialize_once()` and is
+    // intended to be overriden by derived classes to do cleanup work. If an
+    // exception is thrown, it is silently ignored.
+    // The default implementation does nothing.
     virtual
     void
-    do_on_abstract_future_execute() = 0;
+    do_on_abstract_future_finalize();
+
+    // Requests one-time initialization. If `m_init` is `false`, this function
+    // calls `do_on_abstract_future_initialize()`; if an exception is thrown, it
+    // is caught and stored into `m_init_except`. Then, `m_init` is set to
+    // `true` and all fibers that are blocking on this future are released.
+    // Finally, `do_on_abstract_future_finalize()` is called; exceptions are
+    // ignored. The entire operation is thread-safe.
+    void
+    do_abstract_future_initialize_once();
 
   public:
     Abstract_Future(const Abstract_Future&) = delete;
     Abstract_Future& operator=(const Abstract_Future&) & = delete;
     virtual ~Abstract_Future();
 
-    // Gets the completion state. If this function returns `true`, then either a
-    // result or an exception will have been set.
+    // Checks whether initialization has completed.
     bool
-    completed() const noexcept
-      { return this->m_init_completed.load();  }
+    initialized() const noexcept
+      { return this->m_init.load();  }
 
+    // Checks whether initialization has completed without an exception.
     bool
     successful() const noexcept
-      { return this->m_init_completed.load() && !this->m_init_except;  }
+      { return this->m_init.load() && !this->m_init_except;  }
 
-    // Checks whether this future has completed with no exception being thrown.
+    // Checks whether this future has been initialized. If an exception has been
+    // caught and saved, it is rethrown.
     void
     check_success() const;
   };

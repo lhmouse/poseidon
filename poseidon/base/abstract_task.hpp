@@ -23,13 +23,6 @@ class Abstract_Task
     void
     do_on_abstract_task_execute() = 0;
 
-    // This is a second callback, invoked by the task executor thread after
-    // `do_on_abstract_task_execute()` has finished execution, either by
-    // returning or throwing an exception.
-    virtual
-    void
-    do_on_abstract_task_finalize() = 0;
-
   public:
     virtual ~Abstract_Task();
   };
