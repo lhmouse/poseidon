@@ -460,6 +460,7 @@ class Easy_WSS_Client;
 
 // Singletons
 extern const ::locale_t c_locale;
+extern const cow_string hostname;
 extern const cow_string empty_cow_string;
 extern const phcow_string empty_phcow_string;
 
