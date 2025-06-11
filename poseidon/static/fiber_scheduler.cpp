@@ -124,7 +124,6 @@ struct Queued_Fiber
     wkptr<Abstract_Future> wfutr;
     steady_time yield_time;
     steady_time check_time;
-    milliseconds fail_timeout_override;
     Fiber_State state = fiber_pending;
     ::ucontext_t sched_inner[1];
   };
@@ -332,8 +331,7 @@ thread_loop()
       return;
     }
 
-    milliseconds real_fail_timeout = (elem->fail_timeout_override >= 0ms) ? elem->fail_timeout_override : fail_timeout;
-    steady_time next_check_time = min(elem->check_time + warn_timeout, elem->yield_time + real_fail_timeout);
+    steady_time next_check_time = min(elem->check_time + warn_timeout, elem->yield_time + fail_timeout);
     elem->async_time.cmpxchg(elem->check_time, next_check_time);
     elem->check_time = next_check_time;
     ::std::push_heap(this->m_pq.mut_begin(), this->m_pq.mut_end(), s_fiber_comparator);
@@ -350,7 +348,7 @@ thread_loop()
         return;
 
       bool should_warn = now >= elem->yield_time + warn_timeout;
-      bool should_fail = now >= elem->yield_time + real_fail_timeout;
+      bool should_fail = now >= elem->yield_time + fail_timeout;
 
       if(should_warn && !should_fail)
         POSEIDON_LOG_WARN((
@@ -435,7 +433,7 @@ launch(const shptr<Abstract_Fiber>& fiber)
 
 void
 Fiber_Scheduler::
-yield(const Abstract_Fiber& tfiber, const shptr<Abstract_Future>& futr_opt, milliseconds fail_timeout_override)
+yield(const Abstract_Fiber& tfiber, const shptr<Abstract_Future>& futr_opt)
   {
     auto elem = this->m_sched_elem;
     if(!elem)
@@ -449,7 +447,6 @@ yield(const Abstract_Fiber& tfiber, const shptr<Abstract_Future>& futr_opt, mill
     elem->wfutr = futr_opt;
     elem->yield_time = steady_clock::now();
     elem->async_time.store(elem->yield_time);
-    elem->fail_timeout_override = fail_timeout_override;
 
     if(futr_opt) {
       // Associate the future. If the future is already in the READY state,
