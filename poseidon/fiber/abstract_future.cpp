@@ -32,7 +32,7 @@ do_abstract_future_initialize_once()
 
     try {
       // Perform initialization.
-      POSEIDON_LOG_DEBUG(("Initiating `$1` (class `$2`)"), this, typeid(*this));
+      POSEIDON_LOG_TRACE(("Initiating `$1` (class `$2`)"), this, typeid(*this));
       this->do_on_abstract_future_initialize();
     }
     catch(exception& stdex) {
@@ -43,7 +43,7 @@ do_abstract_future_initialize_once()
     cow_vector<wkptr<atomic_relaxed<steady_time>>> waiters;
     waiters.swap(this->m_waiters);
 
-    POSEIDON_LOG_DEBUG(("Completing `$1` (class `$2`)"), this, typeid(*this));
+    POSEIDON_LOG_TRACE(("Completing `$1` (class `$2`)"), this, typeid(*this));
     this->m_init.store(true);
     lock.unlock();
 
@@ -53,7 +53,7 @@ do_abstract_future_initialize_once()
         timep->store(steady_clock::now());
 
     // Perform finalization.
-    POSEIDON_LOG_DEBUG(("Finalizing `$1` (class `$2`)"), this, typeid(*this));
+    POSEIDON_LOG_TRACE(("Finalizing `$1` (class `$2`)"), this, typeid(*this));
     POSEIDON_CATCH_EVERYTHING(this->do_on_abstract_future_finalize());
   }
 
