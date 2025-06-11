@@ -33,10 +33,14 @@ class Easy_Timer
     Easy_Timer& operator=(const Easy_Timer&) & = delete;
     ~Easy_Timer();
 
-    // Starts a timer if none is running, or resets the running one. The timer
-    // callback will be called after `delay` milliseconds, and then, if `period`
-    // is non-zero, periodically every `period` milliseconds. If `period` is
-    // zero, the timer will only be called once.
+    // Checks whether the timer is running.
+    bool
+    running() const noexcept;
+
+    // Starts a timer, replacing the running one. The timer callback will be
+    // called after `delay` milliseconds, and then, if `period` is non-zero,
+    // every `period` milliseconds. If `period` is zero, the timer will only be
+    // called once.
     // If an exception is thrown, there is no effect.
     shptr<Abstract_Timer>
     start(milliseconds delay, milliseconds period, const callback_type& callback);

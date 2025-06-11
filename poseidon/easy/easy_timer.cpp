@@ -126,6 +126,13 @@ Easy_Timer::
   {
   }
 
+bool
+Easy_Timer::
+running() const noexcept
+  {
+    return this->m_timer != nullptr;
+  }
+
 shptr<Abstract_Timer>
 Easy_Timer::
 start(milliseconds delay, milliseconds period, const callback_type& callback)
