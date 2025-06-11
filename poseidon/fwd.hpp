@@ -103,7 +103,6 @@ using ::rocket::recursive_mutex;
 using ::rocket::condition_variable;
 using ::rocket::array;
 using ::rocket::cow_vector;
-using ::asteria::cow_dictionary;
 using ::rocket::cow_hashmap;
 using ::rocket::static_vector;
 using ::rocket::cow_string;
@@ -124,7 +123,8 @@ using ::rocket::unique_posix_dir;
 using charbuf_16 = ::rocket::static_char_buffer<16>;
 using charbuf_256 = ::rocket::static_char_buffer<256>;
 
-POSEIDON_USING cow_bivector = ::rocket::cow_vector<::std::pair<Ts...>>;
+POSEIDON_USING cow_bivector = cow_vector<pair<Ts...>>;
+POSEIDON_USING cow_dictionary = cow_hashmap<phcow_string, Ts..., phcow_string::hash>;
 POSEIDON_USING opt = ::rocket::optional<Ts...>;
 POSEIDON_USING uniptr = ::std::unique_ptr<Ts...>;
 POSEIDON_USING shptr = ::std::shared_ptr<Ts...>;
@@ -423,14 +423,14 @@ class MySQL_Connection;
 // MongoDB types
 enum Mongo_Value_Type : uint8_t;
 class Mongo_Value;
-using Mongo_Array = ::asteria::cow_vector<Mongo_Value>;
-using Mongo_Document = ::asteria::cow_bivector<cow_string, Mongo_Value>;
+using Mongo_Array = cow_vector<Mongo_Value>;
+using Mongo_Document = cow_bivector<cow_string, Mongo_Value>;
 class Mongo_Connection;
 
 // Redis types
 enum Redis_Value_Type : uint8_t;
 class Redis_Value;
-using Redis_Array = ::asteria::cow_vector<Redis_Value>;
+using Redis_Array = cow_vector<Redis_Value>;
 class Redis_Connection;
 
 // Easy types
