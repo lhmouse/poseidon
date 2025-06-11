@@ -170,7 +170,7 @@ using ::rocket::xmempcpy;
 using ::rocket::xmemrpcpy;
 
 using ::asteria::format;
-using ::asteria::format_string;
+using ::asteria::sformat;
 
 template<typename xValue, typename... xArgs>
 ROCKET_ALWAYS_INLINE

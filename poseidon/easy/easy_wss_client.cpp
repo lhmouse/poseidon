@@ -226,7 +226,7 @@ connect(const cow_string& addr, const callback_type& callback)
 
     auto session = new_sh<Final_Session>(cow_string(caddr.path), cow_string(caddr.query),
                                          callback, this->m_sessions);
-    session->https_set_default_host(format_string("$1:$2", caddr.host, caddr.port_num));
+    session->https_set_default_host(sformat("$1:$2", caddr.host, caddr.port_num));
     auto dns_task = new_sh<DNS_Connect_Task>(network_driver,
                        session, cow_string(caddr.host), caddr.port_num);
 
