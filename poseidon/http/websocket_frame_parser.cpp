@@ -482,12 +482,12 @@ parse_frame_header_from_stream(linear_buffer& data)
     this->m_frm_header.rsv2 = mask_len_rsv_opcode >> 5 & 1;
     this->m_frm_header.rsv3 = mask_len_rsv_opcode >> 4 & 1;
     this->m_frm_header.opcode = static_cast<WebSocket_Opcode>(mask_len_rsv_opcode & 15);
-    this->m_frm_header.mask = mask_len_rsv_opcode >> 15 & 1;
+    this->m_frm_header.masked = mask_len_rsv_opcode >> 15 & 1;
     this->m_frm_header.reserved_1 = mask_len_rsv_opcode >> 8 & 127;
 
-    if((this->m_wshs == wshs_s_accepted) && (this->m_frm_header.mask == 0)) {
-      // RFC 6455 states that clients must mask all frames. It also requires that
-      // servers must not mask frames, but we'd be permissive about unnecessary
+    if((this->m_wshs == wshs_s_accepted) && (this->m_frm_header.masked == 0)) {
+      // RFC 6455 states that clients must masked all frames. It also requires that
+      // servers must not masked frames, but we'd be permissive about unnecessary
       // masking.
       this->m_wsf = wsf_error;
       this->m_error_desc = "clients must mask frames to servers";
@@ -626,7 +626,7 @@ parse_frame_header_from_stream(linear_buffer& data)
       this->m_frm_header.payload_len = ROCKET_BETOH64(belen);
     }
 
-    if(this->m_frm_header.mask) {
+    if(this->m_frm_header.masked) {
       // four-byte masking key
       ntotal += 4;
       if(data.size() < ntotal)
@@ -634,7 +634,7 @@ parse_frame_header_from_stream(linear_buffer& data)
 
       uint32_t bekey;
       ::memcpy(&bekey, bptr + ntotal - 4, 4);
-      this->m_frm_header.mask_key = ROCKET_BETOH32(bekey);
+      this->m_frm_header.masking_key = ROCKET_BETOH32(bekey);
     }
 
     data.discard(ntotal);

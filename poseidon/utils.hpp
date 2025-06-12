@@ -33,6 +33,16 @@ quote_json_string(tinybuf& buf, const cow_string& str);
 void
 quote_json_string(tinyfmt& fmt, const cow_string& str);
 
+// Converts 16 bytes into a hexadecimal string. Exactly 33 characters will be
+// written, including a null terminator.
+void
+hex_encode_16_partial(char* str, const void* data) noexcept;
+
+// Generates a cryptographically secure random byte sequence. Please be advised
+// that this function may be very slow.
+void
+random_bytes(void* ptr, size_t size) noexcept;
+
 // Splices two buffers. After this function returns, `in` will be empty.
 inline
 linear_buffer&
@@ -52,34 +62,6 @@ splice_buffers(linear_buffer& out, linear_buffer&& in)
     out.putn(in.data(), in.size());
     in.clear();
     return out;
-  }
-
-// Converts 16 bytes into a hexadecimal string. Exactly 33 characters will be
-// written, including a null terminator.
-void
-hex_encode_16_partial(char* str, const void* data) noexcept;
-
-// Generates a cryptographically secure random byte sequence. Please be advised
-// that this function may be very slow.
-void
-random_bytes(void* ptr, size_t size) noexcept;
-
-ROCKET_ALWAYS_INLINE
-uint32_t
-random_uint32() noexcept
-  {
-    uint32_t bits;
-    random_bytes(&bits, sizeof(bits));
-    return bits;
-  }
-
-ROCKET_ALWAYS_INLINE
-uint64_t
-random_uint64() noexcept
-  {
-    uint64_t bits;
-    random_bytes(&bits, sizeof(bits));
-    return bits;
   }
 
 // Performs conversion between `timespec` and `system_time`.

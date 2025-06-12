@@ -22,9 +22,9 @@ struct WebSocket_Frame_Header
         uint8_t rsv1 : 1;
         uint8_t fin : 1;
         uint8_t reserved_1 : 7;
-        uint8_t mask : 1;
+        uint8_t masked : 1;
         uint16_t reserved_2;
-        uint32_t mask_key;
+        uint32_t masking_key;
         uint64_t payload_len;
       };
     };
@@ -49,7 +49,7 @@ struct WebSocket_Frame_Header
     encode(tinyfmt& fmt) const;
 
     // Masks a part (or unmasks a masked part) of the frame payload, and update
-    // `mask_key` incrementally. If `mask` is unset, this function does nothing.
+    // `masking_key` incrementally. If `masked` is unset, this function does nothing.
     void
     mask_payload(char* data, size_t size) noexcept;
   };

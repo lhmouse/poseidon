@@ -91,8 +91,8 @@ my_timer_callback(const shptr<Abstract_Timer>& timer,
         {
           // HACKS; DO NOT PLAY WITH THESE AT HOME.
           WebSocket_Frame_Header header;
-          header.mask = 1;
-          header.mask_key = 0x87654321U;
+          header.masked = 1;
+          header.masking_key = 0x87654321U;
 
           // fragment 1
           header.fin = 0;
@@ -148,8 +148,8 @@ my_timer_callback(const shptr<Abstract_Timer>& timer,
         {
           // HACKS; DO NOT PLAY WITH THESE AT HOME.
           WebSocket_Frame_Header header;
-          header.mask = 1;
-          header.mask_key = 0x87654321U;
+          header.masked = 1;
+          header.masking_key = 0x87654321U;
 
           // fragment 1
           header.fin = 0;

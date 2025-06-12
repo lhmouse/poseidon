@@ -30,8 +30,8 @@ main()
 
     header.fin = 1;
     header.opcode = websocket_TEXT;
-    header.mask = 1;
-    header.mask_key = 0x37fa213d;
+    header.masked = 1;
+    header.masking_key = 0x37fa213d;
     header.payload_len = 5;
     header.encode(fmt);
 
@@ -83,8 +83,8 @@ main()
 
     header.fin = 1;
     header.opcode = websocket_PONG;
-    header.mask = 1;
-    header.mask_key = 0x37fa213d;
+    header.masked = 1;
+    header.masking_key = 0x37fa213d;
     header.payload_len = 5;
     header.encode(fmt);
 
@@ -100,8 +100,8 @@ main()
 
     header.fin = 1;
     header.opcode = websocket_PONG;
-    header.mask = 1;
-    header.mask_key = 0x37fa213d;
+    header.masked = 1;
+    header.masking_key = 0x37fa213d;
     header.payload_len = 283;
     header.encode(fmt);
 
@@ -134,8 +134,8 @@ main()
 
     header.fin = 1;
     header.opcode = websocket_PONG;
-    header.mask = 1;
-    header.mask_key = 0x37fa213d;
+    header.masked = 1;
+    header.masking_key = 0x37fa213d;
     header.payload_len = 5;
     header.encode(fmt);
 

@@ -9,6 +9,9 @@
 #include "static/timer_driver.hpp"
 #include "static/task_executor.hpp"
 #include "static/network_driver.hpp"
+#include "static/mysql_connector.hpp"
+#include "static/mongo_connector.hpp"
+#include "static/redis_connector.hpp"
 #include "utils.hpp"
 #include <locale.h>
 #include <signal.h>
@@ -19,9 +22,6 @@
 #include <sys/file.h>
 #include <sys/socket.h>
 #include <sys/resource.h>
-#include "static/mysql_connector.hpp"
-#include "static/mongo_connector.hpp"
-#include "static/redis_connector.hpp"
 namespace {
 using namespace poseidon;
 
@@ -451,11 +451,12 @@ ROCKET_NEVER_INLINE
 void
 do_seed_random()
   {
-    uint64_t seed[2];
+    long seed[4];
     random_bytes(seed, sizeof(seed));
 
-    ::srand(static_cast<uint32_t>(seed[0]));
-    ::srand48(static_cast<long>(seed[1]));
+    ::srand48(seed[0]);
+    ::srandom(static_cast<unsigned>(seed[1]));
+    ::srand(static_cast<unsigned>(seed[2]));
   }
 
 ROCKET_NEVER_INLINE

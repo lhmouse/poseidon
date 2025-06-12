@@ -23,27 +23,27 @@ encode(tinyfmt& fmt) const
 
     if(this->payload_len <= 125) {
       // one-byte length
-      bytes[1] = this->mask << 7 | this->payload_len;
+      bytes[1] = this->masked << 7 | this->payload_len;
     }
     else if(this->payload_len <= 65535) {
       // two-byte length
-      bytes[1] = this->mask << 7 | 126;
+      bytes[1] = this->masked << 7 | 126;
       ntotal += 2;
       uint16_t belen = ROCKET_HTOBE16(this->payload_len);
       ::memcpy(bytes + ntotal - 2, &belen, 2);
     }
     else {
       // eight-byte length
-      bytes[1] = this->mask << 7 | 127;
+      bytes[1] = this->masked << 7 | 127;
       ntotal += 8;
       uint64_t belen = ROCKET_HTOBE64(this->payload_len);
       ::memcpy(bytes + ntotal - 8, &belen, 8);
     }
 
-    if(this->mask) {
+    if(this->masked) {
       // four-byte masking key
       ntotal += 4;
-      uint32_t bekey = ROCKET_HTOBE32(this->mask_key);
+      uint32_t bekey = ROCKET_HTOBE32(this->masking_key);
       ::memcpy(bytes + ntotal - 4, &bekey, 4);
     }
 #pragma GCC diagnostic pop
@@ -55,12 +55,12 @@ void
 WebSocket_Frame_Header::
 mask_payload(char* data, size_t size) noexcept
   {
-    if(!this->mask)
+    if(!this->masked)
       return;
 
     char* cur = data;
     char* esdata = data + size;
-    uint32_t& key = this->mask_key;
+    uint32_t& key = this->masking_key;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"

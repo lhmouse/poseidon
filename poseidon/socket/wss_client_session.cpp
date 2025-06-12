@@ -255,8 +255,8 @@ do_wss_send_raw_frame(int rsv_opcode, chars_view data)
     header.rsv2 = rsv_opcode >> 5 & 1;
     header.rsv3 = rsv_opcode >> 4 & 1;
     header.opcode = static_cast<WebSocket_Opcode>(rsv_opcode & 15);
-    header.mask = 1;
-    header.mask_key = 0x80 | random_uint32();
+    header.masked = 1;
+    header.masking_key = static_cast<uint32_t>(0x80 | ::random());
     header.payload_len = data.n;
 
     tinyfmt_ln fmt;
