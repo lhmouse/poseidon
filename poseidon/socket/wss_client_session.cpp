@@ -183,8 +183,8 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
                 data.clear();
 
                 // Get the status code in big-endian order..
-                uint16_t bestatus;
                 WebSocket_Status status = websocket_status_no_status_code;
+                uint16_t bestatus;
                 if(payload.getn(reinterpret_cast<char*>(&bestatus), 2) >= 2)
                   status = static_cast<WebSocket_Status>(ROCKET_BETOH16(bestatus));
                 this->do_on_wss_close(status, payload);
@@ -350,11 +350,10 @@ wss_shut_down(WebSocket_Status status, chars_view reason) noexcept
       // length of its payload cannot exceed 125 bytes, and the reason string has
       // to be truncated if it's too long.
       static_vector<char, 125> data;
+      data.resize(2);
       uint16_t bestatus = ROCKET_HTOBE16(status);
-      const char* eptr = reinterpret_cast<const char*>(&bestatus) + 2;
-      data.append(eptr - 2, eptr);
-      eptr = reason.p + ::std::min<size_t>(reason.n, 123);
-      data.append(reason.p, eptr);
+      ::memcpy(data.mut_data(), reinterpret_cast<char*>(&bestatus), 2);
+      data.append(reason.p, reason.p + min(reason.n, data.capacity() - 2));
 
       // FIN + CLOSE
       succ = this->do_wss_send_raw_frame(0b10000000 | 8, data);
