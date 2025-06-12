@@ -8,11 +8,11 @@
 namespace poseidon {
 
 Read_File_Future::
-Read_File_Future(const cow_string& path, int64_t offset, size_t limit)
+Read_File_Future(const cow_string& path, int64_t offset_req, size_t limit)
   {
-    this->m_res.path = path;
-    this->m_res.offset = offset;
-    this->m_res.limit = limit;
+    this->m_path = path;
+    this->m_offset_req = offset_req;
+    this->m_limit = limit;
   }
 
 Read_File_Future::
@@ -24,12 +24,12 @@ void
 Read_File_Future::
 do_on_abstract_future_initialize()
   {
-    unique_posix_fd fd(::open(this->m_res.path.safe_c_str(), O_RDONLY | O_NOCTTY, 0));
+    unique_posix_fd fd(::open(this->m_path.safe_c_str(), O_RDONLY | O_NOCTTY, 0));
     if(!fd)
       POSEIDON_THROW((
           "Could not open file `$1` for reading",
           "[`open()` failed: ${errno:full}]"),
-          this->m_res.path);
+          this->m_path);
 
     // Get basic information.
     struct ::stat64 st;
@@ -37,47 +37,48 @@ do_on_abstract_future_initialize()
       POSEIDON_THROW((
           "Could not get information about file `$1`",
           "[`fstat64()` failed: ${errno:full}]"),
-          this->m_res.path);
+          this->m_path);
 
     if(S_ISREG(st.st_mode) == false)
       POSEIDON_THROW((
           "Could not read non-regular file `$1`"),
-          this->m_res.path);
+          this->m_path);
 
-    this->m_res.accessed_on = system_time_from_timespec(st.st_atim);
-    this->m_res.modified_on = system_time_from_timespec(st.st_mtim);
-    this->m_res.file_size = st.st_size;
+    this->m_accessed = system_time_from_timespec(st.st_atim);
+    this->m_modified = system_time_from_timespec(st.st_mtim);
+    this->m_file_size = st.st_size;
 
-    if(this->m_res.offset != 0) {
+    if(this->m_offset_req != 0) {
       // Seek to the requested offset. Negative values denote offsets from
       // the end of the file.
-      int whence = (this->m_res.offset >= 0) ? SEEK_SET : SEEK_END;
-      ::off_t r = ::lseek64(fd, this->m_res.offset, whence);
-      if(r == -1)
+      this->m_offset = ::lseek64(fd, this->m_offset_req,
+                                 (this->m_offset_req >= 0) ? SEEK_SET : SEEK_END);
+      if(this->m_offset == -1)
         POSEIDON_THROW((
             "Could not reposition file `$1`",
             "[`lseek64()` failed: ${errno:full}]"),
-            this->m_res.path);
-
-      // Update `m_res.offset` to the absolute value.
-      this->m_res.offset = r;
+            this->m_path);
     }
 
-    while(this->m_res.data.size() < this->m_res.limit) {
-      // Read bytes and append them to `m_res.data`.
-      size_t rlim = min(this->m_res.limit - this->m_res.data.size(), INT_MAX);
-      this->m_res.data.reserve_after_end(rlim);
-      ::ssize_t ior = POSEIDON_SYSCALL_LOOP(::read(fd, this->m_res.data.mut_end(), rlim));
-      if(ior == 0)
+    for(;;) {
+      size_t size_to_reserve = static_cast<size_t>(::rocket::min(
+               static_cast<int64_t>(this->m_limit - this->m_data.size()),
+               this->m_file_size - this->m_offset - this->m_data.ssize(),
+               INT_MAX));  // safety value
+      if(size_to_reserve == 0)
         break;
-      else if(ior < 0)
+
+      auto base = this->m_data.insert(this->m_data.end(), size_to_reserve, '*');
+      ::ssize_t ior = POSEIDON_SYSCALL_LOOP(::read(fd, &*base, size_to_reserve));
+      if(ior < 0)
         POSEIDON_THROW((
             "Could not read file `$1`",
             "[`read()` failed: ${errno:full}]"),
-            this->m_res.path);
+            this->m_path);
 
-      // Accept bytes that have been read.
-      this->m_res.data.accept(static_cast<size_t>(ior));
+      this->m_data.erase(base + ior, this->m_data.end());
+      if(ior == 0)
+        break;
     }
   }
 

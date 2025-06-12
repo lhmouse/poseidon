@@ -14,14 +14,14 @@ Mongo_Query_Future(Mongo_Connector& connector, uniptr<Mongo_Connection>&& conn_o
   {
     this->m_ctr = &connector;
     this->m_conn = move(conn_opt);
-    this->m_res.cmd = cmd;
+    this->m_cmd = cmd;
   }
 
 Mongo_Query_Future::
 Mongo_Query_Future(Mongo_Connector& connector, const Mongo_Document& cmd)
   {
     this->m_ctr = &connector;
-    this->m_res.cmd = cmd;
+    this->m_cmd = cmd;
   }
 
 Mongo_Query_Future::
@@ -36,11 +36,11 @@ do_on_abstract_future_initialize()
     if(!this->m_conn)
       this->m_conn = this->m_ctr->allocate_default_connection();
 
-    this->m_conn->execute(this->m_res.cmd);
+    this->m_conn->execute(this->m_cmd);
 
     Mongo_Document doc;
     while(this->m_conn->fetch_reply(doc))
-      this->m_res.reply_docs.push_back(move(doc));
+      this->m_res.push_back(move(doc));
   }
 
 void

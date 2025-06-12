@@ -15,22 +15,15 @@ class DNS_Query_Future
     public Abstract_Future,
     public Abstract_Task
   {
-  public:
-    // This is actually an input/output type.
-    struct Result
-      {
-        cow_string host;
-        uint16_t port;
-        cow_vector<IPv6_Address> addrs;
-      };
-
   private:
-    Result m_res;
+    cow_string m_host;
+    uint16_t m_port;
+    cow_vector<IPv6_Address> m_res;
 
   public:
-    // Constructs a DNS query future. This object also functions as an asynchronous
-    // task, which can be enqueued into an `Task_Executor`. This future will
-    // become ready once the DNS query is complete.
+    // Constructs a DNS query future. This object also functions as an
+    // asynchronous task which can be enqueued into an `Task_Executor`. This
+    // future will become ready once the DNS query is complete.
     DNS_Query_Future(const cow_string& host, uint16_t port);
 
   private:
@@ -47,17 +40,22 @@ class DNS_Query_Future
     DNS_Query_Future& operator=(const DNS_Query_Future&) & = delete;
     virtual ~DNS_Query_Future();
 
-    // Gets the result if `successful()` yields `true`. If `successful()` yields
-    // `false`, an exception is thrown, and there is no effect.
-    const Result&
-    result() const
-      {
-        this->check_success();
-        return this->m_res;
-      }
+    // Gets the hostname to look up. This field is set by the constructor.
+    const cow_string&
+    host() const noexcept
+      { return this->m_host;  }
 
-    Result&
-    mut_result()
+    // Gets the port to set in the result addresses. This field is set by the
+    // constructor.
+    uint16_t
+    port() const noexcept
+      { return this->m_port;  }
+
+    // Gets the result after the operation has completed successfully. If
+    // `successful()` yields `false`, an exception is thrown, and there is no
+    // effect.
+    const cow_vector<IPv6_Address>&
+    result() const
       {
         this->check_success();
         return this->m_res;

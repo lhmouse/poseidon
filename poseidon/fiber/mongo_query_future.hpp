@@ -15,18 +15,11 @@ class Mongo_Query_Future
     public Abstract_Future,
     public Abstract_Task
   {
-  public:
-    // This is actually an input/output type.
-    struct Result
-      {
-        Mongo_Document cmd;  // input
-        cow_vector<Mongo_Document> reply_docs;
-      };
-
   private:
     Mongo_Connector* m_ctr;
     uniptr<Mongo_Connection> m_conn;
-    Result m_res;
+    Mongo_Document m_cmd;
+    cow_vector<Mongo_Document> m_res;
 
   public:
     // Constructs a future for a single Mongo command. This object also functions
@@ -55,17 +48,16 @@ class Mongo_Query_Future
     Mongo_Query_Future& operator=(const Mongo_Query_Future&) & = delete;
     virtual ~Mongo_Query_Future();
 
-    // Gets the result if `successful()` yields `true`. If `successful()` yields
-    // `false`, an exception is thrown, and there is no effect.
-    const Result&
-    result() const
-      {
-        this->check_success();
-        return this->m_res;
-      }
+    // Gets the command to execute. This field is set by the constructor.
+    const Mongo_Document&
+    cmd() const noexcept
+      { return this->m_cmd;  }
 
-    Result&
-    mut_result()
+    // Gets the result after the operation has completed successfully. If
+    // `successful()` yields `false`, an exception is thrown, and there is no
+    // effect.
+    const cow_vector<Mongo_Document>&
+    result() const
       {
         this->check_success();
         return this->m_res;

@@ -15,18 +15,11 @@ class Redis_Query_Future
     public Abstract_Future,
     public Abstract_Task
   {
-  public:
-    // This is actually an input/output type.
-    struct Result
-      {
-        cow_vector<cow_string> cmd;  // input
-        Redis_Value reply;
-      };
-
   private:
     Redis_Connector* m_ctr;
     uniptr<Redis_Connection> m_conn;
-    Result m_res;
+    cow_vector<cow_string> m_cmd;
+    Redis_Value m_res;
 
   public:
     // Constructs a future for a single Redis command. This object also functions
@@ -55,17 +48,16 @@ class Redis_Query_Future
     Redis_Query_Future& operator=(const Redis_Query_Future&) & = delete;
     virtual ~Redis_Query_Future();
 
-    // Gets the result if `successful()` yields `true`. If `successful()` yields
-    // `false`, an exception is thrown, and there is no effect.
-    const Result&
-    result() const
-      {
-        this->check_success();
-        return this->m_res;
-      }
+    // Gets the command to execute. This field is set by the constructor.
+    const cow_vector<cow_string>&
+    cmd() const noexcept
+      { return this->m_cmd;  }
 
-    Result&
-    mut_result()
+    // Gets the result after the operation has completed successfully. If
+    // `successful()` yields `false`, an exception is thrown, and there is no
+    // effect.
+    const Redis_Value&
+    result() const
       {
         this->check_success();
         return this->m_res;

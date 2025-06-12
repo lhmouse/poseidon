@@ -15,19 +15,11 @@ class MySQL_Check_Table_Future
     public Abstract_Future,
     public Abstract_Task
   {
-  public:
-    // This is actually an input/output type.
-    struct Result
-      {
-        MySQL_Table_Structure table;  // input
-        uint32_t warning_count;
-        bool altered;
-      };
-
   private:
     MySQL_Connector* m_ctr;
     uniptr<MySQL_Connection> m_conn;
-    Result m_res;
+    MySQL_Table_Structure m_table;
+    bool m_altered = false;
 
   public:
     // Constructs a future for a table check request. This object also functions
@@ -56,20 +48,19 @@ class MySQL_Check_Table_Future
     MySQL_Check_Table_Future& operator=(const MySQL_Check_Table_Future&) & = delete;
     virtual ~MySQL_Check_Table_Future();
 
-    // Gets the result if `successful()` yields `true`. If `successful()` yields
-    // `false`, an exception is thrown, and there is no effect.
-    const Result&
-    result() const
-      {
-        this->check_success();
-        return this->m_res;
-      }
+    // Gets the MySQL table structure. This field is set by the constructor.
+    const MySQL_Table_Structure&
+    table() const noexcept
+      { return this->m_table;  }
 
-    Result&
-    mut_result()
+    // Indicates whether the table has been altered after the operation has
+    // completed successfully. If `successful()` yields `false`, an exception is
+    // thrown, and there is no effect.
+    bool
+    altered() const
       {
         this->check_success();
-        return this->m_res;
+        return this->m_altered;
       }
   };
 

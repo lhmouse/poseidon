@@ -14,8 +14,8 @@ MySQL_Query_Future(MySQL_Connector& connector, uniptr<MySQL_Connection>&& conn_o
   {
     this->m_ctr = &connector;
     this->m_conn = move(conn_opt);
-    this->m_res.stmt = stmt;
-    this->m_res.stmt_args = stmt_args;
+    this->m_stmt = stmt;
+    this->m_stmt_args = stmt_args;
   }
 
 MySQL_Query_Future::
@@ -23,8 +23,8 @@ MySQL_Query_Future(MySQL_Connector& connector, const cow_string& stmt,
                    const cow_vector<MySQL_Value>& stmt_args)
   {
     this->m_ctr = &connector;
-    this->m_res.stmt = stmt;
-    this->m_res.stmt_args = stmt_args;
+    this->m_stmt = stmt;
+    this->m_stmt_args = stmt_args;
   }
 
 MySQL_Query_Future::
@@ -39,16 +39,14 @@ do_on_abstract_future_initialize()
     if(!this->m_conn)
       this->m_conn = this->m_ctr->allocate_default_connection();
 
-    this->m_conn->execute(this->m_res.stmt, this->m_res.stmt_args);
+    this->m_conn->execute(this->m_stmt, this->m_stmt_args);
 
-    this->m_res.warning_count = this->m_conn->warning_count();
-    this->m_res.affected_rows = this->m_conn->affected_rows();
-    this->m_res.insert_id = this->m_conn->insert_id();
-    this->m_conn->fetch_fields(this->m_res.result_fields);
+    this->m_insert_id = this->m_conn->insert_id();
+    this->m_conn->fetch_fields(this->m_result_fields);
 
     cow_vector<MySQL_Value> row;
     while(this->m_conn->fetch_row(row))
-      this->m_res.result_rows.push_back(move(row));
+      this->m_result_rows.push_back(move(row));
   }
 
 void

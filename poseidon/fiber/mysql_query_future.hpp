@@ -15,23 +15,14 @@ class MySQL_Query_Future
     public Abstract_Future,
     public Abstract_Task
   {
-  public:
-    // This is actually an input/output type.
-    struct Result
-      {
-        cow_string stmt;  // input
-        cow_vector<MySQL_Value> stmt_args;  // input
-        uint32_t warning_count;
-        uint64_t affected_rows;
-        uint64_t insert_id;
-        cow_vector<cow_string> result_fields;
-        cow_vector<cow_vector<MySQL_Value>> result_rows;
-      };
-
   private:
     MySQL_Connector* m_ctr;
     uniptr<MySQL_Connection> m_conn;
-    Result m_res;
+    cow_string m_stmt;
+    cow_vector<MySQL_Value> m_stmt_args;
+    uint64_t m_insert_id;
+    cow_vector<cow_string> m_result_fields;
+    cow_vector<cow_vector<MySQL_Value>> m_result_rows;
 
   public:
     // Constructs a future for a single MySQL statement. This object also functions
@@ -61,20 +52,46 @@ class MySQL_Query_Future
     MySQL_Query_Future& operator=(const MySQL_Query_Future&) & = delete;
     virtual ~MySQL_Query_Future();
 
-    // Gets the result if `successful()` yields `true`. If `successful()` yields
-    // `false`, an exception is thrown, and there is no effect.
-    const Result&
-    result() const
+    // Gets the statement to execute. This field is set by the constructor.
+    const cow_string&
+    stmt() const noexcept
+      { return this->m_stmt;  }
+
+    // Gets the arguments for the statement to execute. This field is set by
+    // the constructor.
+    const cow_vector<MySQL_Value>&
+    stmt_args() const noexcept
+      { return this->m_stmt_args;  }
+
+    // Gets the auto-increment ID of an INSERT or REPLACE operation, after it
+    // has completed successfully. The value is undefined for other operations.
+    // If `successful()` yields `false`, an exception is thrown, and there is no
+    // effect.
+    uint64_t
+    insert_id() const
       {
         this->check_success();
-        return this->m_res;
+        return this->m_insert_id;
       }
 
-    Result&
-    mut_result()
+    // Gets all result fields after the operation has completed successfully. If
+    // `successful()` yields `false`, an exception is thrown, and there is no
+    // effect.
+    const cow_vector<cow_string>&
+    result_fields() const
       {
         this->check_success();
-        return this->m_res;
+        return this->m_result_fields;
+      }
+
+    // Gets all result rows after the operation has completed successfully. If
+    // `successful()` yields `false`, an exception is thrown, and there is no
+    // effect.
+    const cow_vector<cow_vector<MySQL_Value>>&
+    result_rows() const
+      {
+        this->check_success();
+        return this->m_result_rows;
       }
   };
 

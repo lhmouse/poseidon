@@ -149,14 +149,14 @@ MySQL_Check_Table_Future(MySQL_Connector& connector, uniptr<MySQL_Connection>&& 
   {
     this->m_ctr = &connector;
     this->m_conn = move(conn_opt);
-    this->m_res.table = table;
+    this->m_table = table;
   }
 
 MySQL_Check_Table_Future::
 MySQL_Check_Table_Future(MySQL_Connector& connector, const MySQL_Table_Structure& table)
   {
     this->m_ctr = &connector;
-    this->m_res.table = table;
+    this->m_table = table;
   }
 
 MySQL_Check_Table_Future::
@@ -174,37 +174,35 @@ do_on_abstract_future_initialize()
     // Compose a `CREATE TABLE` statement and execute it first. This ensures
     // the table exists for all operations later.
     tinyfmt_str sql;
-    sql << "CREATE TABLE IF NOT EXISTS `" << this->m_res.table.name() << "`\n  (";
+    sql << "CREATE TABLE IF NOT EXISTS `" << this->m_table.name() << "`\n  (";
     size_t ncolumns = 0;
 
-    for(const auto& column : this->m_res.table.columns())
+    for(const auto& column : this->m_table.columns())
       if(column.type != mysql_column_dropped) {
         if(++ ncolumns != 1)
           sql << ",\n   ";
         do_append_column_definition(sql, column);
       }
 
-    for(const auto& index : this->m_res.table.indexes())
+    for(const auto& index : this->m_table.indexes())
       if(index.type != mysql_index_dropped) {
         sql << ",\n   ";
         do_append_index_definition(sql, index);
       }
 
     sql << ")\n  ";
-    do_append_engine(sql, this->m_res.table.engine());
+    do_append_engine(sql, this->m_table.engine());
     sql << ",\n  CHARSET = 'utf8mb4'";
 
     POSEIDON_LOG_INFO(("Checking MySQL table:\n$1"), sql.get_string());
     this->m_conn->execute(sql.get_string(), { });
-    this->m_res.warning_count = this->m_conn->warning_count();
-    this->m_res.altered = false;
 
     // Fetch information about existent columns and indexes.
     cow_vector<MySQL_Value> row;
     cow_vector<cow_string> fields;
 
     sql.clear_string();
-    sql << "SHOW COLUMNS FROM `" << this->m_res.table.name() << "`";
+    sql << "SHOW COLUMNS FROM `" << this->m_table.name() << "`";
     this->m_conn->execute(sql.get_string(), { });
     this->m_conn->fetch_fields(fields);
 
@@ -229,7 +227,7 @@ do_on_abstract_future_initialize()
 
     while(this->m_conn->fetch_row(row)) {
       cow_string& name = row.mut(idx_name).mut_blob();
-      if(auto column_config = this->m_res.table.find_column_opt(name))
+      if(auto column_config = this->m_table.find_column_opt(name))
         name = column_config->name;
 
       // Save this column.
@@ -241,7 +239,7 @@ do_on_abstract_future_initialize()
     }
 
     sql.clear_string();
-    sql << "SHOW INDEXES FROM `" << this->m_res.table.name() << "`";
+    sql << "SHOW INDEXES FROM `" << this->m_table.name() << "`";
     this->m_conn->execute(sql.get_string(), { });
     this->m_conn->fetch_fields(fields);
 
@@ -262,7 +260,7 @@ do_on_abstract_future_initialize()
 
     while(this->m_conn->fetch_row(row)) {
       cow_string& name = row.mut(idx_name).mut_blob();
-      if(auto index_config = this->m_res.table.find_index_opt(name))
+      if(auto index_config = this->m_table.find_index_opt(name))
         name = index_config->name;
 
       // Save this index.
@@ -276,10 +274,10 @@ do_on_abstract_future_initialize()
     // Compare the existent columns and indexes with the requested ones,
     // altering the table as necessary.
     sql.clear_string();
-    sql << "ALTER TABLE `" << this->m_res.table.name() << "`\n  ";
-    size_t nalters = 0;
+    sql << "ALTER TABLE `" << this->m_table.name() << "`\n  ";
+    size_t field_count = 0;
 
-    for(const auto& column : this->m_res.table.columns()) {
+    for(const auto& column : this->m_table.columns()) {
       auto ex = excolumns.find(column.name);
 
       if((column.type == mysql_column_dropped) && (ex == excolumns.end()))
@@ -492,13 +490,13 @@ do_on_abstract_future_initialize()
         if(ex->second.default_value.is_null() != column.default_value.is_null())
           goto do_alter_table_column_;
 
-        POSEIDON_LOG_DEBUG(("Verified column `$1.$2`"), this->m_res.table.name(), column.name);
+        POSEIDON_LOG_DEBUG(("Verified column `$1.$2`"), this->m_table.name(), column.name);
         continue;
       }
 
   do_alter_table_column_:
       // The column does not match the definition, so modify it.
-      if(++ nalters != 1)
+      if(++ field_count != 1)
         sql << ",\n  ";
 
       if(ex == excolumns.end()) {
@@ -513,7 +511,7 @@ do_on_abstract_future_initialize()
         sql << "DROP COLUMN `" << column.name << "`";
     }
 
-    for(const auto& index : this->m_res.table.indexes()) {
+    for(const auto& index : this->m_table.indexes()) {
       auto ex = exindexes.find(index.name);
 
       if((index.type == mysql_index_dropped) && (ex == exindexes.end()))
@@ -551,13 +549,13 @@ do_on_abstract_future_initialize()
           if(ex->second.columns[t] != index.columns[t])
             goto do_alter_table_index_;
 
-        POSEIDON_LOG_DEBUG(("Verified index `$1.$2`"), this->m_res.table.name(), index.name);
+        POSEIDON_LOG_DEBUG(("Verified index `$1.$2`"), this->m_table.name(), index.name);
         continue;
       }
 
   do_alter_table_index_:
       // The index does not match the definition, so modify it.
-      if(++ nalters != 1)
+      if(++ field_count != 1)
         sql << ",\n  ";
 
       if(ex == exindexes.end()) {
@@ -577,12 +575,12 @@ do_on_abstract_future_initialize()
       }
     }
 
-    if(nalters == 0)
+    if(field_count == 0)
       return;
 
     POSEIDON_LOG_WARN(("Updating MySQL table structure:", "$1"), sql.get_string());
     this->m_conn->execute(sql.get_string(), { });
-    this->m_res.altered = true;
+    this->m_altered = true;
   }
 
 void

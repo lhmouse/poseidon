@@ -14,14 +14,14 @@ Redis_Query_Future(Redis_Connector& connector, uniptr<Redis_Connection>&& conn_o
   {
     this->m_ctr = &connector;
     this->m_conn = move(conn_opt);
-    this->m_res.cmd = cmd;
+    this->m_cmd = cmd;
   }
 
 Redis_Query_Future::
 Redis_Query_Future(Redis_Connector& connector, const cow_vector<cow_string>& cmd)
   {
     this->m_ctr = &connector;
-    this->m_res.cmd = cmd;
+    this->m_cmd = cmd;
   }
 
 Redis_Query_Future::
@@ -36,11 +36,11 @@ do_on_abstract_future_initialize()
     if(!this->m_conn)
       this->m_conn = this->m_ctr->allocate_default_connection();
 
-    this->m_conn->execute(this->m_res.cmd);
+    this->m_conn->execute(this->m_cmd);
 
     // We don't do pipelining, so it's assumed that there is exactly one reply
     // for this command.
-    this->m_conn->fetch_reply(this->m_res.reply);
+    this->m_conn->fetch_reply(this->m_res);
   }
 
 void

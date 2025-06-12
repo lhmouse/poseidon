@@ -14,14 +14,14 @@ Redis_Scan_and_Get_Future(Redis_Connector& connector, uniptr<Redis_Connection>&&
   {
     this->m_ctr = &connector;
     this->m_conn = move(conn_opt);
-    this->m_res.pattern = pattern;
+    this->m_pattern = pattern;
   }
 
 Redis_Scan_and_Get_Future::
 Redis_Scan_and_Get_Future(Redis_Connector& connector, const cow_string& pattern)
   {
     this->m_ctr = &connector;
-    this->m_res.pattern = pattern;
+    this->m_pattern = pattern;
   }
 
 Redis_Scan_and_Get_Future::
@@ -46,7 +46,7 @@ do_on_abstract_future_initialize()
     cmd.mut(0) = &"SCAN";
     cmd.mut(1) = &"0";  // cursor
     cmd.mut(2) = &"MATCH";
-    cmd.mut(3) = this->m_res.pattern;
+    cmd.mut(3) = this->m_pattern;
 
   do_scan_more_:
     this->m_conn->execute(cmd);
@@ -56,7 +56,7 @@ do_on_abstract_future_initialize()
     auto reply_it = replies.mut_begin();
     while(reply_it != replies.end()) {
       POSEIDON_LOG_TRACE((" SCAN => $1"), *reply_it);
-      this->m_res.pairs.try_emplace(move(reply_it->mut_string()));
+      this->m_res.try_emplace(move(reply_it->mut_string()));
       ++ reply_it;
     }
 
@@ -64,7 +64,7 @@ do_on_abstract_future_initialize()
     if(cmd[1] != "0")
       goto do_scan_more_;
 
-    if(this->m_res.pairs.empty())
+    if(this->m_res.empty())
       return;
 
     // Append all unique keys in ascending order. There is a one-to-one mapping
@@ -73,9 +73,9 @@ do_on_abstract_future_initialize()
     cmd.resize(1);
     cmd.mut(0) = &"MGET";
 
-    cmd.reserve(cmd.size() + this->m_res.pairs.size());
-    auto res_it = this->m_res.pairs.mut_begin();
-    while(res_it != this->m_res.pairs.end()) {
+    cmd.reserve(cmd.size() + this->m_res.size());
+    auto res_it = this->m_res.mut_begin();
+    while(res_it != this->m_res.end()) {
       cmd.emplace_back(res_it->first);
       ++ res_it;
     }
@@ -84,12 +84,12 @@ do_on_abstract_future_initialize()
     this->m_conn->execute(cmd);
     this->m_conn->fetch_reply(reply);
 
-    res_it = this->m_res.pairs.mut_begin();
+    res_it = this->m_res.mut_begin();
     replies = move(reply.mut_array());
     reply_it = replies.mut_begin();
-    while((res_it != this->m_res.pairs.end()) && (reply_it != replies.end())) {
+    while((res_it != this->m_res.end()) && (reply_it != replies.end())) {
       if(!reply_it->is_string())
-        res_it = this->m_res.pairs.erase(res_it);
+        res_it = this->m_res.erase(res_it);
       else {
         POSEIDON_LOG_TRACE((" MGET => $1 ($2)"), res_it->first, reply_it->as_string_length());
         res_it->second = move(reply_it->mut_string());

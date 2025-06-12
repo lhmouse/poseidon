@@ -15,18 +15,11 @@ class Redis_Scan_and_Get_Future
     public Abstract_Future,
     public Abstract_Task
   {
-  public:
-    // This is actually an input/output type.
-    struct Result
-      {
-        cow_string pattern;  // input
-        cow_dictionary<cow_string> pairs;
-      };
-
   private:
     Redis_Connector* m_ctr;
     uniptr<Redis_Connection> m_conn;
-    Result m_res;
+    cow_string m_pattern;
+    cow_dictionary<cow_string> m_res;
 
   public:
     // Constructs a future for a single Redis command. This object also functions
@@ -55,17 +48,16 @@ class Redis_Scan_and_Get_Future
     Redis_Scan_and_Get_Future& operator=(const Redis_Scan_and_Get_Future&) & = delete;
     virtual ~Redis_Scan_and_Get_Future();
 
-    // Gets the result if `successful()` yields `true`. If `successful()` yields
-    // `false`, an exception is thrown, and there is no effect.
-    const Result&
-    result() const
-      {
-        this->check_success();
-        return this->m_res;
-      }
+    // Gets the scan pattern. This field is set by the constructor.
+    const cow_string&
+    pattern() const noexcept
+      { return this->m_pattern;  }
 
-    Result&
-    mut_result()
+    // Gets the result key-value pairs after the operation has completed
+    // successfully. If `successful()` yields `false`, an exception is thrown,
+    // and there is no effect.
+    const cow_dictionary<cow_string>&
+    result() const
       {
         this->check_success();
         return this->m_res;

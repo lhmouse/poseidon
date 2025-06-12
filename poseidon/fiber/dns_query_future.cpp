@@ -11,8 +11,8 @@ namespace poseidon {
 DNS_Query_Future::
 DNS_Query_Future(const cow_string& host, uint16_t port)
   {
-    this->m_res.host = host;
-    this->m_res.port = port;
+    this->m_host = host;
+    this->m_port = port;
   }
 
 DNS_Query_Future::
@@ -28,12 +28,12 @@ do_on_abstract_future_initialize()
     ::addrinfo hints = { };
     hints.ai_flags = AI_V4MAPPED | AI_ADDRCONFIG | AI_NUMERICSERV;
     ::addrinfo* res;
-    int err = ::getaddrinfo(this->m_res.host.safe_c_str(), nullptr, &hints, &res);
+    int err = ::getaddrinfo(this->m_host.safe_c_str(), nullptr, &hints, &res);
     if(err != 0)
       POSEIDON_THROW((
           "Could not resolve host `$1`",
           "[`getaddrinfo()` failed: $2]"),
-          this->m_res.host, ::gai_strerror(err));
+          this->m_host, ::gai_strerror(err));
 
     const auto guard = make_unique_handle(res, ::freeaddrinfo);
 
@@ -44,22 +44,22 @@ do_on_abstract_future_initialize()
         auto sa = reinterpret_cast<::sockaddr_in*>(res->ai_addr);
         ::memcpy(addr.mut_data(), ipv4_unspecified.data(), 12);
         ::memcpy(addr.mut_data() + 12, &(sa->sin_addr), 4);
-        addr.set_port(this->m_res.port);
+        addr.set_port(this->m_port);
       }
       else if(res->ai_family == AF_INET6) {
         // IPv6
         auto sa = reinterpret_cast<::sockaddr_in6*>(res->ai_addr);
         ::memcpy(addr.mut_data(), &(sa->sin6_addr), 16);
-        addr.set_port(this->m_res.port);
+        addr.set_port(this->m_port);
       }
       else
         continue;
 
-      if(is_any_of(addr, this->m_res.addrs))
+      if(is_any_of(addr, this->m_res))
         continue;
 
-      POSEIDON_LOG_DEBUG(("DNS lookup: `$1` => `$2`"), this->m_res.host, addr);
-      this->m_res.addrs.push_back(addr);
+      POSEIDON_LOG_DEBUG(("Received DNS record: `$1` => `$2`"), this->m_host, addr);
+      this->m_res.push_back(addr);
     }
   }
 
