@@ -287,18 +287,12 @@ bool
 WSS_Server_Session::
 wss_send(WebSocket_Opcode opcode, chars_view data)
   {
-    if(!this->do_has_upgraded())
-      POSEIDON_THROW((
-          "WebSocket handshake not complete yet",
-          "[WebSocket server session `$1` (class `$2`)]"),
-          this, typeid(*this));
-
     switch(static_cast<uint32_t>(opcode))
       {
       case websocket_TEXT:
       case websocket_BINARY:
         {
-          if(this->m_pmce_opt && (data.n >= this->m_parser.pmce_threshold())) {
+          if(this->do_has_upgraded() && this->m_pmce_opt && (data.n >= this->m_parser.pmce_threshold())) {
             // Compress the payload and send it. When context takeover is
             // active, compressed frames have dependency on each other, so
             // the mutex must not be unlocked before the message is sent
