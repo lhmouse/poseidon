@@ -95,12 +95,12 @@ local_address() const noexcept
       return ipv6_invalid;
 
     // If this is an unspecified address, don't cache it.
-    if(sa.sin6_port == ROCKET_HTOBE16(0))
+    if(sa.sin6_port == 0)
       return ipv6_unspecified;
 
     // Save the result.
     this->m_sockname.set_addr(sa.sin6_addr);
-    this->m_sockname.set_port(sa.sin6_port);
+    this->m_sockname.set_port(ROCKET_BETOH16(sa.sin6_port));
     this->m_sockname_ready.store(true);  // release
     return this->m_sockname;
   }
@@ -122,12 +122,12 @@ remote_address() const noexcept
       return ipv6_invalid;
 
     // If this is an unspecified address, don't cache it.
-    if(sa.sin6_port == ROCKET_HTOBE16(0))
+    if(sa.sin6_port == 0)
       return ipv6_unspecified;
 
     // Save the result.
     this->m_peername.set_addr(sa.sin6_addr);
-    this->m_peername.set_port(sa.sin6_port);
+    this->m_peername.set_port(ROCKET_BETOH16(sa.sin6_port));
     this->m_peername_ready.store(true);  // release
     return this->m_peername;
   }
