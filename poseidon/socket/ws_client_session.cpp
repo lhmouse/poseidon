@@ -13,8 +13,12 @@ WS_Client_Session(const cow_string& path, const cow_string& query)
     if(!path.starts_with("/"))
       POSEIDON_THROW(("Absolute path `$1` not allowed"), path);
 
-    this->m_path = path;
-    this->m_query = query;
+    HTTP_Request_Headers req;
+    this->m_parser.create_handshake_request(req);
+    req.is_ssl = false;
+    req.uri_path = path;
+    req.uri_query = query;
+    this->http_request(move(req), "");
   }
 
 WS_Client_Session::
@@ -41,19 +45,6 @@ do_abstract_socket_on_closed()
   {
     POSEIDON_LOG_DEBUG(("Closing WebSocket connection to `$1`: ${errno:full}"), this->remote_address());
     this->do_call_on_ws_close_once(websocket_status_no_close_frame, "no CLOSE frame received");
-  }
-
-void
-WS_Client_Session::
-do_on_tcp_connected()
-  {
-    // Send a handshake request.
-    HTTP_Request_Headers req;
-    this->m_parser.create_handshake_request(req);
-    req.is_ssl = false;
-    req.uri_path = this->m_path;
-    req.uri_query = this->m_query;
-    this->http_request(move(req), "");
   }
 
 void

@@ -15,8 +15,6 @@ class WSS_Client_Session
     public HTTPS_Client_Session
   {
   private:
-    cow_string m_path;
-    cow_string m_query;
     WebSocket_Frame_Parser m_parser;
     shptr<WebSocket_Deflator> m_pmce_opt;
     linear_buffer m_msg;
@@ -35,10 +33,6 @@ class WSS_Client_Session
     virtual
     void
     do_abstract_socket_on_closed() override;
-
-    virtual
-    void
-    do_on_ssl_connected() override;
 
     virtual
     void
