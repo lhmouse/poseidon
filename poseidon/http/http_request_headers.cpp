@@ -3,8 +3,39 @@
 
 #include "../xprecompiled.hpp"
 #include "http_request_headers.hpp"
+#include "../socket/abstract_socket.hpp"
 #include "../utils.hpp"
 namespace poseidon {
+
+void
+HTTP_Request_Headers::
+set_request_host(const Abstract_Socket& socket, const cow_string& default_host)
+  {
+    // A proxy request has a hostname in the URI.
+    if(this->is_proxy)
+      return;
+
+    if(this->uri_host == "") {
+      // Ensure `uri_host` is set to a non-empty string.
+      if(default_host != "")
+        this->uri_host = default_host;
+      else
+        this->uri_host = socket.remote_address().print_to_string();
+    }
+
+    // Replace the existent host header.
+    size_t index = SIZE_MAX;
+    for(size_t k = 0;  k != this->headers.size();  ++k)
+      if(this->headers[k].first == "Host") {
+        index = k;
+        break;
+      }
+
+    if(index == SIZE_MAX)
+      this->headers.emplace_back(&"Host", this->uri_host);
+    else
+      this->headers.mut(index).second = this->uri_host;
+  }
 
 void
 HTTP_Request_Headers::
@@ -35,6 +66,7 @@ encode(tinyfmt& fmt) const
         fmt << this->uri_userinfo << '@';
 
       fmt << this->uri_host;
+
       if(this->uri_port != 0)
         fmt << ':' << this->uri_port;
     }

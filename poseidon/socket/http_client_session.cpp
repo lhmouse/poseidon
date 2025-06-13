@@ -180,13 +180,13 @@ http_request(HTTP_Request_Headers&& req, chars_view data)
           this, typeid(*this));
 
     // Set `Host:` as per HTTP/1.1.
-    if(!req.is_proxy && !this->m_default_host.empty())
-      req.headers.emplace_back(&"Host", this->m_default_host);
+    if(!req.is_proxy)
+      req.set_request_host(*this, this->m_default_host);
 
     // By default, request messages do not have payload bodies. Hence the length
     // is only necessary if the payload is non-empty.
     if(data.n != 0)
-      req.headers.emplace_back(&"Content-Length", (double)(int64_t) data.n);
+      req.headers.emplace_back(&"Content-Length", static_cast<double>(static_cast<intptr_t>(data.n)));
 
     return this->do_http_raw_request(req, data);
   }
@@ -202,8 +202,8 @@ http_chunked_request_start(HTTP_Request_Headers&& req)
           this, typeid(*this));
 
     // Set `Host:` as per HTTP/1.1.
-    if(!req.is_proxy && !this->m_default_host.empty())
-      req.headers.emplace_back(&"Host", this->m_default_host);
+    if(!req.is_proxy)
+      req.set_request_host(*this, this->m_default_host);
 
     // Write a chunked header.
     req.headers.emplace_back(&"Transfer-Encoding", &"chunked");

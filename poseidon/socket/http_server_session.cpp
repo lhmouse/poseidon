@@ -219,7 +219,7 @@ http_response(HTTP_Response_Headers&& resp, chars_view data)
 
     // Otherwise, a `Content-Length` is required; otherwise the response would
     // be interpreted as terminating by closure ofthe connection.
-    resp.headers.emplace_back(&"Content-Length", (double)(int64_t) data.n);
+    resp.headers.emplace_back(&"Content-Length", static_cast<double>(static_cast<intptr_t>(data.n)));
 
     return this->do_http_raw_response(resp, data);
   }
