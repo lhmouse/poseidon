@@ -432,12 +432,14 @@ create_runtime_error(const char* func, const char* file, uint32_t line,
             demangle_buf.reset(fn);
           }
 
-          // * function name and offset
+          // * function signature and offset
           sbuf += " `";
           sbuf += fn;
-          sbuf += "` +";
-          nump.put_XU(unw_offset);
-          sbuf.append(nump.data(), nump.size());
+          if(unw_offset > 0) {
+            sbuf += "`+";
+            nump.put_XU(unw_offset);
+            sbuf.append(nump.data(), nump.size());
+          }
         }
       }
 
