@@ -12,7 +12,7 @@ namespace poseidon {
 
 class WSS_Client_Session
   :
-    public HTTPS_Client_Session
+    public virtual HTTPS_Client_Session
   {
   private:
     WebSocket_Frame_Parser m_parser;
