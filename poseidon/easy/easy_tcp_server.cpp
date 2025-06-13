@@ -36,18 +36,17 @@ struct Session_Table
       };
 
     mutable plain_mutex mutex;
-    ::std::unordered_map<const volatile TCP_Socket*, Event_Queue> session_map;
+    ::std::unordered_map<volatile TCP_Socket*, Event_Queue> session_map;
   };
 
 struct Final_Fiber final : Abstract_Fiber
   {
     Easy_TCP_Server::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
-    const volatile TCP_Socket* m_refptr;
+    volatile TCP_Socket* m_refptr;
 
     Final_Fiber(const Easy_TCP_Server::callback_type& callback,
-                const shptr<Session_Table>& sessions,
-                const volatile TCP_Socket* refptr)
+                const shptr<Session_Table>& sessions, volatile TCP_Socket* refptr)
       :
         m_callback(callback), m_wsessions(sessions), m_refptr(refptr)
       { }

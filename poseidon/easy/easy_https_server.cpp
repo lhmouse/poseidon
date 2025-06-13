@@ -34,18 +34,17 @@ struct Session_Table
       };
 
     mutable plain_mutex mutex;
-    ::std::unordered_map<const volatile HTTPS_Server_Session*, Event_Queue> session_map;
+    ::std::unordered_map<volatile HTTPS_Server_Session*, Event_Queue> session_map;
   };
 
 struct Final_Fiber final : Abstract_Fiber
   {
     Easy_HTTPS_Server::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
-    const volatile HTTPS_Server_Session* m_refptr;
+    volatile HTTPS_Server_Session* m_refptr;
 
     Final_Fiber(const Easy_HTTPS_Server::callback_type& callback,
-                const shptr<Session_Table>& sessions,
-                const volatile HTTPS_Server_Session* refptr)
+                const shptr<Session_Table>& sessions, volatile HTTPS_Server_Session* refptr)
       :
         m_callback(callback), m_wsessions(sessions), m_refptr(refptr)
       { }

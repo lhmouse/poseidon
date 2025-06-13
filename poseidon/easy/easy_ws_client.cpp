@@ -33,18 +33,17 @@ struct Session_Table
       };
 
     mutable plain_mutex mutex;
-    ::std::unordered_map<const volatile WS_Client_Session*, Event_Queue> session_map;
+    ::std::unordered_map<volatile WS_Client_Session*, Event_Queue> session_map;
   };
 
 struct Final_Fiber final : Abstract_Fiber
   {
     Easy_WS_Client::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
-    const volatile WS_Client_Session* m_refptr;
+    volatile WS_Client_Session* m_refptr;
 
     Final_Fiber(const Easy_WS_Client::callback_type& callback,
-                const shptr<Session_Table>& sessions,
-                const volatile WS_Client_Session* refptr)
+                const shptr<Session_Table>& sessions, volatile WS_Client_Session* refptr)
       :
         m_callback(callback), m_wsessions(sessions), m_refptr(refptr)
       { }

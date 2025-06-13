@@ -35,7 +35,7 @@ class Network_Driver
     do_epoll_ctl(int op, Abstract_Socket* socket, uint32_t events);
 
     wkptr<Abstract_Socket>&
-    do_find_socket_nolock(const volatile Abstract_Socket* socket) noexcept;
+    do_find_socket_nolock(volatile Abstract_Socket* socket) noexcept;
 
     static
     int

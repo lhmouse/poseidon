@@ -60,7 +60,7 @@ do_epoll_ctl(int op, Abstract_Socket* socket, uint32_t events)
 POSEIDON_VISIBILITY_HIDDEN
 wkptr<Abstract_Socket>&
 Network_Driver::
-do_find_socket_nolock(const volatile Abstract_Socket* socket) noexcept
+do_find_socket_nolock(volatile Abstract_Socket* socket) noexcept
   {
     ROCKET_ASSERT(socket);
 
