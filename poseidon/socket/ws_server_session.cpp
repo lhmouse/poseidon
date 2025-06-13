@@ -207,7 +207,7 @@ void
 WS_Server_Session::
 do_on_ws_accepted(cow_string&& caddr)
   {
-    POSEIDON_LOG_DEBUG(("Accepted WebSocket from `$1`: $2"), this->remote_address(), caddr);
+    POSEIDON_LOG_INFO(("Accepted WebSocket from `$1`: $2"), this->remote_address(), caddr);
   }
 
 void
@@ -228,8 +228,7 @@ void
 WS_Server_Session::
 do_on_ws_close(WebSocket_Status status, chars_view reason)
   {
-    POSEIDON_LOG_DEBUG(("WebSocket CLOSE from `$1` (status $2): $3"),
-                       this->remote_address(), status, reason);
+    POSEIDON_LOG_INFO(("Closed WebSocket to `$1`: $2: $3"), this->remote_address(), status, reason);
   }
 
 void

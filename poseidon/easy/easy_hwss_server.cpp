@@ -110,7 +110,7 @@ struct Final_Session final : WSS_Server_Session
                   const Easy_HWSS_Server::callback_type& callback,
                   const shptr<Session_Table>& sessions)
       :
-        SSL_Socket(move(fd), network_driver),
+        SSL_Socket(move(fd), network_driver), WSS_Server_Session(),
         m_callback(callback), m_wsessions(sessions)
       { }
 
