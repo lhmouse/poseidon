@@ -112,10 +112,6 @@ class WebSocket_Frame_Parser
     pmce_receive_window_bits() const noexcept
       { return this->m_pmce_receive_window_bits;  }
 
-    size_t
-    pmce_threshold() const noexcept
-      { return this->m_pmce_send_no_context_takeover * 1024UL + 16UL;  }
-
     // Clears all fields. This function shall not be called unless the parser is
     // to be reused for another stream.
     void

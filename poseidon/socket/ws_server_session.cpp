@@ -34,8 +34,9 @@ void
 WS_Server_Session::
 do_abstract_socket_on_closed()
   {
-    POSEIDON_LOG_DEBUG(("Closing WebSocket connection from `$1`: ${errno:full}"), this->remote_address());
-    this->do_call_on_ws_close_once(websocket_status_no_close_frame, "no CLOSE frame received");
+    POSEIDON_LOG_INFO(("Closing WebSocket to `$1`: ${errno:full}"), this->remote_address());
+    this->do_call_on_ws_close_once(websocket_status_no_close_frame,
+                                   "no CLOSE frame received");
   }
 
 HTTP_Payload_Type
@@ -55,7 +56,8 @@ do_on_http_request_payload_stream(linear_buffer& data)
 
 void
 WS_Server_Session::
-do_on_http_request_finish(HTTP_Request_Headers&& /*req*/, linear_buffer&& /*data*/, bool /*close_now*/)
+do_on_http_request_finish(HTTP_Request_Headers&& /*req*/,
+                          linear_buffer&& /*data*/, bool /*close_now*/)
   {
   }
 
@@ -70,7 +72,8 @@ do_on_http_request_error(HTTP_Status status)
     this->http_response(move(resp), "");
 
     // Close the connection.
-    this->do_call_on_ws_close_once(websocket_status_no_close_frame, "handshake rejected by HTTP error");
+    this->do_call_on_ws_close_once(websocket_status_no_close_frame,
+                                   "handshake rejected by HTTP error");
   }
 
 void
@@ -89,7 +92,8 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
         if(this->m_parser.error()) {
           data.clear();
-          this->do_call_on_ws_close_once(websocket_status_protocol_error, this->m_parser.error_description());
+          this->do_call_on_ws_close_once(websocket_status_protocol_error,
+                                         this->m_parser.error_description());
           return;
         }
 
@@ -102,7 +106,8 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
         if(this->m_parser.error()) {
           data.clear();
-          this->do_call_on_ws_close_once(websocket_status_protocol_error, this->m_parser.error_description());
+          this->do_call_on_ws_close_once(websocket_status_protocol_error,
+                                         this->m_parser.error_description());
           return;
         }
 
@@ -124,12 +129,14 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
           if(this->m_parser.message_rsv1()) {
             if(!this->m_pmce_opt) {
               data.clear();
-              this->do_call_on_ws_close_once(websocket_status_unexpected_error, "PMCE not initialized");
+              this->do_call_on_ws_close_once(websocket_status_unexpected_error,
+                                             "PMCE not initialized");
               return;
             }
 
             plain_mutex::unique_lock lock;
-            this->m_pmce_opt->inflate_message_stream(lock, payload, this->m_parser.max_message_length());
+            this->m_pmce_opt->inflate_message_stream(lock, payload,
+                                   this->m_parser.max_message_length());
 
             if(this->m_parser.message_fin())
               this->m_pmce_opt->inflate_message_finish(lock);
@@ -161,8 +168,8 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
                 auto opcode = static_cast<WebSocket_Opcode>(this->m_parser.message_opcode());
                 ROCKET_ASSERT(is_any_of(opcode, { websocket_TEXT, websocket_BINARY }));
                 this->do_on_ws_message_finish(opcode, move(this->m_msg));
+                break;
               }
-              break;
 
             case websocket_CLOSE:
               {
@@ -176,30 +183,26 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
                 if(payload.getn(reinterpret_cast<char*>(&bestatus), 2) >= 2)
                   status = static_cast<WebSocket_Status>(ROCKET_BETOH16(bestatus));
                 this->do_on_ws_close(status, payload);
+                return;
               }
-              return;
 
             case websocket_PING:
-              {
-                POSEIDON_LOG_TRACE(("WebSocket PING from `$1`: $2"), this->remote_address(), payload);
-                this->do_on_ws_message_finish(websocket_PING, move(payload));
+              POSEIDON_LOG_TRACE(("PING from `$1`: $2"), this->remote_address(), payload);
+              this->do_on_ws_message_finish(websocket_PING, move(payload));
 
-                // FIN + PONG
-                this->do_ws_send_raw_frame(0b10001010, payload);
-              }
+              // FIN + PONG
+              this->do_ws_send_raw_frame(0b10001010, payload);
               break;
 
             case websocket_PONG:
-              {
-                POSEIDON_LOG_TRACE(("WebSocket PONG from `$1`: $2"), this->remote_address(), payload);
-                this->do_on_ws_message_finish(websocket_PONG, move(payload));
-              }
+              POSEIDON_LOG_TRACE(("PONG from `$1`: $2"), this->remote_address(), payload);
+              this->do_on_ws_message_finish(websocket_PONG, move(payload));
               break;
             }
       }
 
       this->m_parser.next_frame();
-      POSEIDON_LOG_TRACE(("WebSocket parser done: data.size = $1, eof = $2"), data.size(), eof);
+      POSEIDON_LOG_TRACE(("Parser done: data.size = $1, eof = $2"), data.size(), eof);
     }
   }
 
@@ -228,7 +231,7 @@ void
 WS_Server_Session::
 do_on_ws_close(WebSocket_Status status, chars_view reason)
   {
-    POSEIDON_LOG_INFO(("Closed WebSocket to `$1`: $2: $3"), this->remote_address(), status, reason);
+    POSEIDON_LOG_INFO(("Closed WebSocket from `$1`: $2: $3"), this->remote_address(), status, reason);
   }
 
 void
@@ -251,7 +254,8 @@ do_ws_complete_handshake(HTTP_Request_Headers& req, bool close_after_payload)
 
     if(close_after_payload || !this->m_parser.is_server_mode()) {
       // The handshake failed.
-      this->do_call_on_ws_close_once(websocket_status_protocol_error, this->m_parser.error_description());
+      this->do_call_on_ws_close_once(websocket_status_protocol_error,
+                                     this->m_parser.error_description());
       return;
     }
 
@@ -291,30 +295,38 @@ ws_send(WebSocket_Opcode opcode, chars_view data)
       case websocket_TEXT:
       case websocket_BINARY:
         {
-          if(this->do_has_upgraded() && this->m_pmce_opt && (data.n >= this->m_parser.pmce_threshold())) {
-            // Compress the payload and send it. When context takeover is
-            // active, compressed frames have dependency on each other, so
-            // the mutex must not be unlocked before the message is sent
-            // completely.
-            plain_mutex::unique_lock lock;
-            auto& out_buf = this->m_pmce_opt->deflate_output_buffer(lock);
-            out_buf.clear();
-
+          if(this->do_has_upgraded() && this->m_pmce_opt) {
+            // Don't compress small frames when it's not worth the cost.
+            // TODO: Is this configurable?
+            size_t compression_threshold = 64;
             if(this->m_parser.pmce_send_no_context_takeover())
-              this->m_pmce_opt->deflate_reset(lock);
+              compression_threshold = 1024;
 
-            try {
-              this->m_pmce_opt->deflate_message_stream(lock, data);
-              this->m_pmce_opt->deflate_message_finish(lock);
+            if(data.n >= compression_threshold) {
+              // Compress the payload and send it. When context takeover is
+              // active, compressed frames have dependency on each other, so
+              // the mutex must not be unlocked before the message is sent
+              // completely.
+              plain_mutex::unique_lock lock;
+              auto& out_buf = this->m_pmce_opt->deflate_output_buffer(lock);
+              out_buf.clear();
 
-              // FIN + RSV1 + opcode
-              return this->do_ws_send_raw_frame(0b11000000 | opcode, out_buf);
-            }
-            catch(exception& stdex) {
-              // When an error occurred, the deflator is left in an indeterminate
-              // state, so reset it and send the message uncompressed.
-              POSEIDON_LOG_ERROR(("Could not compress message: $1"), stdex);
-              this->m_pmce_opt->deflate_reset(lock);
+              if(this->m_parser.pmce_send_no_context_takeover())
+                this->m_pmce_opt->deflate_reset(lock);
+
+              try {
+                this->m_pmce_opt->deflate_message_stream(lock, data);
+                this->m_pmce_opt->deflate_message_finish(lock);
+
+                // FIN + RSV1 + opcode
+                return this->do_ws_send_raw_frame(0b11000000 | opcode, out_buf);
+              }
+              catch(exception& stdex) {
+                // When an error occurred, the deflator is left in an indeterminate
+                // state, so reset it and send the message uncompressed.
+                POSEIDON_LOG_ERROR(("Could not compress message: $1"), stdex);
+                this->m_pmce_opt->deflate_reset(lock);
+              }
             }
           }
 
