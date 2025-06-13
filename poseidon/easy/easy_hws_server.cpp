@@ -180,11 +180,6 @@ struct Final_Session final : WS_Server_Session
             event.type = easy_hws_head;
             break;
 
-          case http_POST:
-            // Handle a plain HTTP POST request.
-            event.type = easy_hws_post;
-            break;
-
           default:
             // Reject all the other.
             this->do_on_http_request_error(http_status_method_not_allowed);

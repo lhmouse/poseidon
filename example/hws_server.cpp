@@ -43,7 +43,6 @@ my_server_callback(const shptr<WS_Server_Session>& session,
 
       case easy_hws_get:
       case easy_hws_head:
-      case easy_hws_post:
         {
           POSEIDON_LOG_ERROR(("example HTTP/WS server received HTTP: $1"), data);
 
