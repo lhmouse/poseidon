@@ -418,28 +418,6 @@ thread_loop()
     socket->m_io_driver = this;
     lock.unlock();
 
-    // `EPOLLOUT` must be the very first event to process, as it also delivers
-    // connection establishment notifications.
-    if(epoll_ev.events & EPOLLOUT)
-      try {
-        socket->do_abstract_socket_on_writeable();
-      }
-      catch(exception& stdex) {
-        POSEIDON_LOG_ERROR(("Socket error: $1"), stdex);
-        socket->close();
-        epoll_ev.events |= EPOLLHUP;
-      }
-
-    if(epoll_ev.events & EPOLLIN)
-      try {
-        socket->do_abstract_socket_on_readable();
-      }
-      catch(exception& stdex) {
-        POSEIDON_LOG_ERROR(("Socket error: $1"), stdex);
-        socket->close();
-        epoll_ev.events |= EPOLLHUP;
-      }
-
     // If either `EPOLLHUP` or `EPOLLERR` is set, deliver a shutdown
     // notification and remove the socket. Error codes are passed through the
     // system `errno` variable.
@@ -463,6 +441,26 @@ thread_loop()
         this->do_epoll_ctl(EPOLL_CTL_DEL, socket.get(), 0);
         socket->m_io_driver = reinterpret_cast<Network_Driver*>(-5);
         return;
+      }
+
+    if(epoll_ev.events & EPOLLOUT)
+      try {
+        socket->do_abstract_socket_on_writeable();
+      }
+      catch(exception& stdex) {
+        POSEIDON_LOG_ERROR(("Socket error: $1"), stdex);
+        socket->close();
+        epoll_ev.events |= EPOLLHUP;
+      }
+
+    if(epoll_ev.events & EPOLLIN)
+      try {
+        socket->do_abstract_socket_on_readable();
+      }
+      catch(exception& stdex) {
+        POSEIDON_LOG_ERROR(("Socket error: $1"), stdex);
+        socket->close();
+        epoll_ev.events |= EPOLLHUP;
       }
 
     // When there are too many pending bytes, as a safety measure, EPOLLIN
