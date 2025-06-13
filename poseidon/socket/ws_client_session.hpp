@@ -40,19 +40,19 @@ class WS_Client_Session
 
     virtual
     void
-    do_on_http_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data,
-                               bool close_now) override;
+    do_on_http_response_finish(HTTP_Response_Headers&& resp,
+                               linear_buffer&& data, bool close_now) override;
 
     virtual
     void
     do_on_http_upgraded_stream(linear_buffer& data, bool eof) override;
 
     // This callback is invoked by the network thread when a WebSocket connection
-    // has been established. The argument is the request URI of the client.
+    // has been established.
     // The default implementation does nothing.
     virtual
     void
-    do_on_ws_connected(cow_string&& caddr);
+    do_on_ws_connected();
 
     // This callback is invoked by the network thread for each fragment of a data
     // message. `opcode` indicates the type of the message, which can be either

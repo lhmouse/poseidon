@@ -103,17 +103,26 @@ struct Final_Fiber final : Abstract_Fiber
       }
   };
 
+struct Request_URI
+  {
+    cow_string host;
+    cow_string path;
+    cow_string query;
+    cow_string fragment;
+  };
+
 struct Final_Session final : WS_Client_Session
   {
     Easy_WS_Client::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
+    uniptr<Request_URI> m_uri;
 
-    Final_Session(const cow_string& path, const cow_string& query,
-                  const Easy_WS_Client::callback_type& callback,
-                  const shptr<Session_Table>& sessions)
+    Final_Session(const Easy_WS_Client::callback_type& callback,
+                  const shptr<Session_Table>& sessions, uniptr<Request_URI>&& uri)
       :
-        TCP_Socket(), WS_Client_Session(path, query),
-        m_callback(callback), m_wsessions(sessions)
+        TCP_Socket(), HTTP_Client_Session(uri->host),
+        WS_Client_Session(uri->path, uri->query),
+        m_callback(callback), m_wsessions(sessions), m_uri(move(uri))
       { }
 
     void
@@ -149,11 +158,21 @@ struct Final_Session final : WS_Client_Session
 
     virtual
     void
-    do_on_ws_connected(cow_string&& caddr) override
+    do_on_ws_connected() override
       {
         Session_Table::Event_Queue::Event event;
         event.type = easy_ws_open;
-        event.data.putn(caddr.data(), caddr.size());
+
+        auto uri = move(this->m_uri);
+        ROCKET_ASSERT(uri);
+
+        event.data.putn(uri->host.data(), uri->host.size());
+        event.data.putn(uri->path.data(), uri->path.size());
+        event.data.putc('?');
+        event.data.putn(uri->query.data(), uri->query.size());
+        event.data.putc('#');
+        event.data.putn(uri->fragment.data(), uri->fragment.size());
+
         this->do_push_event_common(move(event));
       }
 
@@ -162,7 +181,6 @@ struct Final_Session final : WS_Client_Session
     do_on_ws_message_finish(WebSocket_Opcode opcode, linear_buffer&& data) override
       {
         Session_Table::Event_Queue::Event event;
-
         if(opcode == websocket_TEXT)
           event.type = easy_ws_text;
         else if(opcode == websocket_BINARY)
@@ -215,17 +233,17 @@ connect(const cow_string& addr, const callback_type& callback)
     if(caddr.port.n == 0)
       caddr.port_num = 80;
 
-    // Disallow superfluous components.
-    if(caddr.fragment.p != nullptr)
-      POSEIDON_THROW(("URI fragment shall not be specified in address `$1`"), addr);
+    auto uri = new_uni<Request_URI>();
+    uri->host = sformat("$1:$2", caddr.host, caddr.port_num);
+    uri->path = cow_string(caddr.path);
+    uri->query = cow_string(caddr.query);
+    uri->fragment = cow_string(caddr.fragment);
 
     // Pre-allocate necessary objects. The entire operation will be atomic.
     if(!this->m_sessions)
       this->m_sessions = new_sh<X_Session_Table>();
 
-    auto session = new_sh<Final_Session>(cow_string(caddr.path), cow_string(caddr.query),
-                                         callback, this->m_sessions);
-    session->http_set_default_host(sformat("$1:$2", caddr.host, caddr.port_num));
+    auto session = new_sh<Final_Session>(callback, this->m_sessions, move(uri));
     auto dns_task = new_sh<DNS_Connect_Task>(network_driver,
                        session, cow_string(caddr.host), caddr.port_num);
 

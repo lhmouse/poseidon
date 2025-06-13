@@ -115,10 +115,10 @@ struct Final_Session final : HTTPS_Client_Session
     Easy_HTTPS_Client::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
 
-    Final_Session(const Easy_HTTPS_Client::callback_type& callback,
+    Final_Session(const cow_string& default_host, const Easy_HTTPS_Client::callback_type& callback,
                   const shptr<Session_Table>& sessions)
       :
-        SSL_Socket(network_driver), HTTPS_Client_Session(),
+        SSL_Socket(network_driver), HTTPS_Client_Session(default_host),
         m_callback(callback), m_wsessions(sessions)
       { }
 
@@ -221,15 +221,12 @@ connect(const cow_string& addr, const callback_type& callback)
     if(caddr.query.p != nullptr)
       POSEIDON_THROW(("URI query shall not be specified in address `$1`"), addr);
 
-    if(caddr.fragment.p != nullptr)
-      POSEIDON_THROW(("URI fragment shall not be specified in address `$1`"), addr);
-
     // Pre-allocate necessary objects. The entire operation will be atomic.
     if(!this->m_sessions)
       this->m_sessions = new_sh<X_Session_Table>();
 
-    auto session = new_sh<Final_Session>(callback, this->m_sessions);
-    session->https_set_default_host(sformat("$1:$2", caddr.host, caddr.port_num));
+    auto session = new_sh<Final_Session>(sformat("$1:$2", caddr.host, caddr.port_num),
+                                         callback, this->m_sessions);
     auto dns_task = new_sh<DNS_Connect_Task>(network_driver,
                        session, cow_string(caddr.host), caddr.port_num);
 

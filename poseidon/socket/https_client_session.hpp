@@ -22,7 +22,7 @@ class HTTPS_Client_Session
 
   public:
     // Constructs a socket for outgoing connections.
-    HTTPS_Client_Session();
+    explicit HTTPS_Client_Session(const cow_string& default_host);
 
   protected:
     // This function implements `SSL_Socket`.
@@ -70,8 +70,8 @@ class HTTPS_Client_Session
     // `Connection` header.
     virtual
     void
-    do_on_https_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data,
-                                bool close_now) = 0;
+    do_on_https_response_finish(HTTP_Response_Headers&& resp,
+                                linear_buffer&& data, bool close_now) = 0;
 
     // This callback is invoked by the network thread on a connection that has
     // switched to another protocol. Arguments have the same semantics with
@@ -92,14 +92,11 @@ class HTTPS_Client_Session
     HTTPS_Client_Session& operator=(const HTTPS_Client_Session&) & = delete;
     virtual ~HTTPS_Client_Session();
 
-    // If no `Host:` headers is supplied for a non-proxy request, use this
-    // string.
+    // For a non-proxy request, if no `Host:` header is supplied, then this
+    // string is used. This is required by HTTP/1.1.
     const cow_string&
     https_default_host() const noexcept
       { return this->m_default_host;  }
-
-    void
-    https_set_default_host(const cow_string& host) noexcept;
 
     // Sends a simple request, possibly with a complete payload. Callers should
     // not supply `Content-Length` or `Transfer-Encoding` headers, as they

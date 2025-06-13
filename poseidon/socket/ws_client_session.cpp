@@ -72,8 +72,7 @@ do_on_http_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& /*data*
     if(this->m_parser.pmce_send_window_bits() != 0)
       this->m_pmce_opt = new_sh<WebSocket_Deflator>(this->m_parser);
 
-    // Rebuild the URI.
-    this->do_on_ws_connected(this->http_default_host() + this->m_path + '?' + this->m_query);
+    this->do_on_ws_connected();
   }
 
 void
@@ -208,9 +207,9 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
 void
 WS_Client_Session::
-do_on_ws_connected(cow_string&& caddr)
+do_on_ws_connected()
   {
-    POSEIDON_LOG_DEBUG(("Connected WebSocket to `$1`: $2"), this->remote_address(), caddr);
+    POSEIDON_LOG_INFO(("Connected WebSocket to `$1`"), this->remote_address());
   }
 
 void
@@ -231,8 +230,7 @@ void
 WS_Client_Session::
 do_on_ws_close(WebSocket_Status status, chars_view reason)
   {
-    POSEIDON_LOG_DEBUG(("WebSocket CLOSE from `$1` (status $2): $3"),
-                        this->remote_address(), status, reason);
+    POSEIDON_LOG_INFO(("Closed WebSocket to `$1`: $2: $3"), this->remote_address(), status, reason);
   }
 
 bool

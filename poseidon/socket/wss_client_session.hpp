@@ -48,11 +48,11 @@ class WSS_Client_Session
     do_on_https_upgraded_stream(linear_buffer& data, bool eof) override;
 
     // This callback is invoked by the network thread when a WebSocket connection
-    // has been established. The argument is the request URI of the client.
+    // has been established.
     // The default implementation does nothing.
     virtual
     void
-    do_on_wss_connected(cow_string&& caddr);
+    do_on_wss_connected();
 
     // This callback is invoked by the network thread for each fragment of a data
     // message. `opcode` indicates the type of the message, which can be either

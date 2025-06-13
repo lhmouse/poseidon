@@ -115,10 +115,10 @@ struct Final_Session final : HTTP_Client_Session
     Easy_HTTP_Client::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
 
-    Final_Session(const Easy_HTTP_Client::callback_type& callback,
+    Final_Session(const cow_string& default_host, const Easy_HTTP_Client::callback_type& callback,
                   const shptr<Session_Table>& sessions)
       :
-        TCP_Socket(), HTTP_Client_Session(),
+        TCP_Socket(), HTTP_Client_Session(default_host),
         m_callback(callback), m_wsessions(sessions)
       { }
 
@@ -164,8 +164,8 @@ struct Final_Session final : HTTP_Client_Session
 
     virtual
     void
-    do_on_http_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data,
-                               bool close_now) override
+    do_on_http_response_finish(HTTP_Response_Headers&& resp,
+                               linear_buffer&& data, bool close_now) override
       {
         Session_Table::Event_Queue::Event event;
         event.type = easy_http_message;
@@ -221,15 +221,12 @@ connect(const cow_string& addr, const callback_type& callback)
     if(caddr.query.p != nullptr)
       POSEIDON_THROW(("URI query shall not be specified in address `$1`"), addr);
 
-    if(caddr.fragment.p != nullptr)
-      POSEIDON_THROW(("URI fragment shall not be specified in address `$1`"), addr);
-
     // Pre-allocate necessary objects. The entire operation will be atomic.
     if(!this->m_sessions)
       this->m_sessions = new_sh<X_Session_Table>();
 
-    auto session = new_sh<Final_Session>(callback, this->m_sessions);
-    session->http_set_default_host(sformat("$1:$2", caddr.host, caddr.port_num));
+    auto session = new_sh<Final_Session>(sformat("$1:$2", caddr.host, caddr.port_num),
+                                         callback, this->m_sessions);
     auto dns_task = new_sh<DNS_Connect_Task>(network_driver,
                        session, cow_string(caddr.host), caddr.port_num);
 

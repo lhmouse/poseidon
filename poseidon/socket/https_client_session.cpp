@@ -7,8 +7,9 @@
 namespace poseidon {
 
 HTTPS_Client_Session::
-HTTPS_Client_Session()
+HTTPS_Client_Session(const cow_string& default_host)
   {
+    this->m_default_host = default_host;
   }
 
 HTTPS_Client_Session::
@@ -160,13 +161,6 @@ do_https_raw_request(const HTTP_Request_Headers& req, chars_view data)
     // The return value indicates whether no error has occurred. There is no
     // guarantee that data will eventually arrive, due to network flapping.
     return sent;
-  }
-
-void
-HTTPS_Client_Session::
-https_set_default_host(const cow_string& host) noexcept
-  {
-    this->m_default_host = host;
   }
 
 bool

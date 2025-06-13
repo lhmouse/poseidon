@@ -125,7 +125,7 @@ struct Final_Session final : HTTP_Server_Session
                   const Easy_HTTP_Server::callback_type& callback,
                   const shptr<Session_Table>& sessions)
       :
-        TCP_Socket(move(fd)),
+        TCP_Socket(move(fd)), HTTP_Server_Session(),
         m_callback(callback), m_wsessions(sessions)
       { }
 
