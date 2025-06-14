@@ -86,10 +86,13 @@ local_address() const noexcept
       return this->m_sockname;
 
     // Try getting the local address now.
+    int old_err = errno;
     ::sockaddr_in6 sa;
     ::socklen_t salen = sizeof(sa);
-    if(::getsockname(this->m_fd, reinterpret_cast<::sockaddr*>(&sa), &salen) != 0)
+    if(::getsockname(this->m_fd, reinterpret_cast<::sockaddr*>(&sa), &salen) != 0) {
+      errno = old_err;
       return ipv6_invalid;
+    }
 
     if((sa.sin6_family != AF_INET6) || (salen < sizeof(sa)))
       return ipv6_invalid;
@@ -112,11 +115,14 @@ remote_address() const noexcept
     if(this->m_peername_ready.load())
       return this->m_peername;
 
-    // Try getting the local address now.
+    // Try getting the remote address now.
+    int old_err = errno;
     ::sockaddr_in6 sa;
     ::socklen_t salen = sizeof(sa);
-    if(::getpeername(this->m_fd, reinterpret_cast<::sockaddr*>(&sa), &salen) != 0)
-      return (errno == ENOTCONN) ? ipv6_unspecified : ipv6_invalid;
+    if(::getpeername(this->m_fd, reinterpret_cast<::sockaddr*>(&sa), &salen) != 0) {
+      ::std::swap(errno, old_err);
+      return (old_err == ENOTCONN) ? ipv6_unspecified : ipv6_invalid;
+    }
 
     if((sa.sin6_family != AF_INET6) || (salen < sizeof(sa)))
       return ipv6_invalid;
