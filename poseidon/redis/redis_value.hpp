@@ -13,8 +13,7 @@ class Redis_Value
   private:
     friend class Redis_Connection;
 
-    ::rocket::variant<nullptr_t,
-         int64_t, cow_string, Redis_Array> m_stor;
+    ::rocket::variant<nullptr_t, int64_t, cow_string, Redis_Array> m_stor;
 
   public:
     // Value constructors
