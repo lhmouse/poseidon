@@ -165,12 +165,6 @@ fetch_reply(cow_string& status, Redis_Value& value)
     if(!unique_reply)
       return false;
 
-    if(this->m_reply->type == REDIS_REPLY_STATUS) {
-      // This is not a value.
-      status.append(this->m_reply->str, this->m_reply->len);
-      return true;
-    }
-
     // Parse the reply and store the result into `value`.
     struct xFrame
       {
@@ -182,6 +176,12 @@ fetch_reply(cow_string& status, Redis_Value& value)
     ::std::vector<xFrame> stack;
     Redis_Value* pval = &value;
     const ::redisReply* reply = unique_reply;
+
+    if(reply->type == REDIS_REPLY_STATUS) {
+      // This is not a value.
+      status.append(reply->str, reply->len);
+      return true;
+    }
 
   do_pack_loop_:
     switch(reply->type)
