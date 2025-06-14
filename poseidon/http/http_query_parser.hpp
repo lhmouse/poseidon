@@ -6,6 +6,7 @@
 
 #include "../fwd.hpp"
 #include "http_field_name.hpp"
+#include "http_value.hpp"
 namespace poseidon {
 
 class HTTP_Query_Parser
@@ -18,7 +19,7 @@ class HTTP_Query_Parser
 
     // name and value of current element
     HTTP_Field_Name m_name;
-    HTTP_Field_Name m_value;
+    HTTP_Value m_value;
 
   public:
     // Constructs a parser for a single HTTP query string, suitable for parsing
@@ -59,11 +60,11 @@ class HTTP_Query_Parser
       { return this->m_name;  }
 
     // Get the value of the current element.
-    const HTTP_Field_Name&
+    const HTTP_Value&
     current_value() const noexcept
       { return this->m_value;  }
 
-    HTTP_Field_Name&
+    HTTP_Value&
     mut_current_value() noexcept
       { return this->m_value;  }
   };

@@ -83,13 +83,8 @@ encode(tinyfmt& fmt) const
 
     // Write request headers. Empty headers are ignored.
     for(const auto& hr : this->headers)
-      if(hr.first != "") {
-        fmt << "\r\n" << hr.first << ": ";
-        if(hr.second.is_string())
-          fmt << hr.second.as_string();
-        else
-          fmt << hr.second;
-      }
+      if(hr.first != "")
+        fmt << "\r\n" << hr.first << ": " << hr.second.as_string();
 
     // Terminate the request with an empty line.
     fmt << "\r\n\r\n";

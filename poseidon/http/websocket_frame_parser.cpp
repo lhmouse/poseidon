@@ -97,31 +97,27 @@ struct PerMessage_Deflate
           else if(hparser.current_name() == "server_max_window_bits") {
             if(hparser.current_value().is_null())
               continue;
-            else if(!hparser.current_value().is_number())
-              return;
-
-            double value = hparser.current_value().as_number();
-            if(!(value >= 9) || !(value <= 15) || (value != static_cast<int>(value)))
-              return;
 
             // `server_max_window_bits`:
             // States the maximum size of the LZ77 sliding window that the server
             // will use, in number of bits.
+            int64_t value = hparser.current_value().as_integer();
+            if((value < 9) || (value > 15))
+              return;
+
             this->server_max_window_bits = static_cast<int>(value);
           }
           else if(hparser.current_name() == "client_max_window_bits") {
             if(hparser.current_value().is_null())
               continue;
-            else if(!hparser.current_value().is_number())
-              return;
-
-            double value = hparser.current_value().as_number();
-            if(!(value >= 9) || !(value <= 15) || (value != static_cast<int>(value)))
-              return;
 
             // `client_max_window_bits`:
             // States the maximum size of the LZ77 sliding window that the client
             // will use, in number of bits.
+            int64_t value = hparser.current_value().as_integer();
+            if((value < 9) || (value > 15))
+              return;
+
             this->client_max_window_bits = static_cast<int>(value);
           }
           else
@@ -251,45 +247,28 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
 
     for(const auto& hr : req.headers)
       if(hr.first == "Connection") {
-        if(!hr.second.is_string())
-          return;
-
-        // Connection: Upgrade
+        // Connection: close
         hparser.reload(hr.second.as_string());
         while(hparser.next_element())
           if(hparser.current_name() == "close")
             return;
       }
       else if(hr.first == "Upgrade") {
-        if(!hr.second.is_string())
-          return;
-
         // Upgrade: websocket
         if(hr.second.as_string() == "websocket")
           upgrade_ok = true;
       }
       else if(hr.first == "Sec-WebSocket-Version") {
-        if(!hr.second.is_number())
-          return;
-
         // Sec-WebSocket-Version: 13
-        if(hr.second.as_number() == 13)
+        if(hr.second.as_string() == "13")
           ws_version_ok = true;
       }
       else if(hr.first == "Sec-WebSocket-Key") {
-        if(!hr.second.is_string())
-          return;
-
         // Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
-        if(hr.second.as_string().length() == 24)
-          ::memcpy(sec_ws.key_str, hr.second.str_data(), 25);
+        if(hr.second.as_string_length() == 24)
+          ::memcpy(sec_ws.key_str, hr.second.as_string_c_str(), 25);
       }
       else if(hr.first == "Sec-WebSocket-Extensions") {
-        if(hr.second.is_null())
-          continue;
-        else if(!hr.second.is_string())
-          return;
-
         // Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits
         hparser.reload(hr.second.as_string());
         while(hparser.next_element())
@@ -375,9 +354,6 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
 
     for(const auto& hr : resp.headers)
       if(hr.first == "Connection") {
-        if(!hr.second.is_string())
-          return;
-
         // Connection: Upgrade
         hparser.reload(hr.second.as_string());
         while(hparser.next_element())
@@ -385,25 +361,16 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
             return;
       }
       else if(hr.first == "Upgrade") {
-        if(!hr.second.is_string())
-          return;
-
         // Upgrade: websocket
         if(hr.second.as_string() == "websocket")
           upgrade_ok = true;
       }
       else if(hr.first == "Sec-WebSocket-Accept") {
-        if(!hr.second.is_string())
-          return;
-
         // Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
-        if(hr.second.as_string().length() == 28)
-          ::memcpy(sec_ws_accept_resp, hr.second.str_data(), 29);
+        if(hr.second.as_string_length() == 28)
+          ::memcpy(sec_ws_accept_resp, hr.second.as_string_c_str(), 29);
       }
       else if(hr.first == "Sec-WebSocket-Extensions") {
-        if(!hr.second.is_string())
-          return;
-
         // Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits
         hparser.reload(hr.second.as_string());
         while(hparser.next_element())

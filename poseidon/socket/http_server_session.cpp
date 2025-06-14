@@ -175,9 +175,6 @@ do_http_raw_response(const HTTP_Response_Headers& resp, chars_view data)
     HTTP_Header_Parser hparser;
     for(const auto& hr : resp.headers)
       if(hr.first == "Connection") {
-        if(!hr.second.is_string())
-          continue;
-
         hparser.reload(hr.second.as_string());
         while(hparser.next_element())
           if(hparser.current_name() == "close")

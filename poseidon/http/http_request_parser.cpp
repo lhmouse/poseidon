@@ -43,12 +43,10 @@ HTTP_Request_Parser::s_settings[1] =
     // on_header_value
     +[](::http_parser* ps, const char* str, size_t len)
       {
-        // Accept the value as a string.
-        if(!this->m_headers.headers.back().second.is_string())
-          this->m_headers.headers.mut_back().second = &"";
-
         // Append the header value, as this callback might be invoked repeatedly.
-        this->m_headers.headers.mut_back().second.mut_string().append(str, len);
+        cow_string value = this->m_headers.headers.back().second.as_string();
+        value.append(str, len);
+        this->m_headers.headers.mut_back().second = move(value);
         return 0;
       },
 
@@ -61,14 +59,6 @@ HTTP_Request_Parser::s_settings[1] =
           ps->http_errno = HPE_INVALID_METHOD;
           return 0;
         }
-
-        // Convert header values from strings to their presumed form.
-        HTTP_Value value;
-        for(auto t = this->m_headers.headers.mut_begin();  t != this->m_headers.headers.end();  ++t)
-          if(t->second.is_null())
-            t->second = &"";
-          else if(value.parse(t->second.as_string()) == t->second.str_size())
-            t->second = move(value);
 
         // Parse the URI.
         cow_string caddr;
@@ -112,21 +102,17 @@ HTTP_Request_Parser::s_settings[1] =
         }
         else {
           // Get the `Host:` header. Multiple `Host:` headers are not allowed.
-          bool host_header_found = false;
-
+          uint32_t host_header_num = 0;
           for(const auto& hr : this->m_headers.headers)
             if(hr.first == "Host") {
-              if(hr.second.is_string() && !host_header_found) {
-                host_header_found = true;
+              host_header_num ++;
+              if(host_header_num == 1)
                 this->m_headers.uri_host = hr.second.as_string();
-              }
-              else {
-                ps->http_errno = HPE_INVALID_URL;
-                return 2;
-              }
+              else
+                break;
             }
 
-          if(!host_header_found) {
+          if(host_header_num != 1) {
             ps->http_errno = HPE_INVALID_URL;
             return 2;
           }

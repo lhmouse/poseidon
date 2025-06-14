@@ -11,100 +11,188 @@ namespace poseidon {
 class HTTP_Value
   {
   private:
-    ::rocket::variant<nullptr_t, cow_string, double, DateTime> m_stor;
+    enum : uint8_t
+      {
+        vm_str_valid  = 0b00000001,
+        vm_int_valid  = 0b00000010,
+        vm_dbl_valid  = 0b00000100,
+        vm_dt_valid   = 0b00001000,
+      };
+
+    cow_string m_str;
+    int64_t m_int = 0;
+    double m_dbl = 0;
+    DateTime m_dt;
+    uint8_t m_vm = 0;
+
+  private:
+    void
+    do_update_variants();
 
   public:
-    // Value constructors
-    constexpr
-    HTTP_Value(nullptr_t = nullptr) noexcept { }
+    // Initialize a value from the given argument. It's important that all fields
+    // are updated accordingly, so users may read this value in any format.
+    HTTP_Value() noexcept
+      {
+      }
+
+    HTTP_Value(const cow_string& str)
+      :
+        m_str(str),
+        m_vm(vm_str_valid)
+      {
+        this->do_update_variants();
+      }
 
     HTTP_Value&
-    operator=(nullptr_t) & noexcept
+    operator=(const cow_string& str) &
       {
-        this->m_stor.emplace<nullptr_t>();
+        this->m_str = str;
+        this->m_vm = vm_str_valid;
+        this->do_update_variants();
         return *this;
       }
 
-    HTTP_Value(const cow_string& str) noexcept
-      {
-        this->m_stor.emplace<cow_string>(str);
-      }
-
     HTTP_Value&
-    operator=(const cow_string& str) & noexcept
+    operator=(cow_string&& str) &
       {
-        this->m_stor = str;
+        this->m_str = move(str);
+        this->m_vm = vm_str_valid;
+        this->do_update_variants();
         return *this;
       }
 
     template<typename ycharT, size_t N,
     ROCKET_ENABLE_IF(::std::is_same<ycharT, char>::value)>
-    HTTP_Value(const ycharT (*ps)[N]) noexcept
+    HTTP_Value(const ycharT (*ps)[N])
+      :
+        m_str(ps),
+        m_vm(vm_str_valid)
       {
-        this->m_stor.emplace<cow_string>(ps);
+        this->do_update_variants();
       }
 
     template<typename ycharT, size_t N,
     ROCKET_ENABLE_IF(::std::is_same<ycharT, char>::value)>
     HTTP_Value&
-    operator=(const ycharT (*ps)[N]) noexcept
+    operator=(const ycharT (*ps)[N])
       {
-        this->mut_string() = ps;
+        this->m_str = ps;
+        this->m_vm = vm_str_valid;
+        this->do_update_variants();
         return *this;
       }
 
-    HTTP_Value(double num) noexcept
+    HTTP_Value(int num)
+      :
+        m_int(num),
+        m_vm(vm_int_valid)
       {
-        this->m_stor.emplace<double>(num);
+        this->do_update_variants();
       }
 
     HTTP_Value&
-    operator=(double num) & noexcept
+    operator=(int num)
       {
-        this->m_stor = num;
+        this->m_int = num;
+        this->m_vm = vm_int_valid;
+        this->do_update_variants();
         return *this;
       }
 
-    HTTP_Value(int num) noexcept
+    HTTP_Value(long num)
+      :
+        m_int(num),
+        m_vm(vm_int_valid)
       {
-        this->m_stor.emplace<double>(num);
+        this->do_update_variants();
       }
 
     HTTP_Value&
-    operator=(int num) & noexcept
+    operator=(long num)
       {
-        this->m_stor = static_cast<double>(num);
+        this->m_int = num;
+        this->m_vm = vm_int_valid;
+        this->do_update_variants();
         return *this;
       }
 
-    HTTP_Value(const DateTime& dt) noexcept
+    HTTP_Value(long long num)
+      :
+        m_int(num),
+        m_vm(vm_int_valid)
       {
-        this->m_stor.emplace<DateTime>(dt);
+        this->do_update_variants();
       }
 
     HTTP_Value&
-    operator=(const DateTime& dt) & noexcept
+    operator=(long long num)
       {
-        this->m_stor = dt;
+        this->m_int = num;
+        this->m_vm = vm_int_valid;
+        this->do_update_variants();
         return *this;
       }
 
-    HTTP_Value(system_time tm) noexcept
+    HTTP_Value(double num)
+      :
+        m_dbl(num),
+        m_vm(vm_dbl_valid)
       {
-        this->m_stor.emplace<DateTime>(tm);
+        this->do_update_variants();
       }
 
     HTTP_Value&
-    operator=(system_time tm) & noexcept
+    operator=(double num)
       {
-        this->m_stor.emplace<DateTime>(tm);
+        this->m_dbl = num;
+        this->m_vm = vm_dbl_valid;
+        this->do_update_variants();
+        return *this;
+      }
+
+    HTTP_Value(const DateTime& dt)
+      :
+        m_dt(dt),
+        m_vm(vm_dt_valid)
+      {
+        this->do_update_variants();
+      }
+
+    HTTP_Value&
+    operator=(const DateTime& dt)
+      {
+        this->m_vm = vm_dt_valid;
+        this->m_dt = dt;
+        this->do_update_variants();
+        return *this;
+      }
+
+    HTTP_Value(const system_time& tm)
+      :
+        m_dt(tm),
+        m_vm(vm_dt_valid)
+      {
+        this->do_update_variants();
+      }
+
+    HTTP_Value&
+    operator=(const system_time& tm)
+      {
+        this->m_dt = tm;
+        this->m_vm = vm_dt_valid;
+        this->do_update_variants();
         return *this;
       }
 
     HTTP_Value&
     swap(HTTP_Value& other) noexcept
       {
-        this->m_stor.swap(other.m_stor);
+        ::std::swap(this->m_int, other.m_int);
+        this->m_str.swap(other.m_str);
+        ::std::swap(this->m_dbl, other.m_dbl);
+        this->m_dt.swap(other.m_dt);
+        ::std::swap(this->m_vm, other.m_vm);
         return *this;
       }
 
@@ -115,76 +203,69 @@ class HTTP_Value
     HTTP_Value& operator=(HTTP_Value&&) & = default;
     ~HTTP_Value();
 
+    // Sets this value to an empty string.
     void
     clear() noexcept
-      { this->m_stor.emplace<nullptr_t>();  }
+      {
+        this->m_int = 0;
+        this->m_str.clear();
+        this->m_dbl = 0;
+        this->m_dt = system_time();
+        this->m_vm = 0;
+      }
 
-    // Access raw data.
+    // Access individual fields. These are always synchronized.
     bool
     is_null() const noexcept
-      { return this->m_stor.ptr<nullptr_t>() != nullptr;  }
-
-    bool
-    is_string() const noexcept
-      { return this->m_stor.ptr<cow_string>() != nullptr;  }
+      { return !(this->m_vm & vm_str_valid);  }
 
     const cow_string&
-    as_string() const
-      { return this->m_stor.as<cow_string>();  }
+    as_string() const noexcept
+      { return this->m_str;  };
 
     const char*
-    str_data() const
-      { return this->m_stor.as<cow_string>().data();  }
+    as_string_c_str() const noexcept
+      { return this->m_str.c_str();  }
 
     size_t
-    str_size() const
-      { return this->m_stor.as<cow_string>().size();  }
-
-    cow_string&
-    mut_string() noexcept
-      {
-        if(auto ptr = this->m_stor.mut_ptr<cow_string>())
-          return *ptr;
-        else
-          return this->m_stor.emplace<cow_string>();
-      }
+    as_string_length() const noexcept
+      { return this->m_str.length();  }
 
     bool
-    is_number() const noexcept
-      { return this->m_stor.ptr<double>() != nullptr;  }
+    is_integer() const noexcept
+      { return this->m_vm & vm_int_valid;  }
 
-    const double&
-    as_number() const
-      { return this->m_stor.as<double>();  }
+    int64_t
+    as_integer() const noexcept
+      { return this->m_int;  }
 
-    double&
-    mut_number() noexcept
-      {
-        if(auto ptr = this->m_stor.mut_ptr<double>())
-          return *ptr;
-        else
-          return this->m_stor.emplace<double>();
-      }
+    bool
+    is_double() const noexcept
+      { return this->m_vm & vm_dbl_valid;  }
+
+    double
+    as_double() const noexcept
+      { return this->m_dbl;  }
 
     bool
     is_datetime() const noexcept
-      { return this->m_stor.ptr<DateTime>() != nullptr;  }
+      { return this->m_vm & vm_dt_valid;  }
 
     const DateTime&
-    as_datetime() const
-      { return this->m_stor.as<DateTime>();  }
+    as_datetime() const noexcept
+      { return this->m_dt;  }
 
     system_time
-    as_system_time() const
-      { return this->m_stor.as<DateTime>().as_system_time();  }
+    as_system_time() const noexcept
+      { return this->m_dt.as_system_time();  }
 
-    DateTime&
-    mut_datetime() noexcept
+    // Sets raw data.
+    void
+    set(const char* str, size_t len)
       {
-        if(auto ptr = this->m_stor.mut_ptr<DateTime>())
-          return *ptr;
-        else
-          return this->m_stor.emplace<DateTime>();
+        this->m_vm = vm_str_valid;
+        this->m_str.assign(str, len);
+        this->do_update_variants();
       }
 
     // Tries parsing a quoted string. Upon success, the number of characters that
@@ -192,13 +273,6 @@ class HTTP_Value
     // of this object is indeterminate.
     size_t
     parse_quoted_string_partial(chars_view str);
-
-    // Tries parsing a floating-point number, starting with a decimal digit. Upon
-    // success, the number of characters that have been accepted is returned.
-    // Otherwise zero is returned, and the contents of this object are
-    // indeterminate.
-    size_t
-    parse_number_partial(chars_view str);
 
     // Tries parsing an HTTP date/time partially from a string. Upon success, the
     // number of characters that have been accepted is returned. Otherwise zero is

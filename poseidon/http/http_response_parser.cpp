@@ -44,26 +44,16 @@ HTTP_Response_Parser::s_settings[1] =
     // on_header_value
     +[](::http_parser* ps, const char* str, size_t len)
       {
-        // Accept the value as a string.
-        if(!this->m_headers.headers.back().second.is_string())
-          this->m_headers.headers.mut_back().second = &"";
-
         // Append the header value, as this callback might be invoked repeatedly.
-        this->m_headers.headers.mut_back().second.mut_string().append(str, len);
+        cow_string value = this->m_headers.headers.back().second.as_string();
+        value.append(str, len);
+        this->m_headers.headers.mut_back().second = move(value);
         return 0;
       },
 
     // on_headers_complete
     +[](::http_parser* ps)
       {
-        // Convert header values from strings to their presumed form.
-        HTTP_Value value;
-        for(auto t = this->m_headers.headers.mut_begin();  t != this->m_headers.headers.end();  ++t)
-          if(t->second.is_null())
-            t->second = &"";
-          else if(value.parse(t->second.as_string()) == t->second.str_size())
-            t->second = move(value);
-
         // The headers are complete, so halt.
         this->m_hresp = hresp_headers_done;
         this->m_close_after_payload = ::http_should_keep_alive(ps) == 0;

@@ -135,7 +135,7 @@ next_element()
 
     if(name_len != SIZE_MAX) {
       // Split the string.
-      this->m_value.mut_str().assign(this->m_name.str(), name_len);
+      this->m_value.set(this->m_name.c_str() + name_len, this->m_name.size() - name_len);
       this->m_name.mut_str().erase(name_len);
     }
 
