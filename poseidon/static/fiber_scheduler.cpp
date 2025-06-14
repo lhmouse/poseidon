@@ -464,12 +464,14 @@ yield(const Abstract_Fiber& tfiber, const shptr<Abstract_Future>& futr_opt)
     ::swapcontext(elem->sched_inner, this->m_sched_outer);
     POSEIDON_SANITIZER_FINISH_SWITCH_FIBER(this);
 
-    elem->wfutr.reset();
-
     POSEIDON_CATCH_EVERYTHING(fiber->do_on_abstract_fiber_resumed());
     ROCKET_ASSERT(elem->state == fiber_suspended);
     elem->state = fiber_running;
     POSEIDON_LOG_TRACE(("Resumed fiber `$1` (class `$2`)"), fiber, typeid(*fiber));
+
+    elem->wfutr.reset();
+    if(futr_opt)
+      futr_opt->check_success();
   }
 
 }  // namespace poseidon
