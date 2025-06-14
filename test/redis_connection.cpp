@@ -26,6 +26,7 @@ main()
 
     int num = 0;
     ::rocket::tinyfmt_file fmt(stderr, nullptr);
+    cow_string status;
     Redis_Value value;
 
     // `scan 0 match *`
@@ -35,7 +36,7 @@ main()
     num = 0;
     format(fmt, "scan 0 match * -->\n");
 
-    while(conn.fetch_reply(value)) {
+    while(conn.fetch_reply(status, value)) {
       format(fmt, "[$1] --->\n", ++num);
       format(fmt, "  $1\n", value);
     }
