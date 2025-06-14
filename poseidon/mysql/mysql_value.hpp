@@ -15,8 +15,8 @@ class MySQL_Value
   private:
     friend class MySQL_Connection;
 
-    ::rocket::variant<nullptr_t,
-         int64_t, double, cow_string, DateTime_with_MYSQL_TIME> m_stor;
+    ::rocket::variant<nullptr_t, int64_t, double,
+          cow_string, DateTime_with_MYSQL_TIME> m_stor;
 
   public:
     // Value constructors
