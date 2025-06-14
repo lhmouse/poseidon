@@ -48,11 +48,11 @@ class Redis_Connection
     void
     execute(const cow_vector<cow_string>& cmd);
 
-    // Gets the reply of the previous command. `output` is cleared before any
-    // operation. If the reply has been stored into `output`, `true` is returned.
-    // If there is no more reply, `false` is returned.
+    // Gets the reply of the previous command. `status` and `value` are cleared
+    // before any operation. If the reply has been saved into either `status` or
+    // `value`, `true` is returned. If there is no reply, `false` is returned.
     bool
-    fetch_reply(Redis_Value& output);
+    fetch_reply(cow_string& status, Redis_Value& value);
   };
 
 }  // namespace poseidon

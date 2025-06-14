@@ -156,15 +156,22 @@ execute(const cow_vector<cow_string>& cmd)
 
 bool
 Redis_Connection::
-fetch_reply(Redis_Value& output)
+fetch_reply(cow_string& status, Redis_Value& value)
   {
-    output.clear();
+    status.clear();
+    value.clear();
 
     const auto unique_reply = move(this->m_reply);
     if(!unique_reply)
       return false;
 
-    // Parse the reply and store the result into `output`.
+    if(this->m_reply->type == REDIS_REPLY_STATUS) {
+      // This is not a value.
+      status.append(this->m_reply->str, this->m_reply->len);
+      return true;
+    }
+
+    // Parse the reply and store the result into `value`.
     struct xFrame
       {
         Redis_Value* target;
@@ -173,7 +180,7 @@ fetch_reply(Redis_Value& output)
       };
 
     ::std::vector<xFrame> stack;
-    Redis_Value* pval = &output;
+    Redis_Value* pval = &value;
     const ::redisReply* reply = unique_reply;
 
   do_pack_loop_:

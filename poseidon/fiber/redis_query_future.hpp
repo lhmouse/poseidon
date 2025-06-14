@@ -19,6 +19,7 @@ class Redis_Query_Future
     Redis_Connector* m_ctr;
     uniptr<Redis_Connection> m_conn;
     cow_vector<cow_string> m_cmd;
+    cow_string m_status;
     Redis_Value m_res;
 
   public:
@@ -53,9 +54,19 @@ class Redis_Query_Future
     cmd() const noexcept
       { return this->m_cmd;  }
 
-    // Gets the result after the operation has completed successfully. If
-    // `successful()` yields `false`, an exception is thrown, and there is no
-    // effect.
+    // Gets the result status after the operation has completed successfully.
+    // If `successful()` yields `false`, an exception is thrown, and there is
+    // no effect.
+    const cow_string&
+    status() const
+      {
+        this->check_success();
+        return this->m_status;
+      }
+
+    // Gets the result value after the operation has completed successfully.
+    // If `successful()` yields `false`, an exception is thrown, and there is
+    // no effect.
     const Redis_Value&
     result() const
       {

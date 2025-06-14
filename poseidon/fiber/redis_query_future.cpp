@@ -38,9 +38,9 @@ do_on_abstract_future_initialize()
 
     this->m_conn->execute(this->m_cmd);
 
-    // We don't do pipelining, so it's assumed that there is exactly one reply
-    // for this command.
-    this->m_conn->fetch_reply(this->m_res);
+    // We don't do pipelining, so it's assumed that there is exactly one
+    // reply for this command.
+    this->m_conn->fetch_reply(this->m_status, this->m_res);
   }
 
 void

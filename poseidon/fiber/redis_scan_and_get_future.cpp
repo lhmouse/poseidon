@@ -40,7 +40,8 @@ do_on_abstract_future_initialize()
     // an array of two elements. The first element is the next cursor. The second
     // element is an array of matching keys.
     cow_vector<cow_string> cmd;
-    Redis_Value reply;
+    cow_string status;
+    Redis_Value value;
 
     cmd.resize(4);
     cmd.mut(0) = &"SCAN";
@@ -50,9 +51,9 @@ do_on_abstract_future_initialize()
 
   do_scan_more_:
     this->m_conn->execute(cmd);
-    this->m_conn->fetch_reply(reply);
+    this->m_conn->fetch_reply(status, value);
 
-    auto replies = move(reply.mut_array().mut(1).mut_array());
+    auto replies = move(value.mut_array().mut(1).mut_array());
     auto reply_it = replies.mut_begin();
     while(reply_it != replies.end()) {
       POSEIDON_LOG_TRACE((" SCAN => $1"), *reply_it);
@@ -60,7 +61,7 @@ do_on_abstract_future_initialize()
       ++ reply_it;
     }
 
-    cmd.mut(1) = move(reply.mut_array().mut(0).mut_string());
+    cmd.mut(1) = move(value.mut_array().mut(0).mut_string());
     if(cmd[1] != "0")
       goto do_scan_more_;
 
@@ -82,10 +83,10 @@ do_on_abstract_future_initialize()
 
     // Get values. The reply shall be an array.
     this->m_conn->execute(cmd);
-    this->m_conn->fetch_reply(reply);
+    this->m_conn->fetch_reply(status, value);
 
     res_it = this->m_res.mut_begin();
-    replies = move(reply.mut_array());
+    replies = move(value.mut_array());
     reply_it = replies.mut_begin();
     while((res_it != this->m_res.end()) && (reply_it != replies.end())) {
       if(!reply_it->is_string())
