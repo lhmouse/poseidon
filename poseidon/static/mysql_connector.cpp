@@ -192,8 +192,8 @@ pool_connection(uniptr<MySQL_Connection>&& conn)
       this->m_pool.pop_back();
 
     // Trim the pool.
-    if(this->m_pool.size() + 1 > pool_size)
-      this->m_pool.pop_back(this->m_pool.size() + 1 - pool_size);
+    while(this->m_pool.size() + 1 > pool_size)
+      this->m_pool.pop_back();
 
     // Insert the connection in the beginning.
     X_Pooled_Connection elem;
