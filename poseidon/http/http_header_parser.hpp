@@ -14,7 +14,7 @@ class HTTP_Header_Parser
   private:
     // source header string
     cow_string m_hstr;
-    static constexpr size_t error_hpos = (size_t) -127;
+    static constexpr size_t error_hpos = static_cast<size_t>(-127);
     size_t m_hpos = 0;
 
     // name and value of current attribute

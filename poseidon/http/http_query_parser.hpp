@@ -13,7 +13,7 @@ class HTTP_Query_Parser
   private:
     // source query string
     cow_string m_hstr;
-    static constexpr size_t error_hpos = (size_t) -127;
+    static constexpr size_t error_hpos = static_cast<size_t>(-127);
     size_t m_hpos = 0;
 
     // name and value of current element
