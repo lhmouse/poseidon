@@ -61,6 +61,7 @@ do_abstract_socket_on_readable()
   {
     recursive_mutex::unique_lock io_lock;
     auto& queue = this->do_abstract_socket_lock_read_queue(io_lock);
+    auto& from_addr = this->m_from_addr;
 
     for(;;) {
       queue.clear();
@@ -84,11 +85,12 @@ do_abstract_socket_on_readable()
       }
 
       queue.accept(static_cast<size_t>(ior));
-      IPv6_Address addr(sa.sin6_addr, ROCKET_BETOH16(sa.sin6_port));
+      from_addr.set_addr(sa.sin6_addr);
+      from_addr.set_port(ROCKET_BETOH16(sa.sin6_port));
 
       try {
         // Call the user-defined data callback.
-        this->do_on_udp_packet(move(addr), move(queue));
+        this->do_on_udp_packet(move(from_addr), move(queue));
       }
       catch(exception& stdex) {
         POSEIDON_LOG_ERROR((

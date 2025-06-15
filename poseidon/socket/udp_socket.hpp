@@ -16,6 +16,8 @@ class UDP_Socket
   private:
     friend class Network_Driver;
 
+    IPv6_Address m_from_addr;
+
   protected:
     // Creates a socket that is bound onto `addr`. [server-side constructor]
     explicit

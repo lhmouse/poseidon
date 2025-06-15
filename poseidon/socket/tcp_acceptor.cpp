@@ -60,13 +60,14 @@ do_abstract_socket_on_readable()
   {
     recursive_mutex::unique_lock io_lock;
     auto& driver = this->do_abstract_socket_lock_driver(io_lock);
+    auto& from_addr = this->m_from_addr;
 
     for(;;) {
       ::sockaddr_in6 sa;
       ::socklen_t salen = sizeof(sa);
-      int afd = ::accept4(this->do_socket_fd(), reinterpret_cast<::sockaddr*>(&sa),
-                          &salen, SOCK_NONBLOCK);
-      if(afd == -1) {
+      unique_posix_fd fd(::accept4(this->do_socket_fd(), reinterpret_cast<::sockaddr*>(&sa),
+                                   &salen, SOCK_NONBLOCK));
+      if(fd == -1) {
         if((errno == EAGAIN) || (errno == EWOULDBLOCK))
           return;
 
@@ -79,16 +80,16 @@ do_abstract_socket_on_readable()
         continue;
       }
 
-      unique_posix_fd fd(afd);
-      IPv6_Address addr(sa.sin6_addr, ROCKET_BETOH16(sa.sin6_port));
+      from_addr.set_addr(sa.sin6_addr);
+      from_addr.set_port(ROCKET_BETOH16(sa.sin6_port));
 
       static constexpr int one = 1;
-      ::setsockopt(afd, IPPROTO_TCP, TCP_QUICKACK, &one, sizeof(one));
+      ::setsockopt(fd, IPPROTO_TCP, TCP_QUICKACK, &one, sizeof(one));
 
       try {
         // Call the user-defined accept callback. If a null pointer is returned,
         // the accepted socket will be closed immediately.
-        auto client = this->do_accept_socket_opt(move(addr), move(fd));
+        auto client = this->do_accept_socket_opt(move(from_addr), move(fd));
         if(ROCKET_UNEXPECT(!client))
           continue;
 

@@ -16,6 +16,8 @@ class TCP_Acceptor
   private:
     friend class Network_Driver;
 
+    IPv6_Address m_from_addr;
+
   protected:
     // Creates a TCP socket that is bound onto the given address, that accepts
     // either TCP or SSL connections.
