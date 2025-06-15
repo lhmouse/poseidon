@@ -16,6 +16,8 @@ class TCP_Socket
   private:
     friend class Network_Driver;
 
+    cow_string m_session_user_data;
+
   protected:
     // Takes ownership of an accepted socket. [server-side constructor]
     explicit
@@ -57,6 +59,18 @@ class TCP_Socket
     TCP_Socket(const TCP_Socket&) = delete;
     TCP_Socket& operator=(const TCP_Socket&) & = delete;
     virtual ~TCP_Socket();
+
+    // Gets user-defined private data. This value is not used by the framework.
+    const cow_string&
+    session_user_data() const noexcept
+      { return this->m_session_user_data;  }
+
+    // Sets user-defined private data. This value is not used by the framework.
+    void
+    set_session_user_data(const cow_string& str) noexcept;
+
+    void
+    set_session_user_data(const char* str, size_t len) noexcept;
 
     // Gets the maximum segment size (MSS) for outgoing packets.
     uint32_t
