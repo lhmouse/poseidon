@@ -171,15 +171,6 @@ class HTTP_Field_Name
     // Compare names in a case-insensitive way.
     constexpr ROCKET_PURE
     bool
-    equals(const char* str) const noexcept
-      {
-        if(ROCKET_CONSTANT_P(xstrlen(str)) && (this->m_str.size() != xstrlen(str)))
-          return false;
-        return this->compare(str) == 0;
-      }
-
-    constexpr ROCKET_PURE
-    bool
     equals(const cow_string& str) const noexcept
       {
         if(this->m_str.size() != str.size())
@@ -195,10 +186,6 @@ class HTTP_Field_Name
           return false;
         return this->compare(other) == 0;
       }
-
-    ROCKET_PURE
-    int
-    compare(const char* cmps) const noexcept;
 
     ROCKET_PURE
     int
