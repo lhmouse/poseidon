@@ -10,7 +10,7 @@ namespace poseidon {
 namespace {
 
 void
-do_append_column_definition(tinyfmt_str& sql, const MySQL_Table_Structure::Column& column)
+do_append_column_definition(tinyfmt_str& sql, const MySQL_Table_Column& column)
   {
     sql << "`" << column.name << "` ";
 
@@ -63,7 +63,7 @@ do_append_column_definition(tinyfmt_str& sql, const MySQL_Table_Structure::Colum
   }
 
 void
-do_append_index_definition(tinyfmt_str& sql, const MySQL_Table_Structure::Index& index)
+do_append_index_definition(tinyfmt_str& sql, const MySQL_Table_Index& index)
   {
     if(index.name == "PRIMARY")
       sql << "PRIMARY KEY";

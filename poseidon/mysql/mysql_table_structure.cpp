@@ -71,17 +71,17 @@ set_engine(MySQL_Engine_Type engine)
     this->m_engine = engine;
   }
 
-const MySQL_Table_Structure::Column*
+const MySQL_Table_Column*
 MySQL_Table_Structure::
 find_column_opt(const cow_string& name) const noexcept
   {
     return ::rocket::find_if(this->m_columns,
-               [&](const Column& r) { return r.name == name;  });
+               [&](const MySQL_Table_Column& r) { return r.name == name;  });
   }
 
 size_t
 MySQL_Table_Structure::
-add_column(const Column& column)
+add_column(const MySQL_Table_Column& column)
   {
     if(!do_is_name_valid(column.name))
       POSEIDON_THROW(("Invalid MySQL column name `$1`"), column.name);
@@ -271,17 +271,17 @@ add_column(const Column& column)
     return do_add_element(this->m_columns, column);
   }
 
-const MySQL_Table_Structure::Index*
+const MySQL_Table_Index*
 MySQL_Table_Structure::
 find_index_opt(const cow_string& name) const noexcept
   {
     return ::rocket::find_if(this->m_indexes,
-               [&](const Index& r) { return r.name == name;  });
+               [&](const MySQL_Table_Index& r) { return r.name == name;  });
   }
 
 size_t
 MySQL_Table_Structure::
-add_index(const Index& index)
+add_index(const MySQL_Table_Index& index)
   {
     if(!do_is_name_valid(index.name))
       POSEIDON_THROW(("Invalid MySQL index name `$1`"), index.name);

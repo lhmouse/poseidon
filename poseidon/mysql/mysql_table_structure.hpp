@@ -6,33 +6,17 @@
 
 #include "../fwd.hpp"
 #include "enums.hpp"
-#include "mysql_value.hpp"
-#include "../http/http_field_name.hpp"
+#include "mysql_table_column.hpp"
+#include "mysql_table_index.hpp"
 namespace poseidon {
 
 class MySQL_Table_Structure
   {
-  public:
-    struct Column
-      {
-        HTTP_Field_Name name;
-        MySQL_Column_Type type = mysql_column_varchar;
-        bool nullable = false;
-        MySQL_Value default_value;
-      };
-
-    struct Index
-      {
-        HTTP_Field_Name name;
-        MySQL_Index_Type type = mysql_index_multi;
-        cow_vector<cow_string> columns;
-      };
-
   private:
     cow_string m_name;
     MySQL_Engine_Type m_engine = mysql_engine_innodb;
-    cow_vector<Column> m_columns;
-    cow_vector<Index> m_indexes;
+    cow_vector<MySQL_Table_Column> m_columns;
+    cow_vector<MySQL_Table_Index> m_indexes;
 
   public:
     // Constructs an empty table.
@@ -77,7 +61,7 @@ class MySQL_Table_Structure
     set_engine(MySQL_Engine_Type engine);
 
     // Gets all columns.
-    const cow_vector<Column>&
+    const cow_vector<MySQL_Table_Column>&
     columns() const noexcept
       { return this->m_columns;  }
 
@@ -86,11 +70,11 @@ class MySQL_Table_Structure
     count_columns() const noexcept
       { return this->m_columns.size();  }
 
-    const Column&
+    const MySQL_Table_Column&
     column(size_t pos) const
       { return this->m_columns.at(pos);  }
 
-    const Column*
+    const MySQL_Table_Column*
     find_column_opt(const cow_string& name) const noexcept;
 
     // Adds a column. If a column with the same name already exists, it will be
@@ -100,10 +84,10 @@ class MySQL_Table_Structure
     // If `column` references an invalid column, such as an invalid name or type,
     // an exception is thrown, and there is no effect.
     size_t
-    add_column(const Column& column);
+    add_column(const MySQL_Table_Column& column);
 
     // Gets all indexes.
-    const cow_vector<Index>&
+    const cow_vector<MySQL_Table_Index>&
     indexes() const noexcept
       { return this->m_indexes;  }
 
@@ -112,11 +96,11 @@ class MySQL_Table_Structure
     count_indexes() const noexcept
       { return this->m_indexes.size();  }
 
-    const Index&
+    const MySQL_Table_Index&
     index(size_t pos) const
       { return this->m_indexes.at(pos);  }
 
-    const Index*
+    const MySQL_Table_Index*
     find_index_opt(const cow_string& name) const noexcept;
 
     // Adds an index. If an index with the same name already exists, it will be
@@ -126,7 +110,7 @@ class MySQL_Table_Structure
     // If `index` references an invalid index, such as an invalid name or a
     // non-existent column, an exception is thrown, and there is no effect.
     size_t
-    add_index(const Index& index);
+    add_index(const MySQL_Table_Index& index);
 
     // Clears all columns with all indexes.
     void
