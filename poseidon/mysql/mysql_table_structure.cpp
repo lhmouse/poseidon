@@ -19,13 +19,19 @@ do_is_name_valid(const cow_string& name)
              });
   }
 
+bool
+do_names_equal(const cow_string& lhs, const cow_string& rhs)
+  {
+    return ::rocket::ascii_ci_equal(lhs.data(), lhs.size(), rhs.data(), rhs.size());
+  }
+
 template<typename elementT>
 size_t
 do_add_element(cow_vector<elementT>& container, const elementT& element)
   {
     // Find and update.
     for(size_t k = 0;  k != container.size();  ++k)
-      if(container[k].name == element.name) {
+      if(do_names_equal(container[k].name, element.name)) {
         container.mut(k) = element;
         return k;
       }
@@ -76,7 +82,7 @@ MySQL_Table_Structure::
 find_column_opt(const cow_string& name) const noexcept
   {
     return ::rocket::find_if(this->m_columns,
-               [&](const MySQL_Table_Column& r) { return r.name == name;  });
+        [&](const MySQL_Table_Column& r) { return do_names_equal(name, r.name);  });
   }
 
 size_t
@@ -276,7 +282,7 @@ MySQL_Table_Structure::
 find_index_opt(const cow_string& name) const noexcept
   {
     return ::rocket::find_if(this->m_indexes,
-               [&](const MySQL_Table_Index& r) { return r.name == name;  });
+        [&](const MySQL_Table_Index& r) { return do_names_equal(name, r.name);  });
   }
 
 size_t
@@ -313,7 +319,7 @@ add_index(const MySQL_Table_Index& index)
                 "Non-unique index `$1` shall comprise at least one column"),
                 index.name);
 
-          if(index.name == "PRIMARY")
+          if(do_names_equal(index.name, &"PRIMARY"))
             POSEIDON_THROW((
                 "A primary key must be unique"));
         }
@@ -331,7 +337,7 @@ add_index(const MySQL_Table_Index& index)
             "Index `$1` references non-existent column `$2`"),
             index.name, col_name);
 
-      if(col->nullable && (index.name == "PRIMARY"))
+      if(col->nullable && do_names_equal(index.name, &"PRIMARY"))
         POSEIDON_THROW((
             "Primary key shall not contain nullable column `$1`"),
             col_name);
