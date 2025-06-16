@@ -29,6 +29,13 @@ struct WebSocket_Frame_Header
       };
     };
 
+    WebSocket_Frame_Header() noexcept = default;
+    WebSocket_Frame_Header(const WebSocket_Frame_Header&) = default;
+    WebSocket_Frame_Header(WebSocket_Frame_Header&&) = default;
+    WebSocket_Frame_Header& operator=(const WebSocket_Frame_Header&) & = default;
+    WebSocket_Frame_Header& operator=(WebSocket_Frame_Header&&) & = default;
+    ~WebSocket_Frame_Header() = default;
+
     WebSocket_Frame_Header&
     swap(WebSocket_Frame_Header& other) noexcept
       {
