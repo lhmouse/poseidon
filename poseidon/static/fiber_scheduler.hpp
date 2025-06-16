@@ -20,7 +20,7 @@ class Fiber_Scheduler
 
     mutable plain_mutex m_pq_mutex;
     cow_vector<shptr<X_Queued_Fiber>> m_pq;
-    ::timespec m_pq_wait = { };
+    struct timespec m_pq_wait = { };
 
     mutable recursive_mutex m_sched_mutex;
     shptr<X_Queued_Fiber> m_sched_elem;

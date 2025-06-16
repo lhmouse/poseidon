@@ -387,7 +387,7 @@ void
 do_init_signal_handlers()
   {
     // Ignore certain signals for good.
-    struct ::sigaction sigact = { };
+    struct sigaction sigact = { };
     sigact.sa_handler = SIG_IGN;
     ::sigaction(SIGPIPE, &sigact, nullptr);
     ::sigaction(SIGCHLD, &sigact, nullptr);

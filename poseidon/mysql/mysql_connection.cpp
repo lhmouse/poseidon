@@ -151,7 +151,7 @@ execute(const cow_string& stmt, const cow_vector<MySQL_Value>& args)
             const auto& input_mdt = args[col].m_stor.as<DateTime_with_MYSQL_TIME>();
             ::MYSQL_TIME& myt = input_mdt.get_mysql_time();
 
-            ::timespec ts;
+            struct timespec ts;
             timespec_from_system_time(ts, input_mdt.datetime.as_system_time());
             ::tm tm;
             ::gmtime_r(&(ts.tv_sec), &tm);

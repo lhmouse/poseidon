@@ -67,14 +67,14 @@ splice_buffers(linear_buffer& out, linear_buffer&& in)
 // Performs conversion between `timespec` and `system_time`.
 ROCKET_ALWAYS_INLINE
 system_time
-system_time_from_timespec(const struct ::timespec& ts) noexcept
+system_time_from_timespec(const struct timespec& ts) noexcept
   {
     return system_clock::from_time_t(ts.tv_sec) + nanoseconds(ts.tv_nsec);
   }
 
 ROCKET_ALWAYS_INLINE
 void
-timespec_from_system_time(struct ::timespec& ts, system_time tm) noexcept
+timespec_from_system_time(struct timespec& ts, system_time tm) noexcept
   {
     int64_t ns = time_point_cast<nanoseconds>(tm).time_since_epoch().count();
     uint64_t shifted_ns = static_cast<uint64_t>(ns) + 9223372036000000000;

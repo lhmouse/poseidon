@@ -224,7 +224,7 @@ add_column(const Column& column)
                 "Invalid default value for column `$1`"),
                 column.name);
 
-          ::timespec ts;
+          struct timespec ts;
           timespec_from_system_time(ts, column.default_value.as_system_time());
           const system_time val = system_clock::from_time_t(ts.tv_sec);
 

@@ -43,7 +43,7 @@ random() noexcept
     // First, generate the `xxxxxxxx-xxxx` field. This is the number of 1/30518
     // seconds since 2001-03-01T00:00:00Z, plus a serial number to keep it
     // monotonic.
-    ::timespec ts;
+    struct timespec ts;
     ::clock_gettime(CLOCK_REALTIME, &ts);
     uint64_t high = static_cast<uint64_t>(ts.tv_sec - 983404800) * 30518 << 16;
     high += static_cast<uint32_t>(ts.tv_nsec) / 32768 << 16;

@@ -32,7 +32,7 @@ do_on_abstract_future_initialize()
           this->m_path);
 
     // Get basic information.
-    struct ::stat64 st;
+    struct stat64 st;
     if(::fstat64(fd, &st) != 0)
       POSEIDON_THROW((
           "Could not get information about file `$1`",

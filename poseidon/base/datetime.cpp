@@ -143,7 +143,7 @@ DateTime::
 print_rfc1123_partial(char* str) const noexcept
   {
     // `Sun, 06 Nov 1994 08:49:37 GMT`
-    ::timespec ts;
+    struct timespec ts;
     timespec_from_system_time(ts, this->m_tp);
     ts.tv_sec = ::std::clamp<::time_t>(ts.tv_sec, -2208988800, 253402300799);
     ::tm tm;
@@ -159,7 +159,7 @@ DateTime::
 print_rfc850_partial(char* str) const noexcept
   {
     // `Sunday, 06-Nov-94 08:49:37 GMT`
-    ::timespec ts;
+    struct timespec ts;
     timespec_from_system_time(ts, this->m_tp);
     ts.tv_sec = ::std::clamp<::time_t>(ts.tv_sec, -2208988800, 253402300799);
     ::tm tm;
@@ -175,7 +175,7 @@ DateTime::
 print_asctime_partial(char* str) const noexcept
   {
     // `Sun Nov  6 08:49:37 1994`
-    ::timespec ts;
+    struct timespec ts;
     timespec_from_system_time(ts, this->m_tp);
     ts.tv_sec = ::std::clamp<::time_t>(ts.tv_sec, -2208988800, 253402300799);
     ::tm tm;
@@ -191,7 +191,7 @@ DateTime::
 print_cookie_partial(char* str) const noexcept
   {
     // `Sun, 06-Nov-1994 08:49:37 GMT`
-    ::timespec ts;
+    struct timespec ts;
     timespec_from_system_time(ts, this->m_tp);
     ts.tv_sec = ::std::clamp<::time_t>(ts.tv_sec, -2208988800, 253402300799);
     ::tm tm;
@@ -207,7 +207,7 @@ DateTime::
 print_iso8601_partial(char* str) const noexcept
   {
     // `1994-11-06T08:49:37Z`
-    ::timespec ts;
+    struct timespec ts;
     timespec_from_system_time(ts, this->m_tp);
     ts.tv_sec = ::std::clamp<::time_t>(ts.tv_sec, -2208988800, 253402300799);
     ::tm tm;
@@ -223,7 +223,7 @@ DateTime::
 print_iso8601_ns_partial(char* str) const noexcept
   {
     // `1994-11-06T08:49:37.123456789Z`
-    ::timespec ts;
+    struct timespec ts;
     timespec_from_system_time(ts, this->m_tp);
     ts.tv_sec = ::std::clamp<::time_t>(ts.tv_sec, -2208988800, 253402300799);
     ::tm tm;

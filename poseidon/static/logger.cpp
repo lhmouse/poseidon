@@ -88,7 +88,7 @@ do_write_nothrow(xFiles& io_files,  const Level_Config& lconf, const Message& ms
     ::rocket::ascii_numput nump;
 
     // Get the local system time.
-    ::timespec tv;
+    struct timespec tv;
     ::clock_gettime(CLOCK_REALTIME, &tv);
     ::tm tm;
     ::localtime_r(&(tv.tv_sec), &tm);
