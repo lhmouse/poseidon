@@ -10,6 +10,12 @@
 namespace poseidon {
 namespace {
 
+struct Packet
+  {
+    IPv6_Address addr;
+    linear_buffer data;
+  };
+
 struct Packet_Queue
   {
     // read-only fields; no locking needed
@@ -17,12 +23,6 @@ struct Packet_Queue
     cacheline_barrier xcb_1;
 
     // shared fields between threads
-    struct Packet
-      {
-        IPv6_Address addr;
-        linear_buffer data;
-      };
-
     mutable plain_mutex mutex;
     ::std::deque<Packet> packets;
     bool fiber_active = false;

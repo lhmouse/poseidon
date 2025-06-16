@@ -11,25 +11,25 @@
 namespace poseidon {
 namespace {
 
+struct Event
+  {
+    Easy_WS_Event type;
+    linear_buffer data;
+  };
+
+struct Event_Queue
+  {
+    // read-only fields; no locking needed
+    shptr<WSS_Server_Session> session;
+    cacheline_barrier xcb_1;
+
+    // shared fields between threads
+    ::std::deque<Event> events;
+    bool fiber_active = false;
+  };
+
 struct Session_Table
   {
-    struct Event_Queue
-      {
-        // read-only fields; no locking needed
-        shptr<WSS_Server_Session> session;
-        cacheline_barrier xcb_1;
-
-        // shared fields between threads
-        struct Event
-          {
-            Easy_WS_Event type;
-            linear_buffer data;
-          };
-
-        ::std::deque<Event> events;
-        bool fiber_active = false;
-      };
-
     mutable plain_mutex mutex;
     ::std::unordered_map<volatile WSS_Server_Session*, Event_Queue> session_map;
   };
@@ -114,7 +114,7 @@ struct Final_Session final : WSS_Server_Session
       { }
 
     void
-    do_push_event_common(Session_Table::Event_Queue::Event&& event)
+    do_push_event_common(Event&& event)
       {
         auto sessions = this->m_wsessions.lock();
         if(!sessions)
@@ -148,7 +148,7 @@ struct Final_Session final : WSS_Server_Session
     void
     do_on_wss_accepted(cow_string&& caddr) override
       {
-        Session_Table::Event_Queue::Event event;
+        Event event;
         event.type = easy_ws_open;
         event.data.putn(caddr.data(), caddr.size());
         this->do_push_event_common(move(event));
@@ -158,7 +158,7 @@ struct Final_Session final : WSS_Server_Session
     void
     do_on_wss_message_finish(WebSocket_Opcode opcode, linear_buffer&& data) override
       {
-        Session_Table::Event_Queue::Event event;
+        Event event;
 
         if(opcode == websocket_TEXT)
           event.type = easy_ws_text;
@@ -177,7 +177,7 @@ struct Final_Session final : WSS_Server_Session
     void
     do_on_wss_close(WebSocket_Status status, chars_view reason) override
       {
-        Session_Table::Event_Queue::Event event;
+        Event event;
         event.type = easy_ws_close;
 
         tinyfmt_ln fmt;

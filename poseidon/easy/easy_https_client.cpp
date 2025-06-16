@@ -12,28 +12,28 @@
 namespace poseidon {
 namespace {
 
+struct Event
+  {
+    Easy_HTTP_Event type;
+    HTTP_Response_Headers resp;
+    linear_buffer data;
+    bool close_now = false;
+  };
+
+struct Event_Queue
+  {
+    // read-only fields; no locking needed
+    shptr<HTTPS_Client_Session> session;
+    shptr<DNS_Connect_Task> dns_task;
+    cacheline_barrier xcb_1;
+
+    // shared fields between threads
+    ::std::deque<Event> events;
+    bool fiber_active = false;
+  };
+
 struct Session_Table
   {
-    struct Event_Queue
-      {
-        // read-only fields; no locking needed
-        shptr<HTTPS_Client_Session> session;
-        shptr<DNS_Connect_Task> dns_task;
-        cacheline_barrier xcb_1;
-
-        // shared fields between threads
-        struct Event
-          {
-            Easy_HTTP_Event type;
-            HTTP_Response_Headers resp;
-            linear_buffer data;
-            bool close_now = false;
-          };
-
-        ::std::deque<Event> events;
-        bool fiber_active = false;
-      };
-
     mutable plain_mutex mutex;
     ::std::unordered_map<volatile HTTPS_Client_Session*, Event_Queue> session_map;
   };
@@ -123,7 +123,7 @@ struct Final_Session final : HTTPS_Client_Session
       { }
 
     void
-    do_push_event_common(Session_Table::Event_Queue::Event&& event)
+    do_push_event_common(Event&& event)
       {
         auto sessions = this->m_wsessions.lock();
         if(!sessions)
@@ -157,7 +157,7 @@ struct Final_Session final : HTTPS_Client_Session
     void
     do_on_ssl_connected() override
       {
-        Session_Table::Event_Queue::Event event;
+        Event event;
         event.type = easy_http_open;
         this->do_push_event_common(move(event));
       }
@@ -167,7 +167,7 @@ struct Final_Session final : HTTPS_Client_Session
     do_on_https_response_finish(HTTP_Response_Headers&& resp,
                                 linear_buffer&& data, bool close_now) override
       {
-        Session_Table::Event_Queue::Event event;
+        Event event;
         event.type = easy_http_message;
         event.resp = move(resp);
         event.data = move(data);
@@ -183,7 +183,7 @@ struct Final_Session final : HTTPS_Client_Session
         int err_code = errno;
         const char* err_str = ::strerror_r(err_code, sbuf, sizeof(sbuf));
 
-        Session_Table::Event_Queue::Event event;
+        Event event;
         event.type = easy_http_close;
         event.data.puts(err_str);
         this->do_push_event_common(move(event));

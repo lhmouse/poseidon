@@ -11,28 +11,28 @@
 namespace poseidon {
 namespace {
 
+struct Event
+  {
+    Easy_HTTP_Event type;
+    HTTP_Request_Headers req;
+    linear_buffer data;
+    bool close_now = false;
+    HTTP_Status status = http_status_null;
+  };
+
+struct Event_Queue
+  {
+    // read-only fields; no locking needed
+    shptr<HTTP_Server_Session> session;
+    cacheline_barrier xcb_1;
+
+    // shared fields between threads
+    ::std::deque<Event> events;
+    bool fiber_active = false;
+  };
+
 struct Session_Table
   {
-    struct Event_Queue
-      {
-        // read-only fields; no locking needed
-        shptr<HTTP_Server_Session> session;
-        cacheline_barrier xcb_1;
-
-        // shared fields between threads
-        struct Event
-          {
-            Easy_HTTP_Event type;
-            HTTP_Request_Headers req;
-            linear_buffer data;
-            bool close_now = false;
-            HTTP_Status status = http_status_null;
-          };
-
-        ::std::deque<Event> events;
-        bool fiber_active = false;
-      };
-
     mutable plain_mutex mutex;
     ::std::unordered_map<volatile HTTP_Server_Session*, Event_Queue> session_map;
   };
@@ -130,7 +130,7 @@ struct Final_Session final : HTTP_Server_Session
       { }
 
     void
-    do_push_event_common(Session_Table::Event_Queue::Event&& event)
+    do_push_event_common(Event&& event)
       {
         auto sessions = this->m_wsessions.lock();
         if(!sessions)
@@ -164,7 +164,7 @@ struct Final_Session final : HTTP_Server_Session
     void
     do_on_tcp_connected() override
       {
-        Session_Table::Event_Queue::Event event;
+        Event event;
         event.type = easy_http_open;
         this->do_push_event_common(move(event));
       }
@@ -174,7 +174,7 @@ struct Final_Session final : HTTP_Server_Session
     do_on_http_request_finish(HTTP_Request_Headers&& req,
                               linear_buffer&& data, bool close_now) override
       {
-        Session_Table::Event_Queue::Event event;
+        Event event;
         event.type = easy_http_message;
         event.req = move(req);
         event.data = move(data);
@@ -186,7 +186,7 @@ struct Final_Session final : HTTP_Server_Session
     void
     do_on_http_request_error(HTTP_Status status) override
       {
-        Session_Table::Event_Queue::Event event;
+        Event event;
         event.status = status;
         event.close_now = true;
         this->do_push_event_common(move(event));
@@ -200,7 +200,7 @@ struct Final_Session final : HTTP_Server_Session
         int err_code = errno;
         const char* err_str = ::strerror_r(err_code, sbuf, sizeof(sbuf));
 
-        Session_Table::Event_Queue::Event event;
+        Event event;
         event.type = easy_http_close;
         event.data.puts(err_str);
         this->do_push_event_common(move(event));

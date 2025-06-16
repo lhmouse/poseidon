@@ -11,30 +11,30 @@
 namespace poseidon {
 namespace {
 
+struct Event
+  {
+    Easy_Stream_Event type;
+    linear_buffer data;
+    int code = 0;
+  };
+
+struct Event_Queue
+  {
+    // read-only fields; no locking needed
+    shptr<SSL_Socket> socket;
+    cacheline_barrier xcb_1;
+
+    // fiber-private fields; no locking needed
+    linear_buffer data_stream;
+    cacheline_barrier xcb_2;
+
+    // shared fields between threads
+    ::std::deque<Event> events;
+    bool fiber_active = false;
+  };
+
 struct Session_Table
   {
-    struct Event_Queue
-      {
-        // read-only fields; no locking needed
-        shptr<SSL_Socket> socket;
-        cacheline_barrier xcb_1;
-
-        // fiber-private fields; no locking needed
-        linear_buffer data_stream;
-        cacheline_barrier xcb_2;
-
-        // shared fields between threads
-        struct Event
-          {
-            Easy_Stream_Event type;
-            linear_buffer data;
-            int code = 0;
-          };
-
-        ::std::deque<Event> events;
-        bool fiber_active = false;
-      };
-
     mutable plain_mutex mutex;
     ::std::unordered_map<volatile SSL_Socket*, Event_Queue> session_map;
   };
@@ -129,7 +129,7 @@ struct Final_Socket final : SSL_Socket
       { }
 
     void
-    do_push_event_common(Session_Table::Event_Queue::Event&& event)
+    do_push_event_common(Event&& event)
       {
         auto sessions = this->m_wsessions.lock();
         if(!sessions)
@@ -163,7 +163,7 @@ struct Final_Socket final : SSL_Socket
     void
     do_on_ssl_connected() override
       {
-        Session_Table::Event_Queue::Event event;
+        Event event;
         event.type = easy_stream_open;
         this->do_push_event_common(move(event));
       }
@@ -172,7 +172,7 @@ struct Final_Socket final : SSL_Socket
     void
     do_on_ssl_stream(linear_buffer& data, bool eof) override
       {
-        Session_Table::Event_Queue::Event event;
+        Event event;
         event.type = easy_stream_data;
         event.data.swap(data);
         event.code = eof;
@@ -187,7 +187,7 @@ struct Final_Socket final : SSL_Socket
         int err_code = errno;
         const char* err_str = ::strerror_r(err_code, sbuf, sizeof(sbuf));
 
-        Session_Table::Event_Queue::Event event;
+        Event event;
         event.type = easy_stream_close;
         event.data.puts(err_str);
         event.code = err_code;

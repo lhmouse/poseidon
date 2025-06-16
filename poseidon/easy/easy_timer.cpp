@@ -11,6 +11,11 @@
 namespace poseidon {
 namespace {
 
+struct Event
+  {
+    steady_time time;
+  };
+
 struct Event_Queue
   {
     // read-only fields; no locking needed
@@ -18,11 +23,6 @@ struct Event_Queue
     cacheline_barrier xcb_1;
 
     // shared fields between threads
-    struct Event
-      {
-        steady_time time;
-      };
-
     mutable plain_mutex mutex;
     ::std::deque<Event> events;
     bool fiber_active = false;
@@ -110,7 +110,7 @@ struct Final_Timer final : Abstract_Timer
           queue->fiber_active = true;
         }
 
-        Event_Queue::Event event;
+        Event event;
         event.time = time;
         queue->events.push_back(move(event));
       }
