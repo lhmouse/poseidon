@@ -92,7 +92,13 @@ enum WebSocket_Status : uint16_t
     websocket_status_message_too_large     = 1009,
     websocket_status_extension_required    = 1010,
     websocket_status_unexpected_error      = 1011,
+    websocket_status_service_restart       = 1012,
+    websocket_status_try_again_later       = 1013,
+    websocket_status_bad_gateway           = 1014,
     websocket_status_tls_error             = 1015,
+    websocket_status_unauthorized          = 3000,
+    websocket_status_forbidden             = 3003,
+    websocket_status_timeout               = 3008,
   };
 
 }  // namespace poseidon
