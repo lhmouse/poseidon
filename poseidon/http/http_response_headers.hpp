@@ -18,6 +18,13 @@ struct HTTP_Response_Headers
     cow_string reason;
     cow_bivector<HTTP_Field_Name, HTTP_Value> headers;
 
+    HTTP_Response_Headers() noexcept = default;
+    HTTP_Response_Headers(const HTTP_Response_Headers&) = default;
+    HTTP_Response_Headers(HTTP_Response_Headers&&) = default;
+    HTTP_Response_Headers& operator=(const HTTP_Response_Headers&) & = default;
+    HTTP_Response_Headers& operator=(HTTP_Response_Headers&&) & = default;
+    ~HTTP_Response_Headers();
+
     HTTP_Response_Headers&
     swap(HTTP_Response_Headers& other) noexcept
       {

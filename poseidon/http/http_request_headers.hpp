@@ -31,6 +31,13 @@ struct HTTP_Request_Headers
     cow_string uri_query;
     cow_bivector<HTTP_Field_Name, HTTP_Value> headers;
 
+    HTTP_Request_Headers() noexcept = default;
+    HTTP_Request_Headers(const HTTP_Request_Headers&) = default;
+    HTTP_Request_Headers(HTTP_Request_Headers&&) = default;
+    HTTP_Request_Headers& operator=(const HTTP_Request_Headers&) & = default;
+    HTTP_Request_Headers& operator=(HTTP_Request_Headers&&) & = default;
+    ~HTTP_Request_Headers();
+
     HTTP_Request_Headers&
     swap(HTTP_Request_Headers& other) noexcept
       {

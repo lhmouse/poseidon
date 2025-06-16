@@ -7,6 +7,11 @@
 #include "../utils.hpp"
 namespace poseidon {
 
+HTTP_Request_Headers::
+~HTTP_Request_Headers()
+  {
+  }
+
 void
 HTTP_Request_Headers::
 set_request_host(const Abstract_Socket& socket, const cow_string& default_host)

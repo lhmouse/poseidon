@@ -7,6 +7,11 @@
 #include <http_parser.h>
 namespace poseidon {
 
+HTTP_Response_Headers::
+~HTTP_Response_Headers()
+  {
+  }
+
 void
 HTTP_Response_Headers::
 encode(tinyfmt& fmt) const
