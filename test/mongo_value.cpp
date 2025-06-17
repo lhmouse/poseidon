@@ -15,21 +15,21 @@ main()
     hval = 1234567890123456789;
     POSEIDON_TEST_CHECK(hval.is_integer());
     POSEIDON_TEST_CHECK(hval.as_integer() == 1234567890123456789);
-    hval.mut_integer() += 1;
+    hval.open_integer() += 1;
     POSEIDON_TEST_CHECK(hval.as_integer() == 1234567890123456790);
     POSEIDON_TEST_CHECK(hval.print_to_string() == "1234567890123456790");
 
     hval = 42.5;
     POSEIDON_TEST_CHECK(hval.is_double());
     POSEIDON_TEST_CHECK(hval.as_double() == 42.5);
-    hval.mut_double() += 1;
+    hval.open_double() += 1;
     POSEIDON_TEST_CHECK(hval.as_double() == 43.5);
     POSEIDON_TEST_CHECK(hval.print_to_string() == "43.5");
 
     hval = &"meow";
     POSEIDON_TEST_CHECK(hval.is_utf8());
     POSEIDON_TEST_CHECK(hval.as_utf8() == "meow");
-    hval.mut_utf8() += "ME\tOW";
+    hval.open_utf8() += "ME\tOW";
     POSEIDON_TEST_CHECK(hval.as_utf8() == "meowME\tOW");
     POSEIDON_TEST_CHECK(hval.print_to_string() == R"("meowME\tOW")");
 

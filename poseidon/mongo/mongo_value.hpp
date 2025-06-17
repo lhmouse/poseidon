@@ -96,7 +96,7 @@ class Mongo_Value
     Mongo_Value&
     operator=(const ycharT (*ps)[N]) noexcept
       {
-        this->mut_utf8() = ps;
+        this->open_utf8() = ps;
         return *this;
       }
 
@@ -208,7 +208,7 @@ class Mongo_Value
       { return this->m_stor.as<bool>();  }
 
     bool&
-    mut_boolean() noexcept
+    open_boolean() noexcept
       {
         if(auto ptr = this->m_stor.mut_ptr<bool>())
           return *ptr;
@@ -225,7 +225,7 @@ class Mongo_Value
       { return this->m_stor.as<int64_t>();  }
 
     int64_t&
-    mut_integer() noexcept
+    open_integer() noexcept
       {
         if(auto ptr = this->m_stor.mut_ptr<int64_t>())
           return *ptr;
@@ -242,7 +242,7 @@ class Mongo_Value
       { return this->m_stor.as<double>();  }
 
     double&
-    mut_double() noexcept
+    open_double() noexcept
       {
         if(auto ptr = this->m_stor.mut_ptr<double>())
           return *ptr;
@@ -267,7 +267,7 @@ class Mongo_Value
       { return this->m_stor.as<cow_string>().length();  }
 
     cow_string&
-    mut_utf8() noexcept
+    open_utf8() noexcept
       {
         if(auto ptr = this->m_stor.mut_ptr<cow_string>())
           return *ptr;
@@ -292,7 +292,7 @@ class Mongo_Value
       { return this->m_stor.as<cow_bstring>().size();  }
 
     cow_bstring&
-    mut_binary() noexcept
+    open_binary() noexcept
       {
         if(auto ptr = this->m_stor.mut_ptr<cow_bstring>())
           return *ptr;
@@ -309,7 +309,7 @@ class Mongo_Value
       { return this->m_stor.as<Mongo_Array>();  }
 
     Mongo_Array&
-    mut_array() noexcept
+    open_array() noexcept
       {
         if(auto ptr = this->m_stor.mut_ptr<Mongo_Array>())
           return *ptr;
@@ -326,7 +326,7 @@ class Mongo_Value
       { return this->m_stor.as<Mongo_Document>();  }
 
     Mongo_Document&
-    mut_document() noexcept
+    open_document() noexcept
       {
         if(auto ptr = this->m_stor.mut_ptr<Mongo_Document>())
           return *ptr;
@@ -343,7 +343,7 @@ class Mongo_Value
       { return this->m_stor.as<::bson_oid_t>();  }
 
     ::bson_oid_t&
-    mut_oid() noexcept
+    open_oid() noexcept
       {
         if(auto ptr = this->m_stor.mut_ptr<::bson_oid_t>())
           return *ptr;
@@ -364,7 +364,7 @@ class Mongo_Value
       { return this->m_stor.as<DateTime>().as_system_time();  }
 
     DateTime&
-    mut_datetime() noexcept
+    open_datetime() noexcept
       {
         if(auto ptr = this->m_stor.mut_ptr<DateTime>())
           return *ptr;

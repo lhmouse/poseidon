@@ -226,7 +226,7 @@ do_on_abstract_future_initialize()
         idx_extra = t;
 
     while(this->m_conn->fetch_row(row)) {
-      cow_string& name = row.mut(idx_name).mut_blob();
+      cow_string& name = row.mut(idx_name).open_blob();
       if(auto column_config = this->m_table.find_column_opt(name))
         name = column_config->name;
 
@@ -259,7 +259,7 @@ do_on_abstract_future_initialize()
         idx_seq_in_index = t;
 
     while(this->m_conn->fetch_row(row)) {
-      cow_string& name = row.mut(idx_name).mut_blob();
+      cow_string& name = row.mut(idx_name).open_blob();
       if(auto index_config = this->m_table.find_index_opt(name))
         name = index_config->name;
 

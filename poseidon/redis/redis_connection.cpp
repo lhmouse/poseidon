@@ -191,11 +191,11 @@ fetch_reply(cow_string& status, Redis_Value& value)
         break;
 
       case REDIS_REPLY_INTEGER:
-        pval->mut_integer() = reply->integer;
+        pval->open_integer() = reply->integer;
         break;
 
       case REDIS_REPLY_STRING:
-        pval->mut_string().append(reply->str, reply->len);
+        pval->open_string().append(reply->str, reply->len);
         break;
 
       case REDIS_REPLY_ARRAY:
@@ -203,7 +203,7 @@ fetch_reply(cow_string& status, Redis_Value& value)
           // open
           auto& frm = stack.emplace_back();
           frm.target = pval;
-          frm.psa = &(pval->mut_array());
+          frm.psa = &(pval->open_array());
           frm.parent = reply;
           frm.psa->reserve(static_cast<uint32_t>(reply->elements));
           pval = &(frm.psa->emplace_back());
@@ -212,7 +212,7 @@ fetch_reply(cow_string& status, Redis_Value& value)
         }
 
         // empty
-        pval->mut_array();
+        pval->open_array();
         break;
       }
 

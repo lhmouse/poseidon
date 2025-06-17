@@ -59,8 +59,8 @@ main()
     // `db.system.version.find({_id:{$regex:'\w*Version$'}})`
     doc.clear();
     doc.emplace_back(&"find", &"system.version");
-    auto& filter = doc.emplace_back(&"filter", nullptr).second.mut_document();
-    auto& _id = filter.emplace_back(&"_id", nullptr).second.mut_document();
+    auto& filter = doc.emplace_back(&"filter", nullptr).second.open_document();
+    auto& _id = filter.emplace_back(&"_id", nullptr).second.open_document();
     _id.emplace_back(&"$regex", &R"(^\w+Schema$)");
     conn.execute(doc);
 

@@ -336,29 +336,29 @@ fetch_reply(Mongo_Document& output)
           break;
 
         case BSON_TYPE_BOOL:
-          pval->mut_boolean() = ::bson_iter_bool_unsafe(&top_iter);
+          pval->open_boolean() = ::bson_iter_bool_unsafe(&top_iter);
           break;
 
         case BSON_TYPE_INT32:
-          pval->mut_integer() = ::bson_iter_int32_unsafe(&top_iter);
+          pval->open_integer() = ::bson_iter_int32_unsafe(&top_iter);
           break;
 
         case BSON_TYPE_INT64:
-          pval->mut_integer() = ::bson_iter_int64_unsafe(&top_iter);
+          pval->open_integer() = ::bson_iter_int64_unsafe(&top_iter);
           break;
 
         case BSON_TYPE_DOUBLE:
-          pval->mut_double() = ::bson_iter_double_unsafe(&top_iter);
+          pval->open_double() = ::bson_iter_double_unsafe(&top_iter);
           break;
 
         case BSON_TYPE_UTF8:
           str = ::bson_iter_utf8(&top_iter, &len);
-          pval->mut_utf8().append(str, len);
+          pval->open_utf8().append(str, len);
           break;
 
         case BSON_TYPE_BINARY:
           ::bson_iter_binary(&top_iter, nullptr, &len, &bytes);
-          pval->mut_binary().append(bytes, len);
+          pval->open_binary().append(bytes, len);
           break;
 
         case BSON_TYPE_ARRAY:
@@ -367,12 +367,12 @@ fetch_reply(Mongo_Document& output)
             {
             case BSON_TYPE_ARRAY:
               ::bson_iter_array(&top_iter, &len, &bytes);
-              pval->mut_array();
+              pval->open_array();
               break;
 
             case BSON_TYPE_DOCUMENT:
               ::bson_iter_document(&top_iter, &len, &bytes);
-              pval->mut_document();
+              pval->open_document();
               break;
             }
 
@@ -395,12 +395,12 @@ fetch_reply(Mongo_Document& output)
           break;
 
         case BSON_TYPE_OID:
-          pval->mut_oid() = *::bson_iter_oid_unsafe(&top_iter);
+          pval->open_oid() = *::bson_iter_oid_unsafe(&top_iter);
           break;
 
         case BSON_TYPE_DATE_TIME:
           dur = milliseconds(::bson_iter_date_time(&top_iter));
-          pval->mut_datetime() = system_time() + dur;
+          pval->open_datetime() = system_time() + dur;
           break;
         }
     }

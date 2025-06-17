@@ -53,15 +53,15 @@ do_on_abstract_future_initialize()
     this->m_conn->execute(cmd);
     this->m_conn->fetch_reply(status, value);
 
-    auto replies = move(value.mut_array().mut(1).mut_array());
+    auto replies = move(value.open_array().mut(1).open_array());
     auto reply_it = replies.mut_begin();
     while(reply_it != replies.end()) {
       POSEIDON_LOG_TRACE((" SCAN => $1"), *reply_it);
-      this->m_res.try_emplace(move(reply_it->mut_string()));
+      this->m_res.try_emplace(move(reply_it->open_string()));
       ++ reply_it;
     }
 
-    cmd.mut(1) = move(value.mut_array().mut(0).mut_string());
+    cmd.mut(1) = move(value.open_array().mut(0).open_string());
     if(cmd[1] != "0")
       goto do_scan_more_;
 
@@ -86,14 +86,14 @@ do_on_abstract_future_initialize()
     this->m_conn->fetch_reply(status, value);
 
     res_it = this->m_res.mut_begin();
-    replies = move(value.mut_array());
+    replies = move(value.open_array());
     reply_it = replies.mut_begin();
     while((res_it != this->m_res.end()) && (reply_it != replies.end())) {
       if(!reply_it->is_string())
         res_it = this->m_res.erase(res_it);
       else {
         POSEIDON_LOG_TRACE((" MGET => $1 ($2)"), res_it->first, reply_it->as_string_length());
-        res_it->second = move(reply_it->mut_string());
+        res_it->second = move(reply_it->open_string());
         ++ res_it;
       }
       ++ reply_it;

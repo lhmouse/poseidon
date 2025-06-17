@@ -15,14 +15,14 @@ main()
     hval = 1234567890123456789;
     POSEIDON_TEST_CHECK(hval.is_integer());
     POSEIDON_TEST_CHECK(hval.as_integer() == 1234567890123456789);
-    hval.mut_integer() += 1;
+    hval.open_integer() += 1;
     POSEIDON_TEST_CHECK(hval.as_integer() == 1234567890123456790);
     POSEIDON_TEST_CHECK(hval.print_to_string() == "1234567890123456790");
 
     hval = &"meow";
     POSEIDON_TEST_CHECK(hval.is_string());
     POSEIDON_TEST_CHECK(hval.as_string() == "meow");
-    hval.mut_string() += "ME\tOW";
+    hval.open_string() += "ME\tOW";
     POSEIDON_TEST_CHECK(hval.as_string() == "meowME\tOW");
     POSEIDON_TEST_CHECK(hval.print_to_string() == R"("meowME\tOW")");
 

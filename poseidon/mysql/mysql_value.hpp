@@ -102,7 +102,7 @@ class MySQL_Value
     MySQL_Value&
     operator=(const ycharT (*ps)[N]) noexcept
       {
-        this->mut_blob() = ps;
+        this->open_blob() = ps;
         return *this;
       }
 
@@ -114,7 +114,7 @@ class MySQL_Value
     MySQL_Value&
     operator=(const DateTime& dt) & noexcept
       {
-        this->mut_datetime() = dt;
+        this->open_datetime() = dt;
         return *this;
       }
 
@@ -126,7 +126,7 @@ class MySQL_Value
     MySQL_Value&
     operator=(system_time tm) & noexcept
       {
-        this->mut_datetime() = tm;
+        this->open_datetime() = tm;
         return *this;
       }
 
@@ -166,7 +166,7 @@ class MySQL_Value
       { return this->m_stor.as<int64_t>();  }
 
     int64_t&
-    mut_integer() noexcept
+    open_integer() noexcept
       {
         if(auto ptr = this->m_stor.mut_ptr<int64_t>())
           return *ptr;
@@ -183,7 +183,7 @@ class MySQL_Value
       { return this->m_stor.as<double>();  }
 
     double&
-    mut_double() noexcept
+    open_double() noexcept
       {
         if(auto ptr = this->m_stor.mut_ptr<double>())
           return *ptr;
@@ -208,7 +208,7 @@ class MySQL_Value
       { return this->m_stor.as<cow_string>().size();  }
 
     cow_string&
-    mut_blob() noexcept
+    open_blob() noexcept
       {
         if(auto ptr = this->m_stor.mut_ptr<cow_string>())
           return *ptr;
@@ -229,7 +229,7 @@ class MySQL_Value
       { return this->m_stor.as<DateTime_with_MYSQL_TIME>().datetime.as_system_time();  }
 
     DateTime&
-    mut_datetime() noexcept
+    open_datetime() noexcept
       {
         if(auto ptr = this->m_stor.mut_ptr<DateTime_with_MYSQL_TIME>())
           return ptr->datetime;

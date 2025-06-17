@@ -260,14 +260,14 @@ fetch_row(cow_vector<MySQL_Value>& output)
         case MYSQL_TYPE_LONG:
         case MYSQL_TYPE_LONGLONG:
           binds[col].buffer_type = MYSQL_TYPE_LONGLONG;
-          binds[col].buffer = &(output.mut(col).mut_integer());
+          binds[col].buffer = &(output.mut(col).open_integer());
           binds[col].buffer_length = sizeof(int64_t);
           break;
 
         case MYSQL_TYPE_FLOAT:
         case MYSQL_TYPE_DOUBLE:
           binds[col].buffer_type = MYSQL_TYPE_DOUBLE;
-          binds[col].buffer = &(output.mut(col).mut_double());
+          binds[col].buffer = &(output.mut(col).open_double());
           binds[col].buffer_length = sizeof(double);
           break;
 
@@ -288,9 +288,9 @@ fetch_row(cow_vector<MySQL_Value>& output)
             // Reserve a small amount of memory for BLOB fields. If it's not
             // large enough, it will be resized later.
             binds[col].buffer_type = MYSQL_TYPE_LONG_BLOB;
-            output.mut(col).mut_blob().resize(64);
-            binds[col].buffer = output.mut(col).mut_blob().mut_data();
-            binds[col].buffer_length = output.mut(col).mut_blob().size();
+            output.mut(col).open_blob().resize(64);
+            binds[col].buffer = output.mut(col).open_blob().mut_data();
+            binds[col].buffer_length = output.mut(col).open_blob().size();
             break;
           }
         }
@@ -343,7 +343,7 @@ fetch_row(cow_vector<MySQL_Value>& output)
       }
       else if(binds[col].buffer_type == MYSQL_TYPE_LONG_BLOB) {
         // Check whether the value has been truncated.
-        auto& output_str = output.mut(col).mut_blob();
+        auto& output_str = output.mut(col).open_blob();
         output_str.resize(binds[col].length_value);
 
         if(binds[col].error_value) {

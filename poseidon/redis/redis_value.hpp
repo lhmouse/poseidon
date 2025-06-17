@@ -68,7 +68,7 @@ class Redis_Value
     Redis_Value&
     operator=(const ycharT (*ps)[N]) noexcept
       {
-        this->mut_string() = ps;
+        this->open_string() = ps;
         return *this;
       }
 
@@ -120,7 +120,7 @@ class Redis_Value
       { return this->m_stor.as<int64_t>();  }
 
     int64_t&
-    mut_integer() noexcept
+    open_integer() noexcept
       {
         if(auto ptr = this->m_stor.mut_ptr<int64_t>())
           return *ptr;
@@ -145,7 +145,7 @@ class Redis_Value
       { return this->m_stor.as<cow_string>().length();  }
 
     cow_string&
-    mut_string() noexcept
+    open_string() noexcept
       {
         if(auto ptr = this->m_stor.mut_ptr<cow_string>())
           return *ptr;
@@ -162,7 +162,7 @@ class Redis_Value
       { return this->m_stor.as<Redis_Array>();  }
 
     Redis_Array&
-    mut_array() noexcept
+    open_array() noexcept
       {
         if(auto ptr = this->m_stor.mut_ptr<Redis_Array>())
           return *ptr;
