@@ -19,7 +19,7 @@ class SSL_Socket
 
     uniptr_SSL m_ssl;
     charbuf_256 m_alpn_proto;
-    cow_string m_session_user_data;
+    ::taxon::Value m_session_user_data;
 
   protected:
     // Takes ownership of an accepted socket, using SSL configuration from
@@ -84,20 +84,13 @@ class SSL_Socket
     virtual ~SSL_Socket();
 
     // Get user-defined private data. This value is not used by the framework.
-    const cow_string&
+    const ::taxon::Value&
     session_user_data() const noexcept
       { return this->m_session_user_data;  }
 
-    cow_string&
+    ::taxon::Value&
     mut_session_user_data() noexcept
       { return this->m_session_user_data;  }
-
-    // Sets user-defined private data. This value is not used by the framework.
-    void
-    set_session_user_data(const cow_string& str) noexcept;
-
-    void
-    set_session_user_data(const char* str, size_t len) noexcept;
 
     // Gets the maximum segment size (MSS) for outgoing packets.
     uint32_t

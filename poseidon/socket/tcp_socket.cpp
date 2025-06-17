@@ -159,20 +159,6 @@ do_on_tcp_connected()
         this, typeid(*this), this->remote_address());
   }
 
-void
-TCP_Socket::
-set_session_user_data(const cow_string& str) noexcept
-  {
-    this->m_session_user_data = str;
-  }
-
-void
-TCP_Socket::
-set_session_user_data(const char* str, size_t len) noexcept
-  {
-    this->m_session_user_data.assign(str, len);
-  }
-
 uint32_t
 TCP_Socket::
 max_segment_size() const
