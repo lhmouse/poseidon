@@ -180,7 +180,7 @@ http_request(HTTP_Request_Headers&& req, chars_view data)
     // By default, request messages do not have payload bodies. Hence the length
     // is only necessary if the payload is non-empty.
     if(data.n != 0)
-      req.headers.emplace_back(&"Content-Length", static_cast<double>(static_cast<intptr_t>(data.n)));
+      req.headers.emplace_back(&"Content-Length", static_cast<int64_t>(data.n));
 
     return this->do_http_raw_request(req, data);
   }
