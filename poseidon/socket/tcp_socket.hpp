@@ -60,9 +60,13 @@ class TCP_Socket
     TCP_Socket& operator=(const TCP_Socket&) & = delete;
     virtual ~TCP_Socket();
 
-    // Gets user-defined private data. This value is not used by the framework.
+    // Get user-defined private data. This value is not used by the framework.
     const cow_string&
     session_user_data() const noexcept
+      { return this->m_session_user_data;  }
+
+    cow_string&
+    mut_session_user_data() noexcept
       { return this->m_session_user_data;  }
 
     // Sets user-defined private data. This value is not used by the framework.
