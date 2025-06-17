@@ -27,4 +27,22 @@ int main()
       POSEIDON_TEST_CHECK(::std::strstr(e.what(),
           "POSEIDON_CHECK: 0+0") != nullptr);
     }
+
+    POSEIDON_CHECK(decode_and_canonicalize_uri_path("") == "/");
+    POSEIDON_CHECK(decode_and_canonicalize_uri_path("/") == "/");
+    POSEIDON_CHECK(decode_and_canonicalize_uri_path("/aa/bb") == "/aa/bb");
+    POSEIDON_CHECK(decode_and_canonicalize_uri_path("/aa///bb") == "/aa/bb");
+    POSEIDON_CHECK(decode_and_canonicalize_uri_path("/aa//bb/") == "/aa/bb/");
+    POSEIDON_CHECK(decode_and_canonicalize_uri_path("/aa/./bb") == "/aa/bb");
+    POSEIDON_CHECK(decode_and_canonicalize_uri_path("/aa/../bb") == "/bb");
+    POSEIDON_CHECK(decode_and_canonicalize_uri_path("/aa/bb/.") == "/aa/bb/");
+    POSEIDON_CHECK(decode_and_canonicalize_uri_path("/aa/bb/..") == "/aa/");
+    POSEIDON_CHECK(decode_and_canonicalize_uri_path("/aa/bb/../..") == "/");
+    POSEIDON_CHECK(decode_and_canonicalize_uri_path("/aa/bb/../../") == "/");
+    POSEIDON_CHECK(decode_and_canonicalize_uri_path("/aa/bb/../../..") == "/");
+    POSEIDON_CHECK(decode_and_canonicalize_uri_path("/aa/bb/../../../") == "/");
+    POSEIDON_CHECK(decode_and_canonicalize_uri_path("/aa/%41") == "/aa/A");
+    POSEIDON_CHECK(decode_and_canonicalize_uri_path("/aa/%41%2F") == "/aa/A/");
+    POSEIDON_CHECK(decode_and_canonicalize_uri_path("/aa/%41/%2F") == "/aa/A/");
+    POSEIDON_CHECK(decode_and_canonicalize_uri_path("/aa/%41/%2Fb") == "/aa/A/b");
   }

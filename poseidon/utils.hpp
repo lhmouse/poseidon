@@ -105,6 +105,12 @@ struct Network_Reference
 size_t
 parse_network_reference(Network_Reference& caddr, chars_view str) noexcept;
 
+// URL-decodes and then canonicalizes the path (of a network reference). The
+// result path will always start with a slash. If the source path appears to
+// denote a directory, the the result path will also end with a slash.
+cow_string
+decode_and_canonicalize_uri_path(chars_view path);
+
 // These are internal functions.
 using message_composer_fn = void (tinyfmt&, const void*);
 

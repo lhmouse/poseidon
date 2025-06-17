@@ -342,6 +342,85 @@ parse_network_reference(Network_Reference& caddr, chars_view str) noexcept
     return (size_t) (mptr - str.p);
   }
 
+cow_string
+decode_and_canonicalize_uri_path(chars_view path)
+  {
+    cow_string result = &"/";
+    const char* bptr = path.p;
+    const char* eptr = path.p + path.n;
+
+    auto do_pop_dot_dot = [&](size_t npop)
+      {
+        result.pop_back(npop);
+        ROCKET_ASSERT(result.back() == '/');
+
+        if(result.size() > 1)
+          do
+            result.pop_back();
+          while(result.back() != '/');
+      };
+
+    while(bptr != eptr) {
+      // Canonicalize once.
+      if(result.ends_with("//"))
+        result.pop_back(1);
+      else if(result.ends_with("/./"))
+        result.pop_back(2);
+      else if(result.ends_with("/../"))
+        do_pop_dot_dot(3);
+
+      uint32_t ch = (uint8_t) *bptr;
+      if(ch == '%') {
+        // Expect two hexadecimal digits.
+        if(eptr - bptr < 3)
+          return result;
+
+        if((bptr[1] >= '0') && (bptr[1] <= '9'))
+          ch = (uint32_t) ((uint8_t) bptr[1] - '0') << 4;
+        else if((bptr[1] >= 'A') && (bptr[1] <= 'F'))
+          ch = (uint32_t) ((uint8_t) bptr[1] - 'A' + 10) << 4;
+        else if((bptr[1] >= 'a') && (bptr[1] <= 'f'))
+          ch = (uint32_t) ((uint8_t) bptr[1] - 'a' + 10) << 4;
+        else
+          return result;
+
+        if((bptr[2] >= '0') && (bptr[2] <= '9'))
+          ch |= (uint32_t) ((uint8_t) bptr[2] - '0');
+        else if((bptr[2] >= 'A') && (bptr[2] <= 'F'))
+          ch |= (uint32_t) ((uint8_t) bptr[2] - 'A' + 10);
+        else if((bptr[2] >= 'a') && (bptr[2] <= 'f'))
+          ch |= (uint32_t) ((uint8_t) bptr[2] - 'a' + 10);
+        else
+          return result;
+
+        // Accept this sequence.
+        result += (char) ch;
+        bptr += 3;
+        continue;
+      }
+
+      // Accept this character verbatim.
+      result += (char) ch;
+      bptr ++;
+    }
+
+    // Canonicalize final segment.
+    if(result.ends_with("//"))
+      result.pop_back(1);
+    else if(result.ends_with("/."))
+      result.pop_back(1);
+    else if(result.ends_with("/./"))
+      result.pop_back(2);
+    else if(result.ends_with("/.."))
+      do_pop_dot_dot(2);
+    else if(result.ends_with("/../"))
+      do_pop_dot_dot(3);
+
+    ROCKET_ASSERT(result.size() >= 1);
+    ROCKET_ASSERT(result[0] == '/');
+    return result;
+  }
+
 bool
 is_log_level_enabled(uint8_t level) noexcept
   {
