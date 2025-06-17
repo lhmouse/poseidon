@@ -111,11 +111,12 @@ class Abstract_Socket
     const IPv6_Address&
     remote_address() const noexcept;
 
-    // Shut down the socket without sending any protocol-specific
-    // notifications. Any pending data are discarded. This function is
-    // thread-safe.
+    // Shut the socket down without flushing unsent data nor sending any
+    // protocol-specific notifications, useful for abandoning an abnormal
+    // connection. Be advised that data loss or corruption may happen.
+    // This function is thread-safe.
     bool
-    shut_down() noexcept;
+    quick_shut_down() noexcept;
   };
 
 }  // namespace poseidon

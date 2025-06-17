@@ -140,7 +140,7 @@ remote_address() const noexcept
 
 bool
 Abstract_Socket::
-shut_down() noexcept
+quick_shut_down() noexcept
   {
     int r = ::shutdown(this->m_fd, SHUT_RDWR);
     this->m_state.store(socket_closed);

@@ -59,7 +59,7 @@ do_abstract_socket_on_readable()
             this, typeid(*this));
 
         // The connection is now broken.
-        this->shut_down();
+        this->quick_shut_down();
         return;
       }
 
@@ -77,14 +77,14 @@ do_abstract_socket_on_readable()
             this, typeid(*this), stdex);
 
         // The connection is now broken.
-        this->shut_down();
+        this->quick_shut_down();
         return;
       }
 
       if(eof) {
         // Close the connection passively.
         POSEIDON_LOG_DEBUG(("Received EOF from `$1`"), this->remote_address());
-        this->shut_down();
+        this->quick_shut_down();
         return;
       }
 
@@ -111,7 +111,7 @@ do_abstract_socket_on_writeable()
             this, typeid(*this), stdex);
 
         // The connection is now broken.
-        this->shut_down();
+        this->quick_shut_down();
         return;
       }
 
@@ -138,7 +138,7 @@ do_abstract_socket_on_writeable()
             this, typeid(*this));
 
         // The connection is now broken.
-        this->shut_down();
+        this->quick_shut_down();
         return;
       }
 
@@ -213,7 +213,7 @@ tcp_send(chars_view data)
               this, typeid(*this));
 
           // The connection is now broken.
-          this->shut_down();
+          this->quick_shut_down();
           return false;
         }
 
@@ -244,7 +244,7 @@ tcp_shut_down() noexcept
 
     if(queue.empty()) {
       // Close the connection immediately.
-      this->shut_down();
+      this->quick_shut_down();
       return true;
     }
     else {

@@ -152,7 +152,7 @@ struct Final_Session final : WSS_Client_Session
         catch(exception& stdex) {
           POSEIDON_LOG_ERROR(("Could not push network event: $1"), stdex);
           sessions->session_map.erase(session_iter);
-          this->shut_down();
+          this->quick_shut_down();
         }
       }
 

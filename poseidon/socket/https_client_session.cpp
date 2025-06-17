@@ -45,7 +45,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
 
         if(this->m_resp_parser.error()) {
           data.clear();
-          this->shut_down();
+          this->quick_shut_down();
           return;
         }
 
@@ -82,7 +82,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
 
         if(this->m_resp_parser.error()) {
           data.clear();
-          this->shut_down();
+          this->quick_shut_down();
           return;
         }
 

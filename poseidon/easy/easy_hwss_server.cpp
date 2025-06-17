@@ -141,7 +141,7 @@ struct Final_Session final : WSS_Server_Session
         catch(exception& stdex) {
           POSEIDON_LOG_ERROR(("Could not push network event: $1"), stdex);
           sessions->session_map.erase(session_iter);
-          this->shut_down();
+          this->quick_shut_downtdown();
         }
       }
 
@@ -182,7 +182,7 @@ struct Final_Session final : WSS_Server_Session
           default:
             // Reject all the other.
             this->do_on_https_request_error(http_status_method_not_allowed);
-            this->shut_down();
+            this->quick_shut_down();
             return http_payload_normal;
           }
 
