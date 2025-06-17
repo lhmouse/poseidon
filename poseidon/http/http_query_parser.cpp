@@ -134,7 +134,7 @@ next_element()
         }
       }
 
-      // Accpet this character verbatim.
+      // Accept this character verbatim.
       this->m_name.mut_str() += (char) ch;
       sptr ++;
     }
