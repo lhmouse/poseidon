@@ -119,6 +119,12 @@ next_element()
           sptr += 3;
           continue;
         }
+        else if(ch == '+') {
+          // Accept a space.
+          this->m_name.mut_str() += ' ';
+          sptr ++;
+          continue;
+        }
         else if((ch == '=') && (name_len == SIZE_MAX)) {
           // Record this position as the beginning of the value. The equals
           // sign itself is not stored.
