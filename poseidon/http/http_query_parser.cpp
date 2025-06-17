@@ -29,9 +29,9 @@ clear() noexcept
 
 void
 HTTP_Query_Parser::
-reload(const cow_string& hstr)
+reload(const cow_string& raw_query)
   {
-    this->m_hstr = hstr;
+    this->m_hstr = raw_query;
     this->m_hpos = SIZE_MAX;
 
     this->m_name.clear();
