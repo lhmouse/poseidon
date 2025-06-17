@@ -143,6 +143,10 @@ class HTTP_Server_Session
 
     bool
     http_chunked_response_finish();
+
+    // Sends a default response and shuts down the connection.
+    bool
+    http_shut_down(HTTP_Status status) noexcept;
   };
 
 }  // namespace poseidon

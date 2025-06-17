@@ -285,4 +285,36 @@ https_chunked_response_finish()
     return this->ssl_send("0\r\n\r\n");
   }
 
+bool
+HTTPS_Server_Session::
+https_shut_down(HTTP_Status status) noexcept
+  {
+    if(this->m_upgrade_ack.load())
+      return this->quick_shut_down();
+
+    bool succ = false;
+    try {
+      // Compose a default page.
+      HTTP_Response_Headers resp;
+      resp.status = status;
+      resp.headers.emplace_back(&"Content-Type", &"text/html");
+      resp.headers.emplace_back(&"Connection", &"close");
+
+      tinyfmt_ln resp_fmt;
+      format(resp_fmt,
+          "<html><head><title>$1 $2</title></head><body><h1>$1 $2</h1></body></html>",
+          status, ::http_status_str(static_cast<::http_status>(status)));
+
+      succ = this->do_https_raw_response(resp, resp_fmt.get_buffer());
+    }
+    catch(exception& stdex) {
+      POSEIDON_LOG_ERROR((
+          "Failed to send default page: $3",
+          "[HTTPS client session `$1` (class `$2`)]"),
+          this, typeid(*this), stdex);
+    }
+    succ |= this->ssl_shut_down();
+    return succ;
+  }
+
 }  // namespace poseidon
