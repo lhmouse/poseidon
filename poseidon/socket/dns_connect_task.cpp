@@ -91,7 +91,7 @@ do_on_abstract_task_execute()
     if(!success) {
       // Abandon the socket for good.
       POSEIDON_LOG_WARN(("DNS lookup failed for `$1`"), this->m_host);
-      socket->close();
+      socket->shut_down();
     }
 
     // Insert the socket. Even in the case of a failure, a closure

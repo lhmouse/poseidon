@@ -115,7 +115,7 @@ class Abstract_Socket
     // notifications. Any pending data are discarded. This function is
     // thread-safe.
     bool
-    close() noexcept;
+    shut_down() noexcept;
   };
 
 }  // namespace poseidon

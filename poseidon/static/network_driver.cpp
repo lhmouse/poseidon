@@ -449,7 +449,7 @@ thread_loop()
       }
       catch(exception& stdex) {
         POSEIDON_LOG_ERROR(("Socket error: $1"), stdex);
-        socket->close();
+        socket->shut_down();
         epoll_ev.events |= EPOLLHUP;
       }
 
@@ -459,7 +459,7 @@ thread_loop()
       }
       catch(exception& stdex) {
         POSEIDON_LOG_ERROR(("Socket error: $1"), stdex);
-        socket->close();
+        socket->shut_down();
         epoll_ev.events |= EPOLLHUP;
       }
 

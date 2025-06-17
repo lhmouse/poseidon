@@ -45,7 +45,7 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
 
         if(this->m_resp_parser.error()) {
           data.clear();
-          this->close();
+          this->shut_down();
           return;
         }
 
@@ -82,7 +82,7 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
 
         if(this->m_resp_parser.error()) {
           data.clear();
-          this->close();
+          this->shut_down();
           return;
         }
 

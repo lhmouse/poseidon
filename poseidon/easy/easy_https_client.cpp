@@ -101,7 +101,7 @@ struct Final_Fiber final : Abstract_Fiber
             // are discarded, but the user-defined callback will still be called
             // for remaining input data, in case there is something useful.
             POSEIDON_LOG_ERROR(("Unhandled exception: $1"), stdex);
-            session->close();
+            session->shut_down();
           }
 
           if(event.close_now)
@@ -149,7 +149,7 @@ struct Final_Session final : HTTPS_Client_Session
         catch(exception& stdex) {
           POSEIDON_LOG_ERROR(("Could not push network event: $1"), stdex);
           sessions->session_map.erase(session_iter);
-          this->close();
+          this->shut_down();
         }
       }
 

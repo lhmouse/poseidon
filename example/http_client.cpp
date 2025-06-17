@@ -103,7 +103,7 @@ my_timer_callback(const shptr<Abstract_Timer>& timer,
 
       default:
         POSEIDON_LOG_ERROR(("example HTTP client shutting down"));
-        my_client_session->close();
+        my_client_session->shut_down();
         my_client_session.reset();
       }
   }

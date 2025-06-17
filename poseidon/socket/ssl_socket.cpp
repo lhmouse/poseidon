@@ -141,7 +141,7 @@ do_abstract_socket_on_readable()
                 this, typeid(*this), ::ERR_reason_error_string(::ERR_get_error()));
 
             // The connection is now broken.
-            this->close();
+            this->shut_down();
             return;
           }
 
@@ -159,14 +159,14 @@ do_abstract_socket_on_readable()
             this, typeid(*this), stdex);
 
         // The connection is now broken.
-        this->close();
+        this->shut_down();
         return;
       }
 
       if(eof) {
         // Close the connection passively.
         POSEIDON_LOG_DEBUG(("Received EOF from `$1`"), this->remote_address());
-        this->close();
+        this->shut_down();
         return;
       }
 
@@ -193,7 +193,7 @@ do_abstract_socket_on_writeable()
             this, typeid(*this), stdex);
 
         // The connection is now broken.
-        this->close();
+        this->shut_down();
         return;
       }
 
@@ -227,7 +227,7 @@ do_abstract_socket_on_writeable()
                 this, typeid(*this), ::ERR_reason_error_string(::ERR_get_error()));
 
             // The connection is now broken.
-            this->close();
+            this->shut_down();
             return;
           }
 
@@ -321,7 +321,7 @@ ssl_send(chars_view data)
                   this, typeid(*this), ::ERR_reason_error_string(::ERR_get_error()));
 
               // The connection is now broken.
-              this->close();
+              this->shut_down();
               return false;
             }
 
@@ -353,7 +353,7 @@ ssl_shut_down() noexcept
     if(queue.empty()) {
       // Close the connection immediately.
       ::SSL_shutdown(this->m_ssl);
-      this->close();
+      this->shut_down();
       return true;
     }
     else {
