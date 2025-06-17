@@ -14,6 +14,117 @@ HTTP_Request_Headers::
 
 void
 HTTP_Request_Headers::
+encode_and_set_path(chars_view path)
+  {
+    this->uri_path.clear();
+    this->uri_path.push_back('/');
+
+    char seq[4] = "%";
+    int dval;
+
+    for(size_t k = 0;  k != path.n;  ++k)
+      switch(path.p[k])
+        {
+        case '0' ... '9':
+        case 'A' ... 'Z':
+        case 'a' ... 'z':
+        case '-':
+        case '_':
+        case '~':
+        case '.':
+        case '/':
+          // These characters are safe.
+          this->uri_path.push_back(path.p[k]);
+          break;
+
+        default:
+          // Encode this unsafe character.
+          dval = static_cast<unsigned char>(path.p[k]) >> 4 & 0x0F;
+          seq[1] = static_cast<char>(dval + '0' + ((9 - dval) >> 15 & 7));
+          dval = static_cast<unsigned char>(path.p[k]) & 0x0F;
+          seq[2] = static_cast<char>(dval + '0' + ((9 - dval) >> 15 & 7));
+          this->uri_path.append(seq, 3);
+          break;
+        }
+  }
+
+
+void
+HTTP_Request_Headers::
+encode_and_append_query(chars_view key, chars_view value)
+  {
+    if(this->uri_query.size() != 0)
+      this->uri_query.push_back('&');
+
+    char seq[4] = "%";
+    int dval;
+
+    for(size_t k = 0;  k != key.n;  ++k)
+      switch(key.p[k])
+        {
+        case '0' ... '9':
+        case 'A' ... 'Z':
+        case 'a' ... 'z':
+        case '-':
+        case '_':
+        case '~':
+        case '.':
+        case '/':
+          // These characters are safe.
+          this->uri_query.push_back(key.p[k]);
+          break;
+
+        case ' ':
+          // This is a special case.
+          this->uri_query.push_back('+');
+          break;
+
+        default:
+          // Encode this unsafe character.
+          dval = static_cast<unsigned char>(key.p[k]) >> 4 & 0x0F;
+          seq[1] = static_cast<char>(dval + '0' + ((9 - dval) >> 15 & 7));
+          dval = static_cast<unsigned char>(key.p[k]) & 0x0F;
+          seq[2] = static_cast<char>(dval + '0' + ((9 - dval) >> 15 & 7));
+          this->uri_query.append(seq, 3);
+          break;
+        }
+
+    this->uri_query.push_back('=');
+
+    for(size_t k = 0;  k != value.n;  ++k)
+      switch(value.p[k])
+        {
+        case '0' ... '9':
+        case 'A' ... 'Z':
+        case 'a' ... 'z':
+        case '-':
+        case '_':
+        case '~':
+        case '.':
+        case '/':
+        case '=':
+          // These characters are safe.
+          this->uri_query.push_back(value.p[k]);
+          break;
+
+        case ' ':
+          // This is a special case.
+          this->uri_query.push_back('+');
+          break;
+
+        default:
+          // Encode this unsafe character.
+          dval = static_cast<unsigned char>(value.p[k]) >> 4 & 0x0F;
+          seq[1] = static_cast<char>(dval + '0' + ((9 - dval) >> 15 & 7));
+          dval = static_cast<unsigned char>(value.p[k]) & 0x0F;
+          seq[2] = static_cast<char>(dval + '0' + ((9 - dval) >> 15 & 7));
+          this->uri_query.append(seq, 3);
+          break;
+        }
+  }
+
+void
+HTTP_Request_Headers::
 set_request_host(const Abstract_Socket& socket, const cow_string& default_host)
   {
     // A proxy request has a hostname in the URI.

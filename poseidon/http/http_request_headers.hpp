@@ -62,6 +62,14 @@ struct HTTP_Request_Headers
         this->headers.clear();
       }
 
+    // Encodes an arbitrary path and assigns it to `uri_path`.
+    void
+    encode_and_set_path(chars_view path);
+
+    // Encodes a key-value pair and appends it to `uri_query`.
+    void
+    encode_and_append_query(chars_view key, chars_view value);
+
     // Creates a `Host:` header if no one is found.
     void
     set_request_host(const Abstract_Socket& socket, const cow_string& default_host);
