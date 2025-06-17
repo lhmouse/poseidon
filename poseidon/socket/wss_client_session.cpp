@@ -8,17 +8,15 @@
 namespace poseidon {
 
 WSS_Client_Session::
-WSS_Client_Session(const cow_string& path, const cow_string& query)
+WSS_Client_Session(const cow_string& raw_path, const cow_string& raw_query)
   {
-    if(!path.starts_with("/"))
-      POSEIDON_THROW(("Absolute path `$1` not allowed"), path);
-
     HTTP_Request_Headers req;
     this->m_parser.create_handshake_request(req);
     req.is_ssl = true;
-    req.uri_path = path;
-    req.uri_query = query;
-    this->https_request(move(req), "");
+    req.raw_path = raw_path;
+    req.raw_query = raw_query;
+    req.set_request_host(*this, this->https_default_host());
+    this->do_https_raw_request(move(req), "");
   }
 
 WSS_Client_Session::

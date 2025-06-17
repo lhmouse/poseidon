@@ -13,7 +13,7 @@ main()
     // https://datatracker.ietf.org/doc/html/rfc6455#section-1.3
     HTTP_Request_Headers req;
     req.method = http_GET;
-    req.uri_path = &"/chat";
+    req.raw_path = &"/chat";
     req.headers.emplace_back(&"Host", &"server.example.com");
     req.headers.emplace_back(&"Upgrade", &"websocket");
     req.headers.emplace_back(&"Connection", &"Upgrade");

@@ -16,11 +16,11 @@ void
 HTTP_Request_Headers::
 encode_and_set_path(chars_view path)
   {
-    this->uri_path.clear();
-    this->uri_path.push_back('/');
-
     char seq[4] = "%";
     int dval;
+
+    this->raw_path.clear();
+    this->raw_path.push_back('/');
 
     for(size_t k = 0;  k != path.n;  ++k)
       switch(path.p[k])
@@ -34,7 +34,7 @@ encode_and_set_path(chars_view path)
         case '.':
         case '/':
           // These characters are safe.
-          this->uri_path.push_back(path.p[k]);
+          this->raw_path.push_back(path.p[k]);
           break;
 
         default:
@@ -43,7 +43,7 @@ encode_and_set_path(chars_view path)
           seq[1] = static_cast<char>(dval + '0' + ((9 - dval) >> 15 & 7));
           dval = static_cast<unsigned char>(path.p[k]) & 0x0F;
           seq[2] = static_cast<char>(dval + '0' + ((9 - dval) >> 15 & 7));
-          this->uri_path.append(seq, 3);
+          this->raw_path.append(seq, 3);
           break;
         }
   }
@@ -53,8 +53,8 @@ void
 HTTP_Request_Headers::
 encode_and_append_query(chars_view key, chars_view value)
   {
-    if(this->uri_query.size() != 0)
-      this->uri_query.push_back('&');
+    if(this->raw_query.size() != 0)
+      this->raw_query.push_back('&');
 
     char seq[4] = "%";
     int dval;
@@ -71,12 +71,12 @@ encode_and_append_query(chars_view key, chars_view value)
         case '.':
         case '/':
           // These characters are safe.
-          this->uri_query.push_back(key.p[k]);
+          this->raw_query.push_back(key.p[k]);
           break;
 
         case ' ':
           // This is a special case.
-          this->uri_query.push_back('+');
+          this->raw_query.push_back('+');
           break;
 
         default:
@@ -85,11 +85,11 @@ encode_and_append_query(chars_view key, chars_view value)
           seq[1] = static_cast<char>(dval + '0' + ((9 - dval) >> 15 & 7));
           dval = static_cast<unsigned char>(key.p[k]) & 0x0F;
           seq[2] = static_cast<char>(dval + '0' + ((9 - dval) >> 15 & 7));
-          this->uri_query.append(seq, 3);
+          this->raw_query.append(seq, 3);
           break;
         }
 
-    this->uri_query.push_back('=');
+    this->raw_query.push_back('=');
 
     for(size_t k = 0;  k != value.n;  ++k)
       switch(value.p[k])
@@ -104,12 +104,12 @@ encode_and_append_query(chars_view key, chars_view value)
         case '/':
         case '=':
           // These characters are safe.
-          this->uri_query.push_back(value.p[k]);
+          this->raw_query.push_back(value.p[k]);
           break;
 
         case ' ':
           // This is a special case.
-          this->uri_query.push_back('+');
+          this->raw_query.push_back('+');
           break;
 
         default:
@@ -118,7 +118,7 @@ encode_and_append_query(chars_view key, chars_view value)
           seq[1] = static_cast<char>(dval + '0' + ((9 - dval) >> 15 & 7));
           dval = static_cast<unsigned char>(value.p[k]) & 0x0F;
           seq[2] = static_cast<char>(dval + '0' + ((9 - dval) >> 15 & 7));
-          this->uri_query.append(seq, 3);
+          this->raw_query.append(seq, 3);
           break;
         }
   }
@@ -131,12 +131,12 @@ set_request_host(const Abstract_Socket& socket, const cow_string& default_host)
     if(this->is_proxy)
       return;
 
-    if(this->uri_host == "") {
+    if(this->raw_host == "") {
       // Ensure `uri_host` is set to a non-empty string.
       if(default_host != "")
-        this->uri_host = default_host;
+        this->raw_host = default_host;
       else
-        this->uri_host = socket.remote_address().print_to_string();
+        this->raw_host = socket.remote_address().print_to_string();
     }
 
     // Replace the existent host header.
@@ -148,9 +148,9 @@ set_request_host(const Abstract_Socket& socket, const cow_string& default_host)
       }
 
     if(index == SIZE_MAX)
-      this->headers.emplace_back(&"Host", this->uri_host);
+      this->headers.emplace_back(&"Host", this->raw_host);
     else
-      this->headers.mut(index).second = this->uri_host;
+      this->headers.mut(index).second = this->raw_host;
   }
 
 void
@@ -178,22 +178,22 @@ encode(tinyfmt& fmt) const
       else
         fmt << "http://";
 
-      if(this->uri_userinfo != "")
-        fmt << this->uri_userinfo << '@';
+      if(this->raw_userinfo != "")
+        fmt << this->raw_userinfo << '@';
 
-      fmt << this->uri_host;
+      fmt << this->raw_host;
 
-      if(this->uri_port != 0)
-        fmt << ':' << this->uri_port;
+      if(this->port != 0)
+        fmt << ':' << this->port;
     }
 
-    if(this->uri_path[0] != '/')
-      fmt << '/' << this->uri_path;
+    if(this->raw_path[0] != '/')
+      fmt << '/' << this->raw_path;
     else
-      fmt << this->uri_path;
+      fmt << this->raw_path;
 
-    if(this->uri_query != "")
-      fmt << '?' << this->uri_query;
+    if(this->raw_query != "")
+      fmt << '?' << this->raw_query;
 
     fmt << " HTTP/1.1";
 

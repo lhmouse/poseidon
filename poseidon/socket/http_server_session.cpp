@@ -58,7 +58,7 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
         if(headers.is_proxy == false)
           headers.is_ssl = false;
 
-        if(headers.uri_host.empty()) {
+        if(headers.raw_host.empty()) {
           data.clear();
           this->do_on_http_request_error(http_status_bad_request);
           return;
@@ -124,7 +124,7 @@ do_on_http_request_headers(HTTP_Request_Headers& req, bool /*close_after_payload
     POSEIDON_LOG_DEBUG((
         "HTTP server received request: $3 $4",
         "[HTTP server session `$1` (class `$2`)]"),
-        this, typeid(*this), req.method_str, req.uri_path);
+        this, typeid(*this), req.method_str, req.raw_path);
 
     // The default handler doesn't handle Upgrade requests.
     return http_payload_normal;

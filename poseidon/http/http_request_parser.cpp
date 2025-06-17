@@ -19,7 +19,7 @@ HTTP_Request_Parser::s_settings[1] =
     // on_url
     +[](::http_parser* ps, const char* str, size_t len)
       {
-        this->m_headers.uri_host.append(str, len);
+        this->m_headers.raw_host.append(str, len);
         return 0;
       },
 
@@ -62,7 +62,7 @@ HTTP_Request_Parser::s_settings[1] =
 
         // Parse the URI.
         cow_string caddr;
-        caddr.swap(this->m_headers.uri_host);
+        caddr.swap(this->m_headers.raw_host);
 
         ::http_parser_url uri_hp;
         ::http_parser_url_init(&uri_hp);
@@ -80,12 +80,12 @@ HTTP_Request_Parser::s_settings[1] =
           // accordingly. When no scheme is specified, the default port is left
           // zero.
           if(::rocket::ascii_ci_equal(uri_str_(SCHEMA), uri_len_(SCHEMA), "http", 4)) {
-            this->m_headers.uri_port = 80;
+            this->m_headers.port = 80;
             this->m_headers.is_proxy = true;
             this->m_headers.is_ssl = false;
           }
           else if(::rocket::ascii_ci_equal(uri_str_(SCHEMA), uri_len_(SCHEMA), "https", 5)) {
-            this->m_headers.uri_port = 443;
+            this->m_headers.port = 443;
             this->m_headers.is_proxy = true;
             this->m_headers.is_ssl = true;
           }
@@ -98,7 +98,7 @@ HTTP_Request_Parser::s_settings[1] =
         if(uri_has_(HOST)) {
           // Use the host name in the request URI and ignore the `Host:` header.
           this->m_headers.is_proxy = true;
-          this->m_headers.uri_host.assign(uri_str_(HOST), uri_len_(HOST));
+          this->m_headers.raw_host.assign(uri_str_(HOST), uri_len_(HOST));
         }
         else {
           // Get the `Host:` header. Multiple `Host:` headers are not allowed.
@@ -107,7 +107,7 @@ HTTP_Request_Parser::s_settings[1] =
             if(hr.first == "Host") {
               host_header_num ++;
               if(host_header_num == 1)
-                this->m_headers.uri_host = hr.second.as_string();
+                this->m_headers.raw_host = hr.second.as_string();
               else
                 break;
             }
@@ -119,11 +119,11 @@ HTTP_Request_Parser::s_settings[1] =
         }
 
         if(uri_has_(PORT))
-          this->m_headers.uri_port = uri_hp.port;
+          this->m_headers.port = uri_hp.port;
 
-        this->m_headers.uri_userinfo.assign(uri_str_(USERINFO), uri_len_(USERINFO));
-        this->m_headers.uri_path.assign(uri_str_(PATH), uri_len_(PATH));
-        this->m_headers.uri_query.assign(uri_str_(QUERY), uri_len_(QUERY));
+        this->m_headers.raw_userinfo.assign(uri_str_(USERINFO), uri_len_(USERINFO));
+        this->m_headers.raw_path.assign(uri_str_(PATH), uri_len_(PATH));
+        this->m_headers.raw_query.assign(uri_str_(QUERY), uri_len_(QUERY));
 
         // The headers are complete, so halt.
         this->m_hreq = hreq_headers_done;
@@ -240,10 +240,10 @@ void
 HTTP_Request_Parser::
 deallocate() noexcept
   {
-    ::rocket::exchange(this->m_headers.uri_host);
-    ::rocket::exchange(this->m_headers.uri_userinfo);
-    ::rocket::exchange(this->m_headers.uri_path);
-    ::rocket::exchange(this->m_headers.uri_query);
+    ::rocket::exchange(this->m_headers.raw_host);
+    ::rocket::exchange(this->m_headers.raw_userinfo);
+    ::rocket::exchange(this->m_headers.raw_path);
+    ::rocket::exchange(this->m_headers.raw_query);
     ::rocket::exchange(this->m_headers.headers);
     ::rocket::exchange(this->m_payload);
   }

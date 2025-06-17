@@ -20,15 +20,15 @@ struct HTTP_Request_Headers
         char method_nul_do_not_use;
         uint8_t is_proxy : 1;
         uint8_t is_ssl : 1;
-        uint16_t uri_port;
+        uint16_t port;
         uint32_t reserved_1;
       };
     };
 
-    cow_string uri_host;
-    cow_string uri_userinfo;
-    cow_string uri_path;
-    cow_string uri_query;
+    cow_string raw_host;
+    cow_string raw_userinfo;
+    cow_string raw_path;
+    cow_string raw_query;
     cow_bivector<HTTP_Field_Name, HTTP_Value> headers;
 
     HTTP_Request_Headers() noexcept = default;
@@ -42,10 +42,10 @@ struct HTTP_Request_Headers
     swap(HTTP_Request_Headers& other) noexcept
       {
         ::std::swap(this->packed_fields_1, other.packed_fields_1);
-        this->uri_host.swap(other.uri_host);
-        this->uri_userinfo.swap(other.uri_userinfo);
-        this->uri_path.swap(other.uri_path);
-        this->uri_query.swap(other.uri_query);
+        this->raw_host.swap(other.raw_host);
+        this->raw_userinfo.swap(other.raw_userinfo);
+        this->raw_path.swap(other.raw_path);
+        this->raw_query.swap(other.raw_query);
         this->headers.swap(other.headers);
         return *this;
       }
@@ -55,18 +55,18 @@ struct HTTP_Request_Headers
     clear() noexcept
       {
         this->packed_fields_1 = _mm_setzero_si128();
-        this->uri_host.clear();
-        this->uri_userinfo.clear();
-        this->uri_path.clear();
-        this->uri_query.clear();
+        this->raw_host.clear();
+        this->raw_userinfo.clear();
+        this->raw_path.clear();
+        this->raw_query.clear();
         this->headers.clear();
       }
 
-    // Encodes an arbitrary path and assigns it to `uri_path`.
+    // Encodes an arbitrary path and assigns it to `raw_path`.
     void
     encode_and_set_path(chars_view path);
 
-    // Encodes a key-value pair and appends it to `uri_query`.
+    // Encodes a key-value pair and appends it to `raw_query`.
     void
     encode_and_append_query(chars_view key, chars_view value);
 

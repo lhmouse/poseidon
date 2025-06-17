@@ -264,7 +264,7 @@ do_wss_complete_handshake(HTTP_Request_Headers& req, bool close_after_payload)
       this->m_pmce_opt = new_sh<WebSocket_Deflator>(this->m_parser);
 
     // Rebuild the URI.
-    this->do_on_wss_accepted(req.uri_host + req.uri_path + '?' + req.uri_query);
+    this->do_on_wss_accepted(req.raw_host + req.raw_path + '?' + req.raw_query);
   }
 
 bool

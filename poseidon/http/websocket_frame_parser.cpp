@@ -189,7 +189,7 @@ create_handshake_request(HTTP_Request_Headers& req)
     // Compose the handshake request.
     req.clear();
     req.method = http_GET;
-    req.uri_path = &"/";
+    req.raw_path = &"/";
     req.headers.reserve(8);
     req.headers.emplace_back(&"Connection", &"Upgrade");
     req.headers.emplace_back(&"Upgrade", &"websocket");

@@ -186,10 +186,10 @@ struct Final_Session final : WSS_Server_Session
             return http_payload_normal;
           }
 
-        event.data.putn(req.uri_host.data(), req.uri_host.size());
-        event.data.putn(req.uri_path.data(), req.uri_path.size());
+        event.data.putn(req.raw_host.data(), req.raw_host.size());
+        event.data.putn(req.raw_path.data(), req.raw_path.size());
         event.data.putc('?');
-        event.data.putn(req.uri_query.data(), req.uri_query.size());
+        event.data.putn(req.raw_query.data(), req.raw_query.size());
 
         this->do_push_event_common(move(event));
         return http_payload_normal;

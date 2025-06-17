@@ -21,8 +21,9 @@ class WS_Client_Session
     bool m_closure_notified = false;
 
   public:
-    // Constructs a socket for outgoing connections.
-    WS_Client_Session(const cow_string& path, const cow_string& query);
+    // Constructs a socket for outgoing connections. The caller shall pass a
+    // URL-encoded path and query in `raw_path` and `raw_query`, respectively.
+    WS_Client_Session(const cow_string& raw_path, const cow_string& raw_query);
 
   private:
     void
