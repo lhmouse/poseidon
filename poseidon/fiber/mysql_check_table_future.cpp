@@ -195,7 +195,8 @@ do_on_abstract_future_initialize()
     sql << ",\n  CHARSET = 'utf8mb4'";
 
     POSEIDON_LOG_INFO(("Checking MySQL table:\n$1"), sql.get_string());
-    this->m_conn->execute(sql.get_string(), { });
+    const cow_vector<MySQL_Value> no_args;
+    this->m_conn->execute(sql.get_string(), no_args);
 
     // Fetch information about existent columns and indexes.
     cow_vector<MySQL_Value> row;
@@ -203,7 +204,7 @@ do_on_abstract_future_initialize()
 
     sql.clear_string();
     sql << "SHOW COLUMNS FROM `" << this->m_table.name << "`";
-    this->m_conn->execute(sql.get_string(), { });
+    this->m_conn->execute(sql.get_string(), no_args);
     this->m_conn->fetch_fields(fields);
 
     uint32_t idx_name = UINT32_MAX;
@@ -235,7 +236,7 @@ do_on_abstract_future_initialize()
 
     sql.clear_string();
     sql << "SHOW INDEXES FROM `" << this->m_table.name << "`";
-    this->m_conn->execute(sql.get_string(), { });
+    this->m_conn->execute(sql.get_string(), no_args);
     this->m_conn->fetch_fields(fields);
 
     uint32_t idx_non_unique = UINT32_MAX;
@@ -569,7 +570,7 @@ do_on_abstract_future_initialize()
       return;
 
     POSEIDON_LOG_WARN(("Updating MySQL table structure:", "$1"), sql.get_string());
-    this->m_conn->execute(sql.get_string(), { });
+    this->m_conn->execute(sql.get_string(), no_args);
     this->m_altered = true;
   }
 
