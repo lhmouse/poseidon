@@ -48,7 +48,6 @@ encode_and_set_path(chars_view path)
         }
   }
 
-
 void
 HTTP_Request_Headers::
 encode_and_append_query(chars_view key, chars_view value)
