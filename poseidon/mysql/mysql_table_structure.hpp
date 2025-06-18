@@ -23,6 +23,10 @@ class MySQL_Table_Structure
     constexpr
     MySQL_Table_Structure() noexcept = default;
 
+    // Constructs a table with explicit arguments.
+    explicit
+    MySQL_Table_Structure(const cow_string& name, MySQL_Engine_Type engine = mysql_engine_innodb);
+
     MySQL_Table_Structure&
     swap(MySQL_Table_Structure& other) noexcept
       {

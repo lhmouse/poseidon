@@ -44,6 +44,13 @@ do_add_element(cow_vector<elementT>& container, const elementT& element)
 }  // namespace
 
 MySQL_Table_Structure::
+MySQL_Table_Structure(const cow_string& name, MySQL_Engine_Type engine)
+  {
+    this->m_name = name;
+    this->m_engine = engine;
+  }
+
+MySQL_Table_Structure::
 ~MySQL_Table_Structure()
   {
   }
