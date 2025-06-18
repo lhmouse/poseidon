@@ -302,10 +302,7 @@ fetch_row(cow_vector<MySQL_Value>& output)
     }
 
     if(::mysql_stmt_bind_result(this->m_stmt, binds.data()) != 0)
-      POSEIDON_THROW((
-          "Could not bind output columns onto MySQL statement: ERROR $1: $2",
-          "[`mysql_stmt_bind_result()` failed]"),
-          ::mysql_stmt_errno(this->m_stmt), ::mysql_stmt_error(this->m_stmt));
+      return false;
 
     // Request the next row.
     int status = ::mysql_stmt_fetch(this->m_stmt);
