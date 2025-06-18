@@ -54,7 +54,7 @@ random() noexcept
 
     // Generate the `Nzzz-zzzzzzzzzzzz` part.
     uint64_t low;
-    random_bytes(&low, 4);
+    random_bytes(&low, 8);
     low >>= 1;
 
     // Compose the UUID.
