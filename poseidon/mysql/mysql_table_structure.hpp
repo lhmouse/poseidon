@@ -33,6 +33,15 @@ struct MySQL_Table_Structure
         ::std::swap(this->engine, other.engine);
         return *this;
       }
+
+    void
+    clear() noexcept
+      {
+        this->name.clear();
+        this->engine = mysql_engine_innodb;
+        this->columns.clear();
+        this->indexes.clear();
+      }
   };
 
 inline

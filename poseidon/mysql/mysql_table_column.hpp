@@ -13,7 +13,7 @@ namespace poseidon {
 struct MySQL_Table_Column
   {
     HTTP_Field_Name name;
-    MySQL_Column_Type type = mysql_column_varchar;
+    MySQL_Column_Type type = mysql_column_dropped;
     bool nullable = false;
     MySQL_Value default_value;
 
@@ -32,6 +32,15 @@ struct MySQL_Table_Column
         ::std::swap(this->nullable, other.nullable);
         this->default_value.swap(other.default_value);
         return *this;
+      }
+
+    void
+    clear() noexcept
+      {
+        this->name.clear();
+        this->type = mysql_column_dropped;
+        this->nullable = false;
+        this->default_value.clear();
       }
   };
 

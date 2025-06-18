@@ -31,6 +31,14 @@ struct MySQL_Table_Index
         this->columns.swap(other.columns);
         return *this;
       }
+
+    void
+    clear() noexcept
+      {
+        this->name.clear();
+        this->type = mysql_index_multi;
+        this->columns.clear();
+      }
   };
 
 inline
