@@ -550,7 +550,7 @@ do_on_abstract_future_initialize()
         sql << ",\n  ";
 
       if(ex == exindexes.end()) {
-        sql << "ADD";
+        sql << "ADD ";
         do_append_index_definition(sql, index);
       }
       else {
