@@ -7,13 +7,14 @@
 #include "../fwd.hpp"
 #include "enums.hpp"
 #include "mysql_value.hpp"
+#include "../http/http_field_name.hpp"
 namespace poseidon {
 
 struct MySQL_Table_Index
   {
-    cow_string name;
+    HTTP_Field_Name name;
     MySQL_Index_Type type = mysql_index_multi;
-    cow_vector<cow_string> columns;
+    cow_vector<HTTP_Field_Name> columns;
 
     MySQL_Table_Index() noexcept = default;
     MySQL_Table_Index(const MySQL_Table_Index&) = default;

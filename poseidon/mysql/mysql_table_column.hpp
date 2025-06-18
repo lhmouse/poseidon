@@ -7,11 +7,12 @@
 #include "../fwd.hpp"
 #include "enums.hpp"
 #include "mysql_value.hpp"
+#include "../http/http_field_name.hpp"
 namespace poseidon {
 
 struct MySQL_Table_Column
   {
-    cow_string name;
+    HTTP_Field_Name name;
     MySQL_Column_Type type = mysql_column_varchar;
     bool nullable = false;
     MySQL_Value default_value;

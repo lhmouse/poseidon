@@ -123,9 +123,8 @@ example_src = [
 test_src = [
   'test/utils.cpp', 'test/ipv6_address.cpp', 'test/uuid.cpp', 'test/datetime.cpp',
   'test/http_value.cpp', 'test/http_field_name.cpp', 'test/http_header_parser.cpp',
-  'test/http_query_parser.cpp', 'test/websocket_frame_header.cpp',
-  'test/websocket_handshake.cpp', 'test/mysql_table_structure.cpp',
-  'test/mysql_value.cpp', 'test/mysql_connection.cpp', 'test/mongo_value.cpp',
+  'test/http_query_parser.cpp', 'test/websocket_frame_header.cpp', 'test/mysql_value.cpp',
+  'test/websocket_handshake.cpp', 'test/mysql_connection.cpp', 'test/mongo_value.cpp',
   'test/mongo_connection.cpp', 'test/redis_value.cpp', 'test/redis_connection.cpp' ]
 
 #===========================================================

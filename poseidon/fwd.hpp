@@ -417,10 +417,10 @@ enum MySQL_Index_Type : uint8_t;
 enum MySQL_Engine_Type : uint8_t;
 enum MySQL_Value_Type : uint8_t;
 class MySQL_Value;
-class MySQL_Table_Column;
-class MySQL_Table_Index;
-class MySQL_Table_Structure;
 class MySQL_Connection;
+struct MySQL_Table_Column;
+struct MySQL_Table_Index;
+struct MySQL_Table_Structure;
 
 // MongoDB types
 enum Mongo_Value_Type : uint8_t;

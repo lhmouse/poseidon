@@ -174,24 +174,24 @@ do_on_abstract_future_initialize()
     // Compose a `CREATE TABLE` statement and execute it first. This ensures
     // the table exists for all operations later.
     tinyfmt_str sql;
-    sql << "CREATE TABLE IF NOT EXISTS `" << this->m_table.name() << "`\n  (";
+    sql << "CREATE TABLE IF NOT EXISTS `" << this->m_table.name << "`\n  (";
     size_t ncolumns = 0;
 
-    for(const auto& column : this->m_table.columns())
+    for(const auto& column : this->m_table.columns)
       if(column.type != mysql_column_dropped) {
         if(++ ncolumns != 1)
           sql << ",\n   ";
         do_append_column_definition(sql, column);
       }
 
-    for(const auto& index : this->m_table.indexes())
+    for(const auto& index : this->m_table.indexes)
       if(index.type != mysql_index_dropped) {
         sql << ",\n   ";
         do_append_index_definition(sql, index);
       }
 
     sql << ")\n  ";
-    do_append_engine(sql, this->m_table.engine());
+    do_append_engine(sql, this->m_table.engine);
     sql << ",\n  CHARSET = 'utf8mb4'";
 
     POSEIDON_LOG_INFO(("Checking MySQL table:\n$1"), sql.get_string());
@@ -202,7 +202,7 @@ do_on_abstract_future_initialize()
     cow_vector<cow_string> fields;
 
     sql.clear_string();
-    sql << "SHOW COLUMNS FROM `" << this->m_table.name() << "`";
+    sql << "SHOW COLUMNS FROM `" << this->m_table.name << "`";
     this->m_conn->execute(sql.get_string(), { });
     this->m_conn->fetch_fields(fields);
 
@@ -226,12 +226,7 @@ do_on_abstract_future_initialize()
         idx_extra = t;
 
     while(this->m_conn->fetch_row(row)) {
-      cow_string& name = row.mut(idx_name).open_blob();
-      if(auto column_config = this->m_table.find_column_opt(name))
-        name = column_config->name;
-
-      // Save this column.
-      exColumn& r = excolumns[name];
+      exColumn& r = excolumns[row.at(idx_name).as_blob()];
       r.type = row.at(idx_type).as_blob();
       r.nullable = row.at(idx_nullable).as_blob() == "YES";
       r.default_value = move(row.at(idx_default_value));
@@ -239,7 +234,7 @@ do_on_abstract_future_initialize()
     }
 
     sql.clear_string();
-    sql << "SHOW INDEXES FROM `" << this->m_table.name() << "`";
+    sql << "SHOW INDEXES FROM `" << this->m_table.name << "`";
     this->m_conn->execute(sql.get_string(), { });
     this->m_conn->fetch_fields(fields);
 
@@ -259,12 +254,7 @@ do_on_abstract_future_initialize()
         idx_seq_in_index = t;
 
     while(this->m_conn->fetch_row(row)) {
-      cow_string& name = row.mut(idx_name).open_blob();
-      if(auto index_config = this->m_table.find_index_opt(name))
-        name = index_config->name;
-
-      // Save this index.
-      exIndex& r = exindexes[name];
+      exIndex& r = exindexes[row.at(idx_name).as_blob()];
       r.multi = row.at(idx_non_unique).as_integer() != 0;
       size_t column_seq = static_cast<size_t>(row.at(idx_seq_in_index).as_integer());
       r.columns.resize(::std::max(r.columns.size(), column_seq));
@@ -274,10 +264,10 @@ do_on_abstract_future_initialize()
     // Compare the existent columns and indexes with the requested ones,
     // altering the table as necessary.
     sql.clear_string();
-    sql << "ALTER TABLE `" << this->m_table.name() << "`\n  ";
+    sql << "ALTER TABLE `" << this->m_table.name << "`\n  ";
     size_t field_count = 0;
 
-    for(const auto& column : this->m_table.columns()) {
+    for(const auto& column : this->m_table.columns) {
       auto ex = excolumns.find(column.name);
 
       if((column.type == mysql_column_dropped) && (ex == excolumns.end()))
@@ -490,7 +480,7 @@ do_on_abstract_future_initialize()
         if(ex->second.default_value.is_null() != column.default_value.is_null())
           goto do_alter_table_column_;
 
-        POSEIDON_LOG_DEBUG(("Verified column `$1.$2`"), this->m_table.name(), column.name);
+        POSEIDON_LOG_DEBUG(("Verified column `$1.$2`"), this->m_table.name, column.name);
         continue;
       }
 
@@ -511,7 +501,7 @@ do_on_abstract_future_initialize()
         sql << "DROP COLUMN `" << column.name << "`";
     }
 
-    for(const auto& index : this->m_table.indexes()) {
+    for(const auto& index : this->m_table.indexes) {
       auto ex = exindexes.find(index.name);
 
       if((index.type == mysql_index_dropped) && (ex == exindexes.end()))
@@ -549,7 +539,7 @@ do_on_abstract_future_initialize()
           if(ex->second.columns[t] != index.columns[t])
             goto do_alter_table_index_;
 
-        POSEIDON_LOG_DEBUG(("Verified index `$1.$2`"), this->m_table.name(), index.name);
+        POSEIDON_LOG_DEBUG(("Verified index `$1.$2`"), this->m_table.name, index.name);
         continue;
       }
 
