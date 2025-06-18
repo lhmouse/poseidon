@@ -154,7 +154,7 @@ execute(const cow_string& stmt, const cow_vector<MySQL_Value>& args)
             struct timespec ts;
             timespec_from_system_time(ts, input_mdt.datetime.as_system_time());
             ::tm tm;
-            ::gmtime_r(&(ts.tv_sec), &tm);
+            ::localtime_r(&(ts.tv_sec), &tm);
 
             myt.year = static_cast<uint32_t>(tm.tm_year) + 1900;
             myt.month = static_cast<uint32_t>(tm.tm_mon) + 1;
@@ -334,7 +334,7 @@ fetch_row(cow_vector<MySQL_Value>& output)
         tm.tm_sec = static_cast<int>(myt.second);
         tm.tm_isdst = 0;
 
-        ::time_t secs = ::timegm(&tm);
+        ::time_t secs = ::timelocal(&tm);
         uint32_t msecs = static_cast<uint32_t>(myt.second_part);
         output_mdt.datetime = system_clock::from_time_t(secs) + milliseconds(msecs);
       }
