@@ -20,6 +20,7 @@ class MySQL_Query_Future
     uniptr<MySQL_Connection> m_conn;
     cow_string m_stmt;
     cow_vector<MySQL_Value> m_stmt_args;
+    uint32_t m_warning_count;
     uint64_t m_insert_id;
     cow_vector<cow_string> m_result_fields;
     cow_vector<cow_vector<MySQL_Value>> m_result_rows;
@@ -62,6 +63,17 @@ class MySQL_Query_Future
     const cow_vector<MySQL_Value>&
     stmt_args() const noexcept
       { return this->m_stmt_args;  }
+
+    // Gets the number of warnings of the last operation. This can indicate
+    // whether an INSERT IGNORE operation fails due to a key conflict. If
+    // `successful()` yields `false`, an exception is thrown, and there is no
+    // effect.
+    uint32_t
+    warning_count() const
+      {
+        this->check_success();
+        return this->m_warning_count;
+      }
 
     // Gets the auto-increment ID of an INSERT or REPLACE operation, after it
     // has completed successfully. The value is undefined for other operations.
