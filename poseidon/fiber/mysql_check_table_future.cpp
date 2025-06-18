@@ -560,7 +560,7 @@ do_on_abstract_future_initialize()
           sql << "DROP INDEX `" << index.name << "`";
 
         if(index.type != mysql_index_dropped) {
-          sql << ",\n   ADD";
+          sql << ",\n   ADD ";
           do_append_index_definition(sql, index);
         }
       }
