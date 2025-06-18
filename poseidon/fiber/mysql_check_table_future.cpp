@@ -244,13 +244,13 @@ do_on_abstract_future_initialize()
     ::std::map<cow_string, exIndex> exindexes;
 
     for(uint32_t t = 0;  t != fields.size();  ++t)
-      if(fields[t] == "key_name")
+      if(fields[t] == "Key_name")
         idx_name = t;
-      else if(fields[t] == "non_unique")
+      else if(fields[t] == "Non_unique")
         idx_non_unique = t;
-      else if(fields[t] == "column_name")
+      else if(fields[t] == "Column_name")
         idx_column_name = t;
-      else if(fields[t] == "seq_in_index")
+      else if(fields[t] == "Seq_in_index")
         idx_seq_in_index = t;
 
     while(this->m_conn->fetch_row(row)) {
