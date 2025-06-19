@@ -6,6 +6,7 @@
 #include "../utils.hpp"
 #define OPENSSL_API_COMPAT  0x10100000L
 #include <openssl/evp.h>
+template class POSEIDON_MONGO_VALUE_VARIANT_TYPE_;
 namespace poseidon {
 
 Mongo_Value::

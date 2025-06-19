@@ -15,9 +15,13 @@ class Mongo_Value
   private:
     friend class Mongo_Connection;
 
-    ::rocket::variant<nullptr_t, bool, int64_t, double,
-         cow_string, cow_bstring, Mongo_Array, Mongo_Document,
-         ::bson_oid_t, DateTime> m_stor;
+#define POSEIDON_MONGO_VALUE_VARIANT_TYPE_  \
+    ::rocket::variant<  \
+        ::std::nullptr_t, bool, int64_t, double, ::poseidon::cow_string,  \
+        ::poseidon::cow_bstring, ::poseidon::Mongo_Array,  \
+        ::poseidon::Mongo_Document, ::bson_oid_t, ::poseidon::DateTime>
+
+    POSEIDON_MONGO_VALUE_VARIANT_TYPE_ m_stor;
 
   public:
     // Value constructors
@@ -392,4 +396,5 @@ operator<<(tinyfmt& fmt, const Mongo_Value& value)
   { return value.print_to(fmt);  }
 
 }  // namespace poseidon
+extern template class POSEIDON_MONGO_VALUE_VARIANT_TYPE_;
 #endif
