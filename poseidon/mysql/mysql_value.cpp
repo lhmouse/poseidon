@@ -4,6 +4,7 @@
 #include "../xprecompiled.hpp"
 #include "mysql_value.hpp"
 #include "../utils.hpp"
+template class POSEIDON_MYSQL_VALUE_VARIANT_TYPE_;
 namespace poseidon {
 
 MySQL_Value::

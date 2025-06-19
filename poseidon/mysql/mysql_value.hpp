@@ -15,8 +15,12 @@ class MySQL_Value
   private:
     friend class MySQL_Connection;
 
-    ::rocket::variant<nullptr_t, int64_t, double,
-          cow_string, DateTime_with_MYSQL_TIME> m_stor;
+#define POSEIDON_MYSQL_VALUE_VARIANT_TYPE_  \
+    ::rocket::variant<  \
+        ::std::nullptr_t, int64_t, double, ::poseidon::cow_string,  \
+        ::poseidon::DateTime_with_MYSQL_TIME>
+
+    POSEIDON_MYSQL_VALUE_VARIANT_TYPE_ m_stor;
 
   public:
     // Value constructors
@@ -257,4 +261,5 @@ operator<<(tinyfmt& fmt, const MySQL_Value& value)
   { return value.print_to(fmt);  }
 
 }  // namespace poseidon
+extern template class POSEIDON_MYSQL_VALUE_VARIANT_TYPE_;
 #endif
