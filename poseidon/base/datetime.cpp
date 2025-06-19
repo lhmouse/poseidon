@@ -24,7 +24,7 @@ parse_rfc1123_partial(const char* str)
     ::memcpy(temp, str, len);
     temp[len] = 0;
 
-    ::tm tm;
+    struct tm tm;
     if(::strptime_l(temp, "%a, %d %b %Y %T GMT", &tm, c_locale) != temp + len)
       return 0;
 
@@ -43,7 +43,7 @@ parse_rfc850_partial(const char* str)
     ::memcpy(temp, str, len);
     temp[len] = 0;
 
-    ::tm tm;
+    struct tm tm;
     if(::strptime_l(temp, "%A, %d-%b-%y %T GMT", &tm, c_locale) != temp + len)
       return 0;
 
@@ -62,7 +62,7 @@ parse_asctime_partial(const char* str)
     ::memcpy(temp, str, len);
     temp[len] = 0;
 
-    ::tm tm;
+    struct tm tm;
     if(::strptime_l(temp, "%a %b %e %T %Y", &tm, c_locale) != temp + len)
       return 0;
 
@@ -81,7 +81,7 @@ parse_cookie_partial(const char* str)
     ::memcpy(temp, str, len);
     temp[len] = 0;
 
-    ::tm tm;
+    struct tm tm;
     if(::strptime_l(temp, "%a, %d-%b-%Y %T GMT", &tm, c_locale) != temp + len)
       return 0;
 
@@ -100,7 +100,7 @@ parse_iso8601_partial(const char* str)
     ::memcpy(temp, str, len);
     temp[len] = 0;
 
-    ::tm tm;
+    struct tm tm;
     if(::strptime_l(temp, "%Y-%m-%dT%TZ", &tm, c_locale) != temp + len)
       return 0;
 
@@ -146,7 +146,7 @@ print_rfc1123_partial(char* str) const noexcept
     struct timespec ts;
     timespec_from_system_time(ts, this->m_tp);
     ts.tv_sec = ::std::clamp<::time_t>(ts.tv_sec, -2208988800, 253402300799);
-    ::tm tm;
+    struct tm tm;
     ::gmtime_r(&(ts.tv_sec), &tm);
 
     size_t len = ::strftime_l(str, 30, "%a, %d %b %Y %T GMT", &tm, c_locale);
@@ -162,7 +162,7 @@ print_rfc850_partial(char* str) const noexcept
     struct timespec ts;
     timespec_from_system_time(ts, this->m_tp);
     ts.tv_sec = ::std::clamp<::time_t>(ts.tv_sec, -2208988800, 253402300799);
-    ::tm tm;
+    struct tm tm;
     ::gmtime_r(&(ts.tv_sec), &tm);
 
     size_t len = ::strftime_l(str, 34, "%A, %d-%b-%y %T GMT", &tm, c_locale);
@@ -178,7 +178,7 @@ print_asctime_partial(char* str) const noexcept
     struct timespec ts;
     timespec_from_system_time(ts, this->m_tp);
     ts.tv_sec = ::std::clamp<::time_t>(ts.tv_sec, -2208988800, 253402300799);
-    ::tm tm;
+    struct tm tm;
     ::gmtime_r(&(ts.tv_sec), &tm);
 
     size_t len = ::strftime_l(str, 25, "%a %b %e %T %Y", &tm, c_locale);
@@ -194,7 +194,7 @@ print_cookie_partial(char* str) const noexcept
     struct timespec ts;
     timespec_from_system_time(ts, this->m_tp);
     ts.tv_sec = ::std::clamp<::time_t>(ts.tv_sec, -2208988800, 253402300799);
-    ::tm tm;
+    struct tm tm;
     ::gmtime_r(&(ts.tv_sec), &tm);
 
     size_t len = ::strftime_l(str, 30, "%a, %d-%b-%Y %T GMT", &tm, c_locale);
@@ -210,7 +210,7 @@ print_iso8601_partial(char* str) const noexcept
     struct timespec ts;
     timespec_from_system_time(ts, this->m_tp);
     ts.tv_sec = ::std::clamp<::time_t>(ts.tv_sec, -2208988800, 253402300799);
-    ::tm tm;
+    struct tm tm;
     ::gmtime_r(&(ts.tv_sec), &tm);
 
     size_t len = ::strftime_l(str, 21, "%Y-%m-%dT%TZ", &tm, c_locale);
@@ -226,7 +226,7 @@ print_iso8601_ns_partial(char* str) const noexcept
     struct timespec ts;
     timespec_from_system_time(ts, this->m_tp);
     ts.tv_sec = ::std::clamp<::time_t>(ts.tv_sec, -2208988800, 253402300799);
-    ::tm tm;
+    struct tm tm;
     ::gmtime_r(&(ts.tv_sec), &tm);
 
     ::rocket::ascii_numput nump;

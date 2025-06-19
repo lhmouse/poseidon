@@ -120,6 +120,9 @@ execute(const cow_string& stmt, const cow_vector<MySQL_Value>& args)
           "No enough arguments for MySQL statement (`$1` < `$2`)"),
           args.size(), nparams);
 
+    struct timespec ts;
+    struct tm tm;
+
     ::std::vector<::MYSQL_BIND> binds(nparams);
     for(uint32_t col = 0;  col != binds.size();  ++col)
       switch(args.at(col).type())
@@ -153,7 +156,7 @@ execute(const cow_string& stmt, const cow_vector<MySQL_Value>& args)
 
             struct timespec ts;
             timespec_from_system_time(ts, input_mdt.datetime.as_system_time());
-            ::tm tm;
+            struct tm tm;
             ::localtime_r(&(ts.tv_sec), &tm);
 
             myt.year = static_cast<uint32_t>(tm.tm_year) + 1900;
@@ -325,7 +328,7 @@ fetch_row(cow_vector<MySQL_Value>& output)
         auto& output_mdt = output.mut(col).m_stor.mut<DateTime_with_MYSQL_TIME>();
         ::MYSQL_TIME& myt = output_mdt.get_mysql_time();
 
-        ::tm tm;
+        struct tm tm;
         tm.tm_year = static_cast<int>(myt.year) - 1900;
         tm.tm_mon = static_cast<int>(myt.month) - 1;
         tm.tm_mday = static_cast<int>(myt.day);

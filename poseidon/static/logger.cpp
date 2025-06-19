@@ -90,7 +90,7 @@ do_write_nothrow(xFiles& io_files,  const Level_Config& lconf, const Message& ms
     // Get the local system time.
     struct timespec tv;
     ::clock_gettime(CLOCK_REALTIME, &tv);
-    ::tm tm;
+    struct tm tm;
     ::localtime_r(&(tv.tv_sec), &tm);
 
     // Write the timestamp and tag.
