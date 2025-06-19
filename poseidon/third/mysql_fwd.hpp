@@ -33,8 +33,7 @@ class scoped_MYSQL
     scoped_MYSQL(const scoped_MYSQL&) = delete;
     scoped_MYSQL& operator=(const scoped_MYSQL&) & = delete;
 
-    operator ::MYSQL*() const noexcept
-      { return this->m_mysql;  }
+    operator ::MYSQL*() const noexcept { return this->m_mysql;  }
   };
 
 struct DateTime_with_MYSQL_TIME

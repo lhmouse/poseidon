@@ -63,8 +63,7 @@ class scoped_deflate_stream
     scoped_deflate_stream(const scoped_deflate_stream&) = delete;
     scoped_deflate_stream& operator=(const scoped_deflate_stream&) & = delete;
 
-    operator ::z_stream*() const noexcept
-      { return this->m_strm;  }
+    operator ::z_stream*() const noexcept { return this->m_strm;  }
 
     const char*
     msg() const noexcept
@@ -128,8 +127,7 @@ class scoped_inflate_stream
     scoped_inflate_stream(const scoped_inflate_stream&) = delete;
     scoped_inflate_stream& operator=(const scoped_inflate_stream&) & = delete;
 
-    operator ::z_stream*() const noexcept
-      { return this->m_strm;  }
+    operator ::z_stream*() const noexcept { return this->m_strm;  }
 
     const char*
     msg() const noexcept

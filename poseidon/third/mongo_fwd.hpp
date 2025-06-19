@@ -16,7 +16,7 @@ namespace poseidon {
 class scoped_bson
   {
   private:
-    ::bson_t m_bson[1];
+    mutable ::bson_t m_bson[1];
 
   public:
     scoped_bson() noexcept
@@ -32,11 +32,7 @@ class scoped_bson
     scoped_bson(const scoped_bson& other) = delete;
     scoped_bson& operator=(const scoped_bson& other) & = delete;
 
-    constexpr operator const ::bson_t*() const noexcept
-      { return this->m_bson;  }
-
-    operator ::bson_t*() noexcept
-      { return this->m_bson;  }
+    operator ::bson_t*() const noexcept { return this->m_bson;  }
 
     const uint8_t*
     data() const noexcept
