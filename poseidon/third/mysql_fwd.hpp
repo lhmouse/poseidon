@@ -36,39 +36,6 @@ class scoped_MYSQL
     operator ::MYSQL*() const noexcept { return this->m_mysql;  }
   };
 
-struct DateTime_with_MYSQL_TIME
-  {
-    DateTime datetime;
-    mutable uniptr<::MYSQL_TIME> cached_mysql_time;
-
-    constexpr
-    DateTime_with_MYSQL_TIME() noexcept = default;
-
-    constexpr
-    DateTime_with_MYSQL_TIME(const DateTime_with_MYSQL_TIME& other) noexcept
-      : datetime(other.datetime)
-      { }
-
-    DateTime_with_MYSQL_TIME&
-    operator=(const DateTime_with_MYSQL_TIME& other) & noexcept
-      {
-        this->datetime = other.datetime;
-        return *this;
-      }
-
-    ::MYSQL_TIME&
-    get_mysql_time() const
-      {
-        auto ptr = this->cached_mysql_time.get();
-        if(!ptr) {
-          ptr = new ::MYSQL_TIME();
-          (void)! this->cached_mysql_time.release();
-          this->cached_mysql_time.reset(ptr);
-        }
-        return *ptr;
-      }
-  };
-
 struct MYSQL_STMT_deleter
   {
     void

@@ -122,6 +122,7 @@ execute(const cow_string& stmt, const cow_vector<MySQL_Value>& args)
 
     struct timespec ts;
     struct tm tm;
+    ::std::vector<::MYSQL_TIME> time_buf;
 
     ::std::vector<::MYSQL_BIND> binds(nparams);
     for(uint32_t col = 0;  col != binds.size();  ++col)
@@ -150,28 +151,23 @@ execute(const cow_string& stmt, const cow_vector<MySQL_Value>& args)
           break;
 
         case mysql_value_datetime:
-          {
-            const auto& input_mdt = args[col].m_stor.as<DateTime_with_MYSQL_TIME>();
-            ::MYSQL_TIME& myt = input_mdt.get_mysql_time();
+          timespec_from_system_time(ts, args[col].as_system_time());
+          ::gmtime_r(&(ts.tv_sec), &tm);
 
-            struct timespec ts;
-            timespec_from_system_time(ts, input_mdt.datetime.as_system_time());
-            struct tm tm;
-            ::localtime_r(&(ts.tv_sec), &tm);
+          time_buf.resize(args.size());
+          time_buf[col].year = static_cast<uint32_t>(tm.tm_year) + 1900;
+          time_buf[col].month = static_cast<uint32_t>(tm.tm_mon) + 1;
+          time_buf[col].day = static_cast<uint32_t>(tm.tm_mday);
+          time_buf[col].hour = static_cast<uint32_t>(tm.tm_hour);
+          time_buf[col].minute = static_cast<uint32_t>(tm.tm_min);
+          time_buf[col].second = static_cast<uint32_t>(tm.tm_sec);
+          time_buf[col].second_part = static_cast<uint32_t>(ts.tv_nsec) / 1000000;
+          time_buf[col].time_type = MYSQL_TIMESTAMP_DATETIME;
 
-            myt.year = static_cast<uint32_t>(tm.tm_year) + 1900;
-            myt.month = static_cast<uint32_t>(tm.tm_mon) + 1;
-            myt.day = static_cast<uint32_t>(tm.tm_mday);
-            myt.hour = static_cast<uint32_t>(tm.tm_hour);
-            myt.minute = static_cast<uint32_t>(tm.tm_min);
-            myt.second = static_cast<uint32_t>(tm.tm_sec);
-            myt.second_part = static_cast<uint32_t>(ts.tv_nsec) / 1000000;
-            myt.time_type = MYSQL_TIMESTAMP_DATETIME;
-
-            binds[col].buffer_type = MYSQL_TYPE_DATETIME;
-            binds[col].buffer = &myt;
-            binds[col].buffer_length = sizeof(::MYSQL_TIME);
-          }
+          // Use the temporary buffer.
+          binds[col].buffer_type = MYSQL_TYPE_DATETIME;
+          binds[col].buffer = &(time_buf[col]);
+          binds[col].buffer_length = sizeof(::MYSQL_TIME);
           break;
 
         default:
@@ -244,6 +240,10 @@ fetch_row(cow_vector<MySQL_Value>& output)
     if(this->m_meta)
       meta_fields = ::mysql_fetch_fields(this->m_meta);
 
+    struct timespec ts;
+    struct tm tm;
+    ::std::vector<::MYSQL_TIME> time_buf;
+
     output.resize(nfields);
     for(size_t col = 0;  col != nfields;  ++col) {
       // Prepare output buffers. When there is no metadata o we can't know the
@@ -278,24 +278,18 @@ fetch_row(cow_vector<MySQL_Value>& output)
         case MYSQL_TYPE_DATETIME:
         case MYSQL_TYPE_DATE:
         case MYSQL_TYPE_TIME:
-          {
-            binds[col].buffer_type = MYSQL_TYPE_DATETIME;
-            auto& output_mdt = output.mut(col).m_stor.emplace<DateTime_with_MYSQL_TIME>();
-            binds[col].buffer = &(output_mdt.get_mysql_time());
-            binds[col].buffer_length = sizeof(::MYSQL_TIME);
-            break;
-          }
+          binds[col].buffer_type = MYSQL_TYPE_DATETIME;
+          time_buf.resize(nfields);
+          binds[col].buffer = &(time_buf[col]);
+          binds[col].buffer_length = sizeof(::MYSQL_TIME);
+          break;
 
         default:
-          {
-            // Reserve a small amount of memory for BLOB fields. If it's not
-            // large enough, it will be resized later.
-            binds[col].buffer_type = MYSQL_TYPE_LONG_BLOB;
-            output.mut(col).open_blob().resize(64);
-            binds[col].buffer = output.mut(col).open_blob().mut_data();
-            binds[col].buffer_length = output.mut(col).open_blob().size();
-            break;
-          }
+          binds[col].buffer_type = MYSQL_TYPE_LONG_BLOB;
+          output.mut(col).open_blob().resize(255);
+          binds[col].buffer = output.mut(col).open_blob().mut_data();
+          binds[col].buffer_length = output.mut(col).open_blob().size();
+          break;
         }
 
       // XXX: What are these fields used for? Why aren't they used by default?
@@ -307,7 +301,6 @@ fetch_row(cow_vector<MySQL_Value>& output)
     if(::mysql_stmt_bind_result(this->m_stmt, binds.data()) != 0)
       return false;
 
-    // Request the next row.
     int status = ::mysql_stmt_fetch(this->m_stmt);
     if(status == 1)
       POSEIDON_THROW((
@@ -325,31 +318,26 @@ fetch_row(cow_vector<MySQL_Value>& output)
       }
       else if(binds[col].buffer_type == MYSQL_TYPE_DATETIME) {
         // Assemble the timestamp.
-        auto& output_mdt = output.mut(col).m_stor.mut<DateTime_with_MYSQL_TIME>();
-        ::MYSQL_TIME& myt = output_mdt.get_mysql_time();
-
-        struct tm tm;
-        tm.tm_year = static_cast<int>(myt.year) - 1900;
-        tm.tm_mon = static_cast<int>(myt.month) - 1;
-        tm.tm_mday = static_cast<int>(myt.day);
-        tm.tm_hour = static_cast<int>(myt.hour);
-        tm.tm_min = static_cast<int>(myt.minute);
-        tm.tm_sec = static_cast<int>(myt.second);
+        tm.tm_year = static_cast<int>(time_buf[col].year) - 1900;
+        tm.tm_mon = static_cast<int>(time_buf[col].month) - 1;
+        tm.tm_mday = static_cast<int>(time_buf[col].day);
+        tm.tm_hour = static_cast<int>(time_buf[col].hour);
+        tm.tm_min = static_cast<int>(time_buf[col].minute);
+        tm.tm_sec = static_cast<int>(time_buf[col].second);
         tm.tm_isdst = 0;
 
-        ::time_t secs = ::timelocal(&tm);
-        uint32_t msecs = static_cast<uint32_t>(myt.second_part);
-        output_mdt.datetime = system_clock::from_time_t(secs) + milliseconds(msecs);
+        ts.tv_sec = ::timegm(&tm);
+        ts.tv_nsec = static_cast<long>(time_buf[col].second_part);
+        output.mut(col).open_datetime() = system_time_from_timespec(ts);
       }
       else if(binds[col].buffer_type == MYSQL_TYPE_LONG_BLOB) {
-        // Check whether the value has been truncated.
-        auto& output_str = output.mut(col).open_blob();
-        output_str.resize(binds[col].length_value);
-
-        if(binds[col].error_value) {
-          // Refetch.
-          binds[col].buffer = output_str.mut_data();
-          binds[col].buffer_length = output_str.size();
+        // Resize the buffer to the actual length.
+        output.mut(col).open_blob().resize(binds[col].length_value);
+        if(binds[col].buffer_length < binds[col].length_value) {
+          // This indicates that the previous size was too small, and we have to
+          // fetch the data again.
+          binds[col].buffer = output.mut(col).open_blob().mut_data();
+          binds[col].buffer_length = binds[col].length_value;
           ::mysql_stmt_fetch_column(this->m_stmt, &(binds[col]), col, 0);
         }
       }

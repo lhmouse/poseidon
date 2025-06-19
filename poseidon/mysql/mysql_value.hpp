@@ -18,7 +18,7 @@ class MySQL_Value
 #define POSEIDON_MYSQL_VALUE_VARIANT_TYPE_  \
     ::rocket::variant<  \
         ::std::nullptr_t, int64_t, double, ::poseidon::cow_string,  \
-        ::poseidon::DateTime_with_MYSQL_TIME>
+        ::poseidon::DateTime>
 
     POSEIDON_MYSQL_VALUE_VARIANT_TYPE_ m_stor;
 
@@ -112,7 +112,7 @@ class MySQL_Value
 
     MySQL_Value(const DateTime& dt) noexcept
       {
-        this->m_stor.emplace<DateTime_with_MYSQL_TIME>().datetime = dt;
+        this->m_stor.emplace<DateTime>(dt);
       }
 
     MySQL_Value&
@@ -124,7 +124,7 @@ class MySQL_Value
 
     MySQL_Value(system_time tm) noexcept
       {
-        this->m_stor.emplace<DateTime_with_MYSQL_TIME>().datetime = tm;
+        this->m_stor.emplace<DateTime>(tm);
       }
 
     MySQL_Value&
@@ -226,19 +226,19 @@ class MySQL_Value
 
     const DateTime&
     as_datetime() const
-      { return this->m_stor.as<DateTime_with_MYSQL_TIME>().datetime;  }
+      { return this->m_stor.as<DateTime>();  }
 
     system_time
     as_system_time() const
-      { return this->m_stor.as<DateTime_with_MYSQL_TIME>().datetime.as_system_time();  }
+      { return this->m_stor.as<DateTime>().as_system_time();  }
 
     DateTime&
     open_datetime() noexcept
       {
-        if(auto ptr = this->m_stor.mut_ptr<DateTime_with_MYSQL_TIME>())
-          return ptr->datetime;
+        if(auto ptr = this->m_stor.mut_ptr<DateTime>())
+          return *ptr;
         else
-          return this->m_stor.emplace<DateTime_with_MYSQL_TIME>().datetime;
+          return this->m_stor.emplace<DateTime>();
       }
 
     // Converts this value to its string form. The result will be suitable
