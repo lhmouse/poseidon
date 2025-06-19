@@ -152,7 +152,7 @@ execute(const cow_string& stmt, const cow_vector<MySQL_Value>& args)
 
         case mysql_value_datetime:
           timespec_from_system_time(ts, args[col].as_system_time());
-          ::gmtime_r(&(ts.tv_sec), &tm);
+          ::localtime_r(&(ts.tv_sec), &tm);
 
           time_buf.resize(args.size());
           time_buf[col].year = static_cast<uint32_t>(tm.tm_year) + 1900;
@@ -161,7 +161,8 @@ execute(const cow_string& stmt, const cow_vector<MySQL_Value>& args)
           time_buf[col].hour = static_cast<uint32_t>(tm.tm_hour);
           time_buf[col].minute = static_cast<uint32_t>(tm.tm_min);
           time_buf[col].second = static_cast<uint32_t>(tm.tm_sec);
-          time_buf[col].second_part = static_cast<uint32_t>(ts.tv_nsec) / 1000000;
+          time_buf[col].second_part = static_cast<uint32_t>(ts.tv_nsec) / 1000000 * 1000;
+          time_buf[col].second_part += tm.tm_isdst == 1;  // yeah, pure abuse
           time_buf[col].time_type = MYSQL_TIMESTAMP_DATETIME;
 
           // Use the temporary buffer.
@@ -318,16 +319,16 @@ fetch_row(cow_vector<MySQL_Value>& output)
       }
       else if(binds[col].buffer_type == MYSQL_TYPE_DATETIME) {
         // Assemble the timestamp.
-        tm.tm_year = static_cast<int>(time_buf[col].year) - 1900;
-        tm.tm_mon = static_cast<int>(time_buf[col].month) - 1;
+        tm.tm_year = static_cast<int>(time_buf[col].year - 1900);
+        tm.tm_mon = static_cast<int>(time_buf[col].month - 1);
         tm.tm_mday = static_cast<int>(time_buf[col].day);
         tm.tm_hour = static_cast<int>(time_buf[col].hour);
         tm.tm_min = static_cast<int>(time_buf[col].minute);
         tm.tm_sec = static_cast<int>(time_buf[col].second);
-        tm.tm_isdst = 0;
+        tm.tm_isdst = static_cast<int>(time_buf[col].second_part % 1000 & 1);
+        ts.tv_nsec = static_cast<long>(time_buf[col].second_part / 1000 * 1000000);
 
-        ts.tv_sec = ::timegm(&tm);
-        ts.tv_nsec = static_cast<long>(time_buf[col].second_part);
+        ts.tv_sec = ::timelocal(&tm);
         output.mut(col).open_datetime() = system_time_from_timespec(ts);
       }
       else if(binds[col].buffer_type == MYSQL_TYPE_LONG_BLOB) {

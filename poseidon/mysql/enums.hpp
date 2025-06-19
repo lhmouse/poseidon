@@ -16,7 +16,7 @@ enum MySQL_Column_Type : uint8_t
     mysql_column_int64           = 4,  // bigint
     mysql_column_double          = 5,  // double
     mysql_column_blob            = 6,  // longblob
-    mysql_column_datetime        = 7,  // timestamp
+    mysql_column_datetime        = 7,  // datetime
     mysql_column_auto_increment  = 8,  // bigint auto_increment
   };
 
