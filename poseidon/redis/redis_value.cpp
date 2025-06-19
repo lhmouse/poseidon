@@ -4,6 +4,7 @@
 #include "../xprecompiled.hpp"
 #include "redis_value.hpp"
 #include "../utils.hpp"
+template class POSEIDON_REDIS_VALUE_VARIANT_TYPE_;
 namespace poseidon {
 
 Redis_Value::

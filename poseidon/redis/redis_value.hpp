@@ -13,7 +13,12 @@ class Redis_Value
   private:
     friend class Redis_Connection;
 
-    ::rocket::variant<nullptr_t, int64_t, cow_string, Redis_Array> m_stor;
+#define POSEIDON_REDIS_VALUE_VARIANT_TYPE_  \
+    ::rocket::variant<  \
+        ::std::nullptr_t, int64_t, ::poseidon::cow_string,  \
+        ::poseidon::Redis_Array>
+
+    POSEIDON_REDIS_VALUE_VARIANT_TYPE_ m_stor;
 
   public:
     // Value constructors
@@ -190,4 +195,5 @@ operator<<(tinyfmt& fmt, const Redis_Value& value)
   { return value.print_to(fmt);  }
 
 }  // namespace poseidon
+extern template class POSEIDON_REDIS_VALUE_VARIANT_TYPE_;
 #endif
