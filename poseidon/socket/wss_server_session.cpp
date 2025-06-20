@@ -56,8 +56,7 @@ do_on_https_request_payload_stream(linear_buffer& data)
 
 void
 WSS_Server_Session::
-do_on_https_request_finish(HTTP_C_Headers&& /*req*/,
-                           linear_buffer&& /*data*/, bool /*connection_close*/)
+do_on_https_request_finish(HTTP_C_Headers&& /*req*/, linear_buffer&& /*data*/, bool /*eot*/)
   {
   }
 

@@ -16,7 +16,8 @@ struct Event
     Easy_HTTP_Event type;
     HTTP_C_Headers req;
     linear_buffer data;
-    bool conn_close = false;
+    bool eot = false;
+    char reserved = 0;
     HTTP_Status status = http_status_null;
   };
 
@@ -103,10 +104,11 @@ struct Final_Fiber final : Abstract_Fiber
             else {
               // Process a request.
               this->m_callback(session, *this, event.type, move(event.req), move(event.data));
-            }
 
-            if(event.conn_close)
-              session->ssl_shut_down();
+              // If the client has offered `Connection: close`, shut it down.
+              if(event.eot)
+                session->ssl_shut_down();
+            }
           }
           catch(exception& stdex) {
             // Shut the connection down without a message.
@@ -172,14 +174,13 @@ struct Final_Session final : HTTPS_Server_Session
 
     virtual
     void
-    do_on_https_request_finish(HTTP_C_Headers&& req,
-                               linear_buffer&& data, bool connection_close) override
+    do_on_https_request_finish(HTTP_C_Headers&& req, linear_buffer&& data, bool eot) override
       {
         Event event;
         event.type = easy_http_message;
         event.req = move(req);
         event.data = move(data);
-        event.conn_close = connection_close;
+        event.eot = eot;
         this->do_push_event_common(move(event));
       }
 
@@ -189,7 +190,7 @@ struct Final_Session final : HTTPS_Server_Session
       {
         Event event;
         event.status = status;
-        event.conn_close = true;
+        event.eot = true;
         this->do_push_event_common(move(event));
       }
 

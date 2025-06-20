@@ -44,8 +44,7 @@ class WS_Server_Session
 
     virtual
     void
-    do_on_http_request_finish(HTTP_C_Headers&& req,
-                              linear_buffer&& data, bool connection_close) override;
+    do_on_http_request_finish(HTTP_C_Headers&& req, linear_buffer&& data, bool eot) override;
 
     virtual
     void
