@@ -42,7 +42,7 @@ class WS_Client_Session
     virtual
     void
     do_on_http_response_finish(HTTP_Response_Headers&& resp,
-                               linear_buffer&& data, bool close_now) override;
+                               linear_buffer&& data, bool connection_close) override;
 
     virtual
     void

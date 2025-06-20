@@ -57,7 +57,7 @@ do_on_http_request_payload_stream(linear_buffer& data)
 void
 WS_Server_Session::
 do_on_http_request_finish(HTTP_Request_Headers&& /*req*/,
-                          linear_buffer&& /*data*/, bool /*close_now*/)
+                          linear_buffer&& /*data*/, bool /*connection_close*/)
   {
   }
 

@@ -70,12 +70,12 @@ class HTTPS_Server_Session
     // This callback is invoked by the network thread at the end of a request
     // message. Arguments have the same semantics with the other callbacks.
     // `data` for GET, HEAD, DELETE and CONNECT methods will always be empty.
-    // `close_now` indicates whether the request contains `close` in its
+    // `connection_close` indicates whether the request contains `close` in its
     // `Connection` header.
     virtual
     void
     do_on_https_request_finish(HTTP_Request_Headers&& req, linear_buffer&& data,
-                               bool close_now) = 0;
+                               bool connection_close) = 0;
 
     // This callback is invoked when an HTTP parser error happens. Why must we
     // dedicate an error callback for server sessions? Well, it's because HTTP

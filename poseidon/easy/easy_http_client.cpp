@@ -17,7 +17,7 @@ struct Event
     Easy_HTTP_Event type;
     HTTP_Response_Headers resp;
     linear_buffer data;
-    bool close_now = false;
+    bool conn_close = false;
   };
 
 struct Event_Queue
@@ -105,7 +105,7 @@ struct Final_Fiber final : Abstract_Fiber
             session->quick_shut_down();
           }
 
-          if(event.close_now)
+          if(event.conn_close)
             session->tcp_shut_down();
         }
       }
@@ -167,13 +167,13 @@ struct Final_Session final : HTTP_Client_Session
     virtual
     void
     do_on_http_response_finish(HTTP_Response_Headers&& resp,
-                               linear_buffer&& data, bool close_now) override
+                               linear_buffer&& data, bool connection_close) override
       {
         Event event;
         event.type = easy_http_message;
         event.resp = move(resp);
         event.data = move(data);
-        event.close_now = close_now;
+        event.conn_close = connection_close;
         this->do_push_event_common(move(event));
       }
 

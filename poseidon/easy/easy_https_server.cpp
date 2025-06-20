@@ -16,7 +16,7 @@ struct Event
     Easy_HTTP_Event type;
     HTTP_Request_Headers req;
     linear_buffer data;
-    bool close_now = false;
+    bool conn_close = false;
     HTTP_Status status = http_status_null;
   };
 
@@ -105,7 +105,7 @@ struct Final_Fiber final : Abstract_Fiber
               this->m_callback(session, *this, event.type, move(event.req), move(event.data));
             }
 
-            if(event.close_now)
+            if(event.conn_close)
               session->ssl_shut_down();
           }
           catch(exception& stdex) {
@@ -173,13 +173,13 @@ struct Final_Session final : HTTPS_Server_Session
     virtual
     void
     do_on_https_request_finish(HTTP_Request_Headers&& req,
-                               linear_buffer&& data, bool close_now) override
+                               linear_buffer&& data, bool connection_close) override
       {
         Event event;
         event.type = easy_http_message;
         event.req = move(req);
         event.data = move(data);
-        event.close_now = close_now;
+        event.conn_close = connection_close;
         this->do_push_event_common(move(event));
       }
 
@@ -189,7 +189,7 @@ struct Final_Session final : HTTPS_Server_Session
       {
         Event event;
         event.status = status;
-        event.close_now = true;
+        event.conn_close = true;
         this->do_push_event_common(move(event));
       }
 

@@ -57,12 +57,12 @@ do_on_http_response_payload_stream(linear_buffer& data)
 void
 WS_Client_Session::
 do_on_http_response_finish(HTTP_Response_Headers&& resp,
-                           linear_buffer&& /*data*/, bool close_now)
+                           linear_buffer&& /*data*/, bool connection_close)
   {
     // Accept the handshake response.
     this->m_parser.accept_handshake_response(resp);
 
-    if(close_now || !this->m_parser.is_client_mode()) {
+    if(connection_close || !this->m_parser.is_client_mode()) {
       // The handshake failed.
       this->do_call_on_ws_close_once(websocket_status_protocol_error,
                                      this->m_parser.error_description());
