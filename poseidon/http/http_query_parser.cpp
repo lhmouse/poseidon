@@ -69,8 +69,7 @@ next_element()
       uint32_t ch = (uint8_t) *sptr;
       if(ch < 128) {
         if((bad_chars[ch / 32] >> (ch % 32)) & 1) {
-          POSEIDON_LOG_DEBUG(("Invalid character encountered at `$1`"),
-                              chars_view(sptr, ::strnlen(sptr, 40)));
+          POSEIDON_LOG_DEBUG(("Invalid character encountered at `$1`"), snview(sptr, 40));
           this->m_hpos = error_hpos;
           return false;
         }
@@ -82,8 +81,7 @@ next_element()
         else if(ch == '%') {
           // Expect two hexadecimal digits.
           if(esptr - sptr < 3) {
-            POSEIDON_LOG_DEBUG(("Invalid percent-encoding sequence encountered at `$1`"),
-                                chars_view(sptr, ::strnlen(sptr, 40)));
+            POSEIDON_LOG_DEBUG(("Invalid % sequence encountered at `$1`"), snview(sptr, 40));
             this->m_hpos = error_hpos;
             return false;
           }
@@ -95,8 +93,7 @@ next_element()
           else if((sptr[1] >= 'a') && (sptr[1] <= 'f'))
             ch = (uint32_t) ((uint8_t) sptr[1] - 'a' + 10) << 4;
           else {
-            POSEIDON_LOG_DEBUG(("Invalid hexadecimal character encountered at `$1`"),
-                               chars_view(sptr, ::strnlen(sptr, 40)));
+            POSEIDON_LOG_DEBUG(("Invalid hex digit encountered at `$1`"), snview(sptr, 40));
             this->m_hpos = error_hpos;
             return false;
           }
@@ -108,8 +105,7 @@ next_element()
           else if((sptr[2] >= 'a') && (sptr[2] <= 'f'))
             ch |= (uint32_t) ((uint8_t) sptr[2] - 'a' + 10);
           else {
-            POSEIDON_LOG_DEBUG(("Invalid hexadecimal character encountered at `$1`"),
-                                chars_view(sptr, ::strnlen(sptr, 40)));
+            POSEIDON_LOG_DEBUG(("Invalid hex digit encountered at `$1`"), snview(sptr, 40));
             this->m_hpos = error_hpos;
             return false;
           }

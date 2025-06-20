@@ -213,7 +213,7 @@ struct cacheline_barrier
 
     cacheline_barrier() noexcept = default;
     cacheline_barrier(const cacheline_barrier&) { }
-    cacheline_barrier& operator=(const cacheline_barrier&) { return *this; }
+    cacheline_barrier& operator=(const cacheline_barrier&) & { return *this; }
   };
 
 struct chars_view
