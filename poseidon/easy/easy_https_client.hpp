@@ -28,7 +28,7 @@ class Easy_HTTPS_Client
               const shptr<HTTPS_Client_Session>&  session,
               Abstract_Fiber& fiber,
               Easy_HTTP_Event event,
-              HTTP_Response_Headers&& resp,
+              HTTP_S_Headers&& resp,
               linear_buffer&& data)>;
 
   private:

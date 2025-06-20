@@ -41,7 +41,7 @@ do_abstract_socket_on_closed()
 
 HTTP_Payload_Type
 WS_Server_Session::
-do_on_http_request_headers(HTTP_Request_Headers& req, bool close_after_payload)
+do_on_http_request_headers(HTTP_C_Headers& req, bool close_after_payload)
   {
     this->do_ws_complete_handshake(req, close_after_payload);
     return http_payload_normal;
@@ -56,7 +56,7 @@ do_on_http_request_payload_stream(linear_buffer& data)
 
 void
 WS_Server_Session::
-do_on_http_request_finish(HTTP_Request_Headers&& /*req*/,
+do_on_http_request_finish(HTTP_C_Headers&& /*req*/,
                           linear_buffer&& /*data*/, bool /*connection_close*/)
   {
   }
@@ -66,7 +66,7 @@ WS_Server_Session::
 do_on_http_request_error(HTTP_Status status)
   {
     // This error can be reported synchronously.
-    HTTP_Response_Headers resp;
+    HTTP_S_Headers resp;
     resp.status = status;
     resp.headers.emplace_back(&"Connection", &"close");
     this->http_response(move(resp), "");
@@ -236,7 +236,7 @@ do_on_ws_close(WebSocket_Status status, chars_view reason)
 
 void
 WS_Server_Session::
-do_ws_complete_handshake(HTTP_Request_Headers& req, bool close_after_payload)
+do_ws_complete_handshake(HTTP_C_Headers& req, bool close_after_payload)
   {
     if(req.is_proxy) {
       // Reject proxy requests.
@@ -245,7 +245,7 @@ do_ws_complete_handshake(HTTP_Request_Headers& req, bool close_after_payload)
     }
 
     // Send the handshake response.
-    HTTP_Response_Headers resp;
+    HTTP_S_Headers resp;
     this->m_parser.accept_handshake_request(resp, req);
     this->http_response_headers_only(move(resp));
 

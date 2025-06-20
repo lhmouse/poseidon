@@ -8,7 +8,7 @@
 #include "enums.hpp"
 #include "tcp_socket.hpp"
 #include "../http/http_request_parser.hpp"
-#include "../http/http_response_headers.hpp"
+#include "../http/http_s_headers.hpp"
 namespace poseidon {
 
 class HTTP_Server_Session
@@ -47,7 +47,7 @@ class HTTP_Server_Session
     // `http_payload_normal`.
     virtual
     HTTP_Payload_Type
-    do_on_http_request_headers(HTTP_Request_Headers& req, bool close_after_payload);
+    do_on_http_request_headers(HTTP_C_Headers& req, bool close_after_payload);
 
     // This callback is invoked by the network thread for each fragment of the
     // request payload that has been received. As with `TCP_Connection::
@@ -70,7 +70,7 @@ class HTTP_Server_Session
     // `Connection` header.
     virtual
     void
-    do_on_http_request_finish(HTTP_Request_Headers&& req, linear_buffer&& data,
+    do_on_http_request_finish(HTTP_C_Headers&& req, linear_buffer&& data,
                               bool connection_close) = 0;
 
     // This callback is invoked when an HTTP parser error happens. Why must we
@@ -98,7 +98,7 @@ class HTTP_Server_Session
     // performed. This function is provided for convenience only, and maybe
     // isn't very useful unless for some low-level hacks.
     bool
-    do_http_raw_response(const HTTP_Response_Headers& resp, chars_view data);
+    do_http_raw_response(const HTTP_S_Headers& resp, chars_view data);
 
   public:
     HTTP_Server_Session(const HTTP_Server_Session&) = delete;
@@ -113,7 +113,7 @@ class HTTP_Server_Session
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    http_response_headers_only(HTTP_Response_Headers&& resp);
+    http_response_headers_only(HTTP_S_Headers&& resp);
 
     // Sends a simple response, possibly with a complete payload. Callers should
     // not supply `Content-Length` or `Transfer-Encoding` headers, as they
@@ -123,7 +123,7 @@ class HTTP_Server_Session
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    http_response(HTTP_Response_Headers&& resp, chars_view data);
+    http_response(HTTP_S_Headers&& resp, chars_view data);
 
     // Send a response with a chunked payload, which may contain multiple chunks.
     // Callers should not supply `Transfer-Encoding` headers, as they will be
@@ -136,7 +136,7 @@ class HTTP_Server_Session
     // If these function throw an exception, there is no effect.
     // These functions are thread-safe.
     bool
-    http_chunked_response_start(HTTP_Response_Headers&& resp);
+    http_chunked_response_start(HTTP_S_Headers&& resp);
 
     bool
     http_chunked_response_send(chars_view data);

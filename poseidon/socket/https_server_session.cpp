@@ -122,7 +122,7 @@ do_on_ssl_alpn_request(charbuf_256& res, cow_vector<charbuf_256>&& protos)
 
 HTTP_Payload_Type
 HTTPS_Server_Session::
-do_on_https_request_headers(HTTP_Request_Headers& req, bool /*close_after_payload*/)
+do_on_https_request_headers(HTTP_C_Headers& req, bool /*close_after_payload*/)
   {
     if(req.is_proxy) {
       // Reject proxy requests.
@@ -166,7 +166,7 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
 
 bool
 HTTPS_Server_Session::
-do_https_raw_response(const HTTP_Response_Headers& resp, chars_view data)
+do_https_raw_response(const HTTP_S_Headers& resp, chars_view data)
   {
     // Compose the message and send it as a whole.
     tinyfmt_ln fmt;
@@ -197,7 +197,7 @@ do_https_raw_response(const HTTP_Response_Headers& resp, chars_view data)
 
 bool
 HTTPS_Server_Session::
-https_response_headers_only(HTTP_Response_Headers&& resp)
+https_response_headers_only(HTTP_S_Headers&& resp)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -210,7 +210,7 @@ https_response_headers_only(HTTP_Response_Headers&& resp)
 
 bool
 HTTPS_Server_Session::
-https_response(HTTP_Response_Headers&& resp, chars_view data)
+https_response(HTTP_S_Headers&& resp, chars_view data)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -232,7 +232,7 @@ https_response(HTTP_Response_Headers&& resp, chars_view data)
 
 bool
 HTTPS_Server_Session::
-https_chunked_response_start(HTTP_Response_Headers&& resp)
+https_chunked_response_start(HTTP_S_Headers&& resp)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -295,7 +295,7 @@ https_shut_down(HTTP_Status status) noexcept
     bool succ = false;
     try {
       // Compose a default page.
-      HTTP_Response_Headers resp;
+      HTTP_S_Headers resp;
       resp.status = status;
       resp.headers.emplace_back(&"Content-Type", &"text/html");
       resp.headers.emplace_back(&"Connection", &"close");

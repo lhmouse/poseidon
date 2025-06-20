@@ -10,7 +10,7 @@ namespace poseidon {
 WSS_Client_Session::
 WSS_Client_Session(const cow_string& raw_path, const cow_string& raw_query)
   {
-    HTTP_Request_Headers req;
+    HTTP_C_Headers req;
     this->m_parser.create_handshake_request(req);
     req.is_ssl = true;
     req.raw_path = raw_path;
@@ -56,7 +56,7 @@ do_on_https_response_payload_stream(linear_buffer& data)
 
 void
 WSS_Client_Session::
-do_on_https_response_finish(HTTP_Response_Headers&& resp,
+do_on_https_response_finish(HTTP_S_Headers&& resp,
                             linear_buffer&& /*data*/, bool connection_close)
   {
     // Accept the handshake response.

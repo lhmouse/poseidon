@@ -113,7 +113,7 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
 
 HTTP_Payload_Type
 HTTP_Server_Session::
-do_on_http_request_headers(HTTP_Request_Headers& req, bool /*close_after_payload*/)
+do_on_http_request_headers(HTTP_C_Headers& req, bool /*close_after_payload*/)
   {
     if(req.is_proxy) {
       // Reject proxy requests.
@@ -157,7 +157,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
 bool
 HTTP_Server_Session::
-do_http_raw_response(const HTTP_Response_Headers& resp, chars_view data)
+do_http_raw_response(const HTTP_S_Headers& resp, chars_view data)
   {
     // Compose the message and send it as a whole.
     tinyfmt_ln fmt;
@@ -188,7 +188,7 @@ do_http_raw_response(const HTTP_Response_Headers& resp, chars_view data)
 
 bool
 HTTP_Server_Session::
-http_response_headers_only(HTTP_Response_Headers&& resp)
+http_response_headers_only(HTTP_S_Headers&& resp)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -201,7 +201,7 @@ http_response_headers_only(HTTP_Response_Headers&& resp)
 
 bool
 HTTP_Server_Session::
-http_response(HTTP_Response_Headers&& resp, chars_view data)
+http_response(HTTP_S_Headers&& resp, chars_view data)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -223,7 +223,7 @@ http_response(HTTP_Response_Headers&& resp, chars_view data)
 
 bool
 HTTP_Server_Session::
-http_chunked_response_start(HTTP_Response_Headers&& resp)
+http_chunked_response_start(HTTP_S_Headers&& resp)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -286,7 +286,7 @@ http_shut_down(HTTP_Status status) noexcept
     bool succ = false;
     try {
       // Compose a default page.
-      HTTP_Response_Headers resp;
+      HTTP_S_Headers resp;
       resp.status = status;
       resp.headers.emplace_back(&"Content-Type", &"text/html");
       resp.headers.emplace_back(&"Connection", &"close");

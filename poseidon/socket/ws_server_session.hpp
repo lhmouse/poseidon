@@ -36,7 +36,7 @@ class WS_Server_Session
 
     virtual
     HTTP_Payload_Type
-    do_on_http_request_headers(HTTP_Request_Headers& req, bool close_after_payload) override;
+    do_on_http_request_headers(HTTP_C_Headers& req, bool close_after_payload) override;
 
     virtual
     void
@@ -44,7 +44,7 @@ class WS_Server_Session
 
     virtual
     void
-    do_on_http_request_finish(HTTP_Request_Headers&& req,
+    do_on_http_request_finish(HTTP_C_Headers&& req,
                               linear_buffer&& data, bool connection_close) override;
 
     virtual
@@ -94,7 +94,7 @@ class WS_Server_Session
     // This function shall be called by `do_on_http_request_headers()` to
     // establish a WebSocket connection.
     void
-    do_ws_complete_handshake(HTTP_Request_Headers& req, bool close_after_payload);
+    do_ws_complete_handshake(HTTP_C_Headers& req, bool close_after_payload);
 
     // Sends a raw frame (not a message). No error checking is performed. This
     // function is provided for convenience only, and maybe isn't very useful

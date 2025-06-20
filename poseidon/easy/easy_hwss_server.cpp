@@ -148,7 +148,7 @@ struct Final_Session final : WSS_Server_Session
 
     virtual
     HTTP_Payload_Type
-    do_on_https_request_headers(HTTP_Request_Headers& req, bool close_after_payload) override
+    do_on_https_request_headers(HTTP_C_Headers& req, bool close_after_payload) override
       {
         if(req.is_proxy) {
           // Reject proxy requests.

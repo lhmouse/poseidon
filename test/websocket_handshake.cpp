@@ -2,8 +2,8 @@
 // Copyright (C) 2022-2025, LH_Mouse. All wrongs reserved.
 
 #include "utils.hpp"
-#include "../poseidon/http/http_request_headers.hpp"
-#include "../poseidon/http/http_response_headers.hpp"
+#include "../poseidon/http/http_c_headers.hpp"
+#include "../poseidon/http/http_s_headers.hpp"
 #include "../poseidon/http/websocket_frame_parser.hpp"
 using namespace ::poseidon;
 
@@ -11,7 +11,7 @@ int
 main()
   {
     // https://datatracker.ietf.org/doc/html/rfc6455#section-1.3
-    HTTP_Request_Headers req;
+    HTTP_C_Headers req;
     req.method = http_GET;
     req.raw_path = &"/chat";
     req.headers.emplace_back(&"Host", &"server.example.com");
@@ -23,7 +23,7 @@ main()
     req.headers.emplace_back(&"Sec-WebSocket-Version", 13);
 
     WebSocket_Frame_Parser parser;
-    HTTP_Response_Headers resp;
+    HTTP_S_Headers resp;
     parser.accept_handshake_request(resp, req);
     POSEIDON_TEST_CHECK(!parser.error());
     POSEIDON_TEST_CHECK(parser.is_server_mode());

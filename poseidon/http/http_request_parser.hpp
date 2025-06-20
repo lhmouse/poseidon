@@ -5,7 +5,7 @@
 #define POSEIDON_HTTP_HTTP_REQUEST_PARSER_
 
 #include "../fwd.hpp"
-#include "http_request_headers.hpp"
+#include "http_c_headers.hpp"
 #include <http_parser.h>
 namespace poseidon {
 
@@ -17,7 +17,7 @@ class HTTP_Request_Parser
 
     static const ::http_parser_settings s_settings[1];
     ::http_parser m_parser[1];
-    HTTP_Request_Headers m_headers;
+    HTTP_C_Headers m_headers;
     linear_buffer m_payload;
 
     enum HREQ_State : uint8_t
@@ -83,11 +83,11 @@ class HTTP_Request_Parser
     headers_complete() const noexcept
       { return this->m_hreq >= hreq_headers_done;  }
 
-    const HTTP_Request_Headers&
+    const HTTP_C_Headers&
     headers() const noexcept
       { return this->m_headers;  }
 
-    HTTP_Request_Headers&
+    HTTP_C_Headers&
     mut_headers() noexcept
       { return this->m_headers;  }
 

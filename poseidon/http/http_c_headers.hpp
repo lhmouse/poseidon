@@ -10,7 +10,7 @@
 #include "enums.hpp"
 namespace poseidon {
 
-struct HTTP_Request_Headers
+struct HTTP_C_Headers
   {
     union {
       __m128i packed_fields_1 = { };
@@ -31,15 +31,15 @@ struct HTTP_Request_Headers
     cow_string raw_query;
     cow_bivector<HTTP_Field_Name, HTTP_Value> headers;
 
-    HTTP_Request_Headers() noexcept = default;
-    HTTP_Request_Headers(const HTTP_Request_Headers&) = default;
-    HTTP_Request_Headers(HTTP_Request_Headers&&) = default;
-    HTTP_Request_Headers& operator=(const HTTP_Request_Headers&) & = default;
-    HTTP_Request_Headers& operator=(HTTP_Request_Headers&&) & = default;
-    ~HTTP_Request_Headers();
+    HTTP_C_Headers() noexcept = default;
+    HTTP_C_Headers(const HTTP_C_Headers&) = default;
+    HTTP_C_Headers(HTTP_C_Headers&&) = default;
+    HTTP_C_Headers& operator=(const HTTP_C_Headers&) & = default;
+    HTTP_C_Headers& operator=(HTTP_C_Headers&&) & = default;
+    ~HTTP_C_Headers();
 
-    HTTP_Request_Headers&
-    swap(HTTP_Request_Headers& other) noexcept
+    HTTP_C_Headers&
+    swap(HTTP_C_Headers& other) noexcept
       {
         ::std::swap(this->packed_fields_1, other.packed_fields_1);
         this->raw_host.swap(other.raw_host);
@@ -82,7 +82,7 @@ struct HTTP_Request_Headers
 
 inline
 void
-swap(HTTP_Request_Headers& lhs, HTTP_Request_Headers& rhs) noexcept
+swap(HTTP_C_Headers& lhs, HTTP_C_Headers& rhs) noexcept
   { lhs.swap(rhs);  }
 
 }  // namespace poseidon

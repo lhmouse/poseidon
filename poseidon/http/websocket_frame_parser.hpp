@@ -128,7 +128,7 @@ class WebSocket_Frame_Parser
     // remove `Sec-WebSocket-Extensions` from `req.headers` after this function
     // returns.
     void
-    create_handshake_request(HTTP_Request_Headers& req);
+    create_handshake_request(HTTP_C_Headers& req);
 
     // Accepts a WebSocket handshake request from a client, and composes a
     // corresponding response from the server. The response headers shall be sent
@@ -141,12 +141,12 @@ class WebSocket_Frame_Parser
     // established. Otherwise, the handshake will have failed and the connection
     // should be closed after the response message.
     void
-    accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers& req);
+    accept_handshake_request(HTTP_S_Headers& resp, const HTTP_C_Headers& req);
 
     // Accepts a WebSocket handshake response from the server. Users shall check
     // whether `resp.status` equals `101`.
     void
-    accept_handshake_response(const HTTP_Response_Headers& resp);
+    accept_handshake_response(const HTTP_S_Headers& resp);
 
     // Parses the header of a WebSocket frame. `data` may be consumed partially,
     // and must be preserved between calls. If `frame_header_complete()` returns

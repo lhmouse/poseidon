@@ -8,7 +8,7 @@
 #include "enums.hpp"
 #include "tcp_socket.hpp"
 #include "../http/http_response_parser.hpp"
-#include "../http/http_request_headers.hpp"
+#include "../http/http_c_headers.hpp"
 namespace poseidon {
 
 class HTTP_Client_Session
@@ -49,7 +49,7 @@ class HTTP_Client_Session
     // and returns `http_payload_normal`.
     virtual
     HTTP_Payload_Type
-    do_on_http_response_headers(HTTP_Response_Headers& resp);
+    do_on_http_response_headers(HTTP_S_Headers& resp);
 
     // This callback is invoked by the network thread for each fragment of the
     // response payload that has been received. As with `TCP_Connection::
@@ -70,7 +70,7 @@ class HTTP_Client_Session
     // `Connection` header.
     virtual
     void
-    do_on_http_response_finish(HTTP_Response_Headers&& resp,
+    do_on_http_response_finish(HTTP_S_Headers&& resp,
                                linear_buffer&& data, bool connection_close) = 0;
 
     // This callback is invoked by the network thread on a connection that has
@@ -85,7 +85,7 @@ class HTTP_Client_Session
     // performed. This function is provided for convenience only, and maybe
     // isn't very useful unless for some low-level hacks.
     bool
-    do_http_raw_request(const HTTP_Request_Headers& req, chars_view data);
+    do_http_raw_request(const HTTP_C_Headers& req, chars_view data);
 
   public:
     HTTP_Client_Session(const HTTP_Client_Session&) = delete;
@@ -104,7 +104,7 @@ class HTTP_Client_Session
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    http_request(HTTP_Request_Headers&& req, chars_view data);
+    http_request(HTTP_C_Headers&& req, chars_view data);
 
     // Send a request with a chunked payload, which may contain multiple chunks.
     // Callers should not supply `Transfer-Encoding` headers, as they will be
@@ -116,7 +116,7 @@ class HTTP_Client_Session
     // If these function throw an exception, there is no effect.
     // These functions are thread-safe.
     bool
-    http_chunked_request_start(HTTP_Request_Headers&& req);
+    http_chunked_request_start(HTTP_C_Headers&& req);
 
     bool
     http_chunked_request_send(chars_view data);

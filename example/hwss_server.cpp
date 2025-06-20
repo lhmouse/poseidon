@@ -46,7 +46,7 @@ my_server_callback(const shptr<WSS_Server_Session>& session,
         {
           POSEIDON_LOG_ERROR(("example HTTPS/WSS server received HTTP: $1"), data);
 
-          HTTP_Response_Headers resp;
+          HTTP_S_Headers resp;
           resp.status = http_status_ok;
           resp.headers.emplace_back(&"Content-Type", &"text/plain");
 

@@ -30,7 +30,7 @@ class Easy_HTTPS_Server
              (const shptr<HTTPS_Server_Session>& session,
               Abstract_Fiber& fiber,
               Easy_HTTP_Event event,
-              HTTP_Request_Headers&& req,
+              HTTP_C_Headers&& req,
               linear_buffer&& data)>;
 
   private:

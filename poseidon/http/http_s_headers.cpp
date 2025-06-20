@@ -2,18 +2,18 @@
 // Copyright (C) 2022-2025, LH_Mouse. All wrongs reserved.
 
 #include "../xprecompiled.hpp"
-#include "http_response_headers.hpp"
+#include "http_s_headers.hpp"
 #include "../utils.hpp"
 #include <http_parser.h>
 namespace poseidon {
 
-HTTP_Response_Headers::
-~HTTP_Response_Headers()
+HTTP_S_Headers::
+~HTTP_S_Headers()
   {
   }
 
 void
-HTTP_Response_Headers::
+HTTP_S_Headers::
 encode(tinyfmt& fmt) const
   {
     // Write the status line. If `reason` is empty, a default reason string
