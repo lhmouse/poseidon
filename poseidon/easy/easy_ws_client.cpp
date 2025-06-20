@@ -43,7 +43,8 @@ struct Final_Fiber final : Abstract_Fiber
     volatile WS_Client_Session* m_refptr;
 
     Final_Fiber(const Easy_WS_Client::callback_type& callback,
-                const shptr<Session_Table>& sessions, volatile WS_Client_Session* refptr)
+                const shptr<Session_Table>& sessions,
+                volatile WS_Client_Session* refptr)
       :
         m_callback(callback), m_wsessions(sessions), m_refptr(refptr)
       { }

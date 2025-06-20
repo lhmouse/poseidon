@@ -48,7 +48,8 @@ struct Final_Fiber final : Abstract_Fiber
     volatile TCP_Socket* m_refptr;
 
     Final_Fiber(const Easy_TCP_Client::callback_type& callback,
-                const shptr<Session_Table>& sessions, volatile TCP_Socket* refptr)
+                const shptr<Session_Table>& sessions,
+                volatile TCP_Socket* refptr)
       :
         m_callback(callback), m_wsessions(sessions), m_refptr(refptr)
       { }

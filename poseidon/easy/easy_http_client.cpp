@@ -45,7 +45,8 @@ struct Final_Fiber final : Abstract_Fiber
     volatile HTTP_Client_Session* m_refptr;
 
     Final_Fiber(const Easy_HTTP_Client::callback_type& callback,
-                const shptr<Session_Table>& sessions, volatile HTTP_Client_Session* refptr)
+                const shptr<Session_Table>& sessions,
+                volatile HTTP_Client_Session* refptr)
       :
         m_callback(callback), m_wsessions(sessions), m_refptr(refptr)
       { }
@@ -115,7 +116,8 @@ struct Final_Session final : HTTP_Client_Session
     Easy_HTTP_Client::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
 
-    Final_Session(const cow_string& default_host, const Easy_HTTP_Client::callback_type& callback,
+    Final_Session(const cow_string& default_host,
+                  const Easy_HTTP_Client::callback_type& callback,
                   const shptr<Session_Table>& sessions)
       :
         TCP_Socket(), HTTP_Client_Session(default_host),

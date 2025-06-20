@@ -41,8 +41,8 @@ class WSS_Client_Session
 
     virtual
     void
-    do_on_https_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data,
-                                bool close_now) override;
+    do_on_https_response_finish(HTTP_Response_Headers&& resp,
+                                linear_buffer&& data, bool close_now) override;
 
     virtual
     void
