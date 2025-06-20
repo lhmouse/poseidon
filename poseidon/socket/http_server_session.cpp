@@ -113,7 +113,7 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
 
 HTTP_Payload_Type
 HTTP_Server_Session::
-do_on_http_request_headers(HTTP_C_Headers& req, bool /*close_after_payload*/)
+do_on_http_request_headers(HTTP_C_Headers& req, bool /*eot*/)
   {
     if(req.is_proxy) {
       // Reject proxy requests.

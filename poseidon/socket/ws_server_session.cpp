@@ -41,9 +41,9 @@ do_abstract_socket_on_closed()
 
 HTTP_Payload_Type
 WS_Server_Session::
-do_on_http_request_headers(HTTP_C_Headers& req, bool close_after_payload)
+do_on_http_request_headers(HTTP_C_Headers& req, bool eot)
   {
-    this->do_ws_complete_handshake(req, close_after_payload);
+    this->do_ws_complete_handshake(req, eot);
     return http_payload_normal;
   }
 
@@ -235,7 +235,7 @@ do_on_ws_close(WebSocket_Status status, chars_view reason)
 
 void
 WS_Server_Session::
-do_ws_complete_handshake(HTTP_C_Headers& req, bool close_after_payload)
+do_ws_complete_handshake(HTTP_C_Headers& req, bool eot)
   {
     if(req.is_proxy) {
       // Reject proxy requests.
@@ -251,7 +251,7 @@ do_ws_complete_handshake(HTTP_C_Headers& req, bool close_after_payload)
     if(req.method == http_OPTIONS)
       return;
 
-    if(close_after_payload || !this->m_parser.is_server_mode()) {
+    if(eot || !this->m_parser.is_server_mode()) {
       // The handshake failed.
       this->do_call_on_ws_close_once(websocket_status_protocol_error,
                                      this->m_parser.error_description());

@@ -122,7 +122,7 @@ do_on_ssl_alpn_request(charbuf_256& res, cow_vector<charbuf_256>&& protos)
 
 HTTP_Payload_Type
 HTTPS_Server_Session::
-do_on_https_request_headers(HTTP_C_Headers& req, bool /*close_after_payload*/)
+do_on_https_request_headers(HTTP_C_Headers& req, bool /*eot*/)
   {
     if(req.is_proxy) {
       // Reject proxy requests.

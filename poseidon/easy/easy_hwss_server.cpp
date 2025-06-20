@@ -148,7 +148,7 @@ struct Final_Session final : WSS_Server_Session
 
     virtual
     HTTP_Payload_Type
-    do_on_https_request_headers(HTTP_C_Headers& req, bool close_after_payload) override
+    do_on_https_request_headers(HTTP_C_Headers& req, bool eot) override
       {
         if(req.is_proxy) {
           // Reject proxy requests.
@@ -161,13 +161,13 @@ struct Final_Session final : WSS_Server_Session
           {
           case http_OPTIONS:
             // Respond to an XSS check.
-            this->do_wss_complete_handshake(req, close_after_payload);
+            this->do_wss_complete_handshake(req, eot);
             return http_payload_normal;
 
           case http_GET:
             if(any_of(req.headers, [&](const auto& r) { return r.first == "Upgrade";  })) {
               // Try upgrading to WebSocket.
-              this->do_wss_complete_handshake(req, close_after_payload);
+              this->do_wss_complete_handshake(req, eot);
               return http_payload_normal;
             }
 
