@@ -421,6 +421,16 @@ thread_loop()
     // If either `EPOLLHUP` or `EPOLLERR` is set, deliver a shutdown
     // notification and remove the socket. Error codes are passed through the
     // system `errno` variable.
+    if(epoll_ev.events & EPOLLIN)
+      try {
+        socket->do_abstract_socket_on_readable();
+      }
+      catch(exception& stdex) {
+        POSEIDON_LOG_ERROR(("Socket error: $1"), stdex);
+        socket->quick_shut_down();
+        epoll_ev.events |= EPOLLHUP;
+      }
+
     if(epoll_ev.events & (EPOLLHUP | EPOLLERR))
       try {
         socket->m_state.store(socket_closed);
@@ -446,16 +456,6 @@ thread_loop()
     if(epoll_ev.events & EPOLLOUT)
       try {
         socket->do_abstract_socket_on_writeable();
-      }
-      catch(exception& stdex) {
-        POSEIDON_LOG_ERROR(("Socket error: $1"), stdex);
-        socket->quick_shut_down();
-        epoll_ev.events |= EPOLLHUP;
-      }
-
-    if(epoll_ev.events & EPOLLIN)
-      try {
-        socket->do_abstract_socket_on_readable();
       }
       catch(exception& stdex) {
         POSEIDON_LOG_ERROR(("Socket error: $1"), stdex);
