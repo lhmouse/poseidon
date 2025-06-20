@@ -40,9 +40,10 @@ reload(const Config_File& conf_file)
 
     // Parse new configuration. Default ones are defined here.
     cow_string default_service_uri = &"root@localhost:3306/admin";
-    cow_string default_password;
     int64_t connection_pool_size = 0;
     int64_t connection_idle_timeout = 60;
+    cow_string default_password, secondary_service_uri, secondary_password;
+    cow_string tertiary_service_uri, tertiary_password;
 
     // Read the server name from configuration. The MySQL client library is able
     // to perform DNS lookup as necessary, so this need not be an IP address.
@@ -65,6 +66,60 @@ reload(const Config_File& conf_file)
           "Invalid `mysql.default_password`: expecting a `string`, got `$1`",
           "[in configuration file '$2']"),
           conf_value, conf_file.path());
+
+    // Read the secondary server name from configuration.
+    conf_value = conf_file.query(&"mysql.secondary_service_uri");
+    if(conf_value.is_string())
+      secondary_service_uri = conf_value.as_string();
+    else if(!conf_value.is_null())
+      POSEIDON_THROW((
+          "Invalid `mysql.secondary_service_uri`: expecting a `string`, got `$1`",
+          "[in configuration file '$2']"),
+          conf_value, conf_file.path());
+
+    if(secondary_service_uri.empty())
+      secondary_service_uri = default_service_uri;
+
+    // Read the password from configuration. The password is not to be stored
+    // as plaintext in memory.
+    conf_value = conf_file.query(&"mysql.secondary_password");
+    if(conf_value.is_string())
+      secondary_password = conf_value.as_string();
+    else if(!conf_value.is_null())
+      POSEIDON_THROW((
+          "Invalid `mysql.secondary_password`: expecting a `string`, got `$1`",
+          "[in configuration file '$2']"),
+          conf_value, conf_file.path());
+
+    if(secondary_password.empty())
+      secondary_password = default_password;
+
+    // Read the tertiary server name from configuration.
+    conf_value = conf_file.query(&"mysql.tertiary_service_uri");
+    if(conf_value.is_string())
+      tertiary_service_uri = conf_value.as_string();
+    else if(!conf_value.is_null())
+      POSEIDON_THROW((
+          "Invalid `mysql.tertiary_service_uri`: expecting a `string`, got `$1`",
+          "[in configuration file '$2']"),
+          conf_value, conf_file.path());
+
+    if(tertiary_service_uri.empty())
+      tertiary_service_uri = secondary_service_uri;
+
+    // Read the password from configuration. The password is not to be stored
+    // as plaintext in memory.
+    conf_value = conf_file.query(&"mysql.tertiary_password");
+    if(conf_value.is_string())
+      tertiary_password = conf_value.as_string();
+    else if(!conf_value.is_null())
+      POSEIDON_THROW((
+          "Invalid `mysql.tertiary_password`: expecting a `string`, got `$1`",
+          "[in configuration file '$2']"),
+          conf_value, conf_file.path());
+
+    if(tertiary_password.empty())
+      tertiary_password = secondary_password;
 
     // Read the connection pool size from configuration.
     conf_value = conf_file.query(&"mysql.connection_pool_size");
@@ -102,6 +157,10 @@ reload(const Config_File& conf_file)
     plain_mutex::unique_lock lock(this->m_conf_mutex);
     this->m_conf_default_service_uri.swap(default_service_uri);
     this->m_conf_default_password.swap(default_password);
+    this->m_conf_secondary_service_uri.swap(secondary_service_uri);
+    this->m_conf_secondary_password.swap(secondary_password);
+    this->m_conf_tertiary_service_uri.swap(tertiary_service_uri);
+    this->m_conf_tertiary_password.swap(tertiary_password);
     this->m_conf_connection_pool_size = static_cast<uint32_t>(connection_pool_size);
     this->m_conf_connection_idle_timeout = static_cast<seconds>(connection_idle_timeout);
   }
@@ -150,6 +209,38 @@ allocate_default_connection()
     plain_mutex::unique_lock lock(this->m_conf_mutex);
     const cow_string service_uri = this->m_conf_default_service_uri;
     const cow_string password = this->m_conf_default_password;
+    const seconds idle_timeout = this->m_conf_connection_idle_timeout;
+    lock.unlock();
+
+    auto conn = this->do_get_pooled_connection_opt(idle_timeout, service_uri);
+    if(!conn)
+      conn = new_uni<MySQL_Connection>(service_uri, password);
+    return conn;
+  }
+
+uniptr<MySQL_Connection>
+MySQL_Connector::
+allocate_secondary_connection()
+  {
+    plain_mutex::unique_lock lock(this->m_conf_mutex);
+    const cow_string service_uri = this->m_conf_secondary_service_uri;
+    const cow_string password = this->m_conf_secondary_password;
+    const seconds idle_timeout = this->m_conf_connection_idle_timeout;
+    lock.unlock();
+
+    auto conn = this->do_get_pooled_connection_opt(idle_timeout, service_uri);
+    if(!conn)
+      conn = new_uni<MySQL_Connection>(service_uri, password);
+    return conn;
+  }
+
+uniptr<MySQL_Connection>
+MySQL_Connector::
+allocate_tertiary_connection()
+  {
+    plain_mutex::unique_lock lock(this->m_conf_mutex);
+    const cow_string service_uri = this->m_conf_tertiary_service_uri;
+    const cow_string password = this->m_conf_tertiary_password;
     const seconds idle_timeout = this->m_conf_connection_idle_timeout;
     lock.unlock();
 

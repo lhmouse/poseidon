@@ -14,6 +14,10 @@ class MySQL_Connector
     mutable plain_mutex m_conf_mutex;
     cow_string m_conf_default_service_uri;
     cow_string m_conf_default_password;
+    cow_string m_conf_secondary_service_uri;
+    cow_string m_conf_secondary_password;
+    cow_string m_conf_tertiary_service_uri;
+    cow_string m_conf_tertiary_password;
     uint32_t m_conf_connection_pool_size = 0;
     seconds m_conf_connection_idle_timeout = 0s;
 
@@ -50,6 +54,18 @@ class MySQL_Connector
     // is otherwise the same as `allocate_connection_explicit()`.
     uniptr<MySQL_Connection>
     allocate_default_connection();
+
+    // Allocates a connection using secondary arguments from 'main.conf'. If
+    // no secondary configuration exists, the default configuration is used.
+    // This function is otherwise the same as `allocate_connection_explicit()`.
+    uniptr<MySQL_Connection>
+    allocate_secondary_connection();
+
+    // Allocates a connection using tertiary arguments from 'main.conf'. If
+    // no tertiary configuration exists, the secondary configuration is used.
+    // This function is otherwise the same as `allocate_connection_explicit()`.
+    uniptr<MySQL_Connection>
+    allocate_tertiary_connection();
 
     // Puts a connection back into the pool. It is required to `.reset()` a
     // connection before putting it back. Resetting a connection is a blocking
