@@ -66,12 +66,9 @@ class HTTP_Client_Session
 
     // This callback is invoked by the network thread at the end of a response
     // message. Arguments have the same semantics with the other callbacks.
-    // `connection_close` indicates whether the response contains `close` in its
-    // `Connection` header.
     virtual
     void
-    do_on_http_response_finish(HTTP_S_Headers&& resp,
-                               linear_buffer&& data, bool connection_close) = 0;
+    do_on_http_response_finish(HTTP_S_Headers&& resp, linear_buffer&& data) = 0;
 
     // This callback is invoked by the network thread on a connection that has
     // switched to another protocol. Arguments have the same semantics with

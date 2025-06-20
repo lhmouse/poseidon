@@ -17,7 +17,6 @@ struct Event
     Easy_HTTP_Event type;
     HTTP_S_Headers resp;
     linear_buffer data;
-    bool conn_close = false;
   };
 
 struct Event_Queue
@@ -104,9 +103,6 @@ struct Final_Fiber final : Abstract_Fiber
             POSEIDON_LOG_ERROR(("Unhandled exception: $1"), stdex);
             session->quick_shut_down();
           }
-
-          if(event.conn_close)
-            session->ssl_shut_down();
         }
       }
   };
@@ -166,14 +162,12 @@ struct Final_Session final : HTTPS_Client_Session
 
     virtual
     void
-    do_on_https_response_finish(HTTP_S_Headers&& resp,
-                                linear_buffer&& data, bool connection_close) override
+    do_on_https_response_finish(HTTP_S_Headers&& resp, linear_buffer&& data) override
       {
         Event event;
         event.type = easy_http_message;
         event.resp = move(resp);
         event.data = move(data);
-        event.conn_close = connection_close;
         this->do_push_event_common(move(event));
       }
 

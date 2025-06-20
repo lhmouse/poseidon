@@ -41,8 +41,7 @@ class WS_Client_Session
 
     virtual
     void
-    do_on_http_response_finish(HTTP_S_Headers&& resp,
-                               linear_buffer&& data, bool connection_close) override;
+    do_on_http_response_finish(HTTP_S_Headers&& resp, linear_buffer&& data) override;
 
     virtual
     void

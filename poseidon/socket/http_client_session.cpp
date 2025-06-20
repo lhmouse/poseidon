@@ -95,8 +95,10 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
         uint32_t status = this->m_resp_parser.headers().status;
 
         this->do_on_http_response_finish(move(this->m_resp_parser.mut_headers()),
-                                         move(this->m_resp_parser.mut_payload()),
-                                         this->m_resp_parser.should_close_after_payload());
+                                         move(this->m_resp_parser.mut_payload()));
+
+        if(this->m_resp_parser.should_close_after_payload())
+          this->tcp_shut_down();
 
         // For WebSocket and HTTP 2.0, this indicates the server has switched to
         // another protocol. CONNECT responses are handled differently after the
