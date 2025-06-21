@@ -50,11 +50,11 @@ do_epoll_ctl(int op, Abstract_Socket* socket, uint32_t events)
 
     if((op == EPOLL_CTL_ADD) || (op == EPOLL_CTL_MOD))
       POSEIDON_LOG_TRACE((
-          "Updated epoll flags for socket `$1` (class `$2`): $3 $4 $5"),
+          "Updated epoll flags for socket `$1` (class `$2`): $3$4$5"),
           socket, typeid(*socket),
-          (event.events & EPOLLET)  ? "ET"  : "",
-          (event.events & EPOLLIN)  ? "IN"  : "",
-          (event.events & EPOLLOUT) ? "OUT" : "");
+          (event.events & EPOLLET)  ? " ET"  : "",
+          (event.events & EPOLLIN)  ? " IN"  : "",
+          (event.events & EPOLLOUT) ? " OUT" : "");
   }
 
 POSEIDON_VISIBILITY_HIDDEN
@@ -423,7 +423,7 @@ thread_loop()
     // system `errno` variable.
     if(epoll_ev.events & EPOLLIN)
       try {
-        socket->do_abstract_socket_on_readable();
+        socket->do_abstract_socket_on_readable(epoll_ev.events & EPOLLRDHUP);
       }
       catch(exception& stdex) {
         POSEIDON_LOG_ERROR(("Socket error: $1"), stdex);
@@ -468,9 +468,10 @@ thread_loop()
     bool should_throttle = socket->m_io_write_queue.size() > throttle_size;
     if(socket->m_io_throttled != should_throttle) {
       socket->m_io_throttled = should_throttle;
-
-      this->do_epoll_ctl(EPOLL_CTL_MOD, socket.get(),
-                         !should_throttle * (EPOLLIN | EPOLLET) | EPOLLOUT);
+      if(should_throttle)
+        this->do_epoll_ctl(EPOLL_CTL_MOD, socket.get(), EPOLLOUT);
+      else
+        this->do_epoll_ctl(EPOLL_CTL_MOD, socket.get(), EPOLLIN | EPOLLRDHUP | EPOLLOUT | EPOLLET);
     }
 
     POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`) I/O complete"), socket, typeid(*socket));
@@ -515,7 +516,7 @@ insert(const shptr<Abstract_Socket>& socket)
     }
 
     // Insert the socket.
-    this->do_epoll_ctl(EPOLL_CTL_ADD, socket.get(), EPOLLIN | EPOLLOUT | EPOLLET);
+    this->do_epoll_ctl(EPOLL_CTL_ADD, socket.get(), EPOLLIN | EPOLLRDHUP | EPOLLOUT | EPOLLET);
     this->do_find_socket_nolock(socket.get()) = socket;
     this->m_epoll_map_used ++;
   }

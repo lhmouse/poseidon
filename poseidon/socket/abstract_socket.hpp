@@ -66,7 +66,7 @@ class Abstract_Socket
     // available, and is intended to be overriden by derived classes.
     virtual
     void
-    do_abstract_socket_on_readable() = 0;
+    do_abstract_socket_on_readable(bool rdhup) = 0;
 
     // This callback is invoked by the network thread when outgoing data are
     // possible, and is intended to be overriden by derived classes.

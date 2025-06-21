@@ -34,7 +34,7 @@ class UDP_Socket
 
     virtual
     void
-    do_abstract_socket_on_readable() override;
+    do_abstract_socket_on_readable(bool rdhup) override;
 
     virtual
     void

@@ -57,7 +57,7 @@ do_abstract_socket_on_closed()
 
 void
 UDP_Socket::
-do_abstract_socket_on_readable()
+do_abstract_socket_on_readable(bool /*rdhup*/)
   {
     recursive_mutex::unique_lock io_lock;
     auto& queue = this->do_abstract_socket_lock_read_queue(io_lock);

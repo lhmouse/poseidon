@@ -56,7 +56,7 @@ do_abstract_socket_on_closed()
 
 void
 TCP_Acceptor::
-do_abstract_socket_on_readable()
+do_abstract_socket_on_readable(bool /*rdhup*/)
   {
     recursive_mutex::unique_lock io_lock;
     auto& driver = this->do_abstract_socket_lock_driver(io_lock);
