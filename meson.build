@@ -225,6 +225,7 @@ executable('poseidon', 'poseidon/main.cpp',
       cpp_pch: 'poseidon/xprecompiled.hpp',
       dependencies: [ dep_pthread, dep_asteria, dep_taxon ],
       link_with: lib_poseidon,
+      install_rpath: '$ORIGIN/../lib',
       install: true)
 
 #===========================================================
