@@ -10,7 +10,7 @@ namespace poseidon {
 using message_composer_fn = void (tinyfmt&, const void*);
 
 bool
-do_is_log_enabled(uint8_t level) noexcept __attribute__((__pure__));
+do_is_log_enabled(uint8_t level) noexcept __attribute__((__pure__, __leaf__));
 
 bool
 do_push_log_message(uint8_t level, const char* func, const char* file, uint32_t line,
