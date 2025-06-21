@@ -397,16 +397,16 @@ thread_loop()
       this->m_event_buf.accept(static_cast<uint32_t>(res) * sizeof(::epoll_event));
     }
 
-    ::epoll_event epoll_ev = { };
-    ROCKET_ASSERT(this->m_event_buf.size() >= sizeof(epoll_ev));
-    this->m_event_buf.getn(reinterpret_cast<char*>(&epoll_ev), sizeof(epoll_ev));
+    ::epoll_event pev = { };
+    ROCKET_ASSERT(this->m_event_buf.size() >= sizeof(pev));
+    this->m_event_buf.getn(reinterpret_cast<char*>(&pev), sizeof(pev));
     lock.unlock();
 
     lock.lock(this->m_epoll_mutex);
     if(this->m_epoll_map_stor.size() == 0)
       return;
 
-    auto socket = this->do_find_socket_nolock(static_cast<Abstract_Socket*>(epoll_ev.data.ptr)).lock();
+    auto socket = this->do_find_socket_nolock(static_cast<Abstract_Socket*>(pev.data.ptr)).lock();
     if(!socket)
       return;
 
@@ -421,21 +421,21 @@ thread_loop()
     // If either `EPOLLHUP` or `EPOLLERR` is set, deliver a shutdown
     // notification and remove the socket. Error codes are passed through the
     // system `errno` variable.
-    if(epoll_ev.events & EPOLLIN)
+    if(pev.events & EPOLLIN)
       try {
-        socket->do_abstract_socket_on_readable(epoll_ev.events & EPOLLRDHUP);
+        socket->do_abstract_socket_on_readable(pev.events & EPOLLRDHUP);
       }
       catch(exception& stdex) {
         POSEIDON_LOG_ERROR(("Socket error: $1"), stdex);
         socket->quick_shut_down();
-        epoll_ev.events |= EPOLLHUP;
+        pev.events |= EPOLLHUP;
       }
 
-    if(epoll_ev.events & (EPOLLHUP | EPOLLERR))
+    if(pev.events & (EPOLLHUP | EPOLLERR))
       try {
         socket->m_state.store(socket_closed);
 
-        if(epoll_ev.events & EPOLLERR) {
+        if(pev.events & EPOLLERR) {
           ::socklen_t optlen = sizeof(int);
           ::getsockopt(socket->m_fd, SOL_SOCKET, SO_ERROR, &errno, &optlen);
         } else
@@ -453,14 +453,14 @@ thread_loop()
         return;
       }
 
-    if(epoll_ev.events & EPOLLOUT)
+    if(pev.events & EPOLLOUT)
       try {
         socket->do_abstract_socket_on_writeable();
       }
       catch(exception& stdex) {
         POSEIDON_LOG_ERROR(("Socket error: $1"), stdex);
         socket->quick_shut_down();
-        epoll_ev.events |= EPOLLHUP;
+        pev.events |= EPOLLHUP;
       }
 
     // When there are too many pending bytes, as a safety measure, EPOLLIN
