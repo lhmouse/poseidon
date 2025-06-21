@@ -41,8 +41,8 @@ class Abstract_Deflator
     do_on_deflate_truncate_output_buffer(size_t backup) = 0;
 
   public:
-    Abstract_Deflator(const Abstract_Deflator&) noexcept = delete;
-    Abstract_Deflator& operator=(const Abstract_Deflator&) & noexcept = delete;
+    Abstract_Deflator(const Abstract_Deflator&) = delete;
+    Abstract_Deflator& operator=(const Abstract_Deflator&) & = delete;
     virtual ~Abstract_Deflator();
 
     // Resets internal states. Pending data are discarded.

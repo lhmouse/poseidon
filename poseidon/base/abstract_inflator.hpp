@@ -41,8 +41,8 @@ class Abstract_Inflator
     do_on_inflate_truncate_output_buffer(size_t backup) = 0;
 
   public:
-    Abstract_Inflator(const Abstract_Inflator&) noexcept = delete;
-    Abstract_Inflator& operator=(const Abstract_Inflator&) & noexcept = delete;
+    Abstract_Inflator(const Abstract_Inflator&) = delete;
+    Abstract_Inflator& operator=(const Abstract_Inflator&) & = delete;
     virtual ~Abstract_Inflator();
 
     // Resets internal states. Pending data are discarded.
