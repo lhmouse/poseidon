@@ -34,10 +34,8 @@ enroll(const cow_string& lock_path)
           lock_path);
 
     // Get my serial number.
-    struct flock lck;
+    struct flock lck = { };
     lck.l_type = F_WRLCK;
-    lck.l_whence = SEEK_SET;
-    lck.l_start = 0;
     lck.l_len = 1;
     while(::fcntl(fd, F_OFD_SETLK, &lck) != 0)
       if(errno == EAGAIN)
