@@ -67,7 +67,8 @@ poseidon_include = [
   'poseidon/details/redis_fwd.hpp', 'poseidon/static/redis_connector.hpp',
   'poseidon/redis/enums.hpp', 'poseidon/redis/redis_value.hpp',
   'poseidon/redis/redis_connection.hpp', 'poseidon/fiber/redis_query_future.hpp',
-  'poseidon/fiber/redis_scan_and_get_future.hpp', 'poseidon/details/error_handling.hpp' ]
+  'poseidon/fiber/redis_scan_and_get_future.hpp', 'poseidon/details/error_handling.hpp',
+  'poseidon/base/appointment.hpp' ]
 
 poseidon_src = [
   'poseidon/fwd.cpp', 'poseidon/utils.cpp', 'poseidon/static/main_config.cpp',
@@ -100,16 +101,16 @@ poseidon_src = [
   'poseidon/easy/easy_wss_server.cpp', 'poseidon/easy/easy_tcp_client.cpp',
   'poseidon/easy/easy_http_client.cpp', 'poseidon/easy/easy_ws_client.cpp',
   'poseidon/easy/easy_ssl_client.cpp', 'poseidon/easy/easy_https_client.cpp',
-  'poseidon/easy/easy_wss_client.cpp',
-  'poseidon/static/mysql_connector.cpp', 'poseidon/mysql/mysql_table_structure.cpp',
-  'poseidon/mysql/mysql_value.cpp', 'poseidon/mysql/mysql_table_column.cpp',
-  'poseidon/mysql/mysql_table_index.cpp', 'poseidon/mysql/mysql_connection.cpp',
-  'poseidon/fiber/mysql_query_future.cpp', 'poseidon/fiber/mysql_check_table_future.cpp',
-  'poseidon/static/mongo_connector.cpp', 'poseidon/mongo/mongo_value.cpp',
-  'poseidon/mongo/mongo_connection.cpp', 'poseidon/fiber/mongo_query_future.cpp',
-  'poseidon/static/redis_connector.cpp', 'poseidon/redis/redis_value.cpp',
-  'poseidon/redis/redis_connection.cpp', 'poseidon/fiber/redis_query_future.cpp',
-  'poseidon/fiber/redis_scan_and_get_future.cpp' ]
+  'poseidon/easy/easy_wss_client.cpp', 'poseidon/static/mysql_connector.cpp',
+  'poseidon/mysql/mysql_table_structure.cpp', 'poseidon/mysql/mysql_value.cpp',
+  'poseidon/mysql/mysql_table_column.cpp', 'poseidon/mysql/mysql_table_index.cpp',
+  'poseidon/mysql/mysql_connection.cpp', 'poseidon/fiber/mysql_query_future.cpp',
+  'poseidon/fiber/mysql_check_table_future.cpp', 'poseidon/static/mongo_connector.cpp',
+  'poseidon/mongo/mongo_value.cpp', 'poseidon/mongo/mongo_connection.cpp',
+  'poseidon/fiber/mongo_query_future.cpp', 'poseidon/static/redis_connector.cpp',
+  'poseidon/redis/redis_value.cpp', 'poseidon/redis/redis_connection.cpp',
+  'poseidon/fiber/redis_query_future.cpp', 'poseidon/fiber/redis_scan_and_get_future.cpp',
+  'poseidon/base/appointment.cpp' ]
 
 poseidon_etc = [
   'etc/poseidon/main.conf', 'etc/poseidon/ssl/test.crt', 'etc/poseidon/ssl/test.key' ]

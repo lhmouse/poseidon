@@ -358,6 +358,7 @@ snview(const char* str, size_t n) noexcept
 class UUID;
 class DateTime;
 class Config_File;
+class Appointment;
 class Abstract_Timer;
 class Abstract_Task;
 class Abstract_Deflator;
