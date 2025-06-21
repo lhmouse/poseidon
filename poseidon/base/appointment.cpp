@@ -22,7 +22,7 @@ Appointment::
 enroll(const cow_string& lock_path)
   {
     this->m_fd.reset();
-    this->m_serial = 0;
+    this->m_index = -1;
 
     // Create the lock file.
     ::rocket::unique_handle<int, closer> fd;
@@ -48,7 +48,7 @@ enroll(const cow_string& lock_path)
 
     // Adopt the lock.
     this->m_fd = move(fd);
-    this->m_serial = static_cast<uint32_t>(lck.l_start + 1);
+    this->m_index = static_cast<int>(lck.l_start);
   }
 
 void
@@ -56,7 +56,7 @@ Appointment::
 withdraw() noexcept
   {
     this->m_fd.reset();
-    this->m_serial = 0;
+    this->m_index = -1;
   }
 
 }  // namespace poseidon

@@ -18,7 +18,7 @@ class Appointment
       };
 
     ::rocket::unique_handle<int, closer> m_fd;
-    uint32_t m_serial = 0;
+    int m_index = 0;
 
   public:
     // Constructs an empty appointment.
@@ -35,18 +35,18 @@ class Appointment
     Appointment& operator=(const Appointment&) & = delete;
     ~Appointment();
 
-    // Gets the 1-based serial number of the current appointment. If this
-    // appointment is empty, zero is returned.
-    uint32_t
-    serial() const noexcept
-      { return this->m_serial;  }
+    // Gets the 0-based index of the current appointment. If this appointment
+    // is empty, -1 is returned.
+    int
+    index() const noexcept
+      { return this->m_index;  }
 
     // Locks the file that is denoted by `path`. If the file can't be locked,
     // an exception is thrown, and no file is locked.
     void
     enroll(const cow_string& lock_path);
 
-    // Unlocks the current file and resets the serial to zero.
+    // Unlocks the current file and resets the index to -1.
     void
     withdraw() noexcept;
   };
