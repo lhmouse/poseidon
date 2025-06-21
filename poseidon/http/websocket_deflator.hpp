@@ -5,7 +5,7 @@
 #define POSEIDON_HTTP_WEBSOCKET_DEFLATOR_
 
 #include "../fwd.hpp"
-#include "../third/zlib_fwd.hpp"
+#include "../details/zlib_fwd.hpp"
 namespace poseidon {
 
 class WebSocket_Deflator

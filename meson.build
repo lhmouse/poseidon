@@ -23,8 +23,8 @@ project('poseidon',
 # List of files
 #===========================================================
 poseidon_include = [
-  'poseidon/fwd.hpp', 'poseidon/utils.hpp', 'poseidon/third/openssl_fwd.hpp',
-  'poseidon/third/zlib_fwd.hpp', 'poseidon/static/main_config.hpp',
+  'poseidon/fwd.hpp', 'poseidon/utils.hpp', 'poseidon/details/openssl_fwd.hpp',
+  'poseidon/details/zlib_fwd.hpp', 'poseidon/static/main_config.hpp',
   'poseidon/static/logger.hpp', 'poseidon/static/timer_driver.hpp',
   'poseidon/static/fiber_scheduler.hpp', 'poseidon/static/task_executor.hpp',
   'poseidon/static/network_driver.hpp', 'poseidon/base/uuid.hpp',
@@ -56,18 +56,18 @@ poseidon_include = [
   'poseidon/easy/easy_tcp_client.hpp', 'poseidon/easy/easy_http_client.hpp',
   'poseidon/easy/easy_ws_client.hpp', 'poseidon/easy/easy_ssl_client.hpp',
   'poseidon/easy/easy_https_client.hpp', 'poseidon/easy/easy_wss_client.hpp',
-  'poseidon/third/mysql_fwd.hpp', 'poseidon/static/mysql_connector.hpp',
+  'poseidon/details/mysql_fwd.hpp', 'poseidon/static/mysql_connector.hpp',
   'poseidon/mysql/enums.hpp', 'poseidon/mysql/mysql_table_structure.hpp',
   'poseidon/mysql/mysql_value.hpp', 'poseidon/mysql/mysql_table_column.hpp',
   'poseidon/mysql/mysql_table_index.hpp', 'poseidon/mysql/mysql_connection.hpp',
   'poseidon/fiber/mysql_query_future.hpp', 'poseidon/fiber/mysql_check_table_future.hpp',
-  'poseidon/third/mongo_fwd.hpp', 'poseidon/static/mongo_connector.hpp',
+  'poseidon/details/mongo_fwd.hpp', 'poseidon/static/mongo_connector.hpp',
   'poseidon/mongo/enums.hpp', 'poseidon/mongo/mongo_value.hpp',
   'poseidon/mongo/mongo_connection.hpp', 'poseidon/fiber/mongo_query_future.hpp',
-  'poseidon/third/redis_fwd.hpp', 'poseidon/static/redis_connector.hpp',
+  'poseidon/details/redis_fwd.hpp', 'poseidon/static/redis_connector.hpp',
   'poseidon/redis/enums.hpp', 'poseidon/redis/redis_value.hpp',
   'poseidon/redis/redis_connection.hpp', 'poseidon/fiber/redis_query_future.hpp',
-  'poseidon/fiber/redis_scan_and_get_future.hpp' ]
+  'poseidon/fiber/redis_scan_and_get_future.hpp', 'poseidon/details/error_handling.hpp' ]
 
 poseidon_src = [
   'poseidon/fwd.cpp', 'poseidon/utils.cpp', 'poseidon/static/main_config.cpp',

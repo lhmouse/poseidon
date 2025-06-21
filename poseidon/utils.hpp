@@ -5,6 +5,7 @@
 #define POSEIDON_UTILS_
 
 #include "fwd.hpp"
+#include "details/error_handling.hpp"
 namespace poseidon {
 
 // Splits a string into a vector of tokens, and vice versa.
@@ -111,25 +112,11 @@ parse_network_reference(Network_Reference& caddr, chars_view str) noexcept;
 cow_string
 decode_and_canonicalize_uri_path(chars_view path);
 
-// These are internal functions.
-using message_composer_fn = void (tinyfmt&, const void*);
-
-bool
-is_log_level_enabled(uint8_t level) noexcept __attribute__((__pure__));
-
-bool
-push_log_message(uint8_t level, const char* func, const char* file, uint32_t line,
-                 const void* composer, message_composer_fn* composer_fn);
-
-::std::runtime_error
-create_runtime_error(const char* func, const char* file, uint32_t line,
-                     const void* composer, message_composer_fn* composer_fn);
-
 // Compose a log message and enqueue it into the global logger. The `TEMPLATE`
 // argument shall be a list of string literals in parentheses. Multiple strings
 // are joined with line separators. `format()` is to be found via ADL.
 #define POSEIDON_LOG_(LEVEL, TEMPLATE, ...)  \
-  (::poseidon::is_log_level_enabled(LEVEL)  \
+  (::poseidon::do_is_log_enabled(LEVEL)  \
    &&  \
    ([&](const char* func_ce7d) -> bool  \
       __attribute__((__nothrow__, __noinline__))  \
@@ -142,7 +129,7 @@ create_runtime_error(const char* func, const char* file, uint32_t line,
                   ##__VA_ARGS__);  \
         };  \
         \
-        ::poseidon::push_log_message(\
+        ::poseidon::do_push_log_message(\
             LEVEL, func_ce7d, __FILE__, __LINE__,  \
             &c_Ru6q,  \
             [](::rocket::tinyfmt& fmt_Ko0i, const void* p_5Gae)  \
@@ -174,7 +161,7 @@ create_runtime_error(const char* func, const char* file, uint32_t line,
                   ##__VA_ARGS__);  \
         };  \
       \
-      return ::poseidon::create_runtime_error(\
+      return ::poseidon::do_create_runtime_error(\
           func_ce7d, __FILE__, __LINE__,  \
           &c_Ru6q,  \
           [](::rocket::tinyfmt& fmt_Ko0i, const void* p_5Gae)  \

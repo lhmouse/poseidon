@@ -7,7 +7,7 @@
 #include "../fwd.hpp"
 #include "enums.hpp"
 #include "../mongo/mongo_value.hpp"
-#include "../third/mongo_fwd.hpp"
+#include "../details/mongo_fwd.hpp"
 namespace poseidon {
 
 class Mongo_Connection

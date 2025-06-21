@@ -5,7 +5,7 @@
 #define POSEIDON_STATIC_REDIS_CONNECTOR_
 
 #include "../fwd.hpp"
-#include "../third/redis_fwd.hpp"
+#include "../details/redis_fwd.hpp"
 namespace poseidon {
 
 class Redis_Connector

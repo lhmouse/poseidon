@@ -7,7 +7,7 @@
 #include "../fwd.hpp"
 #include "enums.hpp"
 #include "abstract_socket.hpp"
-#include "../third/openssl_fwd.hpp"
+#include "../details/openssl_fwd.hpp"
 namespace poseidon {
 
 class SSL_Socket

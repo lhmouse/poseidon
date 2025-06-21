@@ -6,7 +6,7 @@
 
 #include "../fwd.hpp"
 #include "enums.hpp"
-#include "../third/redis_fwd.hpp"
+#include "../details/redis_fwd.hpp"
 namespace poseidon {
 
 class Redis_Connection

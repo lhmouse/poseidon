@@ -1,8 +1,8 @@
 // This file is part of Poseidon.
 // Copyright (C) 2022-2025, LH_Mouse. All wrongs reserved.
 
-#ifndef POSEIDON_THIRD_MONGO_FWD_
-#define POSEIDON_THIRD_MONGO_FWD_
+#ifndef POSEIDON_DETAILS_MONGO_FWD_
+#define POSEIDON_DETAILS_MONGO_FWD_
 
 #include "../fwd.hpp"
 #pragma GCC diagnostic push

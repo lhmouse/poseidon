@@ -5,7 +5,7 @@
 #define POSEIDON_STATIC_MONGO_CONNECTOR_
 
 #include "../fwd.hpp"
-#include "../third/mongo_fwd.hpp"
+#include "../details/mongo_fwd.hpp"
 namespace poseidon {
 
 class Mongo_Connector

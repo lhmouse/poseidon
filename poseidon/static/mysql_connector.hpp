@@ -5,7 +5,7 @@
 #define POSEIDON_STATIC_MYSQL_CONNECTOR_
 
 #include "../fwd.hpp"
-#include "../third/mysql_fwd.hpp"
+#include "../details/mysql_fwd.hpp"
 namespace poseidon {
 
 class MySQL_Connector

@@ -10,6 +10,113 @@
 #include <libunwind.h>
 namespace poseidon {
 
+bool
+do_is_log_enabled(uint8_t level) noexcept
+  {
+    return logger.enabled(level);
+  }
+
+bool
+do_push_log_message(uint8_t level, const char* func, const char* file, uint32_t line,
+                    const void* composer, message_composer_fn* composer_fn)
+  {
+    ::rocket::tinyfmt_str fmt;
+    (* composer_fn) (fmt, composer);
+    cow_string sbuf = fmt.extract_string();
+    sbuf.erase(sbuf.rfind_not_of(" \t\r\n") + 1);
+
+    // Enqueue the message.
+    logger.enqueue(level, func, file, line, sbuf);
+    return true;
+  }
+
+::std::runtime_error
+do_create_runtime_error(const char* func, const char* file, uint32_t line,
+                        const void* composer, message_composer_fn* composer_fn)
+  {
+    ::rocket::tinyfmt_str fmt;
+    (* composer_fn) (fmt, composer);
+    ::std::string sbuf(fmt.c_str(), fmt.length());
+    sbuf.erase(sbuf.find_last_not_of(" \t\r\n") + 1);
+
+    // Append the source location and function name.
+    ::rocket::ascii_numput nump;
+    nump.put_DU(line);
+    sbuf += "\n[thrown from function `";
+    sbuf += func;
+    sbuf += "` at '";
+    sbuf += file;
+    sbuf += ":";
+    sbuf.append(nump.data(), nump.size());
+    sbuf += "']";
+
+    ::unw_context_t unw_ctx;
+    ::unw_cursor_t unw_top;
+    if((::unw_getcontext(&unw_ctx) == 0) && (::unw_init_local(&unw_top, &unw_ctx) == 0)) {
+      sbuf += "\n[stack backtrace:";
+
+      // Calculate the number of caller frames.
+      size_t nframes = 0;
+      ::unw_cursor_t unw_cur = unw_top;
+      while(::unw_step(&unw_cur) > 0)
+        nframes ++;
+
+      nump.put_DU(nframes);
+      static_vector<char, 8> numfield(nump.size(), ' ');
+
+      // Don't leak the buffer that will be returned by `__cxa_demangle()`.
+      ::rocket::unique_ptr<char, void (void*)> demangle_buf(nullptr, ::free);
+      size_t demangle_size = 0;
+
+      // Append frames to the exception message.
+      nframes = 0;
+      unw_cur = unw_top;
+      while(::unw_step(&unw_cur) > 0) {
+        // * frame index
+        nump.put_DU(++ nframes);
+        ::std::reverse_copy(nump.begin(), nump.end(), numfield.mut_rbegin());
+        sbuf += "\n  ";
+        sbuf.append(numfield.data(), numfield.size());
+        sbuf += ") ";
+
+        // * instruction pointer
+        ::unw_word_t unw_offset;
+        ::unw_get_reg(&unw_cur, UNW_REG_IP, &unw_offset);
+        nump.put_XU(unw_offset);
+        sbuf.append(nump.data(), nump.size());
+
+        char unw_name[1024];
+        if(::unw_get_proc_name(&unw_cur, unw_name, sizeof(unw_name), &unw_offset) != 0)
+          sbuf += " (unknown)";
+        else {
+          // Demangle the function name. If `__cxa_demangle()` returns a
+          // non-null pointer, `demangle_buf` will have been reallocated to
+          // `fn` which will point to the demangled name.
+          char* fn = ::abi::__cxa_demangle(unw_name, demangle_buf, &demangle_size, nullptr);
+          if(!fn)
+            fn = unw_name;
+          else {
+            demangle_buf.release();
+            demangle_buf.reset(fn);
+          }
+
+          // * function signature and offset
+          sbuf += " `";
+          sbuf += fn;
+          if(unw_offset > 0) {
+            sbuf += "`+";
+            nump.put_XU(unw_offset);
+            sbuf.append(nump.data(), nump.size());
+          }
+        }
+      }
+
+      sbuf += "\n  -- end of stack backtrace]";
+    }
+
+    return ::std::runtime_error(sbuf);
+  }
+
 void
 explode(cow_vector<cow_string>& segments, const cow_string& text, char delim, size_t limit)
   {
@@ -419,113 +526,6 @@ decode_and_canonicalize_uri_path(chars_view path)
     ROCKET_ASSERT(result.size() >= 1);
     ROCKET_ASSERT(result[0] == '/');
     return result;
-  }
-
-bool
-is_log_level_enabled(uint8_t level) noexcept
-  {
-    return logger.enabled(level);
-  }
-
-bool
-push_log_message(uint8_t level, const char* func, const char* file, uint32_t line,
-                 const void* composer, message_composer_fn* composer_fn)
-  {
-    ::rocket::tinyfmt_str fmt;
-    (* composer_fn) (fmt, composer);
-    cow_string sbuf = fmt.extract_string();
-    sbuf.erase(sbuf.rfind_not_of(" \t\r\n") + 1);
-
-    // Enqueue the message.
-    logger.enqueue(level, func, file, line, sbuf);
-    return true;
-  }
-
-::std::runtime_error
-create_runtime_error(const char* func, const char* file, uint32_t line,
-                     const void* composer, message_composer_fn* composer_fn)
-  {
-    ::rocket::tinyfmt_str fmt;
-    (* composer_fn) (fmt, composer);
-    ::std::string sbuf(fmt.c_str(), fmt.length());
-    sbuf.erase(sbuf.find_last_not_of(" \t\r\n") + 1);
-
-    // Append the source location and function name.
-    ::rocket::ascii_numput nump;
-    nump.put_DU(line);
-    sbuf += "\n[thrown from function `";
-    sbuf += func;
-    sbuf += "` at '";
-    sbuf += file;
-    sbuf += ":";
-    sbuf.append(nump.data(), nump.size());
-    sbuf += "']";
-
-    ::unw_context_t unw_ctx;
-    ::unw_cursor_t unw_top;
-    if((::unw_getcontext(&unw_ctx) == 0) && (::unw_init_local(&unw_top, &unw_ctx) == 0)) {
-      sbuf += "\n[stack backtrace:";
-
-      // Calculate the number of caller frames.
-      size_t nframes = 0;
-      ::unw_cursor_t unw_cur = unw_top;
-      while(::unw_step(&unw_cur) > 0)
-        nframes ++;
-
-      nump.put_DU(nframes);
-      static_vector<char, 8> numfield(nump.size(), ' ');
-
-      // Don't leak the buffer that will be returned by `__cxa_demangle()`.
-      ::rocket::unique_ptr<char, void (void*)> demangle_buf(nullptr, ::free);
-      size_t demangle_size = 0;
-
-      // Append frames to the exception message.
-      nframes = 0;
-      unw_cur = unw_top;
-      while(::unw_step(&unw_cur) > 0) {
-        // * frame index
-        nump.put_DU(++ nframes);
-        ::std::reverse_copy(nump.begin(), nump.end(), numfield.mut_rbegin());
-        sbuf += "\n  ";
-        sbuf.append(numfield.data(), numfield.size());
-        sbuf += ") ";
-
-        // * instruction pointer
-        ::unw_word_t unw_offset;
-        ::unw_get_reg(&unw_cur, UNW_REG_IP, &unw_offset);
-        nump.put_XU(unw_offset);
-        sbuf.append(nump.data(), nump.size());
-
-        char unw_name[1024];
-        if(::unw_get_proc_name(&unw_cur, unw_name, sizeof(unw_name), &unw_offset) != 0)
-          sbuf += " (unknown)";
-        else {
-          // Demangle the function name. If `__cxa_demangle()` returns a
-          // non-null pointer, `demangle_buf` will have been reallocated to
-          // `fn` which will point to the demangled name.
-          char* fn = ::abi::__cxa_demangle(unw_name, demangle_buf, &demangle_size, nullptr);
-          if(!fn)
-            fn = unw_name;
-          else {
-            demangle_buf.release();
-            demangle_buf.reset(fn);
-          }
-
-          // * function signature and offset
-          sbuf += " `";
-          sbuf += fn;
-          if(unw_offset > 0) {
-            sbuf += "`+";
-            nump.put_XU(unw_offset);
-            sbuf.append(nump.data(), nump.size());
-          }
-        }
-      }
-
-      sbuf += "\n  -- end of stack backtrace]";
-    }
-
-    return ::std::runtime_error(sbuf);
   }
 
 }  // namespace poseidon

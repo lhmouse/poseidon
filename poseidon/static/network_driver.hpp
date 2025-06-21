@@ -5,7 +5,7 @@
 #define POSEIDON_STATIC_NETWORK_DRIVER_
 
 #include "../fwd.hpp"
-#include "../third/openssl_fwd.hpp"
+#include "../details/openssl_fwd.hpp"
 #include <valarray>
 namespace poseidon {
 

@@ -5,7 +5,7 @@
 #define POSEIDON_BASE_ABSTRACT_INFLATOR_
 
 #include "../fwd.hpp"
-#include "../third/zlib_fwd.hpp"
+#include "../details/zlib_fwd.hpp"
 namespace poseidon {
 
 class Abstract_Inflator

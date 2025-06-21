@@ -7,7 +7,7 @@
 #include "../fwd.hpp"
 #include "enums.hpp"
 #include "../base/datetime.hpp"
-#include "../third/mysql_fwd.hpp"
+#include "../details/mysql_fwd.hpp"
 namespace poseidon {
 
 class MySQL_Value
