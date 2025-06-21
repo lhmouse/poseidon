@@ -24,40 +24,6 @@ Network_Driver::
   }
 
 POSEIDON_VISIBILITY_HIDDEN
-void
-Network_Driver::
-do_epoll_ctl(int op, Abstract_Socket* socket, uint32_t events)
-  {
-    ROCKET_ASSERT(this->m_epoll_fd);
-
-    ::epoll_event event;
-    event.events = events;
-    event.data.ptr = socket;
-    if(::epoll_ctl(this->m_epoll_fd, op, socket->fd(), &event) != 0) {
-      // When adding a socket, if the operation has failed, an exception shall
-      // be thrown. For the other operations, errors are ignored.
-      if(op == EPOLL_CTL_ADD)
-        POSEIDON_THROW((
-            "Could not add socket `$1` (class `$2`)",
-            "[`epoll_ctl()` failed: ${errno:full}]"),
-            socket, typeid(*socket));
-
-      POSEIDON_LOG_FATAL((
-          "Could not modify socket `$1` (class `$2`)",
-          "[`epoll_ctl()` failed: ${errno:full}]"),
-          socket, typeid(*socket));
-    }
-
-    if((op == EPOLL_CTL_ADD) || (op == EPOLL_CTL_MOD))
-      POSEIDON_LOG_TRACE((
-          "Updated epoll flags for socket `$1` (class `$2`): $3$4$5"),
-          socket, typeid(*socket),
-          (event.events & EPOLLET)  ? " ET"  : "",
-          (event.events & EPOLLIN)  ? " IN"  : "",
-          (event.events & EPOLLOUT) ? " OUT" : "");
-  }
-
-POSEIDON_VISIBILITY_HIDDEN
 wkptr<Abstract_Socket>&
 Network_Driver::
 do_find_socket_nolock(volatile Abstract_Socket* socket) noexcept
@@ -397,7 +363,7 @@ thread_loop()
       this->m_event_buf.accept(static_cast<uint32_t>(res) * sizeof(::epoll_event));
     }
 
-    ::epoll_event pev = { };
+    ::epoll_event pev;
     ROCKET_ASSERT(this->m_event_buf.size() >= sizeof(pev));
     this->m_event_buf.getn(reinterpret_cast<char*>(&pev), sizeof(pev));
     lock.unlock();
@@ -421,57 +387,81 @@ thread_loop()
     // If either `EPOLLHUP` or `EPOLLERR` is set, deliver a shutdown
     // notification and remove the socket. Error codes are passed through the
     // system `errno` variable.
-    if(pev.events & EPOLLIN)
+    if(pev.events & EPOLLERR) {
+      try {
+        socket->m_state.store(socket_closed);
+        ::socklen_t optlen = sizeof(int);
+        ::getsockopt(socket->m_fd, SOL_SOCKET, SO_ERROR, &errno, &optlen);
+        socket->do_abstract_socket_on_closed();
+      }
+      catch(exception& stdex) {
+        POSEIDON_LOG_ERROR(("Socket error: $1"), stdex);
+      }
+
+      ::epoll_ctl(this->m_epoll_fd, EPOLL_CTL_DEL, socket->m_fd, &pev);
+      socket->m_io_driver = reinterpret_cast<Network_Driver*>(-11);
+      return;
+    }
+
+    if(pev.events & EPOLLIN) {
       try {
         socket->do_abstract_socket_on_readable(pev.events & EPOLLRDHUP);
       }
       catch(exception& stdex) {
         POSEIDON_LOG_ERROR(("Socket error: $1"), stdex);
         socket->quick_shut_down();
-        pev.events |= EPOLLHUP;
-      }
 
-    if(pev.events & (EPOLLHUP | EPOLLERR))
+        ::epoll_ctl(this->m_epoll_fd, EPOLL_CTL_DEL, socket->m_fd, &pev);
+        socket->m_io_driver = reinterpret_cast<Network_Driver*>(-13);
+        return;
+      }
+    }
+
+    if(pev.events & EPOLLHUP) {
       try {
         socket->m_state.store(socket_closed);
-
-        if(pev.events & EPOLLERR) {
-          ::socklen_t optlen = sizeof(int);
-          ::getsockopt(socket->m_fd, SOL_SOCKET, SO_ERROR, &errno, &optlen);
-        } else
-          errno = 0;
+        errno = 0;
         socket->do_abstract_socket_on_closed();
-
-        this->do_epoll_ctl(EPOLL_CTL_DEL, socket.get(), 0);
-        socket->m_io_driver = reinterpret_cast<Network_Driver*>(-9);
-        return;
       }
       catch(exception& stdex) {
         POSEIDON_LOG_ERROR(("Socket error: $1"), stdex);
-        this->do_epoll_ctl(EPOLL_CTL_DEL, socket.get(), 0);
-        socket->m_io_driver = reinterpret_cast<Network_Driver*>(-5);
-        return;
       }
 
-    if(pev.events & EPOLLOUT)
+      ::epoll_ctl(this->m_epoll_fd, EPOLL_CTL_DEL, socket->m_fd, &pev);
+      socket->m_io_driver = reinterpret_cast<Network_Driver*>(-15);
+      return;
+    }
+
+    if(pev.events & EPOLLOUT) {
       try {
         socket->do_abstract_socket_on_writeable();
       }
       catch(exception& stdex) {
         POSEIDON_LOG_ERROR(("Socket error: $1"), stdex);
         socket->quick_shut_down();
-        pev.events |= EPOLLHUP;
+
+        ::epoll_ctl(this->m_epoll_fd, EPOLL_CTL_DEL, socket->m_fd, &pev);
+        socket->m_io_driver = reinterpret_cast<Network_Driver*>(-17);
+        return;
       }
+    }
 
     // When there are too many pending bytes, as a safety measure, EPOLLIN
     // notifications are disabled until some bytes can be transferred.
     bool should_throttle = socket->m_io_write_queue.size() > throttle_size;
     if(socket->m_io_throttled != should_throttle) {
       socket->m_io_throttled = should_throttle;
+
       if(should_throttle)
-        this->do_epoll_ctl(EPOLL_CTL_MOD, socket.get(), EPOLLOUT);
+        pev.events = EPOLLOUT;  // output-only, level-triggered
       else
-        this->do_epoll_ctl(EPOLL_CTL_MOD, socket.get(), EPOLLIN | EPOLLRDHUP | EPOLLOUT | EPOLLET);
+        pev.events = EPOLLIN | EPOLLRDHUP | EPOLLOUT | EPOLLET;
+
+      if(::epoll_ctl(this->m_epoll_fd, EPOLL_CTL_MOD, socket->m_fd, &pev) != 0)
+        POSEIDON_LOG_FATAL((
+            "Could not modify socket `$1` (class `$2`)",
+            "[`epoll_ctl()` failed: ${errno:full}]"),
+            socket, typeid(*socket));
     }
 
     POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`) I/O complete"), socket, typeid(*socket));
@@ -515,8 +505,16 @@ insert(const shptr<Abstract_Socket>& socket)
         }
     }
 
-    // Insert the socket.
-    this->do_epoll_ctl(EPOLL_CTL_ADD, socket.get(), EPOLLIN | EPOLLRDHUP | EPOLLOUT | EPOLLET);
+    // Insert the socket for polling.
+    ::epoll_event pev;
+    pev.events = EPOLLIN | EPOLLRDHUP | EPOLLOUT | EPOLLET;
+    pev.data.ptr = socket.get();
+    if(::epoll_ctl(this->m_epoll_fd, EPOLL_CTL_ADD, socket->m_fd, &pev) != 0)
+      POSEIDON_THROW((
+          "Could not add socket `$1` (class `$2`)",
+          "[`epoll_ctl()` failed: ${errno:full}]"),
+          socket, typeid(*socket));
+
     this->do_find_socket_nolock(socket.get()) = socket;
     this->m_epoll_map_used ++;
   }
