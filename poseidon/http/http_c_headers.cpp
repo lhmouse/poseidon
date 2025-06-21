@@ -16,11 +16,10 @@ void
 HTTP_C_Headers::
 encode_and_set_path(chars_view path)
   {
+    this->raw_path.clear();
+
     char seq[4] = "%";
     int dval;
-
-    this->raw_path.clear();
-    this->raw_path.push_back('/');
 
     for(size_t k = 0;  k != path.n;  ++k)
       switch(path.p[k])
@@ -46,13 +45,16 @@ encode_and_set_path(chars_view path)
           this->raw_path.append(seq, 3);
           break;
         }
+
+    if(this->raw_path.empty())
+      this->raw_path = &"/";
   }
 
 void
 HTTP_C_Headers::
 encode_and_append_query(chars_view key, chars_view value)
   {
-    if(this->raw_query.size() != 0)
+    if(!this->raw_query.empty())
       this->raw_query.push_back('&');
 
     char seq[4] = "%";
