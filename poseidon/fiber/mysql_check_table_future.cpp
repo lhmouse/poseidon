@@ -194,6 +194,10 @@ do_on_abstract_future_initialize()
     do_append_engine(sql, this->m_table.engine);
     sql << ",\n  CHARSET = 'utf8mb4'";
 
+    for(const auto& column : this->m_table.columns)
+      if((column.type == mysql_column_auto_increment) && !column.default_value.is_null())
+        sql << ",\n  AUTO_INCREMENT = " << column.default_value;
+
     POSEIDON_LOG_INFO(("Checking MySQL table:\n$1"), sql.get_string());
     const cow_vector<MySQL_Value> no_args;
     this->m_conn->execute(sql.get_string(), no_args);
