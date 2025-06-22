@@ -384,66 +384,39 @@ thread_loop()
     socket->m_io_driver = this;
     lock.unlock();
 
-    // If either `EPOLLHUP` or `EPOLLERR` is set, deliver a shutdown
-    // notification and remove the socket. Error codes are passed through the
-    // system `errno` variable.
-    if(pev.events & EPOLLERR) {
-      try {
+    try {
+      if(pev.events & EPOLLERR) {
+        // Deliver a shutdown notification and remove the socket. Error codes
+        // are passed through the system `errno` variable.
         socket->m_state.store(socket_closed);
         ::socklen_t optlen = sizeof(int);
         ::getsockopt(socket->m_fd, SOL_SOCKET, SO_ERROR, &errno, &optlen);
         socket->do_abstract_socket_on_closed();
       }
-      catch(exception& stdex) {
-        POSEIDON_LOG_ERROR(("Socket error: $1"), stdex);
-      }
+      else {
+        if(pev.events & EPOLLIN)
+          socket->do_abstract_socket_on_readable(pev.events & EPOLLRDHUP);
 
+        if(pev.events & EPOLLOUT)
+          socket->do_abstract_socket_on_writeable();
+
+        if(pev.events & EPOLLHUP) {
+          socket->m_state.store(socket_closed);
+          errno = 0;
+          socket->do_abstract_socket_on_closed();
+        }
+      }
+    }
+    catch(exception& stdex) {
+      POSEIDON_LOG_ERROR(("Socket error: $1"), stdex);
+      socket->quick_shut_down();
+      pev.events |= EPOLLERR;
+    }
+
+    if(pev.events & (EPOLLERR | EPOLLHUP)) {
       ::epoll_ctl(this->m_epoll_fd, EPOLL_CTL_DEL, socket->m_fd, &pev);
-      socket->m_io_driver = reinterpret_cast<Network_Driver*>(-11);
+      socket->m_io_driver = reinterpret_cast<Network_Driver*>(-7);
       return;
-    }
-
-    if(pev.events & EPOLLIN) {
-      try {
-        socket->do_abstract_socket_on_readable(pev.events & EPOLLRDHUP);
-      }
-      catch(exception& stdex) {
-        POSEIDON_LOG_ERROR(("Socket error: $1"), stdex);
-        socket->quick_shut_down();
-
-        ::epoll_ctl(this->m_epoll_fd, EPOLL_CTL_DEL, socket->m_fd, &pev);
-        socket->m_io_driver = reinterpret_cast<Network_Driver*>(-13);
-        return;
-      }
-    }
-
-    if(pev.events & EPOLLHUP) {
-      try {
-        socket->m_state.store(socket_closed);
-        errno = 0;
-        socket->do_abstract_socket_on_closed();
-      }
-      catch(exception& stdex) {
-        POSEIDON_LOG_ERROR(("Socket error: $1"), stdex);
-      }
-
-      ::epoll_ctl(this->m_epoll_fd, EPOLL_CTL_DEL, socket->m_fd, &pev);
-      socket->m_io_driver = reinterpret_cast<Network_Driver*>(-15);
-      return;
-    }
-
-    if(pev.events & EPOLLOUT) {
-      try {
-        socket->do_abstract_socket_on_writeable();
-      }
-      catch(exception& stdex) {
-        POSEIDON_LOG_ERROR(("Socket error: $1"), stdex);
-        socket->quick_shut_down();
-
-        ::epoll_ctl(this->m_epoll_fd, EPOLL_CTL_DEL, socket->m_fd, &pev);
-        socket->m_io_driver = reinterpret_cast<Network_Driver*>(-17);
-        return;
-      }
     }
 
     // When there are too many pending bytes, as a safety measure, EPOLLIN
