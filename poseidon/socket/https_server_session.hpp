@@ -147,9 +147,14 @@ class HTTPS_Server_Session
     bool
     https_chunked_response_finish();
 
-    // Sends a default response and shuts down the connection.
+    // Sends a default response and shuts down the connection. `status` may be
+    // a standard status code, or an integer within [200,599]. Any other value is
+    // sanitized to 400.
     bool
-    https_shut_down(HTTP_Status status) noexcept;
+    https_shut_down(HTTP_Status status = http_status_bad_request) noexcept;
+
+    bool
+    https_shut_down(int status) noexcept;
   };
 
 }  // namespace poseidon

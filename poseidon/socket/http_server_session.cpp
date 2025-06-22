@@ -288,15 +288,20 @@ http_shut_down(HTTP_Status status) noexcept
       // Compose a default page.
       HTTP_S_Headers resp;
       resp.status = status;
+      resp.reason = ::rocket::sref(::http_status_str(static_cast<::http_status>(status)));
       resp.headers.emplace_back(&"Content-Type", &"text/html");
       resp.headers.emplace_back(&"Connection", &"close");
 
-      tinyfmt_ln resp_fmt;
-      format(resp_fmt,
-          "<html><head><title>$1 $2</title></head><body><h1>$1 $2</h1></body></html>",
-          status, ::http_status_str(static_cast<::http_status>(status)));
+      static constexpr char default_page[] =
+          "<html>"
+          "<head><title>$1 $2</title></head>"
+          "<body><h1>$1 $2</h1></body>"
+          "</html>";
 
-      succ = this->do_http_raw_response(resp, resp_fmt.get_buffer());
+      tinyfmt_ln fmt;
+      format(fmt, default_page, status, resp.reason);
+
+      succ = this->do_http_raw_response(resp, fmt.get_buffer());
     }
     catch(exception& stdex) {
       POSEIDON_LOG_ERROR((
@@ -306,6 +311,16 @@ http_shut_down(HTTP_Status status) noexcept
     }
     succ |= this->tcp_shut_down();
     return succ;
+  }
+
+bool
+HTTP_Server_Session::
+http_shut_down(int status) noexcept
+  {
+    HTTP_Status real_status = http_status_bad_request;
+    if((status >= 200) && (status <= 599))
+      real_status = static_cast<HTTP_Status>(real_status);
+    return this->http_shut_down(real_status);
   }
 
 }  // namespace poseidon
