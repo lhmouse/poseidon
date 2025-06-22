@@ -20,14 +20,14 @@ WS_Server_Session::
 POSEIDON_VISIBILITY_HIDDEN
 void
 WS_Server_Session::
-do_call_on_ws_close_once(WebSocket_Status status, chars_view reason)
+do_call_on_ws_close_once(WS_Status status, chars_view reason)
   {
     if(this->m_closure_notified)
       return;
 
     this->m_closure_notified = true;
     this->do_on_ws_close(status, reason);
-    this->ws_shut_down(websocket_status_normal_closure, "");
+    this->ws_shut_down(ws_status_normal, "");
   }
 
 void
@@ -35,8 +35,7 @@ WS_Server_Session::
 do_abstract_socket_on_closed()
   {
     POSEIDON_LOG_INFO(("Closing WebSocket to `$1`: ${errno:full}"), this->remote_address());
-    this->do_call_on_ws_close_once(websocket_status_no_close_frame,
-                                   "no CLOSE frame received");
+    this->do_call_on_ws_close_once(ws_status_no_close_frame, "no CLOSE frame received");
   }
 
 HTTP_Payload_Type
@@ -71,8 +70,7 @@ do_on_http_request_error(HTTP_Status status)
     this->http_response(move(resp), "");
 
     // Close the connection.
-    this->do_call_on_ws_close_once(websocket_status_no_close_frame,
-                                   "handshake rejected by HTTP error");
+    this->do_call_on_ws_close_once(ws_status_no_close_frame, "handshake rejected by HTTP error");
   }
 
 void
@@ -91,8 +89,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
         if(this->m_parser.error()) {
           data.clear();
-          this->do_call_on_ws_close_once(websocket_status_protocol_error,
-                                         this->m_parser.error_description());
+          this->do_call_on_ws_close_once(ws_status_protocol_error, this->m_parser.description());
           return;
         }
 
@@ -105,8 +102,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
         if(this->m_parser.error()) {
           data.clear();
-          this->do_call_on_ws_close_once(websocket_status_protocol_error,
-                                         this->m_parser.error_description());
+          this->do_call_on_ws_close_once(ws_status_protocol_error, this->m_parser.description());
           return;
         }
 
@@ -128,8 +124,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
           if(this->m_parser.message_rsv1()) {
             if(!this->m_pmce_opt) {
               data.clear();
-              this->do_call_on_ws_close_once(websocket_status_unexpected_error,
-                                             "PMCE not initialized");
+              this->do_call_on_ws_close_once(ws_status_unexpected_error, "PMCE not initialized");
               return;
             }
 
@@ -147,8 +142,8 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
           // If this is a data frame or continuation, its payload is part of a
           // (potentially fragmented) data message, so combine it.
-          auto opcode = static_cast<WebSocket_Opcode>(this->m_parser.message_opcode());
-          ROCKET_ASSERT(is_any_of(opcode, { websocket_TEXT, websocket_BINARY }));
+          auto opcode = static_cast<WS_Opcode>(this->m_parser.message_opcode());
+          ROCKET_ASSERT(is_any_of(opcode, { ws_TEXT, ws_BINARY }));
           this->do_on_ws_message_data_stream(opcode, splice_buffers(this->m_msg, move(payload)));
         }
 
@@ -160,42 +155,42 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
         if(this->m_parser.frame_header().fin)
           switch(this->m_parser.frame_header().opcode)
             {
-            case websocket_CONTINUATION:
-            case websocket_TEXT:
-            case websocket_BINARY:
+            case ws_CONTINUATION:
+            case ws_TEXT:
+            case ws_BINARY:
               {
-                auto opcode = static_cast<WebSocket_Opcode>(this->m_parser.message_opcode());
-                ROCKET_ASSERT(is_any_of(opcode, { websocket_TEXT, websocket_BINARY }));
+                auto opcode = static_cast<WS_Opcode>(this->m_parser.message_opcode());
+                ROCKET_ASSERT(is_any_of(opcode, { ws_TEXT, ws_BINARY }));
                 this->do_on_ws_message_finish(opcode, move(this->m_msg));
                 break;
               }
 
-            case websocket_CLOSE:
+            case ws_CLOSE:
               {
                 ROCKET_ASSERT(this->m_closure_notified == false);
                 this->m_closure_notified = true;
                 data.clear();
 
                 // Get the status code in big-endian order..
-                WebSocket_Status status = websocket_status_no_status_code;
+                WS_Status status = ws_status_no_status_code;
                 uint16_t bestatus;
                 if(payload.getn(reinterpret_cast<char*>(&bestatus), 2) >= 2)
-                  status = static_cast<WebSocket_Status>(ROCKET_BETOH16(bestatus));
+                  status = static_cast<WS_Status>(ROCKET_BETOH16(bestatus));
                 this->do_on_ws_close(status, payload);
                 return;
               }
 
-            case websocket_PING:
+            case ws_PING:
               POSEIDON_LOG_TRACE(("PING from `$1`: $2"), this->remote_address(), payload);
-              this->do_on_ws_message_finish(websocket_PING, move(payload));
+              this->do_on_ws_message_finish(ws_PING, move(payload));
 
               // FIN + PONG
               this->do_ws_send_raw_frame(0b10001010, payload);
               break;
 
-            case websocket_PONG:
+            case ws_PONG:
               POSEIDON_LOG_TRACE(("PONG from `$1`: $2"), this->remote_address(), payload);
-              this->do_on_ws_message_finish(websocket_PONG, move(payload));
+              this->do_on_ws_message_finish(ws_PONG, move(payload));
               break;
             }
       }
@@ -214,7 +209,7 @@ do_on_ws_accepted(cow_string&& caddr)
 
 void
 WS_Server_Session::
-do_on_ws_message_data_stream(WebSocket_Opcode /*opcode*/, linear_buffer& data)
+do_on_ws_message_data_stream(WS_Opcode /*opcode*/, linear_buffer& data)
   {
     // Leave `data` alone for consumption by `do_on_ws_message_finish()`, but
     // perform some security checks, so we won't be affected by compromised
@@ -228,7 +223,7 @@ do_on_ws_message_data_stream(WebSocket_Opcode /*opcode*/, linear_buffer& data)
 
 void
 WS_Server_Session::
-do_on_ws_close(WebSocket_Status status, chars_view reason)
+do_on_ws_close(WS_Status status, chars_view reason)
   {
     POSEIDON_LOG_INFO(("Closed WebSocket from `$1`: $2: $3"), this->remote_address(), status, reason);
   }
@@ -253,8 +248,7 @@ do_ws_complete_handshake(HTTP_C_Headers& req, bool eot)
 
     if(eot || !this->m_parser.is_server_mode()) {
       // The handshake failed.
-      this->do_call_on_ws_close_once(websocket_status_protocol_error,
-                                     this->m_parser.error_description());
+      this->do_call_on_ws_close_once(ws_status_protocol_error, this->m_parser.description());
       return;
     }
 
@@ -276,7 +270,7 @@ do_ws_send_raw_frame(int rsv_opcode, chars_view data)
     header.rsv1 = rsv_opcode >> 6 & 1;
     header.rsv2 = rsv_opcode >> 5 & 1;
     header.rsv3 = rsv_opcode >> 4 & 1;
-    header.opcode = static_cast<WebSocket_Opcode>(rsv_opcode & 15);
+    header.opcode = static_cast<WS_Opcode>(rsv_opcode & 15);
     header.payload_len = data.n;
 
     tinyfmt_ln fmt;
@@ -287,12 +281,12 @@ do_ws_send_raw_frame(int rsv_opcode, chars_view data)
 
 bool
 WS_Server_Session::
-ws_send(WebSocket_Opcode opcode, chars_view data)
+ws_send(WS_Opcode opcode, chars_view data)
   {
     switch(static_cast<uint32_t>(opcode))
       {
-      case websocket_TEXT:
-      case websocket_BINARY:
+      case ws_TEXT:
+      case ws_BINARY:
         {
           if(this->do_has_upgraded() && this->m_pmce_opt) {
             // Don't compress small frames when it's not worth the cost.
@@ -334,8 +328,8 @@ ws_send(WebSocket_Opcode opcode, chars_view data)
           return this->do_ws_send_raw_frame(0b10000000 | opcode, data);
         }
 
-      case websocket_PING:
-      case websocket_PONG:
+      case ws_PING:
+      case ws_PONG:
         {
           if(data.n > 125)
             POSEIDON_THROW((
@@ -358,7 +352,7 @@ ws_send(WebSocket_Opcode opcode, chars_view data)
 
 bool
 WS_Server_Session::
-ws_shut_down(WebSocket_Status status, chars_view reason) noexcept
+ws_shut_down(WS_Status status, chars_view reason) noexcept
   {
     if(!this->do_has_upgraded() || (this->socket_state() >= socket_closing))
       return this->tcp_shut_down();
@@ -385,6 +379,16 @@ ws_shut_down(WebSocket_Status status, chars_view reason) noexcept
     }
     succ |= this->tcp_shut_down();
     return succ;
+  }
+
+bool
+WS_Server_Session::
+ws_shut_down(int status, chars_view reason) noexcept
+  {
+    WS_Status real_status = ws_status_policy_violation;
+    if((status >= 1000) && (status <= 4999))
+      real_status = static_cast<WS_Status>(real_status);
+    return this->ws_shut_down(real_status, reason);
   }
 
 }  // namespace poseidon

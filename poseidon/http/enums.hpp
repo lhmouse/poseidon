@@ -68,37 +68,37 @@ enum HTTP_Status : uint16_t
     http_status_http_version_not_supported       = 505,
   };
 
-enum WebSocket_Opcode : uint8_t
+enum WS_Opcode : uint8_t
   {
-    websocket_CONTINUATION  =  0,
-    websocket_TEXT          =  1,
-    websocket_BINARY        =  2,
-    websocket_CLOSE         =  8,
-    websocket_PING          =  9,
-    websocket_PONG          = 10,
+    ws_CONTINUATION  =  0,
+    ws_TEXT          =  1,
+    ws_BINARY        =  2,
+    ws_CLOSE         =  8,
+    ws_PING          =  9,
+    ws_PONG          = 10,
   };
 
-enum WebSocket_Status : uint16_t
+enum WS_Status : uint16_t
   {
-    websocket_status_null                  =    0,
-    websocket_status_normal_closure        = 1000,
-    websocket_status_going_away            = 1001,
-    websocket_status_protocol_error        = 1002,
-    websocket_status_not_acceptable        = 1003,
-    websocket_status_no_status_code        = 1005,
-    websocket_status_no_close_frame        = 1006,
-    websocket_status_message_data_error    = 1007,
-    websocket_status_policy_violation      = 1008,
-    websocket_status_message_too_large     = 1009,
-    websocket_status_extension_required    = 1010,
-    websocket_status_unexpected_error      = 1011,
-    websocket_status_service_restart       = 1012,
-    websocket_status_try_again_later       = 1013,
-    websocket_status_bad_gateway           = 1014,
-    websocket_status_tls_error             = 1015,
-    websocket_status_unauthorized          = 3000,
-    websocket_status_forbidden             = 3003,
-    websocket_status_timeout               = 3008,
+    ws_status_null                  =    0,
+    ws_status_normal                = 1000,
+    ws_status_going_away            = 1001,
+    ws_status_protocol_error        = 1002,
+    ws_status_not_acceptable        = 1003,
+    ws_status_no_status_code        = 1005,
+    ws_status_no_close_frame        = 1006,
+    ws_status_message_data_error    = 1007,
+    ws_status_policy_violation      = 1008,
+    ws_status_message_too_large     = 1009,
+    ws_status_extension_required    = 1010,
+    ws_status_unexpected_error      = 1011,
+    ws_status_service_restart       = 1012,
+    ws_status_try_again_later       = 1013,
+    ws_status_bad_gateway           = 1014,
+    ws_status_tls_error             = 1015,
+    ws_status_unauthorized          = 3000,
+    ws_status_forbidden             = 3003,
+    ws_status_timeout               = 3008,
   };
 
 }  // namespace poseidon

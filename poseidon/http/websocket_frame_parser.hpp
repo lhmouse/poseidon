@@ -82,7 +82,7 @@ class WebSocket_Frame_Parser
       { return this->m_wsf == wsf_error;  }
 
     const char*
-    error_description() const noexcept
+    description() const noexcept
       { return this->m_error_desc ? this->m_error_desc : "success";  }
 
     // Get the operating mode.

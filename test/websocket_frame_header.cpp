@@ -17,7 +17,7 @@ main()
     header.clear();
 
     header.fin = 1;
-    header.opcode = websocket_TEXT;
+    header.opcode = ws_TEXT;
     header.payload_len = 5;
     header.encode(fmt);
     fmt.putn("Hello", 5);
@@ -29,7 +29,7 @@ main()
     header.clear();
 
     header.fin = 1;
-    header.opcode = websocket_TEXT;
+    header.opcode = ws_TEXT;
     header.masked = 1;
     header.masking_key = 0x37fa213d;
     header.payload_len = 5;
@@ -46,7 +46,7 @@ main()
     fmt.clear_string();
     header.clear();
 
-    header.opcode = websocket_TEXT;
+    header.opcode = ws_TEXT;
     header.payload_len = 3;
     header.encode(fmt);
     fmt.putn("Hel", 3);
@@ -70,7 +70,7 @@ main()
     header.clear();
 
     header.fin = 1;
-    header.opcode = websocket_PING;
+    header.opcode = ws_PING;
     header.payload_len = 5;
     header.encode(fmt);
     fmt.putn("Hello", 5);
@@ -82,7 +82,7 @@ main()
     header.clear();
 
     header.fin = 1;
-    header.opcode = websocket_PONG;
+    header.opcode = ws_PONG;
     header.masked = 1;
     header.masking_key = 0x37fa213d;
     header.payload_len = 5;
@@ -99,7 +99,7 @@ main()
     header.clear();
 
     header.fin = 1;
-    header.opcode = websocket_PONG;
+    header.opcode = ws_PONG;
     header.masked = 1;
     header.masking_key = 0x37fa213d;
     header.payload_len = 283;
@@ -133,7 +133,7 @@ main()
     header.clear();
 
     header.fin = 1;
-    header.opcode = websocket_PONG;
+    header.opcode = ws_PONG;
     header.masked = 1;
     header.masking_key = 0x37fa213d;
     header.payload_len = 5;
@@ -163,7 +163,7 @@ main()
     header.clear();
 
     header.fin = 1;
-    header.opcode = websocket_BINARY;
+    header.opcode = ws_BINARY;
     header.payload_len = 256;
     header.encode(fmt);
 
@@ -174,7 +174,7 @@ main()
     header.clear();
 
     header.fin = 1;
-    header.opcode = websocket_BINARY;
+    header.opcode = ws_BINARY;
     header.payload_len = 65536;
     header.encode(fmt);
 

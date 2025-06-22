@@ -16,7 +16,7 @@ struct WebSocket_Frame_Header
         // The payload length is always stored as an `uint64_t`. The `encode()`
         // function will deduce the correct field basing on its value.
         // Reference: https://datatracker.ietf.org/doc/html/rfc6455
-        WebSocket_Opcode opcode : 4;
+        WS_Opcode opcode : 4;
         uint8_t rsv3 : 1;
         uint8_t rsv2 : 1;
         uint8_t rsv1 : 1;

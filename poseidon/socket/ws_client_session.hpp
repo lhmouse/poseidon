@@ -27,7 +27,7 @@ class WS_Client_Session
 
   private:
     void
-    do_call_on_ws_close_once(WebSocket_Status status, chars_view reason);
+    do_call_on_ws_close_once(WS_Status status, chars_view reason);
 
   protected:
     // This function implements `HTTP_Client_Session`.
@@ -56,7 +56,7 @@ class WS_Client_Session
 
     // This callback is invoked by the network thread for each fragment of a data
     // message. `opcode` indicates the type of the message, which can be either
-    // `websocket_text` or `websocket_binary`; control frames are never notified via
+    // `ws_text` or `ws_binary`; control frames are never notified via
     // this callback. As with `TCP_Connection::do_on_tcp_stream()`, the argument
     // buffer contains all data that have been accumulated so far and callees are
     // supposed to remove bytes that have been processed.
@@ -66,14 +66,14 @@ class WS_Client_Session
     // `network.http.max_websocket_message_length` limit in 'main.conf'.
     virtual
     void
-    do_on_ws_message_data_stream(WebSocket_Opcode opcode, linear_buffer& data);
+    do_on_ws_message_data_stream(WS_Opcode opcode, linear_buffer& data);
 
     // This callback is invoked by the network thread at the end of a data message
-    // or a control frame. `opcode` may be `websocket_text`, `websocket_binary`,
-    // `websocket_ping` or `websocket_pong`.
+    // or a control frame. `opcode` may be `ws_text`, `ws_binary`,
+    // `ws_ping` or `ws_pong`.
     virtual
     void
-    do_on_ws_message_finish(WebSocket_Opcode opcode, linear_buffer&& data) = 0;
+    do_on_ws_message_finish(WS_Opcode opcode, linear_buffer&& data) = 0;
 
     // This callback is invoked by the network thread when an error occurs, or
     // after a CLOSE frame has been received. The connection will be closed after
@@ -81,7 +81,7 @@ class WS_Client_Session
     // The default implementation does nothing.
     virtual
     void
-    do_on_ws_close(WebSocket_Status status, chars_view reason);
+    do_on_ws_close(WS_Status status, chars_view reason);
 
     // Sends a raw frame (not a message). No error checking is performed. This
     // function is provided for convenience only, and maybe isn't very useful
@@ -99,16 +99,18 @@ class WS_Client_Session
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    ws_send(WebSocket_Opcode opcode, chars_view data);
+    ws_send(WS_Opcode opcode, chars_view data);
 
     // Sends a CLOSE frame with an optional error message, then shuts down the
-    // connection. The reason string will be truncated to 123 bytes if it's too
-    // long.
-    // If this function throws an exception, there is no effect.
+    // connection. `status` may be a standard status code, or an integer within
+    // [1000,4999]. Any other value is sanitized to 1008. The reason string will
+    // be truncated to 123 bytes if it's too long.
     // This function is thread-safe.
     bool
-    ws_shut_down(WebSocket_Status status = websocket_status_normal_closure,
-                 chars_view reason = "") noexcept;
+    ws_shut_down(WS_Status status = ws_status_normal, chars_view reason = "") noexcept;
+
+    bool
+    ws_shut_down(int status, chars_view reason = "") noexcept;
   };
 
 }  // namespace poseidon

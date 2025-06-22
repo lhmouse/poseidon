@@ -398,8 +398,8 @@ class DNS_Connect_Task;
 // HTTP and WebSocket types
 enum HTTP_Method : uint64_t;
 enum HTTP_Status : uint16_t;
-enum WebSocket_Opcode : uint8_t;
-enum WebSocket_Status : uint16_t;
+enum WS_Opcode : uint8_t;
+enum WS_Status : uint16_t;
 class HTTP_Value;
 class HTTP_Field_Name;
 class HTTP_Header_Parser;

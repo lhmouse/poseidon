@@ -96,7 +96,7 @@ struct Final_Fiber final : Abstract_Fiber
           catch(exception& stdex) {
             // Shut the connection down with a message.
             POSEIDON_LOG_ERROR(("Unhandled exception: $1"), stdex);
-            session->ws_shut_down(websocket_status_unexpected_error);
+            session->ws_shut_down(ws_status_unexpected_error);
           }
         }
       }
@@ -158,15 +158,15 @@ struct Final_Session final : WS_Server_Session
 
     virtual
     void
-    do_on_ws_message_finish(WebSocket_Opcode opcode, linear_buffer&& data) override
+    do_on_ws_message_finish(WS_Opcode opcode, linear_buffer&& data) override
       {
         Event event;
 
-        if(opcode == websocket_TEXT)
+        if(opcode == ws_TEXT)
           event.type = easy_ws_text;
-        else if(opcode == websocket_BINARY)
+        else if(opcode == ws_BINARY)
           event.type = easy_ws_binary;
-        else if(opcode == websocket_PONG)
+        else if(opcode == ws_PONG)
           event.type = easy_ws_pong;
         else
           return;
@@ -177,7 +177,7 @@ struct Final_Session final : WS_Server_Session
 
     virtual
     void
-    do_on_ws_close(WebSocket_Status status, chars_view reason) override
+    do_on_ws_close(WS_Status status, chars_view reason) override
       {
         Event event;
         event.type = easy_ws_close;

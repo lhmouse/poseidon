@@ -448,7 +448,7 @@ parse_frame_header_from_stream(linear_buffer& data)
     this->m_frm_header.rsv1 = mask_len_rsv_opcode >> 6 & 1;
     this->m_frm_header.rsv2 = mask_len_rsv_opcode >> 5 & 1;
     this->m_frm_header.rsv3 = mask_len_rsv_opcode >> 4 & 1;
-    this->m_frm_header.opcode = static_cast<WebSocket_Opcode>(mask_len_rsv_opcode & 15);
+    this->m_frm_header.opcode = static_cast<WS_Opcode>(mask_len_rsv_opcode & 15);
     this->m_frm_header.masked = mask_len_rsv_opcode >> 15 & 1;
     this->m_frm_header.reserved_1 = mask_len_rsv_opcode >> 8 & 127;
 
@@ -463,8 +463,8 @@ parse_frame_header_from_stream(linear_buffer& data)
 
     switch(this->m_frm_header.opcode)
       {
-      case websocket_TEXT:
-      case websocket_BINARY:
+      case ws_TEXT:
+      case ws_BINARY:
         {
           if(this->m_opcode != 0) {
             // The previous message must have terminated.
@@ -500,7 +500,7 @@ parse_frame_header_from_stream(linear_buffer& data)
         POSEIDON_LOG_TRACE(("Data frame: opcode = $1"), this->m_opcode);
         break;
 
-      case websocket_CONTINUATION:
+      case ws_CONTINUATION:
         {
           if(mask_len_rsv_opcode & 0b01110000) {
             // RSV bits shall only be set in the first data frame.
@@ -526,9 +526,9 @@ parse_frame_header_from_stream(linear_buffer& data)
           break;
         }
 
-      case websocket_CLOSE:
-      case websocket_PING:
-      case websocket_PONG:
+      case ws_CLOSE:
+      case ws_PING:
+      case ws_PONG:
         {
           if(mask_len_rsv_opcode & 0b01110000) {
             // RSV bits shall only be set in a data frame.

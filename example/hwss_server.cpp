@@ -25,12 +25,12 @@ my_server_callback(const shptr<WSS_Server_Session>& session,
 
       case easy_hws_text:
         POSEIDON_LOG_ERROR(("example HTTPS/WSS server received TEXT data: $1"), data);
-        session->wss_send(websocket_TEXT, data);
+        session->wss_send(ws_TEXT, data);
         break;
 
       case easy_hws_binary:
         POSEIDON_LOG_ERROR(("example HTTPS/WSS server received BINARY data: $1"), data);
-        session->wss_send(websocket_BINARY, data);
+        session->wss_send(ws_BINARY, data);
         break;
 
       case easy_hws_pong:
