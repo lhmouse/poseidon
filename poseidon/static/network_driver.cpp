@@ -394,11 +394,14 @@ thread_loop()
         socket->do_abstract_socket_on_closed();
       }
       else {
-        if(pev.events & EPOLLIN)
-          socket->do_abstract_socket_on_readable(pev.events & EPOLLRDHUP);
-
+        // `EPOLLOUT` delivers connection establishment notification, so it has
+        // to be called first. Similarly, `EPOLLHUP` delivers connection closure
+        // notification, so it has to be called last.
         if(pev.events & EPOLLOUT)
           socket->do_abstract_socket_on_writeable();
+
+        if(pev.events & EPOLLIN)
+          socket->do_abstract_socket_on_readable(pev.events & EPOLLRDHUP);
 
         if(pev.events & EPOLLHUP) {
           socket->m_state.store(socket_closed);
