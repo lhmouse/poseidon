@@ -7,7 +7,7 @@
 #include "../fiber/abstract_fiber.hpp"
 #include "../static/fiber_scheduler.hpp"
 #include "../socket/dns_connect_task.hpp"
-#include "../static/task_executor.hpp"
+#include "../static/task_scheduler.hpp"
 #include "../utils.hpp"
 namespace poseidon {
 namespace {
@@ -240,7 +240,7 @@ connect(const cow_string& addr, const callback_type& callback)
     // Initiate the connection.
     plain_mutex::unique_lock lock(this->m_sessions->mutex);
 
-    task_executor.enqueue(dns_task);
+    task_scheduler.enqueue(dns_task);
     auto r = this->m_sessions->session_map.try_emplace(socket.get());
     ROCKET_ASSERT(r.second);
     r.first->second.socket = socket;

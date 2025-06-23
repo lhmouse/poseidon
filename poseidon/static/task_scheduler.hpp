@@ -1,13 +1,13 @@
 // This file is part of Poseidon.
 // Copyright (C) 2022-2025, LH_Mouse. All wrongs reserved.
 
-#ifndef POSEIDON_STATIC_TASK_EXECUTOR_
-#define POSEIDON_STATIC_TASK_EXECUTOR_
+#ifndef POSEIDON_STATIC_TASK_SCHEDULER_
+#define POSEIDON_STATIC_TASK_SCHEDULER_
 
 #include "../fwd.hpp"
 namespace poseidon {
 
-class Task_Executor
+class Task_Scheduler
   {
   private:
     mutable plain_mutex m_queue_mutex;
@@ -16,13 +16,13 @@ class Task_Executor
     cow_vector<wkptr<Abstract_Task>> m_queue_back;
 
   public:
-    // Creates an empty task executor.
-    Task_Executor() noexcept;
+    // Creates an empty task scheduler.
+    Task_Scheduler() noexcept;
 
   public:
-    Task_Executor(const Task_Executor&) = delete;
-    Task_Executor& operator=(const Task_Executor&) & = delete;
-    ~Task_Executor();
+    Task_Scheduler(const Task_Scheduler&) = delete;
+    Task_Scheduler& operator=(const Task_Scheduler&) & = delete;
+    ~Task_Scheduler();
 
     // Pops and executes a task.
     // This function should be called by the task thread repeatedly.

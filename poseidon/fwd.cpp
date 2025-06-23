@@ -7,7 +7,7 @@
 #include "static/fiber_scheduler.hpp"
 #include "static/logger.hpp"
 #include "static/timer_driver.hpp"
-#include "static/task_executor.hpp"
+#include "static/task_scheduler.hpp"
 #include "static/network_driver.hpp"
 #include <locale.h>
 #include "static/mysql_connector.hpp"
@@ -48,7 +48,7 @@ Main_Config& main_config = *new Main_Config;
 Logger& logger = *new Logger;
 
 Timer_Driver& timer_driver = *new Timer_Driver;
-Task_Executor& task_executor = *new Task_Executor;
+Task_Scheduler& task_scheduler = *new Task_Scheduler;
 Network_Driver& network_driver = *new Network_Driver;
 Fiber_Scheduler& fiber_scheduler = *new Fiber_Scheduler;
 

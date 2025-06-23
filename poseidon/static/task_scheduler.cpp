@@ -2,23 +2,23 @@
 // Copyright (C) 2022-2025, LH_Mouse. All wrongs reserved.
 
 #include "../xprecompiled.hpp"
-#include "task_executor.hpp"
+#include "task_scheduler.hpp"
 #include "../base/abstract_task.hpp"
 #include "../utils.hpp"
 namespace poseidon {
 
-Task_Executor::
-Task_Executor() noexcept
+Task_Scheduler::
+Task_Scheduler() noexcept
   {
   }
 
-Task_Executor::
-~Task_Executor()
+Task_Scheduler::
+~Task_Scheduler()
   {
   }
 
 void
-Task_Executor::
+Task_Scheduler::
 thread_loop()
   {
     plain_mutex::unique_lock lock(this->m_queue_mutex);
@@ -30,8 +30,8 @@ thread_loop()
 
     auto task = this->m_queue_front.back().lock();
     this->m_queue_front.pop_back();
-    recursive_mutex::unique_lock executor_lock(task->m_exec_mutex);
-    task->m_executor = this;
+    recursive_mutex::unique_lock sched_lock(task->m_sched_mutex);
+    task->m_scheduler = this;
     lock.unlock();
 
     if(!task)
@@ -40,11 +40,11 @@ thread_loop()
     // Execute it. Exceptions are ignored.
     POSEIDON_LOG_TRACE(("Executing task `$1` (class `$2`)"), task, typeid(*task));
     POSEIDON_CATCH_EVERYTHING(task->do_on_abstract_task_execute());
-    task->m_executor = reinterpret_cast<Task_Executor*>(-5);
+    task->m_scheduler = reinterpret_cast<Task_Scheduler*>(-5);
   }
 
 void
-Task_Executor::
+Task_Scheduler::
 enqueue(const shptr<Abstract_Task>& task)
   {
     if(!task)

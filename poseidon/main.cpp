@@ -7,7 +7,7 @@
 #include "static/fiber_scheduler.hpp"
 #include "static/logger.hpp"
 #include "static/timer_driver.hpp"
-#include "static/task_executor.hpp"
+#include "static/task_scheduler.hpp"
 #include "static/network_driver.hpp"
 #include "static/mysql_connector.hpp"
 #include "static/mongo_connector.hpp"
@@ -374,11 +374,11 @@ do_create_threads()
   {
     do_create_resident_thread(logger, "logger");
     do_create_resident_thread(timer_driver, "timer");
-    do_create_resident_thread(task_executor, "task_0");
-    do_create_resident_thread(task_executor, "task_1");
-    do_create_resident_thread(task_executor, "task_2");
-    do_create_resident_thread(task_executor, "task_3");
-    do_create_resident_thread(task_executor, "task_4");
+    do_create_resident_thread(task_scheduler, "task_0");
+    do_create_resident_thread(task_scheduler, "task_1");
+    do_create_resident_thread(task_scheduler, "task_2");
+    do_create_resident_thread(task_scheduler, "task_3");
+    do_create_resident_thread(task_scheduler, "task_4");
     do_create_resident_thread(network_driver, "network");
   }
 

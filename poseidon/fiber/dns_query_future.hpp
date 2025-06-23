@@ -22,7 +22,7 @@ class DNS_Query_Future
 
   public:
     // Constructs a DNS query future. This object also functions as an
-    // asynchronous task which can be enqueued into an `Task_Executor`. This
+    // asynchronous task which can be enqueued into an `Task_Scheduler`. This
     // future will become ready once the DNS query is complete.
     DNS_Query_Future(const cow_string& host, uint16_t port);
 

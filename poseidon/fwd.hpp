@@ -472,7 +472,7 @@ extern class Main_Config& main_config;
 extern class Logger& logger;
 
 extern class Timer_Driver& timer_driver;
-extern class Task_Executor& task_executor;
+extern class Task_Scheduler& task_scheduler;
 extern class Network_Driver& network_driver;
 extern class Fiber_Scheduler& fiber_scheduler;
 
