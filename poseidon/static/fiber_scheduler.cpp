@@ -110,10 +110,10 @@ do_free_stack(::stack_t st) noexcept
 
 enum Fiber_State : uint8_t
   {
-    fiber_pending     = 0,
-    fiber_suspended   = 1,
-    fiber_running     = 2,
-    fiber_terminated  = 3,
+    st_pending     = 0,
+    st_suspended   = 1,
+    st_running     = 2,
+    st_terminated  = 3,
   };
 
 struct Queued_Fiber
@@ -124,7 +124,7 @@ struct Queued_Fiber
     wkptr<Abstract_Future> wfutr;
     steady_time yield_time;
     steady_time check_time;
-    Fiber_State state = fiber_pending;
+    Fiber_State state = st_pending;
     ::ucontext_t sched_inner[1];
   };
 
@@ -171,15 +171,15 @@ do_fiber_function() noexcept
     const auto& fiber = ep->fiber;
 
     POSEIDON_CATCH_EVERYTHING(fiber->do_on_abstract_fiber_resumed());
-    ROCKET_ASSERT(ep->state == fiber_pending);
-    ep->state = fiber_running;
+    ROCKET_ASSERT(ep->state == st_pending);
+    ep->state = st_running;
     POSEIDON_LOG_TRACE(("Starting fiber `$1` (class `$2`)"), fiber, typeid(*fiber));
 
     POSEIDON_CATCH_EVERYTHING(fiber->do_on_abstract_fiber_execute());
 
     POSEIDON_LOG_TRACE(("Terminating fiber `$1` (class `$2`)"), fiber, typeid(*fiber));
-    ROCKET_ASSERT(ep->state == fiber_running);
-    ep->state = fiber_terminated;
+    ROCKET_ASSERT(ep->state == st_running);
+    ep->state = st_terminated;
     POSEIDON_CATCH_EVERYTHING(fiber->do_on_abstract_fiber_suspended());
 
     // Return to the scheduler.
@@ -322,7 +322,7 @@ thread_loop()
     ::std::pop_heap(this->m_pq.mut_begin(), this->m_pq.mut_end(), s_fiber_comparator);
     auto ep = this->m_pq.back();
     const auto fiber = ep->fiber;
-    if(ep->state == fiber_terminated) {
+    if(ep->state == st_terminated) {
       this->m_pq.pop_back();
       lock.unlock();
 
@@ -361,7 +361,7 @@ thread_loop()
         return;
     }
 
-    if(ep->state == fiber_pending) {
+    if(ep->state == st_pending) {
       POSEIDON_LOG_TRACE(("Initializing fiber `$1` (class `$2`)"), fiber, typeid(*fiber));
       ROCKET_ASSERT(ep->sched_inner->uc_stack.ss_sp == nullptr);
 
@@ -456,8 +456,8 @@ yield(const Abstract_Fiber& tfiber, const shptr<Abstract_Future>& futr_opt)
     }
 
     POSEIDON_LOG_TRACE(("Suspending fiber `$1` (class `$2`)"), fiber, typeid(*fiber));
-    ROCKET_ASSERT(ep->state == fiber_running);
-    ep->state = fiber_suspended;
+    ROCKET_ASSERT(ep->state == st_running);
+    ep->state = st_suspended;
     POSEIDON_CATCH_EVERYTHING(fiber->do_on_abstract_fiber_suspended());
 
     POSEIDON_SANITIZER_START_SWITCH_FIBER(this, ep);
@@ -465,8 +465,8 @@ yield(const Abstract_Fiber& tfiber, const shptr<Abstract_Future>& futr_opt)
     POSEIDON_SANITIZER_FINISH_SWITCH_FIBER(this);
 
     POSEIDON_CATCH_EVERYTHING(fiber->do_on_abstract_fiber_resumed());
-    ROCKET_ASSERT(ep->state == fiber_suspended);
-    ep->state = fiber_running;
+    ROCKET_ASSERT(ep->state == st_suspended);
+    ep->state = st_running;
     POSEIDON_LOG_TRACE(("Resumed fiber `$1` (class `$2`)"), fiber, typeid(*fiber));
 
     ep->wfutr.reset();
