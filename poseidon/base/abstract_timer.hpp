@@ -12,6 +12,7 @@ class Abstract_Timer
   private:
     friend class Timer_Scheduler;
 
+    atomic_relaxed<bool> m_abandoned;
     mutable recursive_mutex m_sched_mutex;
     Timer_Scheduler* m_scheduler;
 
@@ -33,6 +34,12 @@ class Abstract_Timer
 
   public:
     virtual ~Abstract_Timer();
+
+    // Mark this timer as abandoned so it will cease to be scheduled. This
+    // operation cannot be undone.
+    void
+    abandon() noexcept
+      { this->m_abandoned.store(true);  }
   };
 
 }  // namespace poseidon

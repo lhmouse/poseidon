@@ -64,7 +64,7 @@ thread_loop()
     ::std::pop_heap(this->m_pq.mut_begin(), this->m_pq.mut_end(), timer_comparator);
     steady_time next = this->m_pq.back().next;
     auto timer = this->m_pq.back().wtimer.lock();
-    if(!timer) {
+    if(!timer || timer->m_abandoned.load()) {
       // If the timer has expired, delete it.
       this->m_pq.pop_back();
       return;
