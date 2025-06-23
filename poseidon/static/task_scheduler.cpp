@@ -30,12 +30,11 @@ thread_loop()
 
     auto task = this->m_queue_front.back().lock();
     this->m_queue_front.pop_back();
+    if(!task || task->m_abandoned.load())
+      return;
     recursive_mutex::unique_lock sched_lock(task->m_sched_mutex);
     task->m_scheduler = this;
     lock.unlock();
-
-    if(!task)
-      return;
 
     // Execute it. Exceptions are ignored.
     POSEIDON_LOG_TRACE(("Executing task `$1` (class `$2`)"), task, typeid(*task));

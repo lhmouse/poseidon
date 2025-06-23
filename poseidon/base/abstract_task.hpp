@@ -12,6 +12,7 @@ class Abstract_Task
   private:
     friend class Task_Scheduler;
 
+    atomic_relaxed<bool> m_abandoned;
     mutable recursive_mutex m_sched_mutex;
     Task_Scheduler* m_scheduler;
 
@@ -33,6 +34,12 @@ class Abstract_Task
 
   public:
     virtual ~Abstract_Task();
+
+    // Mark this task as abandoned to prevent it from being scheduled. This
+    // operation cannot be undone.
+    void
+    abandon() noexcept
+      { this->m_abandoned.store(true);  }
   };
 
 }  // namespace poseidon
