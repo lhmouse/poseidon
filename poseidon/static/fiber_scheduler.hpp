@@ -5,7 +5,6 @@
 #define POSEIDON_STATIC_FIBER_SCHEDULER_
 
 #include "../fwd.hpp"
-#include <ucontext.h>  // ucontext_t
 namespace poseidon {
 
 class Fiber_Scheduler
@@ -22,16 +21,12 @@ class Fiber_Scheduler
     cow_vector<shptr<X_Queued_Fiber>> m_pq;
     struct timespec m_pq_wait = { };
 
-    mutable recursive_mutex m_sched_mutex;
-    shptr<X_Queued_Fiber> m_sched_elem;
-    void* m_sched_asan_save;  // private data for address sanitizer
-    ::ucontext_t m_sched_outer[1];  // yield target
-
   public:
     // Constructs an empty scheduler.
     Fiber_Scheduler() noexcept;
 
   private:
+    static
     void
     do_fiber_function() noexcept;
 
@@ -62,11 +57,6 @@ class Fiber_Scheduler
     // This function is thread-safe.
     void
     launch(const shptr<Abstract_Fiber>& fiber);
-
-    // Suspends execution of the current fiber. If `futr_opt` is not null, it
-    // is suspended until `*futr_opt` becomes ready.
-    void
-    yield(const Abstract_Fiber& tfiber, const shptr<Abstract_Future>& futr_opt);
   };
 
 }  // namespace poseidon
