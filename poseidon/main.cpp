@@ -6,7 +6,7 @@
 #include "static/main_config.hpp"
 #include "static/fiber_scheduler.hpp"
 #include "static/logger.hpp"
-#include "static/timer_driver.hpp"
+#include "static/timer_scheduler.hpp"
 #include "static/task_scheduler.hpp"
 #include "static/network_driver.hpp"
 #include "static/mysql_connector.hpp"
@@ -373,7 +373,7 @@ void
 do_create_threads()
   {
     do_create_resident_thread(logger, "logger");
-    do_create_resident_thread(timer_driver, "timer");
+    do_create_resident_thread(timer_scheduler, "timer");
     do_create_resident_thread(task_scheduler, "task_0");
     do_create_resident_thread(task_scheduler, "task_1");
     do_create_resident_thread(task_scheduler, "task_2");

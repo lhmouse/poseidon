@@ -4,7 +4,7 @@
 #include "../xprecompiled.hpp"
 #include "easy_timer.hpp"
 #include "../base/abstract_timer.hpp"
-#include "../static/timer_driver.hpp"
+#include "../static/timer_scheduler.hpp"
 #include "../fiber/abstract_fiber.hpp"
 #include "../static/fiber_scheduler.hpp"
 #include "../utils.hpp"
@@ -141,7 +141,7 @@ start(milliseconds delay, milliseconds period, const callback_type& callback)
     auto timer = new_sh<Final_Timer>(callback, queue);
     queue->wtimer = timer;
 
-    timer_driver.insert(timer, delay, period);
+    timer_scheduler.insert(timer, delay, period);
     this->m_queue = move(queue);
     this->m_timer = timer;
     return timer;

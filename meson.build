@@ -25,7 +25,7 @@ project('poseidon',
 poseidon_include = [
   'poseidon/fwd.hpp', 'poseidon/utils.hpp', 'poseidon/details/openssl_fwd.hpp',
   'poseidon/details/zlib_fwd.hpp', 'poseidon/static/main_config.hpp',
-  'poseidon/static/logger.hpp', 'poseidon/static/timer_driver.hpp',
+  'poseidon/static/logger.hpp', 'poseidon/static/timer_scheduler.hpp',
   'poseidon/static/fiber_scheduler.hpp', 'poseidon/static/task_scheduler.hpp',
   'poseidon/static/network_driver.hpp', 'poseidon/base/uuid.hpp',
   'poseidon/base/datetime.hpp', 'poseidon/base/config_file.hpp',
@@ -72,7 +72,7 @@ poseidon_include = [
 
 poseidon_src = [
   'poseidon/fwd.cpp', 'poseidon/utils.cpp', 'poseidon/static/main_config.cpp',
-  'poseidon/static/logger.cpp', 'poseidon/static/timer_driver.cpp',
+  'poseidon/static/logger.cpp', 'poseidon/static/timer_scheduler.cpp',
   'poseidon/static/fiber_scheduler.cpp', 'poseidon/static/task_scheduler.cpp',
   'poseidon/static/network_driver.cpp', 'poseidon/base/uuid.cpp',
   'poseidon/base/datetime.cpp', 'poseidon/base/config_file.cpp',

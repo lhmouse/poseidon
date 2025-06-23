@@ -8,7 +8,7 @@ namespace poseidon {
 Abstract_Timer::
 Abstract_Timer() noexcept
   {
-    this->m_driver = reinterpret_cast<Timer_Driver*>(-1);
+    this->m_scheduler = reinterpret_cast<Timer_Scheduler*>(-1);
   }
 
 Abstract_Timer::
@@ -16,13 +16,13 @@ Abstract_Timer::
   {
   }
 
-Timer_Driver&
+Timer_Scheduler&
 Abstract_Timer::
-do_abstract_timer_lock_driver(recursive_mutex::unique_lock& lock) const noexcept
+do_abstract_timer_lock_scheduler(recursive_mutex::unique_lock& lock) const noexcept
   {
-    lock.lock(this->m_driver_mutex);
-    ROCKET_ASSERT(this->m_driver);
-    return *(this->m_driver);
+    lock.lock(this->m_sched_mutex);
+    ROCKET_ASSERT(this->m_scheduler);
+    return *(this->m_scheduler);
   }
 
 }  // namespace poseidon

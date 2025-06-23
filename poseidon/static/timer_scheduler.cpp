@@ -2,7 +2,7 @@
 // Copyright (C) 2022-2025, LH_Mouse. All wrongs reserved.
 
 #include "../xprecompiled.hpp"
-#include "timer_driver.hpp"
+#include "timer_scheduler.hpp"
 #include "../base/abstract_timer.hpp"
 #include "../utils.hpp"
 namespace poseidon {
@@ -34,21 +34,21 @@ struct Timer_Comparator
 
 }  // namespace
 
-POSEIDON_HIDDEN_X_STRUCT(Timer_Driver,
+POSEIDON_HIDDEN_X_STRUCT(Timer_Scheduler,
   Queued_Timer);
 
-Timer_Driver::
-Timer_Driver() noexcept
+Timer_Scheduler::
+Timer_Scheduler() noexcept
   {
   }
 
-Timer_Driver::
-~Timer_Driver()
+Timer_Scheduler::
+~Timer_Scheduler()
   {
   }
 
 void
-Timer_Driver::
+Timer_Scheduler::
 thread_loop()
   {
     plain_mutex::unique_lock lock(this->m_pq_mutex);
@@ -78,18 +78,18 @@ thread_loop()
       // Delete the one-shot timer.
       this->m_pq.pop_back();
     }
-    recursive_mutex::unique_lock driver_lock(timer->m_driver_mutex);
-    timer->m_driver = this;
+    recursive_mutex::unique_lock sched_lock(timer->m_sched_mutex);
+    timer->m_scheduler = this;
     lock.unlock();
 
     // Execute it. Exceptions are ignored.
     POSEIDON_LOG_TRACE(("Executing timer `$1` (class `$2`)"), timer, typeid(*timer));
     POSEIDON_CATCH_EVERYTHING(timer->do_abstract_timer_on_tick(next));
-    timer->m_driver = reinterpret_cast<Timer_Driver*>(-5);
+    timer->m_scheduler = reinterpret_cast<Timer_Scheduler*>(-5);
   }
 
 void
-Timer_Driver::
+Timer_Scheduler::
 insert(const shptr<Abstract_Timer>& timer, milliseconds delay, milliseconds period)
   {
     if(!timer)

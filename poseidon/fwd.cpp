@@ -6,7 +6,7 @@
 #include "static/main_config.hpp"
 #include "static/fiber_scheduler.hpp"
 #include "static/logger.hpp"
-#include "static/timer_driver.hpp"
+#include "static/timer_scheduler.hpp"
 #include "static/task_scheduler.hpp"
 #include "static/network_driver.hpp"
 #include <locale.h>
@@ -47,7 +47,7 @@ atomic_relaxed<int> exit_signal;
 Main_Config& main_config = *new Main_Config;
 Logger& logger = *new Logger;
 
-Timer_Driver& timer_driver = *new Timer_Driver;
+Timer_Scheduler& timer_scheduler = *new Timer_Scheduler;
 Task_Scheduler& task_scheduler = *new Task_Scheduler;
 Network_Driver& network_driver = *new Network_Driver;
 Fiber_Scheduler& fiber_scheduler = *new Fiber_Scheduler;

@@ -1,13 +1,13 @@
 // This file is part of Poseidon.
 // Copyright (C) 2022-2025, LH_Mouse. All wrongs reserved.
 
-#ifndef POSEIDON_STATIC_TIMER_DRIVER_
-#define POSEIDON_STATIC_TIMER_DRIVER_
+#ifndef POSEIDON_STATIC_TIMER_SCHEDULER_
+#define POSEIDON_STATIC_TIMER_SCHEDULER_
 
 #include "../fwd.hpp"
 namespace poseidon {
 
-class Timer_Driver
+class Timer_Scheduler
   {
   private:
     mutable plain_mutex m_pq_mutex;
@@ -17,12 +17,12 @@ class Timer_Driver
 
   public:
     // Constructs an empty driver.
-    Timer_Driver() noexcept;
+    Timer_Scheduler() noexcept;
 
   public:
-    Timer_Driver(const Timer_Driver&) = delete;
-    Timer_Driver& operator=(const Timer_Driver&) & = delete;
-    ~Timer_Driver();
+    Timer_Scheduler(const Timer_Scheduler&) = delete;
+    Timer_Scheduler& operator=(const Timer_Scheduler&) & = delete;
+    ~Timer_Scheduler();
 
     // Schedules timers.
     // This function should be called by the timer thread repeatedly.
