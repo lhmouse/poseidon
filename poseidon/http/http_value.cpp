@@ -261,7 +261,7 @@ print_to(tinyfmt& fmt) const
 
 cow_string
 HTTP_Value::
-print_to_string() const
+to_string() const
   {
     tinyfmt_str fmt;
     this->print_to(fmt);

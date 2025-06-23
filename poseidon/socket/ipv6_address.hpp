@@ -139,7 +139,7 @@ class IPv6_Address
     print_to(tinyfmt& fmt) const;
 
     cow_string
-    print_to_string() const;
+    to_string() const;
   };
 
 extern const IPv6_Address ipv6_unspecified;  // [::]:0

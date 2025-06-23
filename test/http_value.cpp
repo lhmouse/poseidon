@@ -10,31 +10,31 @@ main()
   {
     HTTP_Value hval;
     POSEIDON_TEST_CHECK(hval.is_null());
-    POSEIDON_TEST_CHECK(hval.print_to_string() == "");
+    POSEIDON_TEST_CHECK(hval.to_string() == "");
 
     hval = 42.5;
     POSEIDON_TEST_CHECK(hval.is_double());
     POSEIDON_TEST_CHECK(hval.as_double() == 42.5);
-    POSEIDON_TEST_CHECK(hval.print_to_string() == "42.5");
+    POSEIDON_TEST_CHECK(hval.to_string() == "42.5");
 
     hval = &"meow";
     POSEIDON_TEST_CHECK(hval.as_string() == "meow");
-    POSEIDON_TEST_CHECK(hval.print_to_string() == "meow");
+    POSEIDON_TEST_CHECK(hval.to_string() == "meow");
 
     hval = system_clock::from_time_t(1469118411);
     POSEIDON_TEST_CHECK(hval.is_datetime());
     POSEIDON_TEST_CHECK(hval.as_system_time() == system_clock::from_time_t(1469118411));
-    POSEIDON_TEST_CHECK(hval.print_to_string() == "Thu, 21 Jul 2016 16:26:51 GMT");
+    POSEIDON_TEST_CHECK(hval.to_string() == "Thu, 21 Jul 2016 16:26:51 GMT");
 
     hval.clear();
     POSEIDON_TEST_CHECK(hval.is_null());
-    POSEIDON_TEST_CHECK(hval.print_to_string() == "");
+    POSEIDON_TEST_CHECK(hval.to_string() == "");
 
     hval = &"hello\r\n\tworld";
-    POSEIDON_TEST_CHECK(hval.print_to_string() == "\"hello world\"");
+    POSEIDON_TEST_CHECK(hval.to_string() == "\"hello world\"");
 
     hval = &"with,comma";
-    POSEIDON_TEST_CHECK(hval.print_to_string() == "\"with,comma\"");
+    POSEIDON_TEST_CHECK(hval.to_string() == "\"with,comma\"");
 
     POSEIDON_TEST_CHECK(hval.parse("http-token mumble") == 10);
     POSEIDON_TEST_CHECK(hval.as_string() == "http-token");

@@ -159,7 +159,7 @@ print_to(tinyfmt& fmt) const
 
 cow_string
 UUID::
-print_to_string() const
+to_string() const
   {
     char str[64];
     size_t len = this->print_partial(str);

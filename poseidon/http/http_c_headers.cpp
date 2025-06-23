@@ -137,7 +137,7 @@ set_request_host(const Abstract_Socket& socket, const cow_string& default_host)
       if(default_host != "")
         this->raw_host = default_host;
       else
-        this->raw_host = socket.remote_address().print_to_string();
+        this->raw_host = socket.remote_address().to_string();
     }
 
     // Replace the existent host header.

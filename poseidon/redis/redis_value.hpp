@@ -181,7 +181,7 @@ class Redis_Value
     print_to(tinyfmt& fmt) const;
 
     cow_string
-    print_to_string() const;
+    to_string() const;
   };
 
 inline
