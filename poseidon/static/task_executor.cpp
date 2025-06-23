@@ -30,6 +30,8 @@ thread_loop()
 
     auto task = this->m_queue_front.back().lock();
     this->m_queue_front.pop_back();
+    recursive_mutex::unique_lock executor_lock(task->m_exec_mutex);
+    task->m_executor = this;
     lock.unlock();
 
     if(!task)
@@ -38,6 +40,7 @@ thread_loop()
     // Execute it. Exceptions are ignored.
     POSEIDON_LOG_TRACE(("Executing task `$1` (class `$2`)"), task, typeid(*task));
     POSEIDON_CATCH_EVERYTHING(task->do_on_abstract_task_execute());
+    task->m_executor = reinterpret_cast<Task_Executor*>(-5);
   }
 
 void

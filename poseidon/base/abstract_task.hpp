@@ -12,11 +12,19 @@ class Abstract_Task
   private:
     friend class Task_Executor;
 
+    mutable recursive_mutex m_exec_mutex;
+    Task_Executor* m_executor;
+
   protected:
     // Constructs an asynchronous task.
     Abstract_Task() noexcept;
 
   protected:
+    // Get the task executor instance inside the callbacks hereafter. If this
+    // function is called elsewhere, the behavior is undefined.
+    Task_Executor&
+    do_abstract_task_lock_executor(recursive_mutex::unique_lock& lock) const noexcept;
+
     // This callback is invoked by the task executor thread and is intended to
     // be overriden by derived classes.
     virtual
