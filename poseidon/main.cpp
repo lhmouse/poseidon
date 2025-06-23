@@ -8,7 +8,7 @@
 #include "static/logger.hpp"
 #include "static/timer_scheduler.hpp"
 #include "static/task_scheduler.hpp"
-#include "static/network_driver.hpp"
+#include "static/network_scheduler.hpp"
 #include "static/mysql_connector.hpp"
 #include "static/mongo_connector.hpp"
 #include "static/redis_connector.hpp"
@@ -379,7 +379,7 @@ do_create_threads()
     do_create_resident_thread(task_scheduler, "task_2");
     do_create_resident_thread(task_scheduler, "task_3");
     do_create_resident_thread(task_scheduler, "task_4");
-    do_create_resident_thread(network_driver, "network");
+    do_create_resident_thread(network_scheduler, "network");
   }
 
 ROCKET_NEVER_INLINE
@@ -560,7 +560,7 @@ main(int argc, char** argv)
     mongo_connector.reload(main_config.copy());
     redis_connector.reload(main_config.copy());
 
-    network_driver.reload(main_config.copy());
+    network_scheduler.reload(main_config.copy());
     fiber_scheduler.reload(main_config.copy());
 
     do_create_threads();

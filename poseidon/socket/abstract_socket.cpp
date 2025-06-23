@@ -26,7 +26,7 @@ Abstract_Socket(unique_posix_fd&& fd)
     if((fl_new != fl_old) && (::fcntl(this->m_fd, F_SETFL, fl_new) != 0))
       POSEIDON_THROW(("Could not set socket flags: ${errno:full}]"));
 
-    this->m_io_driver = reinterpret_cast<Network_Driver*>(-1);
+    this->m_io_driver = reinterpret_cast<Network_Scheduler*>(-1);
   }
 
 Abstract_Socket::
@@ -45,7 +45,7 @@ Abstract_Socket(int type, int protocol)
     if((type == SOCK_STREAM) && is_any_of(protocol, { IPPROTO_IP, IPPROTO_TCP }))
       ::setsockopt(this->m_fd, IPPROTO_TCP, TCP_QUICKACK, &one, sizeof(one));
 
-    this->m_io_driver = reinterpret_cast<Network_Driver*>(-3);
+    this->m_io_driver = reinterpret_cast<Network_Scheduler*>(-3);
   }
 
 Abstract_Socket::
@@ -53,7 +53,7 @@ Abstract_Socket::
   {
   }
 
-Network_Driver&
+Network_Scheduler&
 Abstract_Socket::
 do_abstract_socket_lock_driver(recursive_mutex::unique_lock& lock) const noexcept
   {

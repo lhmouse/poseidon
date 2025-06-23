@@ -8,7 +8,7 @@
 #include "static/logger.hpp"
 #include "static/timer_scheduler.hpp"
 #include "static/task_scheduler.hpp"
-#include "static/network_driver.hpp"
+#include "static/network_scheduler.hpp"
 #include <locale.h>
 #include "static/mysql_connector.hpp"
 #include "static/mongo_connector.hpp"
@@ -49,7 +49,7 @@ Logger& logger = *new Logger;
 
 Timer_Scheduler& timer_scheduler = *new Timer_Scheduler;
 Task_Scheduler& task_scheduler = *new Task_Scheduler;
-Network_Driver& network_driver = *new Network_Driver;
+Network_Scheduler& network_scheduler = *new Network_Scheduler;
 Fiber_Scheduler& fiber_scheduler = *new Fiber_Scheduler;
 
 MySQL_Connector& mysql_connector = *new MySQL_Connector;

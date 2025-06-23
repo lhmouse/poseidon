@@ -2,7 +2,7 @@
 // Copyright (C) 2022-2025, LH_Mouse. All wrongs reserved.
 
 #include "../xprecompiled.hpp"
-#include "network_driver.hpp"
+#include "network_scheduler.hpp"
 #include "../socket/abstract_socket.hpp"
 #include "../socket/ssl_socket.hpp"
 #include "../base/config_file.hpp"
@@ -13,19 +13,19 @@
 #include <openssl/err.h>
 namespace poseidon {
 
-Network_Driver::
-Network_Driver() noexcept
+Network_Scheduler::
+Network_Scheduler() noexcept
   {
   }
 
-Network_Driver::
-~Network_Driver()
+Network_Scheduler::
+~Network_Scheduler()
   {
   }
 
 POSEIDON_VISIBILITY_HIDDEN
 wkptr<Abstract_Socket>&
-Network_Driver::
+Network_Scheduler::
 do_find_socket_nolock(volatile Abstract_Socket* socket) noexcept
   {
     ROCKET_ASSERT(socket);
@@ -62,7 +62,7 @@ do_find_socket_nolock(volatile Abstract_Socket* socket) noexcept
 
 POSEIDON_VISIBILITY_HIDDEN
 int
-Network_Driver::
+Network_Scheduler::
 do_alpn_select_cb(::SSL* ssl, const unsigned char** out, unsigned char* outlen,
                   const unsigned char* in, unsigned int inlen, void* arg)
   {
@@ -118,7 +118,7 @@ do_alpn_select_cb(::SSL* ssl, const unsigned char** out, unsigned char* outlen,
   }
 
 uniptr_SSL_CTX
-Network_Driver::
+Network_Scheduler::
 server_ssl_ctx() const
   {
     plain_mutex::unique_lock lock(this->m_conf_mutex);
@@ -133,7 +133,7 @@ server_ssl_ctx() const
   }
 
 uniptr_SSL_CTX
-Network_Driver::
+Network_Scheduler::
 client_ssl_ctx() const
   {
     plain_mutex::unique_lock lock(this->m_conf_mutex);
@@ -148,7 +148,7 @@ client_ssl_ctx() const
   }
 
 void
-Network_Driver::
+Network_Scheduler::
 reload(const Config_File& conf_file)
   {
     static ::rocket::once_flag s_openssl_init_once;
@@ -330,7 +330,7 @@ reload(const Config_File& conf_file)
   }
 
 void
-Network_Driver::
+Network_Scheduler::
 thread_loop()
   {
     plain_mutex::unique_lock lock(this->m_conf_mutex);
@@ -418,7 +418,7 @@ thread_loop()
 
     if(pev.events & (EPOLLERR | EPOLLHUP)) {
       ::epoll_ctl(this->m_epoll_fd, EPOLL_CTL_DEL, socket->m_fd, &pev);
-      socket->m_io_driver = reinterpret_cast<Network_Driver*>(-7);
+      socket->m_io_driver = reinterpret_cast<Network_Scheduler*>(-7);
       return;
     }
 
@@ -441,11 +441,11 @@ thread_loop()
     }
 
     POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`) I/O complete"), socket, typeid(*socket));
-    socket->m_io_driver = (Network_Driver*) 123456789;
+    socket->m_io_driver = (Network_Scheduler*) 123456789;
   }
 
 void
-Network_Driver::
+Network_Scheduler::
 insert(const shptr<Abstract_Socket>& socket)
   {
     if(!socket)

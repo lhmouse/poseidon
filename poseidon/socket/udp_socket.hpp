@@ -14,7 +14,7 @@ class UDP_Socket
     public Abstract_Socket
   {
   private:
-    friend class Network_Driver;
+    friend class Network_Scheduler;
 
     IPv6_Address m_from_addr;
 

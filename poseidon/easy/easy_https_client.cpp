@@ -3,7 +3,7 @@
 
 #include "../xprecompiled.hpp"
 #include "easy_https_client.hpp"
-#include "../static/network_driver.hpp"
+#include "../static/network_scheduler.hpp"
 #include "../fiber/abstract_fiber.hpp"
 #include "../static/fiber_scheduler.hpp"
 #include "../socket/dns_connect_task.hpp"
@@ -116,7 +116,7 @@ struct Final_Session final : HTTPS_Client_Session
                   const Easy_HTTPS_Client::callback_type& callback,
                   const shptr<Session_Table>& sessions)
       :
-        SSL_Socket(network_driver), HTTPS_Client_Session(default_host),
+        SSL_Socket(network_scheduler), HTTPS_Client_Session(default_host),
         m_callback(callback), m_wsessions(sessions)
       { }
 
@@ -223,7 +223,7 @@ connect(const cow_string& addr, const callback_type& callback)
 
     auto session = new_sh<Final_Session>(sformat("$1:$2", caddr.host, caddr.port_num),
                                          callback, this->m_sessions);
-    auto dns_task = new_sh<DNS_Connect_Task>(network_driver,
+    auto dns_task = new_sh<DNS_Connect_Task>(network_scheduler,
                        session, cow_string(caddr.host), caddr.port_num);
 
     // Initiate the connection.

@@ -473,7 +473,7 @@ extern class Logger& logger;
 
 extern class Timer_Scheduler& timer_scheduler;
 extern class Task_Scheduler& task_scheduler;
-extern class Network_Driver& network_driver;
+extern class Network_Scheduler& network_scheduler;
 extern class Fiber_Scheduler& fiber_scheduler;
 
 extern class MySQL_Connector& mysql_connector;

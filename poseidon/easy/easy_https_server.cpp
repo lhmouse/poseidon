@@ -4,7 +4,7 @@
 #include "../xprecompiled.hpp"
 #include "easy_https_server.hpp"
 #include "../socket/tcp_acceptor.hpp"
-#include "../static/network_driver.hpp"
+#include "../static/network_scheduler.hpp"
 #include "../fiber/abstract_fiber.hpp"
 #include "../static/fiber_scheduler.hpp"
 #include "../utils.hpp"
@@ -128,7 +128,7 @@ struct Final_Session final : HTTPS_Server_Session
                   const Easy_HTTPS_Server::callback_type& callback,
                   const shptr<Session_Table>& sessions)
       :
-        SSL_Socket(move(fd), network_driver), HTTPS_Server_Session(),
+        SSL_Socket(move(fd), network_scheduler), HTTPS_Server_Session(),
         m_callback(callback), m_wsessions(sessions)
       { }
 
@@ -271,7 +271,7 @@ start(const IPv6_Address& addr, const callback_type& callback)
     auto sessions = new_sh<X_Session_Table>();
     auto acceptor = new_sh<Final_Acceptor>(addr, callback, sessions);
 
-    network_driver.insert(acceptor);
+    network_scheduler.insert(acceptor);
     this->m_sessions = move(sessions);
     this->m_acceptor = acceptor;
     return acceptor;

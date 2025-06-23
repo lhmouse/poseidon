@@ -4,14 +4,14 @@
 #include "../xprecompiled.hpp"
 #include "dns_connect_task.hpp"
 #include "abstract_socket.hpp"
-#include "../static/network_driver.hpp"
+#include "../static/network_scheduler.hpp"
 #include "../utils.hpp"
 #include <sys/socket.h>
 #include <netdb.h>
 namespace poseidon {
 
 DNS_Connect_Task::
-DNS_Connect_Task(Network_Driver& driver, const shptr<Abstract_Socket>& socket,
+DNS_Connect_Task(Network_Scheduler& driver, const shptr<Abstract_Socket>& socket,
                  const cow_string& host, uint16_t port)
   {
     if(!socket)

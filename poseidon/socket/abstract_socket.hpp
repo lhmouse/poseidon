@@ -12,7 +12,7 @@ namespace poseidon {
 class Abstract_Socket
   {
   private:
-    friend class Network_Driver;
+    friend class Network_Scheduler;
 
     unique_posix_fd m_fd;
     atomic_relaxed<Socket_State> m_state;
@@ -26,7 +26,7 @@ class Abstract_Socket
     mutable IPv6_Address m_peername;
 
     mutable recursive_mutex m_io_mutex;
-    Network_Driver* m_io_driver;
+    Network_Scheduler* m_io_driver;
     linear_buffer m_io_read_queue;
     linear_buffer m_io_write_queue;
     bool m_io_throttled = false;
@@ -55,7 +55,7 @@ class Abstract_Socket
 
     // Get the network driver instance inside the callbacks hereafter. If this
     // function is called elsewhere, the behavior is undefined.
-    Network_Driver&
+    Network_Scheduler&
     do_abstract_socket_lock_driver(recursive_mutex::unique_lock& lock) const noexcept;
 
     linear_buffer&

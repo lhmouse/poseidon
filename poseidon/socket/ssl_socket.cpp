@@ -3,7 +3,7 @@
 
 #include "../xprecompiled.hpp"
 #include "ssl_socket.hpp"
-#include "../static/network_driver.hpp"
+#include "../static/network_scheduler.hpp"
 #include "../utils.hpp"
 #include <sys/socket.h>
 #include <netinet/tcp.h>
@@ -12,7 +12,7 @@
 namespace poseidon {
 
 SSL_Socket::
-SSL_Socket(unique_posix_fd&& fd, const Network_Driver& driver)
+SSL_Socket(unique_posix_fd&& fd, const Network_Scheduler& driver)
   :
     Abstract_Socket(move(fd))
   {
@@ -32,7 +32,7 @@ SSL_Socket(unique_posix_fd&& fd, const Network_Driver& driver)
   }
 
 SSL_Socket::
-SSL_Socket(const Network_Driver& driver)
+SSL_Socket(const Network_Scheduler& driver)
   :
     Abstract_Socket(SOCK_STREAM, IPPROTO_TCP)
   {

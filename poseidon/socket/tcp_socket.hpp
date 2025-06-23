@@ -14,7 +14,7 @@ class TCP_Socket
     public Abstract_Socket
   {
   private:
-    friend class Network_Driver;
+    friend class Network_Scheduler;
 
     ::taxon::Value m_session_user_data;
 

@@ -3,7 +3,7 @@
 
 #include "../xprecompiled.hpp"
 #include "easy_udp_client.hpp"
-#include "../static/network_driver.hpp"
+#include "../static/network_scheduler.hpp"
 #include "../fiber/abstract_fiber.hpp"
 #include "../static/fiber_scheduler.hpp"
 #include "../utils.hpp"
@@ -142,7 +142,7 @@ start(const callback_type& callback)
     auto socket = new_sh<Final_Socket>(callback, queue);
     queue->wsocket = socket;
 
-    network_driver.insert(socket);
+    network_scheduler.insert(socket);
     this->m_queue = move(queue);
     this->m_socket = socket;
     return socket;

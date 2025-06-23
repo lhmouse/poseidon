@@ -3,7 +3,7 @@
 
 #include "../xprecompiled.hpp"
 #include "easy_ws_client.hpp"
-#include "../static/network_driver.hpp"
+#include "../static/network_scheduler.hpp"
 #include "../fiber/abstract_fiber.hpp"
 #include "../static/fiber_scheduler.hpp"
 #include "../socket/dns_connect_task.hpp"
@@ -245,7 +245,7 @@ connect(const cow_string& addr, const callback_type& callback)
       this->m_sessions = new_sh<X_Session_Table>();
 
     auto session = new_sh<Final_Session>(callback, this->m_sessions, move(uri));
-    auto dns_task = new_sh<DNS_Connect_Task>(network_driver,
+    auto dns_task = new_sh<DNS_Connect_Task>(network_scheduler,
                        session, cow_string(caddr.host), caddr.port_num);
 
     // Initiate the connection.

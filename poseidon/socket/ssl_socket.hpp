@@ -15,7 +15,7 @@ class SSL_Socket
     public Abstract_Socket
   {
   private:
-    friend class Network_Driver;
+    friend class Network_Scheduler;
 
     uniptr_SSL m_ssl;
     charbuf_256 m_alpn_proto;
@@ -24,12 +24,12 @@ class SSL_Socket
   protected:
     // Takes ownership of an accepted socket, using SSL configuration from
     // `driver`. [server-side constructor]
-    SSL_Socket(unique_posix_fd&& fd, const Network_Driver& driver);
+    SSL_Socket(unique_posix_fd&& fd, const Network_Scheduler& driver);
 
     // Creates a socket for outgoing connections, using SSL configuration
     // from `driver`. [client-side constructor]
     explicit
-    SSL_Socket(const Network_Driver& driver);
+    SSL_Socket(const Network_Scheduler& driver);
 
   protected:
     // These callbacks implement `Abstract_Socket`.

@@ -1,15 +1,15 @@
 // This file is part of Poseidon.
 // Copyright (C) 2022-2025, LH_Mouse. All wrongs reserved.
 
-#ifndef POSEIDON_STATIC_NETWORK_DRIVER_
-#define POSEIDON_STATIC_NETWORK_DRIVER_
+#ifndef POSEIDON_STATIC_NETWORK_SCHEDULER_
+#define POSEIDON_STATIC_NETWORK_SCHEDULER_
 
 #include "../fwd.hpp"
 #include "../details/openssl_fwd.hpp"
 #include <valarray>
 namespace poseidon {
 
-class Network_Driver
+class Network_Scheduler
   {
   private:
     mutable plain_mutex m_conf_mutex;
@@ -28,7 +28,7 @@ class Network_Driver
 
   public:
     // Constructs an empty driver.
-    Network_Driver() noexcept;
+    Network_Scheduler() noexcept;
 
   private:
     wkptr<Abstract_Socket>&
@@ -40,9 +40,9 @@ class Network_Driver
                       const unsigned char* in, unsigned int inlen, void* arg);
 
   public:
-    Network_Driver(const Network_Driver&) = delete;
-    Network_Driver& operator=(const Network_Driver&) & = delete;
-    ~Network_Driver();
+    Network_Scheduler(const Network_Scheduler&) = delete;
+    Network_Scheduler& operator=(const Network_Scheduler&) & = delete;
+    ~Network_Scheduler();
 
     // Gets the server SSL context for incoming connections, which is available
     // only if a certificate and a private key have been specified in 'main.conf'.
