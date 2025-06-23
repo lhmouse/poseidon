@@ -78,11 +78,14 @@ thread_loop()
       // Delete the one-shot timer.
       this->m_pq.pop_back();
     }
+    recursive_mutex::unique_lock driver_lock(timer->m_driver_mutex);
+    timer->m_driver = this;
     lock.unlock();
 
     // Execute it. Exceptions are ignored.
     POSEIDON_LOG_TRACE(("Executing timer `$1` (class `$2`)"), timer, typeid(*timer));
     POSEIDON_CATCH_EVERYTHING(timer->do_abstract_timer_on_tick(next));
+    timer->m_driver = reinterpret_cast<Timer_Driver*>(-5);
   }
 
 void
