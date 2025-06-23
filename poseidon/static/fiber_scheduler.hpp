@@ -28,7 +28,11 @@ class Fiber_Scheduler
   private:
     static
     void
-    do_fiber_function() noexcept;
+    do_fiber_procedure() noexcept;
+
+    static
+    void
+    do_fiber_yield_function(const shptr<Abstract_Future>& futr_opt);
 
   public:
     Fiber_Scheduler(const Fiber_Scheduler&) = delete;

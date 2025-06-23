@@ -173,7 +173,7 @@ Fiber_Scheduler::
 POSEIDON_VISIBILITY_HIDDEN
 void
 Fiber_Scheduler::
-do_fiber_function() noexcept
+do_fiber_procedure() noexcept
   {
     do_sanitizer_finish_switch_fiber();
     ROCKET_ASSERT(s_ep);
@@ -192,6 +192,51 @@ do_fiber_function() noexcept
 
     s_ep->async_time.store(steady_clock::now());
     do_sanitizer_start_switch_fiber();
+  }
+
+POSEIDON_VISIBILITY_HIDDEN
+void
+Fiber_Scheduler::
+do_fiber_yield_function(const shptr<Abstract_Future>& futr_opt)
+  {
+    ROCKET_ASSERT(s_ep);
+    s_ep->wfutr = futr_opt;
+    s_ep->yield_time = steady_clock::now();
+    s_ep->async_time.store(s_ep->yield_time);
+
+    if(futr_opt) {
+      // Associate the future. If the future is already in the READY state,
+      // don't block at all.
+      plain_mutex::unique_lock futr_lock(futr_opt->m_init_mutex);
+      if(futr_opt->m_init.load())
+        return;
+
+      shptr<atomic_relaxed<steady_time>> async_time_ptr(s_ep, &(s_ep->async_time));
+      futr_opt->m_waiters.push_back(async_time_ptr);
+    }
+
+    POSEIDON_LOG_TRACE(("Suspending `$1` (class `$2`)"), s_ep->fiber, typeid(*(s_ep->fiber)));
+    ROCKET_ASSERT(s_ep->state == st_running);
+    s_ep->state = st_suspended;
+    POSEIDON_CATCH_EVERYTHING(s_ep->fiber->do_on_abstract_fiber_suspended());
+
+    do_sanitizer_start_switch_fiber();
+    ::swapcontext(s_ep->sched_inner, s_sched_outer);
+    do_sanitizer_finish_switch_fiber();
+
+    POSEIDON_LOG_TRACE(("Resuming `$1` (class `$2`)"), s_ep->fiber, typeid(*(s_ep->fiber)));
+    POSEIDON_CATCH_EVERYTHING(s_ep->fiber->do_on_abstract_fiber_resumed());
+    ROCKET_ASSERT(s_ep->state == st_suspended);
+    s_ep->state = st_running;
+
+    if(futr_opt) {
+      // Unassociate the future.
+      s_ep->wfutr.reset();
+      futr_opt->check_success();
+    }
+
+    if(s_ep->fiber->m_abandoned.load())
+      POSEIDON_THROW(("Abandoning `$1` (class `$2`)"), s_ep->fiber, typeid(*(s_ep->fiber)));
   }
 
 void
@@ -346,6 +391,7 @@ thread_loop()
     ::std::push_heap(this->m_pq.mut_begin(), this->m_pq.mut_end(), s_fiber_comparator);
     recursive_mutex::unique_lock sched_lock(ep->fiber->m_sched_mutex);
     ep->fiber->m_scheduler = this;
+    ep->fiber->m_sched_yield_fn = do_fiber_yield_function;
     auto futr = ep->wfutr.lock();
     lock.unlock();
 
@@ -378,49 +424,7 @@ thread_loop()
       ::getcontext(ep->sched_inner);
       ep->sched_inner->uc_stack = do_allocate_stack(stack_vm_size);
       ep->sched_inner->uc_link = s_sched_outer;
-      ::makecontext(ep->sched_inner, do_fiber_function, 0);
-
-      ep->fiber->m_sched_yield_fn = [](const shptr<Abstract_Future>& futr_opt)
-        {
-          ROCKET_ASSERT(s_ep);
-          s_ep->wfutr = futr_opt;
-          s_ep->yield_time = steady_clock::now();
-          s_ep->async_time.store(s_ep->yield_time);
-
-          if(futr_opt) {
-            // Associate the future. If the future is already in the READY state,
-            // don't block at all.
-            plain_mutex::unique_lock futr_lock(futr_opt->m_init_mutex);
-            if(futr_opt->m_init.load())
-              return;
-
-            shptr<atomic_relaxed<steady_time>> async_time_ptr(s_ep, &(s_ep->async_time));
-            futr_opt->m_waiters.push_back(async_time_ptr);
-          }
-
-          POSEIDON_LOG_TRACE(("Suspending `$1` (class `$2`)"), s_ep->fiber, typeid(*(s_ep->fiber)));
-          ROCKET_ASSERT(s_ep->state == st_running);
-          s_ep->state = st_suspended;
-          POSEIDON_CATCH_EVERYTHING(s_ep->fiber->do_on_abstract_fiber_suspended());
-
-          do_sanitizer_start_switch_fiber();
-          ::swapcontext(s_ep->sched_inner, s_sched_outer);
-          do_sanitizer_finish_switch_fiber();
-
-          POSEIDON_LOG_TRACE(("Resuming `$1` (class `$2`)"), s_ep->fiber, typeid(*(s_ep->fiber)));
-          POSEIDON_CATCH_EVERYTHING(s_ep->fiber->do_on_abstract_fiber_resumed());
-          ROCKET_ASSERT(s_ep->state == st_suspended);
-          s_ep->state = st_running;
-
-          if(futr_opt) {
-            // Unassociate the future.
-            s_ep->wfutr.reset();
-            futr_opt->check_success();
-          }
-
-          if(s_ep->fiber->m_abandoned.load())
-            POSEIDON_THROW(("Abandoning `$1` (class `$2`)"), s_ep->fiber, typeid(*(s_ep->fiber)));
-        };
+      ::makecontext(ep->sched_inner, do_fiber_procedure, 0);
     }
 
     // Start or resume this fiber.
@@ -433,6 +437,7 @@ thread_loop()
 
     ROCKET_ASSERT(s_ep == ep);
     ep->fiber->m_scheduler = reinterpret_cast<Fiber_Scheduler*>(-5);
+    ep->fiber->m_sched_yield_fn = reinterpret_cast<Abstract_Fiber::sched_yield_fn*>(-9);
     s_ep.reset();
   }
 
