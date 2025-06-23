@@ -380,8 +380,8 @@ thread_loop()
       ::SSL_CTX_set_alpn_select_cb(::SSL_get_SSL_CTX(ssl_socket->m_ssl),
                                    do_alpn_select_cb, ssl_socket);
 
-    recursive_mutex::unique_lock io_lock(socket->m_io_mutex);
-    socket->m_io_driver = this;
+    recursive_mutex::unique_lock io_lock(socket->m_sched_mutex);
+    socket->m_scheduler = this;
     lock.unlock();
 
     try {
@@ -418,15 +418,15 @@ thread_loop()
 
     if(pev.events & (EPOLLERR | EPOLLHUP)) {
       ::epoll_ctl(this->m_epoll_fd, EPOLL_CTL_DEL, socket->m_fd, &pev);
-      socket->m_io_driver = reinterpret_cast<Network_Scheduler*>(-7);
+      socket->m_scheduler = reinterpret_cast<Network_Scheduler*>(-7);
       return;
     }
 
     // When there are too many pending bytes, as a safety measure, EPOLLIN
     // notifications are disabled until some bytes can be transferred.
-    bool should_throttle = socket->m_io_write_queue.size() > throttle_size;
-    if(socket->m_io_throttled != should_throttle) {
-      socket->m_io_throttled = should_throttle;
+    bool should_throttle = socket->m_sched_write_queue.size() > throttle_size;
+    if(socket->m_sched_throttled != should_throttle) {
+      socket->m_sched_throttled = should_throttle;
 
       if(should_throttle)
         pev.events = EPOLLOUT;  // output-only, level-triggered
@@ -441,7 +441,7 @@ thread_loop()
     }
 
     POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`) I/O complete"), socket, typeid(*socket));
-    socket->m_io_driver = (Network_Scheduler*) 123456789;
+    socket->m_scheduler = (Network_Scheduler*) 123456789;
   }
 
 void

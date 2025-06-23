@@ -25,11 +25,11 @@ class Abstract_Socket
     mutable IPv6_Address m_sockname;
     mutable IPv6_Address m_peername;
 
-    mutable recursive_mutex m_io_mutex;
-    Network_Scheduler* m_io_driver;
-    linear_buffer m_io_read_queue;
-    linear_buffer m_io_write_queue;
-    bool m_io_throttled = false;
+    mutable recursive_mutex m_sched_mutex;
+    Network_Scheduler* m_scheduler;
+    linear_buffer m_sched_read_queue;
+    linear_buffer m_sched_write_queue;
+    bool m_sched_throttled = false;
 
   protected:
     // Take ownership of an existent IPv6 socket. [server-side constructor]
@@ -53,10 +53,10 @@ class Abstract_Socket
         return (old == from) && this->m_state.cmpxchg(old, to);
       }
 
-    // Get the network driver instance inside the callbacks hereafter. If this
+    // Get the network scheduler instance inside the callbacks hereafter. If this
     // function is called elsewhere, the behavior is undefined.
     Network_Scheduler&
-    do_abstract_socket_lock_driver(recursive_mutex::unique_lock& lock) const noexcept;
+    do_abstract_socket_lock_scheduler(recursive_mutex::unique_lock& lock) const noexcept;
 
     linear_buffer&
     do_abstract_socket_lock_read_queue(recursive_mutex::unique_lock& lock) noexcept;

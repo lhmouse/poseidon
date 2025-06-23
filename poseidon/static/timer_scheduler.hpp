@@ -16,7 +16,7 @@ class Timer_Scheduler
     cow_vector<X_Queued_Timer> m_pq;
 
   public:
-    // Constructs an empty driver.
+    // Constructs an empty scheduler.
     Timer_Scheduler() noexcept;
 
   public:

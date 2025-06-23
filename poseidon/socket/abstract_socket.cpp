@@ -26,7 +26,7 @@ Abstract_Socket(unique_posix_fd&& fd)
     if((fl_new != fl_old) && (::fcntl(this->m_fd, F_SETFL, fl_new) != 0))
       POSEIDON_THROW(("Could not set socket flags: ${errno:full}]"));
 
-    this->m_io_driver = reinterpret_cast<Network_Scheduler*>(-1);
+    this->m_scheduler = reinterpret_cast<Network_Scheduler*>(-1);
   }
 
 Abstract_Socket::
@@ -45,7 +45,7 @@ Abstract_Socket(int type, int protocol)
     if((type == SOCK_STREAM) && is_any_of(protocol, { IPPROTO_IP, IPPROTO_TCP }))
       ::setsockopt(this->m_fd, IPPROTO_TCP, TCP_QUICKACK, &one, sizeof(one));
 
-    this->m_io_driver = reinterpret_cast<Network_Scheduler*>(-3);
+    this->m_scheduler = reinterpret_cast<Network_Scheduler*>(-3);
   }
 
 Abstract_Socket::
@@ -55,27 +55,27 @@ Abstract_Socket::
 
 Network_Scheduler&
 Abstract_Socket::
-do_abstract_socket_lock_driver(recursive_mutex::unique_lock& lock) const noexcept
+do_abstract_socket_lock_scheduler(recursive_mutex::unique_lock& lock) const noexcept
   {
-    lock.lock(this->m_io_mutex);
-    ROCKET_ASSERT(this->m_io_driver);
-    return *(this->m_io_driver);
+    lock.lock(this->m_sched_mutex);
+    ROCKET_ASSERT(this->m_scheduler);
+    return *(this->m_scheduler);
   }
 
 linear_buffer&
 Abstract_Socket::
 do_abstract_socket_lock_read_queue(recursive_mutex::unique_lock& lock) noexcept
   {
-    lock.lock(this->m_io_mutex);
-    return this->m_io_read_queue;
+    lock.lock(this->m_sched_mutex);
+    return this->m_sched_read_queue;
   }
 
 linear_buffer&
 Abstract_Socket::
 do_abstract_socket_lock_write_queue(recursive_mutex::unique_lock& lock) noexcept
   {
-    lock.lock(this->m_io_mutex);
-    return this->m_io_write_queue;
+    lock.lock(this->m_sched_mutex);
+    return this->m_sched_write_queue;
   }
 
 const IPv6_Address&

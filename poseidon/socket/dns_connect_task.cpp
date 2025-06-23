@@ -11,13 +11,13 @@
 namespace poseidon {
 
 DNS_Connect_Task::
-DNS_Connect_Task(Network_Scheduler& driver, const shptr<Abstract_Socket>& socket,
+DNS_Connect_Task(Network_Scheduler& scheduler, const shptr<Abstract_Socket>& socket,
                  const cow_string& host, uint16_t port)
   {
     if(!socket)
       POSEIDON_THROW(("Null socket pointer not valid"));
 
-    this->m_driver = &driver;
+    this->m_scheduler = &scheduler;
     this->m_wsock = socket;
     this->m_host = host;
     this->m_port = port;
@@ -96,7 +96,7 @@ do_on_abstract_task_execute()
 
     // Insert the socket. Even in the case of a failure, a closure
     // notification shall be delivered.
-    POSEIDON_CATCH_EVERYTHING(this->m_driver->insert(socket));
+    POSEIDON_CATCH_EVERYTHING(this->m_scheduler->insert(socket));
   }
 
 }  // namespace poseidon

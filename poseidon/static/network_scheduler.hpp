@@ -27,7 +27,7 @@ class Network_Scheduler
     linear_buffer m_event_buf;
 
   public:
-    // Constructs an empty driver.
+    // Constructs an empty scheduler.
     Network_Scheduler() noexcept;
 
   private:
@@ -71,7 +71,7 @@ class Network_Scheduler
     void
     thread_loop();
 
-    // Inserts a socket for polling. The network driver will hold a weak
+    // Inserts a socket for polling. The network scheduler will hold a weak
     // reference to this socket.
     // This function is thread-safe.
     void

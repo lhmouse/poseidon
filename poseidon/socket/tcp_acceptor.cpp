@@ -59,7 +59,7 @@ TCP_Acceptor::
 do_abstract_socket_on_readable(bool /*rdhup*/)
   {
     recursive_mutex::unique_lock io_lock;
-    auto& driver = this->do_abstract_socket_lock_driver(io_lock);
+    auto& scheduler = this->do_abstract_socket_lock_scheduler(io_lock);
     auto& from_addr = this->m_from_addr;
 
     for(;;) {
@@ -99,7 +99,7 @@ do_abstract_socket_on_readable(bool /*rdhup*/)
             "[TCP acceptor `$1` (class `$2`)]"),
             this, typeid(*this), client->remote_address(), client, typeid(*client));
 
-        driver.insert(client);
+        scheduler.insert(client);
       }
       catch(exception& stdex) {
         POSEIDON_LOG_ERROR((

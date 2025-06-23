@@ -12,11 +12,11 @@
 namespace poseidon {
 
 SSL_Socket::
-SSL_Socket(unique_posix_fd&& fd, const Network_Scheduler& driver)
+SSL_Socket(unique_posix_fd&& fd, const Network_Scheduler& scheduler)
   :
     Abstract_Socket(move(fd))
   {
-    if(!this->m_ssl.reset(::SSL_new(driver.server_ssl_ctx())))
+    if(!this->m_ssl.reset(::SSL_new(scheduler.server_ssl_ctx())))
       POSEIDON_THROW((
           "Could not allocate SSL structure",
           "[`SSL_new()` failed: $1])"),
@@ -32,11 +32,11 @@ SSL_Socket(unique_posix_fd&& fd, const Network_Scheduler& driver)
   }
 
 SSL_Socket::
-SSL_Socket(const Network_Scheduler& driver)
+SSL_Socket(const Network_Scheduler& scheduler)
   :
     Abstract_Socket(SOCK_STREAM, IPPROTO_TCP)
   {
-    if(!this->m_ssl.reset(::SSL_new(driver.client_ssl_ctx())))
+    if(!this->m_ssl.reset(::SSL_new(scheduler.client_ssl_ctx())))
       POSEIDON_THROW((
           "Could not allocate SSL structure",
           "[`SSL_new()` failed: $1])"),

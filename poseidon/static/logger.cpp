@@ -223,7 +223,7 @@ Logger::
 reload(const Config_File& conf_file, bool verbose)
   {
     // Hold the logging thread.
-    recursive_mutex::unique_lock io_sync_lock(this->m_io_mutex);
+    recursive_mutex::unique_lock io_sync_lock(this->m_sched_mutex);
     this->m_conf_level_bits.store(UINT32_MAX);
 
     // Parse new configuration.
@@ -315,10 +315,10 @@ thread_loop()
     while(this->m_queue.empty())
       this->m_queue_avail.wait(lock);
 
-    recursive_mutex::unique_lock io_sync_lock(this->m_io_mutex);
-    this->m_io_queue.clear();
-    this->m_io_queue.swap(this->m_queue);
-    size_t queue_size = this->m_io_queue.size();
+    recursive_mutex::unique_lock io_sync_lock(this->m_sched_mutex);
+    this->m_sched_queue.clear();
+    this->m_sched_queue.swap(this->m_queue);
+    size_t queue_size = this->m_sched_queue.size();
     lock.unlock();
 
     // Get configuration of all levels.
@@ -327,16 +327,16 @@ thread_loop()
     lock.unlock();
 
     // Write all elements.
-    for(const auto& msg : this->m_io_queue)
+    for(const auto& msg : this->m_sched_queue)
       if(msg.level >= levels.size())
         continue;
       else if((queue_size > 1000) && levels[msg.level].expendable)
         continue;
       else
-        do_write_nothrow(this->m_io_files, levels[msg.level], msg);
+        do_write_nothrow(this->m_sched_files, levels[msg.level], msg);
 
-    this->m_io_queue.clear();
-    this->m_io_files.clear();
+    this->m_sched_queue.clear();
+    this->m_sched_files.clear();
     io_sync_lock.unlock();
     ::sync();
   }
@@ -370,12 +370,12 @@ synchronize() noexcept
   {
     // Get all pending elements.
     plain_mutex::unique_lock lock(this->m_queue_mutex);
-    recursive_mutex::unique_lock io_sync_lock(this->m_io_mutex);
+    recursive_mutex::unique_lock io_sync_lock(this->m_sched_mutex);
     if(this->m_queue.empty())
       return;
 
-    this->m_io_queue.clear();
-    this->m_io_queue.swap(this->m_queue);
+    this->m_sched_queue.clear();
+    this->m_sched_queue.swap(this->m_queue);
     lock.unlock();
 
     // Get configuration.
@@ -384,12 +384,12 @@ synchronize() noexcept
     lock.unlock();
 
     // Write all elements.
-    for(const auto& msg : this->m_io_queue)
+    for(const auto& msg : this->m_sched_queue)
       if(msg.level < levels.size())
-        do_write_nothrow(this->m_io_files, levels[msg.level], msg);
+        do_write_nothrow(this->m_sched_files, levels[msg.level], msg);
 
-    this->m_io_queue.clear();
-    this->m_io_files.clear();
+    this->m_sched_queue.clear();
+    this->m_sched_files.clear();
     io_sync_lock.unlock();
     ::sync();
   }

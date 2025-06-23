@@ -20,9 +20,9 @@ class Logger
     struct X_Message;
     cow_vector<X_Message> m_queue;
 
-    mutable recursive_mutex m_io_mutex;
-    cow_vector<X_Message> m_io_queue;
-    cow_dictionary<unique_posix_fd> m_io_files;
+    mutable recursive_mutex m_sched_mutex;
+    cow_vector<X_Message> m_sched_queue;
+    cow_dictionary<unique_posix_fd> m_sched_files;
 
   public:
     // Creates a logger that outputs to nowhere.

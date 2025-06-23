@@ -14,7 +14,7 @@ class DNS_Connect_Task
     public Abstract_Task
   {
   private:
-    Network_Scheduler* m_driver;
+    Network_Scheduler* m_scheduler;
     wkptr<Abstract_Socket> m_wsock;
     cow_string m_host;
     uint16_t m_port;
@@ -24,7 +24,7 @@ class DNS_Connect_Task
     // `connect()` is called on `socket`. If both IPv4 and IPv6 addresses are
     // found, an IPv4 address is preferred to an IPv6 address. If no address can
     // be found, the socket is closed immediately.
-    DNS_Connect_Task(Network_Scheduler& driver, const shptr<Abstract_Socket>& socket,
+    DNS_Connect_Task(Network_Scheduler& scheduler, const shptr<Abstract_Socket>& socket,
                      const cow_string& host, uint16_t port);
 
   protected:

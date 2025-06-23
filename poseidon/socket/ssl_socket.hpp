@@ -23,13 +23,13 @@ class SSL_Socket
 
   protected:
     // Takes ownership of an accepted socket, using SSL configuration from
-    // `driver`. [server-side constructor]
-    SSL_Socket(unique_posix_fd&& fd, const Network_Scheduler& driver);
+    // `scheduler`. [server-side constructor]
+    SSL_Socket(unique_posix_fd&& fd, const Network_Scheduler& scheduler);
 
     // Creates a socket for outgoing connections, using SSL configuration
-    // from `driver`. [client-side constructor]
+    // from `scheduler`. [client-side constructor]
     explicit
-    SSL_Socket(const Network_Scheduler& driver);
+    SSL_Socket(const Network_Scheduler& scheduler);
 
   protected:
     // These callbacks implement `Abstract_Socket`.
@@ -72,7 +72,7 @@ class SSL_Socket
     // For a client-side socket, this function sets a list of protocols to offer
     // to the server. This function must be called before SSL negotiation, for
     // example inside the constructor of a derived class or just before assigning
-    // this socket to the network driver. The argument is the list of protocols
+    // this socket to the network scheduler. The argument is the list of protocols
     // that will be offered to the server. Empty protocol names are ignored. If
     // the list is empty, ALPN will not be negotiated.
     void
