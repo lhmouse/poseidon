@@ -12,6 +12,11 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 namespace poseidon {
+namespace {
+
+thread_local wkptr<SSL_Socket> s_weak_ssl_socket;
+
+}  // namespace
 
 Network_Scheduler::
 Network_Scheduler() noexcept
@@ -64,10 +69,11 @@ POSEIDON_VISIBILITY_HIDDEN
 int
 Network_Scheduler::
 do_alpn_select_cb(::SSL* ssl, const unsigned char** out, unsigned char* outlen,
-                  const unsigned char* in, unsigned int inlen, void* arg)
+                  const unsigned char* in, unsigned int inlen, void* /*arg*/)
   {
-    auto socket = static_cast<SSL_Socket*>(arg);
-    ROCKET_ASSERT(socket);
+    auto socket = s_weak_ssl_socket.lock();
+    if(!socket)
+      return SSL_TLSEXT_ERR_ALERT_FATAL;
 
     if(socket->m_ssl != ssl)
       return SSL_TLSEXT_ERR_ALERT_FATAL;
@@ -103,9 +109,9 @@ do_alpn_select_cb(::SSL* ssl, const unsigned char** out, unsigned char* outlen,
     }
     catch(exception& stdex) {
       POSEIDON_LOG_ERROR((
-          "Unhandled exception thrown from socket ALPN callback: $1",
-          "[socket class `$2`]"),
-          stdex, typeid(*socket));
+          "Unhandled exception thrown from socket ALPN callback: $3",
+          "[SSL socket `$1` (class `$2`)]"),
+          socket, typeid(*socket), stdex);
     }
 
     if(resp_len == 0)
@@ -275,6 +281,7 @@ reload(const Config_File& conf_file)
             "[in configuration file '$2']"),
             ::ERR_reason_error_string(::ERR_get_error()), conf_file.path());
 
+      ::SSL_CTX_set_alpn_select_cb(server_ssl_ctx, do_alpn_select_cb, this);
       ::SSL_CTX_set_verify(server_ssl_ctx, SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE, nullptr);
     }
 
@@ -376,13 +383,12 @@ thread_loop()
     if(!socket)
       return;
 
-    if(auto ssl_socket = dynamic_cast<SSL_Socket*>(socket.get()))
-      ::SSL_CTX_set_alpn_select_cb(::SSL_get_SSL_CTX(ssl_socket->m_ssl),
-                                   do_alpn_select_cb, ssl_socket);
-
     recursive_mutex::unique_lock io_lock(socket->m_sched_mutex);
     socket->m_scheduler = this;
     lock.unlock();
+
+    if(auto ssl_socket = dynamic_pointer_cast<SSL_Socket>(socket))
+      s_weak_ssl_socket = ssl_socket;
 
     try {
       if(pev.events & EPOLLERR) {
