@@ -48,18 +48,22 @@ do_append_column_definition(tinyfmt_str& sql, const MySQL_Table_Column& column)
         break;
 
       case mysql_column_auto_increment:
-        sql << "bigint AUTO_INCREMENT";
+        sql << "bigint AUTO_INCREMENT NOT NULL";
         break;
 
       default:
         POSEIDON_THROW(("Invalid MySQL column type `$1`"), column.type);
       }
 
-    if((column.type == mysql_column_auto_increment) || !column.nullable)
-      sql << " NOT NULL";
+    if(column.type != mysql_column_auto_increment) {
+      // An auto-increment field is always non-null and has no default value so
+      // these hardly make any sense.
+      if(!column.nullable)
+        sql << " NOT NULL";
 
-    if((column.type != mysql_column_auto_increment) && !column.default_value.is_null())
-      sql << " DEFAULT " << column.default_value;
+      if(!column.default_value.is_null())
+        sql << " DEFAULT " << column.default_value;
+    }
   }
 
 void
@@ -479,11 +483,15 @@ do_on_abstract_future_initialize()
             POSEIDON_THROW(("Invalid MySQL column type `$1`"), column.type);
           }
 
-        if(ex->second.nullable != column.nullable)
-          goto do_alter_table_column_;
+        if(column.type != mysql_column_auto_increment) {
+          // An auto-increment field is always non-null and has no default value
+          // so these hardly make any sense.
+          if(ex->second.nullable != column.nullable)
+            goto do_alter_table_column_;
 
-        if(ex->second.default_value.is_null() != column.default_value.is_null())
-          goto do_alter_table_column_;
+          if(ex->second.default_value.is_null() != column.default_value.is_null())
+            goto do_alter_table_column_;
+        }
 
         POSEIDON_LOG_DEBUG(("Verified column `$1.$2`"), this->m_table.name, column.name);
         continue;
