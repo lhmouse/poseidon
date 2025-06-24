@@ -155,7 +155,7 @@ struct Final_Socket final : SSL_Socket
         catch(exception& stdex) {
           POSEIDON_LOG_ERROR(("Could not push network event: $1"), stdex);
           sessions->session_map.erase(session_iter);
-          quick_shut_down();
+          this->quick_shut_down();
         }
       }
 
