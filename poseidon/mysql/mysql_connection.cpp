@@ -195,6 +195,26 @@ execute(const cow_string& stmt, const cow_vector<MySQL_Value>& args)
           ::mysql_stmt_errno(this->m_stmt), ::mysql_stmt_error(this->m_stmt));
   }
 
+uint64_t
+MySQL_Connection::
+affected_rows() const noexcept
+  {
+    if(!this->m_stmt)
+      return 0;
+
+    return ::mysql_stmt_affected_rows(this->m_stmt);
+  }
+
+uint64_t
+MySQL_Connection::
+insert_id() const noexcept
+  {
+    if(!this->m_stmt)
+      return 0;
+
+    return ::mysql_stmt_insert_id(this->m_stmt);
+  }
+
 bool
 MySQL_Connection::
 fetch_fields(cow_vector<cow_string>& output)
@@ -344,26 +364,6 @@ fetch_row(cow_vector<MySQL_Value>& output)
       }
 
     return true;
-  }
-
-uint64_t
-MySQL_Connection::
-affected_rows() const noexcept
-  {
-    if(!this->m_stmt)
-      return 0;
-
-    return ::mysql_stmt_affected_rows(this->m_stmt);
-  }
-
-uint64_t
-MySQL_Connection::
-insert_id() const noexcept
-  {
-    if(!this->m_stmt)
-      return 0;
-
-    return ::mysql_stmt_insert_id(this->m_stmt);
   }
 
 }  // namespace poseidon
