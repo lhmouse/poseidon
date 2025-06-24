@@ -12,8 +12,8 @@ class Task_Scheduler
   private:
     mutable plain_mutex m_queue_mutex;
     condition_variable m_queue_avail;
-    cow_vector<wkptr<Abstract_Task>> m_queue_front;
-    cow_vector<wkptr<Abstract_Task>> m_queue_back;
+    cow_vector<shptr<Abstract_Task>> m_queue_front;
+    cow_vector<shptr<Abstract_Task>> m_queue_back;
 
   public:
     // Creates an empty task scheduler.
@@ -29,11 +29,11 @@ class Task_Scheduler
     void
     thread_loop();
 
-    // Enqueues a task.
-    // If this function fails, an exception is thrown, and there is no effect.
+    // Takes ownership of a task, and schedules it for execution. The task
+    // will be deleted after it finishes execution.
     // This function is thread-safe.
     void
-    enqueue(const shptr<Abstract_Task>& task);
+    launch(const shptr<Abstract_Task>& task);
   };
 
 }  // namespace poseidon

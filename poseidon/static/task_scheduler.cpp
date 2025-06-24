@@ -28,7 +28,7 @@ thread_loop()
     if(this->m_queue_front.empty())
       this->m_queue_front.swap(this->m_queue_back);
 
-    auto task = this->m_queue_front.back().lock();
+    auto task = move(this->m_queue_front.back());
     this->m_queue_front.pop_back();
     if(!task || task->m_abandoned.load())
       return;
@@ -44,7 +44,7 @@ thread_loop()
 
 void
 Task_Scheduler::
-enqueue(const shptr<Abstract_Task>& task)
+launch(const shptr<Abstract_Task>& task)
   {
     if(!task)
       POSEIDON_THROW(("Null task pointer not valid"));

@@ -23,7 +23,6 @@ struct Event_Queue
   {
     // read-only fields; no locking needed
     shptr<TCP_Socket> socket;
-    shptr<DNS_Connect_Task> dns_task;
     cacheline_barrier xcb_1;
 
     // fiber-private fields; no locking needed
@@ -241,11 +240,10 @@ connect(const cow_string& addr, const callback_type& callback)
     // Initiate the connection.
     plain_mutex::unique_lock lock(this->m_sessions->mutex);
 
-    task_scheduler.enqueue(dns_task);
+    task_scheduler.launch(dns_task);
     auto r = this->m_sessions->session_map.try_emplace(socket.get());
     ROCKET_ASSERT(r.second);
     r.first->second.socket = socket;
-    r.first->second.dns_task = move(dns_task);
     return socket;
   }
 
