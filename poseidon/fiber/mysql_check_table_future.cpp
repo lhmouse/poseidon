@@ -55,10 +55,10 @@ do_append_column_definition(tinyfmt_str& sql, const MySQL_Table_Column& column)
         POSEIDON_THROW(("Invalid MySQL column type `$1`"), column.type);
       }
 
-    if(column.nullable == false)
+    if((column.type == mysql_column_auto_increment) || !column.nullable)
       sql << " NOT NULL";
 
-    if(column.default_value.is_null() == false)
+    if((column.type != mysql_column_auto_increment) && !column.default_value.is_null())
       sql << " DEFAULT " << column.default_value;
   }
 
