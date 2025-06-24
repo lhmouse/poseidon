@@ -452,7 +452,7 @@ thread_loop()
 
 void
 Network_Scheduler::
-insert(const shptr<Abstract_Socket>& socket)
+insert_weak(const shptr<Abstract_Socket>& socket)
   {
     if(!socket)
       POSEIDON_THROW(("Null socket pointer not valid"));

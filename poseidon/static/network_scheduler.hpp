@@ -75,7 +75,7 @@ class Network_Scheduler
     // reference to this socket.
     // This function is thread-safe.
     void
-    insert(const shptr<Abstract_Socket>& socket);
+    insert_weak(const shptr<Abstract_Socket>& socket);
   };
 
 }  // namespace poseidon

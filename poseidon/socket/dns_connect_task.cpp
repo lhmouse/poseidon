@@ -76,6 +76,13 @@ do_on_abstract_task_execute()
                                sizeof(::sockaddr_in6)) == 0)
                     || (errno == EINPROGRESS);
         }
+
+      // Insert the socket, only after `connect()` has been called. Even in
+      // the case of a failure, a closure notification shall be delivered.
+      if(!success)
+        POSEIDON_LOG_WARN(("DNS lookup failed for `$1`"), this->m_host);
+      else
+        this->m_scheduler->insert_weak(socket);
     }
     catch(exception& stdex) {
       POSEIDON_LOG_ERROR(("DNS lookup error: $1"), stdex);
@@ -88,15 +95,8 @@ do_on_abstract_task_execute()
         return;
     }
 
-    if(!success) {
-      // Abandon the socket for good.
-      POSEIDON_LOG_WARN(("DNS lookup failed for `$1`"), this->m_host);
+    if(!success)
       socket->quick_shut_down();
-    }
-
-    // Insert the socket. Even in the case of a failure, a closure
-    // notification shall be delivered.
-    POSEIDON_CATCH_EVERYTHING(this->m_scheduler->insert(socket));
   }
 
 }  // namespace poseidon

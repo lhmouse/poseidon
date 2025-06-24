@@ -141,7 +141,7 @@ start(milliseconds delay, milliseconds period, const callback_type& callback)
     auto timer = new_sh<Final_Timer>(callback, queue);
     queue->wtimer = timer;
 
-    timer_scheduler.insert(timer, delay, period);
+    timer_scheduler.insert_weak(timer, delay, period);
     this->m_queue = move(queue);
     this->m_timer = timer;
     return timer;

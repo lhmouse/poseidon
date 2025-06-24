@@ -35,7 +35,7 @@ class Timer_Scheduler
     // denote a one-shot timer.
     // This function is thread-safe.
     void
-    insert(const shptr<Abstract_Timer>& timer, milliseconds delay, milliseconds period);
+    insert_weak(const shptr<Abstract_Timer>& timer, milliseconds delay, milliseconds period);
   };
 
 }  // namespace poseidon

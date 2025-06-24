@@ -90,7 +90,7 @@ thread_loop()
 
 void
 Timer_Scheduler::
-insert(const shptr<Abstract_Timer>& timer, milliseconds delay, milliseconds period)
+insert_weak(const shptr<Abstract_Timer>& timer, milliseconds delay, milliseconds period)
   {
     if(!timer)
       POSEIDON_THROW(("Null timer pointer not valid"));

@@ -142,7 +142,7 @@ start(const callback_type& callback)
     auto socket = new_sh<Final_Socket>(callback, queue);
     queue->wsocket = socket;
 
-    network_scheduler.insert(socket);
+    network_scheduler.insert_weak(socket);
     this->m_queue = move(queue);
     this->m_socket = socket;
     return socket;

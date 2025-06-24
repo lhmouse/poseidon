@@ -99,7 +99,7 @@ do_abstract_socket_on_readable(bool /*rdhup*/)
             "[TCP acceptor `$1` (class `$2`)]"),
             this, typeid(*this), client->remote_address(), client, typeid(*client));
 
-        scheduler.insert(client);
+        scheduler.insert_weak(client);
       }
       catch(exception& stdex) {
         POSEIDON_LOG_ERROR((

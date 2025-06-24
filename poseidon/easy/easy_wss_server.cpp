@@ -252,7 +252,7 @@ start(const IPv6_Address& addr, const callback_type& callback)
     auto sessions = new_sh<X_Session_Table>();
     auto acceptor = new_sh<Final_Acceptor>(addr, callback, sessions);
 
-    network_scheduler.insert(acceptor);
+    network_scheduler.insert_weak(acceptor);
     this->m_sessions = move(sessions);
     this->m_acceptor = acceptor;
     return acceptor;
