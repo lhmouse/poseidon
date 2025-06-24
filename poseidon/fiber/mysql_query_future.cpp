@@ -42,6 +42,7 @@ do_on_abstract_future_initialize()
     this->m_conn->execute(this->m_stmt, this->m_stmt_args);
 
     this->m_warning_count = this->m_conn->warning_count();
+    this->m_affected_rows = this->m_conn->affected_rows();
     this->m_insert_id = this->m_conn->insert_id();
     this->m_conn->fetch_fields(this->m_result_fields);
 

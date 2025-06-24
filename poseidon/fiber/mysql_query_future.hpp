@@ -21,6 +21,7 @@ class MySQL_Query_Future
     cow_string m_stmt;
     cow_vector<MySQL_Value> m_stmt_args;
     uint32_t m_warning_count;
+    uint64_t m_affected_rows;
     uint64_t m_insert_id;
     cow_vector<cow_string> m_result_fields;
     cow_vector<cow_vector<MySQL_Value>> m_result_rows;
@@ -73,6 +74,16 @@ class MySQL_Query_Future
       {
         this->check_success();
         return this->m_warning_count;
+      }
+
+    // Gets the number of rows that have been affected by the last operation.
+    // The value is undefined for other operations. If `successful()` yields
+    // `false`, an exception is thrown, and there is no effect.
+    uint64_t
+    affected_rows() const noexcept
+      {
+        this->check_success();
+        return this->m_affected_rows;
       }
 
     // Gets the auto-increment ID of an INSERT or REPLACE operation, after it
