@@ -470,7 +470,7 @@ do_on_abstract_future_initialize()
               if((ex->second.type != "bigint(20)") && (ex->second.type != "bigint"))
                 goto do_alter_table_column_;
 
-              if(ex->second.extra != "AUTO_INCREMENT")
+              if(ex->second.extra != "auto_increment")
                 goto do_alter_table_column_;
             }
             break;
