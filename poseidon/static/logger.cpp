@@ -182,9 +182,9 @@ do_write_nothrow(xFiles& io_files,  const Level_Config& lconf, const Message& ms
         if(r.second) {
           // A new element has just been inserted, so open the file.
           if(file == "/dev/stdout")
-            r.first->second.reset(STDOUT_FILENO, nullptr);  // no close
+            r.first->second.reset(STDOUT_FILENO);  // no close
           else if(file == "/dev/stderr")
-            r.first->second.reset(STDERR_FILENO, nullptr);  // no close
+            r.first->second.reset(STDERR_FILENO);  // no close
           else
             r.first->second.reset(::open(file.c_str(), O_WRONLY | O_APPEND | O_CREAT, 0644));
         }

@@ -25,9 +25,9 @@ enroll(const cow_string& lock_path)
     this->m_index = -1;
 
     // Create the lock file.
-    ::rocket::unique_handle<int, closer> fd;
+    ::rocket::unique_posix_fd fd;
     fd.reset(::open(lock_path.safe_c_str(), O_RDWR | O_CREAT | O_CLOEXEC, 0600));
-    if(fd == -1)
+    if(!fd)
       POSEIDON_THROW((
           "Could not create or open file '$1'",
           "[`open()` failed: ${errno:full}]"),

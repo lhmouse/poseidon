@@ -27,7 +27,7 @@ main()
     }
 
     int num = 0;
-    ::rocket::tinyfmt_file fmt(stderr, nullptr);
+    ::rocket::tinyfmt_file fmt(stderr);
 
     // `show dbs`
     doc.clear();

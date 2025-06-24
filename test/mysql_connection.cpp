@@ -29,7 +29,7 @@ main()
 
     cow_vector<MySQL_Value> values;
     int row = 0;
-    ::rocket::tinyfmt_file fmt(stderr, nullptr);
+    ::rocket::tinyfmt_file fmt(stderr);
 
     while(conn.fetch_row(values)) {
       POSEIDON_TEST_CHECK(fields.size() == values.size());

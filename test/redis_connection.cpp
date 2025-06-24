@@ -25,7 +25,7 @@ main()
     }
 
     int num = 0;
-    ::rocket::tinyfmt_file fmt(stderr, nullptr);
+    ::rocket::tinyfmt_file fmt(stderr);
     cow_string status;
     Redis_Value value;
 

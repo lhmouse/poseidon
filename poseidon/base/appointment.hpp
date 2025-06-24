@@ -10,14 +10,7 @@ namespace poseidon {
 class Appointment
   {
   private:
-    struct closer
-      {
-        constexpr int null() const noexcept { return -1;  }
-        constexpr bool is_null(int fd) const noexcept { return fd == -1;  }
-        void close(int fd) noexcept { ::close(fd);  }
-      };
-
-    ::rocket::unique_handle<int, closer> m_fd;
+    ::rocket::unique_posix_fd m_fd;
     int m_index = 0;
 
   public:
