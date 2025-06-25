@@ -129,6 +129,7 @@ POSEIDON_USING opt = ::rocket::optional<Ts...>;
 POSEIDON_USING uniptr = ::std::unique_ptr<Ts...>;
 POSEIDON_USING shptr = ::std::shared_ptr<Ts...>;
 POSEIDON_USING wkptr = ::std::weak_ptr<Ts...>;
+POSEIDON_USING vfptr = void (*) (Ts...);
 
 using ::rocket::begin;
 using ::rocket::end;
