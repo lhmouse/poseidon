@@ -126,10 +126,10 @@ using charbuf_256 = ::rocket::static_char_buffer<256>;
 POSEIDON_USING cow_bivector = cow_vector<pair<Ts...>>;
 POSEIDON_USING cow_dictionary = cow_hashmap<phcow_string, Ts..., phcow_string::hash>;
 POSEIDON_USING opt = ::rocket::optional<Ts...>;
+POSEIDON_USING vfn = void (Ts...);
 POSEIDON_USING uniptr = ::std::unique_ptr<Ts...>;
 POSEIDON_USING shptr = ::std::shared_ptr<Ts...>;
 POSEIDON_USING wkptr = ::std::weak_ptr<Ts...>;
-POSEIDON_USING vfptr = void (*) (Ts...);
 
 using ::rocket::begin;
 using ::rocket::end;
