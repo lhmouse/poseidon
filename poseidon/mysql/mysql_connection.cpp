@@ -37,13 +37,6 @@ reset() noexcept
     return !error;
   }
 
-uint32_t
-MySQL_Connection::
-warning_count() const noexcept
-  {
-    return ::mysql_warning_count(this->m_mysql);
-  }
-
 void
 MySQL_Connection::
 execute(const cow_string& stmt, const cow_vector<MySQL_Value>& args)
@@ -88,7 +81,7 @@ execute(const cow_string& stmt, const cow_vector<MySQL_Value>& args)
       }
 
       if(!::mysql_real_connect(this->m_mysql, host, user, this->m_password.c_str(),
-                               database, port, nullptr, CLIENT_COMPRESS))
+                               database, port, nullptr, CLIENT_COMPRESS | CLIENT_FOUND_ROWS))
         POSEIDON_THROW((
             "Could not connect to MySQL server `$1`: ERROR $2: $3",
             "[`mysql_real_connect()` failed]"),
@@ -195,13 +188,21 @@ execute(const cow_string& stmt, const cow_vector<MySQL_Value>& args)
           ::mysql_stmt_errno(this->m_stmt), ::mysql_stmt_error(this->m_stmt));
   }
 
+uint32_t
+MySQL_Connection::
+warning_count() const noexcept
+  {
+    return ::mysql_warning_count(this->m_mysql);
+  }
+
 uint64_t
 MySQL_Connection::
-affected_rows() const noexcept
+match_count() const noexcept
   {
     if(!this->m_stmt)
       return 0;
 
+    // Note we have set `CLIENT_FOUND_ROWS`.
     return ::mysql_stmt_affected_rows(this->m_stmt);
   }
 
