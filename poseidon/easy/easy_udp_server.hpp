@@ -49,7 +49,7 @@ class Easy_UDP_Server
     start(const cow_string& addr, const callback_type& callback);
 
     shptr<UDP_Socket>
-    start_any(uint16_t port, const callback_type& callback);
+    start(uint16_t port, const callback_type& callback);
 
     // Shuts down the socket, if any.
     void

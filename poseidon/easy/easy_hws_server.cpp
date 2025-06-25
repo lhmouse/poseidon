@@ -317,7 +317,7 @@ start(const cow_string& addr, const callback_type& callback)
 
 shptr<TCP_Acceptor>
 Easy_HWS_Server::
-start_any(uint16_t port, const callback_type& callback)
+start(uint16_t port, const callback_type& callback)
   {
     return this->start(IPv6_Address(ipv6_unspecified, port), callback);
   }

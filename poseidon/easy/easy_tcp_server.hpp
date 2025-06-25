@@ -60,7 +60,7 @@ class Easy_TCP_Server
     start(const cow_string& addr, const callback_type& callback);
 
     shptr<TCP_Acceptor>
-    start_any(uint16_t port, const callback_type& callback);
+    start(uint16_t port, const callback_type& callback);
 
     // Shuts down the listening socket, if any. All existent clients are also
     // disconnected immediately.
