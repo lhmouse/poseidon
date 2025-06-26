@@ -51,19 +51,19 @@ class MySQL_Connector
     allocate_connection(const cow_string& service_uri, const cow_string& password);
 
     // Allocates a connection using arguments from 'main.conf'. This function
-    // is otherwise the same as `allocate_connection_explicit()`.
+    // is otherwise the same as `allocate_connection()`.
     uniptr<MySQL_Connection>
     allocate_default_connection();
 
     // Allocates a connection using secondary arguments from 'main.conf'. If
     // no secondary configuration exists, the default configuration is used.
-    // This function is otherwise the same as `allocate_connection_explicit()`.
+    // This function is otherwise the same as `allocate_connection()`.
     uniptr<MySQL_Connection>
     allocate_secondary_connection();
 
     // Allocates a connection using tertiary arguments from 'main.conf'. If
     // no tertiary configuration exists, the secondary configuration is used.
-    // This function is otherwise the same as `allocate_connection_explicit()`.
+    // This function is otherwise the same as `allocate_connection()`.
     uniptr<MySQL_Connection>
     allocate_tertiary_connection();
 

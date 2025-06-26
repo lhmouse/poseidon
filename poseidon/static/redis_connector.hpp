@@ -47,7 +47,7 @@ class Redis_Connector
     allocate_connection(const cow_string& service_uri, const cow_string& password);
 
     // Allocates a connection using arguments from 'main.conf'. This function
-    // is otherwise the same as `allocate_connection_explicit()`.
+    // is otherwise the same as `allocate_connection()`.
     uniptr<Redis_Connection>
     allocate_default_connection();
 
