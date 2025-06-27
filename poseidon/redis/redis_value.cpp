@@ -52,8 +52,8 @@ print_to(tinyfmt& fmt) const
   do_unpack_loop_:
     switch(pval->type())
       {
-      case redis_value_null:
-        fmt << "null";
+      case redis_value_nil:
+        fmt << "nil";
         break;
 
       case redis_value_integer:

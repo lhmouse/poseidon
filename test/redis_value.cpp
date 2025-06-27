@@ -9,8 +9,8 @@ int
 main()
   {
     Redis_Value hval;
-    POSEIDON_TEST_CHECK(hval.is_null());
-    POSEIDON_TEST_CHECK(hval.to_string() == "null");
+    POSEIDON_TEST_CHECK(hval.is_nil());
+    POSEIDON_TEST_CHECK(hval.to_string() == "nil");
 
     hval = 1234567890123456789;
     POSEIDON_TEST_CHECK(hval.is_integer());

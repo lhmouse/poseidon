@@ -113,8 +113,8 @@ class Redis_Value
 
     // Access raw data.
     bool
-    is_null() const noexcept
-      { return this->m_stor.index() == redis_value_null;  }
+    is_nil() const noexcept
+      { return this->m_stor.index() == redis_value_nil;  }
 
     bool
     is_integer() const noexcept
