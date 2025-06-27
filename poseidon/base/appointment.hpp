@@ -11,7 +11,7 @@ class Appointment
   {
   private:
     ::rocket::unique_posix_fd m_fd;
-    int m_index = 0;
+    int m_index = -1;
 
   public:
     // Constructs an empty appointment.
