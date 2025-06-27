@@ -396,7 +396,7 @@ operator!=(chars_view lhs, const char* rhs) noexcept
 
 constexpr
 bool
-operator==(const char* lhs, chars_view rhs) noexcept
+operator!=(const char* lhs, chars_view rhs) noexcept
   { return (::rocket::xstrlen(lhs) != rhs.n) || (::rocket::xmemcmp(lhs, rhs.p, rhs.n) != 0);  }
 
 }  // namespace fwd
