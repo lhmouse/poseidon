@@ -27,7 +27,7 @@ class Easy_TCP_Client
     // accordingly in the main thread. The callback object is never copied,
     // and is allowed to modify itself.
     using callback_type =
-      ::rocket::shared_function<
+      shared_function<
         void (
           const shptr<TCP_Socket>&,  // session
           Abstract_Fiber&,  // fiber for current callback

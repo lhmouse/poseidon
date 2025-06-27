@@ -27,7 +27,7 @@ class Easy_SSL_Client
     // accordingly in the main thread. The callback object is never copied,
     // and is allowed to modify itself.
     using callback_type =
-      ::rocket::shared_function<
+      shared_function<
         void (
           const shptr<SSL_Socket>&,  // session
           Abstract_Fiber&,  // fiber for current callback

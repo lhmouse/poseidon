@@ -123,6 +123,7 @@ using ::rocket::tinyfmt_ln;
 using ::rocket::unique_posix_fd;
 using ::rocket::unique_posix_file;
 using ::rocket::unique_posix_dir;
+using ::rocket::shared_function;
 using charbuf_16 = ::rocket::static_char_buffer<16>;
 using charbuf_256 = ::rocket::static_char_buffer<256>;
 

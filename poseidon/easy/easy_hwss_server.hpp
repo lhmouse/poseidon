@@ -29,7 +29,7 @@ class Easy_HWSS_Server
     // `.lock()` as needed. This server object stores a copy of the callback,
     // which is invoked accordingly in the main thread. The callback object is
     // never copied, and is allowed to modify itself.
-    using callback_type = ::rocket::shared_function<
+    using callback_type = shared_function<
             void
              (const shptr<WSS_Server_Session>& session,
               Abstract_Fiber& fiber,
