@@ -152,7 +152,7 @@ struct Final_Session final : WSS_Server_Session
       {
         if(req.is_proxy) {
           // Reject proxy requests.
-          this->do_on_https_request_error(http_status_forbidden);
+          this->do_on_https_request_error(false, http_status_forbidden);
           return http_payload_normal;
         }
 
@@ -182,7 +182,7 @@ struct Final_Session final : WSS_Server_Session
 
           default:
             // Reject all the other.
-            this->do_on_https_request_error(http_status_method_not_allowed);
+            this->do_on_https_request_error(false, http_status_method_not_allowed);
             this->quick_shut_down();
             return http_payload_normal;
           }

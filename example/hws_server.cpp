@@ -49,11 +49,7 @@ my_server_callback(const shptr<WS_Server_Session>& session,
           HTTP_S_Headers resp;
           resp.status = http_status_ok;
           resp.headers.emplace_back(&"Content-Type", &"text/plain");
-
-          if(event == easy_hws_head)
-            session->http_response_headers_only(move(resp));
-          else
-            session->http_response(move(resp), "response from example HTTP/WS server\n");
+          session->http_response(event == easy_hws_head, move(resp), "example HTTP/WS server\n");
         }
         break;
 

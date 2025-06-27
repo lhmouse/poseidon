@@ -17,7 +17,7 @@ struct Event
     HTTP_C_Headers req;
     linear_buffer data;
     bool eot = false;
-    char reserved = 0;
+    bool method_was_head = false;
     HTTP_Status status = http_status_null;
   };
 
@@ -99,7 +99,7 @@ struct Final_Fiber final : Abstract_Fiber
               HTTP_S_Headers resp;
               resp.status = event.status;
               resp.headers.emplace_back(&"Connection", &"close");
-              session->https_response(move(resp), "");
+              session->https_response(event.method_was_head, move(resp), "");
             }
             else {
               // Process a request.
@@ -186,11 +186,12 @@ struct Final_Session final : HTTPS_Server_Session
 
     virtual
     void
-    do_on_https_request_error(HTTP_Status status) override
+    do_on_https_request_error(bool method_was_head, HTTP_Status status) override
       {
         Event event;
-        event.status = status;
         event.eot = true;
+        event.method_was_head = method_was_head;
+        event.status = status;
         this->do_push_event_common(move(event));
       }
 

@@ -61,13 +61,13 @@ do_on_http_request_finish(HTTP_C_Headers&& /*req*/, linear_buffer&& /*data*/, bo
 
 void
 WS_Server_Session::
-do_on_http_request_error(HTTP_Status status)
+do_on_http_request_error(bool method_was_head, HTTP_Status status)
   {
     // This error can be reported synchronously.
     HTTP_S_Headers resp;
     resp.status = status;
     resp.headers.emplace_back(&"Connection", &"close");
-    this->http_response(move(resp), "");
+    this->http_response(method_was_head, move(resp), "");
 
     // Close the connection.
     this->do_call_on_ws_close_once(ws_status_no_close_frame, "handshake rejected by HTTP error");
@@ -234,7 +234,7 @@ do_ws_complete_handshake(HTTP_C_Headers& req, bool eot)
   {
     if(req.is_proxy) {
       // Reject proxy requests.
-      this->do_on_http_request_error(http_status_forbidden);
+      this->do_on_http_request_error(false, http_status_forbidden);
       return;
     }
 

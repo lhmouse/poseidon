@@ -83,7 +83,7 @@ class HTTP_Server_Session
     // thread, after all requests, to preserve the order of responses.
     virtual
     void
-    do_on_http_request_error(HTTP_Status status) = 0;
+    do_on_http_request_error(bool method_was_head, HTTP_Status status) = 0;
 
     // This callback is invoked by the network thread on a connection that has
     // switched to another protocol. Arguments have the same semantics with
@@ -122,7 +122,7 @@ class HTTP_Server_Session
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    http_response(HTTP_S_Headers&& resp, chars_view data);
+    http_response(bool method_was_head, HTTP_S_Headers&& resp, chars_view data);
 
     // Send a response with a chunked payload, which may contain multiple chunks.
     // Callers should not supply `Transfer-Encoding` headers, as they will be

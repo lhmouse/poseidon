@@ -48,7 +48,7 @@ class WSS_Server_Session
 
     virtual
     void
-    do_on_https_request_error(HTTP_Status status) override;
+    do_on_https_request_error(bool method_was_head, HTTP_Status status) override;
 
     virtual
     void

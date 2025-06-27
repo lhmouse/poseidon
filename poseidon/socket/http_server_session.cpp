@@ -45,7 +45,8 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
 
         if(this->m_req_parser.error()) {
           data.clear();
-          this->do_on_http_request_error(this->m_req_parser.http_status_from_error());
+          this->do_on_http_request_error(this->m_req_parser.headers().method == http_HEAD,
+                                         this->m_req_parser.http_status_from_error());
           return;
         }
 
@@ -60,7 +61,8 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
 
         if(headers.raw_host.empty()) {
           data.clear();
-          this->do_on_http_request_error(http_status_bad_request);
+          this->do_on_http_request_error(this->m_req_parser.headers().method == http_HEAD,
+                                         http_status_bad_request);
           return;
         }
 
@@ -91,7 +93,8 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
 
         if(this->m_req_parser.error()) {
           data.clear();
-          this->do_on_http_request_error(this->m_req_parser.http_status_from_error());
+          this->do_on_http_request_error(this->m_req_parser.headers().method == http_HEAD,
+                                         this->m_req_parser.http_status_from_error());
           return;
         }
 
@@ -117,7 +120,7 @@ do_on_http_request_headers(HTTP_C_Headers& req, bool /*eot*/)
   {
     if(req.is_proxy) {
       // Reject proxy requests.
-      this->do_on_http_request_error(http_status_forbidden);
+      this->do_on_http_request_error(false, http_status_forbidden);
       return http_payload_normal;
     }
 
@@ -201,7 +204,7 @@ http_response_headers_only(HTTP_S_Headers&& resp)
 
 bool
 HTTP_Server_Session::
-http_response(HTTP_S_Headers&& resp, chars_view data)
+http_response(bool method_was_head, HTTP_S_Headers&& resp, chars_view data)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -218,7 +221,7 @@ http_response(HTTP_S_Headers&& resp, chars_view data)
     // be interpreted as terminating by closure ofthe connection.
     resp.headers.emplace_back(&"Content-Length", static_cast<int64_t>(data.n));
 
-    return this->do_http_raw_response(resp, data);
+    return this->do_http_raw_response(resp, method_was_head ? "" : data);
   }
 
 bool
