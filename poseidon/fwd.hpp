@@ -25,11 +25,9 @@
 #include <cxxabi.h>
 #include <x86intrin.h>
 #include <emmintrin.h>
-extern "C++" void poseidon_module_main();  // see below
-namespace poseidon {
-namespace noadl = poseidon;
 
-// Macros
+extern "C++" void poseidon_module_main();  // see below
+
 #define POSEIDON_HIDDEN_X_STRUCT(C, S)  \
   struct __attribute__((__visibility__("hidden"))) C::X_##S  \
     : S { using S::S, S::operator=;  }  // no semicolon
@@ -48,6 +46,10 @@ namespace noadl = poseidon;
           wdLAlUiJ = (__VA_ARGS__);  \
         wdLAlUiJ;  \
       })
+
+namespace poseidon {
+namespace noadl = poseidon;
+namespace fwd {
 
 // Aliases
 using ::std::initializer_list;
@@ -365,6 +367,9 @@ inline
 chars_view
 snview(const char* str, size_t n) noexcept
   { return chars_view(str, ::strnlen(str, n));  }
+
+}  // namespace fwd
+using namespace fwd;
 
 // Base types
 class UUID;
