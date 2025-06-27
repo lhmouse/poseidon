@@ -18,6 +18,7 @@ encode(tinyfmt& fmt) const
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
+    // Set the opcode byte.
     bytes[0] = this->fin << 7 | this->rsv1 << 6 | this->rsv2 << 5 | this->rsv3 << 4
                | this->opcode;
 
@@ -55,7 +56,7 @@ void
 WebSocket_Frame_Header::
 mask_payload(char* data, size_t size) noexcept
   {
-    if(!this->masked)
+    if(!this->masked || (this->masking_key == 0))
       return;
 
     char* cur = data;
