@@ -48,18 +48,8 @@
 #include <functional>
 #include <algorithm>
 #include <numeric>
-#include <string>
-#include <bitset>
 #include <chrono>
 #include <array>
-#include <vector>
-#include <deque>
-#include <list>
-#include <forward_list>
-#include <map>
-#include <set>
-#include <unordered_map>
-#include <unordered_set>
 
 #include <cstdio>
 #include <climits>
@@ -81,5 +71,19 @@
 #include <asteria/value.hpp>
 #include <asteria/utils.hpp>
 #include <taxon.hpp>
+
+// Standard containers are subject to `_GLIBCXX_DEBUG` and other macros, and
+// can change the ABI between Debug and Release builds. Therefore they should
+// not be used in public headers.
+#include <string>
+#include <bitset>
+#include <vector>
+#include <deque>
+#include <list>
+#include <forward_list>
+#include <map>
+#include <set>
+#include <unordered_map>
+#include <unordered_set>
 
 #endif
