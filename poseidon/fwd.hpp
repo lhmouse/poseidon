@@ -19,8 +19,9 @@
 #include <asteria/value.hpp>
 #include <asteria/utils.hpp>
 #include <taxon.hpp>
-#include <vector>
+#include <array>
 #include <string>
+#include <vector>
 #include <cxxabi.h>
 #include <x86intrin.h>
 #include <emmintrin.h>
@@ -244,6 +245,11 @@ struct chars_view
     chars_view(const ::std::vector<char, allocT>& rs) noexcept
       : p(rs.data()), n(rs.size())  { }
 
+    template<size_t N>
+    constexpr
+    chars_view(const ::std::array<char, N>& rs) noexcept
+      : p(rs.data()), n(rs.size())  { }
+
 #ifdef __cpp_lib_string_view
     template<typename traitsT>
     constexpr
@@ -288,6 +294,11 @@ struct chars_view
     template<typename allocT>
     constexpr
     chars_view(const ::rocket::basic_tinyfmt_ln<char, allocT>& rs) noexcept
+      : p(rs.data()), n(rs.size())  { }
+
+    template<size_t... Ns>
+    constexpr
+    chars_view(const ::rocket::array<char, Ns...>& rs) noexcept
       : p(rs.data()), n(rs.size())  { }
 
     template<typename allocT>
