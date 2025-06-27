@@ -369,6 +369,36 @@ chars_view
 snview(const char* str, size_t n) noexcept
   { return chars_view(str, ::strnlen(str, n));  }
 
+constexpr
+bool
+operator==(chars_view lhs, chars_view rhs) noexcept
+  { return (lhs.n == rhs.n) && (::rocket::xmemcmp(lhs.p, rhs.p, lhs.n) == 0);  }
+
+constexpr
+bool
+operator==(chars_view lhs, const char* rhs) noexcept
+  { return (lhs.n == ::rocket::xstrlen(rhs)) && (::rocket::xmemcmp(lhs.p, rhs, lhs.n) == 0);  }
+
+constexpr
+bool
+operator==(const char* lhs, chars_view rhs) noexcept
+  { return (::rocket::xstrlen(lhs) == rhs.n) && (::rocket::xmemcmp(lhs, rhs.p, rhs.n) == 0);  }
+
+constexpr
+bool
+operator!=(chars_view lhs, chars_view rhs) noexcept
+  { return (lhs.n != rhs.n) || (::rocket::xmemcmp(lhs.p, rhs.p, lhs.n) != 0);  }
+
+constexpr
+bool
+operator!=(chars_view lhs, const char* rhs) noexcept
+  { return (lhs.n != ::rocket::xstrlen(rhs)) || (::rocket::xmemcmp(lhs.p, rhs, lhs.n) != 0);  }
+
+constexpr
+bool
+operator==(const char* lhs, chars_view rhs) noexcept
+  { return (::rocket::xstrlen(lhs) != rhs.n) || (::rocket::xmemcmp(lhs, rhs.p, rhs.n) != 0);  }
+
 }  // namespace fwd
 using namespace fwd;
 
