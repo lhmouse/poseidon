@@ -107,7 +107,27 @@ class MySQL_Query_Future
         return this->m_result_fields;
       }
 
-    // Gets all result rows after the operation has completed successfully. If
+    // Gets the number of result fields after the operation has completed
+    // successfully. If `successful()` yields `false`, an exception is thrown,
+    // and there is no effect.
+    size_t
+    result_field_count() const
+      {
+        this->check_success();
+        return this->m_result_fields.size();
+      }
+
+    // Gets the name of a single result field after the operation has completed
+    // successfully. If `successful()` yields `false`, an exception is thrown,
+    // and there is no effect.
+    const cow_string&
+    result_field(size_t field_index) const
+      {
+        this->check_success();
+        return this->m_result_fields.at(field_index);
+      }
+
+    // Gets all rows of an operation after it has completed successfully. If
     // `successful()` yields `false`, an exception is thrown, and there is no
     // effect.
     const cow_vector<cow_vector<MySQL_Value>>&
@@ -115,6 +135,36 @@ class MySQL_Query_Future
       {
         this->check_success();
         return this->m_result_rows;
+      }
+
+    // Gets the number of rows of an operation after it has completed
+    // successfully. If `successful()` yields `false`, an exception is thrown,
+    // and there is no effect.
+    size_t
+    result_row_count() const
+      {
+        this->check_success();
+        return this->m_result_rows.size();
+      }
+
+    // Gets a single row of an operation after it has completed successfully. If
+    // `successful()` yields `false`, an exception is thrown, and there is no
+    // effect.
+    const cow_vector<MySQL_Value>&
+    result_row(size_t row_index) const
+      {
+        this->check_success();
+        return this->m_result_rows.at(row_index);
+      }
+
+    // Gets a single field of an operation after it has completed successfully.
+    // If `successful()` yields `false`, an exception is thrown, and there is no
+    // effect.
+    const MySQL_Value&
+    result_row_field(size_t row_index, size_t field_index) const
+      {
+        this->check_success();
+        return this->m_result_rows.at(row_index).at(field_index);
       }
   };
 
