@@ -5,6 +5,7 @@
 #include "timer_scheduler.hpp"
 #include "../base/abstract_timer.hpp"
 #include "../utils.hpp"
+#include <algorithm>
 namespace poseidon {
 namespace {
 

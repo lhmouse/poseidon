@@ -145,7 +145,7 @@ print_rfc1123_partial(char* str) const noexcept
     // `Sun, 06 Nov 1994 08:49:37 GMT`
     struct timespec ts;
     timespec_from_system_time(ts, this->m_tp);
-    ts.tv_sec = ::std::clamp<::time_t>(ts.tv_sec, -2208988800, 253402300799);
+    ts.tv_sec = ::rocket::clamp_cast<::time_t>(ts.tv_sec, -2208988800, 253402300799);
     struct tm tm;
     ::gmtime_r(&(ts.tv_sec), &tm);
 
@@ -161,7 +161,7 @@ print_rfc850_partial(char* str) const noexcept
     // `Sunday, 06-Nov-94 08:49:37 GMT`
     struct timespec ts;
     timespec_from_system_time(ts, this->m_tp);
-    ts.tv_sec = ::std::clamp<::time_t>(ts.tv_sec, -2208988800, 253402300799);
+    ts.tv_sec = ::rocket::clamp_cast<::time_t>(ts.tv_sec, -2208988800, 253402300799);
     struct tm tm;
     ::gmtime_r(&(ts.tv_sec), &tm);
 
@@ -177,7 +177,7 @@ print_asctime_partial(char* str) const noexcept
     // `Sun Nov  6 08:49:37 1994`
     struct timespec ts;
     timespec_from_system_time(ts, this->m_tp);
-    ts.tv_sec = ::std::clamp<::time_t>(ts.tv_sec, -2208988800, 253402300799);
+    ts.tv_sec = ::rocket::clamp_cast<::time_t>(ts.tv_sec, -2208988800, 253402300799);
     struct tm tm;
     ::gmtime_r(&(ts.tv_sec), &tm);
 
@@ -193,7 +193,7 @@ print_cookie_partial(char* str) const noexcept
     // `Sun, 06-Nov-1994 08:49:37 GMT`
     struct timespec ts;
     timespec_from_system_time(ts, this->m_tp);
-    ts.tv_sec = ::std::clamp<::time_t>(ts.tv_sec, -2208988800, 253402300799);
+    ts.tv_sec = ::rocket::clamp_cast<::time_t>(ts.tv_sec, -2208988800, 253402300799);
     struct tm tm;
     ::gmtime_r(&(ts.tv_sec), &tm);
 
@@ -209,7 +209,7 @@ print_iso8601_partial(char* str) const noexcept
     // `1994-11-06T08:49:37Z`
     struct timespec ts;
     timespec_from_system_time(ts, this->m_tp);
-    ts.tv_sec = ::std::clamp<::time_t>(ts.tv_sec, -2208988800, 253402300799);
+    ts.tv_sec = ::rocket::clamp_cast<::time_t>(ts.tv_sec, -2208988800, 253402300799);
     struct tm tm;
     ::gmtime_r(&(ts.tv_sec), &tm);
 
@@ -225,7 +225,7 @@ print_iso8601_ns_partial(char* str) const noexcept
     // `1994-11-06T08:49:37.123456789Z`
     struct timespec ts;
     timespec_from_system_time(ts, this->m_tp);
-    ts.tv_sec = ::std::clamp<::time_t>(ts.tv_sec, -2208988800, 253402300799);
+    ts.tv_sec = ::rocket::clamp_cast<::time_t>(ts.tv_sec, -2208988800, 253402300799);
     struct tm tm;
     ::gmtime_r(&(ts.tv_sec), &tm);
 

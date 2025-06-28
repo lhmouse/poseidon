@@ -9,6 +9,8 @@
 #include "../socket/dns_connect_task.hpp"
 #include "../static/task_scheduler.hpp"
 #include "../utils.hpp"
+#include <deque>
+#include <unordered_map>
 namespace poseidon {
 namespace {
 

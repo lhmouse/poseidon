@@ -8,6 +8,7 @@
 #include "../fiber/abstract_fiber.hpp"
 #include "../static/fiber_scheduler.hpp"
 #include "../utils.hpp"
+#include <deque>
 namespace poseidon {
 namespace {
 

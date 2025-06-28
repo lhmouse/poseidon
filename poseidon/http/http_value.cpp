@@ -4,6 +4,7 @@
 #include "../xprecompiled.hpp"
 #include "http_value.hpp"
 #include "../utils.hpp"
+#include <algorithm>
 namespace poseidon {
 namespace {
 

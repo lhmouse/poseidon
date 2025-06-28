@@ -31,7 +31,7 @@ print_to(tinyfmt& fmt) const
           if(::std::isnan(this->as_double()))
             fmt << "NULL";
           else
-            fmt << ::std::clamp(this->as_double(), -DBL_MAX, DBL_MAX);
+            fmt << ::rocket::clamp(this->as_double(), -DBL_MAX, DBL_MAX);
         }
         break;
 

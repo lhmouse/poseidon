@@ -4,6 +4,7 @@
 #include "xprecompiled.hpp"
 #include "utils.hpp"
 #include "static/logger.hpp"
+#include <algorithm>
 #include <openssl/rand.h>
 #include <openssl/err.h>
 #define UNW_LOCAL_ONLY  1

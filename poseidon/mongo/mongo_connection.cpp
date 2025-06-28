@@ -4,6 +4,7 @@
 #include "../xprecompiled.hpp"
 #include "mongo_connection.hpp"
 #include "../utils.hpp"
+#include <forward_list>
 namespace poseidon {
 
 Mongo_Connection::

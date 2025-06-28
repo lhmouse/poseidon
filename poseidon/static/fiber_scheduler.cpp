@@ -7,6 +7,7 @@
 #include "../fiber/abstract_fiber.hpp"
 #include "../fiber/abstract_future.hpp"
 #include "../utils.hpp"
+#include <algorithm>
 #include <time.h>  // clock_gettime()
 #include <sys/resource.h>  // getrlimit()
 #include <sys/mman.h>  // mmap(), munmap()

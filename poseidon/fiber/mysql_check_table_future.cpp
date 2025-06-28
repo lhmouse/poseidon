@@ -220,7 +220,7 @@ do_on_abstract_future_initialize()
     uint32_t idx_nullable = UINT32_MAX;
     uint32_t idx_default_value = UINT32_MAX;
     uint32_t idx_extra = UINT32_MAX;
-    ::std::map<cow_string, exColumn> excolumns;
+    cow_dictionary<exColumn> excolumns;
 
     for(uint32_t t = 0;  t != fields.size();  ++t)
       if(fields[t]== "Field")
@@ -250,7 +250,7 @@ do_on_abstract_future_initialize()
     uint32_t idx_non_unique = UINT32_MAX;
     uint32_t idx_column_name = UINT32_MAX;
     uint32_t idx_seq_in_index = UINT32_MAX;
-    ::std::map<cow_string, exIndex> exindexes;
+    cow_dictionary<exIndex> exindexes;
 
     for(uint32_t t = 0;  t != fields.size();  ++t)
       if(fields[t] == "Key_name")
