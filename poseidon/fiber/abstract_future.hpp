@@ -47,6 +47,10 @@ class Abstract_Future
     void
     do_abstract_future_initialize_once();
 
+    // This is the out-of-line implementation of `check_success()`.
+    void
+    do_abstract_future_check_success() const;
+
   public:
     Abstract_Future(const Abstract_Future&) = delete;
     Abstract_Future& operator=(const Abstract_Future&) & = delete;
@@ -65,7 +69,11 @@ class Abstract_Future
     // Checks whether this future has been initialized. If an exception has been
     // caught and saved, it is rethrown.
     void
-    check_success() const;
+    check_success() const
+      {
+        if(!this->m_init.load())
+          this->do_abstract_future_check_success();
+      }
   };
 
 }  // namespace poseidon
