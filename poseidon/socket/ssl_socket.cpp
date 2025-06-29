@@ -104,7 +104,7 @@ do_abstract_socket_on_closed()
 
 void
 SSL_Socket::
-do_abstract_socket_on_readable(bool rdhup)
+do_abstract_socket_on_readable()
   {
     recursive_mutex::unique_lock io_lock;
     auto& queue = this->do_abstract_socket_lock_read_queue(io_lock);
@@ -146,7 +146,7 @@ do_abstract_socket_on_readable(bool rdhup)
           }
 
       queue.accept(nread);
-      bool eof = rdhup || (ret <= 0);
+      bool eof = ret <= 0;
 
       try {
         // Call the user-defined data callback.

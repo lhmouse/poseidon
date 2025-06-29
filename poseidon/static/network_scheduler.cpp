@@ -407,7 +407,7 @@ thread_loop()
           socket->do_abstract_socket_on_writeable();
 
         if(pev.events & EPOLLIN)
-          socket->do_abstract_socket_on_readable(pev.events & EPOLLRDHUP);
+          socket->do_abstract_socket_on_readable();
 
         if(pev.events & EPOLLHUP) {
           socket->m_state.store(socket_closed);
@@ -437,7 +437,7 @@ thread_loop()
       if(should_throttle)
         pev.events = EPOLLOUT;  // output-only, level-triggered
       else
-        pev.events = EPOLLIN | EPOLLRDHUP | EPOLLOUT | EPOLLET;
+        pev.events = EPOLLIN |  EPOLLOUT | EPOLLET;
 
       if(::epoll_ctl(this->m_epoll_fd, EPOLL_CTL_MOD, socket->m_fd, &pev) != 0)
         POSEIDON_LOG_FATAL((
@@ -489,7 +489,7 @@ insert_weak(const shptr<Abstract_Socket>& socket)
 
     // Insert the socket for polling.
     ::epoll_event pev;
-    pev.events = EPOLLIN | EPOLLRDHUP | EPOLLOUT | EPOLLET;
+    pev.events = EPOLLIN | EPOLLOUT | EPOLLET;
     pev.data.ptr = socket.get();
     if(::epoll_ctl(this->m_epoll_fd, EPOLL_CTL_ADD, socket->m_fd, &pev) != 0)
       POSEIDON_THROW((

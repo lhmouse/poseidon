@@ -32,7 +32,7 @@ class TCP_Acceptor
 
     virtual
     void
-    do_abstract_socket_on_readable(bool rdhup) override;
+    do_abstract_socket_on_readable() override;
 
     virtual
     void

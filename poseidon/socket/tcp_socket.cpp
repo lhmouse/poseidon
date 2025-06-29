@@ -39,7 +39,7 @@ do_abstract_socket_on_closed()
 
 void
 TCP_Socket::
-do_abstract_socket_on_readable(bool rdhup)
+do_abstract_socket_on_readable()
   {
     recursive_mutex::unique_lock io_lock;
     auto& queue = this->do_abstract_socket_lock_read_queue(io_lock);
@@ -64,7 +64,7 @@ do_abstract_socket_on_readable(bool rdhup)
       }
 
       queue.accept(static_cast<size_t>(ior));
-      bool eof = rdhup || (ior == 0);
+      bool eof = ior == 0;
 
       try {
         // Call the user-defined data callback.
