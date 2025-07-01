@@ -114,19 +114,20 @@ do_get_pooled_connection_opt(seconds idle_timeout, const cow_string& service_uri
     plain_mutex::unique_lock lock(this->m_pool_mutex);
     const steady_time now = steady_clock::now();
 
+    // Look for a matching connection.
+    uniptr<Mongo_Connection> conn;
+    for(auto pos = this->m_pool.mut_begin();  pos != this->m_pool.end();  ++pos)
+      if(pos->conn->m_service_uri == service_uri) {
+        conn.swap(pos->conn);
+        this->m_pool.erase(pos);
+        break;
+      }
+
     // Close idle connections.
     while(!this->m_pool.empty() && (now - this->m_pool.back().time > idle_timeout))
       this->m_pool.pop_back();
 
-    // Look for a matching connection.
-    for(auto pos = this->m_pool.mut_begin();  pos != this->m_pool.end();  ++pos)
-      if(pos->conn->m_service_uri == service_uri) {
-        auto conn = move(pos->conn);
-        this->m_pool.erase(pos);
-        return conn;
-      }
-
-    return nullptr;
+    return conn;
   }
 
 uniptr<Mongo_Connection>
