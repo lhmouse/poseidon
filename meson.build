@@ -221,7 +221,8 @@ import('pkgconfig').generate(lib_poseidon,
 #===========================================================
 # Rules for 'bin/poseidon'
 #===========================================================
-executable('poseidon', 'poseidon/main.cpp',
+executable('poseidon',
+      sources: [ 'poseidon/main.cpp' ],
       cpp_pch: 'poseidon/xprecompiled.hpp',
       dependencies: [ dep_pthread, dep_asteria, dep_taxon ],
       link_with: lib_poseidon,
@@ -237,7 +238,8 @@ install_data(poseidon_etc, install_dir: '.', preserve_path: true)
 # Rules for example libraries
 #===========================================================
 foreach src : example_src
-  shared_module('poseidon-' + src.replace('.cpp', '').underscorify(), src,
+  shared_module('poseidon-' + src.replace('.cpp', '').underscorify(),
+                sources: [ src ],
                 link_with: lib_poseidon,
                 install: true)
 endforeach
@@ -261,11 +263,12 @@ foreach src : test_src
     test_deps += [ dep_hiredis ]
   endif
 
-  test_exe = executable(src.underscorify(), src,
-      dependencies: test_deps,
-      link_with: lib_poseidon,
-      build_by_default: false,
-      install: false)
+  test_exe = executable(src.underscorify(),
+                        sources: [ src ],
+                        dependencies: test_deps,
+                        link_with: lib_poseidon,
+                        build_by_default: false,
+                        install: false)
 
   test('..' / src, test_exe)
 endforeach
