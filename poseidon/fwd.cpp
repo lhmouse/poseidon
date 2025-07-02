@@ -9,10 +9,11 @@
 #include "static/timer_scheduler.hpp"
 #include "static/task_scheduler.hpp"
 #include "static/network_scheduler.hpp"
-#include <locale.h>
 #include "static/mysql_connector.hpp"
 #include "static/mongo_connector.hpp"
 #include "static/redis_connector.hpp"
+#include <asteria/utils.hpp>
+#include <locale.h>
 namespace poseidon {
 namespace {
 
@@ -23,7 +24,7 @@ do_create_c_locale()
     if(!loc)
       loc = ::newlocale(0, "C", nullptr);
     if(!loc)
-      ::std::terminate();
+      ASTERIA_TERMINATE(("Could not initialize C locale: ${errno:full}"));
     return loc;
   }
 
@@ -32,7 +33,7 @@ do_get_hostname()
   {
     char str[HOST_NAME_MAX];
     if(::gethostname(str, sizeof(str)) != 0)
-      ::std::terminate();
+      ASTERIA_TERMINATE(("Could not read hostname: ${errno:full}"));
     return cow_string(str, ::strlen(str));
   }
 
@@ -44,16 +45,14 @@ const cow_string empty_cow_string;
 const phcow_string empty_phcow_string;
 
 atomic_relaxed<int> exit_signal;
-Main_Config& main_config = *new Main_Config;
-Logger& logger = *new Logger;
-
-Timer_Scheduler& timer_scheduler = *new Timer_Scheduler;
-Task_Scheduler& task_scheduler = *new Task_Scheduler;
-Network_Scheduler& network_scheduler = *new Network_Scheduler;
-Fiber_Scheduler& fiber_scheduler = *new Fiber_Scheduler;
-
-MySQL_Connector& mysql_connector = *new MySQL_Connector;
-Mongo_Connector& mongo_connector = *new Mongo_Connector;
-Redis_Connector& redis_connector = *new Redis_Connector;
+Main_Config main_config;
+Logger logger;
+Timer_Scheduler timer_scheduler;
+Task_Scheduler task_scheduler;
+Network_Scheduler network_scheduler;
+Fiber_Scheduler fiber_scheduler;
+MySQL_Connector mysql_connector;
+Mongo_Connector mongo_connector;
+Redis_Connector redis_connector;
 
 }  // namespace poseidon

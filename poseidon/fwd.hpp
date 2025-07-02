@@ -516,17 +516,15 @@ extern const cow_string empty_cow_string;
 extern const phcow_string empty_phcow_string;
 
 extern atomic_relaxed<int> exit_signal;
-extern class Main_Config& main_config;
-extern class Logger& logger;
-
-extern class Timer_Scheduler& timer_scheduler;
-extern class Task_Scheduler& task_scheduler;
-extern class Network_Scheduler& network_scheduler;
-extern class Fiber_Scheduler& fiber_scheduler;
-
-extern class MySQL_Connector& mysql_connector;
-extern class Mongo_Connector& mongo_connector;
-extern class Redis_Connector& redis_connector;
+extern class Main_Config main_config;
+extern class Logger logger;
+extern class Timer_Scheduler timer_scheduler;
+extern class Task_Scheduler task_scheduler;
+extern class Network_Scheduler network_scheduler;
+extern class Fiber_Scheduler fiber_scheduler;
+extern class MySQL_Connector mysql_connector;
+extern class Mongo_Connector mongo_connector;
+extern class Redis_Connector redis_connector;
 
 // Entry point procedure for modules
 // This function is to be defined by users. It will be called after a module
