@@ -335,9 +335,8 @@ thread_loop()
     lock.unlock();
 
     lock.lock(this->m_pq_mutex);
-    const int signal = exit_signal.load();
     const steady_time now = steady_clock::now();
-
+    const int signal = exit_signal.load();
     if(signal == 0) {
       int64_t timeout_ns = INT_MAX;
       bool remake_heap = false;
