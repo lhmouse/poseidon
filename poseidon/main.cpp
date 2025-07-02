@@ -104,6 +104,7 @@ struct Command_Line_Options
   };
 
 // They are declared here for convenience.
+atomic_relaxed<int> exit_signal;
 Command_Line_Options cmdline;
 unique_posix_fd daemon_pipe_wfd;
 unique_posix_fd pid_file_fd;
@@ -570,13 +571,12 @@ main(int argc, char** argv)
     do_daemonize_finish();
     logger.synchronize();
 
-    // Schedule fibers if there is something to do, or no stop signal has
-    // been received.
-    while((fiber_scheduler.size() != 0) || (exit_signal.load() == 0))
+    // Schedule fibers until a stop signal has been received.
+    int s1;
+    while((s1 = exit_signal.load()) == 0)
       fiber_scheduler.thread_loop();
 
-    int sig = exit_signal.load();
-    POSEIDON_LOG_INFO(("Shutting down (signal $1: $2)"), sig, ::strsignal(sig));
+    POSEIDON_LOG_INFO(("Shutting down (signal $1: $2)"), s1, ::strsignal(s1));
     do_exit_printf(exit_success);
   }
   catch(exception& stdex) {

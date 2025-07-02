@@ -336,40 +336,37 @@ thread_loop()
 
     lock.lock(this->m_pq_mutex);
     const steady_time now = steady_clock::now();
-    const int signal = exit_signal.load();
-    if(signal == 0) {
-      int64_t timeout_ns = INT_MAX;
-      bool remake_heap = false;
-
+    nanoseconds time_to_wait = 999ms;
+    if(!this->m_pq.empty())
+      time_to_wait = this->m_pq.front()->check_time - now;
+    if(time_to_wait > 0ms) {
       // Rebuild the heap when there is nothing to do. `async_time` can be
-      // modified by other threads arbitrarily, so has to be copied to somewhere
-      // safe first.
-      if(!this->m_pq.empty()) {
-        timeout_ns = duration_cast<nanoseconds>(this->m_pq.front()->check_time - now).count();
-        if(timeout_ns > 0) {
-          for(const auto& ptr : this->m_pq) {
-            auto async_time = ptr->async_time.load();
-            if(ptr->check_time != async_time) {
-              remake_heap = true;
-              ptr->check_time = async_time;
-            }
-          }
-
-          if(remake_heap) {
-            ::std::make_heap(this->m_pq.mut_begin(), this->m_pq.mut_end(), s_fiber_comparator);
-            timeout_ns = duration_cast<nanoseconds>(this->m_pq.front()->check_time - now).count();
-          }
+      // modified by other threads arbitrarily, so it has to be copied to
+      // somewhere safe first.
+      bool remake_heap = false;
+      for(const auto& ptr : this->m_pq) {
+        auto async_time = ptr->async_time.load();
+        if(ptr->check_time != async_time) {
+          remake_heap = true;
+          ptr->check_time = async_time;
         }
       }
 
-      // Calculate the duration to wait, using an exponential backoff algorithm.
-      timeout_ns = min(this->m_pq_wait.tv_nsec * 9 + 7, timeout_ns);
-      this->m_pq_wait.tv_nsec = clamp_cast<long>(timeout_ns, 0, 200'000000);
-      if(this->m_pq_wait.tv_nsec != 0) {
-        lock.unlock();
+      if(remake_heap) {
+        POSEIDON_LOG_TRACE(("Remaking heap: size = `$1`"), this->m_pq.size());
+        ::std::make_heap(this->m_pq.mut_begin(), this->m_pq.mut_end(), s_fiber_comparator);
+        time_to_wait = this->m_pq.front()->check_time - now;
+      }
 
-        ROCKET_ASSERT(this->m_pq_wait.tv_sec == 0);
-        ::nanosleep(&(this->m_pq_wait), nullptr);
+      time_to_wait = ::rocket::min(time_to_wait, this->m_pq_wait * 2 + 1us);
+      this->m_pq_wait = ::rocket::clamp(time_to_wait, 0ms, 500ms);
+      if(this->m_pq_wait > 0ms) {
+        POSEIDON_LOG_TRACE(("Going to sleep for $1"), this->m_pq_wait);
+        struct timespec ts;
+        ts.tv_sec = 0;
+        ts.tv_nsec = this->m_pq_wait.count();
+        lock.unlock();
+        ::nanosleep(&ts, nullptr);
         return;
       }
     }
@@ -412,7 +409,7 @@ thread_loop()
 
       // Wait for the future. In case of a shutdown request or timeout, ignore
       // the future and move on anyway.
-      if((signal == 0) && !should_fail && !futr->m_init.load())
+      if(!should_fail && !futr->m_init.load())
         return;
     }
 

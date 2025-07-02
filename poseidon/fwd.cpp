@@ -44,7 +44,6 @@ const cow_string hostname = do_get_hostname();
 const cow_string empty_cow_string;
 const phcow_string empty_phcow_string;
 
-atomic_relaxed<int> exit_signal;
 Main_Config main_config;
 Logger logger;
 Timer_Scheduler timer_scheduler;

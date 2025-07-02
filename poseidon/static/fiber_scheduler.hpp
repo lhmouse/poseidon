@@ -19,7 +19,7 @@ class Fiber_Scheduler
 
     mutable plain_mutex m_pq_mutex;
     cow_vector<shptr<X_Queued_Fiber>> m_pq;
-    struct timespec m_pq_wait = { };
+    nanoseconds m_pq_wait;
 
   public:
     // Constructs an empty scheduler.
