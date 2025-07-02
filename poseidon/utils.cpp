@@ -293,7 +293,7 @@ random_bytes(void* ptr, size_t size) noexcept
     if(::RAND_bytes_ex(ctx, static_cast<unsigned char*>(ptr), size, 0) != 1)
       ASTERIA_TERMINATE((
           "Could not generate random bytes: $1",
-          "[`RAND_bytes()` failed]"),
+          "[`RAND_bytes_ex()` failed]"),
           ::ERR_reason_error_string(::ERR_get_error()));
   }
 
