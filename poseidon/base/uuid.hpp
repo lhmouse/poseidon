@@ -23,12 +23,9 @@ class UUID
 
   private:
     union {
-      uint8_t m_uuid[16] = { };
+      ::std::array<uint8_t, 16> m_bytes = { };
       __m128i m_stor;
-      struct {
-        uint64_t m_high;
-        uint64_t m_low;
-      };
+      uint64_t m_quads[2];
     };
 
   public:
@@ -43,24 +40,29 @@ class UUID
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
-        this->m_uuid[0] = f.xh >> 24;
-        this->m_uuid[1] = f.xh >> 16;
-        this->m_uuid[2] = f.xh >> 8;
-        this->m_uuid[3] = f.xh;
-        this->m_uuid[4] = f.xl >> 8;
-        this->m_uuid[5] = f.xl;
-        this->m_uuid[6] = f.y >> 8;
-        this->m_uuid[7] = f.y;
-        this->m_uuid[8] = f.zh >> 8;
-        this->m_uuid[9] = f.zh;
-        this->m_uuid[10] = f.zl >> 40;
-        this->m_uuid[11] = f.zl >> 32;
-        this->m_uuid[12] = f.zl >> 24;
-        this->m_uuid[13] = f.zl >> 16;
-        this->m_uuid[14] = f.zl >> 8;
-        this->m_uuid[15] = f.zl;
+        this->m_bytes[0] = f.xh >> 24;
+        this->m_bytes[1] = f.xh >> 16;
+        this->m_bytes[2] = f.xh >> 8;
+        this->m_bytes[3] = f.xh;
+        this->m_bytes[4] = f.xl >> 8;
+        this->m_bytes[5] = f.xl;
+        this->m_bytes[6] = f.y >> 8;
+        this->m_bytes[7] = f.y;
+        this->m_bytes[8] = f.zh >> 8;
+        this->m_bytes[9] = f.zh;
+        this->m_bytes[10] = f.zl >> 40;
+        this->m_bytes[11] = f.zl >> 32;
+        this->m_bytes[12] = f.zl >> 24;
+        this->m_bytes[13] = f.zl >> 16;
+        this->m_bytes[14] = f.zl >> 8;
+        this->m_bytes[15] = f.zl;
 #pragma GCC diagnostic pop
       }
+
+    // Constructs a UUID from an `std::array`.
+    constexpr
+    UUID(const ::std::array<uint8_t, 16>& bytes) noexcept
+      : m_bytes(bytes)  { }
 
     // Parses a UUID from a string, like `parse()`.
     // An exception is thrown if the UUID string is not valid.
@@ -101,9 +103,14 @@ class UUID
 
     // Get raw bytes.
     constexpr
+    const ::std::array<uint8_t, 16>&
+    as_array() const noexcept
+      { return this->m_bytes;  }
+
+    constexpr
     const uint8_t*
     data() const noexcept
-      { return this->m_uuid;  }
+      { return this->m_bytes.data();  }
 
     constexpr
     size_t
@@ -113,12 +120,12 @@ class UUID
     constexpr
     const uint8_t*
     begin() const noexcept
-      { return this->m_uuid;  }
+      { return this->m_bytes.begin();  }
 
     constexpr
     const uint8_t*
     end() const noexcept
-      { return this->m_uuid + 16;  }
+      { return this->m_bytes.end();  }
 
     ROCKET_PURE
     bool

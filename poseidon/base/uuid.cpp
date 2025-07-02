@@ -4,7 +4,17 @@
 #include "../xprecompiled.hpp"
 #include "uuid.hpp"
 #include "../utils.hpp"
+#include <openssl/rand.h>
+#include <openssl/err.h>
 namespace poseidon {
+namespace {
+
+constexpr UUID s_min = POSEIDON_UUID(00000000,0000,0000,0000,000000000000);
+constexpr UUID s_max = POSEIDON_UUID(ffffffff,ffff,ffff,ffff,ffffffffffff);
+
+atomic_relaxed<uint64_t> s_serial;
+
+}  // namespace
 
 UUID::
 UUID(chars_view str)
@@ -17,50 +27,38 @@ const UUID&
 UUID::
 min() noexcept
   {
-    static constexpr UUID s = POSEIDON_UUID(00000000,0000,0000,0000,000000000000);
-    return s;
+    return s_min;
   }
 
 const UUID&
 UUID::
 max() noexcept
   {
-    static constexpr UUID s = POSEIDON_UUID(ffffffff,ffff,ffff,ffff,ffffffffffff);
-    return s;
+    return s_max;
   }
 
 UUID
 UUID::
 random() noexcept
   {
-    // The UUID shall look like `xxxxxxxx-xxxx-Myyy-Nzzz-zzzzzzzzzzzz`.
-    // First, generate the `xxxxxxxx-xxxx` field. This is the number of 1/30518
-    // seconds since 2001-03-01T00:00:00Z, plus a serial number to keep it
-    // monotonic.
     struct timespec ts;
     ::clock_gettime(CLOCK_REALTIME, &ts);
-    uint64_t high = static_cast<uint64_t>(ts.tv_sec - 983404800) * 30518 << 16;
-    high += static_cast<uint32_t>(ts.tv_nsec) / 32768 << 16;
+    uint64_t ts_pid = (static_cast<uint64_t>(ts.tv_sec - 983404800) * 30518 << 16)
+                      + (static_cast<uint32_t>(ts.tv_nsec) / 32768 << 16)
+                      + (s_serial.xadd(1) << 16)
+                      + 0x4000
+                      + static_cast<uint32_t>(::getpid() & 0x0FFF);
 
-    static atomic_relaxed<uint64_t> s_serial;
-    high += s_serial.xadd(1) << 16;
+    uint64_t random;
+    if(::RAND_bytes(reinterpret_cast<unsigned char*>(&random), 8) != 1)
+      ASTERIA_TERMINATE((
+          "Could not generate random bytes: $1",
+          "[`RAND_bytes()` failed]"),
+          ::ERR_reason_error_string(::ERR_get_error()));
 
-    // Set the `M` field, which is always `4` (UUID version 4).
-    high |= 0x4000;
-
-    // Set the `yyy` field, which is the PID of the current process, truncated
-    // to 12 bits.
-    high |= static_cast<uint32_t>(::getpid()) & 0x0FFF;
-
-    // Generate the `Nzzz-zzzzzzzzzzzz` part.
-    uint64_t low;
-    random_bytes(&low, 8);
-    low >>= 1;
-
-    // Compose the UUID.
     UUID result;
-    result.m_high = ROCKET_HTOBE64(high);
-    result.m_low = ROCKET_HTOBE64(low);
+    result.m_quads[0] = ROCKET_HTOBE64(ts_pid);
+    result.m_quads[1] = ROCKET_HTOBE64(random >> 1);
     return result;
   }
 
@@ -109,8 +107,8 @@ parse_partial(const char* str) noexcept
           low = low << 4 | val;
       }
 
-    this->m_high = ROCKET_HTOBE64(high);
-    this->m_low = ROCKET_HTOBE64(low);
+    this->m_quads[0] = ROCKET_HTOBE64(high);
+    this->m_quads[1] = ROCKET_HTOBE64(low);
     return 36;
   }
 
@@ -133,7 +131,7 @@ print_partial(char* str) const noexcept
     // * str    : xxxxxxxx-xxxx-Myyy-Nzzz-zzzzzzzzzzzz.
     // * hexstr : xxxxxxxxxxxxMyyyNzzzzzzzzzzzzzzz.
     char hexstr[33];
-    hex_encode_16_partial(hexstr, this->m_uuid);
+    hex_encode_16_partial(hexstr, this->m_bytes.data());
 
     str[36] = 0;
     ::memcpy(str + 20, hexstr + 16, 16);
