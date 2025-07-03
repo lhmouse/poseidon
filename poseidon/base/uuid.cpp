@@ -84,7 +84,7 @@ parse_partial(const char* str) noexcept
     uint64_t low = 0;
 
     for(uint32_t k = 0;  k != 36;  ++k)
-      if((0b100001000010000100000000U >> k) & 1) {
+      if((0b100001000010000100000000ULL >> k) & 1) {
         // dash
         if(str[k] != '-')
           return 0;
