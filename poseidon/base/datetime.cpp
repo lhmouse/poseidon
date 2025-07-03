@@ -148,7 +148,7 @@ parse(chars_view str)
       if(size_t aclen = this->parse_cookie_partial(str.p))
         return aclen;
 
-    if(str.n >= 20)
+    if(str.n >= 19)
       if(size_t aclen = this->parse_git_partial(str.p))
         return aclen;
 

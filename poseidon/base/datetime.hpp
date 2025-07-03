@@ -81,9 +81,10 @@ class DateTime
     parse_cookie_partial(const char* str);
 
     // Tries parsing a general date/time in the Git format. An example is
-    // `1994-11-06 16:49:37 +0800`. The time zone specification is optional. This
-    // function returns the number of characters that have been accepted, which
-    // is at most 25 upon success, and 0 upon failure.
+    // `1994-11-06 16:49:37 +0800`. An optional time zone specification may be
+    // specified, and if it's not, it's assumed to be the local time zone of the
+    // current process. This function returns the number of characters that have
+    // been accepted, which is within [19,25] upon success, and 0 upon failure.
     size_t
     parse_git_partial(const char* str);
 
@@ -123,9 +124,10 @@ class DateTime
     print_cookie_partial(char* str) const noexcept;
 
     // Converts this timestamp to its Git format, with a null terminator. There
-    // shall be at least 26 characters in the buffer that `str` points to.
-    // This function returns the number of characters that have been written,
-    // excluding the null terminator, which is always 25.
+    // shall be at least 26 characters in the buffer that `str` points to. A
+    // time zone specification is always appended. This function returns the
+    // number of characters that have been written, excluding the null
+    // terminator, which is always 25.
     size_t
     print_git_partial(char* str) const noexcept;
 
