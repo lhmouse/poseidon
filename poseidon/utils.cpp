@@ -65,10 +65,6 @@ do_create_runtime_error(const char* func, const char* file, uint32_t line,
       nump.put_DU(nframes);
       static_vector<char, 8> numfield(nump.size(), ' ');
 
-      // Don't leak the buffer that will be returned by `__cxa_demangle()`.
-      ::rocket::unique_ptr<char, void (void*)> demangle_buf(nullptr, ::free);
-      size_t demangle_size = 0;
-
       // Append frames to the exception message.
       nframes = 0;
       unw_cur = unw_top;
@@ -90,20 +86,9 @@ do_create_runtime_error(const char* func, const char* file, uint32_t line,
         if(::unw_get_proc_name(&unw_cur, unw_name, sizeof(unw_name), &unw_offset) != 0)
           sbuf += " (unknown)";
         else {
-          // Demangle the function name. If `__cxa_demangle()` returns a
-          // non-null pointer, `demangle_buf` will have been reallocated to
-          // `fn` which will point to the demangled name.
-          char* fn = ::abi::__cxa_demangle(unw_name, demangle_buf, &demangle_size, nullptr);
-          if(!fn)
-            fn = unw_name;
-          else {
-            demangle_buf.release();
-            demangle_buf.reset(fn);
-          }
-
           // * function signature and offset
           sbuf += " `";
-          sbuf += fn;
+          sbuf += unw_name;
           if(unw_offset > 0) {
             sbuf += "`+";
             nump.put_XU(unw_offset);
