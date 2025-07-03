@@ -138,19 +138,22 @@ print_to(tinyfmt& fmt) const
           char temp[40];
           ::memcpy(temp, "{$oid:\"", 8);
           ::bson_oid_to_string(&(pval->as_oid()), temp + 7);
-          ::memcpy(temp + 31, "\"}\0", 4);
-          fmt << temp;
+          ::memcpy(temp + 31, "\"}_", 4);
+          fmt.putn(temp, 33);
         }
         break;
 
       case mongo_value_datetime:
         {
-          // `{$date:"1994-11-06T08:49:37.123Z}"}`
-          char temp[40];
-          ::memcpy(temp, "{$date:\"", 8);
-          pval->as_datetime().print_iso8601_ns_partial(temp + 8);
-          ::memcpy(temp + 31, "Z\"}", 4);
-          fmt.putn(temp, 34);
+          // `{$date:{$numberLong:"784111777123"}}`
+          char temp[80];
+          ::memcpy(temp, "{$date:{$numberLong:\"__", 24);
+          ::rocket::ascii_numput nump;
+          auto nano_tp = time_point_cast<duration<double, ::std::nano>>(pval->as_system_time());
+          nump.put_DI(static_cast<int64_t>(nano_tp.time_since_epoch().count() * 0.000001));
+          char* eptr = xmempcpy(temp + 21, nump.data(), nump.size());
+          eptr = xmempcpy(eptr, "\"}}", 4) - 1;
+          fmt.putn(temp, static_cast<size_t>(eptr - temp));
         }
         break;
 
