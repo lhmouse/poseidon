@@ -386,6 +386,7 @@ thread_loop()
     ep->async_time.cmpxchg(ep->check_time, next_check_time);
     ep->check_time = next_check_time;
     ::std::push_heap(this->m_pq.mut_begin(), this->m_pq.mut_end(), s_fiber_comparator);
+
     recursive_mutex::unique_lock sched_lock(ep->fiber->m_sched_mutex);
     ep->fiber->m_scheduler = this;
     ep->fiber->m_sched_yield_fn = do_fiber_yield_function;

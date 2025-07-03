@@ -75,10 +75,9 @@ thread_loop()
       this->m_pq.mut_back().next += this->m_pq.back().period;
       ::std::push_heap(this->m_pq.mut_begin(), this->m_pq.mut_end(), timer_comparator);
     }
-    else {
-      // Delete the one-shot timer.
+    else
       this->m_pq.pop_back();
-    }
+
     recursive_mutex::unique_lock sched_lock(timer->m_sched_mutex);
     timer->m_scheduler = this;
     lock.unlock();

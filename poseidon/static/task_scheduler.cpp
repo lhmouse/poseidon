@@ -32,6 +32,7 @@ thread_loop()
     this->m_queue_front.pop_back();
     if(!task || task->m_abandoned.load())
       return;
+
     recursive_mutex::unique_lock sched_lock(task->m_sched_mutex);
     task->m_scheduler = this;
     lock.unlock();
