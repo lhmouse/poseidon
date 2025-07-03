@@ -80,12 +80,12 @@ class DateTime
     size_t
     parse_cookie_partial(const char* str);
 
-    // Tries parsing a general date/time in the ISO 8601 format. An example is
-    // `1994-11-06T08:49:37Z`. Only the `Z` time zone specifier is allowed. This
+    // Tries parsing a general date/time in the Git format. An example is
+    // `1994-11-06 16:49:37 +0800`. The time zone specification is optional. This
     // function returns the number of characters that have been accepted, which
-    // is 20 upon success, and 0 upon failure.
+    // is at most 25 upon success, and 0 upon failure.
     size_t
-    parse_iso8601_partial(const char* str);
+    parse_git_partial(const char* str);
 
     // Tries parsing an HTTP date/time in any of the formats above. If a date/time
     // string has been parsed, the number of characters that have been consumed
@@ -122,22 +122,14 @@ class DateTime
     size_t
     print_cookie_partial(char* str) const noexcept;
 
-    // Converts this timestamp to its ISO 8601 format, with a null terminator.
-    // There shall be at least 21 characters in the buffer that `str` points to.
+    // Converts this timestamp to its Git format, with a null terminator. There
+    // shall be at least 26 characters in the buffer that `str` points to.
     // This function returns the number of characters that have been written,
-    // excluding the null terminator, which is always 20.
+    // excluding the null terminator, which is always 25.
     size_t
-    print_iso8601_partial(char* str) const noexcept;
+    print_git_partial(char* str) const noexcept;
 
-    // Converts this timestamp to its ISO 8601 format with nanoseconds, with a
-    // null terminator. There shall be at least 31 characters in the buffer
-    // that `str` points to. This function returns the number of characters
-    // that have been written, excluding the null terminator, which is always
-    // 30.
-    size_t
-    print_iso8601_ns_partial(char* str) const noexcept;
-
-    // Converts this timestamp to its ISO 8601 form.
+    // Converts this timestamp to its Git format.
     tinyfmt&
     print_to(tinyfmt& fmt) const;
 

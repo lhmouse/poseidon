@@ -53,13 +53,12 @@ print_to(tinyfmt& fmt) const
 
       case mysql_value_datetime:
         {
-          // `'1994-11-06 08:49:37.123'`
+          // `'1994-11-06 08:49:37'`
           char temp[32];
           temp[0] = '\'';
-          this->as_datetime().print_iso8601_ns_partial(temp + 1);
-          temp[11] = ' ';
-          temp[24] = '\'';
-          fmt.putn(temp, 25);
+          this->as_datetime().print_git_partial(temp + 1);
+          temp[20] = '\'';
+          fmt.putn(temp, 21);
         }
         break;
 

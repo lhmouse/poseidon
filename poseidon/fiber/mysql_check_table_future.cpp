@@ -448,15 +448,8 @@ do_on_abstract_future_initialize()
                   goto do_alter_table_column_;
 
                 char def_str[32];
-                column.default_value.as_datetime().print_iso8601_partial(def_str);
-                def_str[10] = ' ';
-                ::memcpy(def_str + 19, ".000000", 8);
-                size_t cmp_len = ex->second.default_value.as_blob_size();
-
-                if((cmp_len < 19) || (cmp_len > 26))
-                  goto do_alter_table_column_;
-
-                if(::memcmp(ex->second.default_value.as_blob_data(), def_str, cmp_len) != 0)
+                column.default_value.as_datetime().print_git_partial(def_str);
+                if(::strncmp(ex->second.default_value.as_blob_data(), def_str, 19) != 0)
                   goto do_alter_table_column_;
               }
 

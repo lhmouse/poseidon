@@ -8,6 +8,11 @@ using namespace ::poseidon;
 int
 main()
   {
+    ::setenv("TZ", "TEST+01", true);
+    ::tzset();
+    POSEIDON_TEST_CHECK(::timezone == +3600);
+    POSEIDON_TEST_CHECK(::daylight == 0);
+
     MySQL_Value hval;
     POSEIDON_TEST_CHECK(hval.is_null());
     POSEIDON_TEST_CHECK(hval.to_string() == "NULL");
@@ -33,9 +38,9 @@ main()
     POSEIDON_TEST_CHECK(hval.as_blob() == "meowMEOW");
     POSEIDON_TEST_CHECK(hval.to_string() == "\'meowMEOW\'");
 
-    hval = system_clock::from_time_t(1469118411) + milliseconds(678);
+    hval = system_clock::from_time_t(1469118411);  // `2016-07-21 15:26:51 -0100`
     POSEIDON_TEST_CHECK(hval.is_datetime());
-    POSEIDON_TEST_CHECK(hval.to_string() == "\'2016-07-21 16:26:51.678\'");
+    POSEIDON_TEST_CHECK(hval.to_string() == "\'2016-07-21 15:26:51\'");
 
     hval.clear();
     POSEIDON_TEST_CHECK(hval.is_null());
