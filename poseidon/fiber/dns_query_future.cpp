@@ -25,17 +25,19 @@ DNS_Query_Future::
 do_on_abstract_future_initialize()
   {
     // Perform DNS query. This will block the worker thread.
+    ::addrinfo* res = nullptr;
+    ::rocket::unique_ptr<::addrinfo, void (::addrinfo*)> guard(res, ::freeaddrinfo);
+
     ::addrinfo hints = { };
     hints.ai_flags = AI_V4MAPPED | AI_ADDRCONFIG | AI_NUMERICSERV;
-    ::addrinfo* res;
     int err = ::getaddrinfo(this->m_host.safe_c_str(), nullptr, &hints, &res);
-    if(err != 0)
+    if(err == 0)
+      guard.reset(res);
+    else
       POSEIDON_THROW((
           "Could not resolve host `$1`",
           "[`getaddrinfo()` failed: $2]"),
           this->m_host, ::gai_strerror(err));
-
-    const auto guard = make_unique_handle(res, ::freeaddrinfo);
 
     for(res = guard;  res;  res = res->ai_next) {
       IPv6_Address addr;

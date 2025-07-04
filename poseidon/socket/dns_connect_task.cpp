@@ -37,17 +37,19 @@ do_on_abstract_task_execute()
 
     try {
       // Perform DNS query. This will block the worker thread.
+      ::addrinfo* res = nullptr;
+      ::rocket::unique_ptr<::addrinfo, void (::addrinfo*)> guard(res, ::freeaddrinfo);
+
       ::addrinfo hints = { };
       hints.ai_flags = AI_V4MAPPED | AI_ADDRCONFIG | AI_NUMERICSERV;
-      ::addrinfo* res;
       int err = ::getaddrinfo(this->m_host.safe_c_str(), nullptr, &hints, &res);
-      if(err != 0)
+      if(err == 0)
+        guard.reset(res);
+      else
         POSEIDON_THROW((
             "Could not resolve host `$1`",
             "[`getaddrinfo()` failed: $2]"),
             this->m_host, ::gai_strerror(err));
-
-      const auto guard = make_unique_handle(res, ::freeaddrinfo);
 
       socket = this->m_wsock.lock();
       if(!socket)
@@ -79,10 +81,10 @@ do_on_abstract_task_execute()
 
       // Insert the socket, only after `connect()` has been called. Even in
       // the case of a failure, a closure notification shall be delivered.
-      if(!success)
-        POSEIDON_LOG_WARN(("DNS lookup failed for `$1`"), this->m_host);
-      else
+      if(success)
         this->m_scheduler->insert_weak(socket);
+      else
+        POSEIDON_LOG_WARN(("DNS lookup failed for `$1`"), this->m_host);
     }
     catch(exception& stdex) {
       POSEIDON_LOG_ERROR(("DNS lookup error: $1"), stdex);
