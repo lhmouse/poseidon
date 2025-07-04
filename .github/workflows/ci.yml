@@ -11,41 +11,45 @@ concurrency:
 on:
   push:
     branches:
-    - master
-    - releases/*
+      - master
+      - releases/*
 
   pull_request:
     branches:
-    - master
+      - master
 
 jobs:
   ubuntu:
     name: Ubuntu native build (x86-64)
     runs-on: ubuntu-24.04
 
+    env:
+      CC: gcc-10
+      CXX: g++-10
+
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Install dependencies
-      run: >-
-           sudo apt-get install -y --no-install-recommends g++ meson
-           ninja-build python3 python3-pip pkgconf zlib1g-dev uuid-dev
-           lib{edit,pcre2,ssl,unwind,mysqlclient,mongoc,hiredis}-dev
+      - name: Install dependencies
+        run: >-
+             sudo apt-get install -y --no-install-recommends g++-10 meson
+             ninja-build python3 python3-pip pkgconf zlib1g-dev uuid-dev
+             lib{edit,pcre2,ssl,unwind,mysqlclient,mongoc,hiredis}-dev
 
-    - name: Build and install submodules
-      run: >-
-           git submodule update --init
-           && (cd libmongoc-dev-symlinks && ./makedeb.sh && sudo dpkg -i *.deb)
-           && (cd asteria && ./makedeb.sh && sudo dpkg -i *.deb)
-           && (cd http-parser && ./makedeb.sh && sudo dpkg -i *.deb)
-           && (cd taxon && ./makedeb.sh && sudo dpkg -i *.deb)
+      - name: Build and install submodules
+        run: >-
+             git submodule update --init
+             && (cd libmongoc-dev-symlinks && ./makedeb.sh && sudo dpkg -i *.deb)
+             && (cd asteria && ./makedeb.sh && sudo dpkg -i *.deb)
+             && (cd http-parser && ./makedeb.sh && sudo dpkg -i *.deb)
+             && (cd taxon && ./makedeb.sh && sudo dpkg -i *.deb)
 
-    - name: Configure
-      run: >-
-           meson setup -Denable-debug-checks=true -Doptimization=1 build_ci
+      - name: Configure
+        run: >-
+             meson setup -Denable-debug-checks=true -Doptimization=1 build_ci
 
-    - name: Build
-      run: meson compile -Cbuild_ci
+      - name: Build
+        run: meson compile -Cbuild_ci
 
-    - name: Run tests (full)
-      run: meson test -Cbuild_ci --print-errorlogs
+      - name: Run tests (full)
+        run: meson test -Cbuild_ci --print-errorlogs
