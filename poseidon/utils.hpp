@@ -33,7 +33,7 @@ namespace poseidon {
       }  \
       catch(...) { }  \
       return true;  \
-    } (ROCKET_FUNCSIG)))
+    } (__func__)))
 
 #define POSEIDON_LOG_FATAL(...)   POSEIDON_LOG_(0, __VA_ARGS__)
 #define POSEIDON_LOG_ERROR(...)   POSEIDON_LOG_(1, __VA_ARGS__)
@@ -62,7 +62,7 @@ namespace poseidon {
           &c_Ru6q,  \
           [](::rocket::tinyfmt& fmt_Ko0i, const void* p_5Gae)  \
             { (* static_cast<decltype(c_Ru6q)*>(p_5Gae)) (fmt_Ko0i);  });  \
-    } (ROCKET_FUNCSIG)))
+    } (__func__)))
 
 #define POSEIDON_CATCH_EVERYTHING(...)  \
   do  \
