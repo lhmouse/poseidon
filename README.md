@@ -9,7 +9,7 @@
 3. I/O multiplexing basing on epoll
 4. HTTP and WebSocket with permessage-deflate
 5. Configurable modules
-6. Asynchronous MySQL, MongoDB and Redis access (optional)
+6. Asynchronous MySQL, MongoDB and Redis access
 
 # How to build
 
