@@ -238,16 +238,15 @@ accept_handshake_request(HTTP_S_Headers& resp, const HTTP_C_Headers& req)
     this->m_error_desc = "handshake request invalid";
 
     // Parse request headers from the client.
-    HTTP_Header_Parser hparser;
-
     bool upgrade_ok = false;
     bool ws_version_ok = false;
     Sec_WebSocket sec_ws;
     PerMessage_Deflate pmce;
 
+    HTTP_Header_Parser hparser;
     for(const auto& hr : req.headers)
       if(hr.first == "Connection") {
-        // Connection: close
+        // Connection: Upgrade
         hparser.reload(hr.second.as_string());
         while(hparser.next_element())
           if(hparser.current_name() == "close")
@@ -346,12 +345,11 @@ accept_handshake_response(const HTTP_S_Headers& resp)
     this->m_error_desc = "handshake response invalid";
 
     // Parse request headers from the server.
-    HTTP_Header_Parser hparser;
-
     bool upgrade_ok = false;
     char sec_ws_accept_resp[29] = "";
     PerMessage_Deflate pmce;
 
+    HTTP_Header_Parser hparser;
     for(const auto& hr : resp.headers)
       if(hr.first == "Connection") {
         // Connection: Upgrade
