@@ -83,7 +83,6 @@ do_abstract_socket_on_readable()
 
       if(eof) {
         // Close the connection passively.
-        POSEIDON_LOG_DEBUG(("Received EOF from `$1`"), this->remote_address());
         this->quick_shut_down();
         return;
       }
