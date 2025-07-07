@@ -15,6 +15,12 @@ Config_File() noexcept
   }
 
 Config_File::
+Config_File(const cow_string& conf_path)
+  {
+    this->reload(conf_path);
+  }
+
+Config_File::
 ~Config_File()
   {
   }

@@ -18,6 +18,9 @@ class Config_File
     // Constructs an empty file.
     Config_File() noexcept;
 
+    // Loads the file denoted by `path`.
+    explicit Config_File(const cow_string& conf_path);
+
     Config_File&
     swap(Config_File& other) noexcept
       {
