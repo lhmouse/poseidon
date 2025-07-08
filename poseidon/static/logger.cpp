@@ -234,69 +234,37 @@ reload(const Config_File& conf_file, bool verbose)
       auto& lconf = levels.emplace_back();
       ::snprintf(lconf.tag, sizeof(lconf.tag), "[%s]", name);
 
-      // Read settings.
       ::rocket::tinyfmt_str fmt;
       format(fmt, "logger.$1.color", name);
-      auto conf_value = conf_file.query(fmt.get_string());
-      if(conf_value.is_string())
-        lconf.color = conf_value.as_string();
-      else if(!conf_value.is_null())
-        POSEIDON_THROW((
-            "Invalid `logger.$1.color`: expecting a `string`, got `$2`",
-            "[in configuration file '$3']"),
-            name, conf_value, conf_file.path());
+      auto vstr = conf_file.get_string_opt(fmt.get_string());
+      lconf.color = vstr.value_or(&"");
 
       fmt.clear_string();
       format(fmt, "logger.$1.expendable", name);
-      conf_value = conf_file.query(fmt.get_string());
-      if(conf_value.is_boolean())
-        lconf.expendable = conf_value.as_boolean();
-      else if(!conf_value.is_null())
-        POSEIDON_THROW((
-            "Invalid `logger.$1.expendable`: expecting a `boolean`, got `$2`",
-            "[in configuration file '$3']"),
-            name, conf_value, conf_file.path());
+      auto vbool = conf_file.get_boolean_opt(fmt.get_string());
+      lconf.expendable = vbool.value_or(false);
 
-      ::asteria::V_array files;
-      fmt.clear_string();
-      format(fmt, "logger.$1.files", name);
-      conf_value = conf_file.query(fmt.get_string());
-      if(conf_value.is_array())
-        files = conf_value.as_array();
-      else if(!conf_value.is_null())
-        POSEIDON_THROW((
-            "Invalid `logger.$1.files`: expecting an `array`, got `$2`",
-            "[in configuration file '$3']"),
-            name, conf_value, conf_file.path());
+      bool has_stdout = false;
+      for(uint32_t k = 0;  k < 10;  ++k) {
+        fmt.clear_string();
+        format(fmt, "logger.$1.files[$2]", name, k);
+        vstr = conf_file.get_string_opt(fmt.get_string());
+        if(!vstr)
+          break;
+        lconf.files.emplace_back(*vstr);
+        has_stdout |= (*vstr == "/dev/stdout") || (*vstr == "/dev/stderr");
+      }
 
-      for(size_t k = 0;  k < files.size();  ++k)
-        if(files[k].is_string())
-          lconf.files.emplace_back(files[k].as_string());
-        else if(!files[k].is_null())
-          POSEIDON_THROW((
-              "Invalid `logger.$1.files[$2]`: expecting a `string`, got `$3`",
-              "[in configuration file '$4']"),
-              name, k, files[k], conf_file.path());
+      // In verbose mode, apply `/dev/stdout` to all levels, to make them
+      // always visible.
+      if(verbose && !has_stdout)
+        lconf.files.emplace_back(&"/dev/stdout");
     }
 
     uint32_t level_bits = 0;
-    for(size_t k = 0;  k != levels.size();  ++k) {
-      if(verbose) {
-        // Apply `/dev/stdout` to all levels, so they are all visible.
-        bool has_stdout = false;
-        for(const auto& file : levels[k].files)
-          if((file == "/dev/stdout") || (file == "/dev/stderr"))
-            has_stdout = true;
-
-        if(!has_stdout)
-          levels.mut(k).files.emplace_back(&"/dev/stdout");
-
-        levels.mut(k).expendable = false;
-      }
-
+    for(size_t k = 0;  k != levels.size();  ++k)
       if(levels[k].files.size() != 0)
         level_bits |= 1U << k;
-    }
 
     if(level_bits == 0)
       ::fputs("WARNING: Logger is disabled.\n", stderr);
