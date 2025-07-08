@@ -6,7 +6,6 @@
 #include "http_c_headers.hpp"
 #include "http_s_headers.hpp"
 #include "http_header_parser.hpp"
-#include "../base/config_file.hpp"
 #include "../static/main_config.hpp"
 #include "../socket/enums.hpp"
 #include "../utils.hpp"
@@ -133,24 +132,11 @@ struct PerMessage_Deflate
 WebSocket_Frame_Parser::
 WebSocket_Frame_Parser()
   {
-    const auto conf_file = main_config.copy();
-    auto conf_value = conf_file.query(&"network.http.default_compression_level");
-    if(conf_value.is_integer())
-      this->m_default_compression_level = clamp_cast<int>(conf_value.as_integer(), 0, 9);
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `network.http.default_compression_level`: expecting an `integer`, got `$1`",
-          "[in configuration file '$2']"),
-          conf_value, conf_file.path());
+    auto qval = main_config.copy_integer_opt(&"network.http.default_compression_level", 0, 9);
+    this->m_default_compression_level = static_cast<int>(qval.value_or(6));
 
-    conf_value = conf_file.query(&"network.http.max_websocket_message_length");
-    if(conf_value.is_integer())
-      this->m_max_message_length = clamp_cast<uint32_t>(conf_value.as_integer(), 0x100, 0x10000000);
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `network.http.max_websocket_message_length`: expecting an `integer`, got `$1`",
-          "[in configuration file '$2']"),
-          conf_value, conf_file.path());
+    qval = main_config.copy_integer_opt(&"network.http.max_websocket_message_length", 256, 16777216);
+    this->m_max_message_length = static_cast<uint32_t>(qval.value_or(1048576));
   }
 
 WebSocket_Frame_Parser::

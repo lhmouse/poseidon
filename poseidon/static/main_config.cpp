@@ -36,4 +36,60 @@ copy() noexcept
     return this->m_file;
   }
 
+::asteria::Value
+Main_Config::
+copy_value(chars_view vpath)
+  {
+    plain_mutex::unique_lock lock(this->m_mutex);
+    return this->m_file.query(vpath);
+  }
+
+opt<cow_string>
+Main_Config::
+copy_string_opt(chars_view vpath)
+  {
+    plain_mutex::unique_lock lock(this->m_mutex);
+    return this->m_file.get_string_opt(vpath);
+  }
+
+opt<bool>
+Main_Config::
+copy_boolean_opt(chars_view vpath)
+  {
+    plain_mutex::unique_lock lock(this->m_mutex);
+    return this->m_file.get_boolean_opt(vpath);
+  }
+
+opt<int64_t>
+Main_Config::
+copy_integer_opt(chars_view vpath, int64_t min, int64_t max)
+  {
+    plain_mutex::unique_lock lock(this->m_mutex);
+    return this->m_file.get_integer_opt(vpath, min, max);
+  }
+
+opt<int64_t>
+Main_Config::
+copy_integer_opt(chars_view vpath)
+  {
+    plain_mutex::unique_lock lock(this->m_mutex);
+    return this->m_file.get_integer_opt(vpath);
+  }
+
+opt<double>
+Main_Config::
+copy_real_opt(chars_view vpath, double min, double max)
+  {
+    plain_mutex::unique_lock lock(this->m_mutex);
+    return this->m_file.get_real_opt(vpath, min, max);
+  }
+
+opt<double>
+Main_Config::
+copy_real_opt(chars_view vpath)
+  {
+    plain_mutex::unique_lock lock(this->m_mutex);
+    return this->m_file.get_real_opt(vpath);
+  }
+
 }  // namespace poseidon

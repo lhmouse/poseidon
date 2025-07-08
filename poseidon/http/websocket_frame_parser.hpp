@@ -11,8 +11,8 @@ namespace poseidon {
 class WebSocket_Frame_Parser
   {
   private:
-    int m_default_compression_level = 6;
-    uint32_t m_max_message_length = 1048576;
+    int m_default_compression_level;
+    uint32_t m_max_message_length;
 
     WebSocket_Frame_Header m_frm_header;
     linear_buffer m_frm_payload;

@@ -34,6 +34,41 @@ class Main_Config
     // This function is thread-safe.
     Config_File
     copy() noexcept;
+
+    // Copies a raw value.
+    // This function is thread-safe.
+    ::asteria::Value
+    copy_value(chars_view vpath);
+
+    // Copies a string. If a non-null value exists, it must be a string,
+    // otherwise an exception is thrown.
+    // This function is thread-safe.
+    opt<cow_string>
+    copy_string_opt(chars_view vpath);
+
+    // Copies a boolean value. If a non-null value exists, it must be a boolean,
+    // otherwise an exception is thrown.
+    // This function is thread-safe.
+    opt<bool>
+    copy_boolean_opt(chars_view vpath);
+
+    // Copies an integer. If a non-null value exists, it must be an integer
+    // within the given range, otherwise an exception is thrown.
+    // This function is thread-safe.
+    opt<int64_t>
+    copy_integer_opt(chars_view vpath, int64_t min, int64_t max);
+
+    opt<int64_t>
+    copy_integer_opt(chars_view vpath);
+
+    // Copies a float-point value. If a non-null value exists, it must be a
+    // number within the given range, otherwise an exception is thrown.
+    // This function is thread-safe.
+    opt<double>
+    copy_real_opt(chars_view vpath, double min, double max);
+
+    opt<double>
+    copy_real_opt(chars_view vpath);
   };
 
 }  // namespace poseidon

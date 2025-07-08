@@ -12,8 +12,8 @@ namespace poseidon {
 class HTTP_Response_Parser
   {
   private:
-    int m_default_compression_level = 6;
-    uint32_t m_max_content_length = 1048576;
+    int m_default_compression_level;
+    uint32_t m_max_content_length;
 
     static const ::http_parser_settings s_settings[1];
     ::http_parser m_parser[1];
