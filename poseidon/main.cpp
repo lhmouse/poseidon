@@ -410,19 +410,8 @@ do_write_pid_file()
     if(!cmdline.modules.empty())
       return;
 
-    // Get the path to the PID file.
-    cow_string pid_file;
-    const auto conf = main_config.copy();
-
-    auto conf_value = conf.query(&"pid_file");
-    if(conf_value.is_string())
-      pid_file = conf_value.as_string();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `pid_file`: expecting a `string`, got `$1`",
-          "[in configuration file '$2']"),
-          conf_value, conf.path());
-
+    auto vstr = main_config.copy_string_opt(&"pid_file");
+    cow_string pid_file = vstr.value_or(&"");
     if(pid_file.empty())
       return;
 
@@ -491,31 +480,19 @@ do_load_modules()
     }
     else {
       // Use `modules` from 'main.conf', which shall be an array of strings.
-      ::asteria::V_array mods;
-      const auto conf = main_config.copy();
-
-      auto conf_value = conf.query(&"modules");
-      if(conf_value.is_array())
-        mods = conf_value.as_array();
-      else if(!conf_value.is_null())
-        POSEIDON_THROW((
-            "Invalid `modules`: expecting an `array`, got `$1`",
-            "[in configuration file '$2']"),
-            conf_value, conf.path());
-
-      for(size_t k = 0;  k < mods.size();  ++k)
-        if(mods[k].is_string())
-          modules.emplace_back(mods[k].as_string());
-        else if(!mods[k].is_null())
-          POSEIDON_THROW((
-              "Invalid `modules[$1]`:: expecting a `string`, got `$2`",
-              "[in configuration file '$3']"),
-              k, mods[k], conf.path());
+      ::rocket::tinyfmt_str fmt;
+      for(uint32_t k = 0;  k < 65536;  ++k) {
+        fmt.clear_string();
+        format(fmt, "modules[$1]", k);
+        auto vstr = main_config.copy_string_opt(fmt.get_string());
+        if(!vstr)
+          break;
+        modules.emplace_back(*vstr);
+      }
     }
 
     for(const auto& name : modules) {
       POSEIDON_LOG_INFO(("Loading module: $1"), name);
-
       void* so_handle = ::dlopen(name.safe_c_str(), RTLD_NOW | RTLD_NODELETE);
       if(!so_handle)
         POSEIDON_THROW((
