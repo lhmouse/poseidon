@@ -290,7 +290,7 @@ get_boolean(chars_view vpath) const
     if(value.is_null())
       POSEIDON_THROW((
           "Invalid `$1`: value is null or undefined",
-          "[in configuration file '$3']"),
+          "[in configuration file '$2']"),
           vpath, this->m_path);
 
     if(!value.is_boolean())
@@ -327,7 +327,7 @@ get_integer(chars_view vpath, int64_t min, int64_t max) const
     if(value.is_null())
       POSEIDON_THROW((
           "Invalid `$1`: value is null or undefined",
-          "[in configuration file '$3']"),
+          "[in configuration file '$2']"),
           vpath, this->m_path);
 
     if(!value.is_integer())
@@ -376,7 +376,7 @@ get_real(chars_view vpath, double min, double max) const
     if(value.is_null())
       POSEIDON_THROW((
           "Invalid `$1`: value is null or undefined",
-          "[in configuration file '$3']"),
+          "[in configuration file '$2']"),
           vpath, this->m_path);
 
     if(!value.is_real())
@@ -425,7 +425,7 @@ get_string(chars_view vpath) const
     if(value.is_null())
       POSEIDON_THROW((
           "Invalid `$1`: value is null or undefined",
-          "[in configuration file '$3']"),
+          "[in configuration file '$2']"),
           vpath, this->m_path);
 
     if(!value.is_string())
