@@ -38,120 +38,37 @@ reload(const Config_File& conf_file)
     static ::rocket::once_flag s_mysql_init_once;
     s_mysql_init_once.call(::mysql_library_init, 0, nullptr, nullptr);
 
-    // Parse new configuration. Default ones are defined here.
-    cow_string default_service_uri = &"root@localhost:3306/admin";
-    int64_t connection_pool_size = 0;
-    int64_t connection_idle_timeout = 60;
-    cow_string default_password, secondary_service_uri, secondary_password;
-    cow_string tertiary_service_uri, tertiary_password;
+    // Read the server name and password from configuration. The MySQL client
+    // library is able to perform DNS lookup as necessary, so this need not be
+    // an IP address.
+    auto vstr = conf_file.get_string_opt(&"mysql.default_service_uri");
+    cow_string default_service_uri = vstr.value_or(&"root@localhost:3306/admin");
 
-    // Read the server name from configuration. The MySQL client library is able
-    // to perform DNS lookup as necessary, so this need not be an IP address.
-    auto conf_value = conf_file.query(&"mysql.default_service_uri");
-    if(conf_value.is_string())
-      default_service_uri = conf_value.as_string();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `mysql.default_service_uri`: expecting a `string`, got `$1`",
-          "[in configuration file '$2']"),
-          conf_value, conf_file.path());
+    vstr = conf_file.get_string_opt(&"mysql.default_password");
+    cow_string default_password = vstr.value_or(&"");
 
-    // Read the password from configuration. The password is not to be stored
-    // as plaintext in memory.
-    conf_value = conf_file.query(&"mysql.default_password");
-    if(conf_value.is_string())
-      default_password = conf_value.as_string();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `mysql.default_password`: expecting a `string`, got `$1`",
-          "[in configuration file '$2']"),
-          conf_value, conf_file.path());
+    // Read the secondary server (replica) from configuration. If not configured
+    // it defaults to the primary one.
+    vstr = conf_file.get_string_opt(&"mysql.secondary_service_uri");
+    cow_string secondary_service_uri = vstr.value_or(default_service_uri);
 
-    // Read the secondary server name from configuration.
-    conf_value = conf_file.query(&"mysql.secondary_service_uri");
-    if(conf_value.is_string())
-      secondary_service_uri = conf_value.as_string();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `mysql.secondary_service_uri`: expecting a `string`, got `$1`",
-          "[in configuration file '$2']"),
-          conf_value, conf_file.path());
+    vstr = conf_file.get_string_opt(&"mysql.secondary_password");
+    cow_string secondary_password = vstr.value_or(default_password);
 
-    if(secondary_service_uri.empty())
-      secondary_service_uri = default_service_uri;
+    // Read the tertiary server (replica) from configuration. If not configured
+    // it defaults to the secondary one.
+    vstr = conf_file.get_string_opt(&"mysql.tertiary_service_uri");
+    cow_string tertiary_service_uri = vstr.value_or(secondary_service_uri);
 
-    // Read the password from configuration. The password is not to be stored
-    // as plaintext in memory.
-    conf_value = conf_file.query(&"mysql.secondary_password");
-    if(conf_value.is_string())
-      secondary_password = conf_value.as_string();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `mysql.secondary_password`: expecting a `string`, got `$1`",
-          "[in configuration file '$2']"),
-          conf_value, conf_file.path());
+    vstr = conf_file.get_string_opt(&"mysql.tertiary_password");
+    cow_string tertiary_password = vstr.value_or(secondary_password);
 
-    if(secondary_password.empty())
-      secondary_password = default_password;
+    // Read connection pool settings from configuration.
+    auto vint = conf_file.get_integer_opt(&"mysql.connection_pool_size", 0, 100);
+    uint32_t connection_pool_size = static_cast<uint32_t>(vint.value_or(0));
 
-    // Read the tertiary server name from configuration.
-    conf_value = conf_file.query(&"mysql.tertiary_service_uri");
-    if(conf_value.is_string())
-      tertiary_service_uri = conf_value.as_string();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `mysql.tertiary_service_uri`: expecting a `string`, got `$1`",
-          "[in configuration file '$2']"),
-          conf_value, conf_file.path());
-
-    if(tertiary_service_uri.empty())
-      tertiary_service_uri = secondary_service_uri;
-
-    // Read the password from configuration. The password is not to be stored
-    // as plaintext in memory.
-    conf_value = conf_file.query(&"mysql.tertiary_password");
-    if(conf_value.is_string())
-      tertiary_password = conf_value.as_string();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `mysql.tertiary_password`: expecting a `string`, got `$1`",
-          "[in configuration file '$2']"),
-          conf_value, conf_file.path());
-
-    if(tertiary_password.empty())
-      tertiary_password = secondary_password;
-
-    // Read the connection pool size from configuration.
-    conf_value = conf_file.query(&"mysql.connection_pool_size");
-    if(conf_value.is_integer())
-      connection_pool_size = conf_value.as_integer();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `mysql.connection_pool_size`: expecting an `integer`, got `$1`",
-          "[in configuration file '$2']"),
-          conf_value, conf_file.path());
-
-    if((connection_pool_size < 0) || (connection_pool_size > 100))
-      POSEIDON_THROW((
-          "`mysql.connection_pool_size` value `$1` out of range",
-          "[in configuration file '$2']"),
-          connection_pool_size, conf_file.path());
-
-    // Read the idle timeout from configuration, as the number of seconds.
-    conf_value = conf_file.query(&"mysql.connection_idle_timeout");
-    if(conf_value.is_integer())
-      connection_idle_timeout = conf_value.as_integer();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `mysql.connection_idle_timeout`: expecting an `integer`, got `$1`",
-          "[in configuration file '$2']"),
-          conf_value, conf_file.path());
-
-    if((connection_idle_timeout < 0) || (connection_idle_timeout > 8640000))
-      POSEIDON_THROW((
-          "`mysql.connection_idle_timeout` value `$1` out of range",
-          "[in configuration file '$2']"),
-          connection_idle_timeout, conf_file.path());
+    vint = conf_file.get_integer_opt(&"mysql.connection_idle_timeout", 0, 86400);
+    seconds connection_idle_timeout = seconds(static_cast<int>(vint.value_or(60)));
 
     // Set up new data.
     plain_mutex::unique_lock lock(this->m_conf_mutex);
