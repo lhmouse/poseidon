@@ -47,7 +47,7 @@ reload(const cow_string& conf_path)
 
 const ::asteria::Value&
 Config_File::
-query(const cow_string& value_path) const
+query(chars_view vpath) const
   {
     enum Parser_State
       {
@@ -64,8 +64,9 @@ query(const cow_string& value_path) const
     Parser_State ps = parser_name_i;
     cow_string name;
     uint32_t index = 0;
+    size_t offset = SIZE_MAX;
 
-#define do_apply_subscript_name_  \
+#define do_apply_subscript_name_no_semicolon_  \
     {  \
       const ::asteria::V_object* parent;  \
       if(!current)  \
@@ -76,14 +77,14 @@ query(const cow_string& value_path) const
         POSEIDON_THROW((  \
             "Invalid value path `$1` at offset `$2`: invalid subscript of non-object",  \
             "[in configuration file '$3']"),  \
-            value_path, off, this->m_path);  \
+            vpath, offset, this->m_path);  \
       \
       current = parent->ptr(name);  \
       if(!current)  \
         return ::asteria::null;  \
     }
 
-#define do_apply_subscript_index_  \
+#define do_apply_subscript_index_no_semicolon_  \
     {  \
       const ::asteria::V_array* parent;  \
       if(current->is_array())  \
@@ -92,22 +93,21 @@ query(const cow_string& value_path) const
         POSEIDON_THROW((  \
             "Invalid value path `$1` at offset `$2`: invalid subscript of non-array",  \
             "[in configuration file '$3']"),  \
-            value_path, off, this->m_path);  \
+            vpath, offset, this->m_path);  \
       \
       current = parent->ptr(index);  \
       if(!current)  \
         return ::asteria::null;  \
     }
 
-    for(size_t off = 0;  off <= value_path.size();  ++ off)
+    while(++ offset != vpath.n)
       switch(ps)
         {
         case parser_name_i:
-          switch(value_path[off])
+          switch(vpath.p[offset])
             {
             case ' ':
             case '\t':
-            case '\0':
               ps = parser_name_i;
               continue;
 
@@ -118,7 +118,7 @@ query(const cow_string& value_path) const
             case '$':
             case '@':
             case '*':
-              name.assign(1, value_path[off]);
+              name.assign(1, vpath.p[offset]);
               ps = parser_name;
               continue;
 
@@ -126,11 +126,11 @@ query(const cow_string& value_path) const
               POSEIDON_THROW((
                   "Invalid value path `$1` at offset `$2`: name expected",
                   "[in configuration file '$3']"),
-                  value_path, off, this->m_path);
+                  vpath, offset, this->m_path);
             }
 
         case parser_name:
-          switch(value_path[off])
+          switch(vpath.p[offset])
             {
             case 'A' ... 'Z':
             case 'a' ... 'z':
@@ -140,24 +140,23 @@ query(const cow_string& value_path) const
             case '$':
             case '@':
             case '*':
-              name.push_back(value_path[off]);
+              name.push_back(vpath.p[offset]);
               ps = parser_name;
               continue;
 
             case ' ':
             case '\t':
-            case '\0':
-              do_apply_subscript_name_
+              do_apply_subscript_name_no_semicolon_
               ps = parser_name_t;
               continue;
 
             case '.':
-              do_apply_subscript_name_
+              do_apply_subscript_name_no_semicolon_
               ps = parser_name_i;
               continue;
 
             case '[':
-              do_apply_subscript_name_
+              do_apply_subscript_name_no_semicolon_
               ps = parser_index_i;
               continue;
 
@@ -165,15 +164,14 @@ query(const cow_string& value_path) const
               POSEIDON_THROW((
                   "Invalid value path `$1` at offset `$2`: invalid character",
                   "[in configuration file '$3']"),
-                  value_path, off, this->m_path);
+                  vpath, offset, this->m_path);
             }
 
         case parser_name_t:
-          switch(value_path[off])
+          switch(vpath.p[offset])
             {
             case ' ':
             case '\t':
-            case '\0':
               ps = parser_name_t;
               continue;
 
@@ -189,20 +187,19 @@ query(const cow_string& value_path) const
               POSEIDON_THROW((
                   "Invalid value path `$1` at offset `$2`: invalid character",
                   "[in configuration file '$3']"),
-                  value_path, off, this->m_path);
+                  vpath, offset, this->m_path);
             }
 
         case parser_index_i:
-          switch(value_path[off])
+          switch(vpath.p[offset])
             {
             case ' ':
             case '\t':
-            case '\0':
               ps = parser_index_i;
               continue;
 
             case '0' ... '9':
-              index = static_cast<uint32_t>(value_path[off] - '0');
+              index = static_cast<uint32_t>(vpath.p[offset] - '0');
               ps = parser_index;
               continue;
 
@@ -210,32 +207,31 @@ query(const cow_string& value_path) const
               POSEIDON_THROW((
                   "Invalid value path `$1` at offset `$2`: digit expected",
                   "[in configuration file '$3']"),
-                  value_path, off, this->m_path);
+                  vpath, offset, this->m_path);
             }
 
         case parser_index:
-          switch(value_path[off])
+          switch(vpath.p[offset])
             {
             case '0' ... '9':
               if(index >= 999999)
                 POSEIDON_THROW((
                     "Invalid value path `$1` at offset `$2`: integer too large",
                     "[in configuration file '$3']"),
-                    value_path, off, this->m_path);
+                    vpath, offset, this->m_path);
 
-              index = index * 10 + static_cast<uint32_t>(value_path[off] - '0');
+              index = index * 10 + static_cast<uint32_t>(vpath.p[offset] - '0');
               ps = parser_index;
               continue;
 
             case ' ':
             case '\t':
-            case '\0':
-              do_apply_subscript_index_
+              do_apply_subscript_index_no_semicolon_
               ps = parser_index_t;
               continue;
 
             case ']':
-              do_apply_subscript_index_
+              do_apply_subscript_index_no_semicolon_
               ps = parser_name_t;
               continue;
 
@@ -243,15 +239,14 @@ query(const cow_string& value_path) const
               POSEIDON_THROW((
                   "Invalid value path `$1` at offset `$2`: closed bracket expected",
                   "[in configuration file '$3']"),
-                  value_path, off, this->m_path);
+                  vpath, offset, this->m_path);
             }
 
         case parser_index_t:
-          switch(value_path[off])
+          switch(vpath.p[offset])
             {
             case ' ':
             case '\t':
-            case '\0':
               ps = parser_index_t;
               continue;
 
@@ -263,24 +258,26 @@ query(const cow_string& value_path) const
               POSEIDON_THROW((
                   "Invalid value path `$1` at offset `$2`: closed bracket expected",
                   "[in configuration file '$3']"),
-                  value_path, off, this->m_path);
+                  vpath, offset, this->m_path);
             }
 
         default:
           ROCKET_ASSERT(false);
         }
 
-    if(ps != parser_name_t)
+    if(ps == parser_name)
+      do_apply_subscript_name_no_semicolon_
+    else if(ps != parser_name_t)
       POSEIDON_THROW((
           "Invalid value path `$1`: unexpected end of input",
           "[in configuration file '$3']"),
-          value_path, this->m_path);
+          vpath, this->m_path);
 
     if(!current)
       POSEIDON_THROW((
           "Invalid value path `$1`: empty path not allowed",
           "[in configuration file '$3']"),
-          value_path, this->m_path);
+          vpath, this->m_path);
 
     return *current;
   }

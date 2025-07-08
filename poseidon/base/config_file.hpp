@@ -64,7 +64,7 @@ class Config_File
     // If during path resolution, an attempt is made to get a field of a
     // non-object, an exception is thrown.
     const ::asteria::Value&
-    query(const cow_string& value_path) const;
+    query(chars_view vpath) const;
   };
 
 inline
