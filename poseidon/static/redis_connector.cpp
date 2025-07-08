@@ -34,72 +34,28 @@ void
 Redis_Connector::
 reload(const Config_File& conf_file)
   {
-    // Parse new configuration. Default ones are defined here.
-    cow_string default_service_uri = &"default@localhost:6379";
-    cow_string default_password;
-    int64_t connection_pool_size = 0;
-    int64_t connection_idle_timeout = 60;
+    // Read the server name and password from configuration. The hiredis
+    // library is able to perform DNS lookup as necessary, so this need not be
+    // an IP address.
+    auto vstr = conf_file.get_string_opt(&"redis.default_service_uri");
+    cow_string default_service_uri = vstr.value_or(&"default@localhost:6379/0");
 
-    // Read the server name from configuration. The hiredis library is able to
-    // perform DNS lookup as necessary, so this need not be an IP address.
-    auto conf_value = conf_file.query(&"redis.default_service_uri");
-    if(conf_value.is_string())
-      default_service_uri = conf_value.as_string();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `redis.default_service_uri`: expecting a `string`, got `$1`",
-          "[in configuration file '$2']"),
-          conf_value, conf_file.path());
+    vstr = conf_file.get_string_opt(&"redis.default_password");
+    cow_string default_password = vstr.value_or(&"");
 
-    // Read the password from configuration. The password is not to be stored
-    // as plaintext in memory.
-    conf_value = conf_file.query(&"redis.default_password");
-    if(conf_value.is_string())
-      default_password = conf_value.as_string();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `redis.default_password`: expecting a `string`, got `$1`",
-          "[in configuration file '$2']"),
-          conf_value, conf_file.path());
+    // Read connection pool settings from configuration.
+    auto vint = conf_file.get_integer_opt(&"redis.connection_pool_size", 0, 100);
+    uint32_t connection_pool_size = static_cast<uint32_t>(vint.value_or(0));
 
-    // Read the connection pool size from configuration.
-    conf_value = conf_file.query(&"redis.connection_pool_size");
-    if(conf_value.is_integer())
-      connection_pool_size = conf_value.as_integer();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `redis.connection_pool_size`: expecting an `integer`, got `$1`",
-          "[in configuration file '$2']"),
-          conf_value, conf_file.path());
-
-    if((connection_pool_size < 0) || (connection_pool_size > 100))
-      POSEIDON_THROW((
-          "`redis.connection_pool_size` value `$1` out of range",
-          "[in configuration file '$2']"),
-          connection_pool_size, conf_file.path());
-
-    // Read the idle timeout from configuration, as the number of seconds.
-    conf_value = conf_file.query(&"redis.connection_idle_timeout");
-    if(conf_value.is_integer())
-      connection_idle_timeout = conf_value.as_integer();
-    else if(!conf_value.is_null())
-      POSEIDON_THROW((
-          "Invalid `redis.connection_idle_timeout`: expecting an `integer`, got `$1`",
-          "[in configuration file '$2']"),
-          conf_value, conf_file.path());
-
-    if((connection_idle_timeout < 0) || (connection_idle_timeout > 8640000))
-      POSEIDON_THROW((
-          "`redis.connection_idle_timeout` value `$1` out of range",
-          "[in configuration file '$2']"),
-          connection_idle_timeout, conf_file.path());
+    vint = conf_file.get_integer_opt(&"redis.connection_idle_timeout", 0, 86400);
+    seconds connection_idle_timeout = seconds(static_cast<int>(vint.value_or(60)));
 
     // Set up new data.
     plain_mutex::unique_lock lock(this->m_conf_mutex);
     this->m_conf_default_service_uri.swap(default_service_uri);
     this->m_conf_default_password.swap(default_password);
-    this->m_conf_connection_pool_size = static_cast<uint32_t>(connection_pool_size);
-    this->m_conf_connection_idle_timeout = static_cast<seconds>(connection_idle_timeout);
+    this->m_conf_connection_pool_size = connection_pool_size;
+    this->m_conf_connection_idle_timeout = connection_idle_timeout;
   }
 
 POSEIDON_VISIBILITY_HIDDEN
