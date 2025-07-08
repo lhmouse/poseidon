@@ -66,11 +66,11 @@ class Config_File
     const ::asteria::Value&
     query(chars_view vpath) const;
 
-    // Gets a string. If a non-null value exists, it must be a string,
+    // Gets a boolean value. The value must exist and must be a boolean,
     // otherwise an exception is thrown.
     // This function is thread-safe.
-    opt<cow_string>
-    get_string_opt(chars_view vpath) const;
+    bool
+    get_boolean(chars_view vpath) const;
 
     // Gets a boolean value. If a non-null value exists, it must be a boolean,
     // otherwise an exception is thrown.
@@ -78,14 +78,23 @@ class Config_File
     opt<bool>
     get_boolean_opt(chars_view vpath) const;
 
+    // Gets an integer. The value must exist and must be an integer within the
+    // given range, otherwise an exception is thrown.
+    // This function is thread-safe.
+    int64_t
+    get_integer(chars_view vpath, int64_t min, int64_t max) const;
+
     // Gets an integer. If a non-null value exists, it must be an integer
     // within the given range, otherwise an exception is thrown.
     // This function is thread-safe.
     opt<int64_t>
     get_integer_opt(chars_view vpath, int64_t min, int64_t max) const;
 
-    opt<int64_t>
-    get_integer_opt(chars_view vpath) const;
+    // Gets a float-point value. The value must exist and must be a number
+    // within the given range, otherwise an exception is thrown.
+    // This function is thread-safe.
+    double
+    get_real(chars_view vpath, double min, double max) const;
 
     // Gets a float-point value. If a non-null value exists, it must be a
     // number within the given range, otherwise an exception is thrown.
@@ -93,8 +102,17 @@ class Config_File
     opt<double>
     get_real_opt(chars_view vpath, double min, double max) const;
 
-    opt<double>
-    get_real_opt(chars_view vpath) const;
+    // Gets a string. The value must exist and must be a string, otherwise an
+    // exception is thrown.
+    // This function is thread-safe.
+    const cow_string&
+    get_string(chars_view vpath) const;
+
+    // Gets a string. If a non-null value exists, it must be a string,
+    // otherwise an exception is thrown.
+    // This function is thread-safe.
+    opt<cow_string>
+    get_string_opt(chars_view vpath) const;
   };
 
 inline

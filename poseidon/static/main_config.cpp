@@ -44,52 +44,68 @@ copy_value(chars_view vpath)
     return this->m_file.query(vpath);
   }
 
-opt<cow_string>
+bool
 Main_Config::
-copy_string_opt(chars_view vpath)
+copy_boolean(chars_view vpath) const
   {
     plain_mutex::unique_lock lock(this->m_mutex);
-    return this->m_file.get_string_opt(vpath);
+    return this->m_file.get_boolean(vpath);
   }
 
 opt<bool>
 Main_Config::
-copy_boolean_opt(chars_view vpath)
+copy_boolean_opt(chars_view vpath) const
   {
     plain_mutex::unique_lock lock(this->m_mutex);
     return this->m_file.get_boolean_opt(vpath);
   }
 
+int64_t
+Main_Config::
+copy_integer(chars_view vpath, int64_t min, int64_t max) const
+  {
+    plain_mutex::unique_lock lock(this->m_mutex);
+    return this->m_file.get_integer(vpath, min, max);
+  }
+
 opt<int64_t>
 Main_Config::
-copy_integer_opt(chars_view vpath, int64_t min, int64_t max)
+copy_integer_opt(chars_view vpath, int64_t min, int64_t max) const
   {
     plain_mutex::unique_lock lock(this->m_mutex);
     return this->m_file.get_integer_opt(vpath, min, max);
   }
 
-opt<int64_t>
+double
 Main_Config::
-copy_integer_opt(chars_view vpath)
+copy_real(chars_view vpath, double min, double max) const
   {
     plain_mutex::unique_lock lock(this->m_mutex);
-    return this->m_file.get_integer_opt(vpath);
+    return this->m_file.get_real(vpath, min, max);
   }
 
 opt<double>
 Main_Config::
-copy_real_opt(chars_view vpath, double min, double max)
+copy_real_opt(chars_view vpath, double min, double max) const
   {
     plain_mutex::unique_lock lock(this->m_mutex);
     return this->m_file.get_real_opt(vpath, min, max);
   }
 
-opt<double>
+cow_string
 Main_Config::
-copy_real_opt(chars_view vpath)
+copy_string(chars_view vpath) const
   {
     plain_mutex::unique_lock lock(this->m_mutex);
-    return this->m_file.get_real_opt(vpath);
+    return this->m_file.get_string(vpath);
+  }
+
+opt<cow_string>
+Main_Config::
+copy_string_opt(chars_view vpath) const
+  {
+    plain_mutex::unique_lock lock(this->m_mutex);
+    return this->m_file.get_string_opt(vpath);
   }
 
 }  // namespace poseidon

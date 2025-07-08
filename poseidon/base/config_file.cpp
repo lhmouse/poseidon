@@ -282,28 +282,31 @@ query(chars_view vpath) const
     return *current;
   }
 
-opt<cow_string>
+bool
 Config_File::
-get_string_opt(chars_view vpath) const
+get_boolean(chars_view vpath) const
   {
-    auto value = this->query(vpath);
+    const auto& value = this->query(vpath);
     if(value.is_null())
-      return nullopt;
-
-    if(!value.is_string())
       POSEIDON_THROW((
-          "Invalid `$1`: expecting a `string`, got `$2`",
+          "Invalid `$1`: value is null or undefined",
+          "[in configuration file '$3']"),
+          vpath, this->m_path);
+
+    if(!value.is_boolean())
+      POSEIDON_THROW((
+          "Invalid `$1`: expecting a `boolean`, got `$2`",
           "[in configuration file '$3']"),
           vpath, value, this->m_path);
 
-    return value.as_string();
+    return value.as_boolean();
   }
 
 opt<bool>
 Config_File::
 get_boolean_opt(chars_view vpath) const
   {
-    auto value = this->query(vpath);
+    const auto& value = this->query(vpath);
     if(value.is_null())
       return nullopt;
 
@@ -316,13 +319,16 @@ get_boolean_opt(chars_view vpath) const
     return value.as_boolean();
   }
 
-opt<int64_t>
+int64_t
 Config_File::
-get_integer_opt(chars_view vpath, int64_t min, int64_t max) const
+get_integer(chars_view vpath, int64_t min, int64_t max) const
   {
-    auto value = this->query(vpath);
+    const auto& value = this->query(vpath);
     if(value.is_null())
-      return nullopt;
+      POSEIDON_THROW((
+          "Invalid `$1`: value is null or undefined",
+          "[in configuration file '$3']"),
+          vpath, this->m_path);
 
     if(!value.is_integer())
       POSEIDON_THROW((
@@ -341,9 +347,9 @@ get_integer_opt(chars_view vpath, int64_t min, int64_t max) const
 
 opt<int64_t>
 Config_File::
-get_integer_opt(chars_view vpath) const
+get_integer_opt(chars_view vpath, int64_t min, int64_t max) const
   {
-    auto value = this->query(vpath);
+    const auto& value = this->query(vpath);
     if(value.is_null())
       return nullopt;
 
@@ -353,16 +359,25 @@ get_integer_opt(chars_view vpath) const
           "[in configuration file '$3']"),
           vpath, value, this->m_path);
 
+    if(!((value.as_integer() >= min) && (value.as_integer() <= max)))
+      POSEIDON_THROW((
+          "Invalid `$1`: value `$2` out of range [$4,$5]",
+          "[in configuration file '$3']"),
+          vpath, value, this->m_path, min, max);
+
     return value.as_integer();
   }
 
-opt<double>
+double
 Config_File::
-get_real_opt(chars_view vpath, double min, double max) const
+get_real(chars_view vpath, double min, double max) const
   {
-    auto value = this->query(vpath);
+    const auto& value = this->query(vpath);
     if(value.is_null())
-      return nullopt;
+      POSEIDON_THROW((
+          "Invalid `$1`: value is null or undefined",
+          "[in configuration file '$3']"),
+          vpath, this->m_path);
 
     if(!value.is_real())
       POSEIDON_THROW((
@@ -381,9 +396,9 @@ get_real_opt(chars_view vpath, double min, double max) const
 
 opt<double>
 Config_File::
-get_real_opt(chars_view vpath) const
+get_real_opt(chars_view vpath, double min, double max) const
   {
-    auto value = this->query(vpath);
+    const auto& value = this->query(vpath);
     if(value.is_null())
       return nullopt;
 
@@ -393,7 +408,50 @@ get_real_opt(chars_view vpath) const
           "[in configuration file '$3']"),
           vpath, value, this->m_path);
 
+    if(!((value.as_real() >= min) && (value.as_real() <= max)))
+      POSEIDON_THROW((
+          "Invalid `$1`: value `$2` out of range [$4,$5]",
+          "[in configuration file '$3']"),
+          vpath, value, this->m_path, min, max);
+
     return value.as_real();
+  }
+
+const cow_string&
+Config_File::
+get_string(chars_view vpath) const
+  {
+    const auto& value = this->query(vpath);
+    if(value.is_null())
+      POSEIDON_THROW((
+          "Invalid `$1`: value is null or undefined",
+          "[in configuration file '$3']"),
+          vpath, this->m_path);
+
+    if(!value.is_string())
+      POSEIDON_THROW((
+          "Invalid `$1`: expecting a `string`, got `$2`",
+          "[in configuration file '$3']"),
+          vpath, value, this->m_path);
+
+    return value.as_string();
+  }
+
+opt<cow_string>
+Config_File::
+get_string_opt(chars_view vpath) const
+  {
+    const auto& value = this->query(vpath);
+    if(value.is_null())
+      return nullopt;
+
+    if(!value.is_string())
+      POSEIDON_THROW((
+          "Invalid `$1`: expecting a `string`, got `$2`",
+          "[in configuration file '$3']"),
+          vpath, value, this->m_path);
+
+    return value.as_string();
   }
 
 }  // namespace poseidon
