@@ -20,20 +20,6 @@ Abstract_Fiber::
 
 void
 Abstract_Fiber::
-do_on_abstract_fiber_resumed()
-  {
-    POSEIDON_LOG_TRACE(("Resumed fiber `$1` (class `$2`)"), this, typeid(*this));
-  }
-
-void
-Abstract_Fiber::
-do_on_abstract_fiber_suspended()
-  {
-    POSEIDON_LOG_TRACE(("Suspended fiber `$1` (class `$2`)"), this, typeid(*this));
-  }
-
-void
-Abstract_Fiber::
 yield(const shptr<Abstract_Future>& futr_opt) const
   {
     (* this->m_sched_yield_fn) (futr_opt);

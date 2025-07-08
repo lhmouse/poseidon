@@ -28,22 +28,6 @@ class Abstract_Fiber
     Fiber_Scheduler&
     do_abstract_fiber_lock_scheduler(recursive_mutex::unique_lock& lock) const noexcept;
 
-    // This callback is invoked before `do_on_abstract_fiber_execute()`, and
-    // after it is resumed from a previous yield operation.
-    // This function should not throw exceptions; exceptions are ignored.
-    // The default implementations merely print a message.
-    virtual
-    void
-    do_on_abstract_fiber_resumed();
-
-    // This callback is invoked after `do_on_abstract_fiber_execute()`, and
-    // before it is suspended by a yield operation.
-    // This function should not throw exceptions; exceptions are ignored.
-    // The default implementations merely print a message.
-    virtual
-    void
-    do_on_abstract_fiber_suspended();
-
     // This callback is invoked by the fiber scheduler and is intended to be
     // overriden by derived classes to perform useful operation.
     virtual

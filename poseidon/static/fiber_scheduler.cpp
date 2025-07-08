@@ -180,7 +180,6 @@ do_fiber_procedure() noexcept
     ROCKET_ASSERT(s_ep);
 
     POSEIDON_LOG_TRACE(("Starting `$1` (class `$2`)"), s_ep->fiber, typeid(*(s_ep->fiber)));
-    POSEIDON_CATCH_EVERYTHING(s_ep->fiber->do_on_abstract_fiber_resumed());
     ROCKET_ASSERT(s_ep->state == st_pending);
     s_ep->state = st_running;
 
@@ -189,7 +188,6 @@ do_fiber_procedure() noexcept
     POSEIDON_LOG_TRACE(("Terminating `$1` (class `$2`)"), s_ep->fiber, typeid(*(s_ep->fiber)));
     ROCKET_ASSERT(s_ep->state == st_running);
     s_ep->state = st_terminated;
-    POSEIDON_CATCH_EVERYTHING(s_ep->fiber->do_on_abstract_fiber_suspended());
 
     s_ep->async_time.store(steady_clock::now());
     do_sanitizer_start_switch_fiber();
@@ -219,14 +217,12 @@ do_fiber_yield_function(const shptr<Abstract_Future>& futr_opt)
     POSEIDON_LOG_TRACE(("Suspending `$1` (class `$2`)"), s_ep->fiber, typeid(*(s_ep->fiber)));
     ROCKET_ASSERT(s_ep->state == st_running);
     s_ep->state = st_suspended;
-    POSEIDON_CATCH_EVERYTHING(s_ep->fiber->do_on_abstract_fiber_suspended());
 
     do_sanitizer_start_switch_fiber();
     ::swapcontext(s_ep->sched_inner, s_sched_outer);
     do_sanitizer_finish_switch_fiber();
 
     POSEIDON_LOG_TRACE(("Resuming `$1` (class `$2`)"), s_ep->fiber, typeid(*(s_ep->fiber)));
-    POSEIDON_CATCH_EVERYTHING(s_ep->fiber->do_on_abstract_fiber_resumed());
     ROCKET_ASSERT(s_ep->state == st_suspended);
     s_ep->state = st_running;
 
