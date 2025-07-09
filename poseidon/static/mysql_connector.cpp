@@ -35,9 +35,6 @@ void
 MySQL_Connector::
 reload(const Config_File& conf_file)
   {
-    static ::rocket::once_flag s_mysql_init_once;
-    s_mysql_init_once.call(::mysql_library_init, 0, nullptr, nullptr);
-
     // Read the server name and password from configuration. The MySQL client
     // library is able to perform DNS lookup as necessary, so this need not be
     // an IP address.
@@ -65,6 +62,10 @@ reload(const Config_File& conf_file)
                                         &"mysql.connection_pool_size", 0, 100).value_or(0));
     seconds connection_idle_timeout = seconds(static_cast<int>(conf_file.get_integer_opt(
                                         &"mysql.connection_idle_timeout", 0, 86400).value_or(60)));
+
+    // Initialize the MySQL client library in a thread-safe manner.
+    static ::rocket::once_flag s_init_once;
+    s_init_once.call(::mysql_library_init, 0, nullptr, nullptr);
 
     // Set up new data.
     plain_mutex::unique_lock lock(this->m_conf_mutex);

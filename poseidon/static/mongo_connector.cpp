@@ -35,9 +35,6 @@ void
 Mongo_Connector::
 reload(const Config_File& conf_file)
   {
-    static ::rocket::once_flag s_mongoc_init_once;
-    s_mongoc_init_once.call(::mongoc_init);
-
     // Read the server name and password from configuration. The Mongo client
     // library is able to perform DNS lookup as necessary, so this need not be
     // an IP address.
@@ -51,6 +48,10 @@ reload(const Config_File& conf_file)
                                         &"mongo.connection_pool_size", 0, 100).value_or(0));
     seconds connection_idle_timeout = seconds(static_cast<int>(conf_file.get_integer_opt(
                                         &"mongo.connection_idle_timeout", 0, 86400).value_or(60)));
+
+    // Initialize the Mongo C library in a thread-safe manner.
+    static ::rocket::once_flag s_init_once;
+    s_init_once.call(::mongoc_init, 0, nullptr, nullptr);
 
     // Set up new data.
     plain_mutex::unique_lock lock(this->m_conf_mutex);
