@@ -411,8 +411,7 @@ do_write_pid_file()
       return;
 
     auto conf_file = main_config.copy();
-    auto vstr = conf_file.get_string_opt(&"pid_file");
-    cow_string pid_file = move(vstr.value_or_emplace());
+    cow_string pid_file = conf_file.get_string_opt(&"pid_file").value_or(&"");
     if(pid_file.empty())
       return;
 
@@ -474,7 +473,6 @@ void
 do_load_modules()
   {
     cow_vector<cow_string> modules;
-
     if(!cmdline.modules.empty()) {
       // Load only modules from the command line.
       modules = cmdline.modules;

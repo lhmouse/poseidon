@@ -41,34 +41,30 @@ reload(const Config_File& conf_file)
     // Read the server name and password from configuration. The MySQL client
     // library is able to perform DNS lookup as necessary, so this need not be
     // an IP address.
-    auto vstr = conf_file.get_string_opt(&"mysql.default_service_uri");
-    cow_string default_service_uri = vstr.value_or(&"root@localhost:3306/admin");
-
-    vstr = conf_file.get_string_opt(&"mysql.default_password");
-    cow_string default_password = vstr.value_or(&"");
+    cow_string default_service_uri = conf_file.get_string_opt(
+                                &"mysql.default_service_uri").value_or(&"root@localhost:3306/admin");
+    cow_string default_password = conf_file.get_string_opt(
+                                        &"mysql.default_password").value_or(&"");
 
     // Read the secondary server (replica) from configuration. If not configured
     // it defaults to the primary one.
-    vstr = conf_file.get_string_opt(&"mysql.secondary_service_uri");
-    cow_string secondary_service_uri = vstr.value_or(default_service_uri);
-
-    vstr = conf_file.get_string_opt(&"mysql.secondary_password");
-    cow_string secondary_password = vstr.value_or(default_password);
+    cow_string secondary_service_uri = conf_file.get_string_opt(
+                                &"mysql.secondary_service_uri").value_or(default_service_uri);
+    cow_string secondary_password = conf_file.get_string_opt(
+                                        &"mysql.secondary_password").value_or(default_password);
 
     // Read the tertiary server (replica) from configuration. If not configured
     // it defaults to the secondary one.
-    vstr = conf_file.get_string_opt(&"mysql.tertiary_service_uri");
-    cow_string tertiary_service_uri = vstr.value_or(secondary_service_uri);
-
-    vstr = conf_file.get_string_opt(&"mysql.tertiary_password");
-    cow_string tertiary_password = vstr.value_or(secondary_password);
+    cow_string tertiary_service_uri = conf_file.get_string_opt(
+                                &"mysql.tertiary_service_uri").value_or(secondary_service_uri);
+    cow_string tertiary_password = conf_file.get_string_opt(
+                                        &"mysql.tertiary_password").value_or(secondary_password);
 
     // Read connection pool settings from configuration.
-    auto vint = conf_file.get_integer_opt(&"mysql.connection_pool_size", 0, 100);
-    uint32_t connection_pool_size = static_cast<uint32_t>(vint.value_or(0));
-
-    vint = conf_file.get_integer_opt(&"mysql.connection_idle_timeout", 0, 86400);
-    seconds connection_idle_timeout = seconds(static_cast<int>(vint.value_or(60)));
+    uint32_t connection_pool_size = static_cast<uint32_t>(conf_file.get_integer_opt(
+                                        &"mysql.connection_pool_size", 0, 100).value_or(0));
+    seconds connection_idle_timeout = seconds(static_cast<int>(conf_file.get_integer_opt(
+                                        &"mysql.connection_idle_timeout", 0, 86400).value_or(60)));
 
     // Set up new data.
     plain_mutex::unique_lock lock(this->m_conf_mutex);

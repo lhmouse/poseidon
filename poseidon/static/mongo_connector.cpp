@@ -41,18 +41,16 @@ reload(const Config_File& conf_file)
     // Read the server name and password from configuration. The Mongo client
     // library is able to perform DNS lookup as necessary, so this need not be
     // an IP address.
-    auto vstr = conf_file.get_string_opt(&"mongo.default_service_uri");
-    cow_string default_service_uri = vstr.value_or(&"root@localhost:27017/admin");
-
-    vstr = conf_file.get_string_opt(&"mongo.default_password");
-    cow_string default_password = vstr.value_or(&"");
+    cow_string default_service_uri = conf_file.get_string_opt(
+                                &"mongo.default_service_uri").value_or(&"root@localhost:27017/admin");
+    cow_string default_password = conf_file.get_string_opt(
+                                        &"mongo.default_password").value_or(&"");
 
     // Read connection pool settings from configuration.
-    auto vint = conf_file.get_integer_opt(&"mongo.connection_pool_size", 0, 100);
-    uint32_t connection_pool_size = static_cast<uint32_t>(vint.value_or(0));
-
-    vint = conf_file.get_integer_opt(&"mongo.connection_idle_timeout", 0, 86400);
-    seconds connection_idle_timeout = seconds(static_cast<int>(vint.value_or(60)));
+    uint32_t connection_pool_size = static_cast<uint32_t>(conf_file.get_integer_opt(
+                                        &"mongo.connection_pool_size", 0, 100).value_or(0));
+    seconds connection_idle_timeout = seconds(static_cast<int>(conf_file.get_integer_opt(
+                                        &"mongo.connection_idle_timeout", 0, 86400).value_or(60)));
 
     // Set up new data.
     plain_mutex::unique_lock lock(this->m_conf_mutex);

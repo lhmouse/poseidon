@@ -233,26 +233,15 @@ reload(const Config_File& conf_file, bool verbose)
     for(const char* name : names) {
       auto& lconf = levels.emplace_back();
       ::snprintf(lconf.tag, sizeof(lconf.tag), "[%s]", name);
-
-      ::rocket::tinyfmt_str fmt;
-      format(fmt, "logger.$1.color", name);
-      auto vstr = conf_file.get_string_opt(fmt.get_string());
-      lconf.color = vstr.value_or(&"");
-
-      fmt.clear_string();
-      format(fmt, "logger.$1.expendable", name);
-      auto vbool = conf_file.get_boolean_opt(fmt.get_string());
-      lconf.expendable = vbool.value_or(false);
+      lconf.color = conf_file.get_string_opt(sformat("logger.$1.color", name)).value_or(&"");
+      lconf.expendable = conf_file.get_boolean_opt(sformat("logger.$1.expendable", name)).value_or(false);
 
       bool has_stdout = false;
-      for(uint32_t k = 0;  k < 10;  ++k) {
-        fmt.clear_string();
-        format(fmt, "logger.$1.files[$2]", name, k);
-        vstr = conf_file.get_string_opt(fmt.get_string());
-        if(!vstr)
-          break;
-        lconf.files.emplace_back(*vstr);
-        has_stdout |= (*vstr == "/dev/stdout") || (*vstr == "/dev/stderr");
+      size_t nfiles = conf_file.get_array_size_opt(sformat("logger.$1.files", name)).value_or(0);
+      lconf.files.reserve(nfiles);
+      for(uint32_t k = 0;  k != nfiles;  ++k) {
+        lconf.files.emplace_back(conf_file.get_string(sformat("logger.$1.files[$2]", name, k)));
+        has_stdout |= (lconf.files.back() == "/dev/stdout") || (lconf.files.back() == "/dev/stderr");
       }
 
       // In verbose mode, apply `/dev/stdout` to all levels, to make them
