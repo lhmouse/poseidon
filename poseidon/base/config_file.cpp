@@ -454,4 +454,41 @@ get_string_opt(chars_view vpath) const
     return value.as_string();
   }
 
+size_t
+Config_File::
+get_array_size(chars_view vpath) const
+  {
+    const auto& value = this->query(vpath);
+    if(value.is_null())
+      POSEIDON_THROW((
+          "Invalid `$1`: value is null or undefined",
+          "[in configuration file '$2']"),
+          vpath, this->m_path);
+
+    if(!value.is_array())
+      POSEIDON_THROW((
+          "Invalid `$1`: expecting an `array`, got `$2`",
+          "[in configuration file '$3']"),
+          vpath, value, this->m_path);
+
+    return value.as_array().size();
+  }
+
+opt<size_t>
+Config_File::
+get_array_size_opt(chars_view vpath) const
+  {
+    const auto& value = this->query(vpath);
+    if(value.is_null())
+      return nullopt;
+
+    if(!value.is_array())
+      POSEIDON_THROW((
+          "Invalid `$1`: expecting an `array`, got `$2`",
+          "[in configuration file '$3']"),
+          vpath, value, this->m_path);
+
+    return value.as_array().size();
+  }
+
 }  // namespace poseidon

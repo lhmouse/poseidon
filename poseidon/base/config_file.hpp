@@ -105,6 +105,16 @@ class Config_File
     // otherwise an exception is thrown.
     opt<cow_string>
     get_string_opt(chars_view vpath) const;
+
+    // Gets the size of an array. The value must exist and must be an array,
+    // otherwise an exception is thrown.
+    size_t
+    get_array_size(chars_view vpath) const;
+
+    // Gets the size of an array. If a non-null value exists, it must be an
+    // array, otherwise an exception is thrown.
+    opt<size_t>
+    get_array_size_opt(chars_view vpath) const;
   };
 
 inline
