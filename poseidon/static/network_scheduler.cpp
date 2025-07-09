@@ -7,7 +7,6 @@
 #include "../socket/ssl_socket.hpp"
 #include "../base/config_file.hpp"
 #include "../utils.hpp"
-#include <rocket/once_flag.hpp>
 #include <sys/epoll.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -157,9 +156,6 @@ void
 Network_Scheduler::
 reload(const Config_File& conf_file)
   {
-    static ::rocket::once_flag s_openssl_init_once;
-    s_openssl_init_once.call(::OPENSSL_init_ssl, OPENSSL_INIT_NO_ATEXIT, nullptr);
-
     // Read the epoll event buffer size from configuration.
     uint32_t event_buffer_size = static_cast<uint32_t>(conf_file.get_integer_opt(
                           &"network.poll.event_buffer_size", 10, 1048576).value_or(1024));
