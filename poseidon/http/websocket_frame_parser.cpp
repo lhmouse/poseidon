@@ -6,6 +6,7 @@
 #include "http_c_headers.hpp"
 #include "http_s_headers.hpp"
 #include "http_header_parser.hpp"
+#include "../base/config_file.hpp"
 #include "../static/main_config.hpp"
 #include "../socket/enums.hpp"
 #include "../utils.hpp"
@@ -132,11 +133,11 @@ struct PerMessage_Deflate
 WebSocket_Frame_Parser::
 WebSocket_Frame_Parser()
   {
-    auto qval = main_config.copy_integer_opt(&"network.http.default_compression_level", 0, 9);
-    this->m_default_compression_level = static_cast<int>(qval.value_or(6));
-
-    qval = main_config.copy_integer_opt(&"network.http.max_websocket_message_length", 256, 16777216);
-    this->m_max_message_length = static_cast<uint32_t>(qval.value_or(1048576));
+    auto conf_file = main_config.copy();
+    this->m_default_compression_level = static_cast<int>(conf_file.get_integer_opt(
+                                &"network.http.default_compression_level", 0, 9).value_or(6));
+    this->m_max_message_length = static_cast<uint32_t>(conf_file.get_integer_opt(
+                     &"network.http.max_websocket_message_length", 256, 16777216).value_or(1048576));
   }
 
 WebSocket_Frame_Parser::

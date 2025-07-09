@@ -410,8 +410,9 @@ do_write_pid_file()
     if(!cmdline.modules.empty())
       return;
 
-    auto vstr = main_config.copy_string_opt(&"pid_file");
-    cow_string pid_file = vstr.value_or(&"");
+    auto conf_file = main_config.copy();
+    auto vstr = conf_file.get_string_opt(&"pid_file");
+    cow_string pid_file = move(vstr.value_or_emplace());
     if(pid_file.empty())
       return;
 
@@ -480,15 +481,11 @@ do_load_modules()
     }
     else {
       // Use `modules` from 'main.conf', which shall be an array of strings.
-      ::rocket::tinyfmt_str fmt;
-      for(uint32_t k = 0;  k < 65536;  ++k) {
-        fmt.clear_string();
-        format(fmt, "modules[$1]", k);
-        auto vstr = main_config.copy_string_opt(fmt.get_string());
-        if(!vstr)
-          break;
-        modules.emplace_back(*vstr);
-      }
+      auto conf_file = main_config.copy();
+      size_t nmodules = conf_file.get_array_size(&"modules");
+      modules.reserve(nmodules);
+      for(size_t k = 0;  k != nmodules;  ++k)
+        modules.emplace_back(conf_file.get_string(sformat("modules[$1]", k)));
     }
 
     for(const auto& name : modules) {

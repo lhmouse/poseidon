@@ -3,6 +3,7 @@
 
 #include "../xprecompiled.hpp"
 #include "http_response_parser.hpp"
+#include "../base/config_file.hpp"
 #include "../static/main_config.hpp"
 #include "../utils.hpp"
 namespace poseidon {
@@ -91,11 +92,11 @@ HTTP_Response_Parser()
     this->m_parser->data = this;
     this->m_parser->allow_chunked_length = true;
 
-    auto qval = main_config.copy_integer_opt(&"network.http.default_compression_level", 0, 9);
-    this->m_default_compression_level = static_cast<int>(qval.value_or(6));
-
-    qval = main_config.copy_integer_opt(&"network.http.max_response_content_length", 256, 16777216);
-    this->m_max_content_length = static_cast<uint32_t>(qval.value_or(1048576));
+    auto conf_file = main_config.copy();
+    this->m_default_compression_level = static_cast<int>(conf_file.get_integer_opt(
+                                &"network.http.default_compression_level", 0, 9).value_or(6));
+    this->m_max_content_length = static_cast<uint32_t>(conf_file.get_integer_opt(
+                     &"network.http.max_response_content_length", 256, 16777216).value_or(1048576));
   }
 
 HTTP_Response_Parser::
