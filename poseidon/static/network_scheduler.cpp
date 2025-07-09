@@ -171,16 +171,16 @@ reload(const Config_File& conf_file)
                           &"network.poll.throttle_size", 0, INT_MAX).value_or(1048576));
 
     // Read SSL settings.
-    auto opt_cert = conf_file.get_string_opt(&"network.ssl.default_certificate");
-    auto opt_priv_key = conf_file.get_string_opt(&"network.ssl.default_private_key");
+    cow_string default_certificate = conf_file.get_string_opt(&"network.ssl.default_certificate").value_or(&"");
+    cow_string default_private_key = conf_file.get_string_opt(&"network.ssl.default_private_key").value_or(&"");
 
-    if(opt_cert && !opt_priv_key)
+    if((default_certificate != "") && (default_private_key == ""))
       POSEIDON_THROW((
           "`network.ssl.default_private_key` is missing",
           "[in configuration file '$1']"),
           conf_file.path());
 
-    if(!opt_cert && opt_priv_key)
+    if((default_certificate == "") && (default_private_key != ""))
       POSEIDON_THROW((
           "`network.ssl.default_certificate` is missing",
           "[in configuration file '$1']"),
@@ -189,7 +189,7 @@ reload(const Config_File& conf_file)
     // The server SSL context is optional, and is created only if a certificate
     // is configured.
     uniptr_SSL_CTX server_ssl_ctx;
-    if(opt_cert) {
+    if(default_certificate != "") {
       if(!server_ssl_ctx.reset(::SSL_CTX_new(::TLS_server_method())))
         POSEIDON_THROW((
             "Could not allocate server SSL context",
@@ -199,21 +199,21 @@ reload(const Config_File& conf_file)
       ::SSL_CTX_set_mode(server_ssl_ctx, SSL_MODE_ENABLE_PARTIAL_WRITE);
       ::SSL_CTX_set_mode(server_ssl_ctx, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
 
-      if(!::SSL_CTX_use_certificate_chain_file(server_ssl_ctx, opt_cert->safe_c_str()))
+      if(!::SSL_CTX_use_certificate_chain_file(server_ssl_ctx, default_certificate.safe_c_str()))
         POSEIDON_THROW((
             "Could not load default server SSL certificate file '$3'",
             "[`SSL_CTX_use_certificate_chain_file()` failed: $1]",
             "[in configuration file '$2']"),
             ::ERR_reason_error_string(::ERR_get_error()), conf_file.path(),
-            *opt_cert);
+            default_certificate);
 
-      if(!::SSL_CTX_use_PrivateKey_file(server_ssl_ctx, opt_priv_key->safe_c_str(), SSL_FILETYPE_PEM))
+      if(!::SSL_CTX_use_PrivateKey_file(server_ssl_ctx, default_private_key.safe_c_str(), SSL_FILETYPE_PEM))
         POSEIDON_THROW((
             "Could not load default server SSL private key file '$3'",
             "[`SSL_CTX_use_PrivateKey_file()` failed: $1]",
             "[in configuration file '$2']"),
             ::ERR_reason_error_string(::ERR_get_error()), conf_file.path(),
-            *opt_priv_key);
+            default_private_key);
 
       if(!::SSL_CTX_check_private_key(server_ssl_ctx))
         POSEIDON_THROW((
@@ -221,7 +221,7 @@ reload(const Config_File& conf_file)
             "[`SSL_CTX_check_private_key()` failed: $1]",
             "[in configuration file '$2']"),
             ::ERR_reason_error_string(::ERR_get_error()), conf_file.path(),
-            *opt_cert, *opt_priv_key);
+            default_certificate, default_private_key);
 
       // The session context ID is composed from the DNS name of the running
       // machine. This determines which SSL sessions can be reused to improve
@@ -251,9 +251,9 @@ reload(const Config_File& conf_file)
     ::SSL_CTX_set_mode(client_ssl_ctx, SSL_MODE_ENABLE_PARTIAL_WRITE);
     ::SSL_CTX_set_mode(client_ssl_ctx, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
 
-    auto opt_ca_path = conf_file.get_string_opt(&"network.ssl.trusted_ca_path");
-    if(opt_ca_path) {
-      if(!::SSL_CTX_load_verify_locations(client_ssl_ctx, nullptr, opt_ca_path->safe_c_str()))
+    cow_string trusted_ca_path = conf_file.get_string_opt(&"network.ssl.trusted_ca_path").value_or(&"");
+    if(trusted_ca_path != "") {
+      if(!::SSL_CTX_load_verify_locations(client_ssl_ctx, nullptr, trusted_ca_path.safe_c_str()))
         POSEIDON_THROW((
             "Could not trusted CA path",
             "[`SSL_CTX_load_verify_locations()` failed: $1]",
