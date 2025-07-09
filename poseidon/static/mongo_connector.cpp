@@ -51,7 +51,7 @@ reload(const Config_File& conf_file)
 
     // Initialize the Mongo C library in a thread-safe manner.
     static ::rocket::once_flag s_init_once;
-    s_init_once.call(::mongoc_init, 0, nullptr, nullptr);
+    s_init_once.call(::mongoc_init);
 
     // Set up new data.
     plain_mutex::unique_lock lock(this->m_conf_mutex);
