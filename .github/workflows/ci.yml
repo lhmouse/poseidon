@@ -32,6 +32,7 @@ jobs:
 
       - name: Install dependencies
         run: >-
+             sudo apt-get update ;
              sudo apt-get install -y --no-install-recommends g++-10 meson
              ninja-build python3 python3-pip pkgconf zlib1g-dev uuid-dev
              lib{edit,pcre2,ssl,unwind,mysqlclient,mongoc,hiredis}-dev
