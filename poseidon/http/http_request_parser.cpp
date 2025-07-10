@@ -60,70 +60,84 @@ HTTP_Request_Parser::s_settings[1] =
           return 0;
         }
 
-        // Parse the URI.
-        cow_string caddr;
-        caddr.swap(this->m_headers.raw_host);
+        // Parse the request URI.
+        cow_string uri;
+        uri.swap(this->m_headers.raw_host);
 
-        ::http_parser_url uri_hp;
-        ::http_parser_url_init(&uri_hp);
-        if(::http_parser_parse_url(caddr.data(), caddr.size(), ps->method == HTTP_CONNECT, &uri_hp)) {
+        if((uri.size() >= 7) && ::rocket::ascii_ci_equal(uri.c_str(), 7, "http://", 7)) {
+          this->m_headers.port = 80;
+          this->m_headers.is_proxy = true;
+          this->m_headers.is_ssl = false;
+          uri.erase(0, 7);
+        }
+        else if((uri.size() >= 8) && ::rocket::ascii_ci_equal(uri.c_str(), 8, "https://", 8)) {
+          this->m_headers.port = 443;
+          this->m_headers.is_proxy = true;
+          this->m_headers.is_ssl = true;
+          uri.erase(0, 8);
+        }
+        else if(uri.find("://") != cow_string::npos) {
           ps->http_errno = HPE_INVALID_URL;
-          return 0;
+          return 2;
         }
 
-#define uri_has_(x)  ((uri_hp.field_set & (1U << UF_##x)) != 0)
-#define uri_str_(x)  (caddr.data() + uri_hp.field_data[UF_##x].off)
-#define uri_len_(x)  (uri_hp.field_data[UF_##x].len)
+        Network_Reference ref;
+        if(this->m_headers.is_proxy) {
+          // Userinfo is allowed.
+          size_t t = uri.find_of("@/");
+          if((t != cow_string::npos) && (uri[t] == '@')) {
+            this->m_headers.raw_userinfo.assign(uri, 0, t);
+            uri.erase(0, t + 1);
+          }
 
-        if(uri_has_(SCHEMA)) {
-          // The scheme shall be `http://` or `https://`. The default port is set
-          // accordingly. When no scheme is specified, the default port is left
-          // zero.
-          if(::rocket::ascii_ci_equal(uri_str_(SCHEMA), uri_len_(SCHEMA), "http", 4)) {
-            this->m_headers.port = 80;
-            this->m_headers.is_proxy = true;
-            this->m_headers.is_ssl = false;
-          }
-          else if(::rocket::ascii_ci_equal(uri_str_(SCHEMA), uri_len_(SCHEMA), "https", 5)) {
-            this->m_headers.port = 443;
-            this->m_headers.is_proxy = true;
-            this->m_headers.is_ssl = true;
-          }
-          else {
-            ps->http_errno = HPE_INVALID_URL;
+          // Hostname is required.
+          if(parse_network_reference(ref, uri) != uri.size()) {
+            ps->http_errno = HPE_INVALID_HOST;
             return 2;
           }
-        }
 
-        if(uri_has_(HOST)) {
-          // Use the host name in the request URI and ignore the `Host:` header.
-          this->m_headers.is_proxy = true;
-          this->m_headers.raw_host.assign(uri_str_(HOST), uri_len_(HOST));
+          this->m_headers.raw_host.assign(ref.host.p, ref.host.n);
         }
         else {
+          // Neither userinfo nor hostname is allowed.
+          if(uri[0] != '/') {
+            ps->http_errno = HPE_INVALID_PATH;
+            return 2;
+          }
+
+          uri.insert(0, 1, 'a');
+          if(parse_network_reference(ref, uri) != uri.size()) {
+            ps->http_errno = HPE_INVALID_HOST;
+            return 2;
+          }
+
           // Get the `Host:` header. Multiple `Host:` headers are not allowed.
-          uint32_t host_header_num = 0;
+          uint32_t count = 0;
           for(const auto& hr : this->m_headers.headers)
             if(hr.first == "Host") {
-              host_header_num ++;
-              if(host_header_num == 1)
+              count ++;
+              if(count == 1)
                 this->m_headers.raw_host = hr.second.as_string();
               else
                 break;
             }
 
-          if(host_header_num != 1) {
+          if(count != 1) {
             ps->http_errno = HPE_INVALID_URL;
             return 2;
           }
         }
 
-        if(uri_has_(PORT))
-          this->m_headers.port = uri_hp.port;
+        if(ref.port.n != 0)
+          this->m_headers.port = ref.port_num;
 
-        this->m_headers.raw_userinfo.assign(uri_str_(USERINFO), uri_len_(USERINFO));
-        this->m_headers.raw_path.assign(uri_str_(PATH), uri_len_(PATH));
-        this->m_headers.raw_query.assign(uri_str_(QUERY), uri_len_(QUERY));
+        if(ref.path.n != 0)
+          this->m_headers.raw_path.assign(ref.path.p, ref.path.n);
+        else
+          this->m_headers.raw_path = &"/";
+
+        if(ref.query.n != 0)
+          this->m_headers.raw_query.assign(ref.query.p, ref.query.n);
 
         // The headers are complete, so halt.
         this->m_hreq = hreq_headers_done;
