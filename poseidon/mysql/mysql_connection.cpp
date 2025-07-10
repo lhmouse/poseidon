@@ -5,7 +5,6 @@
 #include "mysql_connection.hpp"
 #include "mysql_value.hpp"
 #include "../utils.hpp"
-#include <http_parser.h>
 namespace poseidon {
 
 MySQL_Connection::
@@ -46,42 +45,38 @@ execute(const cow_string& stmt, const cow_vector<MySQL_Value>& args)
 
     if(!this->m_connected) {
       // Parse the service URI in a hacky way.
-      cow_string full_uri = "mysql://" + this->m_service_uri;
-      ::http_parser_url uri_hp;
-      ::http_parser_url_init(&uri_hp);
-      if(::http_parser_parse_url(full_uri.c_str(), full_uri.size(), false, &uri_hp) != 0)
+      cow_string user = &"root";
+      cow_string host = &"localhost";
+      uint16_t port = 3306;
+      cow_string database = &"";
+
+      cow_string uri = this->m_service_uri;
+      size_t t = uri.find_of("@/");
+      if((t != cow_string::npos) && (uri[t] == '@')) {
+        user.assign(uri, 0, t);
+        uri.erase(0, t + 1);
+      }
+
+      Network_Reference ref;
+      if(parse_network_reference(ref, uri) != uri.size())
         POSEIDON_THROW((
             "Invalid MySQL service URI `$1`",
-            "[`http_parser_parse_url()` failed]"),
+            "[`parse_network_reference()` failed]"),
             this->m_service_uri);
 
-      const char* user = "root";
-      if(uri_hp.field_set & (1 << UF_USERINFO)) {
-        char* s = full_uri.mut_data() + uri_hp.field_data[UF_USERINFO].off;
-        *(s + uri_hp.field_data[UF_USERINFO].len) = 0;
-        user = s;
-      }
+      if(ref.host.n != 0)
+        host.assign(ref.host.p, ref.host.n);
 
-      const char* host = "localhost";
-      if(uri_hp.field_set & (1 << UF_HOST)) {
-        char* s = full_uri.mut_data() + uri_hp.field_data[UF_HOST].off;
-        *(s + uri_hp.field_data[UF_HOST].len) = 0;
-        host = s;
-      }
+      if(ref.port.n != 0)
+        port = ref.port_num;
 
-      uint16_t port = 3306;
-      if(uri_hp.field_set & (1 << UF_PORT))
-        port = uri_hp.port;
+      if(ref.path.n != 0)
+        database.assign(ref.path.p + 1, ref.path.n - 1);
 
-      const char* database = "";
-      if(uri_hp.field_set & (1 << UF_PATH)) {
-        char* s = full_uri.mut_data() + uri_hp.field_data[UF_PATH].off;
-        *(s + uri_hp.field_data[UF_PATH].len) = 0;
-        database = s + 1;  // skip initial slash
-      }
-
-      if(!::mysql_real_connect(this->m_mysql, host, user, this->m_password.c_str(),
-                               database, port, nullptr, CLIENT_COMPRESS | CLIENT_FOUND_ROWS))
+      // Try connecting to the server.
+      if(!::mysql_real_connect(this->m_mysql, host.c_str(), user.c_str(),
+                               this->m_password.c_str(), database.c_str(), port,
+                               nullptr, CLIENT_COMPRESS | CLIENT_FOUND_ROWS))
         POSEIDON_THROW((
             "Could not connect to MySQL server `$1`: ERROR $2: $3",
             "[`mysql_real_connect()` failed]"),
