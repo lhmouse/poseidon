@@ -122,7 +122,7 @@ parse_git_partial(const char* str)
 
     tm.tm_isdst = 0;
     time_t saved_gmtoff = tm.tm_gmtoff;
-    this->m_tp = system_clock::from_time_t(::timegm(&tm)) - seconds(saved_gmtoff);
+    this->m_tp = system_clock::from_time_t(::timegm(&tm) - saved_gmtoff);
     return len;
   }
 
