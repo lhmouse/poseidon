@@ -44,7 +44,7 @@ do_append_column_definition(tinyfmt_str& sql, const MySQL_Table_Column& column)
         break;
 
       case mysql_column_datetime:
-        sql << "datetime";
+        sql << "datetime(6)";
         break;
 
       case mysql_column_auto_increment:
@@ -437,7 +437,7 @@ do_on_abstract_future_initialize()
           case mysql_column_datetime:
             {
               // The type shall be an exact match.
-              if(ex->second.type != "datetime")
+              if(ex->second.type != "datetime(6)")
                 goto do_alter_table_column_;
 
               if(column.default_value.is_null() == false) {
