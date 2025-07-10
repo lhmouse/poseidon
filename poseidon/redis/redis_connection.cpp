@@ -5,7 +5,6 @@
 #include "redis_connection.hpp"
 #include "redis_value.hpp"
 #include "../utils.hpp"
-#include <http_parser.h>
 namespace poseidon {
 
 Redis_Connection::
@@ -44,42 +43,36 @@ execute(const cow_vector<cow_string>& cmd)
 
     if(!this->m_connected) {
       // Parse the service URI in a hacky way.
-      cow_string full_uri = "redis://" + this->m_service_uri;
-      ::http_parser_url uri_hp;
-      ::http_parser_url_init(&uri_hp);
-      if(::http_parser_parse_url(full_uri.c_str(), full_uri.size(), false, &uri_hp) != 0)
+      cow_string user = &"default";
+      cow_string host = &"localhost";
+      uint16_t port = 6379;
+      cow_string database = &"0";
+
+      cow_string uri = this->m_service_uri;
+      size_t t = uri.find_of("@/");
+      if((t != cow_string::npos) && (uri[t] == '@')) {
+        user.assign(uri, 0, t);
+        uri.erase(0, t + 1);
+      }
+
+      Network_Reference ref;
+      if(parse_network_reference(ref, uri) != uri.size())
         POSEIDON_THROW((
             "Invalid Redis service URI `$1`",
-            "[`http_parser_parse_url()` failed]"),
+            "[`parse_network_reference()` failed]"),
             this->m_service_uri);
 
-      const char* user_str = "default";
-      if(uri_hp.field_set & (1 << UF_USERINFO)) {
-        char* s = full_uri.mut_data() + uri_hp.field_data[UF_USERINFO].off;
-        *(s + uri_hp.field_data[UF_USERINFO].len) = 0;
-        user_str = s;
-      }
+      if(ref.host.n != 0)
+        host.assign(ref.host.p, ref.host.n);
 
-      const char* host = "localhost";
-      if(uri_hp.field_set & (1 << UF_HOST)) {
-        char* s = full_uri.mut_data() + uri_hp.field_data[UF_HOST].off;
-        *(s + uri_hp.field_data[UF_HOST].len) = 0;
-        host = s;
-      }
+      if(ref.port.n != 0)
+        port = ref.port_num;
 
-      uint16_t port = 6379;
-      if(uri_hp.field_set & (1 << UF_PORT))
-        port = uri_hp.port;
-
-      const char* database = "";
-      if(uri_hp.field_set & (1 << UF_PATH)) {
-        char* s = full_uri.mut_data() + uri_hp.field_data[UF_PATH].off;
-        *(s + uri_hp.field_data[UF_PATH].len) = 0;
-        database = s + 1;  // skip initial slash
-      }
+      if(ref.path.n != 0)
+        database.assign(ref.path.p + 1, ref.path.n - 1);
 
       // Try connecting to the server.
-      if(!this->m_redis.reset(::redisConnect(host, port)))
+      if(!this->m_redis.reset(::redisConnect(host.c_str(), port)))
         POSEIDON_THROW((
             "Could not connect to Redis server `$1`: ${errno:full}",
             "[`redisConnect()` failed]"),
@@ -94,7 +87,8 @@ execute(const cow_vector<cow_string>& cmd)
       if(this->m_password.size() != 0) {
         // `AUTH user password`
         if(!this->m_reply.reset(static_cast<::redisReply*>(::redisCommand(
-                            this->m_redis, "AUTH %s %s", user_str, this->m_password.c_str()))))
+                                    this->m_redis, "AUTH %s %s", user.c_str(),
+                                    this->m_password.c_str()))))
           POSEIDON_THROW((
               "Could not execute Redis command: ERROR $1: $2",
               "[`redisCommand()` failed]"),
@@ -106,10 +100,10 @@ execute(const cow_vector<cow_string>& cmd)
               this->m_reply->str);
       }
 
-      if(database[0] != 0) {
+      if(database.size() != 0) {
         // `SELECT index`
         if(!this->m_reply.reset(static_cast<::redisReply*>(::redisCommand(
-                            this->m_redis, "SELECT %s", database))))
+                                    this->m_redis, "SELECT %s", database.c_str()))))
           POSEIDON_THROW((
               "Could not execute Redis command: ERROR $1: $2",
               "[`redisCommand()` failed]"),
@@ -140,9 +134,9 @@ execute(const cow_vector<cow_string>& cmd)
     }
 
     if(!this->m_reply.reset(static_cast<::redisReply*>(::redisCommandArgv(
-                               this->m_redis, static_cast<int>(cmd.size()),
-                               reinterpret_cast<const char**>(argv.data()),
-                               reinterpret_cast<size_t*>(argv.data() + cmd.size())))))
+                                this->m_redis, static_cast<int>(cmd.size()),
+                                reinterpret_cast<const char**>(argv.data()),
+                                reinterpret_cast<size_t*>(argv.data() + cmd.size())))))
       POSEIDON_THROW((
           "Could not execute Redis command: ERROR $1: $2",
           "[`redisCommandArgv()` failed]"),
