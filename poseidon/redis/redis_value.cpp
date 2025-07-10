@@ -14,17 +14,19 @@ Redis_Value::
     ::std::vector<decltype(Redis_Value::m_stor)> stack;
 
   do_unpack_loop_:
-    try {
-      // Unpack arrays or objects.
-      auto psa = this->m_stor.mut_ptr<Redis_Array>();
-      if(psa && psa->unique())
-        for(auto it = psa->mut_begin();  it != psa->end();  ++it)
-          stack.emplace_back().swap(it->m_stor);
-    }
-    catch(::std::exception& stdex) {
-      // Ignore this exception.
-      ::fprintf(stderr, "WARNING: %s\n", stdex.what());
-    }
+    switch(this->m_stor.index())
+      {
+      case redis_value_array:
+        try {
+          auto& sa = this->m_stor.mut<Redis_Array>();
+          if(sa.unique())
+            for(auto it = sa.mut_begin();  it != sa.end();  ++it)
+              stack.emplace_back().swap(it->m_stor);
+        }
+        catch(::std::exception& stdex)
+          { ::fprintf(stderr, "WARNING: %s\n", stdex.what());  }
+        break;
+      }
 
     if(!stack.empty()) {
       // Destroy the this value. This will not result in recursion.
