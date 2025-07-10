@@ -150,7 +150,7 @@ execute(const cow_string& stmt, const cow_vector<MySQL_Value>& args)
           time_buf[col].minute = static_cast<uint32_t>(tm.tm_min);
           time_buf[col].second = static_cast<uint32_t>(tm.tm_sec);
           time_buf[col].second_part = static_cast<uint32_t>(ts.tv_nsec) / 1000000 * 1000;
-          time_buf[col].second_part += static_cast<uint32_t>(54000 + tm.tm_gmtoff) / 1800;  // abuse for GMT offset
+          time_buf[col].second_part += static_cast<uint32_t>(54000 + tm.tm_gmtoff) / 1800;
           time_buf[col].time_type = MYSQL_TIMESTAMP_DATETIME;
 
           // Use the temporary buffer.
@@ -343,8 +343,12 @@ fetch_row(cow_vector<MySQL_Value>& output)
         tm.tm_sec = static_cast<int>(time_buf[col].second);
         ts.tv_nsec = static_cast<long>(time_buf[col].second_part / 1000 * 1000000);
 
-        ts.tv_sec = ::timegm(&tm);
-        ts.tv_sec -= static_cast<::time_t>(time_buf[col].second_part % 100 * 1800) - 54000;  // abuse for GMT offset
+        if(time_buf[col].second_part % 100 == 0)  // time zone unavailable?
+          ts.tv_sec = ::timelocal(&tm);
+        else {
+          ts.tv_sec = ::timegm(&tm);
+          ts.tv_sec -= static_cast<::time_t>(time_buf[col].second_part % 100 * 1800) - 54000;
+        }
         output.mut(col).open_datetime() = system_time_from_timespec(ts);
       }
       else if(binds[col].buffer_type == MYSQL_TYPE_LONG_BLOB) {
