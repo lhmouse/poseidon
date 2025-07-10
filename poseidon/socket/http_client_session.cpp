@@ -71,7 +71,7 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
 
           default:
             POSEIDON_THROW((
-                "Invalid payload type `$3` returned from `do_http_parser_on_headers_complete()`",
+                "Invalid payload type `$3` returned from `do_on_http_response_headers()`",
                 "[HTTP client session `$1` (class `$2`)]"),
                 this, typeid(*this), payload_type);
           }
