@@ -41,7 +41,7 @@ print_to(tinyfmt& fmt) const
           fmt.putc('\'');
           size_t base = 0;
           size_t next = cow_string::npos;
-          while((next = str.find_of(next + 1, "\'\\")) != cow_string::npos) {
+          while((next = str.find_of(next + 1, "\'\"\\")) != cow_string::npos) {
             fmt.putn(str.data() + base, next - base);
             fmt.putc('\\');
             base = next;
