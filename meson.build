@@ -68,7 +68,8 @@ poseidon_include = [
   'poseidon/redis/enums.hpp', 'poseidon/redis/redis_value.hpp',
   'poseidon/redis/redis_connection.hpp', 'poseidon/fiber/redis_query_future.hpp',
   'poseidon/fiber/redis_scan_and_get_future.hpp', 'poseidon/details/error_handling.hpp',
-  'poseidon/base/appointment.hpp' ]
+  'poseidon/base/appointment.hpp', 'poseidon/details/trigonometry.hpp',
+  'poseidon/geometry.hpp' ]
 
 poseidon_src = [
   'poseidon/fwd.cpp', 'poseidon/utils.cpp', 'poseidon/static/main_config.cpp',
@@ -110,7 +111,7 @@ poseidon_src = [
   'poseidon/fiber/mongo_query_future.cpp', 'poseidon/static/redis_connector.cpp',
   'poseidon/redis/redis_value.cpp', 'poseidon/redis/redis_connection.cpp',
   'poseidon/fiber/redis_query_future.cpp', 'poseidon/fiber/redis_scan_and_get_future.cpp',
-  'poseidon/base/appointment.cpp' ]
+  'poseidon/base/appointment.cpp', 'poseidon/geometry.cpp' ]
 
 poseidon_etc = [
   'etc/poseidon/main.conf', 'etc/poseidon/ssl/test.crt', 'etc/poseidon/ssl/test.key' ]
@@ -126,7 +127,8 @@ test_src = [
   'test/http_value.cpp', 'test/http_field_name.cpp', 'test/http_header_parser.cpp',
   'test/http_query_parser.cpp', 'test/websocket_frame_header.cpp', 'test/mysql_value.cpp',
   'test/websocket_handshake.cpp', 'test/mysql_connection.cpp', 'test/mongo_value.cpp',
-  'test/mongo_connection.cpp', 'test/redis_value.cpp', 'test/redis_connection.cpp' ]
+  'test/mongo_connection.cpp', 'test/redis_value.cpp', 'test/redis_connection.cpp',
+  'test/geometry.cpp' ]
 
 #===========================================================
 # Global configuration
