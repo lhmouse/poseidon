@@ -23,39 +23,46 @@ class Redis_Value
   public:
     // Value constructors
     constexpr
-    Redis_Value(nullptr_t = nullptr) noexcept { }
+    Redis_Value(nullptr_t = nullptr)
+      noexcept { }
 
-    Redis_Value(int num) noexcept
+    Redis_Value(int num)
+      noexcept
       {
         this->m_stor.emplace<int64_t>(num);
       }
 
     Redis_Value&
-    operator=(int num) noexcept
+    operator=(int num)
+      &
       {
         this->m_stor = static_cast<int64_t>(num);
         return *this;
       }
 
-    Redis_Value(int64_t num) noexcept
+    Redis_Value(int64_t num)
+      noexcept
       {
         this->m_stor.emplace<int64_t>(num);
       }
 
     Redis_Value&
-    operator=(int64_t num) noexcept
+    operator=(int64_t num)
+      &
       {
         this->m_stor = num;
         return *this;
       }
 
-    Redis_Value(const cow_string& str) noexcept
+    Redis_Value(const cow_string& str)
+      noexcept
       {
         this->m_stor.emplace<cow_string>(str);
       }
 
     Redis_Value&
-    operator=(const cow_string& str) noexcept
+    operator=(const cow_string& str)
+      &
       {
         this->m_stor = str;
         return *this;
@@ -63,7 +70,8 @@ class Redis_Value
 
     template<typename ycharT, size_t N,
     ROCKET_ENABLE_IF(::std::is_same<ycharT, char>::value)>
-    Redis_Value(const ycharT (*ps)[N]) noexcept
+    Redis_Value(const ycharT (*ps)[N])
+      noexcept
       {
         this->m_stor.emplace<cow_string>(ps);
       }
@@ -71,26 +79,30 @@ class Redis_Value
     template<typename ycharT, size_t N,
     ROCKET_ENABLE_IF(::std::is_same<ycharT, char>::value)>
     Redis_Value&
-    operator=(const ycharT (*ps)[N]) noexcept
+    operator=(const ycharT (*ps)[N])
+      &
       {
         this->open_string() = ps;
         return *this;
       }
 
-    Redis_Value(const Redis_Array& arr) noexcept
+    Redis_Value(const Redis_Array& arr)
+      noexcept
       {
         this->m_stor.emplace<Redis_Array>(arr);
       }
 
     Redis_Value&
-    operator=(const Redis_Array& arr) noexcept
+    operator=(const Redis_Array& arr)
+      &
       {
         this->m_stor = arr;
         return *this;
       }
 
     Redis_Value&
-    swap(Redis_Value& other) noexcept
+    swap(Redis_Value& other)
+      noexcept
       {
         this->m_stor.swap(other.m_stor);
         return *this;
@@ -104,28 +116,34 @@ class Redis_Value
     ~Redis_Value();
 
     Redis_Value_Type
-    type() const noexcept
+    type()
+      const noexcept
       { return static_cast<Redis_Value_Type>(this->m_stor.index());  }
 
     void
-    clear() noexcept
+    clear()
+      noexcept
       { this->m_stor.emplace<nullptr_t>();  }
 
     // Access raw data.
     bool
-    is_nil() const noexcept
+    is_nil()
+      const noexcept
       { return this->m_stor.index() == redis_value_nil;  }
 
     bool
-    is_integer() const noexcept
+    is_integer()
+      const noexcept
       { return this->m_stor.index() == redis_value_integer;  }
 
     const int64_t&
-    as_integer() const
+    as_integer()
+      const
       { return this->m_stor.as<int64_t>();  }
 
     int64_t&
-    open_integer() noexcept
+    open_integer()
+      noexcept
       {
         if(auto ptr = this->m_stor.mut_ptr<int64_t>())
           return *ptr;
@@ -134,23 +152,28 @@ class Redis_Value
       }
 
     bool
-    is_string() const noexcept
+    is_string()
+      const noexcept
       { return this->m_stor.index() == redis_value_string;  }
 
     const cow_string&
-    as_string() const
+    as_string()
+      const
       { return this->m_stor.as<cow_string>();  }
 
     const char*
-    as_string_c_str() const
+    as_string_c_str()
+      const
       { return this->m_stor.as<cow_string>().c_str();  }
 
     size_t
-    as_string_length() const
+    as_string_length()
+      const
       { return this->m_stor.as<cow_string>().length();  }
 
     cow_string&
-    open_string() noexcept
+    open_string()
+      noexcept
       {
         if(auto ptr = this->m_stor.mut_ptr<cow_string>())
           return *ptr;
@@ -159,15 +182,18 @@ class Redis_Value
       }
 
     bool
-    is_array() const noexcept
+    is_array()
+      const noexcept
       { return this->m_stor.index() == redis_value_array;  }
 
     const Redis_Array&
-    as_array() const
+    as_array()
+      const
       { return this->m_stor.as<Redis_Array>();  }
 
     Redis_Array&
-    open_array() noexcept
+    open_array()
+      noexcept
       {
         if(auto ptr = this->m_stor.mut_ptr<Redis_Array>())
           return *ptr;
@@ -178,15 +204,18 @@ class Redis_Value
     // Converts this value to its string form. Strings are enclosed in double
     // quotation marks.
     tinyfmt&
-    print_to(tinyfmt& fmt) const;
+    print_to(tinyfmt& fmt)
+      const;
 
     cow_string
-    to_string() const;
+    to_string()
+      const;
   };
 
 inline
 void
-swap(Redis_Value& lhs, Redis_Value& rhs) noexcept
+swap(Redis_Value& lhs, Redis_Value& rhs)
+  noexcept
   { lhs.swap(rhs);  }
 
 inline

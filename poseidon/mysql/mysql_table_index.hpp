@@ -24,7 +24,8 @@ struct MySQL_Table_Index
     ~MySQL_Table_Index();
 
     MySQL_Table_Index&
-    swap(MySQL_Table_Index& other) noexcept
+    swap(MySQL_Table_Index& other)
+      noexcept
       {
         this->name.swap(other.name);
         ::std::swap(this->type, other.type);
@@ -33,7 +34,8 @@ struct MySQL_Table_Index
       }
 
     void
-    clear() noexcept
+    clear()
+      noexcept
       {
         this->name.clear();
         this->type = mysql_index_multi;
@@ -43,7 +45,8 @@ struct MySQL_Table_Index
 
 inline
 void
-swap(MySQL_Table_Index& lhs, MySQL_Table_Index& rhs) noexcept
+swap(MySQL_Table_Index& lhs, MySQL_Table_Index& rhs)
+  noexcept
   { lhs.swap(rhs);  }
 
 }  // namespace poseidon

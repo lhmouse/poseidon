@@ -50,7 +50,8 @@ class Easy_HWSS_Server
     // Gets the local address of the listening socket. If the server is not
     // active, `ipv6_unspecified` is returned.
     const IPv6_Address&
-    local_address() const noexcept;
+    local_address()
+      const noexcept;
 
     // Starts listening the given address and port for incoming connections.
     shptr<TCP_Acceptor>
@@ -65,7 +66,8 @@ class Easy_HWSS_Server
     // Shuts down the listening socket, if any. All existent clients are also
     // disconnected immediately.
     void
-    stop() noexcept;
+    stop()
+      noexcept;
   };
 
 }  // namespace poseidon

@@ -23,7 +23,8 @@ Redis_Connection::
 
 bool
 Redis_Connection::
-reset() noexcept
+reset()
+  noexcept
   {
     // Discard the current reply.
     this->m_reply.reset();

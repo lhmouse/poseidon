@@ -39,7 +39,8 @@ Redis_Value::
 
 tinyfmt&
 Redis_Value::
-print_to(tinyfmt& fmt) const
+print_to(tinyfmt& fmt)
+  const
   {
     // Break deep recursion with a handwritten stack.
     struct xFrame
@@ -106,7 +107,8 @@ print_to(tinyfmt& fmt) const
 
 cow_string
 Redis_Value::
-to_string() const
+to_string()
+  const
   {
     tinyfmt_str fmt;
     this->print_to(fmt);

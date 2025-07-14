@@ -69,57 +69,69 @@ class WebSocket_Frame_Parser
 
     // Get configuration values.
     int
-    default_compression_level() const noexcept
+    default_compression_level()
+      const noexcept
       { return this->m_default_compression_level;  }
 
     uint32_t
-    max_message_length() const noexcept
+    max_message_length()
+      const noexcept
       { return this->m_max_message_length;  }
 
     // Has an error occurred?
     bool
-    error() const noexcept
+    error()
+      const noexcept
       { return this->m_wsf == wsf_error;  }
 
     const char*
-    description() const noexcept
+    description()
+      const noexcept
       { return this->m_error_desc ? this->m_error_desc : "success";  }
 
     // Get the operating mode.
     bool
-    is_client_mode() const noexcept
+    is_client_mode()
+      const noexcept
       { return this->m_wshs == wshs_c_accepted;  }
 
     bool
-    is_server_mode() const noexcept
+    is_server_mode()
+      const noexcept
       { return this->m_wshs == wshs_s_accepted;  }
 
     // Get parameters of the per-message compression extension (PMCE). If PMCE
     // is not active, these functions return zero.
     int
-    pmce_compression_level() const noexcept
+    pmce_compression_level()
+      const noexcept
       { return this->m_pmce_compression_level_m2 + 2;  }
 
     bool
-    pmce_send_no_context_takeover() const noexcept
+    pmce_send_no_context_takeover()
+      const noexcept
       { return this->m_pmce_send_no_context_takeover;  }
 
     uint8_t
-    pmce_send_window_bits() const noexcept
+    pmce_send_window_bits()
+      const noexcept
       { return this->m_pmce_send_window_bits;  }
 
     uint8_t
-    pmce_receive_window_bits() const noexcept
+    pmce_receive_window_bits()
+      const noexcept
       { return this->m_pmce_receive_window_bits;  }
 
     // Clears all fields. This function shall not be called unless the parser is
     // to be reused for another stream.
     void
-    clear() noexcept;
+    clear()
+      noexcept;
 
     // Deallocate dynamic memory, if any.
     void
-    deallocate() noexcept;
+    deallocate()
+      noexcept;
 
     // Creates a WebSocket handshake request from a client. The user may modify
     // the request URI or append new headers after this function returns. The
@@ -156,15 +168,18 @@ class WebSocket_Frame_Parser
 
     // Get the parsed frame header.
     bool
-    frame_header_complete() const noexcept
+    frame_header_complete()
+      const noexcept
       { return this->m_wsf >= wsf_header_done;  }
 
     const WebSocket_Frame_Header&
-    frame_header() const noexcept
+    frame_header()
+      const noexcept
       { return this->m_frm_header;  }
 
     WebSocket_Frame_Header&
-    mut_frame_header() noexcept
+    mut_frame_header()
+      noexcept
       { return this->m_frm_header;  }
 
     // Parses the payload of a frame. `data` may be consumed partially, and must
@@ -176,15 +191,18 @@ class WebSocket_Frame_Parser
     // Get the parsed frame payload. If the frame has been masked, this buffer
     // contains unmasked data.
     bool
-    frame_payload_complete() const noexcept
+    frame_payload_complete()
+      const noexcept
       { return this->m_wsf >= wsf_payload_done;  }
 
     const linear_buffer&
-    frame_payload() const noexcept
+    frame_payload()
+      const noexcept
       { return this->m_frm_payload;  }
 
     linear_buffer&
-    mut_frame_payload() noexcept
+    mut_frame_payload()
+      noexcept
       { return this->m_frm_payload;  }
 
     // Get header bits of the current (maybe fragmented) data message, which can
@@ -193,28 +211,34 @@ class WebSocket_Frame_Parser
     // data frame, the opcode of the data frame is returned; otherwise, zero is
     // returned.
     bool
-    message_fin() const noexcept
+    message_fin()
+      const noexcept
       { return this->m_fin;  }
 
     bool
-    message_rsv1() const noexcept
+    message_rsv1()
+      const noexcept
       { return this->m_rsv1;  }
 
     bool
-    message_rsv2() const noexcept
+    message_rsv2()
+      const noexcept
       { return this->m_rsv2;  }
 
     bool
-    message_rsv3() const noexcept
+    message_rsv3()
+      const noexcept
       { return this->m_rsv3;  }
 
     uint8_t
-    message_opcode() const noexcept
+    message_opcode()
+      const noexcept
       { return this->m_opcode;  }
 
     // Clears the current complete frame, so the parser can start the next one.
     void
-    next_frame() noexcept
+    next_frame()
+      noexcept
       {
         ROCKET_ASSERT(this->m_wsf >= wsf_header_done);
 

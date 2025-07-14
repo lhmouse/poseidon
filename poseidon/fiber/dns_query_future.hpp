@@ -29,11 +29,13 @@ class DNS_Query_Future
   private:
     virtual
     void
-    do_on_abstract_future_initialize() override;
+    do_on_abstract_future_initialize()
+      override;
 
     virtual
     void
-    do_on_abstract_task_execute() override;
+    do_on_abstract_task_execute()
+      override;
 
   public:
     DNS_Query_Future(const DNS_Query_Future&) = delete;
@@ -42,20 +44,23 @@ class DNS_Query_Future
 
     // Gets the hostname to look up. This field is set by the constructor.
     const cow_string&
-    host() const noexcept
+    host()
+      const noexcept
       { return this->m_host;  }
 
     // Gets the port to set in the result addresses. This field is set by the
     // constructor.
     uint16_t
-    port() const noexcept
+    port()
+      const noexcept
       { return this->m_port;  }
 
     // Gets the result after the operation has completed successfully. If
     // `successful()` yields `false`, an exception is thrown, and there is no
     // effect.
     const cow_vector<IPv6_Address>&
-    result() const
+    result()
+      const
       {
         this->check_success();
         return this->m_res;

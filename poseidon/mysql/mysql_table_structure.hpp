@@ -25,7 +25,8 @@ struct MySQL_Table_Structure
     ~MySQL_Table_Structure();
 
     MySQL_Table_Structure&
-    swap(MySQL_Table_Structure& other) noexcept
+    swap(MySQL_Table_Structure& other)
+      noexcept
       {
         this->name.swap(other.name);
         this->columns.swap(other.columns);
@@ -35,7 +36,8 @@ struct MySQL_Table_Structure
       }
 
     void
-    clear() noexcept
+    clear()
+      noexcept
       {
         this->name.clear();
         this->engine = mysql_engine_innodb;
@@ -46,7 +48,8 @@ struct MySQL_Table_Structure
 
 inline
 void
-swap(MySQL_Table_Structure& lhs, MySQL_Table_Structure& rhs) noexcept
+swap(MySQL_Table_Structure& lhs, MySQL_Table_Structure& rhs)
+  noexcept
   { lhs.swap(rhs);  }
 
 }  // namespace poseidon

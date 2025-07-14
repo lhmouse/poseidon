@@ -31,11 +31,13 @@ class UUID
   public:
     // Constructs an all-zero UUID.
     constexpr
-    UUID() noexcept = default;
+    UUID()
+      noexcept = default;
 
     // Constructs a UUID from individual fields.
     constexpr
-    UUID(const fields& f) noexcept
+    UUID(const fields& f)
+      noexcept
       {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
@@ -61,7 +63,8 @@ class UUID
 
     // Constructs a UUID from an `std::array`.
     constexpr
-    UUID(const ::std::array<uint8_t, 16>& bytes) noexcept
+    UUID(const ::std::array<uint8_t, 16>& bytes)
+      noexcept
       : m_bytes(bytes)  { }
 
     // Parses a UUID from a string, like `parse()`.
@@ -69,7 +72,8 @@ class UUID
     UUID(chars_view str);
 
     UUID&
-    swap(UUID& other) noexcept
+    swap(UUID& other)
+      noexcept
       {
         ::std::swap(this->m_stor, other.m_stor);
         return *this;
@@ -79,12 +83,14 @@ class UUID
     // Returns a static all-zero UUID.
     static ROCKET_CONST
     const UUID&
-    min() noexcept;
+    min()
+      noexcept;
 
     // Returns a static all-one UUID.
     static ROCKET_CONST
     const UUID&
-    max() noexcept;
+    max()
+      noexcept;
 
     // Generates a random UUID `xxxxxxxx-xxxx-Myyy-Nzzz-zzzzzzzzzzzz`, where:
     //
@@ -99,37 +105,44 @@ class UUID
     // This function shall be cryptographically secure.
     static
     UUID
-    random() noexcept;
+    random()
+      noexcept;
 
     // Get raw bytes.
     constexpr
     const ::std::array<uint8_t, 16>&
-    as_array() const noexcept
+    as_array()
+      const noexcept
       { return this->m_bytes;  }
 
     constexpr
     const uint8_t*
-    data() const noexcept
+    data()
+      const noexcept
       { return this->m_bytes.data();  }
 
     constexpr
     size_t
-    size() const noexcept
+    size()
+      const noexcept
       { return 16;  }
 
     constexpr
     const uint8_t*
-    begin() const noexcept
+    begin()
+      const noexcept
       { return this->m_bytes.begin();  }
 
     constexpr
     const uint8_t*
-    end() const noexcept
+    end()
+      const noexcept
       { return this->m_bytes.end();  }
 
     ROCKET_PURE
     bool
-    is_nil() const noexcept
+    is_nil()
+      const noexcept
       {
         __m128i tval = _mm_load_si128(&(this->m_stor));
         __m128i oval = _mm_setzero_si128();
@@ -138,7 +151,8 @@ class UUID
 
     ROCKET_PURE
     bool
-    equals(const UUID& other) const noexcept
+    equals(const UUID& other)
+      const noexcept
       {
         __m128i tval = _mm_load_si128(&(this->m_stor));
         __m128i oval = _mm_load_si128(&(other.m_stor));
@@ -147,32 +161,38 @@ class UUID
 
     ROCKET_PURE
     int
-    compare(const UUID& other) const noexcept;
+    compare(const UUID& other)
+      const noexcept;
 
     // Tries parsing a UUID from a string in the RFC 4122 format. An example is
     // `f81d4fae-7dec-11d0-a765-00a0c91e6bf6`. If a UUID has been parsed, the number
     // of characters that have been consumed is returned, which is always 36;
     // otherwise zero is returned, and the contents of this object are unspecified.
     size_t
-    parse_partial(const char* str) noexcept;
+    parse_partial(const char* str)
+      noexcept;
 
     // Tries parsing a UUID from a string like `parse_partial()`, but the length of
     // `str` is validated.
     size_t
-    parse(chars_view str) noexcept;
+    parse(chars_view str)
+      noexcept;
 
     // Converts this UUID to its RFC 4112 form. Hexadecimal digits are written in
     // uppercase. The caller should supply a buffer for 37 characters. A null
     // terminator is always appended. The number of characters that have been written
     // is stored, which is always 36.
     size_t
-    print_partial(char* str) const noexcept;
+    print_partial(char* str)
+      const noexcept;
 
     tinyfmt&
-    print_to(tinyfmt& fmt) const;
+    print_to(tinyfmt& fmt)
+      const;
 
     cow_string
-    to_string() const;
+    to_string()
+      const;
   };
 
 struct UUID::hash
@@ -181,7 +201,8 @@ struct UUID::hash
     using argument_type  = UUID;
 
     result_type
-    operator()(const UUID& uuid) const noexcept
+    operator()(const UUID& uuid)
+      const noexcept
       {
         __m128i tval = _mm_load_si128(&(uuid.m_stor));
         tval = _mm_hadd_epi32(tval, _mm_bsrli_si128(tval, 8));
@@ -195,7 +216,8 @@ struct UUID::hash
 
 inline
 void
-swap(UUID& lhs, UUID& rhs) noexcept
+swap(UUID& lhs, UUID& rhs)
+  noexcept
   { lhs.swap(rhs);  }
 
 inline
@@ -205,32 +227,38 @@ operator<<(tinyfmt& fmt, const UUID& value)
 
 inline
 bool
-operator==(const UUID& lhs, const UUID& rhs) noexcept
+operator==(const UUID& lhs, const UUID& rhs)
+  noexcept
   { return lhs.equals(rhs) != false;  }
 
 inline
 bool
-operator!=(const UUID& lhs, const UUID& rhs) noexcept
+operator!=(const UUID& lhs, const UUID& rhs)
+  noexcept
   { return lhs.equals(rhs) == false;  }
 
 inline
 bool
-operator<(const UUID& lhs, const UUID& rhs) noexcept
+operator<(const UUID& lhs, const UUID& rhs)
+  noexcept
   { return lhs.compare(rhs) < 0;  }
 
 inline
 bool
-operator>(const UUID& lhs, const UUID& rhs) noexcept
+operator>(const UUID& lhs, const UUID& rhs)
+  noexcept
   { return lhs.compare(rhs) > 0;  }
 
 inline
 bool
-operator<=(const UUID& lhs, const UUID& rhs) noexcept
+operator<=(const UUID& lhs, const UUID& rhs)
+  noexcept
   { return lhs.compare(rhs) <= 0;  }
 
 inline
 bool
-operator>=(const UUID& lhs, const UUID& rhs) noexcept
+operator>=(const UUID& lhs, const UUID& rhs)
+  noexcept
   { return lhs.compare(rhs) >= 0;  }
 
 }  // namespace poseidon

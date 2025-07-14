@@ -25,70 +25,82 @@ class MySQL_Value
   public:
     // Value constructors
     constexpr
-    MySQL_Value(nullptr_t = nullptr) noexcept { }
+    MySQL_Value(nullptr_t = nullptr)
+      noexcept { }
 
     MySQL_Value&
-    operator=(nullptr_t) & noexcept
+    operator=(nullptr_t)
+      &
       {
         this->clear();
         return *this;
       }
 
-    MySQL_Value(bool value) noexcept
+    MySQL_Value(bool value)
+      noexcept
       {
         this->m_stor.emplace<int64_t>(value);
       }
 
     MySQL_Value&
-    operator=(bool value) & noexcept
+    operator=(bool value)
+      &
       {
         this->m_stor = static_cast<int64_t>(value);
         return *this;
       }
 
-    MySQL_Value(int num) noexcept
+    MySQL_Value(int num)
+      noexcept
       {
         this->m_stor.emplace<int64_t>(num);
       }
 
     MySQL_Value&
-    operator=(int num) & noexcept
+    operator=(int num)
+      &
       {
         this->m_stor = static_cast<int64_t>(num);
         return *this;
       }
 
-    MySQL_Value(int64_t num) noexcept
+    MySQL_Value(int64_t num)
+      noexcept
       {
         this->m_stor.emplace<int64_t>(num);
       }
 
     MySQL_Value&
-    operator=(int64_t num) & noexcept
+    operator=(int64_t num)
+      &
       {
         this->m_stor = num;
         return *this;
       }
 
-    MySQL_Value(double num) noexcept
+    MySQL_Value(double num)
+      noexcept
       {
         this->m_stor.emplace<double>(num);
       }
 
     MySQL_Value&
-    operator=(double num) & noexcept
+    operator=(double num)
+      &
       {
         this->m_stor = num;
         return *this;
       }
 
-    MySQL_Value(const cow_string& str) noexcept
+    MySQL_Value(const cow_string& str)
+      noexcept
       {
         this->m_stor.emplace<cow_string>(str);
       }
 
     MySQL_Value&
-    operator=(const cow_string& str) & noexcept
+    operator=(const cow_string& str)
+      &
       {
         this->m_stor = str;
         return *this;
@@ -96,7 +108,8 @@ class MySQL_Value
 
     template<typename ycharT, size_t N,
     ROCKET_ENABLE_IF(::std::is_same<ycharT, char>::value)>
-    MySQL_Value(const ycharT (*ps)[N]) noexcept
+    MySQL_Value(const ycharT (*ps)[N])
+      noexcept
       {
         this->m_stor.emplace<cow_string>(ps);
       }
@@ -104,38 +117,44 @@ class MySQL_Value
     template<typename ycharT, size_t N,
     ROCKET_ENABLE_IF(::std::is_same<ycharT, char>::value)>
     MySQL_Value&
-    operator=(const ycharT (*ps)[N]) noexcept
+    operator=(const ycharT (*ps)[N])
+      &
       {
         this->open_blob() = ps;
         return *this;
       }
 
-    MySQL_Value(const DateTime& dt) noexcept
+    MySQL_Value(const DateTime& dt)
+      noexcept
       {
         this->m_stor.emplace<DateTime>(dt);
       }
 
     MySQL_Value&
-    operator=(const DateTime& dt) & noexcept
+    operator=(const DateTime& dt)
+      &
       {
         this->open_datetime() = dt;
         return *this;
       }
 
-    MySQL_Value(system_time tm) noexcept
+    MySQL_Value(system_time tm)
+      noexcept
       {
         this->m_stor.emplace<DateTime>(tm);
       }
 
     MySQL_Value&
-    operator=(system_time tm) & noexcept
+    operator=(system_time tm)
+      &
       {
         this->open_datetime() = tm;
         return *this;
       }
 
     MySQL_Value&
-    swap(MySQL_Value& other) noexcept
+    swap(MySQL_Value& other)
+      noexcept
       {
         this->m_stor.swap(other.m_stor);
         return *this;
@@ -149,28 +168,34 @@ class MySQL_Value
     ~MySQL_Value();
 
     MySQL_Value_Type
-    type() const noexcept
+    type()
+      const noexcept
       { return static_cast<MySQL_Value_Type>(this->m_stor.index());  }
 
     void
-    clear() noexcept
+    clear()
+      noexcept
       { this->m_stor.emplace<nullptr_t>();  }
 
     // Access raw data.
     bool
-    is_null() const noexcept
+    is_null()
+      const noexcept
       { return this->m_stor.index() == mysql_value_null;  }
 
     bool
-    is_integer() const noexcept
+    is_integer()
+      const noexcept
       { return this->m_stor.index() == mysql_value_integer;  }
 
     const int64_t&
-    as_integer() const
+    as_integer()
+      const
       { return this->m_stor.as<int64_t>();  }
 
     int64_t&
-    open_integer() noexcept
+    open_integer()
+      noexcept
       {
         if(auto ptr = this->m_stor.mut_ptr<int64_t>())
           return *ptr;
@@ -179,15 +204,18 @@ class MySQL_Value
       }
 
     bool
-    is_double() const noexcept
+    is_double()
+      const noexcept
       { return this->m_stor.index() == mysql_value_double;  }
 
     const double&
-    as_double() const
+    as_double()
+      const
       { return this->m_stor.as<double>();  }
 
     double&
-    open_double() noexcept
+    open_double()
+      noexcept
       {
         if(auto ptr = this->m_stor.mut_ptr<double>())
           return *ptr;
@@ -196,23 +224,28 @@ class MySQL_Value
       }
 
     bool
-    is_blob() const noexcept
+    is_blob()
+      const noexcept
       { return this->m_stor.index() == mysql_value_blob;  }
 
     const cow_string&
-    as_blob() const
+    as_blob()
+      const
       { return this->m_stor.as<cow_string>();  }
 
     const char*
-    as_blob_data() const
+    as_blob_data()
+      const
       { return this->m_stor.as<cow_string>().data();  }
 
     size_t
-    as_blob_size() const
+    as_blob_size()
+      const
       { return this->m_stor.as<cow_string>().size();  }
 
     cow_string&
-    open_blob() noexcept
+    open_blob()
+      noexcept
       {
         if(auto ptr = this->m_stor.mut_ptr<cow_string>())
           return *ptr;
@@ -221,19 +254,23 @@ class MySQL_Value
       }
 
     bool
-    is_datetime() const noexcept
+    is_datetime()
+      const noexcept
       { return this->m_stor.index() == mysql_value_datetime;  }
 
     const DateTime&
-    as_datetime() const
+    as_datetime()
+      const
       { return this->m_stor.as<DateTime>();  }
 
     system_time
-    as_system_time() const
+    as_system_time()
+      const
       { return this->m_stor.as<DateTime>().as_system_time();  }
 
     DateTime&
-    open_datetime() noexcept
+    open_datetime()
+      noexcept
       {
         if(auto ptr = this->m_stor.mut_ptr<DateTime>())
           return *ptr;
@@ -244,15 +281,18 @@ class MySQL_Value
     // Converts this value to its string form. The result will be suitable
     // for immediate use in an SQL statement. Strings are quoted as necessary.
     tinyfmt&
-    print_to(tinyfmt& fmt) const;
+    print_to(tinyfmt& fmt)
+      const;
 
     cow_string
-    to_string() const;
+    to_string()
+      const;
   };
 
 inline
 void
-swap(MySQL_Value& lhs, MySQL_Value& rhs) noexcept
+swap(MySQL_Value& lhs, MySQL_Value& rhs)
+  noexcept
   { lhs.swap(rhs);  }
 
 inline

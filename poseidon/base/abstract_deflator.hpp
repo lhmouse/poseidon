@@ -28,7 +28,8 @@ class Abstract_Deflator
     // If an exception is thrown, the state of this stream is unspecified.
     virtual
     char*
-    do_on_deflate_resize_output_buffer(size_t& size) = 0;
+    do_on_deflate_resize_output_buffer(size_t& size)
+      = 0;
 
     // This callback is invoked to inform derived classes that all input data
     // have been compressed but the output buffer is not full. `backup` is the
@@ -38,7 +39,8 @@ class Abstract_Deflator
     // If an exception is thrown, the state of this stream is unspecified.
     virtual
     void
-    do_on_deflate_truncate_output_buffer(size_t backup) = 0;
+    do_on_deflate_truncate_output_buffer(size_t backup)
+      = 0;
 
   public:
     Abstract_Deflator(const Abstract_Deflator&) = delete;
@@ -47,7 +49,8 @@ class Abstract_Deflator
 
     // Resets internal states. Pending data are discarded.
     void
-    reset() noexcept;
+    reset()
+      noexcept;
 
     // Compresses some data and returns the number of bytes that have been
     // consumed. This function returns zero if `finish()` has been called to

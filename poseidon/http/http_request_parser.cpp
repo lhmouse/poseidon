@@ -201,7 +201,8 @@ HTTP_Request_Parser::
 
 HTTP_Status
 HTTP_Request_Parser::
-http_status_from_error() const noexcept
+http_status_from_error()
+  const noexcept
   {
     switch(this->m_parser->http_errno)
       {
@@ -225,7 +226,8 @@ http_status_from_error() const noexcept
 
 void
 HTTP_Request_Parser::
-clear() noexcept
+clear()
+  noexcept
   {
     ::http_parser_init(this->m_parser, HTTP_REQUEST);
     this->m_parser->data = this;
@@ -239,7 +241,8 @@ clear() noexcept
 
 void
 HTTP_Request_Parser::
-deallocate() noexcept
+deallocate()
+  noexcept
   {
     ::rocket::exchange(this->m_headers.raw_host);
     ::rocket::exchange(this->m_headers.raw_userinfo);

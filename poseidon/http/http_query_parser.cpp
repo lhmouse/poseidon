@@ -7,7 +7,8 @@
 namespace poseidon {
 
 HTTP_Query_Parser::
-HTTP_Query_Parser() noexcept
+HTTP_Query_Parser()
+  noexcept
   {
   }
 
@@ -18,7 +19,8 @@ HTTP_Query_Parser::
 
 void
 HTTP_Query_Parser::
-clear() noexcept
+clear()
+  noexcept
   {
     this->m_hstr.clear();
     this->m_hpos = 0;

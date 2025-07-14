@@ -15,23 +15,27 @@ class DateTime
   public:
     // Initializes a timestamp of `1970-01-01 00:00:00 UTC`.
     constexpr
-    DateTime() noexcept = default;
+    DateTime()
+      noexcept = default;
 
     constexpr
-    DateTime(system_time tp) noexcept
+    DateTime(system_time tp)
+      noexcept
       :
         m_tp(tp)
       { }
 
     DateTime&
-    operator=(system_time tp) & noexcept
+    operator=(system_time tp)
+      & noexcept
       {
         this->m_tp = tp;
         return *this;
       }
 
     DateTime&
-    swap(DateTime& other) noexcept
+    swap(DateTime& other)
+      noexcept
       {
         ::std::swap(this->m_tp, other.m_tp);
         return *this;
@@ -46,11 +50,13 @@ class DateTime
     // Accesses raw data.
     constexpr
     system_time
-    as_system_time() const noexcept
+    as_system_time()
+      const noexcept
       { return this->m_tp;  }
 
     void
-    set_system_time(system_time tp) noexcept
+    set_system_time(system_time tp)
+      noexcept
       { this->m_tp = tp;  }
 
     // Tries parsing an HTTP date/time in the formal RFC 1123 format. An example
@@ -100,28 +106,32 @@ class DateTime
     // This function returns the number of characters that have been written,
     // excluding the null terminator, which is always 29.
     size_t
-    print_rfc1123_partial(char* str) const noexcept;
+    print_rfc1123_partial(char* str)
+      const noexcept;
 
     // Converts this timestamp to its RFC 1123 format, with a null terminator.
     // There shall be at least 34 characters in the buffer that `str` points to.
     // This function returns the number of characters that have been written,
     // excluding the null terminator, which is within [30,33].
     size_t
-    print_rfc850_partial(char* str) const noexcept;
+    print_rfc850_partial(char* str)
+      const noexcept;
 
     // Converts this timestamp to its asctime format, with a null terminator.
     // There shall be at least 25 characters in the buffer that `str` points to.
     // This function returns the number of characters that have been written,
     // excluding the null terminator, which is always 24.
     size_t
-    print_asctime_partial(char* str) const noexcept;
+    print_asctime_partial(char* str)
+      const noexcept;
 
     // Converts this timestamp to its cookie format, with a null terminator.
     // There shall be at least 30 characters in the buffer that `str` points to.
     // This function returns the number of characters that have been written,
     // excluding the null terminator, which is always 29.
     size_t
-    print_cookie_partial(char* str) const noexcept;
+    print_cookie_partial(char* str)
+      const noexcept;
 
     // Converts this timestamp to its Git format, with a null terminator. There
     // shall be at least 26 characters in the buffer that `str` points to. A
@@ -129,49 +139,59 @@ class DateTime
     // number of characters that have been written, excluding the null
     // terminator, which is always 25.
     size_t
-    print_git_partial(char* str) const noexcept;
+    print_git_partial(char* str)
+      const noexcept;
 
     // Converts this timestamp to its Git format.
     tinyfmt&
-    print_to(tinyfmt& fmt) const;
+    print_to(tinyfmt& fmt)
+      const;
 
     cow_string
-    to_string() const;
+    to_string()
+      const;
   };
 
 constexpr
 bool
-operator==(const DateTime& lhs, const DateTime& rhs) noexcept
+operator==(const DateTime& lhs, const DateTime& rhs)
+  noexcept
   { return lhs.as_system_time() == rhs.as_system_time();  }
 
 constexpr
 bool
-operator!=(const DateTime& lhs, const DateTime& rhs) noexcept
+operator!=(const DateTime& lhs, const DateTime& rhs)
+  noexcept
   { return lhs.as_system_time() != rhs.as_system_time();  }
 
 constexpr
 bool
-operator<(const DateTime& lhs, const DateTime& rhs) noexcept
+operator<(const DateTime& lhs, const DateTime& rhs)
+  noexcept
   { return lhs.as_system_time() < rhs.as_system_time();  }
 
 constexpr
 bool
-operator>(const DateTime& lhs, const DateTime& rhs) noexcept
+operator>(const DateTime& lhs, const DateTime& rhs)
+  noexcept
   { return lhs.as_system_time() > rhs.as_system_time();  }
 
 constexpr
 bool
-operator<=(const DateTime& lhs, const DateTime& rhs) noexcept
+operator<=(const DateTime& lhs, const DateTime& rhs)
+  noexcept
   { return lhs.as_system_time() <= rhs.as_system_time();  }
 
 constexpr
 bool
-operator>=(const DateTime& lhs, const DateTime& rhs) noexcept
+operator>=(const DateTime& lhs, const DateTime& rhs)
+  noexcept
   { return lhs.as_system_time() >= rhs.as_system_time();  }
 
 inline
 void
-swap(DateTime& lhs, DateTime& rhs) noexcept
+swap(DateTime& lhs, DateTime& rhs)
+  noexcept
   { lhs.swap(rhs);  }
 
 inline

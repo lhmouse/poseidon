@@ -37,7 +37,8 @@ struct WebSocket_Frame_Header
     ~WebSocket_Frame_Header() = default;
 
     WebSocket_Frame_Header&
-    swap(WebSocket_Frame_Header& other) noexcept
+    swap(WebSocket_Frame_Header& other)
+      noexcept
       {
         ::std::swap(this->packed_fields_1, other.packed_fields_1);
         return *this;
@@ -45,7 +46,8 @@ struct WebSocket_Frame_Header
 
     // Clears all fields.
     void
-    clear() noexcept
+    clear()
+      noexcept
       {
         this->packed_fields_1 = _mm_setzero_si128();
       }
@@ -53,17 +55,20 @@ struct WebSocket_Frame_Header
     // Encodes this frame header in wire format. The output will be suitable
     // for sending through a stream socket.
     void
-    encode(tinyfmt& fmt) const;
+    encode(tinyfmt& fmt)
+      const;
 
     // Masks a part (or unmasks a masked part) of the frame payload, and update
     // `masking_key` incrementally. If `masked` is unset, this function does nothing.
     void
-    mask_payload(char* data, size_t size) noexcept;
+    mask_payload(char* data, size_t size)
+      noexcept;
   };
 
 inline
 void
-swap(WebSocket_Frame_Header& lhs, WebSocket_Frame_Header& rhs) noexcept
+swap(WebSocket_Frame_Header& lhs, WebSocket_Frame_Header& rhs)
+  noexcept
   { lhs.swap(rhs);  }
 
 }  // namespace poseidon

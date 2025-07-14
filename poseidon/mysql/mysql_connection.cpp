@@ -23,7 +23,8 @@ MySQL_Connection::
 
 bool
 MySQL_Connection::
-reset() noexcept
+reset()
+  noexcept
   {
     // Discard the current result set.
     this->m_res.reset();
@@ -185,14 +186,16 @@ execute(const cow_string& stmt, const cow_vector<MySQL_Value>& args)
 
 uint32_t
 MySQL_Connection::
-warning_count() const noexcept
+warning_count()
+  const noexcept
   {
     return ::mysql_warning_count(this->m_mysql);
   }
 
 uint64_t
 MySQL_Connection::
-match_count() const noexcept
+match_count()
+  const noexcept
   {
     if(!this->m_stmt)
       return 0;
@@ -203,7 +206,8 @@ match_count() const noexcept
 
 uint64_t
 MySQL_Connection::
-insert_id() const noexcept
+insert_id()
+  const noexcept
   {
     if(!this->m_stmt)
       return 0;

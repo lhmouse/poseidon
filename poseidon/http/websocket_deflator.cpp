@@ -22,7 +22,8 @@ WebSocket_Deflator::
 
 void
 WebSocket_Deflator::
-deflate_reset(plain_mutex::unique_lock& lock) noexcept
+deflate_reset(plain_mutex::unique_lock& lock)
+  noexcept
   {
     lock.lock(this->m_def_mtx);
     ::deflateReset(this->m_def_strm);

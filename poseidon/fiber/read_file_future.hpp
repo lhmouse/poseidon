@@ -36,11 +36,13 @@ class Read_File_Future
   private:
     virtual
     void
-    do_on_abstract_future_initialize() override;
+    do_on_abstract_future_initialize()
+      override;
 
     virtual
     void
-    do_on_abstract_task_execute() override;
+    do_on_abstract_task_execute()
+      override;
 
   public:
     Read_File_Future(const Read_File_Future&) = delete;
@@ -49,24 +51,28 @@ class Read_File_Future
 
     // Gets the path to the file. This field is set by the constructor.
     const cow_string&
-    path() const noexcept
+    path()
+      const noexcept
       { return this->m_path;  }
 
     // Gets the file offset to start from. This field is set by the constructor.
     int64_t
-    offset_req() const noexcept
+    offset_req()
+      const noexcept
       { return this->m_offset_req;  }
 
     // Gets the max number of bytes to read. This field is set by the constructor.
     size_t
-    limit() const noexcept
+    limit()
+      const noexcept
       { return this->m_limit;  }
 
     // Gets the time of last access after the operation has completed successfully.
     // If `successful()` yields `false`, an exception is thrown, and there is no
     // effect.
     system_time
-    time_accessed() const
+    time_accessed()
+      const
       {
         this->check_success();
         return this->m_accessed;
@@ -76,7 +82,8 @@ class Read_File_Future
     // successfully. If `successful()` yields `false`, an exception is thrown, and
     // there is no effect.
     system_time
-    time_modified() const
+    time_modified()
+      const
       {
         this->check_success();
         return this->m_modified;
@@ -86,7 +93,8 @@ class Read_File_Future
     // If `successful()` yields `false`, an exception is thrown, and there is no
     // effect.
     int64_t
-    file_size() const
+    file_size()
+      const
       {
         this->check_success();
         return this->m_file_size;
@@ -96,7 +104,8 @@ class Read_File_Future
     // completed successfully. If `successful()` yields `false`, an exception is
     // thrown, and there is no effect.
     int64_t
-    offset() const
+    offset()
+      const
       {
         this->check_success();
         return this->m_offset;
@@ -106,7 +115,8 @@ class Read_File_Future
     // be fewer than `limit()`. If `successful()` yields `false`, an exception is
     // thrown, and there is no effect.
     const cow_string&
-    data() const
+    data()
+      const
       {
         this->check_success();
         return this->m_data;

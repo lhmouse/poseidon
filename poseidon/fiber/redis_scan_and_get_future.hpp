@@ -33,15 +33,18 @@ class Redis_Scan_and_Get_Future
   private:
     virtual
     void
-    do_on_abstract_future_initialize() override;
+    do_on_abstract_future_initialize()
+      override;
 
     virtual
     void
-    do_on_abstract_future_finalize() override;
+    do_on_abstract_future_finalize()
+      override;
 
     virtual
     void
-    do_on_abstract_task_execute() override;
+    do_on_abstract_task_execute()
+      override;
 
   public:
     Redis_Scan_and_Get_Future(const Redis_Scan_and_Get_Future&) = delete;
@@ -50,14 +53,16 @@ class Redis_Scan_and_Get_Future
 
     // Gets the scan pattern. This field is set by the constructor.
     const cow_string&
-    pattern() const noexcept
+    pattern()
+      const noexcept
       { return this->m_pattern;  }
 
     // Gets the result key-value pairs after the operation has completed
     // successfully. If `successful()` yields `false`, an exception is thrown,
     // and there is no effect.
     const cow_dictionary<cow_string>&
-    result() const
+    result()
+      const
       {
         this->check_success();
         return this->m_res;

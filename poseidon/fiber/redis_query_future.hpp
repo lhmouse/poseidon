@@ -34,15 +34,18 @@ class Redis_Query_Future
   private:
     virtual
     void
-    do_on_abstract_future_initialize() override;
+    do_on_abstract_future_initialize()
+      override;
 
     virtual
     void
-    do_on_abstract_future_finalize() override;
+    do_on_abstract_future_finalize()
+      override;
 
     virtual
     void
-    do_on_abstract_task_execute() override;
+    do_on_abstract_task_execute()
+      override;
 
   public:
     Redis_Query_Future(const Redis_Query_Future&) = delete;
@@ -51,14 +54,16 @@ class Redis_Query_Future
 
     // Gets the command to execute. This field is set by the constructor.
     const cow_vector<cow_string>&
-    cmd() const noexcept
+    cmd()
+      const noexcept
       { return this->m_cmd;  }
 
     // Gets the result status after the operation has completed successfully.
     // If `successful()` yields `false`, an exception is thrown, and there is
     // no effect.
     const cow_string&
-    status() const
+    status()
+      const
       {
         this->check_success();
         return this->m_status;
@@ -68,7 +73,8 @@ class Redis_Query_Future
     // If `successful()` yields `false`, an exception is thrown, and there is
     // no effect.
     const Redis_Value&
-    result() const
+    result()
+      const
       {
         this->check_success();
         return this->m_res;

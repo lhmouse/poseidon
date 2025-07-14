@@ -23,7 +23,8 @@ class Mongo_Connector
 
   public:
     // Constructs an empty connector.
-    Mongo_Connector() noexcept;
+    Mongo_Connector()
+      noexcept;
 
   private:
     uniptr<Mongo_Connection>

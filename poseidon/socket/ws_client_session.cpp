@@ -324,7 +324,8 @@ ws_send(WS_Opcode opcode, chars_view data)
 
 bool
 WS_Client_Session::
-ws_shut_down(WS_Status status, chars_view reason) noexcept
+ws_shut_down(WS_Status status, chars_view reason)
+  noexcept
   {
     if(!this->do_has_upgraded() || (this->socket_state() >= socket_closing))
       return this->tcp_shut_down();
@@ -355,7 +356,8 @@ ws_shut_down(WS_Status status, chars_view reason) noexcept
 
 bool
 WS_Client_Session::
-ws_shut_down(int status, chars_view reason) noexcept
+ws_shut_down(int status, chars_view reason)
+  noexcept
   {
     WS_Status real_status = ws_status_policy_violation;
     if((status >= 1000) && (status <= 4999))

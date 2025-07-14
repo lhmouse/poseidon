@@ -6,7 +6,8 @@
 namespace poseidon {
 
 Main_Config::
-Main_Config() noexcept
+Main_Config()
+  noexcept
   {
   }
 
@@ -30,7 +31,8 @@ reload()
 
 Config_File
 Main_Config::
-copy() noexcept
+copy()
+  noexcept
   {
     plain_mutex::unique_lock lock(this->m_mutex);
     return this->m_file;

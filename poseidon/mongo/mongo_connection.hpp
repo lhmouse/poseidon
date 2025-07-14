@@ -36,7 +36,8 @@ class Mongo_Connection
 
     // Gets the URI from the constructor.
     const cow_string&
-    service_uri() const noexcept
+    service_uri()
+      const noexcept
       { return this->m_service_uri;  }
 
     // Resets the connection so it can be reused by another thread. This is a
@@ -44,7 +45,8 @@ class Mongo_Connection
     // FUNCTION RETURNS `false`.
     // Returns whether the connection may be safely reused.
     bool
-    reset() noexcept;
+    reset()
+      noexcept;
 
     // Executes a command in BSON format with no option on the default database.
     // It is recommended that you pass a `scoped_bson` object.

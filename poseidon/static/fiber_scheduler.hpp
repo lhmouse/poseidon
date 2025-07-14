@@ -23,12 +23,14 @@ class Fiber_Scheduler
 
   public:
     // Constructs an empty scheduler.
-    Fiber_Scheduler() noexcept;
+    Fiber_Scheduler()
+      noexcept;
 
   private:
     static
     void
-    do_fiber_procedure() noexcept;
+    do_fiber_procedure()
+      noexcept;
 
     static
     void
@@ -54,7 +56,8 @@ class Fiber_Scheduler
     // This function is thread-safe.
     ROCKET_PURE
     size_t
-    size() const noexcept;
+    size()
+      const noexcept;
 
     // Takes ownership of a fiber, and schedules it for execution. The fiber
     // can only be deleted after it finishes execution.

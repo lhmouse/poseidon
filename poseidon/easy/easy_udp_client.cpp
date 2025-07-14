@@ -42,7 +42,8 @@ struct Final_Fiber final : Abstract_Fiber
 
     virtual
     void
-    do_on_abstract_fiber_execute() override
+    do_on_abstract_fiber_execute()
+      override
       {
         for(;;) {
           // The packet callback may stop this server, so we have to check for
@@ -93,7 +94,8 @@ struct Final_Socket final : UDP_Socket
 
     virtual
     void
-    do_on_udp_packet(IPv6_Address&& addr, linear_buffer&& data) override
+    do_on_udp_packet(IPv6_Address&& addr, linear_buffer&& data)
+      override
       {
         auto queue = this->m_wqueue.lock();
         if(!queue)
@@ -127,7 +129,8 @@ Easy_UDP_Client::
 
 const IPv6_Address&
 Easy_UDP_Client::
-local_address() const noexcept
+local_address()
+  const noexcept
   {
     if(!this->m_socket)
       return ipv6_unspecified;
@@ -151,7 +154,8 @@ start(const callback_type& callback)
 
 void
 Easy_UDP_Client::
-stop() noexcept
+stop()
+  noexcept
   {
     this->m_queue = nullptr;
     this->m_socket = nullptr;

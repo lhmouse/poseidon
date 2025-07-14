@@ -11,14 +11,16 @@ namespace poseidon {
 struct redisContext_deleter
   {
     void
-    operator()(::redisContext* p) const noexcept
+    operator()(::redisContext* p)
+      const noexcept
       { ::redisFree(p);  }
   };
 
 struct redisReply_deleter
   {
     void
-    operator()(::redisReply* p) const noexcept
+    operator()(::redisReply* p)
+      const noexcept
       { ::freeReplyObject(p);  }
   };
 

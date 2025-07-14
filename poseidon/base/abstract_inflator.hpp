@@ -28,7 +28,8 @@ class Abstract_Inflator
     // If an exception is thrown, the state of this stream is unspecified.
     virtual
     char*
-    do_on_inflate_resize_output_buffer(size_t& size) = 0;
+    do_on_inflate_resize_output_buffer(size_t& size)
+      = 0;
 
     // This callback is invoked to inform derived classes that all input data
     // have been decompressed but the output buffer is not full. `backup` is
@@ -38,7 +39,8 @@ class Abstract_Inflator
     // If an exception is thrown, the state of this stream is unspecified.
     virtual
     void
-    do_on_inflate_truncate_output_buffer(size_t backup) = 0;
+    do_on_inflate_truncate_output_buffer(size_t backup)
+      = 0;
 
   public:
     Abstract_Inflator(const Abstract_Inflator&) = delete;
@@ -47,7 +49,8 @@ class Abstract_Inflator
 
     // Resets internal states. Pending data are discarded.
     void
-    reset() noexcept;
+    reset()
+      noexcept;
 
     // Decompresses some data and returns the number of bytes that have been
     // consumed. This function may return a value that is less than `size` if

@@ -14,7 +14,8 @@ MySQL_Value::
 
 tinyfmt&
 MySQL_Value::
-print_to(tinyfmt& fmt) const
+print_to(tinyfmt& fmt)
+  const
   {
     switch(this->type())
       {
@@ -71,7 +72,8 @@ print_to(tinyfmt& fmt) const
 
 cow_string
 MySQL_Value::
-to_string() const
+to_string()
+  const
   {
     tinyfmt_str fmt;
     this->print_to(fmt);

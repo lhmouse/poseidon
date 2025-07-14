@@ -30,15 +30,18 @@ class UDP_Socket
     // These callbacks implement `Abstract_Socket`.
     virtual
     void
-    do_abstract_socket_on_closed() override;
+    do_abstract_socket_on_closed()
+      override;
 
     virtual
     void
-    do_abstract_socket_on_readable() override;
+    do_abstract_socket_on_readable()
+      override;
 
     virtual
     void
-    do_abstract_socket_on_writeable() override;
+    do_abstract_socket_on_writeable()
+      override;
 
     // This callback is invoked by the network thread when a packet has been
     // received, and is intended to be overriden by derived classes.
@@ -46,7 +49,8 @@ class UDP_Socket
     // for subsequent packets.
     virtual
     void
-    do_on_udp_packet(IPv6_Address&& addr, linear_buffer&& data) = 0;
+    do_on_udp_packet(IPv6_Address&& addr, linear_buffer&& data)
+      = 0;
 
   public:
     UDP_Socket(const UDP_Socket&) = delete;

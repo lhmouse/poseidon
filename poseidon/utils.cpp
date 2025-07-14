@@ -12,7 +12,8 @@
 namespace poseidon {
 
 bool
-do_is_log_enabled(uint8_t level) noexcept
+do_is_log_enabled(uint8_t level)
+  noexcept
   {
     return logger.enabled(level);
   }
@@ -245,7 +246,8 @@ quote_json_string(tinyfmt& fmt, const cow_string& str)
   }
 
 void
-hex_encode_16_partial(char* str, const void* data) noexcept
+hex_encode_16_partial(char* str, const void* data)
+  noexcept
   {
     // Split the higher and lower halves into two SSE registers.
     __m128i tval = _mm_loadu_si128(static_cast<const __m128i*>(data));
@@ -266,7 +268,8 @@ hex_encode_16_partial(char* str, const void* data) noexcept
   }
 
 void
-random_bytes(void* ptr, size_t size) noexcept
+random_bytes(void* ptr, size_t size)
+  noexcept
   {
     auto ctx = ::OSSL_LIB_CTX_get0_global_default();
     if(!ctx)
@@ -283,7 +286,8 @@ random_bytes(void* ptr, size_t size) noexcept
   }
 
 size_t
-parse_network_reference(Network_Reference& caddr, chars_view str) noexcept
+parse_network_reference(Network_Reference& caddr, chars_view str)
+  noexcept
   {
     if(str.n == 0)
       return 0;

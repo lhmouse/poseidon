@@ -63,21 +63,26 @@ class scoped_deflate_stream
     scoped_deflate_stream(const scoped_deflate_stream&) = delete;
     scoped_deflate_stream& operator=(const scoped_deflate_stream&) & = delete;
 
-    operator ::z_stream*() const noexcept { return this->m_strm;  }
+    operator ::z_stream*()
+      const noexcept
+      { return this->m_strm;  }
 
     const char*
-    msg() const noexcept
+    msg()
+      const noexcept
       { return this->m_strm->msg ? this->m_strm->msg : "no error";  }
 
     void
-    get_buffers(char*& ocur, const char*& icur) noexcept
+    get_buffers(char*& ocur, const char*& icur)
+      noexcept
       {
         ocur = reinterpret_cast<char*>(this->m_strm->next_out);
         icur = reinterpret_cast<const char*>(this->m_strm->next_in);
       }
 
     void
-    set_buffers(char* ocur, char* oend, const char* icur, const char* iend) noexcept
+    set_buffers(char* ocur, char* oend, const char* icur, const char* iend)
+      noexcept
       {
         this->m_strm->next_out = reinterpret_cast<::Bytef*>(ocur);
         this->m_strm->avail_out = ::rocket::clamp_cast<::uInt>(oend - ocur, 0, INT_MAX);
@@ -127,21 +132,26 @@ class scoped_inflate_stream
     scoped_inflate_stream(const scoped_inflate_stream&) = delete;
     scoped_inflate_stream& operator=(const scoped_inflate_stream&) & = delete;
 
-    operator ::z_stream*() const noexcept { return this->m_strm;  }
+    operator ::z_stream*()
+      const noexcept
+      { return this->m_strm;  }
 
     const char*
-    msg() const noexcept
+    msg()
+      const noexcept
       { return this->m_strm->msg ? this->m_strm->msg : "no error";  }
 
     void
-    get_buffers(char*& ocur, const char*& icur) noexcept
+    get_buffers(char*& ocur, const char*& icur)
+      noexcept
       {
         ocur = reinterpret_cast<char*>(this->m_strm->next_out);
         icur = reinterpret_cast<const char*>(this->m_strm->next_in);
       }
 
     void
-    set_buffers(char* ocur, char* oend, const char* icur, const char* iend) noexcept
+    set_buffers(char* ocur, char* oend, const char* icur, const char* iend)
+      noexcept
       {
         this->m_strm->next_out = reinterpret_cast<::Bytef*>(ocur);
         this->m_strm->avail_out = ::rocket::clamp_cast<::uInt>(oend - ocur, 0, INT_MAX);

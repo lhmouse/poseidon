@@ -22,7 +22,8 @@ POSEIDON_HIDDEN_X_STRUCT(Mongo_Connector,
   Pooled_Connection);
 
 Mongo_Connector::
-Mongo_Connector() noexcept
+Mongo_Connector()
+  noexcept
   {
   }
 

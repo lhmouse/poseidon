@@ -13,7 +13,8 @@ HTTP_Field_Name::
 
 int
 HTTP_Field_Name::
-compare(const cow_string& cmps) const noexcept
+compare(const cow_string& cmps)
+  const noexcept
   {
     return ::rocket::ascii_ci_compare(this->m_str.data(), this->m_str.size(),
                                       cmps.data(), cmps.size());
@@ -21,7 +22,8 @@ compare(const cow_string& cmps) const noexcept
 
 int
 HTTP_Field_Name::
-compare(const HTTP_Field_Name& other) const noexcept
+compare(const HTTP_Field_Name& other)
+  const noexcept
   {
     return ::rocket::ascii_ci_compare(this->m_str.data(), this->m_str.size(),
                                       other.m_str.data(), other.m_str.size());
@@ -29,7 +31,8 @@ compare(const HTTP_Field_Name& other) const noexcept
 
 size_t
 HTTP_Field_Name::
-rdhash() const noexcept
+rdhash()
+  const noexcept
   {
     return ::rocket::ascii_ci_hash(this->m_str.data(), this->m_str.size());
   }

@@ -23,7 +23,8 @@ class Redis_Connector
 
   public:
     // Constructs an empty connector.
-    Redis_Connector() noexcept;
+    Redis_Connector()
+      noexcept;
 
   private:
     uniptr<Redis_Connection>

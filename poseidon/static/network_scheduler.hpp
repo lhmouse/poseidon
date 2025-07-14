@@ -28,11 +28,13 @@ class Network_Scheduler
 
   public:
     // Constructs an empty scheduler.
-    Network_Scheduler() noexcept;
+    Network_Scheduler()
+      noexcept;
 
   private:
     wkptr<Abstract_Socket>&
-    do_find_socket_nolock(volatile Abstract_Socket* socket) noexcept;
+    do_find_socket_nolock(volatile Abstract_Socket* socket)
+      noexcept;
 
     static
     int
@@ -50,7 +52,8 @@ class Network_Scheduler
     // context is not available, an exception is thrown.
     // This function is thread-safe.
     uniptr_SSL_CTX
-    server_ssl_ctx() const;
+    server_ssl_ctx()
+      const;
 
     // Gets the client SSL context for outgoing connections, which is always
     // available after `reload()`. If a path to trusted CA certificates is
@@ -58,7 +61,8 @@ class Network_Scheduler
     // otherwise, a warning is printed and no verification is performed.
     // This function is thread-safe.
     uniptr_SSL_CTX
-    client_ssl_ctx() const;
+    client_ssl_ctx()
+      const;
 
     // Reloads configuration from 'main.conf'.
     // If this function fails, an exception is thrown, and there is no effect.

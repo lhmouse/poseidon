@@ -14,7 +14,8 @@ HTTP_S_Headers::
 
 void
 HTTP_S_Headers::
-encode(tinyfmt& fmt) const
+encode(tinyfmt& fmt)
+  const
   {
     // Write the status line. If `reason` is empty, a default reason string
     // is written. This function does not validate whether these fields

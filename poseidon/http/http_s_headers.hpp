@@ -26,7 +26,8 @@ struct HTTP_S_Headers
     ~HTTP_S_Headers();
 
     HTTP_S_Headers&
-    swap(HTTP_S_Headers& other) noexcept
+    swap(HTTP_S_Headers& other)
+      noexcept
       {
         ::std::swap(this->status, other.status);
         this->reason.swap(other.reason);
@@ -36,7 +37,8 @@ struct HTTP_S_Headers
 
     // Clears all fields.
     void
-    clear() noexcept
+    clear()
+      noexcept
       {
         this->status = http_status_null;
         this->reason.clear();
@@ -46,12 +48,14 @@ struct HTTP_S_Headers
     // Encodes headers in wire format. Lines are separated by CR LF pairs. The
     // output will be suitable for sending through a stream socket.
     void
-    encode(tinyfmt& fmt) const;
+    encode(tinyfmt& fmt)
+      const;
   };
 
 inline
 void
-swap(HTTP_S_Headers& lhs, HTTP_S_Headers& rhs) noexcept
+swap(HTTP_S_Headers& lhs, HTTP_S_Headers& rhs)
+  noexcept
   { lhs.swap(rhs);  }
 
 }  // namespace poseidon

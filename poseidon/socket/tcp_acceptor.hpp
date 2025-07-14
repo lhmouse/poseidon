@@ -28,22 +28,26 @@ class TCP_Acceptor
     // These callbacks implement `Abstract_Socket`.
     virtual
     void
-    do_abstract_socket_on_closed() override;
+    do_abstract_socket_on_closed()
+      override;
 
     virtual
     void
-    do_abstract_socket_on_readable() override;
+    do_abstract_socket_on_readable()
+      override;
 
     virtual
     void
-    do_abstract_socket_on_writeable() override;
+    do_abstract_socket_on_writeable()
+      override;
 
     // This callback is invoked by the network thread when a connection has been
     // received, and is intended to be overriden by derived classes. This function
     // should return a pointer to a socket object, constructed from the given FD.
     virtual
     shptr<Abstract_Socket>
-    do_accept_socket_opt(IPv6_Address&& addr, unique_posix_fd&& fd) = 0;
+    do_accept_socket_opt(IPv6_Address&& addr, unique_posix_fd&& fd)
+      = 0;
 
   public:
     TCP_Acceptor(const TCP_Acceptor&) = delete;

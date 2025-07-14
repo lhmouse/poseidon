@@ -216,9 +216,9 @@ struct cacheline_barrier
 
     alignas(alignment) char bytes[size];
 
-    cacheline_barrier() noexcept = default;
-    cacheline_barrier(const cacheline_barrier&) { }
-    cacheline_barrier& operator=(const cacheline_barrier&) & { return *this; }
+    cacheline_barrier() noexcept { }
+    cacheline_barrier(const cacheline_barrier&) noexcept { }
+    cacheline_barrier& operator=(const cacheline_barrier&) & noexcept { return *this; }
   };
 
 struct chars_view
@@ -227,91 +227,109 @@ struct chars_view
     size_t n;
 
     constexpr
-    chars_view(nullptr_t = nullptr) noexcept
+    chars_view(nullptr_t = nullptr)
+      noexcept
       : p(nullptr), n(0U)  { }
 
     constexpr
-    chars_view(const char* xp, size_t xn) noexcept
+    chars_view(const char* xp, size_t xn)
+      noexcept
       : p(xp), n(xn)  { }
 
     constexpr
-    chars_view(const char* xs) noexcept
+    chars_view(const char* xs)
+      noexcept
       : p(xs), n(xs ? ::rocket::xstrlen(xs) : 0U)  { }
 
     template<typename traitsT, typename allocT>
     constexpr
-    chars_view(const ::std::basic_string<char, traitsT, allocT>& rs) noexcept
+    chars_view(const ::std::basic_string<char, traitsT, allocT>& rs)
+      noexcept
       : p(rs.data()), n(rs.size())  { }
 
     template<typename allocT>
     constexpr
-    chars_view(const ::std::vector<char, allocT>& rs) noexcept
+    chars_view(const ::std::vector<char, allocT>& rs)
+      noexcept
       : p(rs.data()), n(rs.size())  { }
 
     template<size_t N>
     constexpr
-    chars_view(const ::std::array<char, N>& rs) noexcept
+    chars_view(const ::std::array<char, N>& rs)
+      noexcept
       : p(rs.data()), n(rs.size())  { }
 
 #ifdef __cpp_lib_string_view
     template<typename traitsT>
     constexpr
-    chars_view(const ::std::basic_string_view<char, traitsT>& rs) noexcept
+    chars_view(const ::std::basic_string_view<char, traitsT>& rs)
+      noexcept
       : p(rs.data()), n(rs.size())  { }
 #endif
 
     constexpr
-    chars_view(const ::rocket::shallow_string rs) noexcept
+    chars_view(const ::rocket::shallow_string rs)
+      noexcept
       : p(rs.data()), n(rs.size())  { }
 
     template<size_t N>
     constexpr
-    chars_view(const char (*ps)[N]) noexcept
+    chars_view(const char (*ps)[N])
+      noexcept
       : p(*ps), n((ROCKET_ASSERT(*(*ps + N - 1) == '\0'), N - 1))  { }
 
     template<typename allocT>
     constexpr
-    chars_view(const ::rocket::basic_cow_string<char, allocT>& rs) noexcept
+    chars_view(const ::rocket::basic_cow_string<char, allocT>& rs)
+      noexcept
       : p(rs.data()), n(rs.size())  { }
 
     template<typename allocT>
     constexpr
-    chars_view(const ::rocket::basic_tinybuf_str<char, allocT>& rs) noexcept
+    chars_view(const ::rocket::basic_tinybuf_str<char, allocT>& rs)
+      noexcept
       : p(rs.data()), n(rs.size())  { }
 
     template<typename allocT>
     constexpr
-    chars_view(const ::rocket::basic_tinyfmt_str<char, allocT>& rs) noexcept
+    chars_view(const ::rocket::basic_tinyfmt_str<char, allocT>& rs)
+      noexcept
       : p(rs.data()), n(rs.size())  { }
 
     template<typename allocT>
     constexpr
-    chars_view(const ::rocket::basic_linear_buffer<char, allocT>& rs) noexcept
+    chars_view(const ::rocket::basic_linear_buffer<char, allocT>& rs)
+      noexcept
       : p(rs.data()), n(rs.size())  { }
 
     template<typename allocT>
     constexpr
-    chars_view(const ::rocket::basic_tinybuf_ln<char, allocT>& rs) noexcept
+    chars_view(const ::rocket::basic_tinybuf_ln<char, allocT>& rs)
+      noexcept
       : p(rs.data()), n(rs.size())  { }
 
     template<typename allocT>
     constexpr
-    chars_view(const ::rocket::basic_tinyfmt_ln<char, allocT>& rs) noexcept
+    chars_view(const ::rocket::basic_tinyfmt_ln<char, allocT>& rs)
+      noexcept
       : p(rs.data()), n(rs.size())  { }
 
     template<size_t... Ns>
     constexpr
-    chars_view(const ::rocket::array<char, Ns...>& rs) noexcept
+    chars_view(const ::rocket::array<char, Ns...>& rs)
+      noexcept
       : p(rs.data()), n(rs.size())  { }
 
     template<typename allocT>
     constexpr
-    chars_view(const ::rocket::cow_vector<char, allocT>& rs) noexcept
+    chars_view(const ::rocket::cow_vector<char, allocT>& rs)
+      noexcept
       : p(rs.data()), n(rs.size())  { }
 
     template<size_t N, typename allocT>
     constexpr
-    chars_view(const ::rocket::static_vector<char, N, allocT>& rs) noexcept
+    chars_view(const ::rocket::static_vector<char, N, allocT>& rs)
+      noexcept
       : p(rs.data()), n(rs.size())  { }
 
     // Returns the first character. Depending on the nature of the source string,
@@ -319,39 +337,52 @@ struct chars_view
     // whether `n` equals zero here.
     constexpr
     char
-    operator*() const noexcept
+    operator*()
+      const noexcept
       { return *(this->p);  }
 
     constexpr
     char
-    operator[](size_t index) const noexcept
+    operator[](size_t index)
+      const noexcept
       { return ROCKET_ASSERT(index <= this->n), *(this->p + index);  }
 
     // Moves the view to the left.
     constexpr
     chars_view
-    operator<<(size_t dist) const noexcept
+    operator<<(size_t dist)
+      const noexcept
       { return chars_view(this->p - dist, this->n + dist);  }
 
     constexpr
     chars_view&
-    operator<<=(size_t dist) & noexcept
+    operator<<=(size_t dist)
+      & noexcept
       { return *this = *this << dist;  }
 
     // Moves the view to the right.
     constexpr
     chars_view
-    operator>>(size_t dist) const noexcept
+    operator>>(size_t dist)
+      const noexcept
       { return chars_view(this->p + dist, this->n - dist);  }
 
     constexpr
     chars_view&
-    operator>>=(size_t dist) & noexcept
+    operator>>=(size_t dist)
+      & noexcept
       { return *this = *this >> dist;  }
 
     // Makes a copy.
-    explicit operator cow_string() const
+    cow_string
+    to_string()
+      const
       { return cow_string(this->p, this->n);  }
+
+    explicit
+    operator cow_string()
+      const
+      { return this->to_string();  }
   };
 
 inline
@@ -361,42 +392,50 @@ operator<<(tinyfmt& fmt, chars_view data)
 
 inline
 chars_view
-sview(const char* str) noexcept
+sview(const char* str)
+  noexcept
   { return chars_view(str, ::strlen(str));  }
 
 inline
 chars_view
-snview(const char* str, size_t n) noexcept
+snview(const char* str, size_t n)
+  noexcept
   { return chars_view(str, ::strnlen(str, n));  }
 
 constexpr
 bool
-operator==(chars_view lhs, chars_view rhs) noexcept
+operator==(chars_view lhs, chars_view rhs)
+  noexcept
   { return (lhs.n == rhs.n) && (::rocket::xmemcmp(lhs.p, rhs.p, lhs.n) == 0);  }
 
 constexpr
 bool
-operator==(chars_view lhs, const char* rhs) noexcept
+operator==(chars_view lhs, const char* rhs)
+  noexcept
   { return (lhs.n == ::rocket::xstrlen(rhs)) && (::rocket::xmemcmp(lhs.p, rhs, lhs.n) == 0);  }
 
 constexpr
 bool
-operator==(const char* lhs, chars_view rhs) noexcept
+operator==(const char* lhs, chars_view rhs)
+  noexcept
   { return (::rocket::xstrlen(lhs) == rhs.n) && (::rocket::xmemcmp(lhs, rhs.p, rhs.n) == 0);  }
 
 constexpr
 bool
-operator!=(chars_view lhs, chars_view rhs) noexcept
+operator!=(chars_view lhs, chars_view rhs)
+  noexcept
   { return (lhs.n != rhs.n) || (::rocket::xmemcmp(lhs.p, rhs.p, lhs.n) != 0);  }
 
 constexpr
 bool
-operator!=(chars_view lhs, const char* rhs) noexcept
+operator!=(chars_view lhs, const char* rhs)
+  noexcept
   { return (lhs.n != ::rocket::xstrlen(rhs)) || (::rocket::xmemcmp(lhs.p, rhs, lhs.n) != 0);  }
 
 constexpr
 bool
-operator!=(const char* lhs, chars_view rhs) noexcept
+operator!=(const char* lhs, chars_view rhs)
+  noexcept
   { return (::rocket::xstrlen(lhs) != rhs.n) || (::rocket::xmemcmp(lhs, rhs.p, rhs.n) != 0);  }
 
 }  // namespace fwd

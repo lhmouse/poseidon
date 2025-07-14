@@ -16,13 +16,15 @@ class Config_File
 
   public:
     // Constructs an empty file.
-    Config_File() noexcept;
+    Config_File()
+      noexcept;
 
     // Loads the file denoted by `path`.
     explicit Config_File(const cow_string& conf_path);
 
     Config_File&
-    swap(Config_File& other) noexcept
+    swap(Config_File& other)
+      noexcept
       {
         this->m_path.swap(other.m_path);
         this->m_root.swap(other.m_root);
@@ -39,17 +41,20 @@ class Config_File
     // Returns the absolute file path.
     // If no file has been loaded, an empty string is returned.
     cow_string
-    path() const noexcept
+    path()
+      const noexcept
       { return this->m_path;  }
 
     // Gets the root object.
     ::asteria::V_object
-    root() const noexcept
+    root()
+      const noexcept
       { return this->m_root;  }
 
     // Clears existent data.
     void
-    clear() noexcept;
+    clear()
+      noexcept;
 
     // Loads the file denoted by `path`. In case of an error, an exception is
     // thrown, and there is no effect.
@@ -64,62 +69,74 @@ class Config_File
     // If during path resolution, an attempt is made to get a field of a
     // non-object, an exception is thrown.
     const ::asteria::Value&
-    query(chars_view vpath) const;
+    query(chars_view vpath)
+      const;
 
     // Gets a boolean value. The value must exist and must be a boolean,
     // otherwise an exception is thrown.
     bool
-    get_boolean(chars_view vpath) const;
+    get_boolean(chars_view vpath)
+      const;
 
     // Gets a boolean value. If a non-null value exists, it must be a boolean,
     // otherwise an exception is thrown.
     opt<bool>
-    get_boolean_opt(chars_view vpath) const;
+    get_boolean_opt(chars_view vpath)
+      const;
 
     // Gets an integer. The value must exist and must be an integer within the
     // given range, otherwise an exception is thrown.
     int64_t
-    get_integer(chars_view vpath, int64_t min, int64_t max) const;
+    get_integer(chars_view vpath, int64_t min, int64_t max)
+      const;
 
     // Gets an integer. If a non-null value exists, it must be an integer
     // within the given range, otherwise an exception is thrown.
     opt<int64_t>
-    get_integer_opt(chars_view vpath, int64_t min, int64_t max) const;
+    get_integer_opt(chars_view vpath, int64_t min, int64_t max)
+      const;
 
     // Gets a float-point value. The value must exist and must be a number
     // within the given range, otherwise an exception is thrown.
     double
-    get_real(chars_view vpath, double min, double max) const;
+    get_real(chars_view vpath, double min, double max)
+      const;
 
     // Gets a float-point value. If a non-null value exists, it must be a
     // number within the given range, otherwise an exception is thrown.
     opt<double>
-    get_real_opt(chars_view vpath, double min, double max) const;
+    get_real_opt(chars_view vpath, double min, double max)
+      const;
 
     // Gets a string. The value must exist and must be a string, otherwise an
     // exception is thrown.
     const cow_string&
-    get_string(chars_view vpath) const;
+    get_string(chars_view vpath)
+      const;
 
     // Gets a string. If a non-null value exists, it must be a string,
     // otherwise an exception is thrown.
     opt<cow_string>
-    get_string_opt(chars_view vpath) const;
+    get_string_opt(chars_view vpath)
+      const;
 
     // Gets the size of an array. The value must exist and must be an array,
     // otherwise an exception is thrown.
     size_t
-    get_array_size(chars_view vpath) const;
+    get_array_size(chars_view vpath)
+      const;
 
     // Gets the size of an array. If a non-null value exists, it must be an
     // array, otherwise an exception is thrown.
     opt<size_t>
-    get_array_size_opt(chars_view vpath) const;
+    get_array_size_opt(chars_view vpath)
+      const;
   };
 
 inline
 void
-swap(Config_File& lhs, Config_File& rhs) noexcept
+swap(Config_File& lhs, Config_File& rhs)
+  noexcept
   { lhs.swap(rhs);  }
 
 }  // namespace poseidon

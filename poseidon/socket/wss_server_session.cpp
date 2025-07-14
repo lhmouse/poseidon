@@ -352,7 +352,8 @@ wss_send(WS_Opcode opcode, chars_view data)
 
 bool
 WSS_Server_Session::
-wss_shut_down(WS_Status status, chars_view reason) noexcept
+wss_shut_down(WS_Status status, chars_view reason)
+  noexcept
   {
     if(!this->do_has_upgraded() || (this->socket_state() >= socket_closing))
       return this->ssl_shut_down();
@@ -383,7 +384,8 @@ wss_shut_down(WS_Status status, chars_view reason) noexcept
 
 bool
 WSS_Server_Session::
-wss_shut_down(int status, chars_view reason) noexcept
+wss_shut_down(int status, chars_view reason)
+  noexcept
   {
     WS_Status real_status = ws_status_policy_violation;
     if((status >= 1000) && (status <= 4999))

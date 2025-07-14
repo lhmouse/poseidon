@@ -38,7 +38,8 @@ class Easy_UDP_Client
     // Gets the local address of the listening socket. If the client is not
     // active, `ipv6_unspecified` is returned.
     const IPv6_Address&
-    local_address() const noexcept;
+    local_address()
+      const noexcept;
 
     // Creates a socket for sending data.
     shptr<UDP_Socket>
@@ -46,7 +47,8 @@ class Easy_UDP_Client
 
     // Shuts down the socket, if any.
     void
-    stop() noexcept;
+    stop()
+      noexcept;
   };
 
 }  // namespace poseidon

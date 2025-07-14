@@ -25,21 +25,24 @@ UUID(chars_view str)
 
 const UUID&
 UUID::
-min() noexcept
+min()
+  noexcept
   {
     return s_min;
   }
 
 const UUID&
 UUID::
-max() noexcept
+max()
+  noexcept
   {
     return s_max;
   }
 
 UUID
 UUID::
-random() noexcept
+random()
+  noexcept
   {
     struct timespec ts;
     ::clock_gettime(CLOCK_REALTIME, &ts);
@@ -64,7 +67,8 @@ random() noexcept
 
 int
 UUID::
-compare(const UUID& other) const noexcept
+compare(const UUID& other)
+  const noexcept
   {
     __m128i bswap = _mm_setr_epi8(15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0);
     __m128i shift = _mm_set1_epi8(-128);
@@ -78,7 +82,8 @@ compare(const UUID& other) const noexcept
 
 size_t
 UUID::
-parse_partial(const char* str) noexcept
+parse_partial(const char* str)
+  noexcept
   {
     uint64_t high = 0;
     uint64_t low = 0;
@@ -114,7 +119,8 @@ parse_partial(const char* str) noexcept
 
 size_t
 UUID::
-parse(chars_view str) noexcept
+parse(chars_view str)
+  noexcept
   {
     if(str.n >= 36)
       if(size_t aclen = this->parse_partial(str.p))
@@ -125,7 +131,8 @@ parse(chars_view str) noexcept
 
 size_t
 UUID::
-print_partial(char* str) const noexcept
+print_partial(char* str)
+  const noexcept
   {
     //            0123456789012345678901234567890123456
     // * str    : xxxxxxxx-xxxx-Myyy-Nzzz-zzzzzzzzzzzz.
@@ -148,7 +155,8 @@ print_partial(char* str) const noexcept
 
 tinyfmt&
 UUID::
-print_to(tinyfmt& fmt) const
+print_to(tinyfmt& fmt)
+  const
   {
     char str[64];
     size_t len = this->print_partial(str);
@@ -157,7 +165,8 @@ print_to(tinyfmt& fmt) const
 
 cow_string
 UUID::
-to_string() const
+to_string()
+  const
   {
     char str[64];
     size_t len = this->print_partial(str);

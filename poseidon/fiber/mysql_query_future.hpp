@@ -39,15 +39,18 @@ class MySQL_Query_Future
   private:
     virtual
     void
-    do_on_abstract_future_initialize() override;
+    do_on_abstract_future_initialize()
+      override;
 
     virtual
     void
-    do_on_abstract_future_finalize() override;
+    do_on_abstract_future_finalize()
+      override;
 
     virtual
     void
-    do_on_abstract_task_execute() override;
+    do_on_abstract_task_execute()
+      override;
 
   public:
     MySQL_Query_Future(const MySQL_Query_Future&) = delete;
@@ -56,13 +59,15 @@ class MySQL_Query_Future
 
     // Gets the statement to execute. This field is set by the constructor.
     const cow_string&
-    stmt() const noexcept
+    stmt()
+      const noexcept
       { return this->m_stmt;  }
 
     // Gets the arguments for the statement to execute. This field is set by
     // the constructor.
     const cow_vector<MySQL_Value>&
-    stmt_args() const noexcept
+    stmt_args()
+      const noexcept
       { return this->m_stmt_args;  }
 
     // Gets the number of warnings of the last operation. This can indicate
@@ -70,7 +75,8 @@ class MySQL_Query_Future
     // `successful()` yields `false`, an exception is thrown, and there is no
     // effect.
     uint32_t
-    warning_count() const
+    warning_count()
+      const
       {
         this->check_success();
         return this->m_warning_count;
@@ -80,7 +86,8 @@ class MySQL_Query_Future
     // The value is undefined for other operations. If `successful()` yields
     // `false`, an exception is thrown, and there is no effect.
     uint64_t
-    match_count() const noexcept
+    match_count()
+      const noexcept
       {
         this->check_success();
         return this->m_match_count;
@@ -91,7 +98,8 @@ class MySQL_Query_Future
     // If `successful()` yields `false`, an exception is thrown, and there is no
     // effect.
     uint64_t
-    insert_id() const
+    insert_id()
+      const
       {
         this->check_success();
         return this->m_insert_id;
@@ -101,7 +109,8 @@ class MySQL_Query_Future
     // `successful()` yields `false`, an exception is thrown, and there is no
     // effect.
     const cow_vector<cow_string>&
-    result_fields() const
+    result_fields()
+      const
       {
         this->check_success();
         return this->m_result_fields;
@@ -111,7 +120,8 @@ class MySQL_Query_Future
     // successfully. If `successful()` yields `false`, an exception is thrown,
     // and there is no effect.
     size_t
-    result_field_count() const
+    result_field_count()
+      const
       {
         this->check_success();
         return this->m_result_fields.size();
@@ -121,7 +131,8 @@ class MySQL_Query_Future
     // successfully. If `successful()` yields `false`, an exception is thrown,
     // and there is no effect.
     const cow_string&
-    result_field(size_t field_index) const
+    result_field(size_t field_index)
+      const
       {
         this->check_success();
         return this->m_result_fields.at(field_index);
@@ -131,7 +142,8 @@ class MySQL_Query_Future
     // `successful()` yields `false`, an exception is thrown, and there is no
     // effect.
     const cow_vector<cow_vector<MySQL_Value>>&
-    result_rows() const
+    result_rows()
+      const
       {
         this->check_success();
         return this->m_result_rows;
@@ -141,7 +153,8 @@ class MySQL_Query_Future
     // successfully. If `successful()` yields `false`, an exception is thrown,
     // and there is no effect.
     size_t
-    result_row_count() const
+    result_row_count()
+      const
       {
         this->check_success();
         return this->m_result_rows.size();
@@ -151,7 +164,8 @@ class MySQL_Query_Future
     // `successful()` yields `false`, an exception is thrown, and there is no
     // effect.
     const cow_vector<MySQL_Value>&
-    result_row(size_t row_index) const
+    result_row(size_t row_index)
+      const
       {
         this->check_success();
         return this->m_result_rows.at(row_index);
@@ -161,7 +175,8 @@ class MySQL_Query_Future
     // If `successful()` yields `false`, an exception is thrown, and there is no
     // effect.
     const MySQL_Value&
-    result_row_field(size_t row_index, size_t field_index) const
+    result_row_field(size_t row_index, size_t field_index)
+      const
       {
         this->check_success();
         return this->m_result_rows.at(row_index).at(field_index);

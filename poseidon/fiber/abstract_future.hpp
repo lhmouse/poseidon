@@ -19,7 +19,8 @@ class Abstract_Future
 
   protected:
     // Constructs an uninitialized future.
-    Abstract_Future() noexcept;
+    Abstract_Future()
+      noexcept;
 
   protected:
     // This callback is invoked by `do_abstract_future_initialize_once()` and is
@@ -28,7 +29,8 @@ class Abstract_Future
     // which can be rethrown by `check_result()`.
     virtual
     void
-    do_on_abstract_future_initialize() = 0;
+    do_on_abstract_future_initialize()
+      = 0;
 
     // This callback is invoked by `do_abstract_future_initialize_once()` and is
     // intended to be overriden by derived classes to do cleanup work. If an
@@ -49,7 +51,8 @@ class Abstract_Future
 
     // This is the out-of-line implementation of `check_success()`.
     void
-    do_abstract_future_check_success() const;
+    do_abstract_future_check_success()
+      const;
 
   public:
     Abstract_Future(const Abstract_Future&) = delete;
@@ -58,18 +61,21 @@ class Abstract_Future
 
     // Checks whether initialization has completed.
     bool
-    initialized() const noexcept
+    initialized()
+      const noexcept
       { return this->m_init.load();  }
 
     // Checks whether initialization has completed without an exception.
     bool
-    successful() const noexcept
+    successful()
+      const noexcept
       { return this->m_init.load() && !this->m_init_except;  }
 
     // Checks whether this future has been initialized. If an exception has been
     // caught and saved, it is rethrown.
     void
-    check_success() const
+    check_success()
+      const
       {
         if(!this->m_init.load())
           this->do_abstract_future_check_success();

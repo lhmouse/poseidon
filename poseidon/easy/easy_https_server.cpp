@@ -55,7 +55,8 @@ struct Final_Fiber final : Abstract_Fiber
 
     virtual
     void
-    do_on_abstract_fiber_execute() override
+    do_on_abstract_fiber_execute()
+      override
       {
         for(;;) {
           // The event callback may stop this server, so we have to check for
@@ -167,7 +168,8 @@ struct Final_Session final : HTTPS_Server_Session
 
     virtual
     void
-    do_on_ssl_connected() override
+    do_on_ssl_connected()
+      override
       {
         Event event;
         event.type = easy_http_open;
@@ -176,7 +178,8 @@ struct Final_Session final : HTTPS_Server_Session
 
     virtual
     void
-    do_on_https_request_finish(HTTP_C_Headers&& req, linear_buffer&& data, bool eot) override
+    do_on_https_request_finish(HTTP_C_Headers&& req, linear_buffer&& data, bool eot)
+      override
       {
         Event event;
         event.type = easy_http_message;
@@ -188,7 +191,8 @@ struct Final_Session final : HTTPS_Server_Session
 
     virtual
     void
-    do_on_https_request_error(bool method_was_head, HTTP_Status status) override
+    do_on_https_request_error(bool method_was_head, HTTP_Status status)
+      override
       {
         Event event;
         event.eot = true;
@@ -199,7 +203,8 @@ struct Final_Session final : HTTPS_Server_Session
 
     virtual
     void
-    do_abstract_socket_on_closed() override
+    do_abstract_socket_on_closed()
+      override
       {
         char sbuf[1024];
         int err_code = errno;
@@ -228,7 +233,8 @@ struct Final_Acceptor final : TCP_Acceptor
 
     virtual
     shptr<Abstract_Socket>
-    do_accept_socket_opt(IPv6_Address&& addr, unique_posix_fd&& fd) override
+    do_accept_socket_opt(IPv6_Address&& addr, unique_posix_fd&& fd)
+      override
       {
         auto sessions = this->m_wsessions.lock();
         if(!sessions)
@@ -259,7 +265,8 @@ Easy_HTTPS_Server::
 
 const IPv6_Address&
 Easy_HTTPS_Server::
-local_address() const noexcept
+local_address()
+  const noexcept
   {
     if(!this->m_acceptor)
       return ipv6_unspecified;
@@ -296,7 +303,8 @@ start(uint16_t port, const callback_type& callback)
 
 void
 Easy_HTTPS_Server::
-stop() noexcept
+stop()
+  noexcept
   {
     this->m_sessions = nullptr;
     this->m_acceptor = nullptr;

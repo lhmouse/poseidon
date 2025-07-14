@@ -156,7 +156,8 @@ set_request_host(const Abstract_Socket& socket, const cow_string& default_host)
 
 void
 HTTP_C_Headers::
-encode(tinyfmt& fmt) const
+encode(tinyfmt& fmt)
+  const
   {
     // Write the request line. If `method` is an empty string, `GET` is assumed.
     // This function does not validate whether these fields contain valid values.

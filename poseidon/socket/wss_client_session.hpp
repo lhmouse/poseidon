@@ -33,19 +33,23 @@ class WSS_Client_Session
     // This function implements `HTTPS_Client_Session`.
     virtual
     void
-    do_abstract_socket_on_closed() override;
+    do_abstract_socket_on_closed()
+      override;
 
     virtual
     void
-    do_on_https_response_payload_stream(linear_buffer& data) override;
+    do_on_https_response_payload_stream(linear_buffer& data)
+      override;
 
     virtual
     void
-    do_on_https_response_finish(HTTP_S_Headers&& resp, linear_buffer&& data) override;
+    do_on_https_response_finish(HTTP_S_Headers&& resp, linear_buffer&& data)
+      override;
 
     virtual
     void
-    do_on_https_upgraded_stream(linear_buffer& data, bool eof) override;
+    do_on_https_upgraded_stream(linear_buffer& data, bool eof)
+      override;
 
     // This callback is invoked by the network thread when a WebSocket connection
     // has been established.
@@ -73,7 +77,8 @@ class WSS_Client_Session
     // `ws_ping` or `ws_pong`.
     virtual
     void
-    do_on_wss_message_finish(WS_Opcode opcode, linear_buffer&& data) = 0;
+    do_on_wss_message_finish(WS_Opcode opcode, linear_buffer&& data)
+      = 0;
 
     // This callback is invoked by the network thread when an error occurs, or
     // after a CLOSE frame has been received. The connection will be closed after
@@ -107,10 +112,12 @@ class WSS_Client_Session
     // be truncated to 123 bytes if it's too long.
     // This function is thread-safe.
     bool
-    wss_shut_down(WS_Status status = ws_status_normal, chars_view reason = "") noexcept;
+    wss_shut_down(WS_Status status = ws_status_normal, chars_view reason = "")
+      noexcept;
 
     bool
-    wss_shut_down(int status, chars_view reason = "") noexcept;
+    wss_shut_down(int status, chars_view reason = "")
+      noexcept;
   };
 
 }  // namespace poseidon

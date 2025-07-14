@@ -160,7 +160,8 @@ do_on_tcp_connected()
 
 uint32_t
 TCP_Socket::
-max_segment_size() const
+max_segment_size()
+  const
   {
     int optval;
     ::socklen_t optlen = sizeof(optval);
@@ -233,7 +234,8 @@ tcp_send(chars_view data)
 
 bool
 TCP_Socket::
-tcp_shut_down() noexcept
+tcp_shut_down()
+  noexcept
   {
     if(this->socket_state() >= socket_closing)
       return false;

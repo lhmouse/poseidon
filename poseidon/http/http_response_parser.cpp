@@ -106,7 +106,8 @@ HTTP_Response_Parser::
 
 void
 HTTP_Response_Parser::
-clear() noexcept
+clear()
+  noexcept
   {
     ::http_parser_init(this->m_parser, HTTP_RESPONSE);
     this->m_parser->data = this;
@@ -121,7 +122,8 @@ clear() noexcept
 
 void
 HTTP_Response_Parser::
-deallocate() noexcept
+deallocate()
+  noexcept
   {
     ::rocket::exchange(this->m_headers.reason);
     ::rocket::exchange(this->m_headers.headers);

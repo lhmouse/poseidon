@@ -31,7 +31,8 @@ class DNS_Connect_Task
     // This class implements `Abstract_Task`.
     virtual
     void
-    do_on_abstract_task_execute() override;
+    do_on_abstract_task_execute()
+      override;
 
   public:
     DNS_Connect_Task(const DNS_Connect_Task&) = delete;
@@ -39,15 +40,18 @@ class DNS_Connect_Task
     virtual ~DNS_Connect_Task();
 
     shptr<Abstract_Socket>
-    socket_opt() const noexcept
+    socket_opt()
+      const noexcept
       { return this->m_wsock.lock();  }
 
     const cow_string&
-    host() const noexcept
+    host()
+      const noexcept
       { return this->m_host;  }
 
     uint16_t
-    port() const noexcept
+    port()
+      const noexcept
       { return this->m_port;  }
   };
 

@@ -12,21 +12,24 @@ namespace poseidon {
 struct BIO_deleter
   {
     void
-    operator()(::BIO* p) const noexcept
+    operator()(::BIO* p)
+      const noexcept
       { ::BIO_free(p);  }
   };
 
 struct SSL_deleter
   {
     void
-    operator()(::SSL* p) const noexcept
+    operator()(::SSL* p)
+      const noexcept
       { ::SSL_free(p);  }
   };
 
 struct SSL_CTX_deleter
   {
     void
-    operator()(::SSL_CTX* p) const noexcept
+    operator()(::SSL_CTX* p)
+      const noexcept
       { ::SSL_CTX_free(p);  }
   };
 

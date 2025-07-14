@@ -119,7 +119,8 @@ enum
 
 [[noreturn]] ROCKET_NEVER_INLINE
 int
-do_exit_printf(int code, const char* fmt = nullptr, ...) noexcept
+do_exit_printf(int code, const char* fmt = nullptr, ...)
+  noexcept
   {
     // Wait for pending logs to be flushed.
     ::fflush(nullptr);

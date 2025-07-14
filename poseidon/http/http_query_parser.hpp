@@ -25,7 +25,8 @@ class HTTP_Query_Parser
     // Constructs a parser for a single HTTP query string, suitable for parsing
     // the query component of a URI or URL, or the body of an HTTP request whose
     // `Content-Type:` equals `application/x-www-form-urlencoded`.
-    HTTP_Query_Parser() noexcept;
+    HTTP_Query_Parser()
+      noexcept;
 
   public:
     HTTP_Query_Parser(const HTTP_Query_Parser&) = delete;
@@ -34,12 +35,14 @@ class HTTP_Query_Parser
 
     // Has an error occurred?
     bool
-    error() const noexcept
+    error()
+      const noexcept
       { return this->m_hpos == error_hpos;  }
 
     // Clears all fields.
     void
-    clear() noexcept;
+    clear()
+      noexcept;
 
     // Reloads a new string. All existent contents are destroyed.
     void
@@ -52,20 +55,24 @@ class HTTP_Query_Parser
 
     // Get the name of the current element.
     const HTTP_Field_Name&
-    current_name() const noexcept
+    current_name()
+      const noexcept
       { return this->m_name;  }
 
     HTTP_Field_Name&
-    mut_current_name() noexcept
+    mut_current_name()
+      noexcept
       { return this->m_name;  }
 
     // Get the value of the current element.
     const HTTP_Value&
-    current_value() const noexcept
+    current_value()
+      const noexcept
       { return this->m_value;  }
 
     HTTP_Value&
-    mut_current_value() noexcept
+    mut_current_value()
+      noexcept
       { return this->m_value;  }
   };
 

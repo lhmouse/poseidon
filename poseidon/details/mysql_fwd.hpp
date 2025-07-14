@@ -33,20 +33,24 @@ class scoped_MYSQL
     scoped_MYSQL(const scoped_MYSQL&) = delete;
     scoped_MYSQL& operator=(const scoped_MYSQL&) & = delete;
 
-    operator ::MYSQL*() const noexcept { return this->m_mysql;  }
+    operator ::MYSQL*()
+      const noexcept
+      { return this->m_mysql;  }
   };
 
 struct MYSQL_STMT_deleter
   {
     void
-    operator()(::MYSQL_STMT* p) const noexcept
+    operator()(::MYSQL_STMT* p)
+      const noexcept
       { ::mysql_stmt_close(p);  }
   };
 
 struct MYSQL_RES_deleter
   {
     void
-    operator()(::MYSQL_RES* p) const noexcept
+    operator()(::MYSQL_RES* p)
+      const noexcept
       { ::mysql_free_result(p);  }
   };
 

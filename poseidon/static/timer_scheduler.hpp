@@ -17,7 +17,8 @@ class Timer_Scheduler
 
   public:
     // Constructs an empty scheduler.
-    Timer_Scheduler() noexcept;
+    Timer_Scheduler()
+      noexcept;
 
   public:
     Timer_Scheduler(const Timer_Scheduler&) = delete;

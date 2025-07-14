@@ -27,15 +27,18 @@ class HTTPS_Server_Session
     // These function implement `SSL_Socket`.
     virtual
     void
-    do_on_ssl_stream(linear_buffer& data, bool eof) override;
+    do_on_ssl_stream(linear_buffer& data, bool eof)
+      override;
 
     virtual
     void
-    do_on_ssl_alpn_request(charbuf_256& res, cow_vector<charbuf_256>&& protos) override;
+    do_on_ssl_alpn_request(charbuf_256& res, cow_vector<charbuf_256>&& protos)
+      override;
 
     // Checks whether the protocol has changed.
     bool
-    do_has_upgraded() const noexcept
+    do_has_upgraded()
+      const noexcept
       { return this->m_upgrade_ack.load();  }
 
     // This callback is invoked by the network thread after all headers of a
@@ -74,7 +77,8 @@ class HTTPS_Server_Session
     // message.
     virtual
     void
-    do_on_https_request_finish(HTTP_C_Headers&& req, linear_buffer&& data, bool eot) = 0;
+    do_on_https_request_finish(HTTP_C_Headers&& req, linear_buffer&& data, bool eot)
+      = 0;
 
     // This callback is invoked when an HTTP parser error happens. Why must we
     // dedicate an error callback for server sessions? Well, it's because HTTP
@@ -87,7 +91,8 @@ class HTTPS_Server_Session
     // thread, after all requests, to preserve the order of responses.
     virtual
     void
-    do_on_https_request_error(bool method_was_head, HTTP_Status status) = 0;
+    do_on_https_request_error(bool method_was_head, HTTP_Status status)
+      = 0;
 
     // This callback is invoked by the network thread on a connection that has
     // switched to another protocol. Arguments have the same semantics with
@@ -151,10 +156,12 @@ class HTTPS_Server_Session
     // a standard status code, or an integer within [200,599]. Any other value is
     // sanitized to 400.
     bool
-    https_shut_down(HTTP_Status status = http_status_bad_request) noexcept;
+    https_shut_down(HTTP_Status status = http_status_bad_request)
+      noexcept;
 
     bool
-    https_shut_down(int status) noexcept;
+    https_shut_down(int status)
+      noexcept;
   };
 
 }  // namespace poseidon

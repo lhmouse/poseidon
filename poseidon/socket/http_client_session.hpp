@@ -28,11 +28,13 @@ class HTTP_Client_Session
     // This function implements `TCP_Socket`.
     virtual
     void
-    do_on_tcp_stream(linear_buffer& data, bool eof) override;
+    do_on_tcp_stream(linear_buffer& data, bool eof)
+      override;
 
     // Checks whether the protocol has changed.
     bool
-    do_has_upgraded() const noexcept
+    do_has_upgraded()
+      const noexcept
       { return this->m_upgrade_ack.load();  }
 
     // This callback is invoked by the network thread after all headers of a
@@ -68,7 +70,8 @@ class HTTP_Client_Session
     // message. Arguments have the same semantics with the other callbacks.
     virtual
     void
-    do_on_http_response_finish(HTTP_S_Headers&& resp, linear_buffer&& data) = 0;
+    do_on_http_response_finish(HTTP_S_Headers&& resp, linear_buffer&& data)
+      = 0;
 
     // This callback is invoked by the network thread on a connection that has
     // switched to another protocol. Arguments have the same semantics with
@@ -92,7 +95,8 @@ class HTTP_Client_Session
     // For a non-proxy request, if no `Host:` header is supplied, then this
     // string is used. This is required by HTTP/1.1.
     const cow_string&
-    http_default_host() const noexcept
+    http_default_host()
+      const noexcept
       { return this->m_default_host;  }
 
     // Sends a simple request, possibly with a complete payload. Callers should

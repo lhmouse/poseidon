@@ -16,7 +16,8 @@ class Main_Config
 
   public:
     // Constructs an empty configuration file.
-    Main_Config() noexcept;
+    Main_Config()
+      noexcept;
 
   public:
     Main_Config(const Main_Config&) = delete;
@@ -33,7 +34,8 @@ class Main_Config
     // Configuration files are reference-counted and cheap to copy.
     // This function is thread-safe.
     Config_File
-    copy() noexcept;
+    copy()
+      noexcept;
   };
 
 }  // namespace poseidon

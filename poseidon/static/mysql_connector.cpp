@@ -22,7 +22,8 @@ POSEIDON_HIDDEN_X_STRUCT(MySQL_Connector,
   Pooled_Connection);
 
 MySQL_Connector::
-MySQL_Connector() noexcept
+MySQL_Connector()
+  noexcept
   {
   }
 

@@ -18,7 +18,8 @@ thread_local wkptr<SSL_Socket> s_weak_ssl_socket;
 }  // namespace
 
 Network_Scheduler::
-Network_Scheduler() noexcept
+Network_Scheduler()
+  noexcept
   {
   }
 
@@ -30,7 +31,8 @@ Network_Scheduler::
 POSEIDON_VISIBILITY_HIDDEN
 wkptr<Abstract_Socket>&
 Network_Scheduler::
-do_find_socket_nolock(volatile Abstract_Socket* socket) noexcept
+do_find_socket_nolock(volatile Abstract_Socket* socket)
+  noexcept
   {
     ROCKET_ASSERT(socket);
 
@@ -124,7 +126,8 @@ do_alpn_select_cb(::SSL* ssl, const unsigned char** out, unsigned char* outlen,
 
 uniptr_SSL_CTX
 Network_Scheduler::
-server_ssl_ctx() const
+server_ssl_ctx()
+  const
   {
     plain_mutex::unique_lock lock(this->m_conf_mutex);
     auto ptr = this->m_server_ssl_ctx.get();
@@ -139,7 +142,8 @@ server_ssl_ctx() const
 
 uniptr_SSL_CTX
 Network_Scheduler::
-client_ssl_ctx() const
+client_ssl_ctx()
+  const
   {
     plain_mutex::unique_lock lock(this->m_conf_mutex);
     auto ptr = this->m_client_ssl_ctx.get();

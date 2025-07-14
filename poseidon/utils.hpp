@@ -107,12 +107,14 @@ quote_json_string(tinyfmt& fmt, const cow_string& str);
 // Converts 16 bytes into a hexadecimal string. Exactly 33 characters will be
 // written, including a null terminator.
 void
-hex_encode_16_partial(char* str, const void* data) noexcept;
+hex_encode_16_partial(char* str, const void* data)
+  noexcept;
 
 // Generates a cryptographically secure random byte sequence. Please be advised
 // that this function may be very slow.
 void
-random_bytes(void* ptr, size_t size) noexcept;
+random_bytes(void* ptr, size_t size)
+  noexcept;
 
 // Splices two buffers. After this function returns, `in` will be empty.
 inline
@@ -138,14 +140,16 @@ splice_buffers(linear_buffer& out, linear_buffer&& in)
 // Performs conversion between `timespec` and `system_time`.
 ROCKET_ALWAYS_INLINE
 system_time
-system_time_from_timespec(const struct timespec& ts) noexcept
+system_time_from_timespec(const struct timespec& ts)
+  noexcept
   {
     return system_clock::from_time_t(ts.tv_sec) + nanoseconds(ts.tv_nsec);
   }
 
 ROCKET_ALWAYS_INLINE
 void
-timespec_from_system_time(struct timespec& ts, system_time tm) noexcept
+timespec_from_system_time(struct timespec& ts, system_time tm)
+  noexcept
   {
     int64_t ns = time_point_cast<nanoseconds>(tm).time_since_epoch().count();
     uint64_t shifted_ns = static_cast<uint64_t>(ns) + 9223372036000000000;
@@ -174,7 +178,8 @@ struct Network_Reference
 // Returns the number of character that have been parsed. Zero is returned if the
 // address string is malformed.
 size_t
-parse_network_reference(Network_Reference& caddr, chars_view str) noexcept;
+parse_network_reference(Network_Reference& caddr, chars_view str)
+  noexcept;
 
 // URL-decodes and then canonicalizes the path (of a network reference). The
 // result path will always start with a slash. If the source path appears to

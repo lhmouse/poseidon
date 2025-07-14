@@ -249,7 +249,8 @@ do_on_ssl_connected()
 
 uint32_t
 SSL_Socket::
-max_segment_size() const
+max_segment_size()
+  const
   {
     int optval;
     ::socklen_t optlen = sizeof(optval);
@@ -327,7 +328,8 @@ ssl_send(chars_view data)
 
 bool
 SSL_Socket::
-ssl_shut_down() noexcept
+ssl_shut_down()
+  noexcept
   {
     if(this->socket_state() >= socket_closing)
       return false;

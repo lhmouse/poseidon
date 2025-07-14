@@ -33,15 +33,18 @@ class MySQL_Check_Table_Future
   private:
     virtual
     void
-    do_on_abstract_future_initialize() override;
+    do_on_abstract_future_initialize()
+      override;
 
     virtual
     void
-    do_on_abstract_future_finalize() override;
+    do_on_abstract_future_finalize()
+      override;
 
     virtual
     void
-    do_on_abstract_task_execute() override;
+    do_on_abstract_task_execute()
+      override;
 
   public:
     MySQL_Check_Table_Future(const MySQL_Check_Table_Future&) = delete;
@@ -50,14 +53,16 @@ class MySQL_Check_Table_Future
 
     // Gets the MySQL table structure. This field is set by the constructor.
     const MySQL_Table_Structure&
-    table() const noexcept
+    table()
+      const noexcept
       { return this->m_table;  }
 
     // Indicates whether the table has been altered after the operation has
     // completed successfully. If `successful()` yields `false`, an exception is
     // thrown, and there is no effect.
     bool
-    altered() const
+    altered()
+      const
       {
         this->check_success();
         return this->m_altered;

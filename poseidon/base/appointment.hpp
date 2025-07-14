@@ -16,7 +16,8 @@ class Appointment
   public:
     // Constructs an empty appointment.
     constexpr
-    Appointment() noexcept = default;
+    Appointment()
+      noexcept = default;
 
     // Locks the file that is denoted by `lock_path`. This has the same effect
     // as `enroll(lock_path)`.
@@ -31,7 +32,8 @@ class Appointment
     // Gets the 0-based index of the current appointment. If this appointment
     // is empty, -1 is returned.
     int
-    index() const noexcept
+    index()
+      const noexcept
       { return this->m_index;  }
 
     // Locks the file that is denoted by `path`. If the file can't be locked,
@@ -41,7 +43,8 @@ class Appointment
 
     // Unlocks the current file and resets the index to -1.
     void
-    withdraw() noexcept;
+    withdraw()
+      noexcept;
   };
 
 }  // namespace poseidon

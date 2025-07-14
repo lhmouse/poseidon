@@ -6,7 +6,8 @@
 namespace poseidon {
 
 Abstract_Task::
-Abstract_Task() noexcept
+Abstract_Task()
+  noexcept
   {
     this->m_scheduler = reinterpret_cast<Task_Scheduler*>(-1);
   }
@@ -18,7 +19,8 @@ Abstract_Task::
 
 Task_Scheduler&
 Abstract_Task::
-do_abstract_task_lock_scheduler(recursive_mutex::unique_lock& lock) const noexcept
+do_abstract_task_lock_scheduler(recursive_mutex::unique_lock& lock)
+  const noexcept
   {
     lock.lock(this->m_sched_mutex);
     ROCKET_ASSERT(this->m_scheduler);

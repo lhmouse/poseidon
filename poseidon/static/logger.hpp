@@ -26,7 +26,8 @@ class Logger
 
   public:
     // Creates a logger that outputs to nowhere.
-    Logger() noexcept;
+    Logger()
+      noexcept;
 
   public:
     Logger(const Logger&) = delete;
@@ -47,7 +48,8 @@ class Logger
     // Checks whether a given level is enabled.
     // This function is thread-safe.
     bool
-    enabled(uint8_t level) const noexcept
+    enabled(uint8_t level)
+      const noexcept
       {
         return (level <= 15U) && (this->m_conf_level_bits.load() & (1U << level));
       }
@@ -61,7 +63,8 @@ class Logger
     // Waits until all pending log entries are delivered to output devices.
     // This function is thread-safe.
     void
-    synchronize() noexcept;
+    synchronize()
+      noexcept;
   };
 
 }  // namespace poseidon

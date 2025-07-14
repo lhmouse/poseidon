@@ -25,7 +25,8 @@ class HTTP_Header_Parser
     // Constructs a parser for a single HTTP header, suitable for parsing
     // various HTTP headers in the semicolon-inside-comma-separated format,
     // such as `Cookie` and `Accept-Encoding`.
-    HTTP_Header_Parser() noexcept;
+    HTTP_Header_Parser()
+      noexcept;
 
   private:
     int
@@ -38,12 +39,14 @@ class HTTP_Header_Parser
 
     // Has an error occurred?
     bool
-    error() const noexcept
+    error()
+      const noexcept
       { return this->m_hpos == error_hpos;  }
 
     // Clears all fields.
     void
-    clear() noexcept;
+    clear()
+      noexcept;
 
     // Reloads a new string. All existent contents are destroyed.
     void
@@ -63,20 +66,24 @@ class HTTP_Header_Parser
 
     // Get the name of the current attribute.
     const HTTP_Field_Name&
-    current_name() const noexcept
+    current_name()
+      const noexcept
       { return this->m_name;  }
 
     HTTP_Field_Name&
-    mut_current_name() noexcept
+    mut_current_name()
+      noexcept
       { return this->m_name;  }
 
     // Get the value of the current attribute.
     const HTTP_Value&
-    current_value() const noexcept
+    current_value()
+      const noexcept
       { return this->m_value;  }
 
     HTTP_Value&
-    mut_current_value() noexcept
+    mut_current_value()
+      noexcept
       { return this->m_value;  }
   };
 

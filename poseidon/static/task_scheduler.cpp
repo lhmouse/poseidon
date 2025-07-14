@@ -8,7 +8,8 @@
 namespace poseidon {
 
 Task_Scheduler::
-Task_Scheduler() noexcept
+Task_Scheduler()
+  noexcept
   {
   }
 
