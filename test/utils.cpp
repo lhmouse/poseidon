@@ -5,7 +5,8 @@
 #include "../poseidon/utils.hpp"
 using namespace ::poseidon;
 
-int main()
+int
+main()
   {
     try {
       POSEIDON_THROW((
