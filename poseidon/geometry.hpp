@@ -240,6 +240,11 @@ cross(vector2 lhs, vector2 rhs)
 
 constexpr
 float
+abs(vector2 v)
+  noexcept { return v.magnitude();  }
+
+constexpr
+float
 magnitude(vector2 v)
   noexcept { return v.magnitude();  }
 

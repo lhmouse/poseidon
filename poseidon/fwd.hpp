@@ -91,6 +91,7 @@ using hours = ::std::chrono::duration<int, ::std::ratio<3600>>;
 using days = ::std::chrono::duration<int, ::std::ratio<86400>>;
 using weeks = ::std::chrono::duration<int, ::std::ratio<604800>>;
 
+using ::std::abs;
 using ::std::static_pointer_cast;
 using ::std::dynamic_pointer_cast;
 using ::std::const_pointer_cast;
