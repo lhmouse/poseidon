@@ -6,7 +6,7 @@
 namespace poseidon {
 namespace {
 
-constexpr trigonometric s_trig_table[360] =
+alignas(16) constexpr trigonometric s_trig_table[360] =
   {
     {  0.0000000000F,  1.0000000000F,  0.000000000F,  0 },  //   0
     {  0.0174524064F,  0.9998476952F,  0.017455065F,  0 },  //   1
