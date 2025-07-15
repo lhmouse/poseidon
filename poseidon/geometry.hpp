@@ -78,6 +78,13 @@ swap(degrees& lhs, degrees& rhs)
     ::std::swap(lhs.t, rhs.t);
   }
 
+inline
+tinyfmt&
+operator<<(tinyfmt& fmt, degrees d)
+  {
+    return fmt << d.t << "\u00B0";
+  }
+
 struct vector2
   {
     float x, y;
@@ -181,6 +188,13 @@ swap(vector2& lhs, vector2& rhs)
     ::std::swap(lhs.y, rhs.y);
   }
 
+inline
+tinyfmt&
+operator<<(tinyfmt& fmt, vector2 v)
+  {
+    return fmt << "\u27E8" << v.x << ',' << v.y << "\u27E9";
+  }
+
 struct point2
   {
     float x, y;
@@ -211,6 +225,13 @@ swap(point2& lhs, point2& rhs)
   {
     ::std::swap(lhs.x, rhs.x);
     ::std::swap(lhs.y, rhs.y);
+  }
+
+inline
+tinyfmt&
+operator<<(tinyfmt& fmt, point2 p)
+  {
+    return fmt << '(' << p.x << ',' << p.y << ')';
   }
 
 constexpr
