@@ -418,10 +418,10 @@ do_arctan_degrees(float y, float x)
       return signbit(y) ? 270 : 90;
 
     // Determine the octant of this angle, clockwise.
-    __m128 ps = _mm_cmpgt_ps(_mm_set_ps(x, y, y, y), _mm_set_ps(0, 0, x, -x));
+    __m128 ps = _mm_cmpgt_ps(_mm_set_ps(x, y, y, y), _mm_set_ps(0, -x, 0, x));
     switch(_mm_movemask_ps(ps))
       {
-      case 0b1101:  // x > y > 0 > -x
+      case 0b1110:  // x > y > 0 > -x
         return do_reduced_arctan(y / x);
 
       case 0b1111:  // y > x > 0 > -x
@@ -430,10 +430,10 @@ do_arctan_degrees(float y, float x)
       case 0b0111:  // y > -x > 0 > x
         return 90 + do_reduced_arctan(-x / y);
 
-      case 0b0110:  // -x > y > 0 > x
+      case 0b0011:  // -x > y > 0 > x
         return 180 - do_reduced_arctan(y / -x);
 
-      case 0b0010:  // -x > 0 > y > x
+      case 0b0001:  // -x > 0 > y > x
         return 180 + do_reduced_arctan(y / x);
 
       case 0b0000:  // -x > 0 > x > y
@@ -442,7 +442,7 @@ do_arctan_degrees(float y, float x)
       case 0b1000:  // x > 0 > -x > y
         return 270 + do_reduced_arctan(-x / y);
 
-      case 0b1001:  // x > 0 > y > -x
+      case 0b1100:  // x > 0 > y > -x
         return 360 - do_reduced_arctan(y / -x);
 
       default:
