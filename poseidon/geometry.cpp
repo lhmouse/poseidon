@@ -418,7 +418,7 @@ do_arctan_degrees(float y, float x)
       return signbit(y) ? 270 : 90;
 
     // Determine the octant of this angle, clockwise.
-    __m128 ps = _mm_cmpgt_ps(_mm_set_ps(x, y, y, y), _mm_set_ps(0, -x, 0, x));
+    __m128 ps = _mm_cmpgt_ps(_mm_set_ps(x, x, y, y), _mm_set_ps(0, -y, 0, x));
     switch(_mm_movemask_ps(ps))
       {
       case 0b1110:  // x > y > 0 > -x
