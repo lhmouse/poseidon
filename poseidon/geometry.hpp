@@ -230,6 +230,16 @@ tan(degrees d)
 
 constexpr
 float
+dot(vector2 lhs, vector2 rhs)
+  noexcept { return lhs.dot(rhs);  }
+
+constexpr
+float
+cross(vector2 lhs, vector2 rhs)
+  noexcept { return lhs.cross(rhs);  }
+
+constexpr
+float
 magnitude(vector2 v)
   noexcept { return v.magnitude();  }
 
@@ -237,6 +247,16 @@ constexpr
 degrees
 direction(vector2 v)
   noexcept { return v.direction();  }
+
+constexpr
+vector2
+unit(vector2 v)
+  noexcept { return v.unit();  }
+
+constexpr
+vector2
+rotate(vector2 v, degrees theta)
+  noexcept { return v.rotate(theta);  }
 
 constexpr
 degrees
