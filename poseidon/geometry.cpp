@@ -428,10 +428,10 @@ do_arctan_degrees(float y, float x)
         return 90 - do_reduced_arctan(x / y);
 
       case 0b0111:  // y > -x > 0 > x
-        return 90 + do_reduced_arctan(-x / y);
+        return 90 + do_reduced_arctan(x / -y);
 
       case 0b0011:  // -x > y > 0 > x
-        return 180 - do_reduced_arctan(y / -x);
+        return 180 - do_reduced_arctan(-y / x);
 
       case 0b0001:  // -x > 0 > y > x
         return 180 + do_reduced_arctan(y / x);
@@ -440,10 +440,10 @@ do_arctan_degrees(float y, float x)
         return 270 - do_reduced_arctan(x / y);
 
       case 0b1000:  // x > 0 > -x > y
-        return 270 + do_reduced_arctan(-x / y);
+        return 270 + do_reduced_arctan(x / -y);
 
       case 0b1100:  // x > 0 > y > -x
-        return 360 - do_reduced_arctan(y / -x);
+        return 360 - do_reduced_arctan(-y / x);
 
       default:
         ROCKET_UNREACHABLE();
