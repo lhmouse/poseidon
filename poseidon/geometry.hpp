@@ -85,6 +85,45 @@ operator<<(tinyfmt& fmt, degrees d)
     return fmt << d.t << "\u00B0";
   }
 
+struct point2
+  {
+    float x, y;
+
+    constexpr
+    point2()
+      noexcept : x(0), y(0)  { }
+
+    constexpr
+    point2(float x1, float y1)
+      noexcept : x(x1), y(y1)  { }
+
+    constexpr
+    bool
+    operator==(point2 rhs)
+      const noexcept { return (x == rhs.x) && (y == rhs.y);  }
+
+    constexpr
+    bool
+    operator!=(point2 rhs)
+      const noexcept { return (x != rhs.x) || (y != rhs.y);  }
+  };
+
+inline
+void
+swap(point2& lhs, point2& rhs)
+  noexcept
+  {
+    ::std::swap(lhs.x, rhs.x);
+    ::std::swap(lhs.y, rhs.y);
+  }
+
+inline
+tinyfmt&
+operator<<(tinyfmt& fmt, point2 p)
+  {
+    return fmt << '(' << p.x << ',' << p.y << ')';
+  }
+
 struct vector2
   {
     float x, y;
@@ -100,6 +139,10 @@ struct vector2
     constexpr
     vector2(float rho, degrees theta)
       noexcept : x(rho * theta.cos()), y(rho * theta.sin())  { }
+
+    constexpr
+    vector2(point2 from, point2 to)
+      noexcept : x(to.x - from.x), y(to.y - from.y)  { }
 
     constexpr
     bool
@@ -193,45 +236,6 @@ tinyfmt&
 operator<<(tinyfmt& fmt, vector2 v)
   {
     return fmt << "\u27E8" << v.x << ',' << v.y << "\u27E9";
-  }
-
-struct point2
-  {
-    float x, y;
-
-    constexpr
-    point2()
-      noexcept : x(0), y(0)  { }
-
-    constexpr
-    point2(float x1, float y1)
-      noexcept : x(x1), y(y1)  { }
-
-    constexpr
-    bool
-    operator==(point2 rhs)
-      const noexcept { return (x == rhs.x) && (y == rhs.y);  }
-
-    constexpr
-    bool
-    operator!=(point2 rhs)
-      const noexcept { return (x != rhs.x) || (y != rhs.y);  }
-  };
-
-inline
-void
-swap(point2& lhs, point2& rhs)
-  noexcept
-  {
-    ::std::swap(lhs.x, rhs.x);
-    ::std::swap(lhs.y, rhs.y);
-  }
-
-inline
-tinyfmt&
-operator<<(tinyfmt& fmt, point2 p)
-  {
-    return fmt << '(' << p.x << ',' << p.y << ')';
   }
 
 constexpr
