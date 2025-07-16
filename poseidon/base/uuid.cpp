@@ -89,13 +89,13 @@ parse_partial(const char* str)
     uint64_t low = 0;
 
     for(uint32_t k = 0;  k != 36;  ++k)
-      if((0b100001000010000100000000ULL >> k) & 1) {
+      if(1ULL << k & 0b100001000010000100000000ULL) {
         // dash
         if(str[k] != '-')
           return 0;
       }
       else {
-        // hex digit
+        // hex
         uint64_t val;
         if((str[k] >= '0') && (str[k] <= '9'))
           val = static_cast<unsigned char>(str[k] - '0');
