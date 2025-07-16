@@ -37,6 +37,31 @@ struct degrees
       const noexcept { return t != rhs.t;  }
 
     constexpr
+    degrees
+    abs()
+      const noexcept { return degrees(::std::abs(t));  }
+
+    constexpr
+    degrees
+    reduce360()
+      const noexcept
+      {
+        // [0,359]
+        uint32_t t0 = (static_cast<uint32_t>(t) + 2147483160) % 360;
+        return degrees(static_cast<int>(t0));
+      }
+
+    constexpr
+    degrees
+    reduce180()
+      const noexcept
+      {
+        // [-179,180]
+        uint32_t t0 = (static_cast<uint32_t>(t) + 2147483339) % 360 - 179;
+        return degrees(static_cast<int>(t0));
+      }
+
+    constexpr
     float
     sin()
       const noexcept
@@ -239,6 +264,21 @@ operator<<(tinyfmt& fmt, vector2 v)
   }
 
 constexpr
+degrees
+abs(degrees d)
+  noexcept { return d.abs();  }
+
+constexpr
+degrees
+reduce360(degrees d)
+  noexcept { return d.reduce360();  }
+
+constexpr
+degrees
+reduce180(degrees d)
+  noexcept { return d.reduce180();  }
+
+constexpr
 float
 sin(degrees d)
   noexcept { return d.sin();  }
@@ -262,11 +302,6 @@ constexpr
 float
 cross(vector2 lhs, vector2 rhs)
   noexcept { return lhs.cross(rhs);  }
-
-constexpr
-float
-abs(vector2 v)
-  noexcept { return v.magnitude();  }
 
 constexpr
 float

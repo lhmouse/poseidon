@@ -17,9 +17,20 @@ main()
   {
     POSEIDON_TEST_CHECK(point2().x == 0);
     POSEIDON_TEST_CHECK(point2().y == 0);
+    POSEIDON_TEST_CHECK(point2(1, 2).x == 1);
+    POSEIDON_TEST_CHECK(point2(1, 2).y == 2);
+    POSEIDON_TEST_CHECK(point2(1, 2) == point2(1, 2));
+    POSEIDON_TEST_CHECK(point2(-3, -4).x == -3);
+    POSEIDON_TEST_CHECK(point2(-3, -4).y == -4);
 
     POSEIDON_TEST_CHECK(vector2().x == 0);
     POSEIDON_TEST_CHECK(vector2().y == 0);
+    POSEIDON_TEST_CHECK(vector2(1, 2).x == 1);
+    POSEIDON_TEST_CHECK(vector2(1, 2).y == 2);
+    POSEIDON_TEST_CHECK(vector2(1, 2) == vector2(1, 2));
+    POSEIDON_TEST_CHECK(vector2(-1, -2) == -vector2(1, 2));
+    POSEIDON_TEST_CHECK(vector2(-3, -4).x == -3);
+    POSEIDON_TEST_CHECK(vector2(-3, -4).y == -4);
 
     vector2 a(-3000,4000), b = a.unit();
     POSEIDON_TEST_CHECK(approximate(a.magnitude(), 5000));
@@ -40,6 +51,14 @@ main()
     POSEIDON_TEST_CHECK(e - f == vector2(4,-7));
     POSEIDON_TEST_CHECK(e.dot(f) == -13);
     POSEIDON_TEST_CHECK(e.cross(f) == -1);
+
+    for(int t = -1000;  t <= 1000; ++t) {
+      int t0 = t % 360;
+      POSEIDON_TEST_CHECK(degrees(t).reduce360().t == ((t0 < 0) ? (t0 + 360) : t0));
+      POSEIDON_TEST_CHECK(degrees(t).reduce180().t == ((t0 < -179) ? (t0 + 360)
+                                                       : (t0 > 180) ? (t0 - 360) : t0));
+      POSEIDON_TEST_CHECK(degrees(t).abs().t == abs(t));
+    }
 
     POSEIDON_TEST_CHECK(degrees(0).sin() == 0);
     POSEIDON_TEST_CHECK(degrees(0).cos() == 1);
