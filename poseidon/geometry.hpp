@@ -245,6 +245,16 @@ struct vector2
         float sin_th = theta.sin();
         return vector2(x * cos_th - y * sin_th, x * sin_th + y * cos_th);
       }
+
+    constexpr
+    degrees
+    angle_from(vector2 from)
+      const noexcept
+      {
+        float delta_x = from.dot(*this);
+        float delta_y = from.cross(*this);
+        return vector2(delta_x, delta_y).direction();
+      }
   };
 
 inline
@@ -322,6 +332,11 @@ constexpr
 vector2
 rotate(vector2 v, degrees theta)
   noexcept { return v.rotate(theta);  }
+
+constexpr
+degrees
+angle(vector2 from, vector2 to)
+  noexcept { return to.angle_from(from);  }
 
 constexpr
 degrees

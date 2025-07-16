@@ -52,6 +52,73 @@ main()
     POSEIDON_TEST_CHECK(e.dot(f) == -13);
     POSEIDON_TEST_CHECK(e.cross(f) == -1);
 
+    vector2 g(5, 0);
+    vector2 h = g;
+    g = g.rotate(degrees(0));  // 0
+    POSEIDON_TEST_CHECK(approximate(g.x, 5));
+    POSEIDON_TEST_CHECK(approximate(g.y, 0));
+    POSEIDON_TEST_CHECK(angle(h, g) == degrees(0));
+    POSEIDON_TEST_CHECK(angle(g, h) == degrees(0));
+
+    h = g;
+    g = g.rotate(degrees(30));  // 30
+    POSEIDON_TEST_CHECK(approximate(g.x, 4.330127));
+    POSEIDON_TEST_CHECK(approximate(g.y, 2.5));
+    POSEIDON_TEST_CHECK(angle(h, g) == degrees(30));
+    POSEIDON_TEST_CHECK(angle(g, h) == degrees(330));
+
+    h = g;
+    g = g.rotate(degrees(15));  // 45
+    POSEIDON_TEST_CHECK(approximate(g.x, 3.5355339));
+    POSEIDON_TEST_CHECK(approximate(g.y, 3.5355339));
+    POSEIDON_TEST_CHECK(angle(h, g) == degrees(15));
+    POSEIDON_TEST_CHECK(angle(g, h) == degrees(345));
+
+    h = g;
+    g = g.rotate(degrees(45));  // 90
+    POSEIDON_TEST_CHECK(approximate(g.x, 0));
+    POSEIDON_TEST_CHECK(approximate(g.y, 5));
+    POSEIDON_TEST_CHECK(angle(h, g) == degrees(45));
+    POSEIDON_TEST_CHECK(angle(g, h) == degrees(315));
+
+    h = g;
+    g = g.rotate(degrees(30));  // 120
+    POSEIDON_TEST_CHECK(approximate(g.x, -2.5));
+    POSEIDON_TEST_CHECK(approximate(g.y, 4.330127));
+    POSEIDON_TEST_CHECK(angle(h, g) == degrees(30));
+    POSEIDON_TEST_CHECK(angle(g, h) == degrees(330));
+
+    h = g;
+    g = g.rotate(degrees(105));  // 225
+    POSEIDON_TEST_CHECK(approximate(g.x, -3.5355339));
+    POSEIDON_TEST_CHECK(approximate(g.y, -3.5355339));
+    POSEIDON_TEST_CHECK(angle(h, g) == degrees(105));
+    POSEIDON_TEST_CHECK(angle(g, h) == degrees(255));
+
+    h = g;
+    g = g.rotate(degrees(90));  // 315
+    POSEIDON_TEST_CHECK(approximate(g.x, 3.5355339));
+    POSEIDON_TEST_CHECK(approximate(g.y, -3.5355339));
+    POSEIDON_TEST_CHECK(angle(h, g) == degrees(90));
+    POSEIDON_TEST_CHECK(angle(g, h) == degrees(270));
+
+    h = g;
+    g = g.rotate(degrees(15));  // 330
+    POSEIDON_TEST_CHECK(approximate(g.x, 4.330127));
+    POSEIDON_TEST_CHECK(approximate(g.y, -2.5));
+    POSEIDON_TEST_CHECK(angle(h, g) == degrees(15));
+    POSEIDON_TEST_CHECK(angle(g, h) == degrees(345));
+
+    h = g;
+    g = g.rotate(degrees(30));  // 360
+    POSEIDON_TEST_CHECK(approximate(g.x, 5));
+    POSEIDON_TEST_CHECK(approximate(g.y, 0));
+    POSEIDON_TEST_CHECK(angle(h, g) == degrees(30));
+    POSEIDON_TEST_CHECK(angle(g, h) == degrees(330));
+
+    POSEIDON_TEST_CHECK(angle(vector2(1, 0), vector2(0, 1)) == degrees(90));
+    POSEIDON_TEST_CHECK(angle(vector2(3, 0), vector2(0, 3)) == degrees(90));
+
     for(int t = -1000;  t <= 1000; ++t) {
       int t0 = t % 360;
       POSEIDON_TEST_CHECK(degrees(t).reduce360().t == ((t0 < 0) ? (t0 + 360) : t0));
