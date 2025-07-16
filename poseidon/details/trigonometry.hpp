@@ -15,7 +15,7 @@ struct trigonometric
     float reserved;
   };
 
-trigonometric
+const trigonometric&
 do_trig_degrees(int theta)
   noexcept __attribute__((__const__, __leaf__));
 

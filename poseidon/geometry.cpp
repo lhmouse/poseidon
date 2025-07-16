@@ -400,7 +400,7 @@ do_reduced_arctan(float slope)
 
 }  // namespace
 
-trigonometric
+const trigonometric&
 do_trig_degrees(int theta)
   noexcept
   {
