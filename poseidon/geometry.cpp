@@ -404,7 +404,7 @@ const trigonometric&
 do_trig_degrees(int theta)
   noexcept
   {
-    uint32_t t0 = (static_cast<uint32_t>(theta) + 2147483520) % 360;
+    uint32_t t0 = (static_cast<uint32_t>(theta) + 2147483160) % 360;
     return s_trig_table[t0];
   }
 
