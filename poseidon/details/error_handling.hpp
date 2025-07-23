@@ -7,19 +7,17 @@
 #include "../fwd.hpp"
 namespace poseidon {
 
-using message_composer_fn = void (tinyfmt&, const void*);
-
 bool
 do_is_log_enabled(uint8_t level)
-  noexcept __attribute__((__pure__, __leaf__));
+  noexcept __attribute__((__const__, __leaf__));
 
 bool
 do_push_log_message(uint8_t level, const char* func, const char* file, uint32_t line,
-                    const void* composer, message_composer_fn* composer_fn);
+                    void* composer, vfn<tinyfmt&, void*>* composer_fn);
 
 ::std::runtime_error
 do_create_runtime_error(const char* func, const char* file, uint32_t line,
-                        const void* composer, message_composer_fn* composer_fn);
+                        void* composer, vfn<tinyfmt&, void*>* composer_fn);
 
 }  // namespace poseidon
 #endif

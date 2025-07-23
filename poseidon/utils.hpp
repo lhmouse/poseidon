@@ -18,17 +18,17 @@ namespace poseidon {
       __attribute__((__nothrow__, __noinline__))  \
     {  \
       try {  \
-        const auto c_Ru6q = [&](::rocket::tinyfmt& fmt_Ko0i)  \
-        {  \
-          using ::asteria::format;  \
-          format(fmt_Ko0i, (::asteria::make_string_template TEMPLATE),  \
-                  ##__VA_ARGS__);  \
-        };  \
+        auto c_Ru6q = [&](::rocket::tinyfmt& fmt_Ko0i)  \
+          {  \
+            using ::asteria::format;  \
+            format(fmt_Ko0i, (::asteria::make_string_template TEMPLATE),  \
+                    ##__VA_ARGS__);  \
+          };  \
         \
         ::poseidon::do_push_log_message(\
             LEVEL, func_ce7d, __FILE__, __LINE__,  \
             &c_Ru6q,  \
-            [](::rocket::tinyfmt& fmt_Ko0i, const void* p_5Gae)  \
+            [](::rocket::tinyfmt& fmt_Ko0i, void* p_5Gae)  \
               { (* static_cast<decltype(c_Ru6q)*>(p_5Gae)) (fmt_Ko0i);  });  \
       }  \
       catch(...) { }  \
@@ -50,7 +50,7 @@ namespace poseidon {
    ([&](const char* func_ce7d) -> ::std::runtime_error  \
       __attribute__((__noinline__))  \
     {  \
-      const auto c_Ru6q = [&](::rocket::tinyfmt& fmt_Ko0i)  \
+      auto c_Ru6q = [&](::rocket::tinyfmt& fmt_Ko0i)  \
         {  \
           using ::asteria::format;  \
           format(fmt_Ko0i, (::asteria::make_string_template TEMPLATE),  \
@@ -60,7 +60,7 @@ namespace poseidon {
       return ::poseidon::do_create_runtime_error(\
           func_ce7d, __FILE__, __LINE__,  \
           &c_Ru6q,  \
-          [](::rocket::tinyfmt& fmt_Ko0i, const void* p_5Gae)  \
+          [](::rocket::tinyfmt& fmt_Ko0i, void* p_5Gae)  \
             { (* static_cast<decltype(c_Ru6q)*>(p_5Gae)) (fmt_Ko0i);  });  \
     } (__func__)))
 
