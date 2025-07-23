@@ -145,7 +145,7 @@ do_parse_command_line(int argc, char** argv)
   {
     bool help = false;
     bool version = false;
-    ::rocket::unique_ptr<char, void (void*)> abs_path(nullptr, ::free);
+    ::rocket::unique_ptr<char, vfn<void*>> abs_path(nullptr, ::free);
 
     if(argc > 1) {
       // Check for common long options before calling `getopt()`.

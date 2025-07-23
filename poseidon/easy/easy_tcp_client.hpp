@@ -26,15 +26,13 @@ class Easy_TCP_Client
     // This client object stores a copy of the callback, which is invoked
     // accordingly in the main thread. The callback object is never copied,
     // and is allowed to modify itself.
-    using callback_type =
-      shared_function<
-        void (
-          const shptr<TCP_Socket>&,  // session
-          Abstract_Fiber&,  // fiber for current callback
-          Easy_Stream_Event,  // event type; see comments above constructor
-          linear_buffer&,  // accumulative data that have been received
-          int  // event code; see comments above constructor
-        )>;
+    using callback_type = shared_function<
+            void (
+              const shptr<TCP_Socket>& socket,
+              Abstract_Fiber& fiber,
+              Easy_Stream_Event event,
+              linear_buffer& data,
+              int code)>;
 
   private:
     struct X_Session_Table;

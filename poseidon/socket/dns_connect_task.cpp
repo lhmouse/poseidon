@@ -38,7 +38,7 @@ do_on_abstract_task_execute()
     try {
       // Perform DNS query. This will block the worker thread.
       ::addrinfo* res = nullptr;
-      ::rocket::unique_ptr<::addrinfo, void (::addrinfo*)> guard(res, ::freeaddrinfo);
+      ::rocket::unique_ptr<::addrinfo, vfn<::addrinfo*>> guard(res, ::freeaddrinfo);
 
       ::addrinfo hints = { };
       hints.ai_flags = AI_V4MAPPED | AI_ADDRCONFIG | AI_NUMERICSERV;
