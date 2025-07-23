@@ -388,7 +388,7 @@ thread_loop()
 
     ROCKET_ASSERT(s_ep == ep);
     ep->fiber->m_scheduler = reinterpret_cast<Fiber_Scheduler*>(-5);
-    ep->fiber->m_sched_yield_fn = reinterpret_cast<Abstract_Fiber::sched_yield_fn*>(-9);
+    ep->fiber->m_sched_yield_fn = nullptr;
     s_ep.reset();
   }
 

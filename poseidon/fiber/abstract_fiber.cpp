@@ -11,7 +11,7 @@ Abstract_Fiber()
   noexcept
   {
     this->m_scheduler = reinterpret_cast<Fiber_Scheduler*>(-1);
-    this->m_sched_yield_fn = reinterpret_cast<sched_yield_fn*>(-3);
+    this->m_sched_yield_fn = nullptr;
   }
 
 Abstract_Fiber::

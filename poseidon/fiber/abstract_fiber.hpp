@@ -15,8 +15,7 @@ class Abstract_Fiber
     atomic_relaxed<bool> m_abandoned;
     mutable recursive_mutex m_sched_mutex;
     Fiber_Scheduler* m_scheduler;
-    using sched_yield_fn = void (const shptr<Abstract_Future>&);
-    sched_yield_fn* m_sched_yield_fn;
+    vfn<const shptr<Abstract_Future>&>* m_sched_yield_fn;
 
   protected:
     // Constructs an inactive fiber.
