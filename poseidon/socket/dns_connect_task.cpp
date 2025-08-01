@@ -63,7 +63,7 @@ do_on_abstract_task_execute()
           v6addr.sin6_family = AF_INET6;
           ::memcpy(v6addr.sin6_addr.s6_addr, ipv4_unspecified.data(), 12);
           ::memcpy(v6addr.sin6_addr.s6_addr + 12, &(sa->sin_addr), 4);
-          v6addr.sin6_port = ROCKET_HTOBE16(this->m_port);
+          v6addr.sin6_port = ::htons(this->m_port);
           success = (::connect(socket->fd(),
                                reinterpret_cast<const ::sockaddr*>(&v6addr),
                                sizeof(::sockaddr_in6)) == 0)
@@ -72,7 +72,7 @@ do_on_abstract_task_execute()
         else if(res->ai_family == AF_INET6) {
           // IPv6
           auto sa = reinterpret_cast<::sockaddr_in6*>(res->ai_addr);
-          sa->sin6_port = ROCKET_HTOBE16(this->m_port);
+          sa->sin6_port = ::htons(this->m_port);
           success = (::connect(socket->fd(),
                                reinterpret_cast<const ::sockaddr*>(sa),
                                sizeof(::sockaddr_in6)) == 0)

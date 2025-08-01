@@ -19,7 +19,7 @@ UDP_Socket(const IPv6_Address& addr)
 
     ::sockaddr_in6 sa = { };
     sa.sin6_family = AF_INET6;
-    sa.sin6_port = ROCKET_HTOBE16(addr.port());
+    sa.sin6_port = ::htons(addr.port());
     sa.sin6_addr = addr.addr();
     if(::bind(this->do_socket_fd(), reinterpret_cast<::sockaddr*>(&sa), sizeof(sa)) != 0)
       POSEIDON_THROW((
@@ -86,7 +86,7 @@ do_abstract_socket_on_readable()
 
       queue.accept(static_cast<size_t>(ior));
       from_addr.set_addr(sa.sin6_addr);
-      from_addr.set_port(ROCKET_BETOH16(sa.sin6_port));
+      from_addr.set_port(::ntohs(sa.sin6_port));
 
       try {
         // Call the user-defined data callback.
@@ -243,7 +243,7 @@ udp_send(const IPv6_Address& addr, chars_view data)
 
     ::sockaddr_in6 sa = { };
     sa.sin6_family = AF_INET6;
-    sa.sin6_port = ROCKET_HTOBE16(addr.port());
+    sa.sin6_port = ::htons(addr.port());
     sa.sin6_addr = addr.addr();
     ::ssize_t ior = ::sendto(this->do_socket_fd(), data.p, data.n, 0,
                              reinterpret_cast<::sockaddr*>(&sa), sizeof(sa));

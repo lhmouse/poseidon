@@ -107,7 +107,7 @@ local_address()
 
     // Save the result.
     this->m_sockname.set_addr(sa.sin6_addr);
-    this->m_sockname.set_port(ROCKET_BETOH16(sa.sin6_port));
+    this->m_sockname.set_port(::ntohs(sa.sin6_port));
     this->m_sockname_ready.store(true);  // release
     return this->m_sockname;
   }
@@ -138,7 +138,7 @@ remote_address()
 
     // Save the result.
     this->m_peername.set_addr(sa.sin6_addr);
-    this->m_peername.set_port(ROCKET_BETOH16(sa.sin6_port));
+    this->m_peername.set_port(::ntohs(sa.sin6_port));
     this->m_peername_ready.store(true);  // release
     return this->m_peername;
   }

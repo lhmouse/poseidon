@@ -171,12 +171,11 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
                 this->m_closure_notified = true;
                 data.clear();
 
-                // Get the status code in big-endian order..
-                WS_Status status = ws_status_no_status_code;
-                uint16_t bestatus;
-                if(payload.getn(reinterpret_cast<char*>(&bestatus), 2) >= 2)
-                  status = static_cast<WS_Status>(ROCKET_BETOH16(bestatus));
-                this->do_on_ws_close(status, payload);
+                // Get the status code in big-endian order.
+                char temp[2];
+                ROCKET_STORE_BE16(temp, ws_status_no_status_code);
+                payload.getn(temp, 2);
+                this->do_on_ws_close(static_cast<WS_Status>(ROCKET_LOAD_BE16(temp)), payload);
                 return;
               }
 
@@ -337,8 +336,7 @@ ws_shut_down(WS_Status status, chars_view reason)
       // to be truncated if it's too long.
       static_vector<char, 125> data;
       data.resize(2);
-      uint16_t bestatus = ROCKET_HTOBE16(status);
-      ::memcpy(data.mut_data(), reinterpret_cast<char*>(&bestatus), 2);
+      ROCKET_STORE_BE16(data.mut_data(), status);
       data.append(reason.p, reason.p + min(reason.n, data.capacity() - 2));
 
       // FIN + CLOSE

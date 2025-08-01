@@ -565,9 +565,7 @@ parse_frame_header_from_stream(linear_buffer& data)
       if(data.size() < ntotal)
         return;
 
-      uint16_t belen;
-      ::memcpy(&belen, bptr + ntotal - 2, 2);
-      this->m_frm_header.payload_len = ROCKET_BETOH16(belen);
+      this->m_frm_header.payload_len = ROCKET_LOAD_BE16(bptr + ntotal - 2);
     }
     else {
       // eight-byte length
@@ -575,9 +573,7 @@ parse_frame_header_from_stream(linear_buffer& data)
       if(data.size() < ntotal)
         return;
 
-      uint64_t belen;
-      ::memcpy(&belen, bptr + ntotal - 8, 8);
-      this->m_frm_header.payload_len = ROCKET_BETOH64(belen);
+      this->m_frm_header.payload_len = ROCKET_LOAD_BE64(bptr + ntotal - 8);
     }
 
     if(this->m_frm_header.masked) {
@@ -586,9 +582,7 @@ parse_frame_header_from_stream(linear_buffer& data)
       if(data.size() < ntotal)
         return;
 
-      uint32_t bekey;
-      ::memcpy(&bekey, bptr + ntotal - 4, 4);
-      this->m_frm_header.masking_key = ROCKET_BETOH32(bekey);
+      this->m_frm_header.masking_key = ROCKET_LOAD_BE32(bptr + ntotal - 4);
     }
 
     data.discard(ntotal);

@@ -25,7 +25,6 @@ class UUID
     union {
       ::std::array<uint8_t, 16> m_bytes = { };
       __m128i m_stor;
-      uint64_t m_quads[2];
     };
 
   public:

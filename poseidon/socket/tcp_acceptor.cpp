@@ -19,7 +19,7 @@ TCP_Acceptor(const IPv6_Address& addr)
 
     ::sockaddr_in6 sa = { };
     sa.sin6_family = AF_INET6;
-    sa.sin6_port = ROCKET_HTOBE16(addr.port());
+    sa.sin6_port = ::htons(addr.port());
     sa.sin6_addr = addr.addr();
     if(::bind(this->do_socket_fd(), reinterpret_cast<::sockaddr*>(&sa), sizeof(sa)) != 0)
       POSEIDON_THROW((
@@ -81,7 +81,7 @@ do_abstract_socket_on_readable()
       }
 
       from_addr.set_addr(sa.sin6_addr);
-      from_addr.set_port(ROCKET_BETOH16(sa.sin6_port));
+      from_addr.set_port(::ntohs(sa.sin6_port));
 
       static constexpr int one = 1;
       ::setsockopt(fd, IPPROTO_TCP, TCP_QUICKACK, &one, sizeof(one));

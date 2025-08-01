@@ -147,13 +147,11 @@ compare(const IPv6_Address& other)
   {
     char tdata[18];
     ::memcpy(tdata, &(this->m_addr), 16);
-    uint16_t port_be = ROCKET_HTOBE16(this->m_port);
-    ::memcpy(tdata + 16, &port_be, 2);
+    ROCKET_STORE_BE16(tdata + 16, this->m_port);
 
     char odata[18];
     ::memcpy(odata, &(other.m_addr), 16);
-    port_be = ROCKET_HTOBE16(other.m_port);
-    ::memcpy(odata + 16, &port_be, 2);
+    ROCKET_STORE_BE16(odata + 16, other.m_port);
 
     return ::memcmp(tdata, odata, 18);
   }

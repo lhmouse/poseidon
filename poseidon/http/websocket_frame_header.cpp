@@ -31,22 +31,19 @@ encode(tinyfmt& fmt)
       // two-byte length
       bytes[1] = this->masked << 7 | 126;
       ntotal += 2;
-      uint16_t belen = ROCKET_HTOBE16(this->payload_len);
-      ::memcpy(bytes + ntotal - 2, &belen, 2);
+      ROCKET_STORE_BE16(bytes + ntotal - 2, this->payload_len);
     }
     else {
       // eight-byte length
       bytes[1] = this->masked << 7 | 127;
       ntotal += 8;
-      uint64_t belen = ROCKET_HTOBE64(this->payload_len);
-      ::memcpy(bytes + ntotal - 8, &belen, 8);
+      ROCKET_STORE_BE64(bytes + ntotal - 8, this->payload_len);
     }
 
     if(this->masked) {
       // four-byte masking key
       ntotal += 4;
-      uint32_t bekey = ROCKET_HTOBE32(this->masking_key);
-      ::memcpy(bytes + ntotal - 4, &bekey, 4);
+      ROCKET_STORE_BE32(bytes + ntotal - 4, this->masking_key);
     }
 #pragma GCC diagnostic pop
 
@@ -80,8 +77,8 @@ mask_payload(char* data, size_t size)
 
     if(esdata - cur >= 4) {
       // Do it in the SIMD way. This branch must not alter `key`.
-      uint32_t bekey = ROCKET_HTOBE32(key);
-#if defined __AVX__
+      uint32_t bekey;
+      ROCKET_STORE_BE32(&bekey, key);
       __m256 ymask = _mm256_broadcast_ss(reinterpret_cast<float*>(&bekey));
 
       while(esdata - cur >= 32) {
@@ -89,7 +86,6 @@ mask_payload(char* data, size_t size)
         _mm256_storeu_ps(ycur, _mm256_xor_ps(_mm256_loadu_ps(ycur), ymask));
         cur += 32;
       }
-#endif
 
       while(esdata - cur >= 4) {
         uint32_t* wcur = reinterpret_cast<uint32_t*>(cur);

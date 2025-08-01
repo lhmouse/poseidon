@@ -44,6 +44,8 @@ UUID::
 random()
   noexcept
   {
+    UUID result;
+
     struct timespec ts;
     ::clock_gettime(CLOCK_REALTIME, &ts);
     uint64_t ts_pid = (static_cast<uint64_t>(ts.tv_sec - 983404800) * 30518 << 16)
@@ -59,9 +61,8 @@ random()
           "[`RAND_bytes()` failed]"),
           ::ERR_reason_error_string(::ERR_get_error()));
 
-    UUID result;
-    result.m_quads[0] = ROCKET_HTOBE64(ts_pid);
-    result.m_quads[1] = ROCKET_HTOBE64(random >> 1);
+    ROCKET_STORE_BE64(result.m_bytes.data() + 0, ts_pid);
+    ROCKET_STORE_BE64(result.m_bytes.data() + 8, random >> 1);
     return result;
   }
 
@@ -112,8 +113,8 @@ parse_partial(const char* str)
           low = low << 4 | val;
       }
 
-    this->m_quads[0] = ROCKET_HTOBE64(high);
-    this->m_quads[1] = ROCKET_HTOBE64(low);
+    ROCKET_STORE_BE64(this->m_bytes.data() + 0, high);
+    ROCKET_STORE_BE64(this->m_bytes.data() + 8, low);
     return 36;
   }
 
