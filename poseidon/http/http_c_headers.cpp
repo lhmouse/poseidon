@@ -164,13 +164,12 @@ encode(tinyfmt& fmt)
     if(this->method_str[0] == 0)
       fmt << "GET ";
     else {
-      const __m128i zr = _mm_setzero_si128();
       alignas(16) char str[16];
-      __m128i t = _mm_load_si128(&(this->packed_fields_1));
-      t = _mm_blend_epi16(t, zr, 0xC0);
+      __m128i t = _mm_loadu_si64(this->method_str);
+      uint32_t tn = static_cast<uint32_t>(_mm_cmpistri(t, _mm_setzero_si128(), 0x08));
       _mm_store_si128(reinterpret_cast<__m128i*>(str), t);
-      ::memcpy(str + static_cast<uint32_t>(_mm_cmpistri(t, zr, 0x08)), " ", 2);
-      fmt << str;
+      str[tn++] = ' ';
+      fmt.putn(str, tn);
     }
 
     if(this->is_proxy) {
