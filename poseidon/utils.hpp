@@ -99,10 +99,7 @@ implode(const cow_vector<cow_string>& segments, char delim = ',');
 
 // Prints a quoted UTF-8 string, like in JSON.
 void
-quote_json_string(tinybuf& buf, const cow_string& str);
-
-void
-quote_json_string(tinyfmt& fmt, const cow_string& str);
+quote_json_string(tinyfmt& buf, const cow_string& str);
 
 // Converts 16 bytes into a hexadecimal string. Exactly 33 characters will be
 // written, including a null terminator.

@@ -115,9 +115,6 @@ using ::rocket::cow_u16string;
 using ::rocket::cow_u32string;
 using ::rocket::phcow_string;
 using ::rocket::linear_buffer;
-using ::rocket::tinybuf;
-using ::rocket::tinybuf_str;
-using ::rocket::tinybuf_ln;
 using ::rocket::tinyfmt;
 using ::rocket::tinyfmt_str;
 using ::rocket::tinyfmt_ln;
@@ -287,12 +284,6 @@ struct chars_view
 
     template<typename allocT>
     constexpr
-    chars_view(const ::rocket::basic_tinybuf_str<char, allocT>& rs)
-      noexcept
-      : p(rs.data()), n(rs.size())  { }
-
-    template<typename allocT>
-    constexpr
     chars_view(const ::rocket::basic_tinyfmt_str<char, allocT>& rs)
       noexcept
       : p(rs.data()), n(rs.size())  { }
@@ -300,12 +291,6 @@ struct chars_view
     template<typename allocT>
     constexpr
     chars_view(const ::rocket::basic_linear_buffer<char, allocT>& rs)
-      noexcept
-      : p(rs.data()), n(rs.size())  { }
-
-    template<typename allocT>
-    constexpr
-    chars_view(const ::rocket::basic_tinybuf_ln<char, allocT>& rs)
       noexcept
       : p(rs.data()), n(rs.size())  { }
 

@@ -171,7 +171,7 @@ implode(const cow_vector<cow_string>& segments, char delim)
   }
 
 void
-quote_json_string(tinybuf& buf, const cow_string& str)
+quote_json_string(tinyfmt& buf, const cow_string& str)
   {
     buf.putc('"');
     size_t offset = 0;
@@ -237,12 +237,6 @@ quote_json_string(tinybuf& buf, const cow_string& str)
         }
     }
     buf.putc('"');
-  }
-
-void
-quote_json_string(tinyfmt& fmt, const cow_string& str)
-  {
-    quote_json_string(fmt.mut_buf(), str);
   }
 
 void
