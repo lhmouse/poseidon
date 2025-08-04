@@ -10,33 +10,15 @@ namespace poseidon {
 enum HTTP_Method : uint64_t
   {
     http_NULL      = 0,
-#if __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__
-    // BE
-    http_OPTIONS   = 0x4F'50'54'49'4F'4E'53,
-    http_GET       = 0x47'45'54,
-    http_HEAD      = 0x48'45'41'44,
-    http_POST      = 0x50'4F'53'54,
-    http_PUT       = 0x50'55'54,
-    http_DELETE    = 0x44'45'4C'45'54'45,
-    http_TRACE     = 0x54'52'41'43'45,
-    http_CONNECT   = 0x43'4F'4E'4E'45'43'54,
-    http_PATCH     = 0x50'41'54'43'48,
-    // BE
-#elif __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__
-    // LE
-    http_OPTIONS   = 0x53'4E'4F'49'54'50'4F,
-    http_GET       = 0x54'45'47,
-    http_HEAD      = 0x44'41'45'48,
-    http_POST      = 0x54'53'4F'50,
-    http_PUT       = 0x54'55'50,
-    http_DELETE    = 0x45'54'45'4C'45'44,
-    http_TRACE     = 0x45'43'41'52'54,
-    http_CONNECT   = 0x54'43'45'4E'4E'4F'43,
-    http_PATCH     = 0x48'43'54'41'50,
-    // LE
-#else
-#  error Byte order could not be determined.
-#endif
+    http_OPTIONS   = 0x0'00'53'4E'4F'49'54'50'4F,
+    http_GET       = 0x0'00'00'00'00'00'54'45'47,
+    http_HEAD      = 0x0'00'00'00'00'44'41'45'48,
+    http_POST      = 0x0'00'00'00'00'54'53'4F'50,
+    http_PUT       = 0x0'00'00'00'00'00'54'55'50,
+    http_DELETE    = 0x0'00'00'45'54'45'4C'45'44,
+    http_TRACE     = 0x0'00'00'00'45'43'41'52'54,
+    http_CONNECT   = 0x0'00'54'43'45'4E'4E'4F'43,
+    http_PATCH     = 0x0'00'00'00'48'43'54'41'50,
   };
 
 enum HTTP_Status : uint16_t
