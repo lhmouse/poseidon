@@ -69,9 +69,9 @@ do_update_variants()
       this->m_str.assign(nump.c_str(), nump.length());
       this->m_vm = vm_str_valid | vm_dbl_valid;
 
-      ::feclearexcept(FE_ALL_EXCEPT);
-      this->m_int = ::llrint(this->m_dbl);
-      if(::fetestexcept(FE_ALL_EXCEPT) == 0)
+      _MM_SET_EXCEPTION_STATE(0);
+      this->m_int = _mm_cvtsd_si64(_mm_load_sd(&(this->m_dbl)));
+      if(_MM_GET_EXCEPTION_STATE() == 0)
         this->m_vm |= vm_int_valid;
 
       this->m_dt = system_time();

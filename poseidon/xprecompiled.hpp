@@ -56,7 +56,6 @@
 #include <cstdio>
 #include <climits>
 #include <cmath>
-#include <cfenv>
 #include <cfloat>
 #include <cstring>
 #include <cerrno>
