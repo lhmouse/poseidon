@@ -77,8 +77,7 @@ mask_payload(char* data, size_t size)
 
     if(esdata - cur >= 4) {
       // Do it in the SIMD way. This branch must not alter `key`.
-      uint32_t bekey;
-      ::rocket::store_be<uint32_t>(&bekey, key);
+      uint32_t bekey = ::rocket::load_be<uint32_t>(&key);
       __m256 ymask = _mm256_broadcast_ss(reinterpret_cast<float*>(&bekey));
 
       while(esdata - cur >= 32) {
