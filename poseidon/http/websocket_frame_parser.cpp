@@ -565,7 +565,7 @@ parse_frame_header_from_stream(linear_buffer& data)
       if(data.size() < ntotal)
         return;
 
-      this->m_frm_header.payload_len = ROCKET_LOAD_BE16(bptr + ntotal - 2);
+      this->m_frm_header.payload_len = ::rocket::load_be<uint16_t>(bptr + ntotal - 2);
     }
     else {
       // eight-byte length
@@ -573,7 +573,7 @@ parse_frame_header_from_stream(linear_buffer& data)
       if(data.size() < ntotal)
         return;
 
-      this->m_frm_header.payload_len = ROCKET_LOAD_BE64(bptr + ntotal - 8);
+      this->m_frm_header.payload_len = ::rocket::load_be<uint64_t>(bptr + ntotal - 8);
     }
 
     if(this->m_frm_header.masked) {
@@ -582,7 +582,7 @@ parse_frame_header_from_stream(linear_buffer& data)
       if(data.size() < ntotal)
         return;
 
-      this->m_frm_header.masking_key = ROCKET_LOAD_BE32(bptr + ntotal - 4);
+      this->m_frm_header.masking_key = ::rocket::load_be<uint32_t>(bptr + ntotal - 4);
     }
 
     data.discard(ntotal);

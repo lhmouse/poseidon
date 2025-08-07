@@ -173,9 +173,9 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
                 // Get the status code in big-endian order.
                 char temp[2];
-                ROCKET_STORE_BE16(temp, ws_status_no_status_code);
+                ::rocket::store_be<uint16_t>(temp, ws_status_no_status_code);
                 payload.getn(temp, 2);
-                this->do_on_ws_close(static_cast<WS_Status>(ROCKET_LOAD_BE16(temp)), payload);
+                this->do_on_ws_close(::rocket::load_be<WS_Status>(temp), payload);
                 return;
               }
 
@@ -336,7 +336,7 @@ ws_shut_down(WS_Status status, chars_view reason)
       // to be truncated if it's too long.
       static_vector<char, 125> data;
       data.resize(2);
-      ROCKET_STORE_BE16(data.mut_data(), status);
+      ::rocket::store_be<uint16_t>(data.mut_data(), status);
       data.append(reason.p, reason.p + min(reason.n, data.capacity() - 2));
 
       // FIN + CLOSE

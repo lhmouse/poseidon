@@ -31,19 +31,19 @@ encode(tinyfmt& fmt)
       // two-byte length
       bytes[1] = this->masked << 7 | 126;
       ntotal += 2;
-      ROCKET_STORE_BE16(bytes + ntotal - 2, this->payload_len);
+      ::rocket::store_be<uint16_t>(bytes + ntotal - 2, this->payload_len);
     }
     else {
       // eight-byte length
       bytes[1] = this->masked << 7 | 127;
       ntotal += 8;
-      ROCKET_STORE_BE64(bytes + ntotal - 8, this->payload_len);
+      ::rocket::store_be<uint64_t>(bytes + ntotal - 8, this->payload_len);
     }
 
     if(this->masked) {
       // four-byte masking key
       ntotal += 4;
-      ROCKET_STORE_BE32(bytes + ntotal - 4, this->masking_key);
+      ::rocket::store_be<uint32_t>(bytes + ntotal - 4, this->masking_key);
     }
 #pragma GCC diagnostic pop
 
@@ -78,7 +78,7 @@ mask_payload(char* data, size_t size)
     if(esdata - cur >= 4) {
       // Do it in the SIMD way. This branch must not alter `key`.
       uint32_t bekey;
-      ROCKET_STORE_BE32(&bekey, key);
+      ::rocket::store_be<uint32_t>(&bekey, key);
       __m256 ymask = _mm256_broadcast_ss(reinterpret_cast<float*>(&bekey));
 
       while(esdata - cur >= 32) {

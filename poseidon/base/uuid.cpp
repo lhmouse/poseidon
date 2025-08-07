@@ -61,8 +61,8 @@ random()
           "[`RAND_bytes()` failed]"),
           ::ERR_reason_error_string(::ERR_get_error()));
 
-    ROCKET_STORE_BE64(result.m_bytes.data() + 0, ts_pid);
-    ROCKET_STORE_BE64(result.m_bytes.data() + 8, random >> 1);
+    ::rocket::store_be<uint64_t>(result.m_bytes.data() + 0, ts_pid);
+    ::rocket::store_be<uint64_t>(result.m_bytes.data() + 8, random >> 1);
     return result;
   }
 
@@ -113,8 +113,8 @@ parse_partial(const char* str)
           low = low << 4 | val;
       }
 
-    ROCKET_STORE_BE64(this->m_bytes.data() + 0, high);
-    ROCKET_STORE_BE64(this->m_bytes.data() + 8, low);
+    ::rocket::store_be<uint64_t>(this->m_bytes.data() + 0, high);
+    ::rocket::store_be<uint64_t>(this->m_bytes.data() + 8, low);
     return 36;
   }
 
