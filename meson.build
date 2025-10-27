@@ -192,10 +192,10 @@ dep_hiredis = dependency('hiredis')
 #===========================================================
 # Rules for headers
 #===========================================================
-configure_file(input: 'poseidon/version.h.in',
-               configuration: ver,
+configure_file(configuration: ver,
                output: 'version.h',
-               install: false)
+               install: false,
+               input: 'poseidon/version.h.in')
 
 install_headers(poseidon_include, preserve_path: true)
 install_headers(meson.current_build_dir() / 'version.h', subdir: 'poseidon')
