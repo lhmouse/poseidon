@@ -57,8 +57,8 @@ class Mongo_Connection
     // be be called after `execute_bson()`. If the command has produced a reply
     // which does not contain a cursor, a pointer to the reply document is
     // returned. If the command has produced a reply which contains a cursor, a
-    // cursor is created where subsequent documents will be fetched. In  either
-    /// case, the caller must not free the result `bson_t` object. If there is
+    // cursor is created where subsequent documents will be fetched. In either
+    // case, the caller must not free the result `bson_t` object. If there is
     // no more document to fetch, a null pointer is returned.
     const ::bson_t*
     fetch_reply_bson_opt();
