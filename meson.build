@@ -22,6 +22,7 @@ project('poseidon',
 #===========================================================
 # List of files
 #===========================================================
+
 poseidon_include = [
   'poseidon/fwd.hpp', 'poseidon/utils.hpp', 'poseidon/details/openssl_fwd.hpp',
   'poseidon/details/zlib_fwd.hpp', 'poseidon/static/main_config.hpp',
@@ -133,6 +134,7 @@ test_src = [
 #===========================================================
 # Global configuration
 #===========================================================
+
 ver = configuration_data()
 ver.set('abi_major', meson.project_version().split('.')[0])
 ver.set('abi_minor', meson.project_version().split('.')[1])
@@ -175,6 +177,7 @@ endif
 #===========================================================
 # Dependencies
 #===========================================================
+
 dep_pthread = dependency('threads')
 dep_asteria = dependency('asteria')
 dep_taxon = dependency('taxon')
@@ -191,6 +194,7 @@ dep_hiredis = dependency('hiredis')
 #===========================================================
 # Rules for headers
 #===========================================================
+
 configure_file(configuration: ver,
                output: 'version.h',
                install: false,
@@ -202,6 +206,7 @@ install_headers(meson.current_build_dir() / 'version.h', subdir: 'poseidon')
 #===========================================================
 # Rules for 'lib/libposeidon.so'
 #===========================================================
+
 lib_poseidon = shared_library('poseidon',
       cpp_pch: 'poseidon/xprecompiled.hpp',
       sources: [ poseidon_src ],
@@ -223,6 +228,7 @@ import('pkgconfig').generate(lib_poseidon,
 #===========================================================
 # Rules for 'bin/poseidon'
 #===========================================================
+
 executable('poseidon',
       sources: [ 'poseidon/main.cpp' ],
       cpp_pch: 'poseidon/xprecompiled.hpp',
@@ -234,11 +240,13 @@ executable('poseidon',
 #===========================================================
 # Rules for default configuration files
 #===========================================================
+
 install_data(poseidon_etc, install_dir: '.', preserve_path: true)
 
 #===========================================================
 # Rules for example libraries
 #===========================================================
+
 foreach src : example_src
   shared_module('poseidon-' + src.replace('.cpp', '').underscorify(),
                 sources: [ src ],
@@ -249,6 +257,7 @@ endforeach
 #===========================================================
 # Rules for tests
 #===========================================================
+
 foreach src : test_src
   basename = src.replace('test/', '')
   test_deps = [ dep_pthread, dep_asteria, dep_taxon ]
