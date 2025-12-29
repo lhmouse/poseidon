@@ -256,8 +256,7 @@ print_to(tinyfmt& fmt)
             pos = ::std::find_if(pos + 1, eptr, do_is_ctl_or_sep);
             fmt.putn(&*from, static_cast<size_t>(pos - from));
           }
-        }
-        while(pos != eptr);
+        } while(pos != eptr);
         fmt.putc('"');
       }
       return fmt;

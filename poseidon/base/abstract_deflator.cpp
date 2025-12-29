@@ -60,8 +60,7 @@ deflate(chars_view data)
             "Failed to compress data; zlib error: $1",
             "[`deflate()` returned `$2`]"),
             this->m_strm.msg(), err);
-    }
-    while((in_ptr != in_end) && (err == Z_OK));
+    } while((in_ptr != in_end) && (err == Z_OK));
 
     // Return the number of characters that have been consumed.
     return (size_t) (in_ptr - data.p);
@@ -98,8 +97,7 @@ sync_flush()
             "Failed to compress data; zlib error: $1",
             "[`deflate()` returned `$2`]"),
             this->m_strm.msg(), err);
-    }
-    while(err == Z_OK);
+    } while(err == Z_OK);
 
     // Return whether the operation has succeeded.
     return err == Z_BUF_ERROR;
@@ -136,8 +134,7 @@ full_flush()
             "Failed to compress data; zlib error: $1",
             "[`deflate()` returned `$2`]"),
             this->m_strm.msg(), err);
-    }
-    while(err == Z_OK);
+    } while(err == Z_OK);
 
     // Return whether the operation has succeeded.
     return err == Z_BUF_ERROR;
@@ -174,8 +171,7 @@ finish()
             "Failed to compress data; zlib error: $1",
             "[`deflate()` returned `$2`]"),
             this->m_strm.msg(), err);
-    }
-    while(err == Z_OK);
+    } while(err == Z_OK);
 
     // Return whether the operation has succeeded.
     return err == Z_STREAM_END;

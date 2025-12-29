@@ -59,8 +59,7 @@ inflate(chars_view data)
             "Failed to decompress data; zlib error: $1",
             "[`inflate()` returned `$2`]"),
             this->m_strm.msg(), err);
-    }
-    while((in_ptr != in_end) && (err == Z_OK));
+    } while((in_ptr != in_end) && (err == Z_OK));
 
     // Return the number of characters that have been consumed.
     return (size_t) (in_ptr - data.p);
@@ -97,8 +96,7 @@ finish()
             "Failed to decompress data; zlib error: $1",
             "[`inflate()` returned `$2`]"),
             this->m_strm.msg(), err);
-    }
-    while(err == Z_OK);
+    } while(err == Z_OK);
 
     // Return whether the operation has succeeded.
     return err == Z_STREAM_END;
