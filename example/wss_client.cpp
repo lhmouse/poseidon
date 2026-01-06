@@ -1,5 +1,5 @@
 // This file is part of Poseidon.
-// Copyright (C) 2022-2025, LH_Mouse. All wrongs reserved.
+// Copyright (C) 2022-2026 LH_Mouse. All wrongs reserved.
 
 #include "../poseidon/xprecompiled.hpp"
 #include "../poseidon/easy/easy_wss_client.hpp"
