@@ -55,7 +55,7 @@ deflate(chars_view data)
       if(out_ptr != out_end)
         this->do_on_deflate_truncate_output_buffer(static_cast<size_t>(out_end - out_ptr));
 
-      if(is_none_of(err, { Z_OK, Z_BUF_ERROR, Z_STREAM_ERROR }))
+      if(is_none_of(err, { Z_OK, Z_BUF_ERROR }))
         POSEIDON_THROW((
             "Failed to compress data; zlib error: $1",
             "[`deflate()` returned `$2`]"),
@@ -93,7 +93,7 @@ sync_flush()
       if(out_ptr != out_end)
         this->do_on_deflate_truncate_output_buffer(static_cast<size_t>(out_end - out_ptr));
 
-      if(is_none_of(err, { Z_OK, Z_BUF_ERROR, Z_STREAM_ERROR }))
+      if(is_none_of(err, { Z_OK, Z_BUF_ERROR }))
         POSEIDON_THROW((
             "Failed to compress data; zlib error: $1",
             "[`deflate()` returned `$2`]"),
@@ -131,7 +131,7 @@ full_flush()
       if(out_ptr != out_end)
         this->do_on_deflate_truncate_output_buffer(static_cast<size_t>(out_end - out_ptr));
 
-      if(is_none_of(err, { Z_OK, Z_BUF_ERROR, Z_STREAM_ERROR }))
+      if(is_none_of(err, { Z_OK, Z_BUF_ERROR }))
         POSEIDON_THROW((
             "Failed to compress data; zlib error: $1",
             "[`deflate()` returned `$2`]"),
