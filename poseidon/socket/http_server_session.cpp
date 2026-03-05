@@ -310,7 +310,7 @@ http_shut_down(HTTP_Status status)
     catch(exception& stdex) {
       POSEIDON_LOG_ERROR((
           "Failed to send default page: $3",
-          "[HTTP client session `$1` (class `$2`)]"),
+          "[HTTP server session `$1` (class `$2`)]"),
           this, typeid(*this), stdex);
     }
     succ |= this->tcp_shut_down();
