@@ -612,6 +612,11 @@ parse_frame_payload_from_stream(linear_buffer& data)
     if(navail != 0) {
       // Move the (maybe partial) payload from `data` into `m_frm_payload`. If the
       // payload has been masked, unmask it first.
+      if(this->m_frm_payload.size() + navail > this->m_max_message_length)
+        POSEIDON_THROW((
+            "WebSocket message length limit exceeded: `$1` > `$2`"),
+            this->m_frm_payload.size() + navail, this->m_max_message_length);
+
       this->m_frm_header.mask_payload(data.mut_data(), navail);
       this->m_frm_payload.putn(data.data(), navail);
       data.discard(navail);
