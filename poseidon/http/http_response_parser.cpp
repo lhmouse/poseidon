@@ -64,6 +64,12 @@ HTTP_Response_Parser::s_settings[1] =
     // on_body
     +[](::http_parser* ps, const char* str, size_t len)
       {
+        // Accept the payload, always.
+        if(this->m_payload.size() + len > this->m_max_message_length)
+          POSEIDON_THROW((
+              "HTTP message length limit exceeded: `$1` > `$2`"),
+              this->m_payload.size() + len, this->m_max_message_length);
+
         this->m_payload.putn(str, len);
         return 0;
       },
