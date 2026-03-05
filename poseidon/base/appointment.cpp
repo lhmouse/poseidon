@@ -48,7 +48,7 @@ enroll(const cow_string& lock_path)
 
     // Adopt the lock.
     this->m_fd = move(fd);
-    this->m_index = static_cast<int>(lck.l_start);
+    this->m_index = (int) lck.l_start;
   }
 
 void
