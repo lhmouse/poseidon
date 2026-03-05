@@ -56,7 +56,8 @@ deflate_message_stream(plain_mutex::unique_lock& lock, chars_view data)
             "Failed to compress WebSocket message; zlib error: $1",
             "[`deflate()` returned `$2`]"),
             this->m_def_strm.msg(), err);
-    } while((in_ptr != in_end) && (err == Z_OK));
+    }
+    while((in_ptr != in_end) && (err == Z_OK));
   }
 
 void
@@ -83,7 +84,8 @@ deflate_message_finish(plain_mutex::unique_lock& lock)
             "Failed to compress WebSocket message; zlib error: $1",
             "[`deflate()` returned `$2`]"),
             this->m_def_strm.msg(), err);
-    } while(err == Z_OK);
+    }
+    while(err == Z_OK);
 
     if((this->m_def_buf.size() >= 4)
        && (::memcmp(this->m_def_buf.end() - 4, "\x00\x00\xFF\xFF", 4) == 0))
@@ -123,7 +125,8 @@ inflate_message_stream(plain_mutex::unique_lock& lock, chars_view data,
         POSEIDON_THROW((
             "WebSocket message length limit exceeded: `$1` > `$2`"),
             this->m_inf_buf.size(), max_message_length);
-    } while((in_ptr != in_end) && (err == Z_OK));
+    }
+    while((in_ptr != in_end) && (err == Z_OK));
   }
 
 void
@@ -150,7 +153,8 @@ inflate_message_finish(plain_mutex::unique_lock& lock)
             "Failed to decompress WebSocket message; zlib error: $1",
             "[`inflate()` returned `$2`]"),
             this->m_inf_strm.msg(), err);
-    } while(err == Z_OK);
+    }
+    while(err == Z_OK);
   }
 
 }  // namespace poseidon
