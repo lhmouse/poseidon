@@ -333,7 +333,7 @@ https_shut_down(int status)
   {
     HTTP_Status real_status = http_status_bad_request;
     if((status >= 200) && (status <= 599))
-      real_status = static_cast<HTTP_Status>(real_status);
+      real_status = static_cast<HTTP_Status>(status);
     return this->https_shut_down(real_status);
   }
 

@@ -387,7 +387,7 @@ ws_shut_down(int status, chars_view reason)
   {
     WS_Status real_status = ws_status_policy_violation;
     if((status >= 1000) && (status <= 4999))
-      real_status = static_cast<WS_Status>(real_status);
+      real_status = static_cast<WS_Status>(status);
     return this->ws_shut_down(real_status, reason);
   }
 
