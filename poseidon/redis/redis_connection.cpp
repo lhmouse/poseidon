@@ -128,7 +128,6 @@ execute(const cow_vector<cow_string>& cmd)
     // Compose the argument and length vector.
     ::std::vector<uintptr_t> argv;
     argv.resize(cmd.size() * 2);
-
     for(size_t t = 0;  t != cmd.size();  ++t) {
       argv.at(t) = reinterpret_cast<uintptr_t>(cmd.at(t).data());
       argv.at(cmd.size() + t) = cmd.at(t).size();
