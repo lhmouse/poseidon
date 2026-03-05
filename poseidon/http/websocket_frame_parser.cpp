@@ -524,7 +524,7 @@ parse_frame_header_from_stream(linear_buffer& data)
             return;
           }
 
-          if(this->m_frm_header.payload_len > 125) {
+          if(this->m_frm_header.reserved_1 > 125) {
             // RFC 6455
             // 5.5. Control Frames
             // All control frames MUST have a payload length of 125 bytes or less
