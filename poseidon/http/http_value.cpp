@@ -154,7 +154,7 @@ parse_datetime_partial(chars_view str)
     if(aclen == 0)
       return 0;
 
-    this->m_str.assign(str.p, str.n);
+    this->m_str.assign(str.p, aclen);
     this->m_int = 0;
     this->m_dbl = 0;
     this->m_vm = vm_dt_valid;
