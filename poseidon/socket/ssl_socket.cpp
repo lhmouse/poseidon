@@ -86,7 +86,7 @@ do_ssl_alpn_request(const cow_vector<charbuf_256>& protos)
                              reinterpret_cast<const unsigned char*>(bytes.data()),
                              static_cast<unsigned>(bytes.size())) != 0)
       POSEIDON_THROW((
-          "Could set ALPN protocols for negotiation",
+          "Could not set ALPN protocols for negotiation",
           "[`SSL_set_alpn_protos()` failed]",
           "[SSL socket `$1` (class `$2`)]"),
           this, typeid(*this));
