@@ -19,6 +19,12 @@ HTTP_Request_Parser::s_settings[1] =
     // on_url
     +[](::http_parser* ps, const char* str, size_t len)
       {
+        // Append to the the URI.
+        if(this->m_headers.estimate_size() + len > this->m_max_header_length)
+          POSEIDON_THROW((
+              "HTTP header length limit exceeded: `$1` > `$2`"),
+              this->m_headers.estimate_size() + len, this->m_max_content_length);
+
         this->m_headers.raw_host.append(str, len);
         return 0;
       },
@@ -36,6 +42,11 @@ HTTP_Request_Parser::s_settings[1] =
 
         // Append the header name to the last key, as this callback might be
         // invoked repeatedly.
+        if(this->m_headers.estimate_size() + len > this->m_max_header_length)
+          POSEIDON_THROW((
+              "HTTP header length limit exceeded: `$1` > `$2`"),
+              this->m_headers.estimate_size() + len, this->m_max_content_length);
+
         this->m_headers.headers.mut_back().first.mut_str().append(str, len);
         return 0;
       },
@@ -44,6 +55,11 @@ HTTP_Request_Parser::s_settings[1] =
     +[](::http_parser* ps, const char* str, size_t len)
       {
         // Append the header value, as this callback might be invoked repeatedly.
+        if(this->m_headers.estimate_size() + len > this->m_max_header_length)
+          POSEIDON_THROW((
+              "HTTP header length limit exceeded: `$1` > `$2`"),
+              this->m_headers.estimate_size() + len, this->m_max_content_length);
+
         cow_string value = this->m_headers.headers.back().second.as_string();
         value.append(str, len);
         this->m_headers.headers.mut_back().second = move(value);
@@ -195,8 +211,10 @@ HTTP_Request_Parser()
     auto conf_file = main_config.copy();
     this->m_default_compression_level = static_cast<int>(conf_file.get_integer_opt(
                                 &"network.http.default_compression_level", 0, 9).value_or(6));
+    this->m_max_header_length = static_cast<uint32_t>(conf_file.get_integer_opt(
+                           &"network.http.max_header_length", 256, 16777216).value_or(262144));
     this->m_max_content_length = static_cast<uint32_t>(conf_file.get_integer_opt(
-                     &"network.http.max_request_content_length", 256, 16777216).value_or(1048576));
+                 &"network.http.max_request_content_length", 256, 16777216).value_or(1048576));
   }
 
 HTTP_Request_Parser::

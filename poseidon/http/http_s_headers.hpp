@@ -45,6 +45,11 @@ struct HTTP_S_Headers
         this->headers.clear();
       }
 
+    // Estimates the number of bytes of all headers.
+    size_t
+    estimate_size()
+      const;
+
     // Encodes headers in wire format. Lines are separated by CR LF pairs. The
     // output will be suitable for sending through a stream socket.
     void

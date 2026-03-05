@@ -12,6 +12,18 @@ HTTP_C_Headers::
   {
   }
 
+size_t
+HTTP_C_Headers::
+estimate_size()
+  const
+  {
+    size_t tlen = this->raw_host.size() + this->raw_userinfo.size()
+                  + this->raw_path.size() + this->raw_query.size();
+    for(const auto& hr : this->headers)
+      tlen += 4 + hr.first.length() + hr.second.as_string_length();
+    return tlen;
+  }
+
 void
 HTTP_C_Headers::
 encode_and_set_path(chars_view path)

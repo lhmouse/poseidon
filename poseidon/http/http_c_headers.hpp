@@ -64,6 +64,11 @@ struct HTTP_C_Headers
         this->headers.clear();
       }
 
+    // Estimates the number of bytes of all headers.
+    size_t
+    estimate_size()
+      const;
+
     // Encodes an arbitrary path and assigns it to `raw_path`.
     void
     encode_and_set_path(chars_view path);

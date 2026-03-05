@@ -13,6 +13,7 @@ class HTTP_Response_Parser
   {
   private:
     int m_default_compression_level;
+    uint32_t m_max_header_length;
     uint32_t m_max_content_length;
 
     static const ::http_parser_settings s_settings[1];
@@ -44,6 +45,11 @@ class HTTP_Response_Parser
     default_compression_level()
       const noexcept
       { return this->m_default_compression_level;  }
+
+    uint32_t
+    max_header_length()
+      const noexcept
+      { return this->m_max_header_length;  }
 
     uint32_t
     max_content_length()

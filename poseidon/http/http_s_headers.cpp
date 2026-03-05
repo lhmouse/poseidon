@@ -12,6 +12,17 @@ HTTP_S_Headers::
   {
   }
 
+size_t
+HTTP_S_Headers::
+estimate_size()
+  const
+  {
+    size_t tlen = 12 + this->reason.size();
+    for(const auto& hr : this->headers)
+      tlen += 4 + hr.first.length() + hr.second.as_string_length();
+    return tlen;
+  }
+
 void
 HTTP_S_Headers::
 encode(tinyfmt& fmt)
