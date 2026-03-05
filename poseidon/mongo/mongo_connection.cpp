@@ -96,18 +96,19 @@ execute(const Mongo_Document& cmd)
     struct xFrame
       {
         ::bson_t* parent_bson;
-        using append_end_fn_type = bool (bson_t*, bson_t*);
-        append_end_fn_type* append_end_fn;
+        ::std::add_pointer_t<bool (bson_t*, bson_t*)> append_end_fn;
         const Mongo_Value* parent;
         size_t parent_rpos;
+        Mongo_Array* parent_top_a;
+        Mongo_Document* parent_top_o;
         ::bson_t temp;
       };
 
     scoped_bson bson_cmd;
     ::std::forward_list<xFrame> stack;
     bool success = true;
-    size_t top_rpos = cmd.size();
     ::bson_t* pbson = bson_cmd;
+    size_t top_rpos = cmd.size();
     const Mongo_Array* top_a = nullptr;
     const Mongo_Document* top_o = &cmd;
 
@@ -177,6 +178,8 @@ execute(const Mongo_Document& cmd)
             frm.parent_bson = pbson;
             frm.parent = pval;
             frm.parent_rpos = top_rpos;
+            frm.parent_top_a = top_a;
+            frm.parent_top_o = top_o;
 
             switch(pval->m_stor.index())
               {
@@ -196,8 +199,8 @@ execute(const Mongo_Document& cmd)
             if(success) {
               // open
               pbson = &(frm.temp);
-              top_a = pval->m_stor.ptr<Mongo_Array>();
-              top_o = pval->m_stor.ptr<Mongo_Document>();
+              top_a = frm.parent_top_a;
+              top_o = frm.parent_top_o;
               goto do_unpack_loop_;
             }
 
@@ -223,10 +226,10 @@ execute(const Mongo_Document& cmd)
 
     if(success && !stack.empty()) {
       auto& frm = stack.front();
-      top_rpos = frm.parent_rpos;
       pbson = frm.parent_bson;
-      top_a = frm.parent->m_stor.ptr<Mongo_Array>();
-      top_o = frm.parent->m_stor.ptr<Mongo_Document>();
+      top_rpos = frm.parent_rpos;
+      top_a = frm.parent_top_a;
+      top_o = frm.parent_top_o;
       success = frm.append_end_fn(pbson, &(frm.temp));
       stack.pop_front();
       goto do_unpack_loop_;
