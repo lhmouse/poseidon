@@ -27,6 +27,10 @@ do_classify_ipv4_generic(const char* addr)
     if(do_match_subnet(addr, "\x00\x00\x00\x00", 32))
       return ip_address_unspecified;
 
+    // 255.255.255.255/32: Broadcast
+    if(do_match_subnet(addr, "\xFF\xFF\xFF\xFF", 32))
+      return ip_address_broadcast;
+
     // 0.0.0.0/8: Local Identification
     if(do_match_subnet(addr, "\x00", 8))
       return ip_address_reserved;
@@ -58,10 +62,6 @@ do_classify_ipv4_generic(const char* addr)
     // 240.0.0.0/4: Class E
     if(do_match_subnet(addr, "\xF0", 4))
       return ip_address_reserved;
-
-    // 255.255.255.255/32: Broadcast
-    if(do_match_subnet(addr, "\xFF\xFF\xFF\xFF", 32))
-      return ip_address_broadcast;
 
     // Default
     return ip_address_public;
