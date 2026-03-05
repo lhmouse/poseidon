@@ -19,7 +19,7 @@ SSL_Socket(unique_posix_fd&& fd, const Network_Scheduler& scheduler)
     if(!this->m_ssl.reset(::SSL_new(scheduler.server_ssl_ctx())))
       POSEIDON_THROW((
           "Could not allocate SSL structure",
-          "[`SSL_new()` failed: $1])"),
+          "[`SSL_new()` failed: $1]"),
           ::ERR_reason_error_string(::ERR_get_error()));
 
     if(!::SSL_set_fd(this->m_ssl, this->do_socket_fd()))
@@ -39,7 +39,7 @@ SSL_Socket(const Network_Scheduler& scheduler)
     if(!this->m_ssl.reset(::SSL_new(scheduler.client_ssl_ctx())))
       POSEIDON_THROW((
           "Could not allocate SSL structure",
-          "[`SSL_new()` failed: $1])"),
+          "[`SSL_new()` failed: $1]"),
           ::ERR_reason_error_string(::ERR_get_error()));
 
     if(!::SSL_set_fd(this->m_ssl, this->do_socket_fd()))

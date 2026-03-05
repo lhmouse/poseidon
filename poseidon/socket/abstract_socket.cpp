@@ -20,11 +20,11 @@ Abstract_Socket(unique_posix_fd&& fd)
     // Require the socket be non-blocking here for simplicity.
     int fl_old = ::fcntl(this->m_fd, F_GETFL);
     if(fl_old == -1)
-      POSEIDON_THROW(("Could not get socket flags: ${errno:full}]"));
+      POSEIDON_THROW(("Could not get socket flags: ${errno:full}"));
 
     int fl_new = fl_old | O_NONBLOCK;
     if((fl_new != fl_old) && (::fcntl(this->m_fd, F_SETFL, fl_new) != 0))
-      POSEIDON_THROW(("Could not set socket flags: ${errno:full}]"));
+      POSEIDON_THROW(("Could not set socket flags: ${errno:full}"));
 
     this->m_scheduler = reinterpret_cast<Network_Scheduler*>(-1);
   }
