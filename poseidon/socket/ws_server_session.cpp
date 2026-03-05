@@ -181,10 +181,8 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
             case ws_PING:
               POSEIDON_LOG_TRACE(("PING from `$1`: $2"), this->remote_address(), payload);
+              this->do_ws_send_raw_frame(0x8A, payload);
               this->do_on_ws_message_finish(ws_PING, move(payload));
-
-              // FIN + PONG
-              this->do_ws_send_raw_frame(0b10001010, payload);
               break;
 
             case ws_PONG:
