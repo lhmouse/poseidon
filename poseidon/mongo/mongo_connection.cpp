@@ -95,12 +95,11 @@ execute(const Mongo_Document& cmd)
     // Pack the command into a BSON object.
     struct xFrame
       {
-        ::bson_t* parent_bson;
-        ::std::add_pointer_t<bool (bson_t*, bson_t*)> append_end_fn;
-        const Mongo_Value* parent;
-        size_t parent_rpos;
-        Mongo_Array* parent_top_a;
-        Mongo_Document* parent_top_o;
+        ::bson_t* pbson;
+        const Mongo_Array* psa;
+        const Mongo_Document* pso;
+        size_t rpos;
+        decltype(::bson_append_array_end)* append_end_fn;
         ::bson_t temp;
       };
 
@@ -108,34 +107,34 @@ execute(const Mongo_Document& cmd)
     ::std::forward_list<xFrame> stack;
     bool success = true;
     ::bson_t* pbson = bson_cmd;
-    size_t top_rpos = cmd.size();
-    const Mongo_Array* top_a = nullptr;
-    const Mongo_Document* top_o = &cmd;
+    const Mongo_Array* cur_a = nullptr;
+    const Mongo_Document* cur_o = &cmd;
+    size_t cur_rpos = cmd.size();
 
   do_unpack_loop_:
-    while(success && (top_rpos != 0)) {
+    while(success && (cur_rpos != 0)) {
       ::rocket::ascii_numput array_key_nump;
       const char* key;
       int key_len;
       const Mongo_Value* pval;
       milliseconds dur;
 
-      if(top_a) {
+      if(cur_a) {
         // array; keys are subscripts as decimal strings.
-        size_t pos = top_a->size() - top_rpos;
-        top_rpos --;
+        size_t pos = cur_a->size() - cur_rpos;
+        cur_rpos --;
         array_key_nump.put_DU(pos);
         key = array_key_nump.data();
         key_len = static_cast<int>(array_key_nump.size());
-        pval = &(top_a->at(pos));
+        pval = &(cur_a->at(pos));
       }
       else {
         // documents
-        size_t pos = top_o->size() - top_rpos;
-        top_rpos --;
-        key = top_o->at(pos).first.data();
-        key_len = clamp_cast<int>(top_o->at(pos).first.ssize(), 0, INT_MAX);
-        pval = &(top_o->at(pos).second);
+        size_t pos = cur_o->size() - cur_rpos;
+        cur_rpos --;
+        key = cur_o->at(pos).first.data();
+        key_len = clamp_cast<int>(cur_o->at(pos).first.ssize(), 0, INT_MAX);
+        pval = &(cur_o->at(pos).second);
       }
 
       switch(pval->type())
@@ -172,40 +171,47 @@ execute(const Mongo_Document& cmd)
           break;
 
         case mongo_value_array:
-        case mongo_value_document:
           {
             auto& frm = stack.emplace_front();
-            frm.parent_bson = pbson;
-            frm.parent = pval;
-            frm.parent_rpos = top_rpos;
-            frm.parent_top_a = top_a;
-            frm.parent_top_o = top_o;
-
-            switch(pval->m_stor.index())
-              {
-              case mongo_value_array:
-                top_rpos = pval->as_array().size();
-                success = ::bson_append_array_begin(pbson, key, key_len, &(frm.temp));
-                frm.append_end_fn = ::bson_append_array_end;
-                break;
-
-              case mongo_value_document:
-                top_rpos = pval->as_document().size();
-                success = ::bson_append_document_begin(pbson, key, key_len, &(frm.temp));
-                frm.append_end_fn = ::bson_append_document_end;
-                break;
-              }
-
+            success = ::bson_append_array_begin(pbson, key, key_len, &(frm.temp));
             if(success) {
               // open
+              frm.pbson = pbson;
+              frm.psa = cur_a;
+              frm.pso = cur_o;
+              frm.rpos = cur_rpos;
+              frm.append_end_fn = ::bson_append_array_end;
               pbson = &(frm.temp);
-              top_a = frm.parent_top_a;
-              top_o = frm.parent_top_o;
+              cur_a = &(pval->as_array());
+              cur_o = nullptr;
+              cur_rpos = cur_a->size();
               goto do_unpack_loop_;
             }
 
             // invalid; shouldn't happen, but be tolerant anyway.
-            top_rpos = frm.parent_rpos;
+            stack.pop_front();
+          }
+          break;
+
+        case mongo_value_document:
+          {
+            auto& frm = stack.emplace_front();
+            success = ::bson_append_document_begin(pbson, key, key_len, &(frm.temp));
+            if(success) {
+              // open
+              frm.pbson = pbson;
+              frm.psa = cur_a;
+              frm.pso = cur_o;
+              frm.rpos = cur_rpos;
+              frm.append_end_fn = ::bson_append_document_end;
+              pbson = &(frm.temp);
+              cur_a = nullptr;
+              cur_o = &(pval->as_document());
+              cur_rpos = cur_o->size();
+              goto do_unpack_loop_;
+            }
+
+            // invalid; shouldn't happen, but be tolerant anyway.
             stack.pop_front();
           }
           break;
@@ -226,11 +232,11 @@ execute(const Mongo_Document& cmd)
 
     if(success && !stack.empty()) {
       auto& frm = stack.front();
-      pbson = frm.parent_bson;
-      top_rpos = frm.parent_rpos;
-      top_a = frm.parent_top_a;
-      top_o = frm.parent_top_o;
-      success = frm.append_end_fn(pbson, &(frm.temp));
+      pbson = frm.pbson;
+      cur_a = frm.psa;
+      cur_o = frm.pso;
+      cur_rpos = frm.rpos;
+      success = (* frm.append_end_fn) (pbson, &(frm.temp));
       stack.pop_front();
       goto do_unpack_loop_;
     }
