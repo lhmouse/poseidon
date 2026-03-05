@@ -220,7 +220,7 @@ leave_multicast_group(const IPv6_Address& maddr, const cow_string& ifname)
       ::ipv6_mreq mr;
       mr.ipv6mr_multiaddr = maddr.addr();
       mr.ipv6mr_interface = ifindex;
-      if(::setsockopt(this->do_socket_fd(), IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &mr, sizeof(mr)) != 0)
+      if(::setsockopt(this->do_socket_fd(), IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, &mr, sizeof(mr)) != 0)
         POSEIDON_THROW((
             "Could not leave IPv6 multicast group `$3`",
             "[`setsockopt()` failed: ${errno:full}]",
