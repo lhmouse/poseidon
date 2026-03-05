@@ -155,10 +155,10 @@ HTTP_Request_Parser::s_settings[1] =
           case HTTP_PUT:
           case HTTP_PATCH:
             // Accept the payload.
-            if(this->m_payload.size() + len > this->m_max_message_length)
+            if(this->m_payload.size() + len > this->m_max_content_length)
               POSEIDON_THROW((
                   "HTTP message length limit exceeded: `$1` > `$2`"),
-                  this->m_payload.size() + len, this->m_max_message_length);
+                  this->m_payload.size() + len, this->m_max_content_length);
 
             this->m_payload.putn(str, len);
             return 0;
