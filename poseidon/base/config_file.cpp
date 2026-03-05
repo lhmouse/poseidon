@@ -273,13 +273,13 @@ query(chars_view vpath)
     else if(ps != parser_name_t)
       POSEIDON_THROW((
           "Invalid value path `$1`: unexpected end of input",
-          "[in configuration file '$3']"),
+          "[in configuration file '$2']"),
           vpath, this->m_path);
 
     if(!current)
       POSEIDON_THROW((
           "Invalid value path `$1`: empty path not allowed",
-          "[in configuration file '$3']"),
+          "[in configuration file '$2']"),
           vpath, this->m_path);
 
     return *current;
