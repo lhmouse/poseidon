@@ -95,7 +95,6 @@ execute(const Mongo_Document& cmd)
     // Pack the command into a BSON object.
     struct xFrame
       {
-        ::bson_t* pbson;
         const Mongo_Array* psa;
         const Mongo_Document* pso;
         size_t rpos;
@@ -106,18 +105,17 @@ execute(const Mongo_Document& cmd)
     scoped_bson bson_cmd;
     ::std::forward_list<xFrame> stack;
     bool success = true;
-    ::bson_t* pbson = bson_cmd;
     const Mongo_Array* cur_a = nullptr;
     const Mongo_Document* cur_o = &cmd;
     size_t cur_rpos = cmd.size();
 
   do_unpack_loop_:
     while(success && (cur_rpos != 0)) {
+      ::bson_t* pbson = stack.empty() ? bson_cmd : &(stack.front().temp);
       ::rocket::ascii_numput array_key_nump;
       const char* key;
       int key_len;
       const Mongo_Value* pval;
-      milliseconds dur;
 
       if(cur_a) {
         // array; keys are subscripts as decimal strings.
@@ -148,8 +146,8 @@ execute(const Mongo_Document& cmd)
           break;
 
         case mongo_value_integer:
-          success = (pval->as_integer() == (int32_t) pval->as_integer())
-                    ? ::bson_append_int32(pbson, key, key_len, (int32_t) pval->as_integer())
+          success = (pval->as_integer() == static_cast<int32_t>(pval->as_integer()))
+                    ? ::bson_append_int32(pbson, key, key_len, static_cast<int32_t>(pval->as_integer()))
                     : ::bson_append_int64(pbson, key, key_len, pval->as_integer());
           break;
 
@@ -160,14 +158,14 @@ execute(const Mongo_Document& cmd)
         case mongo_value_utf8:
           success = (pval->as_utf8_length() <= INT_MAX)
                     && ::bson_append_utf8(pbson, key, key_len, pval->as_utf8_c_str(),
-                                          (int) pval->as_utf8_length());
+                                          static_cast<int>(pval->as_utf8_length()));
           break;
 
         case mongo_value_binary:
           success = (pval->as_binary_size() <= UINT_MAX)
                     && ::bson_append_binary(pbson, key, key_len, BSON_SUBTYPE_BINARY,
                                             pval->as_binary_data(),
-                                            (unsigned int) pval->as_binary_size());
+                                            static_cast<unsigned>(pval->as_binary_size()));
           break;
 
         case mongo_value_array:
@@ -176,12 +174,10 @@ execute(const Mongo_Document& cmd)
             success = ::bson_append_array_begin(pbson, key, key_len, &(frm.temp));
             if(success) {
               // open
-              frm.pbson = pbson;
               frm.psa = cur_a;
               frm.pso = cur_o;
               frm.rpos = cur_rpos;
               frm.append_end_fn = ::bson_append_array_end;
-              pbson = &(frm.temp);
               cur_a = &(pval->as_array());
               cur_o = nullptr;
               cur_rpos = cur_a->size();
@@ -199,12 +195,10 @@ execute(const Mongo_Document& cmd)
             success = ::bson_append_document_begin(pbson, key, key_len, &(frm.temp));
             if(success) {
               // open
-              frm.pbson = pbson;
               frm.psa = cur_a;
               frm.pso = cur_o;
               frm.rpos = cur_rpos;
               frm.append_end_fn = ::bson_append_document_end;
-              pbson = &(frm.temp);
               cur_a = nullptr;
               cur_o = &(pval->as_document());
               cur_rpos = cur_o->size();
@@ -221,8 +215,8 @@ execute(const Mongo_Document& cmd)
           break;
 
         case mongo_value_datetime:
-          dur = duration_cast<milliseconds>(pval->as_system_time() - system_time());
-          success = ::bson_append_date_time(pbson, key, key_len, dur.count());
+          success = ::bson_append_date_time(pbson, key, key_len,
+                        duration_cast<milliseconds>(pval->as_system_time().time_since_epoch()).count());
           break;
 
         default:
@@ -231,13 +225,13 @@ execute(const Mongo_Document& cmd)
     }
 
     if(success && !stack.empty()) {
-      auto& frm = stack.front();
-      pbson = frm.pbson;
+      ::std::forward_list<xFrame> top;
+      top.splice_after(top.before_begin(), stack, stack.before_begin());
+      auto& frm = top.front();
+      success = (* frm.append_end_fn) (stack.empty() ? bson_cmd : &(stack.front().temp), &(frm.temp));
       cur_a = frm.psa;
       cur_o = frm.pso;
       cur_rpos = frm.rpos;
-      success = (* frm.append_end_fn) (pbson, &(frm.temp));
-      stack.pop_front();
       goto do_unpack_loop_;
     }
 
