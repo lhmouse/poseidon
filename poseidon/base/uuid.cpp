@@ -4,15 +4,17 @@
 #include "../xprecompiled.hpp"
 #include "uuid.hpp"
 #include "../utils.hpp"
-#include <openssl/rand.h>
-#include <openssl/err.h>
+#include <asteria/runtime/random_engine.hpp>
 namespace poseidon {
 namespace {
 
 constexpr UUID s_min = POSEIDON_UUID(00000000,0000,0000,0000,000000000000);
 constexpr UUID s_max = POSEIDON_UUID(ffffffff,ffff,ffff,ffff,ffffffffffff);
 
-atomic_relaxed<uint64_t> s_serial;
+plain_mutex s_gen_mutex;
+::asteria::Random_Engine s_gen_rng;
+uint64_t s_gen_time;
+uint32_t s_gen_serial;
 
 }  // namespace
 
@@ -41,28 +43,52 @@ max()
 
 UUID
 UUID::
-random()
+random_v4()
   noexcept
   {
-    UUID result;
+    plain_mutex::unique_lock lock(s_gen_mutex);
+    uint32_t z0 = s_gen_rng.bump();
+    uint32_t z1 = s_gen_rng.bump();
+    uint32_t z2 = s_gen_rng.bump();
+    uint32_t z3 = s_gen_rng.bump();
+    lock.unlock();
 
+    // Set UUID version and variant.
+    z1 = (z1 & 0xFFFF0FFF) | 0x00004000;
+    z2 = (z2 & 0x3FFFFFFF) | 0x80000000;
+
+    UUID result;
+    ::rocket::store_be<uint32_t>(result.m_bytes.data() + 0, z0);
+    ::rocket::store_be<uint32_t>(result.m_bytes.data() + 4, z1);
+    ::rocket::store_be<uint32_t>(result.m_bytes.data() + 8, z2);
+    ::rocket::store_be<uint32_t>(result.m_bytes.data() + 12, z3);
+    return result;
+  }
+
+UUID
+UUID::
+random_v7()
+  noexcept
+  {
+    plain_mutex::unique_lock lock(s_gen_mutex);
     struct timespec ts;
     ::clock_gettime(CLOCK_REALTIME, &ts);
-    uint64_t ts_pid = (static_cast<uint64_t>(ts.tv_sec - 983404800) * 30518 << 16)
-                      + (static_cast<uint32_t>(ts.tv_nsec) / 32768 << 16)
-                      + (s_serial.xadd(1) << 16)
-                      + 0x4000
-                      + static_cast<uint32_t>(::getpid() & 0x0FFF);
+    uint64_t time = (uint64_t) ts.tv_sec * 1000 + (uint32_t) ts.tv_nsec / 1000000;
+    uint32_t serial = (s_gen_time == time) ? ((s_gen_serial + 1) & 0x0FFF) : 0;
+    s_gen_time = time;
+    s_gen_serial = serial;
+    uint32_t z2 = s_gen_rng.bump();
+    uint32_t z3 = s_gen_rng.bump();
+    lock.unlock();
 
-    uint64_t random;
-    if(::RAND_bytes(reinterpret_cast<unsigned char*>(&random), 8) != 1)
-      ASTERIA_TERMINATE((
-          "Could not generate random bytes: $1",
-          "[`RAND_bytes()` failed]"),
-          ::ERR_reason_error_string(::ERR_get_error()));
+    // Set UUID version and variant.
+    uint64_t x0 = time << 16 | 0x7000 | serial;
+    z2 = 0x80000000 | (((uint32_t) ::getpid() & 0x3FFF) << 16) | (z2 & 0xFFFF);
 
-    ::rocket::store_be<uint64_t>(result.m_bytes.data() + 0, ts_pid);
-    ::rocket::store_be<uint64_t>(result.m_bytes.data() + 8, random >> 1);
+    UUID result;
+    ::rocket::store_be<uint64_t>(result.m_bytes.data() + 0, x0);
+    ::rocket::store_be<uint32_t>(result.m_bytes.data() + 8, z2);
+    ::rocket::store_be<uint32_t>(result.m_bytes.data() + 12, z3);
     return result;
   }
 

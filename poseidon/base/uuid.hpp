@@ -91,12 +91,27 @@ class UUID
     max()
       noexcept;
 
-    // Generates a random UUID `xxxxxxxx-xxxx-Myyy-Nzzz-zzzzzzzzzzzz`, where:
+    // Generates a random UUID of version 4. The UUID will have the form
+    // `zzzzzzzz-zzzz-Mzzz-Nzzz-zzzzzzzzzzzz`, where:
     //
-    // * `x` is the number of 1/30518 seconds since 2001-03-01T00:00:00Z, and
-    // * `M` is always `4` (UUID version 4), and
-    // * `y` is the current process ID, and
-    // * `N` is `0` through `7`, and
+    // * `z` is random bytes, and
+    // * `M` is always `4` (version 4), and
+    // * `N` is `8` through `B`, and
+    //
+    // This function shall be cryptographically secure.
+    static
+    UUID
+    random_v4()
+      noexcept;
+
+    // Generates a random UUID of version 7. The UUID will have the form
+    // `xxxxxxxx-xxxx-Myyy-Nppp-zzzzzzzzzzzz`, where:
+    //
+    // * `x` is the number of milliseconds since 1970-01-01T00:00:00Z, and
+    // * `M` is always `7` (version 7), and
+    // * `y` is a serial number, and
+    // * `N` is `8` through `B`, and
+    // * `p` is the current process ID, and
     // * `z` is random bytes.
     //
     // All numbers are written in big-endian order, so all UUIDs that have
@@ -104,7 +119,7 @@ class UUID
     // This function shall be cryptographically secure.
     static
     UUID
-    random()
+    random_v7()
       noexcept;
 
     // Get raw bytes.

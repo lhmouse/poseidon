@@ -30,20 +30,20 @@ main()
     tid.print_partial(uuid_dstr);
     POSEIDON_TEST_CHECK(::strcmp(uuid_dstr, "ef8a3765-a4f4-4d24-9c72-ee61d7b1253d") == 0);
 
-    UUID t1 = UUID::random();
+    UUID t1 = UUID::random_v7();
     t1.print_partial(uuid_dstr);
     ::fprintf(stderr, "t1 = %s\n", uuid_dstr);
     POSEIDON_TEST_CHECK(UUID::min() < t1);
     POSEIDON_TEST_CHECK(UUID::max() > t1);
 
-    UUID t2 = UUID::random();
+    UUID t2 = UUID::random_v7();
     t2.print_partial(uuid_dstr);
     ::fprintf(stderr, "t2 = %s\n", uuid_dstr);
     POSEIDON_TEST_CHECK(t2 > t1);
     POSEIDON_TEST_CHECK(UUID::min() < t2);
     POSEIDON_TEST_CHECK(UUID::max() > t2);
 
-    UUID t3 = UUID::random();
+    UUID t3 = UUID::random_v7();
     t3.print_partial(uuid_dstr);
     ::fprintf(stderr, "t3 = %s\n", uuid_dstr);
     POSEIDON_TEST_CHECK(t3 > t2);
