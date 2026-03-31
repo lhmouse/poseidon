@@ -1,8 +1,7 @@
 // This file is part of Poseidon.
 // Copyright (C) 2022-2026 LH_Mouse. All wrongs reserved.
 
-#ifndef POSEIDON_XPRECOMPILED_
-#define POSEIDON_XPRECOMPILED_
+#include "version.h"
 
 // Prevent use of standard streams.
 #define _IOS_BASE_H  1
@@ -11,8 +10,6 @@
 #define _GLIBCXX_ISTREAM  1
 #define _GLIBCXX_OSTREAM  1
 #define _GLIBCXX_IOSTREAM  1
-
-#include "version.h"
 
 #include <rocket/cow_string.hpp>
 #include <rocket/cow_vector.hpp>
@@ -68,5 +65,3 @@
 #include <x86intrin.h>
 #include <nmmintrin.h>
 #include <immintrin.h>
-
-#endif
