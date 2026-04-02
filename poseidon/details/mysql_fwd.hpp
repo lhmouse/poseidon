@@ -18,7 +18,7 @@ class scoped_MYSQL
     scoped_MYSQL()
       {
         if(::mysql_init(this->m_mysql) == nullptr)
-          ::rocket::sprintf_and_throw<::std::runtime_error>(
+          ::asteria::sprintf_and_throw<::std::runtime_error>(
                 "scoped_MYSQL: insufficient memory");
 
         ::mysql_options(this->m_mysql, MYSQL_OPT_COMPRESS, "1");
@@ -54,8 +54,8 @@ struct MYSQL_RES_deleter
       { ::mysql_free_result(p);  }
   };
 
-using uniptr_MYSQL_STMT = ::rocket::unique_ptr<::MYSQL_STMT, MYSQL_STMT_deleter>;
-using uniptr_MYSQL_RES = ::rocket::unique_ptr<::MYSQL_RES, MYSQL_RES_deleter>;
+using uniptr_MYSQL_STMT = ::asteria::unique_ptr<::MYSQL_STMT, MYSQL_STMT_deleter>;
+using uniptr_MYSQL_RES = ::asteria::unique_ptr<::MYSQL_RES, MYSQL_RES_deleter>;
 
 }  // namespace poseidon
 #endif

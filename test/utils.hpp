@@ -14,19 +14,19 @@
         if(static_cast<bool>(expr) == false) {  \
           /* failed */  \
           ::asteria::write_log_to_stderr(__FILE__, __LINE__, __func__,  \
-              ::rocket::sref("POSEIDON_TEST_CHECK FAIL: " #expr));  \
+              ::asteria::sref("POSEIDON_TEST_CHECK FAIL: " #expr));  \
           \
           ::abort();  \
         }  \
         \
         /* successful */  \
         ::asteria::write_log_to_stderr(__FILE__, __LINE__, __func__,  \
-            ::rocket::sref("POSEIDON_TEST_CHECK PASS: " #expr));  \
+            ::asteria::sref("POSEIDON_TEST_CHECK PASS: " #expr));  \
       }  \
       catch(::std::exception& stdex) {  \
         /* failed */  \
         ::asteria::write_log_to_stderr(__FILE__, __LINE__, __func__,  \
-            ::rocket::cow_string("POSEIDON_TEST_CHECK EXCEPTION: " #expr)  \
+            ::asteria::cow_string("POSEIDON_TEST_CHECK EXCEPTION: " #expr)  \
               + "\n" + stdex.what());  \
         \
         ::abort();  \
@@ -40,14 +40,14 @@
         \
         /* failed */  \
         ::asteria::write_log_to_stderr(__FILE__, __LINE__, __func__,  \
-            ::rocket::sref("POSEIDON_TEST_CHECK XPASS: " #expr));  \
+            ::asteria::sref("POSEIDON_TEST_CHECK XPASS: " #expr));  \
         \
         ::abort();  \
       }  \
       catch(::std::exception& stdex) {  \
         /* successful */  \
         ::asteria::write_log_to_stderr(__FILE__, __LINE__, __func__,  \
-            ::rocket::cow_string("POSEIDON_TEST_CHECK XFAIL: " #expr)  \
+            ::asteria::cow_string("POSEIDON_TEST_CHECK XFAIL: " #expr)  \
               + "\n" + stdex.what());  \
       }  \
     while(false)

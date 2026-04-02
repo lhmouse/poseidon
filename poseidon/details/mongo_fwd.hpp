@@ -72,9 +72,9 @@ struct mongoc_cursor_deleter
       { ::mongoc_cursor_destroy(p);  }
   };
 
-using uniptr_mongoc_uri = ::rocket::unique_ptr<::mongoc_uri_t, mongoc_uri_deleter>;
-using uniptr_mongoc_client = ::rocket::unique_ptr<::mongoc_client_t, mongoc_client_deleter>;
-using uniptr_mongoc_cursor = ::rocket::unique_ptr<::mongoc_cursor_t, mongoc_cursor_deleter>;
+using uniptr_mongoc_uri = ::asteria::unique_ptr<::mongoc_uri_t, mongoc_uri_deleter>;
+using uniptr_mongoc_client = ::asteria::unique_ptr<::mongoc_client_t, mongoc_client_deleter>;
+using uniptr_mongoc_cursor = ::asteria::unique_ptr<::mongoc_cursor_t, mongoc_cursor_deleter>;
 
 }  // namespace poseidon
 #endif

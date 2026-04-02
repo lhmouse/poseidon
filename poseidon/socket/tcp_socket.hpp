@@ -7,6 +7,7 @@
 #include "../fwd.hpp"
 #include "enums.hpp"
 #include "abstract_socket.hpp"
+#include <taxon.hpp>
 namespace poseidon {
 
 class TCP_Socket

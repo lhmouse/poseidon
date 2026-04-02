@@ -16,7 +16,7 @@ class Mongo_Value
     friend class Mongo_Connection;
 
 #define POSEIDON_MONGO_VALUE_VARIANT_TYPE_  \
-    ::rocket::variant<  \
+    ::asteria::variant<  \
         ::std::nullptr_t, bool, int64_t, double, ::poseidon::cow_string,  \
         ::poseidon::cow_bstring, ::poseidon::Mongo_Array,  \
         ::poseidon::Mongo_Document, ::bson_oid_t, ::poseidon::DateTime>
@@ -100,7 +100,7 @@ class Mongo_Value
       }
 
     template<typename ycharT, size_t N,
-    ROCKET_ENABLE_IF(::std::is_same<ycharT, char>::value)>
+    ASTERIA_ENABLE_IF(::std::is_same<ycharT, char>::value)>
     Mongo_Value(const ycharT (*ps)[N])
       noexcept
       {
@@ -108,7 +108,7 @@ class Mongo_Value
       }
 
     template<typename ycharT, size_t N,
-    ROCKET_ENABLE_IF(::std::is_same<ycharT, char>::value)>
+    ASTERIA_ENABLE_IF(::std::is_same<ycharT, char>::value)>
     Mongo_Value&
     operator=(const ycharT (*ps)[N])
       noexcept

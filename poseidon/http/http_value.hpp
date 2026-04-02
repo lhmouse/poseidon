@@ -66,7 +66,7 @@ class HTTP_Value
       }
 
     template<typename ycharT, size_t N,
-    ROCKET_ENABLE_IF(::std::is_same<ycharT, char>::value)>
+    ASTERIA_ENABLE_IF(::std::is_same<ycharT, char>::value)>
     HTTP_Value(const ycharT (*ps)[N])
       :
         m_str(ps),
@@ -76,7 +76,7 @@ class HTTP_Value
       }
 
     template<typename ycharT, size_t N,
-    ROCKET_ENABLE_IF(::std::is_same<ycharT, char>::value)>
+    ASTERIA_ENABLE_IF(::std::is_same<ycharT, char>::value)>
     HTTP_Value&
     operator=(const ycharT (*ps)[N])
       &

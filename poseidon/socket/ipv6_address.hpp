@@ -101,7 +101,7 @@ class IPv6_Address
       }
 
     // Performs bitwise comparison.
-    ROCKET_PURE
+    ASTERIA_PURE
     bool
     equals(const IPv6_Address& other)
       const noexcept
@@ -113,19 +113,19 @@ class IPv6_Address
         return mask_ne == 0;
       }
 
-    ROCKET_PURE
+    ASTERIA_PURE
     int
     compare(const IPv6_Address& other)
       const noexcept;
 
     // Returns the address class, which is shared by both IPv4 and IPv6.
-    ROCKET_PURE
+    ASTERIA_PURE
     IP_Address_Class
     classify()
       const noexcept;
 
     // Checks whether this is an IPv4-mapped address.
-    ROCKET_PURE
+    ASTERIA_PURE
     bool
     is_v4mapped()
       const noexcept

@@ -33,9 +33,9 @@ struct SSL_CTX_deleter
       { ::SSL_CTX_free(p);  }
   };
 
-using uniptr_BIO = ::rocket::unique_ptr<::BIO, BIO_deleter>;
-using uniptr_SSL = ::rocket::unique_ptr<::SSL, SSL_deleter>;
-using uniptr_SSL_CTX = ::rocket::unique_ptr<::SSL_CTX, SSL_CTX_deleter>;
+using uniptr_BIO = ::asteria::unique_ptr<::BIO, BIO_deleter>;
+using uniptr_SSL = ::asteria::unique_ptr<::SSL, SSL_deleter>;
+using uniptr_SSL_CTX = ::asteria::unique_ptr<::SSL_CTX, SSL_CTX_deleter>;
 
 }  // namespace poseidon
 #endif

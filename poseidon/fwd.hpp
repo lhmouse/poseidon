@@ -5,20 +5,18 @@
 #define POSEIDON_FWD_
 
 #include "version.h"
-#include <rocket/atomic.hpp>
-#include <rocket/mutex.hpp>
-#include <rocket/recursive_mutex.hpp>
-#include <rocket/condition_variable.hpp>
-#include <rocket/tinyfmt_str.hpp>
-#include <rocket/tinyfmt_ln.hpp>
-#include <rocket/unique_posix_fd.hpp>
-#include <rocket/unique_posix_file.hpp>
-#include <rocket/unique_posix_dir.hpp>
-#include <rocket/shared_function.hpp>
-#include <rocket/static_char_buffer.hpp>
-#include <asteria/value.hpp>
+#include <asteria/rocket/atomic.hpp>
+#include <asteria/rocket/mutex.hpp>
+#include <asteria/rocket/recursive_mutex.hpp>
+#include <asteria/rocket/condition_variable.hpp>
+#include <asteria/rocket/tinyfmt_str.hpp>
+#include <asteria/rocket/tinyfmt_ln.hpp>
+#include <asteria/rocket/unique_posix_fd.hpp>
+#include <asteria/rocket/unique_posix_file.hpp>
+#include <asteria/rocket/unique_posix_dir.hpp>
+#include <asteria/rocket/shared_function.hpp>
+#include <asteria/rocket/static_char_buffer.hpp>
 #include <asteria/utils.hpp>
-#include <taxon.hpp>
 #include <array>
 #include <string>
 #include <vector>
@@ -42,7 +40,7 @@ extern "C++" void poseidon_module_main();  // see below
     __extension__  \
       ({  \
         auto wdLAlUiJ = (__VA_ARGS__);  \
-        while(ROCKET_UNEXPECT(wdLAlUiJ < 0) && (errno == EINTR))  \
+        while(ASTERIA_UNEXPECT(wdLAlUiJ < 0) && (errno == EINTR))  \
           wdLAlUiJ = (__VA_ARGS__);  \
         wdLAlUiJ;  \
       })
@@ -98,85 +96,85 @@ using ::std::const_pointer_cast;
 using ::std::chrono::duration_cast;
 using ::std::chrono::time_point_cast;
 
-using ::rocket::atomic;
-using ::rocket::atomic_relaxed;
-using ::rocket::atomic_acq_rel;
-using ::rocket::atomic_seq_cst;
-using plain_mutex = ::rocket::mutex;
-using ::rocket::recursive_mutex;
-using ::rocket::condition_variable;
-using ::rocket::array;
-using ::rocket::cow_vector;
-using ::rocket::cow_hashmap;
-using ::rocket::static_vector;
-using ::rocket::cow_string;
-using ::rocket::cow_bstring;
-using ::rocket::cow_u16string;
-using ::rocket::cow_u32string;
-using ::rocket::phcow_string;
-using ::rocket::linear_buffer;
-using ::rocket::tinyfmt;
-using ::rocket::tinyfmt_str;
-using ::rocket::tinyfmt_ln;
-using ::rocket::unique_posix_fd;
-using ::rocket::unique_posix_file;
-using ::rocket::unique_posix_dir;
-using ::rocket::shared_function;
-using charbuf_16 = ::rocket::static_char_buffer<16>;
-using charbuf_256 = ::rocket::static_char_buffer<256>;
+using ::asteria::atomic;
+using ::asteria::atomic_relaxed;
+using ::asteria::atomic_acq_rel;
+using ::asteria::atomic_seq_cst;
+using plain_mutex = ::asteria::mutex;
+using ::asteria::recursive_mutex;
+using ::asteria::condition_variable;
+using ::asteria::array;
+using ::asteria::cow_vector;
+using ::asteria::cow_hashmap;
+using ::asteria::static_vector;
+using ::asteria::cow_string;
+using ::asteria::cow_bstring;
+using ::asteria::cow_u16string;
+using ::asteria::cow_u32string;
+using ::asteria::phcow_string;
+using ::asteria::linear_buffer;
+using ::asteria::tinyfmt;
+using ::asteria::tinyfmt_str;
+using ::asteria::tinyfmt_ln;
+using ::asteria::unique_posix_fd;
+using ::asteria::unique_posix_file;
+using ::asteria::unique_posix_dir;
+using ::asteria::shared_function;
+using charbuf_16 = ::asteria::static_char_buffer<16>;
+using charbuf_256 = ::asteria::static_char_buffer<256>;
 
 POSEIDON_USING cow_bivector = cow_vector<pair<Ts...>>;
 POSEIDON_USING cow_dictionary = cow_hashmap<phcow_string, Ts..., phcow_string::hash>;
-POSEIDON_USING opt = ::rocket::optional<Ts...>;
+POSEIDON_USING opt = ::asteria::optional<Ts...>;
 POSEIDON_USING vfn = void (Ts...);
 POSEIDON_USING uniptr = ::std::unique_ptr<Ts...>;
 POSEIDON_USING shptr = ::std::shared_ptr<Ts...>;
 POSEIDON_USING wkptr = ::std::weak_ptr<Ts...>;
 
-using ::rocket::begin;
-using ::rocket::end;
-using ::rocket::swap;
-using ::rocket::xswap;
-using ::rocket::move;
-using ::rocket::forward;
-using ::rocket::forward_as_tuple;
-using ::rocket::exchange;
-using ::rocket::size;
-using ::rocket::ssize;
-using ::rocket::static_pointer_cast;
-using ::rocket::dynamic_pointer_cast;
-using ::rocket::const_pointer_cast;
-using ::rocket::make_unique_handle;
-using ::rocket::min;
-using ::rocket::max;
-using ::rocket::clamp;
-using ::rocket::clamp_cast;
-using ::rocket::is_any_of;
-using ::rocket::is_none_of;
-using ::rocket::all_of;
-using ::rocket::any_of;
-using ::rocket::none_of;
-using ::rocket::nullopt;
+using ::asteria::begin;
+using ::asteria::end;
+using ::asteria::swap;
+using ::asteria::xswap;
+using ::asteria::move;
+using ::asteria::forward;
+using ::asteria::forward_as_tuple;
+using ::asteria::exchange;
+using ::asteria::size;
+using ::asteria::ssize;
+using ::asteria::static_pointer_cast;
+using ::asteria::dynamic_pointer_cast;
+using ::asteria::const_pointer_cast;
+using ::asteria::make_unique_handle;
+using ::asteria::min;
+using ::asteria::max;
+using ::asteria::clamp;
+using ::asteria::clamp_cast;
+using ::asteria::is_any_of;
+using ::asteria::is_none_of;
+using ::asteria::all_of;
+using ::asteria::any_of;
+using ::asteria::none_of;
+using ::asteria::nullopt;
 
-using ::rocket::xstrlen;
-using ::rocket::xstrchr;
-using ::rocket::xstrcmp;
-using ::rocket::xstreq;
-using ::rocket::xstrpcpy;
-using ::rocket::xstrrpcpy;
-using ::rocket::xmemchr;
-using ::rocket::xmemcmp;
-using ::rocket::xmemeq;
-using ::rocket::xmempset;
-using ::rocket::xmemrpset;
-using ::rocket::xmempcpy;
-using ::rocket::xmemrpcpy;
+using ::asteria::xstrlen;
+using ::asteria::xstrchr;
+using ::asteria::xstrcmp;
+using ::asteria::xstreq;
+using ::asteria::xstrpcpy;
+using ::asteria::xstrrpcpy;
+using ::asteria::xmemchr;
+using ::asteria::xmemcmp;
+using ::asteria::xmemeq;
+using ::asteria::xmempset;
+using ::asteria::xmemrpset;
+using ::asteria::xmempcpy;
+using ::asteria::xmemrpcpy;
 
 using ::asteria::format;
 using ::asteria::sformat;
 
 template<typename xValue, typename... xArgs>
-ROCKET_ALWAYS_INLINE
+ASTERIA_ALWAYS_INLINE
 uniptr<xValue>
 new_uni(xArgs&&... args)
   {
@@ -184,7 +182,7 @@ new_uni(xArgs&&... args)
   }
 
 template<typename xValue>
-ROCKET_ALWAYS_INLINE
+ASTERIA_ALWAYS_INLINE
 uniptr<typename ::std::decay<xValue>::type>
 new_uni(xValue&& value)
   {
@@ -192,7 +190,7 @@ new_uni(xValue&& value)
   }
 
 template<typename xValue, typename... xArgs>
-ROCKET_ALWAYS_INLINE
+ASTERIA_ALWAYS_INLINE
 shptr<xValue>
 new_sh(xArgs&&... args)
   {
@@ -200,7 +198,7 @@ new_sh(xArgs&&... args)
   }
 
 template<typename xValue>
-ROCKET_ALWAYS_INLINE
+ASTERIA_ALWAYS_INLINE
 shptr<typename ::std::decay<xValue>::type>
 new_sh(xValue&& value)
   {
@@ -237,7 +235,7 @@ struct chars_view
     constexpr
     chars_view(const char* xs)
       noexcept
-      : p(xs), n(xs ? ::rocket::xstrlen(xs) : 0U)  { }
+      : p(xs), n(xs ? ::asteria::xstrlen(xs) : 0U)  { }
 
     template<typename traitsT, typename allocT>
     constexpr
@@ -266,7 +264,7 @@ struct chars_view
 #endif
 
     constexpr
-    chars_view(const ::rocket::shallow_string rs)
+    chars_view(const ::asteria::shallow_string rs)
       noexcept
       : p(rs.data()), n(rs.size())  { }
 
@@ -274,47 +272,47 @@ struct chars_view
     constexpr
     chars_view(const char (*ps)[N])
       noexcept
-      : p(*ps), n((ROCKET_ASSERT(*(*ps + N - 1) == '\0'), N - 1))  { }
+      : p(*ps), n((ASTERIA_ASSERT(*(*ps + N - 1) == '\0'), N - 1))  { }
 
     template<typename allocT>
     constexpr
-    chars_view(const ::rocket::basic_cow_string<char, allocT>& rs)
+    chars_view(const ::asteria::basic_cow_string<char, allocT>& rs)
       noexcept
       : p(rs.data()), n(rs.size())  { }
 
     template<typename allocT>
     constexpr
-    chars_view(const ::rocket::basic_tinyfmt_str<char, allocT>& rs)
+    chars_view(const ::asteria::basic_tinyfmt_str<char, allocT>& rs)
       noexcept
       : p(rs.data()), n(rs.size())  { }
 
     template<typename allocT>
     constexpr
-    chars_view(const ::rocket::basic_linear_buffer<char, allocT>& rs)
+    chars_view(const ::asteria::basic_linear_buffer<char, allocT>& rs)
       noexcept
       : p(rs.data()), n(rs.size())  { }
 
     template<typename allocT>
     constexpr
-    chars_view(const ::rocket::basic_tinyfmt_ln<char, allocT>& rs)
+    chars_view(const ::asteria::basic_tinyfmt_ln<char, allocT>& rs)
       noexcept
       : p(rs.data()), n(rs.size())  { }
 
     template<size_t... Ns>
     constexpr
-    chars_view(const ::rocket::array<char, Ns...>& rs)
+    chars_view(const ::asteria::array<char, Ns...>& rs)
       noexcept
       : p(rs.data()), n(rs.size())  { }
 
     template<typename allocT>
     constexpr
-    chars_view(const ::rocket::cow_vector<char, allocT>& rs)
+    chars_view(const ::asteria::cow_vector<char, allocT>& rs)
       noexcept
       : p(rs.data()), n(rs.size())  { }
 
     template<size_t N, typename allocT>
     constexpr
-    chars_view(const ::rocket::static_vector<char, N, allocT>& rs)
+    chars_view(const ::asteria::static_vector<char, N, allocT>& rs)
       noexcept
       : p(rs.data()), n(rs.size())  { }
 
@@ -331,7 +329,7 @@ struct chars_view
     char
     operator[](size_t index)
       const noexcept
-      { return ROCKET_ASSERT(index <= this->n), *(this->p + index);  }
+      { return ASTERIA_ASSERT(index <= this->n), *(this->p + index);  }
 
     // Moves the view to the left.
     constexpr
@@ -392,37 +390,37 @@ constexpr
 bool
 operator==(chars_view lhs, chars_view rhs)
   noexcept
-  { return (lhs.n == rhs.n) && (::rocket::xmemcmp(lhs.p, rhs.p, lhs.n) == 0);  }
+  { return (lhs.n == rhs.n) && (::asteria::xmemcmp(lhs.p, rhs.p, lhs.n) == 0);  }
 
 constexpr
 bool
 operator==(chars_view lhs, const char* rhs)
   noexcept
-  { return (lhs.n == ::rocket::xstrlen(rhs)) && (::rocket::xmemcmp(lhs.p, rhs, lhs.n) == 0);  }
+  { return (lhs.n == ::asteria::xstrlen(rhs)) && (::asteria::xmemcmp(lhs.p, rhs, lhs.n) == 0);  }
 
 constexpr
 bool
 operator==(const char* lhs, chars_view rhs)
   noexcept
-  { return (::rocket::xstrlen(lhs) == rhs.n) && (::rocket::xmemcmp(lhs, rhs.p, rhs.n) == 0);  }
+  { return (::asteria::xstrlen(lhs) == rhs.n) && (::asteria::xmemcmp(lhs, rhs.p, rhs.n) == 0);  }
 
 constexpr
 bool
 operator!=(chars_view lhs, chars_view rhs)
   noexcept
-  { return (lhs.n != rhs.n) || (::rocket::xmemcmp(lhs.p, rhs.p, lhs.n) != 0);  }
+  { return (lhs.n != rhs.n) || (::asteria::xmemcmp(lhs.p, rhs.p, lhs.n) != 0);  }
 
 constexpr
 bool
 operator!=(chars_view lhs, const char* rhs)
   noexcept
-  { return (lhs.n != ::rocket::xstrlen(rhs)) || (::rocket::xmemcmp(lhs.p, rhs, lhs.n) != 0);  }
+  { return (lhs.n != ::asteria::xstrlen(rhs)) || (::asteria::xmemcmp(lhs.p, rhs, lhs.n) != 0);  }
 
 constexpr
 bool
 operator!=(const char* lhs, chars_view rhs)
   noexcept
-  { return (::rocket::xstrlen(lhs) != rhs.n) || (::rocket::xmemcmp(lhs, rhs.p, rhs.n) != 0);  }
+  { return (::asteria::xstrlen(lhs) != rhs.n) || (::asteria::xmemcmp(lhs, rhs.p, rhs.n) != 0);  }
 
 }  // namespace fwd
 using namespace fwd;

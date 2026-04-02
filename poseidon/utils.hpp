@@ -18,7 +18,7 @@ namespace poseidon {
       __attribute__((__nothrow__, __noinline__))  \
     {  \
       try {  \
-        auto c_Ru6q = [&](::rocket::tinyfmt& fmt_Ko0i)  \
+        auto c_Ru6q = [&](::asteria::tinyfmt& fmt_Ko0i)  \
           {  \
             using ::asteria::format;  \
             format(fmt_Ko0i, (::asteria::make_string_template TEMPLATE),  \
@@ -28,7 +28,7 @@ namespace poseidon {
         ::poseidon::do_push_log_message(\
             LEVEL, func_ce7d, __FILE__, __LINE__,  \
             &c_Ru6q,  \
-            [](::rocket::tinyfmt& fmt_Ko0i, void* p_5Gae)  \
+            [](::asteria::tinyfmt& fmt_Ko0i, void* p_5Gae)  \
               { (* static_cast<decltype(c_Ru6q)*>(p_5Gae)) (fmt_Ko0i);  });  \
       }  \
       catch(...) { }  \
@@ -50,7 +50,7 @@ namespace poseidon {
    ([&](const char* func_ce7d) -> ::std::runtime_error  \
       __attribute__((__noinline__))  \
     {  \
-      auto c_Ru6q = [&](::rocket::tinyfmt& fmt_Ko0i)  \
+      auto c_Ru6q = [&](::asteria::tinyfmt& fmt_Ko0i)  \
         {  \
           using ::asteria::format;  \
           format(fmt_Ko0i, (::asteria::make_string_template TEMPLATE),  \
@@ -60,7 +60,7 @@ namespace poseidon {
       return ::poseidon::do_create_runtime_error(\
           func_ce7d, __FILE__, __LINE__,  \
           &c_Ru6q,  \
-          [](::rocket::tinyfmt& fmt_Ko0i, void* p_5Gae)  \
+          [](::asteria::tinyfmt& fmt_Ko0i, void* p_5Gae)  \
             { (* static_cast<decltype(c_Ru6q)*>(p_5Gae)) (fmt_Ko0i);  });  \
     } (__func__)))
 
@@ -125,7 +125,7 @@ splice_buffers(linear_buffer& out, linear_buffer&& in)
       return out;
 
     // Don't bother making a copy if `out` is empty.
-    if(ROCKET_EXPECT(out.empty()))
+    if(ASTERIA_EXPECT(out.empty()))
       return out.swap(in);
 
     // Copy bytes from `in`, then clear it.
@@ -135,7 +135,7 @@ splice_buffers(linear_buffer& out, linear_buffer&& in)
   }
 
 // Performs conversion between `timespec` and `system_time`.
-ROCKET_ALWAYS_INLINE
+ASTERIA_ALWAYS_INLINE
 system_time
 system_time_from_timespec(const struct timespec& ts)
   noexcept
@@ -143,7 +143,7 @@ system_time_from_timespec(const struct timespec& ts)
     return system_clock::from_time_t(ts.tv_sec) + nanoseconds(ts.tv_nsec);
   }
 
-ROCKET_ALWAYS_INLINE
+ASTERIA_ALWAYS_INLINE
 void
 timespec_from_system_time(struct timespec& ts, system_time tm)
   noexcept

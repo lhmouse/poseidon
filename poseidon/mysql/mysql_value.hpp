@@ -16,7 +16,7 @@ class MySQL_Value
     friend class MySQL_Connection;
 
 #define POSEIDON_MYSQL_VALUE_VARIANT_TYPE_  \
-    ::rocket::variant<  \
+    ::asteria::variant<  \
         ::std::nullptr_t, int64_t, double, ::poseidon::cow_string,  \
         ::poseidon::DateTime>
 
@@ -107,7 +107,7 @@ class MySQL_Value
       }
 
     template<typename ycharT, size_t N,
-    ROCKET_ENABLE_IF(::std::is_same<ycharT, char>::value)>
+    ASTERIA_ENABLE_IF(::std::is_same<ycharT, char>::value)>
     MySQL_Value(const ycharT (*ps)[N])
       noexcept
       {
@@ -115,7 +115,7 @@ class MySQL_Value
       }
 
     template<typename ycharT, size_t N,
-    ROCKET_ENABLE_IF(::std::is_same<ycharT, char>::value)>
+    ASTERIA_ENABLE_IF(::std::is_same<ycharT, char>::value)>
     MySQL_Value&
     operator=(const ycharT (*ps)[N])
       &

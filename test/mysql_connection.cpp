@@ -4,7 +4,7 @@
 #include "utils.hpp"
 #include "../poseidon/mysql/mysql_connection.hpp"
 #include "../poseidon/mysql/mysql_value.hpp"
-#include <rocket/tinyfmt_file.hpp>
+#include <asteria/rocket/tinyfmt_file.hpp>
 using namespace ::poseidon;
 
 int
@@ -29,7 +29,7 @@ main()
 
     cow_vector<MySQL_Value> values;
     int row = 0;
-    ::rocket::tinyfmt_file fmt(stderr);
+    ::asteria::tinyfmt_file fmt(stderr);
 
     while(conn.fetch_row(values)) {
       POSEIDON_TEST_CHECK(fields.size() == values.size());

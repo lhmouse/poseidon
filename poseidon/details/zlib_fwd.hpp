@@ -26,15 +26,15 @@ class scoped_deflate_stream
     scoped_deflate_stream(zlib_Format fmt, uint8_t wbits, int level = Z_DEFAULT_COMPRESSION)
       {
         if((fmt != zlib_deflate) && (fmt != zlib_raw) && (fmt != zlib_gzip))
-          ::rocket::sprintf_and_throw<::std::invalid_argument>(
+          ::asteria::sprintf_and_throw<::std::invalid_argument>(
                 "scoped_deflate_stream: format `%d` not valid", fmt);
 
         if((wbits < 9) || (wbits > 15))
-          ::rocket::sprintf_and_throw<::std::invalid_argument>(
+          ::asteria::sprintf_and_throw<::std::invalid_argument>(
                 "scoped_deflate_stream: window bits `%d` not valid", wbits);
 
         if((level < -1) || (level > 9))
-          ::rocket::sprintf_and_throw<::std::invalid_argument>(
+          ::asteria::sprintf_and_throw<::std::invalid_argument>(
                 "scoped_deflate_stream: compression level `%d` not valid", level);
 
         this->m_strm->zalloc = nullptr;
@@ -51,7 +51,7 @@ class scoped_deflate_stream
 
         if(::deflateInit2(this->m_strm, level, Z_DEFLATED, fmt_wbits, 9,
                           Z_DEFAULT_STRATEGY) != Z_OK)
-          ::rocket::sprintf_and_throw<::std::runtime_error>(
+          ::asteria::sprintf_and_throw<::std::runtime_error>(
                 "scoped_deflate_stream: insufficient memory");
       }
 
@@ -85,9 +85,9 @@ class scoped_deflate_stream
       noexcept
       {
         this->m_strm->next_out = reinterpret_cast<::Bytef*>(ocur);
-        this->m_strm->avail_out = ::rocket::clamp_cast<::uInt>(oend - ocur, 0, INT_MAX);
+        this->m_strm->avail_out = ::asteria::clamp_cast<::uInt>(oend - ocur, 0, INT_MAX);
         this->m_strm->next_in = reinterpret_cast<const ::Bytef*>(icur);
-        this->m_strm->avail_in = ::rocket::clamp_cast<::uInt>(iend - icur, 0, INT_MAX);
+        this->m_strm->avail_in = ::asteria::clamp_cast<::uInt>(iend - icur, 0, INT_MAX);
       }
   };
 
@@ -100,11 +100,11 @@ class scoped_inflate_stream
     scoped_inflate_stream(zlib_Format fmt, uint8_t wbits)
       {
         if((fmt != zlib_deflate) && (fmt != zlib_raw) && (fmt != zlib_gzip))
-          ::rocket::sprintf_and_throw<::std::invalid_argument>(
+          ::asteria::sprintf_and_throw<::std::invalid_argument>(
                 "scoped_inflate_stream: format `%d` not valid", fmt);
 
         if((wbits < 9) || (wbits > 15))
-          ::rocket::sprintf_and_throw<::std::invalid_argument>(
+          ::asteria::sprintf_and_throw<::std::invalid_argument>(
                 "scoped_inflate_stream: window bits `%d` not valid", wbits);
 
         this->m_strm->zalloc = nullptr;
@@ -120,7 +120,7 @@ class scoped_inflate_stream
           fmt_wbits += 16;
 
         if(::inflateInit2(this->m_strm, fmt_wbits) != Z_OK)
-          ::rocket::sprintf_and_throw<::std::runtime_error>(
+          ::asteria::sprintf_and_throw<::std::runtime_error>(
                 "scoped_inflate_stream: insufficient memory");
       }
 
@@ -154,9 +154,9 @@ class scoped_inflate_stream
       noexcept
       {
         this->m_strm->next_out = reinterpret_cast<::Bytef*>(ocur);
-        this->m_strm->avail_out = ::rocket::clamp_cast<::uInt>(oend - ocur, 0, INT_MAX);
+        this->m_strm->avail_out = ::asteria::clamp_cast<::uInt>(oend - ocur, 0, INT_MAX);
         this->m_strm->next_in = reinterpret_cast<const ::Bytef*>(icur);
-        this->m_strm->avail_in = ::rocket::clamp_cast<::uInt>(iend - icur, 0, INT_MAX);
+        this->m_strm->avail_in = ::asteria::clamp_cast<::uInt>(iend - icur, 0, INT_MAX);
       }
   };
 

@@ -66,7 +66,7 @@ struct degrees
     sin()
       const noexcept
       {
-        if(ROCKET_CONSTANT_P(::sinf(t * 0.0174532925F)))
+        if(ASTERIA_CONSTANT_P(::sinf(t * 0.0174532925F)))
           return ::sinf(t * 0.0174532925F);
         else
           return noadl::do_trig_degrees(t).sin;
@@ -77,7 +77,7 @@ struct degrees
     cos()
       const noexcept
       {
-        if(ROCKET_CONSTANT_P(::cosf(t * 0.0174532925F)))
+        if(ASTERIA_CONSTANT_P(::cosf(t * 0.0174532925F)))
           return ::cosf(t * 0.0174532925F);
         else
           return noadl::do_trig_degrees(t).cos;
@@ -88,7 +88,7 @@ struct degrees
     tan()
       const noexcept
       {
-        if(ROCKET_CONSTANT_P(::tanf(t * 0.0174532925F)))
+        if(ASTERIA_CONSTANT_P(::tanf(t * 0.0174532925F)))
           return ::tanf(t * 0.0174532925F);
         else
           return noadl::do_trig_degrees(t).tan;
@@ -194,7 +194,7 @@ struct vector2
     magnitude()
       const noexcept
       {
-        if(ROCKET_CONSTANT_P(::hypotf(x, y)))
+        if(ASTERIA_CONSTANT_P(::hypotf(x, y)))
           return ::hypotf(x, y);
         else {
           __m128 ps = _mm_castpd_ps(_mm_load_sd(reinterpret_cast<const double*>(this)));
@@ -208,7 +208,7 @@ struct vector2
     direction()
       const noexcept
       {
-        if(ROCKET_CONSTANT_P(::atan2f(y, x) * 57.2957795F))
+        if(ASTERIA_CONSTANT_P(::atan2f(y, x) * 57.2957795F))
           return degrees(::atan2f(y, x) * 57.2957795F);
         else
           return degrees(noadl::do_arctan_degrees(y, x));
@@ -224,7 +224,7 @@ struct vector2
         else if((x == 0) || (x != x))
           return vector2(0, signbit(y) ? -1 : 1);
 
-        if(ROCKET_CONSTANT_P(::hypotf(x, y)))
+        if(ASTERIA_CONSTANT_P(::hypotf(x, y)))
           return vector2(x / ::hypotf(x, y), y / ::hypotf(x, y));
         else {
           __m128 ps = _mm_castpd_ps(_mm_load_sd(reinterpret_cast<const double*>(this)));

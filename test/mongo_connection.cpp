@@ -4,7 +4,7 @@
 #include "utils.hpp"
 #include "../poseidon/mongo/mongo_connection.hpp"
 #include "../poseidon/mongo/mongo_value.hpp"
-#include <rocket/tinyfmt_file.hpp>
+#include <asteria/rocket/tinyfmt_file.hpp>
 using namespace ::poseidon;
 
 int
@@ -27,7 +27,7 @@ main()
     }
 
     int num = 0;
-    ::rocket::tinyfmt_file fmt(stderr);
+    ::asteria::tinyfmt_file fmt(stderr);
 
     // `show dbs`
     doc.clear();

@@ -63,7 +63,7 @@ class HTTP_Request_Parser
       { return HTTP_PARSER_ERRNO(this->m_parser) != HPE_OK;  }
 
     // Translates the error code to an HTTP status code.
-    ROCKET_PURE
+    ASTERIA_PURE
     HTTP_Status
     http_status_from_error()
       const noexcept;
@@ -134,7 +134,7 @@ class HTTP_Request_Parser
     next_message()
       noexcept
       {
-        ROCKET_ASSERT(this->m_hreq >= hreq_payload_done);
+        ASTERIA_ASSERT(this->m_hreq >= hreq_payload_done);
 
         this->m_headers.clear();
         this->m_payload.clear();

@@ -240,7 +240,7 @@ class WebSocket_Frame_Parser
     next_frame()
       noexcept
       {
-        ROCKET_ASSERT(this->m_wsf >= wsf_header_done);
+        ASTERIA_ASSERT(this->m_wsf >= wsf_header_done);
 
         this->m_frm_header.clear();
         this->m_frm_payload.clear();

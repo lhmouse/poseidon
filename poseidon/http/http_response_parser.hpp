@@ -86,7 +86,7 @@ class HTTP_Response_Parser
     set_no_payload()
       noexcept
       {
-        ROCKET_ASSERT(this->m_hresp >= hresp_headers_done);
+        ASTERIA_ASSERT(this->m_hresp >= hresp_headers_done);
         this->m_parser->flags |= F_SKIPBODY;
       }
 
@@ -138,7 +138,7 @@ class HTTP_Response_Parser
     next_message()
       noexcept
       {
-        ROCKET_ASSERT(this->m_hresp >= hresp_payload_done);
+        ASTERIA_ASSERT(this->m_hresp >= hresp_payload_done);
 
         this->m_headers.clear();
         this->m_payload.clear();

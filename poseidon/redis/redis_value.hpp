@@ -14,7 +14,7 @@ class Redis_Value
     friend class Redis_Connection;
 
 #define POSEIDON_REDIS_VALUE_VARIANT_TYPE_  \
-    ::rocket::variant<  \
+    ::asteria::variant<  \
         ::std::nullptr_t, int64_t, ::poseidon::cow_string,  \
         ::poseidon::Redis_Array>
 
@@ -69,7 +69,7 @@ class Redis_Value
       }
 
     template<typename ycharT, size_t N,
-    ROCKET_ENABLE_IF(::std::is_same<ycharT, char>::value)>
+    ASTERIA_ENABLE_IF(::std::is_same<ycharT, char>::value)>
     Redis_Value(const ycharT (*ps)[N])
       noexcept
       {
@@ -77,7 +77,7 @@ class Redis_Value
       }
 
     template<typename ycharT, size_t N,
-    ROCKET_ENABLE_IF(::std::is_same<ycharT, char>::value)>
+    ASTERIA_ENABLE_IF(::std::is_same<ycharT, char>::value)>
     Redis_Value&
     operator=(const ycharT (*ps)[N])
       &

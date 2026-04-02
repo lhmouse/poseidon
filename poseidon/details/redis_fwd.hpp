@@ -24,8 +24,8 @@ struct redisReply_deleter
       { ::freeReplyObject(p);  }
   };
 
-using uniptr_redisContext = ::rocket::unique_ptr<::redisContext, redisContext_deleter>;
-using uniptr_redisReply = ::rocket::unique_ptr<::redisReply, redisReply_deleter>;
+using uniptr_redisContext = ::asteria::unique_ptr<::redisContext, redisContext_deleter>;
+using uniptr_redisReply = ::asteria::unique_ptr<::redisReply, redisReply_deleter>;
 
 }  // namespace poseidon
 #endif

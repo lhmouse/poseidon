@@ -10,7 +10,7 @@ namespace poseidon {
 class Appointment
   {
   private:
-    ::rocket::unique_posix_fd m_fd;
+    ::asteria::unique_posix_fd m_fd;
     int m_index = -1;
 
   public:

@@ -20,7 +20,7 @@ class HTTP_Field_Name
       noexcept = default;
 
     template<typename xstringT,
-    ROCKET_ENABLE_IF(::std::is_constructible<cow_string, xstringT&&>::value)>
+    ASTERIA_ENABLE_IF(::std::is_constructible<cow_string, xstringT&&>::value)>
     constexpr
     HTTP_Field_Name(xstringT&& xstr)
       noexcept(::std::is_nothrow_constructible<cow_string, xstringT&&>::value)
@@ -29,7 +29,7 @@ class HTTP_Field_Name
       { }
 
     template<typename xstringT,
-    ROCKET_ENABLE_IF(::std::is_assignable<cow_string&, xstringT&&>::value)>
+    ASTERIA_ENABLE_IF(::std::is_assignable<cow_string&, xstringT&&>::value)>
     HTTP_Field_Name&
     operator=(xstringT&& xstr)
       & noexcept(::std::is_nothrow_assignable<cow_string&, xstringT&&>::value)
@@ -189,7 +189,7 @@ class HTTP_Field_Name
       { this->m_str.assign(forward<xParams>(xparams)...);  }
 
     // Compare names in a case-insensitive way.
-    constexpr ROCKET_PURE
+    constexpr ASTERIA_PURE
     bool
     equals(const cow_string& str)
       const noexcept
@@ -199,7 +199,7 @@ class HTTP_Field_Name
         return this->compare(str) == 0;
       }
 
-    constexpr ROCKET_PURE
+    constexpr ASTERIA_PURE
     bool
     equals(const HTTP_Field_Name& other)
       const noexcept
@@ -209,18 +209,18 @@ class HTTP_Field_Name
         return this->compare(other) == 0;
       }
 
-    ROCKET_PURE
+    ASTERIA_PURE
     int
     compare(const cow_string& cmps)
       const noexcept;
 
-    ROCKET_PURE
+    ASTERIA_PURE
     int
     compare(const HTTP_Field_Name& other)
       const noexcept;
 
     // Gets the case-insensitive hash value of this name.
-    ROCKET_PURE
+    ASTERIA_PURE
     size_t
     rdhash()
       const noexcept;

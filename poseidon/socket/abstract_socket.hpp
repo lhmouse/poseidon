@@ -112,7 +112,7 @@ class Abstract_Socket
     // Get the local or bound address of this socket. In case of errors,
     // `ipv6_invalid` is returned. The result is cached and will not reflect
     // changes that other APIs may have made.
-    ROCKET_PURE
+    ASTERIA_PURE
     const IPv6_Address&
     local_address()
       const noexcept;
@@ -120,7 +120,7 @@ class Abstract_Socket
     // Get the remote or connected address of this socket. In case of errors,
     // `ipv6_invalid` is returned. The result is cached and will not reflect
     // changes that other APIs may have made.
-    ROCKET_PURE
+    ASTERIA_PURE
     const IPv6_Address&
     remote_address()
       const noexcept;

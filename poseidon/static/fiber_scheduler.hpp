@@ -54,7 +54,7 @@ class Fiber_Scheduler
 
     // Returns the number of fibers that are being scheduled.
     // This function is thread-safe.
-    ROCKET_PURE
+    ASTERIA_PURE
     size_t
     size()
       const noexcept;

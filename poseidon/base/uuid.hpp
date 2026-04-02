@@ -80,13 +80,13 @@ class UUID
 
   public:
     // Returns a static all-zero UUID.
-    static ROCKET_CONST
+    static ASTERIA_CONST
     const UUID&
     min()
       noexcept;
 
     // Returns a static all-one UUID.
-    static ROCKET_CONST
+    static ASTERIA_CONST
     const UUID&
     max()
       noexcept;
@@ -153,7 +153,7 @@ class UUID
       const noexcept
       { return this->m_bytes.end();  }
 
-    ROCKET_PURE
+    ASTERIA_PURE
     bool
     is_nil()
       const noexcept
@@ -163,7 +163,7 @@ class UUID
         return _mm_movemask_epi8(_mm_cmpeq_epi8(tval, oval)) == 0xFFFF;
       }
 
-    ROCKET_PURE
+    ASTERIA_PURE
     bool
     equals(const UUID& other)
       const noexcept
@@ -173,7 +173,7 @@ class UUID
         return _mm_movemask_epi8(_mm_cmpeq_epi8(tval, oval)) == 0xFFFF;
       }
 
-    ROCKET_PURE
+    ASTERIA_PURE
     int
     compare(const UUID& other)
       const noexcept;

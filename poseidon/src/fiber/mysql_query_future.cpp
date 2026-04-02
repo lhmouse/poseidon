@@ -1,0 +1,72 @@
+// This file is part of Poseidon.
+// Copyright (C) 2022-2026 LH_Mouse. All wrongs reserved.
+
+#include "../xprecompiled.hpp"
+#include "../../fiber/mysql_query_future.hpp"
+#include "../../mysql/mysql_connection.hpp"
+#include "../../static/mysql_connector.hpp"
+#include "../../utils.hpp"
+namespace poseidon {
+
+MySQL_Query_Future::
+MySQL_Query_Future(MySQL_Connector& connector, uniptr<MySQL_Connection>&& conn_opt,
+                   const cow_string& stmt, const cow_vector<MySQL_Value>& stmt_args)
+  {
+    this->m_ctr = &connector;
+    this->m_conn = move(conn_opt);
+    this->m_stmt = stmt;
+    this->m_stmt_args = stmt_args;
+  }
+
+MySQL_Query_Future::
+MySQL_Query_Future(MySQL_Connector& connector, const cow_string& stmt,
+                   const cow_vector<MySQL_Value>& stmt_args)
+  {
+    this->m_ctr = &connector;
+    this->m_stmt = stmt;
+    this->m_stmt_args = stmt_args;
+  }
+
+MySQL_Query_Future::
+~MySQL_Query_Future()
+  {
+  }
+
+void
+MySQL_Query_Future::
+do_on_abstract_future_initialize()
+  {
+    if(!this->m_conn)
+      this->m_conn = this->m_ctr->allocate_default_connection();
+
+    this->m_conn->execute(this->m_stmt, this->m_stmt_args);
+
+    this->m_warning_count = this->m_conn->warning_count();
+    this->m_match_count = this->m_conn->match_count();
+    this->m_insert_id = this->m_conn->insert_id();
+    this->m_conn->fetch_fields(this->m_result_fields);
+
+    cow_vector<MySQL_Value> row;
+    while(this->m_conn->fetch_row(row))
+      this->m_result_rows.push_back(move(row));
+  }
+
+void
+MySQL_Query_Future::
+do_on_abstract_future_finalize()
+  {
+    if(!this->m_conn)
+      return;
+
+    if(this->m_conn->reset())
+      this->m_ctr->pool_connection(move(this->m_conn));
+  }
+
+void
+MySQL_Query_Future::
+do_on_abstract_task_execute()
+  {
+    this->do_abstract_future_initialize_once();
+  }
+
+}  // namespace poseidon
