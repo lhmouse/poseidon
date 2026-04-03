@@ -198,7 +198,7 @@ dep_hiredis = dependency('hiredis')
 configure_file(configuration: ver,
                output: 'version.h',
                install: false,
-               input: 'poseidon/src/version.h.in')
+               input: 'poseidon/version.h.in')
 
 install_headers(poseidon_include, preserve_path: true)
 install_headers(meson.current_build_dir() / 'version.h', subdir: 'poseidon')
