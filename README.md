@@ -1,8 +1,6 @@
 # The Poseidon Server Framework
 
-![poseidon](poseidon.png)
-
-# Features
+<img src="poseidon_4000x3200.svg" height="135">
 
 1. Coroutines (fibers)
 2. Native TCP, TLS over TCP and UDP over either IPv4 or IPv6
