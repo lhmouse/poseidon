@@ -419,11 +419,9 @@ do_arctan_degrees(float y, float x)
     ASTERIA_ASSERT((bits >= 0) && (bits <= 255));
     switch(bits)
       {
-      case 0b01000000 ... 0b01001111:
-      case 0b01010000 ... 0b01011111:
+      case 0b01000000 ... 0b01011111:
       case 0b01110000 ... 0b01111111:
-      case 0b11000000 ... 0b11001111:
-      case 0b11010000 ... 0b11011111:
+      case 0b11000000 ... 0b11011111:
       case 0b11110000 ... 0b11111111:
       case 0b00001000 ... 0b00001111:
       case 0b00011000 ... 0b00011111:
