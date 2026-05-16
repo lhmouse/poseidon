@@ -412,37 +412,103 @@ int
 do_arctan_degrees(float y, float x)
   noexcept
   {
-    if((y == 0) || (y != y))
-      return signbit(x) ? 180 : 0;
-    else if((x == 0) || (x != x))
-      return signbit(y) ? 270 : 90;
-
-    // Determine the octant of this angle, clockwise.
-    __m128 ps = _mm_cmpgt_ps(_mm_set_ps(x, x, y, y), _mm_set_ps(0, -y, 0, x));
-    switch(_mm_movemask_ps(ps))
+    // Determine the octant of this angle, counterclockwise.
+    __m128 ps1 = _mm_cmpeq_ps(_mm_set_ps(x, x, y, y), _mm_set_ps(x, 0, y, 0));
+    __m128 ps2 = _mm_cmpgt_ps(_mm_set_ps(x, x, y, y), _mm_set_ps(0, -y, 0, x));
+    int bits = _mm_movemask_ps(ps1) << 4 | _mm_movemask_ps(ps2);
+    ASTERIA_ASSERT((bits >= 0) && (bits <= 255));
+    switch(bits)
       {
-      case 0b1110:  // x > y > 0 > -x
+      case 0b01000000 ... 0b01000111:
+      case 0b01010000 ... 0b01010111:
+      case 0b01110000 ... 0b01110111:
+      case 0b11000000 ... 0b11000111:
+      case 0b11010000 ... 0b11010111:
+      case 0b11110000 ... 0b11110111:
+      case 0b00001000 ... 0b00001111:
+      case 0b00011000 ... 0b00011111:
+      case 0b00111000 ... 0b00111111:
+      case 0b01001000 ... 0b01001111:
+      case 0b01011000 ... 0b01011111:
+      case 0b01111000 ... 0b01111111:
+      case 0b10001000 ... 0b10001111:
+      case 0b10011000 ... 0b10011111:
+      case 0b10111000 ... 0b10111111:
+      case 0b11001000 ... 0b11001111:
+      case 0b11011000 ... 0b11011111:
+      case 0b11111000 ... 0b11111111:
+        // ((y != y) || (y == 0)) && (x >= 0)
+        return 0;
+
+      case 0b10101110:
+        // x > y > 0 > -x
         return do_reduced_arctan(y / x);
 
-      case 0b1111:  // y > x > 0 > -x
+      case 0b10101111:
+        // y > x > 0 > -x
         return 90 - do_reduced_arctan(x / y);
 
-      case 0b0111:  // y > -x > 0 > x
+      case 0b00100010 ... 0b00100011:
+      case 0b00100110 ... 0b00100111:
+      case 0b00101010 ... 0b00101011:
+      case 0b00101110 ... 0b00101111:
+      case 0b01100010 ... 0b01100011:
+      case 0b01100110 ... 0b01100111:
+      case 0b01101010 ... 0b01101011:
+      case 0b01101110 ... 0b01101111:
+      case 0b11100010 ... 0b11100011:
+      case 0b11100110 ... 0b11100111:
+      case 0b11101010 ... 0b11101011:
+      case 0b11101110 ... 0b11101111:
+        // ((x != x) || (x == 0)) && (y > 0)
+        return 90;
+
+      case 0b10100111:
+        // y > -x > 0 > x
         return 90 + do_reduced_arctan(x / -y);
 
-      case 0b0011:  // -x > y > 0 > x
+      case 0b10100011:
+        // -x > y > 0 > x
         return 180 - do_reduced_arctan(-y / x);
 
-      case 0b0001:  // -x > 0 > y > x
+      case 0b00000000 ... 0b00000111:
+      case 0b00010000 ... 0b00010111:
+      case 0b00110000 ... 0b00110111:
+      case 0b10000000 ... 0b10000111:
+      case 0b10010000 ... 0b10010111:
+      case 0b10110000 ... 0b10110111:
+        // ((y != y) || (y == 0)) && (x < 0)
+        return 180;
+
+      case 0b10100001:
+        // -x > 0 > y > x
         return 180 + do_reduced_arctan(y / x);
 
-      case 0b0000:  // -x > 0 > x > y
+      case 0b10100000:
+        // -x > 0 > x > y
         return 270 - do_reduced_arctan(x / y);
 
-      case 0b1000:  // x > 0 > -x > y
+      case 0b00100000 ... 0b00100001:
+      case 0b00100100 ... 0b00100101:
+      case 0b00101000 ... 0b00101001:
+      case 0b00101100 ... 0b00101101:
+      case 0b01100000 ... 0b01100001:
+      case 0b01100100 ... 0b01100101:
+      case 0b01101000 ... 0b01101001:
+      case 0b01101100 ... 0b01101101:
+      case 0b11100000 ... 0b11100001:
+      case 0b11100100 ... 0b11100101:
+      case 0b11101000 ... 0b11101001:
+      case 0b11101100 ... 0b11101101:
+        // ((x != x) || (x == 0)) && (y < 0)
+        return 270;
+
+      case 0b10101000:
+        // x > 0 > -x > y
         return 270 + do_reduced_arctan(x / -y);
 
-      case 0b1100:  // x > 0 > y > -x
+      case 0b10101100:
+        // x > 0 > y > -x
         return 360 - do_reduced_arctan(-y / x);
 
       default:
