@@ -438,7 +438,7 @@ do_arctan_degrees(float y, float x)
       case 0b00100010:
       case 0b00110000:
       case 0b11100111:
-        // ((x != x) || (x == 0)) && (y > 0)
+        // ((x != x) || (x == 0)) && (y >= 0)
         return 90;
 
       case 0b10100111:
