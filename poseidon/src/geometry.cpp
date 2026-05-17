@@ -419,6 +419,7 @@ do_arctan_degrees(float y, float x)
     ASTERIA_ASSERT((bits >= 0) && (bits <= 255));
     switch(bits)
       {
+      case 0b00000000:
       case 0b10001000:
       case 0b10111100:
       case 0b11000000:
@@ -435,6 +436,7 @@ do_arctan_degrees(float y, float x)
         return 90 - do_reduced_arctan(x / y);
 
       case 0b00100010:
+      case 0b00110000:
       case 0b11100111:
         // ((x != x) || (x == 0)) && (y > 0)
         return 90;
@@ -447,8 +449,6 @@ do_arctan_degrees(float y, float x)
         // -x > y > 0 > x
         return 180 - do_reduced_arctan(-y / x);
 
-      case 0b00000000:
-      case 0b00110000:
       case 0b10000000:
       case 0b10110001:
         // ((y != y) || (y == 0)) && (x < 0)
