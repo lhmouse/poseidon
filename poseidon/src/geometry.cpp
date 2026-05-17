@@ -420,10 +420,13 @@ do_arctan_degrees(float y, float x)
     switch(bits)
       {
       case 0b00000000:
+      case 0b11110000:
+        // both NaN or both 0
+        return 0;
+
       case 0b10001000:
       case 0b10111100:
       case 0b11000000:
-      case 0b11110000:
         // ((y != y) || (y == 0)) && (x >= 0)
         return 0;
 
