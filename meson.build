@@ -135,10 +135,9 @@ test_src = [
 # Global configuration
 #===========================================================
 
-ver = configuration_data()
-ver.set('abi_major', meson.project_version().split('.')[0])
-ver.set('abi_minor', meson.project_version().split('.')[1])
-ver.set_quoted('abi_string', meson.project_version())
+ver = { 'abi_major': meson.project_version().split('.')[0],
+        'abi_minor': meson.project_version().split('.')[1],
+        'abi_string': meson.project_version().join([ '"', '"' ]) }
 
 cxx = meson.get_compiler('cpp')
 cxx_is_i386 = cxx.has_define('__i386__')
@@ -195,13 +194,14 @@ dep_hiredis = dependency('hiredis')
 # Rules for headers
 #===========================================================
 
-configure_file(configuration: ver,
-               output: 'version.h',
-               install: false,
-               input: 'poseidon/version.h.in')
+install_headers(configure_file(output: 'version.h',
+                               input: 'poseidon/version.h.in',
+                               configuration: ver,
+                               install: false),
+                subdir: 'poseidon')
 
-install_headers(poseidon_include, preserve_path: true)
-install_headers(meson.current_build_dir() / 'version.h', subdir: 'poseidon')
+install_headers(poseidon_include,
+                preserve_path: true)
 
 #===========================================================
 # Rules for 'lib/libposeidon.so'
@@ -213,8 +213,8 @@ lib_poseidon = shared_library('poseidon',
       dependencies: [ dep_pthread, dep_asteria, dep_taxon, dep_libunwind,
                       dep_openssl, dep_zlib, dep_http_parser,
                       dep_mysqlclient, dep_bson, dep_mongoc, dep_hiredis ],
-      soversion: ver.get('abi_major'),
-      version: '.'.join(ver.get('abi_major'), ver.get('abi_minor'), '0'),
+      soversion: ver['abi_major'],
+      version: '.'.join([ ver['abi_major'], ver['abi_minor'], '0' ]),
       install: true)
 
 import('pkgconfig').generate(lib_poseidon,
