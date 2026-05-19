@@ -6,6 +6,6 @@
 
 #define POSEIDON_ABI_VERSION_MAJOR    @abi_major@
 #define POSEIDON_ABI_VERSION_MINOR    @abi_minor@
-#define POSEIDON_ABI_VERSION_STRING   @abi_string@
+#define POSEIDON_ABI_VERSION_STRING   "@abi_string@"
 
-#endif
+#endif  // POSEIDON_VERSION_
