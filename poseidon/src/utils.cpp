@@ -90,8 +90,9 @@ do_create_runtime_error(const char* func, const char* file, uint32_t line,
           // * function signature and offset
           sbuf += " `";
           sbuf += unw_name;
+          sbuf += "`";
           if(unw_offset > 0) {
-            sbuf += "`+";
+            sbuf += "+";
             nump.put_XU(unw_offset);
             sbuf.append(nump.data(), nump.size());
           }
