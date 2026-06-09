@@ -6,6 +6,7 @@
 *.tar.*
 *.deb
 *.log
+*.tar.*
 /build_*
 /description-pak
 /var
