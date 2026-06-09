@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-_version=2.2.4
+_version=2.3.1
 
 wget -c "https://github.com/mongodb/mongo-c-driver/releases/download/${_version}/mongo-c-driver-${_version}.tar.gz"
 tar -xvf "mongo-c-driver-${_version}.tar.gz"
@@ -13,9 +13,9 @@ cmake -G Ninja -S "mongo-c-driver-${_version}"  \
   -DMONGOC_INSTALL_CMAKEDIR="lib/cmake/mongoc"  \
   -DBSON_INSTALL_CMAKEDIR="lib/cmake/bson"  \
   -DCMAKE_INSTALL_PREFIX="/usr/local"  \
-  build_mongo-c-driver
+  build_dep_mongo-c-driver
 
-cmake --build build_mongo-c-driver
+cmake --build build_dep_mongo-c-driver
 
 echo "MongoDB client library" >description-pak
 
@@ -28,4 +28,4 @@ sudo checkinstall  \
   --pkggroup="devel"  \
   --pkgarch="$(dpkg --print-architecture)"  \
   --nodoc --backup=no --default --fstrans=no --install=yes --deldesc  \
-  cmake --install build_mongo-c-driver
+  cmake --install build_dep_mongo-c-driver
