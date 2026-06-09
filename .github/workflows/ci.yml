@@ -45,6 +45,7 @@ jobs:
              && (cd http-parser && ./makedeb_checkinstall.sh)
              && ./makedeb_dep_mongo-c-driver.sh
              && ./makedeb_dep_mysql-client.sh
+             && sudo ldconfig
 
       - name: Configure
         run: >-
