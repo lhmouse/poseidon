@@ -3,12 +3,15 @@
 *.orig
 *.save*
 *.swp
+*.tar.*
 *.deb
 *.log
 /build_*
-/profiling/*
+/description-pak
 /var
 /asteria
 /http-parser
 /taxon
+/mysql-*
+/mongo-c-driver-*
 !/.github
