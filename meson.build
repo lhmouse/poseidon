@@ -185,6 +185,8 @@ dep_mysqlclient = dependency('mysqlclient')
 dep_bson = dependency('bson2', 'libbson-1.0')
 dep_mongoc = dependency('mongoc2', 'libmongoc-1.0')
 dep_hiredis = dependency('hiredis')
+dep_zstd = dependency('libzstd')
+dep_sasl2 = dependency('libsasl2')
 
 #===========================================================
 # Rules for headers
@@ -211,8 +213,8 @@ lib_poseidon = shared_library('poseidon',
       cpp_pch: 'poseidon/src/xprecompiled.hpp',
       sources: [ poseidon_src ],
       dependencies: [ dep_pthread, dep_asteria, dep_taxon, dep_libunwind,
-                      dep_openssl, dep_zlib, dep_http_parser,
-                      dep_mysqlclient, dep_bson, dep_mongoc, dep_hiredis ],
+                      dep_openssl, dep_zlib, dep_http_parser, dep_mysqlclient,
+                      dep_bson, dep_mongoc, dep_hiredis, dep_zstd, dep_sasl2 ],
       soversion: ver['abi_major'],
       version: '.'.join([ ver['abi_major'], ver['abi_minor'], '0' ]),
       install: true)

@@ -171,7 +171,7 @@ execute(const Mongo_Document& cmd)
         case mongo_value_array:
           {
             auto& frm = stack.emplace_front();
-            success = ::bson_append_array_begin(pbson, key, key_len, &(frm.temp));
+            success = ::bson_append_array_unsafe_begin(pbson, key, key_len, &(frm.temp));
             if(success) {
               // open
               frm.psa = cur_a;
