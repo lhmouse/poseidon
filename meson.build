@@ -182,8 +182,8 @@ dep_zlib = dependency('zlib', version: '>= 1.2.9')
 dep_http_parser = dependency('http-parser')
 
 dep_mysqlclient = dependency('mysqlclient')
-dep_bson = dependency('libbson-1.0')
-dep_mongoc = dependency('libmongoc-1.0')
+dep_bson = dependency('bson2', 'libbson-1.0')
+dep_mongoc = dependency('mongoc2', 'libmongoc-1.0')
 dep_hiredis = dependency('hiredis')
 
 #===========================================================
