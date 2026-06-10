@@ -243,7 +243,10 @@ executable('poseidon',
 # Rules for default configuration files
 #===========================================================
 
-install_data(poseidon_etc, install_dir: '.', preserve_path: true)
+install_data(poseidon_etc,
+             install_dir: '.',
+             preserve_path: true,
+             install_tag: 'config')
 
 #===========================================================
 # Rules for example libraries
