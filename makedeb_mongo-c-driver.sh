@@ -10,7 +10,7 @@ echo "8d52d089815356e4c74b16a00239ee19ee5f5418381a6b7947cbe34a6c838613"   \
 mkdir -p "build_makedeb_mongo-c-driver"
 tar -xzf "mongo-c-driver-${_version}.tar.gz" -C "build_makedeb_mongo-c-driver"
 
-cmake -G Ninja -S "mongo-c-driver-${_version}"  \
+cmake -G Ninja  \
   -DCMAKE_BUILD_TYPE=RelWithDebInfo  \
   -DENABLE_ZSTD=ON -DENABLE_ZLIB=SYSTEM  \
   -DMONGOC_INSTALL_INCLUDEDIR="include"  \
