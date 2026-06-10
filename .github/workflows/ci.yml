@@ -40,9 +40,9 @@ jobs:
       - name: Build and install dependencies
         run: >-
              git submodule update --init
-             && (cd asteria && ./makedeb.sh && mv *.deb ../)
-             && (cd http-parser && ./makedeb.sh && mv *.deb ../)
-             && (cd taxon && ./makedeb.sh && mv *.deb ../)
+             && (cd asteria && ./makedeb.sh && sudo dpkg -i *.deb)
+             && (cd http-parser && ./makedeb.sh && sudo dpkg -i *.deb)
+             && (cd taxon && ./makedeb.sh && sudo dpkg -i *.deb)
              && ./makedeb_mysql-client.sh
              && ./makedeb_mongo-c-driver.sh
              && sudo dpkg -i *.deb
