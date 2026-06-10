@@ -12,9 +12,8 @@ tar -xzf "mysql-${_version}.tar.gz" -C "build_makedeb_mysql-client"
 cmake -G Ninja  \
   -DCMAKE_BUILD_TYPE=RelWithDebInfo  \
   -DCMAKE_INSTALL_PREFIX="/usr/local" -DINSTALL_INCLUDEDIR="include/mysql"  \
-  -DWITH_ZLIB=system -DWITH_ZSTD=system -DWITH_SSL=system  \
+  -DWITH_SYSTEM_LIBS=ON -DWITHOUT_SERVER=ON  \
   -DMYSQL_UNIX_ADDR="/var/run/mysqld/mysqld.sock"  \
-  -DWITHOUT_SERVER=ON  \
   -S "build_makedeb_mysql-client/mysql-${_version}"  \
   -B "build_makedeb_mysql-client/build"
 
