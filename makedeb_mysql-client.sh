@@ -28,7 +28,7 @@ DESTDIR=$(realpath "build_makedeb_mysql-client/pkg") cmake --install  \
 
 tee "build_makedeb_mysql-client/pkg/DEBIAN/control" <<control_EOF
 Package: mysql-client-local
-Provides: virtual-mysql-client, libmysqlclient-dev
+Provides: libmysqlclient-dev
 Version: ${_version}
 Architecture: ${_arch}
 Multi-Arch: same
