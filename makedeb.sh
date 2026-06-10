@@ -36,5 +36,9 @@ postinst_EOF
 chmod +x "build_makedeb/pkg/DEBIAN/postinst"
 cp -p "build_makedeb/pkg/DEBIAN/"post{inst,rm}
 
+find "build_makedeb/pkg" -type f  \
+  | sed -En 's,^build_makedeb/pkg(/usr/local/etc/),\1,p'  \
+  | sort | tee "build_makedeb/pkg/DEBIAN/conffiles"
+
 dpkg-deb --root-owner-group --build "build_makedeb/pkg"  \
   "poseidon-local_${_version}_${_arch}.deb"
