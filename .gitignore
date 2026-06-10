@@ -13,6 +13,4 @@
 /asteria
 /http-parser
 /taxon
-/mysql-*
-/mongo-c-driver-*
 !/.github

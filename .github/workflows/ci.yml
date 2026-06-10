@@ -34,18 +34,18 @@ jobs:
         run: >-
              sudo apt-get update ;
              sudo apt-get install -y --no-install-recommends g++-10 meson
-             ninja-build checkinstall python3 python3-pip pkgconf zlib1g-dev uuid-dev
+             ninja-build python3 python3-pip pkgconf zlib1g-dev uuid-dev
              lib{edit,pcre2,ssl,unwind,hiredis,zstd,tirpc,sasl2}-dev
 
       - name: Build and install dependencies
         run: >-
              git submodule update --init
-             && (cd asteria && ./makedeb_checkinstall.sh)
-             && (cd taxon && ./makedeb_checkinstall.sh)
-             && (cd http-parser && ./makedeb_checkinstall.sh)
-             && ./makedeb_dep_mongo-c-driver.sh
-             && ./makedeb_dep_mysql-client.sh
-             && sudo ldconfig
+             && (cd asteria && ./makedeb.sh && mv *.deb ../)
+             && (cd http-parser && ./makedeb.sh && mv *.deb ../)
+             && (cd taxon && ./makedeb.sh && mv *.deb ../)
+             && ./makedeb_mysql-client.sh
+             && ./makedeb_mongo-c-driver.sh
+             && sudo dpkg -i *.deb
 
       - name: Configure
         run: >-
