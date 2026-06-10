@@ -15,8 +15,6 @@ cmake -G Ninja  \
   -DENABLE_ZSTD=ON -DENABLE_ZLIB=SYSTEM  \
   -DMONGOC_INSTALL_INCLUDEDIR="include"  \
   -DBSON_INSTALL_INCLUDEDIR="include"  \
-  -DMONGOC_INSTALL_CMAKEDIR="lib/cmake/mongoc"  \
-  -DBSON_INSTALL_CMAKEDIR="lib/cmake/bson"  \
   -DCMAKE_INSTALL_PREFIX="/usr/local"  \
   -S "build_makedeb_mongo-c-driver/mongo-c-driver-${_version}"  \
   -B "build_makedeb_mongo-c-driver/build"
