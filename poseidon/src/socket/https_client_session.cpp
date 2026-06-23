@@ -14,9 +14,10 @@ HTTPS_Client_Session(const cow_string& default_host)
     Network_Reference caddr;
     size_t aclen = parse_network_reference(caddr, this->m_default_host);
     if((aclen != 0) && (caddr.host.n >= 1) && (caddr.host.n <= 253)) {
-      charbuf_256 host_name;
-      ::strlcpy(host_name.mut_data(), caddr.host.p, caddr.host.n + 1);
-      ::SSL_set_tlsext_host_name(this->m_ssl, host_name.data());
+      charbuf_256 str;
+      ::strlcpy(str.mut_data(), caddr.host.p, caddr.host.n + 1);
+      ::SSL_set1_host(this->m_ssl, str.data());
+      ::SSL_set_tlsext_host_name(this->m_ssl, str.data());
     }
 
     static constexpr uint8_t s_alpn_protos[] = "\x08http/1.1";
