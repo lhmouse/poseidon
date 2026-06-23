@@ -69,8 +69,9 @@ do_find_socket_nolock(volatile Abstract_Socket* socket)
 POSEIDON_VISIBILITY_HIDDEN
 int
 Network_Scheduler::
-do_alpn_select_cb(::SSL* ssl, const unsigned char** out, unsigned char* outlen,
-                  const unsigned char* in, unsigned int inlen, void* /*arg*/)
+do_alpn_select_cb(::SSL* ssl, const uint8_t** out, uint8_t* outlen, const uint8_t* in,
+                  unsigned int inlen, void* /*vp_this*/)
+  noexcept
   {
     auto socket = s_weak_ssl_socket.lock();
     if(!socket)
@@ -88,7 +89,7 @@ do_alpn_select_cb(::SSL* ssl, const unsigned char** out, unsigned char* outlen,
 
     try {
       // Parse ALPN request.
-      const unsigned char* inp = in;
+      const uint8_t* inp = in;
       while(inp != in + inlen) {
         size_t len = *inp;
         inp ++;
@@ -379,7 +380,7 @@ thread_loop()
       if(should_throttle)
         pev.events = EPOLLOUT;  // output-only, level-triggered
       else
-        pev.events = EPOLLIN |  EPOLLOUT | EPOLLET;
+        pev.events = EPOLLIN | EPOLLOUT | EPOLLET;
 
       if(::epoll_ctl(this->m_epoll_fd, EPOLL_CTL_MOD, socket->m_fd, &pev) != 0)
         POSEIDON_LOG_FATAL((
@@ -389,7 +390,7 @@ thread_loop()
     }
 
     POSEIDON_LOG_TRACE(("Socket `$1` (class `$2`) I/O complete"), socket, typeid(*socket));
-    socket->m_scheduler = (Network_Scheduler*) 123456789;
+    socket->m_scheduler = reinterpret_cast<Network_Scheduler*>(-9);
   }
 
 void

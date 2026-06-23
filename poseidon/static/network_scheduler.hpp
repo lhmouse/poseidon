@@ -38,8 +38,9 @@ class Network_Scheduler
 
     static
     int
-    do_alpn_select_cb(::SSL* ssl, const unsigned char** out, unsigned char* outlen,
-                      const unsigned char* in, unsigned int inlen, void* arg);
+    do_alpn_select_cb(::SSL* ssl, const uint8_t** out, uint8_t* outlen, const uint8_t* in,
+                      unsigned int inlen, void* vp_this)
+      noexcept;
 
   public:
     Network_Scheduler(const Network_Scheduler&) = delete;
