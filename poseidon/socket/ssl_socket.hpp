@@ -17,6 +17,8 @@ class SSL_Socket
   {
   private:
     friend class Network_Scheduler;
+    friend class HTTPS_Server_Session;
+    friend class HTTPS_Client_Session;
 
     uniptr_SSL m_ssl;
     ::taxon::Value m_session_user_data;
