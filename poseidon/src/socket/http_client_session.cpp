@@ -8,8 +8,9 @@ namespace poseidon {
 
 HTTP_Client_Session::
 HTTP_Client_Session(const cow_string& default_host)
+  :
+    m_default_host(default_host)
   {
-    this->m_default_host = default_host;
   }
 
 HTTP_Client_Session::
