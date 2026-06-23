@@ -39,8 +39,8 @@ jobs:
              && (cd asteria && ./makedeb.sh && sudo dpkg -i *.deb)
              && (cd http-parser && ./makedeb.sh && sudo dpkg -i *.deb)
              && (cd taxon && ./makedeb.sh && sudo dpkg -i *.deb)
-             && ./makedeb_mysql-client.sh
-             && ./makedeb_mongo-c-driver.sh
+             && ./dep_makedeb_mysql-client.sh
+             && ./dep_makedeb_mongo-c-driver.sh
              && sudo dpkg -i *.deb
 
       - name: Configure
