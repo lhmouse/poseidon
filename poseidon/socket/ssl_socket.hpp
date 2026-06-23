@@ -19,7 +19,6 @@ class SSL_Socket
     friend class Network_Scheduler;
 
     uniptr_SSL m_ssl;
-    charbuf_256 m_alpn_proto;
     ::taxon::Value m_session_user_data;
 
   protected:
@@ -65,24 +64,6 @@ class SSL_Socket
     do_on_ssl_stream(linear_buffer& data, bool eof)
       = 0;
 
-    // For a server-side socket, this callback is invoked by the network thread
-    // when ALPN has been requested by the client. This function should write
-    // the selected protocol into `res`. `protos` is the list of protocols that
-    // have been offered by the client.
-    // The default implementation does nothing.
-    virtual
-    void
-    do_on_ssl_alpn_request(charbuf_256& res, cow_vector<charbuf_256>&& protos);
-
-    // For a client-side socket, this function sets a list of protocols to offer
-    // to the server. This function must be called before SSL negotiation, for
-    // example inside the constructor of a derived class or just before assigning
-    // this socket to the network scheduler. The argument is the list of protocols
-    // that will be offered to the server. Empty protocol names are ignored. If
-    // the list is empty, ALPN will not be negotiated.
-    void
-    do_ssl_alpn_request(const cow_vector<charbuf_256>& protos);
-
   public:
     SSL_Socket(const SSL_Socket&) = delete;
     SSL_Socket& operator=(const SSL_Socket&) & = delete;
@@ -103,16 +84,6 @@ class SSL_Socket
     uint32_t
     max_segment_size()
       const;
-
-    // Gets the protocol that has been selected by ALPN.
-    // For a server-side socket, this string equals the result of a previous
-    // `do_on_ssl_alpn_request()` callback. For a client-side socket, this
-    // string is only available since the `do_on_ssl_connected()` callback.
-    // If no ALPN protocol has been selected, an empty string is returned.
-    const char*
-    alpn_protocol()
-      const noexcept
-      { return this->m_alpn_proto.c_str();  }
 
     // Enqueues some bytes for sending.
     // If this function returns `true`, data will have been enqueued; however it

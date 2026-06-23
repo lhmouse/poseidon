@@ -58,42 +58,6 @@ SSL_Socket::
 
 void
 SSL_Socket::
-do_on_ssl_alpn_request(charbuf_256& res, cow_vector<charbuf_256>&& protos)
-  {
-    for(const auto& req : protos)
-      POSEIDON_LOG_DEBUG((
-          "Client offered ALPN protocol `$3`",
-          "[SSL socket `$1` (class `$2`)]"),
-          this, typeid(*this), req);
-
-    (void) res;
-  }
-
-void
-SSL_Socket::
-do_ssl_alpn_request(const cow_vector<charbuf_256>& protos)
-  {
-    linear_buffer bytes;
-    for(const auto& req : protos) {
-      size_t len = ::strlen(req.c_str());
-      if(len != 0) {
-        bytes.putc(static_cast<char>(len));
-        bytes.putn(req.c_str(), len);
-      }
-    }
-
-    if(::SSL_set_alpn_protos(this->m_ssl,
-                             reinterpret_cast<const unsigned char*>(bytes.data()),
-                             static_cast<unsigned>(bytes.size())) != 0)
-      POSEIDON_THROW((
-          "Could not set ALPN protocols for negotiation",
-          "[`SSL_set_alpn_protos()` failed]",
-          "[SSL socket `$1` (class `$2`)]"),
-          this, typeid(*this));
-  }
-
-void
-SSL_Socket::
 do_abstract_socket_on_closed()
   {
     POSEIDON_LOG_INFO((

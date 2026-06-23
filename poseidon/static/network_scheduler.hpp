@@ -36,12 +36,6 @@ class Network_Scheduler
     do_find_socket_nolock(volatile Abstract_Socket* socket)
       noexcept;
 
-    static
-    int
-    do_alpn_select_cb(::SSL* ssl, const uint8_t** out, uint8_t* outlen, const uint8_t* in,
-                      unsigned int inlen, void* vp_this)
-      noexcept;
-
   public:
     Network_Scheduler(const Network_Scheduler&) = delete;
     Network_Scheduler& operator=(const Network_Scheduler&) & = delete;

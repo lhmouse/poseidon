@@ -114,15 +114,6 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
     }
   }
 
-void
-HTTPS_Server_Session::
-do_on_ssl_alpn_request(charbuf_256& res, cow_vector<charbuf_256>&& protos)
-  {
-    for(const auto& req : protos)
-      if(::strcmp(req.c_str(), "http/1.1") == 0)
-        res = "http/1.1";
-  }
-
 HTTP_Payload_Type
 HTTPS_Server_Session::
 do_on_https_request_headers(HTTP_C_Headers& req, bool /*eot*/)

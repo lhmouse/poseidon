@@ -4,18 +4,12 @@
 #include "../xprecompiled.hpp"
 #include "../../static/network_scheduler.hpp"
 #include "../../socket/abstract_socket.hpp"
-#include "../../socket/ssl_socket.hpp"
 #include "../../base/config_file.hpp"
 #include "../../utils.hpp"
 #include <sys/epoll.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 namespace poseidon {
-namespace {
-
-thread_local wkptr<SSL_Socket> s_weak_ssl_socket;
-
-}  // namespace
 
 Network_Scheduler::
 Network_Scheduler()
@@ -64,65 +58,6 @@ do_find_socket_nolock(volatile Abstract_Socket* socket)
         return *elem;
 
     __builtin_unreachable();
-  }
-
-POSEIDON_VISIBILITY_HIDDEN
-int
-Network_Scheduler::
-do_alpn_select_cb(::SSL* ssl, const uint8_t** out, uint8_t* outlen, const uint8_t* in,
-                  unsigned int inlen, void* /*vp_this*/)
-  noexcept
-  {
-    auto socket = s_weak_ssl_socket.lock();
-    if(!socket)
-      return SSL_TLSEXT_ERR_ALERT_FATAL;
-
-    if(socket->m_ssl != ssl)
-      return SSL_TLSEXT_ERR_ALERT_FATAL;
-
-    if(inlen == 0)
-      return SSL_TLSEXT_ERR_NOACK;
-
-    charbuf_256 resp;
-    size_t resp_len = 0;
-    cow_vector<charbuf_256> req;
-
-    try {
-      // Parse ALPN request.
-      const uint8_t* inp = in;
-      while(inp != in + inlen) {
-        size_t len = *inp;
-        inp ++;
-
-        // If the input is invalid, then fail the connection.
-        if(static_cast<size_t>(in + inlen - inp) < len)
-          return SSL_TLSEXT_ERR_ALERT_FATAL;
-
-        char* sreq = req.emplace_back().mut_data();
-        ::memcpy(sreq, inp, len);
-        sreq[len] = 0;
-        inp += len;
-        POSEIDON_LOG_TRACE(("Received ALPN protocol: $1"), sreq);
-      }
-
-      socket->do_on_ssl_alpn_request(resp, move(req));
-      resp_len = ::strlen(resp.c_str());
-      socket->m_alpn_proto = resp;
-    }
-    catch(exception& stdex) {
-      POSEIDON_LOG_ERROR((
-          "Unhandled exception thrown from socket ALPN callback: $3",
-          "[SSL socket `$1` (class `$2`)]"),
-          socket, typeid(*socket), stdex);
-    }
-
-    if(resp_len == 0)
-      return SSL_TLSEXT_ERR_NOACK;
-
-    POSEIDON_LOG_TRACE(("Accepting ALPN protocol: $1"), socket->m_alpn_proto);
-    *out = reinterpret_cast<const uint8_t*>(socket->m_alpn_proto.data());
-    *outlen = static_cast<uint8_t>(resp_len);
-    return SSL_TLSEXT_ERR_OK;
   }
 
 uniptr_SSL_CTX
@@ -237,7 +172,6 @@ reload(const Config_File& conf_file)
             "[in configuration file '$2']"),
             ::ERR_reason_error_string(::ERR_get_error()), conf_file.path());
 
-      ::SSL_CTX_set_alpn_select_cb(server_ssl_ctx, do_alpn_select_cb, this);
       ::SSL_CTX_set_verify(server_ssl_ctx, SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE, nullptr);
     }
 
@@ -329,9 +263,6 @@ thread_loop()
     recursive_mutex::unique_lock io_lock(socket->m_sched_mutex);
     socket->m_scheduler = this;
     lock.unlock();
-
-    if(auto ssl_socket = dynamic_pointer_cast<SSL_Socket>(socket))
-      s_weak_ssl_socket = ssl_socket;
 
     try {
       if(pev.events & EPOLLERR) {
