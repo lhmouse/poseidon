@@ -40,15 +40,15 @@ reload(const Config_File& conf_file)
     // library is able to perform DNS lookup as necessary, so this need not be
     // an IP address.
     cow_string default_service_uri = conf_file.get_string_opt(
-                                &"mongo.default_service_uri").value_or(&"root@localhost:27017/admin");
+        &"mongo.default_service_uri").value_or(&"root@localhost:27017/admin");
     cow_string default_password = conf_file.get_string_opt(
-                                        &"mongo.default_password").value_or(&"");
+        &"mongo.default_password").value_or(&"");
 
     // Read connection pool settings from configuration.
     uint32_t connection_pool_size = static_cast<uint32_t>(conf_file.get_integer_opt(
-                                        &"mongo.connection_pool_size", 0, 100).value_or(0));
+        &"mongo.connection_pool_size", 0, 100).value_or(0));
     seconds connection_idle_timeout = seconds(static_cast<int>(conf_file.get_integer_opt(
-                                        &"mongo.connection_idle_timeout", 0, 86400).value_or(60)));
+        &"mongo.connection_idle_timeout", 0, 86400).value_or(60)));
 
     // Initialize the Mongo C library in a thread-safe manner.
     static ::asteria::once_flag s_init_once;

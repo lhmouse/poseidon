@@ -98,25 +98,25 @@ reload(const Config_File& conf_file)
   {
     // Read the epoll event buffer size from configuration.
     uint32_t event_buffer_size = static_cast<uint32_t>(conf_file.get_integer_opt(
-                          &"network.poll.event_buffer_size", 10, 1048576).value_or(1024));
+        &"network.poll.event_buffer_size", 10, 1048576).value_or(1024));
 
     // Read the throttle size from configuration. If the size of the sending
     // queue of a socket has exceeded this value, receiving events will be
     // suspended.
     uint32_t throttle_size = static_cast<uint32_t>(conf_file.get_integer_opt(
-                          &"network.poll.throttle_size", 0, INT_MAX).value_or(1048576));
+        &"network.poll.throttle_size", 0, INT_MAX).value_or(1048576));
 
     // Read SSL settings.
-    cow_string default_certificate = conf_file.get_string_opt(&"network.ssl.default_certificate").value_or(&"");
-    cow_string default_private_key = conf_file.get_string_opt(&"network.ssl.default_private_key").value_or(&"");
+    cow_string def_cert = conf_file.get_string_opt(&"network.ssl.default_certificate").value_or(&"");
+    cow_string def_pkey = conf_file.get_string_opt(&"network.ssl.default_private_key").value_or(&"");
 
-    if((default_certificate != "") && (default_private_key == ""))
+    if((def_cert != "") && (def_pkey == ""))
       POSEIDON_THROW((
           "`network.ssl.default_private_key` is missing",
           "[in configuration file '$1']"),
           conf_file.path());
 
-    if((default_certificate == "") && (default_private_key != ""))
+    if((def_cert == "") && (def_pkey != ""))
       POSEIDON_THROW((
           "`network.ssl.default_certificate` is missing",
           "[in configuration file '$1']"),
@@ -125,7 +125,7 @@ reload(const Config_File& conf_file)
     // The server SSL context is optional, and is created only if a certificate
     // is configured.
     uniptr_SSL_CTX server_ssl_ctx;
-    if(default_certificate != "") {
+    if(def_cert != "") {
       if(!server_ssl_ctx.reset(::SSL_CTX_new(::TLS_server_method())))
         POSEIDON_THROW((
             "Could not allocate server SSL context",
@@ -135,21 +135,21 @@ reload(const Config_File& conf_file)
       ::SSL_CTX_set_mode(server_ssl_ctx, SSL_MODE_ENABLE_PARTIAL_WRITE);
       ::SSL_CTX_set_mode(server_ssl_ctx, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
 
-      if(!::SSL_CTX_use_certificate_chain_file(server_ssl_ctx, default_certificate.safe_c_str()))
+      if(!::SSL_CTX_use_certificate_chain_file(server_ssl_ctx, def_cert.safe_c_str()))
         POSEIDON_THROW((
             "Could not load default server SSL certificate file '$3'",
             "[`SSL_CTX_use_certificate_chain_file()` failed: $1]",
             "[in configuration file '$2']"),
             ::ERR_reason_error_string(::ERR_get_error()), conf_file.path(),
-            default_certificate);
+            def_cert);
 
-      if(!::SSL_CTX_use_PrivateKey_file(server_ssl_ctx, default_private_key.safe_c_str(), SSL_FILETYPE_PEM))
+      if(!::SSL_CTX_use_PrivateKey_file(server_ssl_ctx, def_pkey.safe_c_str(), SSL_FILETYPE_PEM))
         POSEIDON_THROW((
             "Could not load default server SSL private key file '$3'",
             "[`SSL_CTX_use_PrivateKey_file()` failed: $1]",
             "[in configuration file '$2']"),
             ::ERR_reason_error_string(::ERR_get_error()), conf_file.path(),
-            default_private_key);
+            def_pkey);
 
       if(!::SSL_CTX_check_private_key(server_ssl_ctx))
         POSEIDON_THROW((
@@ -157,7 +157,7 @@ reload(const Config_File& conf_file)
             "[`SSL_CTX_check_private_key()` failed: $1]",
             "[in configuration file '$2']"),
             ::ERR_reason_error_string(::ERR_get_error()), conf_file.path(),
-            default_certificate, default_private_key);
+            def_cert, def_pkey);
 
       // The session context ID is composed from the DNS name of the running
       // machine. This determines which SSL sessions can be reused to improve
@@ -186,9 +186,9 @@ reload(const Config_File& conf_file)
     ::SSL_CTX_set_mode(client_ssl_ctx, SSL_MODE_ENABLE_PARTIAL_WRITE);
     ::SSL_CTX_set_mode(client_ssl_ctx, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
 
-    cow_string trusted_ca_path = conf_file.get_string_opt(&"network.ssl.trusted_ca_path").value_or(&"");
-    if(trusted_ca_path != "") {
-      if(!::SSL_CTX_load_verify_locations(client_ssl_ctx, nullptr, trusted_ca_path.safe_c_str()))
+    cow_string ca_path = conf_file.get_string_opt(&"network.ssl.trusted_ca_path").value_or(&"");
+    if(ca_path != "") {
+      if(!::SSL_CTX_load_verify_locations(client_ssl_ctx, nullptr, ca_path.safe_c_str()))
         POSEIDON_THROW((
             "Could not trusted CA path",
             "[`SSL_CTX_load_verify_locations()` failed: $1]",

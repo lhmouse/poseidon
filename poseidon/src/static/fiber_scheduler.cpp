@@ -249,7 +249,7 @@ reload(const Config_File& conf_file)
     // Read the stack size from configuration. If no value or zero is specified,
     // use the system's stack size.
     uint32_t stack_vm_size = static_cast<uint32_t>(conf_file.get_integer_opt(
-                                    &"fiber.stack_vm_size", 0, 16777216).value_or(0));
+        &"fiber.stack_vm_size", 0, 16777216).value_or(0));
 
     if(stack_vm_size == 0) {
       // Use the system default value.
@@ -263,9 +263,9 @@ reload(const Config_File& conf_file)
 
     // Read fiber timeout values.
     seconds warn_timeout = seconds(static_cast<int>(conf_file.get_integer_opt(
-                                    &"fiber.warn_timeout", 0, 86400).value_or(15)));
+        &"fiber.warn_timeout", 0, 86400).value_or(15)));
     seconds fail_timeout = seconds(static_cast<int>(conf_file.get_integer_opt(
-                                    &"fiber.fail_timeout", 0, 86400).value_or(300)));
+        &"fiber.fail_timeout", 0, 86400).value_or(300)));
 
     // Set up new data.
     plain_mutex::unique_lock lock(this->m_conf_mutex);

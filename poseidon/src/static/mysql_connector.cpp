@@ -40,29 +40,29 @@ reload(const Config_File& conf_file)
     // library is able to perform DNS lookup as necessary, so this need not be
     // an IP address.
     cow_string default_service_uri = conf_file.get_string_opt(
-                                &"mysql.default_service_uri").value_or(&"root@localhost:3306/admin");
+        &"mysql.default_service_uri").value_or(&"root@localhost:3306/admin");
     cow_string default_password = conf_file.get_string_opt(
-                                        &"mysql.default_password").value_or(&"");
+        &"mysql.default_password").value_or(&"");
 
     // Read the secondary server (replica) from configuration. If not configured
     // it defaults to the primary one.
     cow_string secondary_service_uri = conf_file.get_string_opt(
-                                &"mysql.secondary_service_uri").value_or(default_service_uri);
+        &"mysql.secondary_service_uri").value_or(default_service_uri);
     cow_string secondary_password = conf_file.get_string_opt(
-                                        &"mysql.secondary_password").value_or(default_password);
+        &"mysql.secondary_password").value_or(default_password);
 
     // Read the tertiary server (replica) from configuration. If not configured
     // it defaults to the secondary one.
     cow_string tertiary_service_uri = conf_file.get_string_opt(
-                                &"mysql.tertiary_service_uri").value_or(secondary_service_uri);
+        &"mysql.tertiary_service_uri").value_or(secondary_service_uri);
     cow_string tertiary_password = conf_file.get_string_opt(
-                                        &"mysql.tertiary_password").value_or(secondary_password);
+        &"mysql.tertiary_password").value_or(secondary_password);
 
     // Read connection pool settings from configuration.
     uint32_t connection_pool_size = static_cast<uint32_t>(conf_file.get_integer_opt(
-                                        &"mysql.connection_pool_size", 0, 100).value_or(0));
+        &"mysql.connection_pool_size", 0, 100).value_or(0));
     seconds connection_idle_timeout = seconds(static_cast<int>(conf_file.get_integer_opt(
-                                        &"mysql.connection_idle_timeout", 0, 86400).value_or(60)));
+        &"mysql.connection_idle_timeout", 0, 86400).value_or(60)));
 
     // Initialize the MySQL client library in a thread-safe manner.
     static ::asteria::once_flag s_init_once;

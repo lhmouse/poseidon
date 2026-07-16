@@ -39,15 +39,15 @@ reload(const Config_File& conf_file)
     // library is able to perform DNS lookup as necessary, so this need not be
     // an IP address.
     cow_string default_service_uri = conf_file.get_string_opt(
-                                &"redis.default_service_uri").value_or(&"default@localhost:6379/0");
+        &"redis.default_service_uri").value_or(&"default@localhost:6379/0");
     cow_string default_password = conf_file.get_string_opt(
-                                        &"redis.default_password").value_or(&"");
+        &"redis.default_password").value_or(&"");
 
     // Read connection pool settings from configuration.
     uint32_t connection_pool_size = static_cast<uint32_t>(conf_file.get_integer_opt(
-                                        &"redis.connection_pool_size", 0, 100).value_or(0));
+        &"redis.connection_pool_size", 0, 100).value_or(0));
     seconds connection_idle_timeout = seconds(static_cast<int>(conf_file.get_integer_opt(
-                                        &"redis.connection_idle_timeout", 0, 86400).value_or(60)));
+        &"redis.connection_idle_timeout", 0, 86400).value_or(60)));
 
     // Set up new data.
     plain_mutex::unique_lock lock(this->m_conf_mutex);

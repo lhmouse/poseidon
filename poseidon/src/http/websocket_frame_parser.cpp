@@ -135,9 +135,9 @@ WebSocket_Frame_Parser()
   {
     auto conf_file = main_config.copy();
     this->m_default_compression_level = static_cast<int>(conf_file.get_integer_opt(
-                                &"network.http.default_compression_level", 0, 9).value_or(6));
+        &"network.http.default_compression_level", 0, 9).value_or(6));
     this->m_max_message_length = static_cast<uint32_t>(conf_file.get_integer_opt(
-                     &"network.http.max_websocket_message_length", 256, 16777216).value_or(1048576));
+        &"network.http.max_websocket_message_length", 256, 16777216).value_or(1048576));
   }
 
 WebSocket_Frame_Parser::
