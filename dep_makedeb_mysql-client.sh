@@ -1,10 +1,12 @@
 #!/bin/bash -e
 
-_version=9.7.1
+_version=9.7.2
+_md5='dd0a38f0e4187f0f096964363c37c4ba'
 _arch=$(dpkg --print-architecture)
 
+# https://dev.mysql.com/downloads/mysql/
 wget -c "https://dev.mysql.com/get/Downloads/MySQL-${_version%.*}/mysql-${_version}.tar.gz"
-echo "5d2f4c9568a0e01d20dc5442c772de9f" "mysql-${_version}.tar.gz" | md5sum -c
+echo "${_md5}" "mysql-${_version}.tar.gz" | md5sum -c
 
 mkdir -p "build_makedeb_mysql-client"
 tar -xzf "mysql-${_version}.tar.gz" -C "build_makedeb_mysql-client"
