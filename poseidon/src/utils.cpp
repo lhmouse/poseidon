@@ -23,7 +23,7 @@ do_push_log_message(uint8_t level, const char* func, const char* file, uint32_t 
                     void* composer, vfn<tinyfmt&, void*>* composer_fn)
   {
     ::asteria::tinyfmt_str fmt;
-    (* composer_fn) (fmt, composer);
+    (*(composer_fn))(fmt, composer);
     cow_string sbuf = fmt.extract_string();
     sbuf.erase(sbuf.rfind_not_of(" \t\r\n") + 1);
 
@@ -37,7 +37,7 @@ do_create_runtime_error(const char* func, const char* file, uint32_t line,
                         void* composer, vfn<tinyfmt&, void*>* composer_fn)
   {
     ::asteria::tinyfmt_str fmt;
-    (* composer_fn) (fmt, composer);
+    (*(composer_fn))(fmt, composer);
     ::std::string sbuf(fmt.c_str(), fmt.length());
     sbuf.erase(sbuf.find_last_not_of(" \t\r\n") + 1);
 

@@ -228,7 +228,7 @@ execute(const Mongo_Document& cmd)
       ::std::forward_list<xFrame> top;
       top.splice_after(top.before_begin(), stack, stack.before_begin());
       auto& frm = top.front();
-      success = (* frm.append_end_fn) (stack.empty() ? bson_cmd : &(stack.front().temp), &(frm.temp));
+      success = (*(frm.append_end_fn))(stack.empty() ? bson_cmd : &(stack.front().temp), &(frm.temp));
       cur_a = frm.psa;
       cur_o = frm.pso;
       cur_rpos = frm.rpos;

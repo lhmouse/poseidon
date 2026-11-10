@@ -29,7 +29,7 @@ namespace poseidon {
             LEVEL, func_ce7d, __FILE__, __LINE__,  \
             &c_Ru6q,  \
             [](::asteria::tinyfmt& fmt_Ko0i, void* p_5Gae)  \
-              { (* static_cast<decltype(c_Ru6q)*>(p_5Gae)) (fmt_Ko0i);  });  \
+              { (*(static_cast<decltype(c_Ru6q)*>(p_5Gae)))(fmt_Ko0i);  });  \
       }  \
       catch(...) { }  \
       return true;  \
@@ -61,7 +61,7 @@ namespace poseidon {
           func_ce7d, __FILE__, __LINE__,  \
           &c_Ru6q,  \
           [](::asteria::tinyfmt& fmt_Ko0i, void* p_5Gae)  \
-            { (* static_cast<decltype(c_Ru6q)*>(p_5Gae)) (fmt_Ko0i);  });  \
+            { (*(static_cast<decltype(c_Ru6q)*>(p_5Gae)))(fmt_Ko0i);  });  \
     } (__func__)))
 
 #define POSEIDON_CATCH_EVERYTHING(...)  \

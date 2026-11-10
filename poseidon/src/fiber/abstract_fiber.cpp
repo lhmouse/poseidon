@@ -24,7 +24,7 @@ Abstract_Fiber::
 yield(const shptr<Abstract_Future>& futr_opt)
   const
   {
-    (* this->m_sched_yield_fn) (futr_opt);
+    (*(this->m_sched_yield_fn))(futr_opt);
   }
 
 }  // namespace poseidon
