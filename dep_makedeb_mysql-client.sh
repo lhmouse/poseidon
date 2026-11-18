@@ -1,12 +1,12 @@
 #!/bin/bash -e
 
 _version=9.7.4
-_md5='55a8f054435120d47d7a8700986997fd'
+_sha256='9188eb1abec42b8ab8bb69948492f06258dd27e6aabd13e2d4c6197dbcde75b2'
 _arch=$(dpkg --print-architecture)
 
 # https://dev.mysql.com/downloads/mysql/
 wget -c "https://dev.mysql.com/get/Downloads/MySQL-${_version%.*}/mysql-${_version}.tar.gz"
-echo "${_md5}" "mysql-${_version}.tar.gz" | md5sum -c
+echo "${_sha256}" "mysql-${_version}.tar.gz" | sha256sum -c
 
 mkdir -p "build_makedeb_mysql-client"
 tar -xzf "mysql-${_version}.tar.gz" -C "build_makedeb_mysql-client"
