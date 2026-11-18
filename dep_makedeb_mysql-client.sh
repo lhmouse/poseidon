@@ -5,7 +5,8 @@ _sha256='9188eb1abec42b8ab8bb69948492f06258dd27e6aabd13e2d4c6197dbcde75b2'
 _arch=$(dpkg --print-architecture)
 
 # https://dev.mysql.com/downloads/mysql/
-wget -c "https://dev.mysql.com/get/Downloads/MySQL-${_version%.*}/mysql-${_version}.tar.gz"
+wget -c "https://dev.mysql.com/get/Downloads/MySQL-${_version%.*}/mysql-${_version}.tar.gz" \
+  -O "mysql-${_version}.tar.gz"
 echo "${_sha256}" "mysql-${_version}.tar.gz" | sha256sum -c
 
 mkdir -p "build_makedeb_mysql-client"

@@ -5,7 +5,8 @@ _sha256='ea63ec9535f1a425b288b2d72ac3a57c7f3b5d606afde73ff532a175a0774f55'
 _arch=$(dpkg --print-architecture)
 
 # https://github.com/mongodb/mongo-c-driver/releases/
-wget -c "https://github.com/mongodb/mongo-c-driver/releases/download/${_version}/mongo-c-driver-${_version}.tar.gz"
+wget -c "https://github.com/mongodb/mongo-c-driver/releases/download/${_version}/mongo-c-driver-${_version}.tar.gz"  \
+  -O "mongo-c-driver-${_version}.tar.gz"
 echo "${_sha256}" "mongo-c-driver-${_version}.tar.gz" | sha256sum -c
 
 mkdir -p "build_makedeb_mongo-c-driver"

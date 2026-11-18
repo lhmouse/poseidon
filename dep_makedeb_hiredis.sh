@@ -6,7 +6,7 @@ _arch=$(dpkg --print-architecture)
 
 # https://github.com/redis/hiredis/releases/
 wget -c "https://github.com/redis/hiredis/archive/refs/tags/v${_version}.tar.gz"  \
-    -O "hiredis-${_version}.tar.gz"
+  -O "hiredis-${_version}.tar.gz"
 echo "${_sha256}" "hiredis-${_version}.tar.gz" | sha256sum -c
 
 mkdir -p "build_makedeb_hiredis"
