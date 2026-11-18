@@ -12,6 +12,5 @@ dep/build_*
 /description-pak
 /var
 /asteria
-/http-parser
 /taxon
 !/.github
