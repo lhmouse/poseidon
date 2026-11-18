@@ -8,6 +8,7 @@
 *.log
 *.tar.*
 /build_*
+dep/build_*
 /description-pak
 /var
 /asteria

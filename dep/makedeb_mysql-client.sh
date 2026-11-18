@@ -9,26 +9,26 @@ wget -c "https://dev.mysql.com/get/Downloads/MySQL-${_version%.*}/mysql-${_versi
   -O "mysql-${_version}.tar.gz"
 echo "${_sha256}" "mysql-${_version}.tar.gz" | sha256sum -c
 
-mkdir -p "build_makedeb_mysql-client"
-tar -xzf "mysql-${_version}.tar.gz" -C "build_makedeb_mysql-client"
+mkdir -p "build_mysql-client"
+tar -xzf "mysql-${_version}.tar.gz" -C "build_mysql-client"
 
 cmake -G Ninja  \
   -DCMAKE_BUILD_TYPE=RelWithDebInfo  \
   -DCMAKE_INSTALL_PREFIX="/usr/local" -DINSTALL_INCLUDEDIR="include/mysql"  \
   -DWITH_SYSTEM_LIBS=ON -DWITHOUT_SERVER=ON  \
   -DMYSQL_UNIX_ADDR="/var/run/mysqld/mysqld.sock"  \
-  -S "build_makedeb_mysql-client/mysql-${_version}"  \
-  -B "build_makedeb_mysql-client/build"
+  -S "build_mysql-client/mysql-${_version}"  \
+  -B "build_mysql-client/build"
 
-cmake --build "build_makedeb_mysql-client/build"
+cmake --build "build_mysql-client/build"
 
-rm -rf "build_makedeb_mysql-client/pkg"
-mkdir -p "build_makedeb_mysql-client/pkg/DEBIAN"
+rm -rf "build_mysql-client/pkg"
+mkdir -p "build_mysql-client/pkg/DEBIAN"
 
-DESTDIR=$(realpath "build_makedeb_mysql-client/pkg") cmake --install  \
-  "build_makedeb_mysql-client/build"
+DESTDIR=$(realpath "build_mysql-client/pkg") cmake --install  \
+  "build_mysql-client/build"
 
-tee "build_makedeb_mysql-client/pkg/DEBIAN/control" <<control_EOF
+tee "build_mysql-client/pkg/DEBIAN/control" <<control_EOF
 Package: mysql-client-local
 Provides: libmysqlclient-dev
 Version: ${_version}
@@ -40,13 +40,13 @@ License: GPL-2.0-only
 Description: MySQL client library and programs
 control_EOF
 
-tee "build_makedeb_mysql-client/pkg/DEBIAN/postinst" <<postinst_EOF
+tee "build_mysql-client/pkg/DEBIAN/postinst" <<postinst_EOF
 #!/bin/sh -e
 ldconfig
 postinst_EOF
 
-chmod +x "build_makedeb_mysql-client/pkg/DEBIAN/postinst"
-cp -p "build_makedeb_mysql-client/pkg/DEBIAN/"post{inst,rm}
+chmod +x "build_mysql-client/pkg/DEBIAN/postinst"
+cp -p "build_mysql-client/pkg/DEBIAN/"post{inst,rm}
 
-dpkg-deb --root-owner-group --build "build_makedeb_mysql-client/pkg"  \
+dpkg-deb --root-owner-group --build "build_mysql-client/pkg"  \
   "mysql-client-local_${_version}_${_arch}.deb"
