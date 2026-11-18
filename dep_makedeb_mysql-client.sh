@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
-_version=9.7.2
-_md5='dd0a38f0e4187f0f096964363c37c4ba'
+_version=9.7.4
+_md5='55a8f054435120d47d7a8700986997fd'
 _arch=$(dpkg --print-architecture)
 
 # https://dev.mysql.com/downloads/mysql/
