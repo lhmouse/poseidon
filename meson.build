@@ -196,14 +196,13 @@ ver = { 'abi_major': meson.project_version().split('.')[0],
         'abi_minor': meson.project_version().split('.')[1],
         'abi_string': meson.project_version() }
 
-install_headers(configure_file(output: 'version.h',
-                               input: 'poseidon/version.h.in',
-                               configuration: ver,
-                               install: false),
-                subdir: 'poseidon')
+version_h = configure_file(output: 'version.h',
+                           input: 'poseidon/version.h.in',
+                           configuration: ver,
+                           install: false)
 
-install_headers(poseidon_include,
-                preserve_path: true)
+install_headers(version_h, subdir: 'poseidon')
+install_headers(poseidon_include, preserve_path: true)
 
 #===========================================================
 # Rules for 'lib/libposeidon.so'
@@ -211,7 +210,7 @@ install_headers(poseidon_include,
 
 lib_poseidon = shared_library('poseidon',
       cpp_pch: 'poseidon/src/xprecompiled.hpp',
-      sources: [ poseidon_src ],
+      sources: [ version_h, poseidon_src ],
       dependencies: [ dep_pthread, dep_asteria, dep_taxon, dep_libunwind,
                       dep_openssl, dep_zlib, dep_http_parser, dep_mysqlclient,
                       dep_bson, dep_mongoc, dep_hiredis, dep_zstd, dep_sasl2 ],
