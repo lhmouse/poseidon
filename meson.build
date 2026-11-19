@@ -208,7 +208,7 @@ install_headers(poseidon_include, preserve_path: true)
 # Rules for 'lib/libposeidon.so'
 #===========================================================
 
-lib_poseidon = shared_library('poseidon',
+libposeidon = shared_library('poseidon',
       cpp_pch: 'poseidon/src/xprecompiled.hpp',
       sources: [ version_h, poseidon_src ],
       dependencies: [ dep_pthread, dep_asteria, dep_taxon, dep_libunwind,
@@ -218,7 +218,7 @@ lib_poseidon = shared_library('poseidon',
       version: '.'.join([ ver['abi_major'], ver['abi_minor'], '0' ]),
       install: true)
 
-import('pkgconfig').generate(lib_poseidon,
+import('pkgconfig').generate(libposeidon,
       name: 'poseidon',
       url: 'https://github.com/lhmouse/poseidon',
       description: 'The Poseidon Server Framework is a modern framework for '
@@ -234,7 +234,7 @@ executable('poseidon',
       sources: [ 'poseidon/src/main.cpp' ],
       cpp_pch: 'poseidon/src/xprecompiled.hpp',
       dependencies: [ dep_pthread, dep_asteria, dep_taxon ],
-      link_with: lib_poseidon,
+      link_with: libposeidon,
       install_rpath: '$ORIGIN/../lib',
       install: true)
 
@@ -254,7 +254,7 @@ install_data(poseidon_etc,
 foreach src : example_src
   shared_module('poseidon-' + src.replace('.cpp', '').underscorify(),
                 sources: [ src ],
-                link_with: lib_poseidon,
+                link_with: libposeidon,
                 install: true)
 endforeach
 
@@ -281,7 +281,7 @@ foreach src : test_src
   test_exe = executable(src.underscorify(),
                         sources: [ src ],
                         dependencies: test_deps,
-                        link_with: lib_poseidon,
+                        link_with: libposeidon,
                         build_by_default: false,
                         install: false)
 
