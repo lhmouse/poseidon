@@ -180,7 +180,7 @@ encode(tinyfmt& fmt)
       __m128i t = _mm_loadu_si64(this->method_str);
       uint32_t tn = static_cast<uint32_t>(_mm_cmpistri(t, _mm_setzero_si128(), 0x08));
       _mm_store_si128(reinterpret_cast<__m128i*>(str), t);
-      str[tn++] = ' ';
+      str[tn ++] = ' ';
       fmt.putn(str, tn);
     }
 

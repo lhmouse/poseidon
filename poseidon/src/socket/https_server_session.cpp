@@ -292,7 +292,7 @@ https_shut_down(HTTP_Status status)
       // Compose a default page.
       HTTP_S_Headers resp;
       resp.status = status;
-      resp.reason = ::asteria::sref(::http_status_str(static_cast<::http_status>(status)));
+      resp.reason = HTTP_S_Headers::default_reason(status);
       resp.headers.emplace_back(&"Content-Type", &"text/html");
       resp.headers.emplace_back(&"Connection", &"close");
 

@@ -35,6 +35,13 @@ struct HTTP_S_Headers
         return *this;
       }
 
+    // Gets a default reason phrase for a status code. The string is allocated
+    // statically.
+    static ASTERIA_CONST
+    shallow_string
+    default_reason(HTTP_Status status)
+      noexcept;
+
     // Clears all fields.
     void
     clear()

@@ -112,6 +112,7 @@ using ::asteria::cow_bstring;
 using ::asteria::cow_u16string;
 using ::asteria::cow_u32string;
 using ::asteria::phcow_string;
+using ::asteria::shallow_string;
 using ::asteria::linear_buffer;
 using ::asteria::tinyfmt;
 using ::asteria::tinyfmt_str;
