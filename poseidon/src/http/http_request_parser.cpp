@@ -86,6 +86,22 @@ HTTP_Request_Parser::s_llhttp_settings =
     // on_headers_complete
     +[](::llhttp_t* ps) -> int
       {
+        if(!this->m_headers.is_proxy) {
+          // Get the `Host:` header. Multiple `Host:` headers are not allowed.
+          uint32_t count = 0;
+          for(const auto& hr : this->m_headers.headers)
+            if(hr.first == "Host") {
+              count ++;
+              if(count == 1)
+                this->m_headers.raw_host = hr.second.as_string();
+              else
+                break;
+            }
+
+          if(count != 1)
+            return -1;  // fail
+        }
+
         this->m_hreq = hreq_headers_done;
         this->m_close_after_payload = ::llhttp_should_keep_alive(ps) == 0;
         this->m_payload.clear();
@@ -147,36 +163,20 @@ HTTP_Request_Parser::s_llhttp_settings =
             this->m_headers.raw_userinfo.assign(url, 0, pos);
             url.erase(0, pos + 1);
           }
-
-          if(parse_network_reference(ref, url) != url.size())
-            return -1;  // fail
-
-          this->m_headers.raw_host.assign(ref.host.p, ref.host.n);
         }
         else {
           // The path must be absolute.
           if(url[0] != '/')
             return -1;  // fail
 
-          url.insert(0, "host");
-
-          if(parse_network_reference(ref, url) != url.size())
-            return -1;  // fail
-
-          // Get the `Host:` header. Multiple `Host:` headers are not allowed.
-          uint32_t count = 0;
-          for(const auto& hr : this->m_headers.headers)
-            if(hr.first == "Host") {
-              count ++;
-              if(count == 1)
-                this->m_headers.raw_host = hr.second.as_string();
-              else
-                break;
-            }
-
-          if(count != 1)
-            return -1;  // fail
+          url.insert(0, "_");  // placeholder
         }
+
+        if(parse_network_reference(ref, url) != url.size())
+          return -1;  // fail
+
+        if(this->m_headers.is_proxy)
+          this->m_headers.raw_host.assign(ref.host.p, ref.host.n);
 
         if(ref.port.n != 0)
           this->m_headers.port = ref.port_num;
