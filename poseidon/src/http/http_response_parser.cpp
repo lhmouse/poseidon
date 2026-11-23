@@ -30,7 +30,6 @@ HTTP_Response_Parser::s_llhttp_settings =
               "HTTP header length limit exceeded: `$1` > `$2`"),
               this->m_header_size + len, this->m_max_header_length);
 
-        this->m_headers.status = static_cast<HTTP_Status>(ps->status_code);
         this->m_headers.reason.append(str, len);
         this->m_header_size += static_cast<uint32_t>(len);
         return 0;
@@ -86,6 +85,7 @@ HTTP_Response_Parser::s_llhttp_settings =
         if(this->m_hresp >= hresp_headers_done)  // chunk trailer
           return 0;
 
+        this->m_headers.status = static_cast<HTTP_Status>(ps->status_code);
         this->m_hresp = hresp_headers_done;
         this->m_close_after_payload = ::llhttp_should_keep_alive(ps) == 0;
         this->m_payload.clear();
