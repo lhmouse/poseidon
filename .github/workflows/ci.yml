@@ -41,7 +41,7 @@ jobs:
              && (cd asteria && ./makedeb.sh && sudo dpkg -i *.deb)
              && (cd taxon && ./makedeb.sh && sudo dpkg -i *.deb)
              && dep/makedeb_hiredis.sh
-             && dep/makedeb_llhttp.sh
+             && dep/makedeb_http-parser.sh
              && dep/makedeb_mongo-c-driver.sh
              && dep/makedeb_mysql-client.sh
              && sudo dpkg -i *.deb

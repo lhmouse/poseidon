@@ -6,7 +6,7 @@
 
 #include "../fwd.hpp"
 #include "http_s_headers.hpp"
-#include <llhttp.h>
+#include <http_parser.h>
 namespace poseidon {
 
 class HTTP_Response_Parser
@@ -16,8 +16,8 @@ class HTTP_Response_Parser
     uint32_t m_max_header_length;
     uint32_t m_max_content_length;
 
-    static const ::llhttp_settings_t s_llhttp_settings;
-    ::llhttp_t m_llhttp_parser;
+    static const ::http_parser_settings s_settings[1];
+    ::http_parser m_parser[1];
     HTTP_S_Headers m_headers;
     linear_buffer m_payload;
 
@@ -60,7 +60,7 @@ class HTTP_Response_Parser
     bool
     error()
       const noexcept
-      { return this->m_llhttp_parser.error != HPE_OK;  }
+      { return HTTP_PARSER_ERRNO(this->m_parser) != HPE_OK;  }
 
     // Clears all fields. This function shall not be called unless the parser is
     // to be reused for another stream.
@@ -87,7 +87,7 @@ class HTTP_Response_Parser
       noexcept
       {
         ASTERIA_ASSERT(this->m_hresp >= hresp_headers_done);
-        this->m_llhttp_parser.flags |= F_SKIPBODY;
+        this->m_parser->flags |= F_SKIPBODY;
       }
 
     // Get the parsed headers.

@@ -9,41 +9,31 @@
 namespace poseidon {
 
 POSEIDON_VISIBILITY_HIDDEN
-const ::llhttp_settings_t
-HTTP_Request_Parser::s_llhttp_settings =
+const ::http_parser_settings
+HTTP_Request_Parser::s_settings[1] =
 #define this   static_cast<HTTP_Request_Parser*>(ps->data)
-  {
+  {{
     // on_message_begin
     nullptr,
 
-    // on_protocol
-    nullptr,
-
     // on_url
-    +[](::llhttp_t* ps, const char* str, size_t len) -> int
+    +[](::http_parser* ps, const char* str, size_t len)
       {
-        // Append the substring to `m_headers.raw_query` which is abused as
-        // temporary storage.
+        // Append to the the URI.
         if(this->m_headers.estimate_size() + len > this->m_max_header_length)
           POSEIDON_THROW((
               "HTTP header length limit exceeded: `$1` > `$2`"),
-              this->m_headers.estimate_size() + len, this->m_max_header_length);
+              this->m_headers.estimate_size() + len, this->m_max_content_length);
 
-        this->m_headers.raw_query.append(str, len);
+        this->m_headers.raw_host.append(str, len);
         return 0;
       },
 
     // on_status
     nullptr,
 
-    // on_method
-    nullptr,
-
-    // on_version
-    nullptr,
-
     // on_header_field
-    +[](::llhttp_t* ps, const char* str, size_t len) -> int
+    +[](::http_parser* ps, const char* str, size_t len)
       {
         // If this notification is received when no header exists, or a previous
         // header value has been accepted, then a new header starts.
@@ -55,20 +45,20 @@ HTTP_Request_Parser::s_llhttp_settings =
         if(this->m_headers.estimate_size() + len > this->m_max_header_length)
           POSEIDON_THROW((
               "HTTP header length limit exceeded: `$1` > `$2`"),
-              this->m_headers.estimate_size() + len, this->m_max_header_length);
+              this->m_headers.estimate_size() + len, this->m_max_content_length);
 
         this->m_headers.headers.mut_back().first.mut_str().append(str, len);
         return 0;
       },
 
     // on_header_value
-    +[](::llhttp_t* ps, const char* str, size_t len) -> int
+    +[](::http_parser* ps, const char* str, size_t len)
       {
         // Append the header value, as this callback might be invoked repeatedly.
         if(this->m_headers.estimate_size() + len > this->m_max_header_length)
           POSEIDON_THROW((
               "HTTP header length limit exceeded: `$1` > `$2`"),
-              this->m_headers.estimate_size() + len, this->m_max_header_length);
+              this->m_headers.estimate_size() + len, this->m_max_content_length);
 
         cow_string value = this->m_headers.headers.back().second.as_string();
         value.append(str, len);
@@ -76,36 +66,147 @@ HTTP_Request_Parser::s_llhttp_settings =
         return 0;
       },
 
-    // on_chunk_extension_name
-    nullptr,
-
-    // on_chunk_extension_value
-    nullptr,
-
     // on_headers_complete
+    +[](::http_parser* ps)
+      {
+        // Set the method string. This might not be null-terminated.
+        const char* method_str = ::http_method_str(static_cast<::http_method>(ps->method));
+        if(!::memccpy(this->m_headers.method_str, method_str, 0, sizeof(this->m_headers.method_str))) {
+          ps->http_errno = HPE_INVALID_METHOD;
+          return 0;
+        }
+
+        // Parse the request URI.
+        cow_string uri;
+        uri.swap(this->m_headers.raw_host);
+
+        if((uri.size() >= 7) && ::asteria::ascii_ci_equal(uri.c_str(), 7, "http://", 7)) {
+          this->m_headers.port = 80;
+          this->m_headers.is_proxy = true;
+          this->m_headers.is_ssl = false;
+          uri.erase(0, 7);
+        }
+        else if((uri.size() >= 8) && ::asteria::ascii_ci_equal(uri.c_str(), 8, "https://", 8)) {
+          this->m_headers.port = 443;
+          this->m_headers.is_proxy = true;
+          this->m_headers.is_ssl = true;
+          uri.erase(0, 8);
+        }
+        else if(uri.find("://") != cow_string::npos) {
+          ps->http_errno = HPE_INVALID_URL;
+          return 2;
+        }
+
+        Network_Reference ref;
+        if(this->m_headers.is_proxy) {
+          // Userinfo is allowed.
+          size_t t = uri.find_of("@/");
+          if((t != cow_string::npos) && (uri[t] == '@')) {
+            this->m_headers.raw_userinfo.assign(uri, 0, t);
+            uri.erase(0, t + 1);
+          }
+
+          // Hostname is required.
+          if(parse_network_reference(ref, uri) != uri.size()) {
+            ps->http_errno = HPE_INVALID_HOST;
+            return 2;
+          }
+
+          this->m_headers.raw_host.assign(ref.host.p, ref.host.n);
+        }
+        else {
+          // Neither userinfo nor hostname is allowed.
+          if(uri[0] != '/') {
+            ps->http_errno = HPE_INVALID_PATH;
+            return 2;
+          }
+
+          uri.insert(0, 1, 'a');
+          if(parse_network_reference(ref, uri) != uri.size()) {
+            ps->http_errno = HPE_INVALID_HOST;
+            return 2;
+          }
+
+          // Get the `Host:` header. Multiple `Host:` headers are not allowed.
+          uint32_t count = 0;
+          for(const auto& hr : this->m_headers.headers)
+            if(hr.first == "Host") {
+              count ++;
+              if(count == 1)
+                this->m_headers.raw_host = hr.second.as_string();
+              else
+                break;
+            }
+
+          if(count != 1) {
+            ps->http_errno = HPE_INVALID_URL;
+            return 2;
+          }
+        }
+
+        if(ref.port.n != 0)
+          this->m_headers.port = ref.port_num;
+
+        if(ref.path.n != 0)
+          this->m_headers.raw_path.assign(ref.path.p, ref.path.n);
+        else
+          this->m_headers.raw_path = &"/";
+
+        if(ref.query.n != 0)
+          this->m_headers.raw_query.assign(ref.query.p, ref.query.n);
+
+        // The headers are complete, so halt.
+        this->m_hreq = hreq_headers_done;
+        this->m_close_after_payload = ::http_should_keep_alive(ps) == 0;
+        ps->http_errno = HPE_PAUSED;
+        return 0;
+      },
 
     // on_body
+    +[](::http_parser* ps, const char* str, size_t len)
+      {
+        switch(ps->method)
+          {
+          case HTTP_POST:
+          case HTTP_PUT:
+          case HTTP_PATCH:
+            // Accept the payload.
+            if(this->m_payload.size() + len > this->m_max_content_length)
+              POSEIDON_THROW((
+                  "HTTP message length limit exceeded: `$1` > `$2`"),
+                  this->m_payload.size() + len, this->m_max_content_length);
+
+            this->m_payload.putn(str, len);
+            return 0;
+
+          default:
+            // Discard the payload.
+            return 0;
+          }
+      },
+
     // on_message_complete
-    // on_protocol_complete
-    // on_url_complete
-    // on_status_complete
-    // on_method_complete
-    // on_version_complete
-    // on_header_field_complete
-    // on_header_value_complete
-    // on_chunk_extension_name_complete
-    // on_chunk_extension_value_complete
+    +[](::http_parser* ps)
+      {
+        // The message is complete, so halt.
+        this->m_hreq = hreq_payload_done;
+        ps->http_errno = HPE_PAUSED;
+        return 0;
+      },
+
     // on_chunk_header
+    nullptr,
+
     // on_chunk_complete
-    // on_reset
-  };
+    nullptr,
+  }};
 #undef this
 
 HTTP_Request_Parser::
 HTTP_Request_Parser()
   {
-    ::llhttp_init(&(this->m_llhttp_parser), HTTP_REQUEST, &(s_llhttp_settings));
-    this->m_llhttp_parser.data = this;
+    ::http_parser_init(this->m_parser, HTTP_REQUEST);
+    this->m_parser->data = this;
 
     auto conf_file = main_config.copy();
     this->m_default_compression_level = static_cast<int>(conf_file.get_integer_opt(
@@ -126,7 +227,7 @@ HTTP_Request_Parser::
 http_status_from_error()
   const noexcept
   {
-    switch(this->m_llhttp_parser.error)
+    switch(this->m_parser->http_errno)
       {
       case HPE_OK:
       case HPE_PAUSED:
@@ -151,8 +252,8 @@ HTTP_Request_Parser::
 clear()
   noexcept
   {
-    ::llhttp_init(&(this->m_llhttp_parser), HTTP_REQUEST, &(s_llhttp_settings));
-    this->m_llhttp_parser.data = this;
+    ::http_parser_init(this->m_parser, HTTP_REQUEST);
+    this->m_parser->data = this;
 
     this->m_headers.clear();
     this->m_payload.clear();
@@ -181,18 +282,17 @@ parse_headers_from_stream(linear_buffer& data, bool eof)
     if(this->m_hreq >= hreq_headers_done)
       return;
 
-    this->m_llhttp_parser.error_pos = data.data();
-    ::llhttp_execute(&(this->m_llhttp_parser), data.data(), data.size());
+    // Consume incoming data.
+    if(data.size() != 0)
+      data.discard(::http_parser_execute(this->m_parser, s_settings, data.data(), data.size()));
 
+    // If the caller indicates EOF, then also notify the HTTP parser an EOF.
     if(eof)
-      ::llhttp_finish(&(this->m_llhttp_parser));
+      ::http_parser_execute(this->m_parser, s_settings, "", 0);
 
-    if(this->m_llhttp_parser.error == HPE_PAUSED) {
-      // This means the end of a message has been reached. Consume parsed bytes,
-      // and reset the error so the caller won't see it.
-      data.discard(static_cast<size_t>(this->m_llhttp_parser.error_pos - data.data()));
-      this->m_llhttp_parser.error = HPE_OK;
-    }
+    // If the parser has been paused, unpause it, so the caller won't see it.
+    if(this->m_parser->http_errno == HPE_PAUSED)
+      this->m_parser->http_errno = HPE_OK;
   }
 
 void
@@ -207,18 +307,17 @@ parse_payload_from_stream(linear_buffer& data, bool eof)
           "HTTP request header not parsed yet (state `$1` not valid)"),
           this->m_hreq);
 
-    this->m_llhttp_parser.error_pos = data.data();
-    ::llhttp_execute(&(this->m_llhttp_parser), data.data(), data.size());
+    // Consume incoming data.
+    if(data.size() != 0)
+      data.discard(::http_parser_execute(this->m_parser, s_settings, data.data(), data.size()));
 
+    // If the caller indicates EOF, then also notify the HTTP parser an EOF.
     if(eof)
-      ::llhttp_finish(&(this->m_llhttp_parser));
+      ::http_parser_execute(this->m_parser, s_settings, "", 0);
 
-    if(this->m_llhttp_parser.error == HPE_PAUSED) {
-      // This means the end of a message has been reached. Consume parsed bytes,
-      // and reset the error so the caller won't see it.
-      data.discard(static_cast<size_t>(this->m_llhttp_parser.error_pos - data.data()));
-      this->m_llhttp_parser.error = HPE_OK;
-    }
+    // If the parser has been paused, unpause it, so the caller won't see it.
+    if(this->m_parser->http_errno == HPE_PAUSED)
+      this->m_parser->http_errno = HPE_OK;
   }
 
 }  // namespace poseidon
