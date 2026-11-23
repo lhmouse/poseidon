@@ -209,8 +209,6 @@ parse_headers_from_stream(linear_buffer& data, bool eof)
 
     this->m_llhttp_parser.error_pos = nullptr;
     ::llhttp_errno_t err = ::llhttp_execute(&(this->m_llhttp_parser), data.data(), data.size());
-    if(eof)
-      ::llhttp_finish(&(this->m_llhttp_parser));
 
     // If `err` is `HPE_PAUSED`, we should consume parsed bytes; otherwise it
     // means either all bytes have been consumed or there is an error, and we
@@ -219,6 +217,14 @@ parse_headers_from_stream(linear_buffer& data, bool eof)
       data.discard(static_cast<size_t>(this->m_llhttp_parser.error_pos - data.data()));
     else
       data.clear();
+
+    if((err == HPE_OK) && eof) {
+      // `llhttp_finish()` doesn't set `m_llhttp_parser.error` so it has to be
+      // copied explicitly.
+      err = ::llhttp_finish(&(this->m_llhttp_parser));
+      if(err != HPE_OK)
+        this->m_llhttp_parser.error = err;
+    }
 
     // `HPE_PAUSED` means the end of a message has been reached, which should
     // not passed to the caller.
@@ -240,8 +246,6 @@ parse_payload_from_stream(linear_buffer& data, bool eof)
 
     this->m_llhttp_parser.error_pos = nullptr;
     ::llhttp_errno_t err = ::llhttp_execute(&(this->m_llhttp_parser), data.data(), data.size());
-    if(eof)
-      ::llhttp_finish(&(this->m_llhttp_parser));
 
     // If `err` is `HPE_PAUSED`, we should consume parsed bytes; otherwise it
     // means either all bytes have been consumed or there is an error, and we
@@ -250,6 +254,14 @@ parse_payload_from_stream(linear_buffer& data, bool eof)
       data.discard(static_cast<size_t>(this->m_llhttp_parser.error_pos - data.data()));
     else
       data.clear();
+
+    if((err == HPE_OK) && eof) {
+      // `llhttp_finish()` doesn't set `m_llhttp_parser.error` so it has to be
+      // copied explicitly.
+      err = ::llhttp_finish(&(this->m_llhttp_parser));
+      if(err != HPE_OK)
+        this->m_llhttp_parser.error = err;
+    }
 
     // `HPE_PAUSED` means the end of a message has been reached, which should
     // not passed to the caller.
