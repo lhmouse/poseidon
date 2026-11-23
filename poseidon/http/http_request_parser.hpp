@@ -6,7 +6,7 @@
 
 #include "../fwd.hpp"
 #include "http_c_headers.hpp"
-#include <http_parser.h>
+#include <llhttp.h>
 namespace poseidon {
 
 class HTTP_Request_Parser
@@ -16,8 +16,8 @@ class HTTP_Request_Parser
     uint32_t m_max_header_length;
     uint32_t m_max_content_length;
 
-    static const ::http_parser_settings s_settings[1];
-    ::http_parser m_parser[1];
+    static const ::llhttp_settings_t s_llhttp_settings;
+    ::llhttp_t m_llhttp_parser;
     HTTP_C_Headers m_headers;
     linear_buffer m_payload;
 
@@ -28,6 +28,7 @@ class HTTP_Request_Parser
         hreq_payload_done  = 2,
       };
 
+    uint32_t m_header_size = 0;
     HREQ_State m_hreq = hreq_new;
     bool m_close_after_payload = false;
 
@@ -60,7 +61,7 @@ class HTTP_Request_Parser
     bool
     error()
       const noexcept
-      { return HTTP_PARSER_ERRNO(this->m_parser) != HPE_OK;  }
+      { return this->m_llhttp_parser.error != HPE_OK;  }
 
     // Translates the error code to an HTTP status code.
     ASTERIA_PURE
