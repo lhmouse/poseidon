@@ -63,7 +63,7 @@ HTTP_Request_Parser::s_llhttp_settings =
               this->m_header_size + len, this->m_max_header_length);
 
         this->m_payload.putn(str, len);
-        this->m_header_size += static_cast<uint32_t>(len + 2);
+        this->m_header_size += static_cast<uint32_t>(len);
         return 0;
       },
 
@@ -79,7 +79,7 @@ HTTP_Request_Parser::s_llhttp_settings =
               this->m_header_size + len, this->m_max_header_length);
 
         this->m_payload.putn(str, len);
-        this->m_header_size += static_cast<uint32_t>(len + 2);
+        this->m_header_size += static_cast<uint32_t>(len);
         return 0;
       },
 
@@ -232,6 +232,7 @@ HTTP_Request_Parser::s_llhttp_settings =
 
         cow_string name(this->m_payload.data(), this->m_payload.size());
         this->m_headers.headers.emplace_back(move(name), &"");
+        this->m_header_size += 2;
         this->m_payload.clear();
         return 0;
       },
