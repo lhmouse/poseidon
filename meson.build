@@ -179,7 +179,7 @@ dep_taxon = dependency('taxon')
 dep_libunwind = dependency('libunwind')
 dep_openssl = dependency('openssl', version: '>= 3.0.0')
 dep_zlib = dependency('zlib', version: '>= 1.2.9')
-dep_http_parser = dependency('http-parser')
+dep_llhttp = dependency('llhttp')
 
 dep_mysqlclient = dependency('mysqlclient')
 dep_bson = dependency('bson2')
@@ -212,7 +212,7 @@ libposeidon = shared_library('poseidon',
       cpp_pch: 'poseidon/src/xprecompiled.hpp',
       sources: [ version_h, poseidon_src ],
       dependencies: [ dep_pthread, dep_asteria, dep_taxon, dep_libunwind,
-                      dep_openssl, dep_zlib, dep_http_parser, dep_mysqlclient,
+                      dep_openssl, dep_zlib, dep_llhttp, dep_mysqlclient,
                       dep_bson, dep_mongoc, dep_hiredis, dep_zstd, dep_sasl2 ],
       soversion: ver['abi_major'],
       version: '.'.join([ ver['abi_major'], ver['abi_minor'], '0' ]),
