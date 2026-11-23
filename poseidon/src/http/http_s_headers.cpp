@@ -13,6 +13,9 @@ default_reason(HTTP_Status status)
   {
     switch(status)
       {
+      case http_null:
+        return &"No Status";
+
       case http_status_continue:
         return &"Continue";
 
