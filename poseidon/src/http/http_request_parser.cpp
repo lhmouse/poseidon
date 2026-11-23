@@ -198,8 +198,6 @@ HTTP_Request_Parser::s_llhttp_settings =
         if(ref.query.n != 0)
           this->m_headers.raw_query.assign(ref.query.p, ref.query.n);
 
-        this->m_hreq = hreq_headers_done;
-        this->m_close_after_payload = ::llhttp_should_keep_alive(ps) == 0;
         this->m_payload.clear();
         return 0;
       },
