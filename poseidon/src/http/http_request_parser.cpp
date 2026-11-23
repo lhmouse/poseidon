@@ -178,7 +178,7 @@ HTTP_Request_Parser::s_llhttp_settings =
           if(url[0] != '/')
             return -1;  // fail
 
-          url.insert(0, "_");  // placeholder
+          url.insert(0, "a");  // placeholder
         }
 
         if(parse_network_reference(ref, url) != url.size())
