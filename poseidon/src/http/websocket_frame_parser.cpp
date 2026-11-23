@@ -608,7 +608,7 @@ parse_frame_payload_from_stream(linear_buffer& data)
           "WebSocket header not parsed yet (state `$1` not valid)"),
           this->m_wshs);
 
-    size_t navail = (size_t) min(data.size(), this->m_frm_payload_rem);
+    size_t navail = clamp_cast<size_t>(data.size(), 0, this->m_frm_payload_rem);
     if(navail != 0) {
       // Move the (maybe partial) payload from `data` into `m_frm_payload`. If the
       // payload has been masked, unmask it first.
