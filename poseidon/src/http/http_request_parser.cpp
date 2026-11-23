@@ -60,7 +60,7 @@ HTTP_Request_Parser::s_llhttp_settings =
               this->m_header_size + len, this->m_max_header_length);
 
         this->m_payload.putn(str, len);
-        this->m_header_size += static_cast<uint32_t>(len);
+        this->m_header_size += static_cast<uint32_t>(len + 2);
         return 0;
       },
 
@@ -73,7 +73,7 @@ HTTP_Request_Parser::s_llhttp_settings =
               this->m_header_size + len, this->m_max_header_length);
 
         this->m_payload.putn(str, len);
-        this->m_header_size += static_cast<uint32_t>(len);
+        this->m_header_size += static_cast<uint32_t>(len + 2);
         return 0;
       },
 
