@@ -9,16 +9,16 @@ namespace poseidon {
 
 enum HTTP_Method : uint64_t
   {
-    http_NULL      = 0,
-    http_OPTIONS   = 0x0'00'53'4E'4F'49'54'50'4F,
-    http_GET       = 0x0'00'00'00'00'00'54'45'47,
-    http_HEAD      = 0x0'00'00'00'00'44'41'45'48,
-    http_POST      = 0x0'00'00'00'00'54'53'4F'50,
-    http_PUT       = 0x0'00'00'00'00'00'54'55'50,
-    http_DELETE    = 0x0'00'00'45'54'45'4C'45'44,
-    http_TRACE     = 0x0'00'00'00'45'43'41'52'54,
-    http_CONNECT   = 0x0'00'54'43'45'4E'4E'4F'43,
-    http_PATCH     = 0x0'00'00'00'48'43'54'41'50,
+    http_NULL      =                  0,
+    http_GET       = 0x0000000000544547,
+    http_HEAD      = 0x0000000044414548,
+    http_POST      = 0x0000000054534F50,
+    http_PUT       = 0x0000000000545550,
+    http_DELETE    = 0x00004554454C4544,
+    http_CONNECT   = 0x005443454E4E4F43,
+    http_OPTIONS   = 0x00534E4F4954504F,
+    http_TRACE     = 0x0000004543415254,
+    http_PATCH     = 0x0000004843544150,
   };
 
 enum HTTP_Status : uint16_t
