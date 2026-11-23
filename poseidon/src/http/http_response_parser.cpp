@@ -184,7 +184,6 @@ clear()
 
     this->m_headers.clear();
     this->m_payload.clear();
-
     this->m_header_size = 0;
     this->m_hresp = hresp_new;
     this->m_close_after_payload = false;
