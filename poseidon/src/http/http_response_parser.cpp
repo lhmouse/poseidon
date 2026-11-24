@@ -44,6 +44,9 @@ HTTP_Response_Parser::s_llhttp_settings =
     // on_header_field
     +[](::llhttp_t* ps, const char* str, size_t len) -> int
       {
+        if(this->m_hresp >= hresp_headers_done)  // chunk trailer
+          return 0;
+
         if(this->m_header_size + len > this->m_max_header_length)
           POSEIDON_THROW((
               "HTTP header length limit exceeded: `$1` > `$2`"),
@@ -57,6 +60,9 @@ HTTP_Response_Parser::s_llhttp_settings =
     // on_header_value
     +[](::llhttp_t* ps, const char* str, size_t len) -> int
       {
+        if(this->m_hresp >= hresp_headers_done)  // chunk trailer
+          return 0;
+
         if(this->m_header_size + len > this->m_max_header_length)
           POSEIDON_THROW((
               "HTTP header length limit exceeded: `$1` > `$2`"),
@@ -76,6 +82,9 @@ HTTP_Response_Parser::s_llhttp_settings =
     // on_headers_complete
     +[](::llhttp_t* ps) -> int
       {
+        if(this->m_hresp >= hresp_headers_done)  // chunk trailer
+          return 0;
+
         this->m_headers.status = static_cast<HTTP_Status>(ps->status_code);
         this->m_hresp = hresp_headers_done;
         this->m_close_after_payload = ::llhttp_should_keep_alive(ps) == 0;
@@ -120,6 +129,9 @@ HTTP_Response_Parser::s_llhttp_settings =
     // on_header_field_complete
     +[](::llhttp_t* ps) -> int
       {
+        if(this->m_hresp >= hresp_headers_done)  // chunk trailer
+          return 0;
+
         this->m_headers.headers.emplace_back(move(this->m_stash), &"");
         this->m_stash.clear();
         return 0;
@@ -128,6 +140,9 @@ HTTP_Response_Parser::s_llhttp_settings =
     // on_header_value_complete
     +[](::llhttp_t* ps) -> int
       {
+        if(this->m_hresp >= hresp_headers_done)  // chunk trailer
+          return 0;
+
         this->m_headers.headers.mut_back().second = move(this->m_stash);
         this->m_stash.clear();
         return 0;
