@@ -27,7 +27,7 @@ HTTP_Request_Parser::s_llhttp_settings =
               "HTTP header length limit exceeded: `$1` > `$2`"),
               this->m_header_size + len, this->m_max_header_length);
 
-        this->m_payload.putn(str, len);
+        this->m_stash.append(str, len);
         this->m_header_size += static_cast<uint32_t>(len);
         return 0;
       },
@@ -43,7 +43,7 @@ HTTP_Request_Parser::s_llhttp_settings =
               "HTTP header length limit exceeded: `$1` > `$2`"),
               this->m_header_size + len, this->m_max_header_length);
 
-        this->m_payload.putn(str, len);
+        this->m_stash.append(str, len);
         this->m_header_size += static_cast<uint32_t>(len);
         return 0;
       },
@@ -54,15 +54,12 @@ HTTP_Request_Parser::s_llhttp_settings =
     // on_header_field
     +[](::llhttp_t* ps, const char* str, size_t len) -> int
       {
-        if(this->m_hreq >= hreq_headers_done)  // chunk trailer
-          return 0;
-
         if(this->m_header_size + len > this->m_max_header_length)
           POSEIDON_THROW((
               "HTTP header length limit exceeded: `$1` > `$2`"),
               this->m_header_size + len, this->m_max_header_length);
 
-        this->m_payload.putn(str, len);
+        this->m_stash.append(str, len);
         this->m_header_size += static_cast<uint32_t>(len);
         return 0;
       },
@@ -70,15 +67,12 @@ HTTP_Request_Parser::s_llhttp_settings =
     // on_header_value
     +[](::llhttp_t* ps, const char* str, size_t len) -> int
       {
-        if(this->m_hreq >= hreq_headers_done)  // chunk trailer
-          return 0;
-
         if(this->m_header_size + len > this->m_max_header_length)
           POSEIDON_THROW((
               "HTTP header length limit exceeded: `$1` > `$2`"),
               this->m_header_size + len, this->m_max_header_length);
 
-        this->m_payload.putn(str, len);
+        this->m_stash.append(str, len);
         this->m_header_size += static_cast<uint32_t>(len);
         return 0;
       },
@@ -92,9 +86,6 @@ HTTP_Request_Parser::s_llhttp_settings =
     // on_headers_complete
     +[](::llhttp_t* ps) -> int
       {
-        if(this->m_hreq >= hreq_headers_done)  // chunk trailer
-          return 0;
-
         if(!this->m_headers.is_proxy) {
           // Get the `Host:` header. Multiple `Host:` headers are not allowed.
           uint32_t count = 0;
@@ -113,7 +104,6 @@ HTTP_Request_Parser::s_llhttp_settings =
 
         this->m_hreq = hreq_headers_done;
         this->m_close_after_payload = ::llhttp_should_keep_alive(ps) == 0;
-        this->m_payload.clear();
         return HPE_PAUSED;
       },
 
@@ -145,43 +135,40 @@ HTTP_Request_Parser::s_llhttp_settings =
     // on_url_complete
     +[](::llhttp_t* ps) -> int
       {
-        cow_string url;
-        url.append(this->m_payload.data(), this->m_payload.size());
-
         Network_Reference ref;
-        size_t pos = url.find("://");
-        if(pos != url.npos) {
+        size_t pos = this->m_stash.find("://");
+        if(pos != this->m_stash.npos) {
           // An explicit scheme indicates a proxy request.
           this->m_headers.is_proxy = true;
 
-          if((pos == 4) && ::asteria::ascii_ci_equal(url.data(), 4, "http", 4)) {
+          if((pos == 4) && ::asteria::ascii_ci_equal(this->m_stash.data(), 4, "http", 4)) {
             this->m_headers.port = 80;
             this->m_headers.is_ssl = false;
-            url.erase(0, 7);
+            this->m_stash.erase(0, 7);
           }
-          else if((pos == 5) && ::asteria::ascii_ci_equal(url.data(), 5, "https", 5)) {
+          else if((pos == 5) && ::asteria::ascii_ci_equal(this->m_stash.data(), 5, "https", 5)) {
             this->m_headers.port = 443;
             this->m_headers.is_ssl = true;
-            url.erase(0, 8);
+            this->m_stash.erase(0, 8);
           }
           else
             return -1;  // fail
 
-          pos = url.find_of("@/");
-          if((pos != url.npos) && (url[pos] == '@')) {
-            this->m_headers.raw_userinfo.assign(url, 0, pos);
-            url.erase(0, pos + 1);
+          pos = this->m_stash.find_of("@/");
+          if((pos != this->m_stash.npos) && (this->m_stash[pos] == '@')) {
+            this->m_headers.raw_userinfo.assign(this->m_stash, 0, pos);
+            this->m_stash.erase(0, pos + 1);
           }
         }
         else {
           // The path must be absolute.
-          if(url[0] != '/')
+          if(this->m_stash[0] != '/')
             return -1;  // fail
 
-          url.insert(0, "a");  // placeholder
+          this->m_stash.insert(0, "a");  // placeholder
         }
 
-        if(parse_network_reference(ref, url) != url.size())
+        if(parse_network_reference(ref, this->m_stash) != this->m_stash.size())
           return -1;  // fail
 
         if(this->m_headers.is_proxy)
@@ -198,7 +185,7 @@ HTTP_Request_Parser::s_llhttp_settings =
         if(ref.query.n != 0)
           this->m_headers.raw_query.assign(ref.query.p, ref.query.n);
 
-        this->m_payload.clear();
+        this->m_stash.clear();
         return 0;
       },
 
@@ -213,9 +200,9 @@ HTTP_Request_Parser::s_llhttp_settings =
                                     HTTP_TRACE, HTTP_PATCH }))
           return -1;  // error
 
-        this->m_payload.putn("\0\0\0\0\0\0\0", 8);
-        ::memcpy(this->m_headers.method_str, this->m_payload.data(), 8);
-        this->m_payload.clear();
+        this->m_stash.append(8, '\0');
+        ::memcpy(this->m_headers.method_str, this->m_stash.data(), 8);
+        this->m_stash.clear();
         return 0;
       },
 
@@ -225,25 +212,16 @@ HTTP_Request_Parser::s_llhttp_settings =
     // on_header_field_complete
     +[](::llhttp_t* ps) -> int
       {
-        if(this->m_hreq >= hreq_headers_done)  // chunk trailer
-          return 0;
-
-        cow_string name(this->m_payload.data(), this->m_payload.size());
-        this->m_headers.headers.emplace_back(move(name), &"");
-        this->m_header_size += 2;
-        this->m_payload.clear();
+        this->m_headers.headers.emplace_back(move(this->m_stash), &"");
+        this->m_stash.clear();
         return 0;
       },
 
     // on_header_value_complete
     +[](::llhttp_t* ps) -> int
       {
-        if(this->m_hreq >= hreq_headers_done)  // chunk trailer
-          return 0;
-
-        cow_string value(this->m_payload.data(), this->m_payload.size());
-        this->m_headers.headers.mut_back().second = move(value);
-        this->m_payload.clear();
+        this->m_headers.headers.mut_back().second = move(this->m_stash);
+        this->m_stash.clear();
         return 0;
       },
 
@@ -314,11 +292,10 @@ HTTP_Request_Parser::
 clear()
   noexcept
   {
-    ::llhttp_init(&(this->m_llhttp_parser), HTTP_REQUEST, &(s_llhttp_settings));
-    this->m_llhttp_parser.data = this;
-
+    ::llhttp_reset(&(this->m_llhttp_parser));
     this->m_headers.clear();
     this->m_payload.clear();
+    this->m_stash.clear();
     this->m_header_size = 0;
     this->m_hreq = hreq_new;
     this->m_close_after_payload = false;
@@ -335,6 +312,7 @@ deallocate()
     ::asteria::exchange(this->m_headers.raw_query);
     ::asteria::exchange(this->m_headers.headers);
     ::asteria::exchange(this->m_payload);
+    ::asteria::exchange(this->m_stash);
   }
 
 void

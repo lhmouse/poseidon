@@ -28,6 +28,7 @@ class HTTP_Response_Parser
         hresp_payload_done  = 2,
       };
 
+    cow_string m_stash;
     uint32_t m_header_size = 0;
     HRESP_State m_hresp = hresp_new;
     bool m_close_after_payload = false;

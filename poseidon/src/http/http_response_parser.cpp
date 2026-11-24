@@ -44,15 +44,12 @@ HTTP_Response_Parser::s_llhttp_settings =
     // on_header_field
     +[](::llhttp_t* ps, const char* str, size_t len) -> int
       {
-        if(this->m_hresp >= hresp_headers_done)  // chunk trailer
-          return 0;
-
         if(this->m_header_size + len > this->m_max_header_length)
           POSEIDON_THROW((
               "HTTP header length limit exceeded: `$1` > `$2`"),
               this->m_header_size + len, this->m_max_header_length);
 
-        this->m_payload.putn(str, len);
+        this->m_stash.append(str, len);
         this->m_header_size += static_cast<uint32_t>(len);
         return 0;
       },
@@ -60,15 +57,12 @@ HTTP_Response_Parser::s_llhttp_settings =
     // on_header_value
     +[](::llhttp_t* ps, const char* str, size_t len) -> int
       {
-        if(this->m_hresp >= hresp_headers_done)  // chunk trailer
-          return 0;
-
         if(this->m_header_size + len > this->m_max_header_length)
           POSEIDON_THROW((
               "HTTP header length limit exceeded: `$1` > `$2`"),
               this->m_header_size + len, this->m_max_header_length);
 
-        this->m_payload.putn(str, len);
+        this->m_stash.append(str, len);
         this->m_header_size += static_cast<uint32_t>(len);
         return 0;
       },
@@ -82,13 +76,10 @@ HTTP_Response_Parser::s_llhttp_settings =
     // on_headers_complete
     +[](::llhttp_t* ps) -> int
       {
-        if(this->m_hresp >= hresp_headers_done)  // chunk trailer
-          return 0;
-
         this->m_headers.status = static_cast<HTTP_Status>(ps->status_code);
         this->m_hresp = hresp_headers_done;
         this->m_close_after_payload = ::llhttp_should_keep_alive(ps) == 0;
-        this->m_payload.clear();
+        this->m_stash.clear();
         return HPE_PAUSED;
       },
 
@@ -129,25 +120,16 @@ HTTP_Response_Parser::s_llhttp_settings =
     // on_header_field_complete
     +[](::llhttp_t* ps) -> int
       {
-        if(this->m_hresp >= hresp_headers_done)  // chunk trailer
-          return 0;
-
-        cow_string name(this->m_payload.data(), this->m_payload.size());
-        this->m_headers.headers.emplace_back(move(name), &"");
-        this->m_header_size += 2;
-        this->m_payload.clear();
+        this->m_headers.headers.emplace_back(move(this->m_stash), &"");
+        this->m_stash.clear();
         return 0;
       },
 
     // on_header_value_complete
     +[](::llhttp_t* ps) -> int
       {
-        if(this->m_hresp >= hresp_headers_done)  // chunk trailer
-          return 0;
-
-        cow_string value(this->m_payload.data(), this->m_payload.size());
-        this->m_headers.headers.mut_back().second = move(value);
-        this->m_payload.clear();
+        this->m_headers.headers.mut_back().second = move(this->m_stash);
+        this->m_stash.clear();
         return 0;
       },
 
@@ -194,12 +176,10 @@ HTTP_Response_Parser::
 clear()
   noexcept
   {
-    ::llhttp_init(&(this->m_llhttp_parser), HTTP_RESPONSE, &(s_llhttp_settings));
-    this->m_llhttp_parser.data = this;
-    ::llhttp_set_lenient_chunked_length(&(this->m_llhttp_parser), true);
-
+    ::llhttp_reset(&(this->m_llhttp_parser));
     this->m_headers.clear();
     this->m_payload.clear();
+    this->m_stash.clear();
     this->m_header_size = 0;
     this->m_hresp = hresp_new;
     this->m_close_after_payload = false;
@@ -213,6 +193,7 @@ deallocate()
     ::asteria::exchange(this->m_headers.reason);
     ::asteria::exchange(this->m_headers.headers);
     ::asteria::exchange(this->m_payload);
+    ::asteria::exchange(this->m_stash);
   }
 
 void
