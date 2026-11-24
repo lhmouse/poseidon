@@ -28,6 +28,7 @@ class HTTP_Request_Parser
         hreq_payload_done  = 2,
       };
 
+    cow_string m_stash;
     uint32_t m_header_size = 0;
     HREQ_State m_hreq = hreq_new;
     bool m_close_after_payload = false;
