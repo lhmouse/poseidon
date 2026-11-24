@@ -132,7 +132,7 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
             this->m_pmce_opt->inflate_message_stream(lock, payload,
                                    this->m_parser.max_message_length());
 
-            if(this->m_parser.message_fin())
+            if(this->m_parser.frame_payload_complete() && this->m_parser.message_fin())
               this->m_pmce_opt->inflate_message_finish(lock);
 
             // Replace the payload... nasty.
