@@ -141,12 +141,12 @@ HTTP_Request_Parser::s_llhttp_settings =
           // An explicit scheme indicates a proxy request.
           this->m_headers.is_proxy = true;
 
-          if((pos == 4) && ::asteria::ascii_ci_equal(this->m_stash.data(), 4, "http", 4)) {
+          if(::asteria::ascii_ci_equal(this->m_stash.data(), pos, "http", 4)) {
             this->m_headers.port = 80;
             this->m_headers.is_ssl = false;
             this->m_stash.erase(0, 7);
           }
-          else if((pos == 5) && ::asteria::ascii_ci_equal(this->m_stash.data(), 5, "https", 5)) {
+          else if(::asteria::ascii_ci_equal(this->m_stash.data(), pos, "https", 5)) {
             this->m_headers.port = 443;
             this->m_headers.is_ssl = true;
             this->m_stash.erase(0, 8);
