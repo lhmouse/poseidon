@@ -33,7 +33,7 @@ extern "C++" void poseidon_module_main();  // see below
 #define POSEIDON_VISIBILITY_HIDDEN   \
   __attribute__((__visibility__("hidden"))) inline
 
-#define POSEIDON_USING  \
+#define POSEIDON_USING_Ts  \
   template<typename... Ts> using
 
 #define POSEIDON_SYSCALL_LOOP(...)  \
@@ -124,13 +124,13 @@ using ::asteria::shared_function;
 using charbuf_16 = ::asteria::static_char_buffer<16>;
 using charbuf_256 = ::asteria::static_char_buffer<256>;
 
-POSEIDON_USING cow_bivector = cow_vector<pair<Ts...>>;
-POSEIDON_USING cow_dictionary = cow_hashmap<phcow_string, Ts..., phcow_string::hash>;
-POSEIDON_USING opt = ::asteria::optional<Ts...>;
-POSEIDON_USING vfn = void (Ts...);
-POSEIDON_USING uniptr = ::std::unique_ptr<Ts...>;
-POSEIDON_USING shptr = ::std::shared_ptr<Ts...>;
-POSEIDON_USING wkptr = ::std::weak_ptr<Ts...>;
+POSEIDON_USING_Ts cow_bivector = cow_vector<pair<Ts...>>;
+POSEIDON_USING_Ts cow_dictionary = cow_hashmap<phcow_string, Ts..., phcow_string::hash>;
+POSEIDON_USING_Ts opt = ::asteria::optional<Ts...>;
+POSEIDON_USING_Ts vfn = void (Ts...);
+POSEIDON_USING_Ts uniptr = ::std::unique_ptr<Ts...>;
+POSEIDON_USING_Ts shptr = ::std::shared_ptr<Ts...>;
+POSEIDON_USING_Ts wkptr = ::std::weak_ptr<Ts...>;
 
 using ::asteria::begin;
 using ::asteria::end;
