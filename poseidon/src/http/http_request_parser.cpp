@@ -222,7 +222,7 @@ HTTP_Request_Parser::s_llhttp_settings =
           return 0;
 
         if(this->m_headers.headers.mut_back().first == "Host") {
-          if(!this->m_host_set)
+          if(this->m_host_set)
             return -1;  // not allowed
 
           this->m_headers.raw_host = this->m_stash;
