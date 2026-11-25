@@ -47,9 +47,9 @@ do_abstract_socket_on_closed()
 
 void
 WS_Client_Session::
-do_on_http_response_payload_stream(linear_buffer& data)
+do_on_http_response_content_stream(linear_buffer& data)
   {
-    // The request payload is ignored.
+    // The request content is ignored.
     data.clear();
   }
 

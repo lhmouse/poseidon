@@ -54,7 +54,7 @@ enum HTTP_Status : uint16_t
     http_status_gone                             = 410,
     http_status_length_required                  = 411,
     http_status_precondition_failed              = 412,
-    http_status_payload_too_large                = 413,
+    http_status_content_too_large                = 413,
     http_status_uri_too_long                     = 414,
     http_status_unsupported_media_type           = 415,
     http_status_range_not_satisfiable            = 416,

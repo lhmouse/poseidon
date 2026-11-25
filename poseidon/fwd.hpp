@@ -430,7 +430,7 @@ class Redis_Scan_and_Get_Future;
 // Socket types
 enum IP_Address_Class : uint8_t;
 enum Socket_State : uint8_t;
-enum HTTP_Payload_Type : uint8_t;
+enum HTTP_Content_Type : uint8_t;
 class IPv6_Address;
 class Abstract_Socket;
 class TCP_Acceptor;

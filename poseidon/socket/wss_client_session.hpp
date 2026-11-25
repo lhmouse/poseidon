@@ -37,7 +37,7 @@ class WSS_Client_Session
 
     virtual
     void
-    do_on_https_response_payload_stream(linear_buffer& data) override;
+    do_on_https_response_content_stream(linear_buffer& data) override;
 
     virtual
     void

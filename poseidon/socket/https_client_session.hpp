@@ -36,33 +36,33 @@ class HTTPS_Client_Session
       { return this->m_upgrade_ack.load();  }
 
     // This callback is invoked by the network thread after all headers of a
-    // response have been received, just before the payload of it. Returning
-    // `http_payload_normal` indicates that the response has a payload whose
+    // response have been received, just before the content of it. Returning
+    // `http_content_normal` indicates that the response has content whose
     // length is described by the `Content-Length` or `Transfer-Encoding`
-    // header. Returning `http_payload_empty` indicates that the message
-    // does not have a payload even if it appears so, such as the response to a
-    // HEAD request. Returning `http_payload_connect` causes all further
+    // header. Returning `http_content_empty` indicates that the message
+    // does not have content even if it appears so, such as the response to a
+    // HEAD request. Returning `http_content_connect` causes all further
     // incoming data to be delivered via `do_on_https_upgraded_stream()`. This
     // callback is primarily used to examine the status code before processing
     // response data.
     // The default implementation does not check for HEAD or upgrade responses
-    // and returns `http_payload_normal`.
+    // and returns `http_content_normal`.
     virtual
-    HTTP_Payload_Type
+    HTTP_Content_Type
     do_on_https_response_headers(HTTP_S_Headers& resp);
 
     // This callback is invoked by the network thread for each fragment of the
-    // response payload that has been received. As with `SSL_Connection::
+    // response content that has been received. As with `SSL_Connection::
     // do_on_ssl_stream()`, the argument buffer contains all data that have
     // been accumulated so far and callees are supposed to remove bytes that
     // have been processed.
     // The default implementation leaves all data alone for consumption by
     // `do_on_https_response_finish()`, but it checks the total length of the
-    // payload so it will not exceed `network.http.max_response_content_length`
+    // content so it will not exceed `network.http.max_response_content_length`
     // in 'main.conf'.
     virtual
     void
-    do_on_https_response_payload_stream(linear_buffer& data);
+    do_on_https_response_content_stream(linear_buffer& data);
 
     // This callback is invoked by the network thread at the end of a response
     // message. Arguments have the same semantics with the other callbacks.
@@ -96,7 +96,7 @@ class HTTPS_Client_Session
     https_default_host() const noexcept
       { return this->m_default_host;  }
 
-    // Sends a simple request, possibly with a complete payload. Callers should
+    // Sends a simple request, possibly with the complete content. Callers should
     // not supply `Content-Length` or `Transfer-Encoding` headers, as they
     // will be rewritten.
     // If this function throws an exception, there is no effect.
@@ -104,10 +104,10 @@ class HTTPS_Client_Session
     bool
     https_request(HTTP_C_Headers&& req, chars_view data);
 
-    // Send a request with a chunked payload, which may contain multiple chunks.
+    // Send a request with chunked content, which may contain multiple chunks.
     // Callers should not supply `Transfer-Encoding` headers, as they will be
     // rewritten. The HTTP/1.1 specification says that a chunk of length zero
-    // terminates the chunked payload; therefore, empty chunks are ignored by
+    // terminates the chunked content; therefore, empty chunks are ignored by
     // `https_chunked_request_send()`. These functions do little error checking.
     // Calling `https_chunked_request_send()` or `https_chunked_request_finish()`
     // when no chunked request is active will corrupt the connection.

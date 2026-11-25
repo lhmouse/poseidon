@@ -66,15 +66,15 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
           return;
         }
 
-        bool fin = this->m_req_parser.should_close_after_payload();
-        auto payload_type = this->do_on_http_request_headers(headers, fin);
-        switch(payload_type)
+        bool fin = this->m_req_parser.should_close_after_content();
+        auto content_type = this->do_on_http_request_headers(headers, fin);
+        switch(content_type)
           {
-          case http_payload_normal:
-          case http_payload_empty:
+          case http_content_normal:
+          case http_content_empty:
             break;
 
-          case http_payload_connect:
+          case http_content_connect:
             this->m_upgrade_ack.store(true);
             this->m_req_parser.deallocate();
             this->do_on_http_upgraded_stream(data, eof);
@@ -82,14 +82,14 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
 
           default:
             POSEIDON_THROW((
-                "Invalid payload type `$3` returned from `do_on_http_request_headers()`",
+                "Invalid content type `$3` returned from `do_on_http_request_headers()`",
                 "[HTTP server session `$1` (class `$2`)]"),
-                this, typeid(*this), payload_type);
+                this, typeid(*this), content_type);
           }
       }
 
-      if(!this->m_req_parser.payload_complete()) {
-        this->m_req_parser.parse_payload_from_stream(data, eof);
+      if(!this->m_req_parser.content_complete()) {
+        this->m_req_parser.parse_content_from_stream(data, eof);
 
         if(this->m_req_parser.error()) {
           data.clear();
@@ -98,15 +98,15 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
           return;
         }
 
-        this->do_on_http_request_payload_stream(this->m_req_parser.mut_payload());
+        this->do_on_http_request_content_stream(this->m_req_parser.mut_content());
 
-        if(!this->m_req_parser.payload_complete())
+        if(!this->m_req_parser.content_complete())
           return;
 
         // The message is complete now.
         this->do_on_http_request_finish(move(this->m_req_parser.mut_headers()),
-                                        move(this->m_req_parser.mut_payload()),
-                                        this->m_req_parser.should_close_after_payload());
+                                        move(this->m_req_parser.mut_content()),
+                                        this->m_req_parser.should_close_after_content());
       }
 
       this->m_req_parser.next_message();
@@ -114,14 +114,14 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
     }
   }
 
-HTTP_Payload_Type
+HTTP_Content_Type
 HTTP_Server_Session::
 do_on_http_request_headers(HTTP_C_Headers& req, bool /*eot*/)
   {
     if(req.is_proxy) {
       // Reject proxy requests.
       this->do_on_http_request_error(false, http_status_forbidden);
-      return http_payload_normal;
+      return http_content_normal;
     }
 
     POSEIDON_LOG_DEBUG((
@@ -130,19 +130,19 @@ do_on_http_request_headers(HTTP_C_Headers& req, bool /*eot*/)
         this, typeid(*this), req.method_str, req.raw_path);
 
     // The default handler doesn't handle Upgrade requests.
-    return http_payload_normal;
+    return http_content_normal;
   }
 
 void
 HTTP_Server_Session::
-do_on_http_request_payload_stream(linear_buffer& data)
+do_on_http_request_content_stream(linear_buffer& data)
   {
     // Leave `data` alone for consumption by `do_on_http_request_finish()`,
     // but perform some security checks, so we won't be affected by compromised
     // 3rd-party servers.
     if(data.size() > this->m_req_parser.max_content_length())
       POSEIDON_THROW((
-          "HTTP request payload too large: `$3` > `$4`",
+          "HTTP request content too large: `$3` > `$4`",
           "[HTTP server session `$1` (class `$2`)]"),
           this, typeid(*this), data.size(), this->m_req_parser.max_content_length());
   }
@@ -212,7 +212,7 @@ http_response(bool method_was_head, HTTP_S_Headers&& resp, chars_view data)
           "[HTTP server session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    // Some responses are required to have no payload payload and require no
+    // Some responses are required to have no content and require no
     // `Content-Length` header.
     if((resp.status <= 199) || (resp.status == 204) || (resp.status == 304))
       return this->do_http_raw_response(resp, "");
@@ -250,7 +250,7 @@ http_chunked_response_send(chars_view data)
           "[HTTP server session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    // Ignore empty chunks, which would mark the end of the payload.
+    // Ignore empty chunks, which would mark the end of the content.
     if(data.n == 0)
       return this->tcp_send("");
 

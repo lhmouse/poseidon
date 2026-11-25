@@ -65,17 +65,17 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
           return;
 
         // Check headers.
-        auto payload_type = this->do_on_https_response_headers(this->m_resp_parser.mut_headers());
-        switch(payload_type)
+        auto content_type = this->do_on_https_response_headers(this->m_resp_parser.mut_headers());
+        switch(content_type)
           {
-          case http_payload_normal:
+          case http_content_normal:
             break;
 
-          case http_payload_empty:
-            this->m_resp_parser.set_no_payload();
+          case http_content_empty:
+            this->m_resp_parser.set_no_content();
             break;
 
-          case http_payload_connect:
+          case http_content_connect:
             this->m_upgrade_ack.store(true);
             this->m_resp_parser.deallocate();
             this->do_on_https_upgraded_stream(data, eof);
@@ -83,14 +83,14 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
 
           default:
             POSEIDON_THROW((
-                "Invalid payload type `$3` returned from `do_https_parser_on_headers_complete()`",
+                "Invalid content type `$3` returned from `do_https_parser_on_headers_complete()`",
                 "[HTTPS client session `$1` (class `$2`)]"),
-                this, typeid(*this), payload_type);
+                this, typeid(*this), content_type);
           }
       }
 
-      if(!this->m_resp_parser.payload_complete()) {
-        this->m_resp_parser.parse_payload_from_stream(data, eof);
+      if(!this->m_resp_parser.content_complete()) {
+        this->m_resp_parser.parse_content_from_stream(data, eof);
 
         if(this->m_resp_parser.error()) {
           data.clear();
@@ -98,18 +98,18 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
           return;
         }
 
-        this->do_on_https_response_payload_stream(this->m_resp_parser.mut_payload());
+        this->do_on_https_response_content_stream(this->m_resp_parser.mut_content());
 
-        if(!this->m_resp_parser.payload_complete())
+        if(!this->m_resp_parser.content_complete())
           return;
 
         // The message is complete now.
         uint32_t status = this->m_resp_parser.headers().status;
 
         this->do_on_https_response_finish(move(this->m_resp_parser.mut_headers()),
-                                          move(this->m_resp_parser.mut_payload()));
+                                          move(this->m_resp_parser.mut_content()));
 
-        if(this->m_resp_parser.should_close_after_payload())
+        if(this->m_resp_parser.should_close_after_content())
           this->ssl_shut_down();
 
         // For WebSocket and HTTP 2.0, this indicates the server has switched to
@@ -124,7 +124,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
     }
   }
 
-HTTP_Payload_Type
+HTTP_Content_Type
 HTTPS_Client_Session::
 do_on_https_response_headers(HTTP_S_Headers& resp)
   {
@@ -134,19 +134,19 @@ do_on_https_response_headers(HTTP_S_Headers& resp)
         this, typeid(*this), resp.status, resp.reason);
 
     // The default handler doesn't handle HEAD, CONNECT or Upgrade responses.
-    return http_payload_normal;
+    return http_content_normal;
   }
 
 void
 HTTPS_Client_Session::
-do_on_https_response_payload_stream(linear_buffer& data)
+do_on_https_response_content_stream(linear_buffer& data)
   {
     // Leave `data` alone for consumption by `do_on_https_response_finish()`,
     // but perform some security checks, so we won't be affected by compromised
     // 3rd-party servers.
     if(data.size() > this->m_resp_parser.max_content_length())
       POSEIDON_THROW((
-          "HTTP response payload too large: `$3` > `$4`",
+          "HTTP response content too large: `$3` > `$4`",
           "[HTTPS client session `$1` (class `$2`)]"),
           this, typeid(*this), data.size(), this->m_resp_parser.max_content_length());
   }
@@ -191,8 +191,8 @@ https_request(HTTP_C_Headers&& req, chars_view data)
     if(!req.is_proxy)
       req.set_request_host(*this, this->m_default_host);
 
-    // By default, request messages do not have payload bodies. Hence the length
-    // is only necessary if the payload is non-empty.
+    // By default, request messages do not have content. Hence the length
+    // is only necessary if the content is non-empty.
     if(data.n != 0)
       req.headers.emplace_back(&"Content-Length", static_cast<int64_t>(data.n));
 
@@ -229,7 +229,7 @@ https_chunked_request_send(chars_view data)
           "[HTTPS client session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    // Ignore empty chunks, which would have marked the end of the payload.
+    // Ignore empty chunks, which would have marked the end of the content.
     if(data.n == 0)
       return this->ssl_send("");
 

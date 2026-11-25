@@ -38,17 +38,17 @@ do_abstract_socket_on_closed()
     this->do_call_on_ws_close_once(ws_status_no_close_frame, "no CLOSE frame received");
   }
 
-HTTP_Payload_Type
+HTTP_Content_Type
 WS_Server_Session::
 do_on_http_request_headers(HTTP_C_Headers& req, bool eot)
   {
     this->do_ws_complete_handshake(req, eot);
-    return http_payload_normal;
+    return http_content_normal;
   }
 
 void
 WS_Server_Session::
-do_on_http_request_payload_stream(linear_buffer& data)
+do_on_http_request_content_stream(linear_buffer& data)
   {
     data.clear();
   }

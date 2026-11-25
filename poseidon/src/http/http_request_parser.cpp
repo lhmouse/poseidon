@@ -96,7 +96,7 @@ HTTP_Request_Parser::s_llhttp_settings =
           return 0;
 
         this->m_hreq = hreq_headers_done;
-        this->m_close_after_payload = ::llhttp_should_keep_alive(ps) == 0;
+        this->m_close_after_content = ::llhttp_should_keep_alive(ps) == 0;
         return HPE_PAUSED;
       },
 
@@ -106,19 +106,19 @@ HTTP_Request_Parser::s_llhttp_settings =
         if(is_none_of(ps->method, { HTTP_POST, HTTP_PUT, HTTP_PATCH }))
           return 0;  // ignore
 
-        if(this->m_payload.size() + len > this->m_max_content_length)
+        if(this->m_content.size() + len > this->m_max_content_length)
           POSEIDON_THROW((
               "HTTP content length limit exceeded: `$1` > `$2`"),
-              this->m_payload.size() + len, this->m_max_content_length);
+              this->m_content.size() + len, this->m_max_content_length);
 
-        this->m_payload.putn(str, len);
+        this->m_content.putn(str, len);
         return 0;
       },
 
     // on_message_complete
     +[](::llhttp_t* ps) -> int
       {
-        this->m_hreq = hreq_payload_done;
+        this->m_hreq = hreq_content_done;
         return HPE_PAUSED;
       },
 
@@ -302,12 +302,12 @@ HTTP_Request_Parser::
 next_message() noexcept
   {
     this->m_headers.clear();
-    this->m_payload.clear();
+    this->m_content.clear();
     this->m_stash.clear();
     this->m_header_size = 0;
     this->m_hreq = hreq_new;
     this->m_host_set = false;
-    this->m_close_after_payload = false;
+    this->m_close_after_content = false;
   }
 
 void
@@ -327,7 +327,7 @@ deallocate() noexcept
     ::asteria::exchange(this->m_headers.raw_path);
     ::asteria::exchange(this->m_headers.raw_query);
     ::asteria::exchange(this->m_headers.headers);
-    ::asteria::exchange(this->m_payload);
+    ::asteria::exchange(this->m_content);
     ::asteria::exchange(this->m_stash);
   }
 
@@ -365,9 +365,9 @@ parse_headers_from_stream(linear_buffer& data, bool eof)
 
 void
 HTTP_Request_Parser::
-parse_payload_from_stream(linear_buffer& data, bool eof)
+parse_content_from_stream(linear_buffer& data, bool eof)
   {
-    if(this->m_hreq >= hreq_payload_done)
+    if(this->m_hreq >= hreq_content_done)
       return;
 
     if(this->m_hreq != hreq_headers_done)

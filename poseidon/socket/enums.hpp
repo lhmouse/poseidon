@@ -27,11 +27,11 @@ enum Socket_State : uint8_t
     socket_closed       = 3,  // TCP, SSL, UDP
   };
 
-enum HTTP_Payload_Type : uint8_t
+enum HTTP_Content_Type : uint8_t
   {
-    http_payload_normal   = 0,
-    http_payload_empty    = 1,
-    http_payload_connect  = 2,
+    http_content_normal   = 0,
+    http_content_empty    = 1,
+    http_content_connect  = 2,
   };
 
 }  // namespace poseidon

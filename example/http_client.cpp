@@ -31,7 +31,7 @@ my_client_callback(const shptr<HTTP_Client_Session>& session, Abstract_Fiber& fi
           for(const auto& pair : resp.headers)
             POSEIDON_LOG_ERROR(("  $1 --> $2"), pair.first, pair.second);
 
-          POSEIDON_LOG_ERROR(("    payload ($1 bytes):\n$2"), data.size(), data);
+          POSEIDON_LOG_ERROR(("    content ($1 bytes):\n$2"), data.size(), data);
         }
         break;
 

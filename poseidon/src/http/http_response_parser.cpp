@@ -87,7 +87,7 @@ HTTP_Response_Parser::s_llhttp_settings =
 
         this->m_headers.status = static_cast<HTTP_Status>(ps->status_code);
         this->m_hresp = hresp_headers_done;
-        this->m_close_after_payload = ::llhttp_should_keep_alive(ps) == 0;
+        this->m_close_after_content = ::llhttp_should_keep_alive(ps) == 0;
         this->m_stash.clear();
         return HPE_PAUSED;
       },
@@ -95,19 +95,19 @@ HTTP_Response_Parser::s_llhttp_settings =
     // on_body
     +[](::llhttp_t* ps, const char* str, size_t len) -> int
       {
-        if(this->m_payload.size() + len > this->m_max_content_length)
+        if(this->m_content.size() + len > this->m_max_content_length)
           POSEIDON_THROW((
               "HTTP content length limit exceeded: `$1` > `$2`"),
-              this->m_payload.size() + len, this->m_max_content_length);
+              this->m_content.size() + len, this->m_max_content_length);
 
-        this->m_payload.putn(str, len);
+        this->m_content.putn(str, len);
         return 0;
       },
 
     // on_message_complete
     +[](::llhttp_t* ps) -> int
       {
-        this->m_hresp = hresp_payload_done;
+        this->m_hresp = hresp_content_done;
         return HPE_PAUSED;
       },
 
@@ -192,11 +192,11 @@ HTTP_Response_Parser::
 next_message() noexcept
   {
     this->m_headers.clear();
-    this->m_payload.clear();
+    this->m_content.clear();
     this->m_stash.clear();
     this->m_header_size = 0;
     this->m_hresp = hresp_new;
-    this->m_close_after_payload = false;
+    this->m_close_after_content = false;
   }
 
 void
@@ -213,7 +213,7 @@ deallocate() noexcept
   {
     ::asteria::exchange(this->m_headers.reason);
     ::asteria::exchange(this->m_headers.headers);
-    ::asteria::exchange(this->m_payload);
+    ::asteria::exchange(this->m_content);
     ::asteria::exchange(this->m_stash);
   }
 
@@ -251,9 +251,9 @@ parse_headers_from_stream(linear_buffer& data, bool eof)
 
 void
 HTTP_Response_Parser::
-parse_payload_from_stream(linear_buffer& data, bool eof)
+parse_content_from_stream(linear_buffer& data, bool eof)
   {
-    if(this->m_hresp >= hresp_payload_done)
+    if(this->m_hresp >= hresp_content_done)
       return;
 
     if(this->m_hresp != hresp_headers_done)

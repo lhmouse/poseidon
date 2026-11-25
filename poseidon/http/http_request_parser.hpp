@@ -19,20 +19,20 @@ class HTTP_Request_Parser
     static const ::llhttp_settings_t s_llhttp_settings;
     ::llhttp_t m_llhttp_parser;
     HTTP_C_Headers m_headers;
-    linear_buffer m_payload;
+    linear_buffer m_content;
 
     enum HREQ_State : uint8_t
       {
         hreq_new           = 0,
         hreq_headers_done  = 1,
-        hreq_payload_done  = 2,
+        hreq_content_done  = 2,
       };
 
     cow_string m_stash;
     uint32_t m_header_size = 0;
     HREQ_State m_hreq = hreq_new;
     bool m_host_set = false;
-    bool m_close_after_payload = false;
+    bool m_close_after_content = false;
 
   public:
     // Constructs a parser for incoming requests.
@@ -88,8 +88,8 @@ class HTTP_Request_Parser
 
     // Get the parsed headers.
     bool
-    should_close_after_payload() const noexcept
-      { return this->m_close_after_payload;  }
+    should_close_after_content() const noexcept
+      { return this->m_close_after_content;  }
 
     bool
     headers_complete() const noexcept
@@ -103,24 +103,24 @@ class HTTP_Request_Parser
     mut_headers() noexcept
       { return this->m_headers;  }
 
-    // Parses the payload of an HTTP request from a stream. `data` may be consumed
-    // partially, and must be preserved between calls. If `payload_complete()`
+    // Parses the content of an HTTP request from a stream. `data` may be consumed
+    // partially, and must be preserved between calls. If `content_complete()`
     // returns `true` before the call, this function does nothing.
     void
-    parse_payload_from_stream(linear_buffer& data, bool eof);
+    parse_content_from_stream(linear_buffer& data, bool eof);
 
-    // Get the parsed payload.
+    // Get the parsed content.
     bool
-    payload_complete() const noexcept
-      { return this->m_hreq >= hreq_payload_done;  }
+    content_complete() const noexcept
+      { return this->m_hreq >= hreq_content_done;  }
 
     const linear_buffer&
-    payload() const noexcept
-      { return this->m_payload;  }
+    content() const noexcept
+      { return this->m_content;  }
 
     linear_buffer&
-    mut_payload() noexcept
-      { return this->m_payload;  }
+    mut_content() noexcept
+      { return this->m_content;  }
   };
 
 }  // namespace poseidon

@@ -19,19 +19,19 @@ class HTTP_Response_Parser
     static const ::llhttp_settings_t s_llhttp_settings;
     ::llhttp_t m_llhttp_parser;
     HTTP_S_Headers m_headers;
-    linear_buffer m_payload;
+    linear_buffer m_content;
 
     enum HRESP_State : uint8_t
       {
         hresp_new           = 0,
         hresp_headers_done  = 1,
-        hresp_payload_done  = 2,
+        hresp_content_done  = 2,
       };
 
     cow_string m_stash;
     uint32_t m_header_size = 0;
     HRESP_State m_hresp = hresp_new;
-    bool m_close_after_payload = false;
+    bool m_close_after_content = false;
 
   public:
     // Constructs a parser for incoming responses.
@@ -80,10 +80,10 @@ class HTTP_Response_Parser
     void
     parse_headers_from_stream(linear_buffer& data, bool eof);
 
-    // Informs the HTTP parser that the current message has no payload, e.g. the
+    // Informs the HTTP parser that the current message has no content, e.g. the
     // response to a HEAD or CONNECT request. This cannot be undone.
     void
-    set_no_payload() noexcept
+    set_no_content() noexcept
       {
         ASTERIA_ASSERT(this->m_hresp >= hresp_headers_done);
         this->m_llhttp_parser.flags |= F_SKIPBODY;
@@ -91,8 +91,8 @@ class HTTP_Response_Parser
 
     // Get the parsed headers.
     bool
-    should_close_after_payload() const noexcept
-      { return this->m_close_after_payload;  }
+    should_close_after_content() const noexcept
+      { return this->m_close_after_content;  }
 
     bool
     headers_complete() const noexcept
@@ -106,24 +106,24 @@ class HTTP_Response_Parser
     mut_headers() noexcept
       { return this->m_headers;  }
 
-    // Parses the payload of an HTTP response from a stream. `data` may be consumed
-    // partially, and must be preserved between calls. If `payload_complete()`
+    // Parses the content of an HTTP response from a stream. `data` may be consumed
+    // partially, and must be preserved between calls. If `content_complete()`
     // returns `true` before the call, this function does nothing.
     void
-    parse_payload_from_stream(linear_buffer& data, bool eof);
+    parse_content_from_stream(linear_buffer& data, bool eof);
 
-    // Get the parsed payload.
+    // Get the parsed content.
     bool
-    payload_complete() const noexcept
-      { return this->m_hresp >= hresp_payload_done;  }
+    content_complete() const noexcept
+      { return this->m_hresp >= hresp_content_done;  }
 
     const linear_buffer&
-    payload() const noexcept
-      { return this->m_payload;  }
+    content() const noexcept
+      { return this->m_content;  }
 
     linear_buffer&
-    mut_payload() noexcept
-      { return this->m_payload;  }
+    mut_content() noexcept
+      { return this->m_content;  }
   };
 
 }  // namespace poseidon

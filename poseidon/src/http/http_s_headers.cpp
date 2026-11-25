@@ -102,7 +102,7 @@ default_reason(HTTP_Status status) noexcept
       case http_status_precondition_failed:
         return &"Precondition Failed";
 
-      case http_status_payload_too_large:
+      case http_status_content_too_large:
         return &"Content Too Large";
 
       case http_status_uri_too_long:
