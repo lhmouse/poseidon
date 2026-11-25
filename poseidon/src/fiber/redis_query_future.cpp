@@ -9,8 +9,8 @@
 namespace poseidon {
 
 Redis_Query_Future::
-Redis_Query_Future(Redis_Connector& connector, uniptr<Redis_Connection>&& conn_opt,
-                   const cow_vector<cow_string>& cmd)
+Redis_Query_Future(Redis_Connector& connector,
+      uniptr<Redis_Connection>&& conn_opt, const cow_vector<cow_string>& cmd)
   {
     this->m_ctr = &connector;
     this->m_conn = move(conn_opt);

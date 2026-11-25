@@ -9,8 +9,8 @@
 namespace poseidon {
 
 Mongo_Query_Future::
-Mongo_Query_Future(Mongo_Connector& connector, uniptr<Mongo_Connection>&& conn_opt,
-                   const Mongo_Document& cmd)
+Mongo_Query_Future(Mongo_Connector& connector,
+      uniptr<Mongo_Connection>&& conn_opt, const Mongo_Document& cmd)
   {
     this->m_ctr = &connector;
     this->m_conn = move(conn_opt);

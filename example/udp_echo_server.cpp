@@ -11,7 +11,7 @@ static Easy_UDP_Server my_server;
 
 static void
 my_server_callback(const shptr<UDP_Socket>& socket, Abstract_Fiber& fiber,
-                   IPv6_Address&& addr, linear_buffer&& data)
+      IPv6_Address&& addr, linear_buffer&& data)
   {
     (void) fiber;
 

@@ -31,10 +31,10 @@ class MySQL_Query_Future
     // as an asynchronous task, which can be enqueued into an `Task_Scheduler`.
     // This future will become ready once the query is complete.
     MySQL_Query_Future(MySQL_Connector& connector, uniptr<MySQL_Connection>&& conn_opt,
-                       const cow_string& stmt, const cow_vector<MySQL_Value>& stmt_args);
+          const cow_string& stmt, const cow_vector<MySQL_Value>& stmt_args);
 
     MySQL_Query_Future(MySQL_Connector& connector, const cow_string& stmt,
-                       const cow_vector<MySQL_Value>& stmt_args);
+          const cow_vector<MySQL_Value>& stmt_args);
 
   private:
     virtual

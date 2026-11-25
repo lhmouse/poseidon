@@ -13,11 +13,11 @@ do_is_log_enabled(uint8_t level)
 
 bool
 do_push_log_message(uint8_t level, const char* func, const char* file, uint32_t line,
-                    void* composer, vfn<tinyfmt&, void*>* composer_fn);
+      void* composer, vfn<tinyfmt&, void*>* composer_fn);
 
 ::std::runtime_error
 do_create_runtime_error(const char* func, const char* file, uint32_t line,
-                        void* composer, vfn<tinyfmt&, void*>* composer_fn);
+      void* composer, vfn<tinyfmt&, void*>* composer_fn);
 
 }  // namespace poseidon
 #endif

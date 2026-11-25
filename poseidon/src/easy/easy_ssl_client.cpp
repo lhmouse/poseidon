@@ -49,7 +49,7 @@ struct Final_Fiber final : Abstract_Fiber
     volatile SSL_Socket* m_refptr;
 
     Final_Fiber(const Easy_SSL_Client::callback_type& callback,
-                const shptr<Session_Table>& sessions, volatile SSL_Socket* refptr)
+          const shptr<Session_Table>& sessions, volatile SSL_Socket* refptr)
       :
         m_callback(callback), m_wsessions(sessions), m_refptr(refptr)
       { }
@@ -125,7 +125,7 @@ struct Final_Socket final : SSL_Socket
     wkptr<Session_Table> m_wsessions;
 
     Final_Socket(const Easy_SSL_Client::callback_type& callback,
-                 const shptr<Session_Table>& sessions)
+          const shptr<Session_Table>& sessions)
       :
         SSL_Socket(network_scheduler),
         m_callback(callback), m_wsessions(sessions)

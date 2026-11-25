@@ -94,8 +94,8 @@ deflate_message_finish(plain_mutex::unique_lock& lock)
 
 void
 WebSocket_Deflator::
-inflate_message_stream(plain_mutex::unique_lock& lock, chars_view data,
-                       uint32_t max_message_length)
+inflate_message_stream(plain_mutex::unique_lock& lock,
+      chars_view data, uint32_t max_message_length)
   {
     if(data.n == 0)
       return;

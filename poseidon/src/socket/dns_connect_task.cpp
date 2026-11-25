@@ -11,8 +11,8 @@
 namespace poseidon {
 
 DNS_Connect_Task::
-DNS_Connect_Task(Network_Scheduler& scheduler, const shptr<Abstract_Socket>& socket,
-                 const cow_string& host, uint16_t port)
+DNS_Connect_Task(Network_Scheduler& scheduler,
+      const shptr<Abstract_Socket>& socket, const cow_string& host, uint16_t port)
   {
     if(!socket)
       POSEIDON_THROW(("Null socket pointer not valid"));

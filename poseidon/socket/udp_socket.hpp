@@ -68,8 +68,8 @@ class UDP_Socket
     // is unspecified.
     // These functions are thread-safe.
     void
-    join_multicast_group(const IPv6_Address& maddr, const cow_string& ifname,
-                         uint8_t ttl, bool loopback);
+    join_multicast_group(const IPv6_Address& maddr,
+          const cow_string& ifname, uint8_t ttl, bool loopback);
 
     void
     leave_multicast_group(const IPv6_Address& maddr, const cow_string& ifname);

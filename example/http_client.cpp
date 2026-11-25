@@ -12,9 +12,8 @@ static Easy_HTTP_Client my_client;
 static Easy_Timer my_timer;
 
 static void
-my_client_callback(const shptr<HTTP_Client_Session>& session,
-                   Abstract_Fiber& fiber, Easy_HTTP_Event event,
-                   HTTP_S_Headers&& resp, linear_buffer&& data)
+my_client_callback(const shptr<HTTP_Client_Session>& session, Abstract_Fiber& fiber,
+      Easy_HTTP_Event event, HTTP_S_Headers&& resp, linear_buffer&& data)
   {
     (void) fiber;
 
@@ -47,7 +46,7 @@ my_client_callback(const shptr<HTTP_Client_Session>& session,
 
 static void
 my_timer_callback(const shptr<Abstract_Timer>& timer,
-                  Abstract_Fiber& fiber, steady_time now)
+      Abstract_Fiber& fiber, steady_time now)
   {
     (void) timer;
     (void) fiber;

@@ -10,7 +10,7 @@ namespace poseidon {
 
 MySQL_Query_Future::
 MySQL_Query_Future(MySQL_Connector& connector, uniptr<MySQL_Connection>&& conn_opt,
-                   const cow_string& stmt, const cow_vector<MySQL_Value>& stmt_args)
+      const cow_string& stmt, const cow_vector<MySQL_Value>& stmt_args)
   {
     this->m_ctr = &connector;
     this->m_conn = move(conn_opt);
@@ -20,7 +20,7 @@ MySQL_Query_Future(MySQL_Connector& connector, uniptr<MySQL_Connection>&& conn_o
 
 MySQL_Query_Future::
 MySQL_Query_Future(MySQL_Connector& connector, const cow_string& stmt,
-                   const cow_vector<MySQL_Value>& stmt_args)
+      const cow_vector<MySQL_Value>& stmt_args)
   {
     this->m_ctr = &connector;
     this->m_stmt = stmt;

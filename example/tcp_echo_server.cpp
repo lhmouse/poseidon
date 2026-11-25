@@ -10,9 +10,8 @@ static constexpr char bind_addr[] = "[::]:3802";
 static Easy_TCP_Server my_server;
 
 static void
-my_server_callback(const shptr<TCP_Socket>& socket,
-                   Abstract_Fiber& fiber, Easy_Stream_Event event,
-                   linear_buffer& data, int code)
+my_server_callback(const shptr<TCP_Socket>& socket, Abstract_Fiber& fiber,
+      Easy_Stream_Event event, linear_buffer& data, int code)
   {
     (void) fiber;
 

@@ -11,8 +11,7 @@ static Easy_HWSS_Server my_server;
 
 static void
 my_server_callback(const shptr<WSS_Server_Session>& session,
-                   Abstract_Fiber& fiber, Easy_HWS_Event event,
-                   linear_buffer&& data)
+      Abstract_Fiber& fiber, Easy_HWS_Event event, linear_buffer&& data)
   {
     (void) fiber;
 

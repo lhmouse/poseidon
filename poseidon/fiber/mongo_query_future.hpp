@@ -25,8 +25,8 @@ class Mongo_Query_Future
     // Constructs a future for a single Mongo command. This object also functions
     // as an asynchronous task, which can be enqueued into an `Task_Scheduler`.
     // This future will become ready once the command is complete.
-    Mongo_Query_Future(Mongo_Connector& connector, uniptr<Mongo_Connection>&& conn_opt,
-                       const Mongo_Document& cmd);
+    Mongo_Query_Future(Mongo_Connector& connector,
+          uniptr<Mongo_Connection>&& conn_opt, const Mongo_Document& cmd);
 
     Mongo_Query_Future(Mongo_Connector& connector, const Mongo_Document& cmd);
 

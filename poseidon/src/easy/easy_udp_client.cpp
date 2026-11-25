@@ -35,7 +35,7 @@ struct Final_Fiber final : Abstract_Fiber
     wkptr<Packet_Queue> m_wqueue;
 
     Final_Fiber(const Easy_UDP_Client::callback_type& callback,
-                const shptr<Packet_Queue>& queue)
+          const shptr<Packet_Queue>& queue)
       :
         m_callback(callback), m_wqueue(queue)
       { }
@@ -87,7 +87,7 @@ struct Final_Socket final : UDP_Socket
     wkptr<Packet_Queue> m_wqueue;
 
     Final_Socket(const Easy_UDP_Client::callback_type& callback,
-                 const shptr<Packet_Queue>& queue)
+          const shptr<Packet_Queue>& queue)
       :
         m_callback(callback), m_wqueue(queue)
       { }

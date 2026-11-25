@@ -35,7 +35,7 @@ struct Final_Fiber final : Abstract_Fiber
     wkptr<Event_Queue> m_wqueue;
 
     Final_Fiber(const Easy_Timer::callback_type& callback,
-                const shptr<Event_Queue>& queue)
+          const shptr<Event_Queue>& queue)
       :
         m_callback(callback), m_wqueue(queue)
       { }
@@ -89,7 +89,7 @@ struct Final_Timer final : Abstract_Timer
     wkptr<Event_Queue> m_wqueue;
 
     Final_Timer(const Easy_Timer::callback_type& callback,
-                const shptr<Event_Queue>& queue)
+          const shptr<Event_Queue>& queue)
       :
         m_callback(callback), m_wqueue(queue)
       { }

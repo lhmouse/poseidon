@@ -115,8 +115,8 @@ do_abstract_socket_on_writeable()
 
 void
 UDP_Socket::
-join_multicast_group(const IPv6_Address& maddr, const cow_string& ifname,
-                     uint8_t ttl, bool loopback)
+join_multicast_group(const IPv6_Address& maddr,
+      const cow_string& ifname, uint8_t ttl, bool loopback)
   {
     unsigned ifindex = ::if_nametoindex(ifname.safe_c_str());
     if(ifindex == 0)

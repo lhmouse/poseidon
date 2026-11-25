@@ -11,7 +11,7 @@ static Easy_SSL_Server my_server;
 
 static void
 my_server_callback(const shptr<SSL_Socket>& socket, Abstract_Fiber& fiber,
-                   Easy_Stream_Event event, linear_buffer& data, int code)
+      Easy_Stream_Event event, linear_buffer& data, int code)
   {
     (void) fiber;
 

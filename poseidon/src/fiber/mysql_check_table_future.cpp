@@ -149,8 +149,8 @@ struct exIndex
 }  // namespace
 
 MySQL_Check_Table_Future::
-MySQL_Check_Table_Future(MySQL_Connector& connector, uniptr<MySQL_Connection>&& conn_opt,
-                         const MySQL_Table_Structure& table)
+MySQL_Check_Table_Future(MySQL_Connector& connector,
+      uniptr<MySQL_Connection>&& conn_opt, const MySQL_Table_Structure& table)
   {
     this->m_ctr = &connector;
     this->m_conn = move(conn_opt);

@@ -78,15 +78,15 @@ namespace poseidon {
 
 // Splits a string into a vector of tokens, and vice versa.
 void
-explode(cow_vector<cow_string>& segments, const cow_string& text, char delim = ',',
-        size_t limit = SIZE_MAX);
+explode(cow_vector<cow_string>& segments, const cow_string& text,
+      char delim = ',', size_t limit = SIZE_MAX);
 
 cow_vector<cow_string>
 explode(const cow_string& text, char delim = ',', size_t limit = SIZE_MAX);
 
 void
-implode(cow_string& text, const cow_string* segment_ptr, size_t segment_count,
-        char delim = ',');
+implode(cow_string& text, const cow_string* segment_ptr,
+      size_t segment_count, char delim = ',');
 
 cow_string
 implode(const cow_string* segment_ptr, size_t segment_count, char delim = ',');

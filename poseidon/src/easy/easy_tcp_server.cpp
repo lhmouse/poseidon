@@ -48,7 +48,7 @@ struct Final_Fiber final : Abstract_Fiber
     volatile TCP_Socket* m_refptr;
 
     Final_Fiber(const Easy_TCP_Server::callback_type& callback,
-                const shptr<Session_Table>& sessions, volatile TCP_Socket* refptr)
+          const shptr<Session_Table>& sessions, volatile TCP_Socket* refptr)
       :
         m_callback(callback), m_wsessions(sessions), m_refptr(refptr)
       { }
@@ -124,8 +124,8 @@ struct Final_Socket final : TCP_Socket
     wkptr<Session_Table> m_wsessions;
 
     Final_Socket(unique_posix_fd&& fd,
-                 const Easy_TCP_Server::callback_type& callback,
-                 const shptr<Session_Table>& sessions)
+          const Easy_TCP_Server::callback_type& callback,
+          const shptr<Session_Table>& sessions)
       :
         TCP_Socket(move(fd)),
         m_callback(callback), m_wsessions(sessions)
@@ -207,8 +207,8 @@ struct Final_Acceptor final : TCP_Acceptor
     wkptr<Session_Table> m_wsessions;
 
     Final_Acceptor(const IPv6_Address& addr,
-                   const Easy_TCP_Server::callback_type& callback,
-                   const shptr<Session_Table>& sessions)
+          const Easy_TCP_Server::callback_type& callback,
+          const shptr<Session_Table>& sessions)
       :
         TCP_Acceptor(addr),
         m_callback(callback), m_wsessions(sessions)
