@@ -299,10 +299,9 @@ http_status_from_error()
 
 void
 HTTP_Request_Parser::
-clear()
+next_message()
   noexcept
   {
-    ::llhttp_reset(&(this->m_llhttp_parser));
     this->m_headers.clear();
     this->m_payload.clear();
     this->m_stash.clear();
@@ -310,6 +309,15 @@ clear()
     this->m_hreq = hreq_new;
     this->m_host_set = false;
     this->m_close_after_payload = false;
+  }
+
+void
+HTTP_Request_Parser::
+clear()
+  noexcept
+  {
+    ::llhttp_reset(&(this->m_llhttp_parser));
+    this->next_message();
   }
 
 void

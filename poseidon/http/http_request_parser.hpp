@@ -71,6 +71,11 @@ class HTTP_Request_Parser
     http_status_from_error()
       const noexcept;
 
+    // Clears the current complete message, so the parser can start the next one.
+    void
+    next_message()
+      noexcept;
+
     // Clears all fields. This function shall not be called unless the parser is
     // to be reused for another stream.
     void
@@ -131,21 +136,6 @@ class HTTP_Request_Parser
     mut_payload()
       noexcept
       { return this->m_payload;  }
-
-    // Clears the current complete message, so the parser can start the next one.
-    void
-    next_message()
-      noexcept
-      {
-        ASTERIA_ASSERT(this->m_hreq >= hreq_payload_done);
-
-        this->m_headers.clear();
-        this->m_payload.clear();
-        this->m_header_size = 0;
-        this->m_hreq = hreq_new;
-        this->m_host_set = false;
-        this->m_close_after_payload = false;
-      }
   };
 
 }  // namespace poseidon

@@ -188,16 +188,24 @@ HTTP_Response_Parser::
 
 void
 HTTP_Response_Parser::
-clear()
+next_message()
   noexcept
   {
-    ::llhttp_reset(&(this->m_llhttp_parser));
     this->m_headers.clear();
     this->m_payload.clear();
     this->m_stash.clear();
     this->m_header_size = 0;
     this->m_hresp = hresp_new;
     this->m_close_after_payload = false;
+  }
+
+void
+HTTP_Response_Parser::
+clear()
+  noexcept
+  {
+    ::llhttp_reset(&(this->m_llhttp_parser));
+    this->next_message();
   }
 
 void

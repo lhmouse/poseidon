@@ -64,6 +64,11 @@ class HTTP_Response_Parser
       const noexcept
       { return this->m_llhttp_parser.error != HPE_OK;  }
 
+    // Clears the current complete message, so the parser can start the next one.
+    void
+    next_message()
+      noexcept;
+
     // Clears all fields. This function shall not be called unless the parser is
     // to be reused for another stream.
     void
@@ -134,20 +139,6 @@ class HTTP_Response_Parser
     mut_payload()
       noexcept
       { return this->m_payload;  }
-
-    // Clears the current complete message, so the parser can start the next one.
-    void
-    next_message()
-      noexcept
-      {
-        ASTERIA_ASSERT(this->m_hresp >= hresp_payload_done);
-
-        this->m_headers.clear();
-        this->m_payload.clear();
-        this->m_header_size = 0;
-        this->m_hresp = hresp_new;
-        this->m_close_after_payload = false;
-      }
   };
 
 }  // namespace poseidon
