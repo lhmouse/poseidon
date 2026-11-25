@@ -240,7 +240,7 @@ do_wss_complete_handshake(HTTP_C_Headers& req, bool eot)
     this->m_parser.accept_handshake_request(resp, req);
     this->https_response_headers_only(move(resp));
 
-    if(req.method == http_OPTIONS)
+    if(req.method == http_method_OPTIONS)
       return;
 
     if(eot || !this->m_parser.is_server_mode()) {

@@ -160,12 +160,12 @@ struct Final_Session final : WSS_Server_Session
         Event event;
         switch((uint64_t) req.method)
           {
-          case http_OPTIONS:
+          case http_method_OPTIONS:
             // Respond to an XSS check.
             this->do_wss_complete_handshake(req, eot);
             return http_content_normal;
 
-          case http_GET:
+          case http_method_GET:
             if(any_of(req.headers, [&](const auto& r) { return r.first == "Upgrade";  })) {
               // Try upgrading to WebSocket.
               this->do_wss_complete_handshake(req, eot);
@@ -176,7 +176,7 @@ struct Final_Session final : WSS_Server_Session
             event.type = easy_hws_get;
             break;
 
-          case http_HEAD:
+          case http_method_HEAD:
             // Handle a plain HTTP HEAD request.
             event.type = easy_hws_head;
             break;

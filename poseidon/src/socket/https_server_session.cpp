@@ -45,7 +45,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
 
         if(this->m_req_parser.error()) {
           data.clear();
-          this->do_on_https_request_error(this->m_req_parser.headers().method == http_HEAD,
+          this->do_on_https_request_error(this->m_req_parser.headers().method == http_method_HEAD,
                                           this->m_req_parser.http_status_from_error());
           return;
         }
@@ -61,7 +61,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
 
         if(headers.raw_host.empty()) {
           data.clear();
-          this->do_on_https_request_error(this->m_req_parser.headers().method == http_HEAD,
+          this->do_on_https_request_error(this->m_req_parser.headers().method == http_method_HEAD,
                                           http_status_bad_request);
           return;
         }
@@ -93,7 +93,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
 
         if(this->m_req_parser.error()) {
           data.clear();
-          this->do_on_https_request_error(this->m_req_parser.headers().method == http_HEAD,
+          this->do_on_https_request_error(this->m_req_parser.headers().method == http_method_HEAD,
                                           this->m_req_parser.http_status_from_error());
           return;
         }
