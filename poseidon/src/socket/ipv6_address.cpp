@@ -10,8 +10,7 @@ namespace {
 
 ASTERIA_ALWAYS_INLINE
 bool
-do_match_subnet(const char* addr, const char* mask, uint32_t bits)
-  noexcept
+do_match_subnet(const char* addr, const char* mask, uint32_t bits) noexcept
   {
     uint32_t bi = bits / 8;
     return (::memcmp(addr, mask, bi) == 0)
@@ -20,8 +19,7 @@ do_match_subnet(const char* addr, const char* mask, uint32_t bits)
 
 inline
 IP_Address_Class
-do_classify_ipv4_generic(const char* addr)
-  noexcept
+do_classify_ipv4_generic(const char* addr) noexcept
   {
     // 0.0.0.0/32: Unspecified
     if(do_match_subnet(addr, "\x00\x00\x00\x00", 32))
@@ -69,8 +67,7 @@ do_classify_ipv4_generic(const char* addr)
 
 inline
 IP_Address_Class
-do_classify_ipv6_generic(const char* addr)
-  noexcept
+do_classify_ipv6_generic(const char* addr) noexcept
   {
     // ::ffff:0:0/96: IPv4-mapped
     if(do_match_subnet(addr, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF", 96))
@@ -142,8 +139,7 @@ IPv6_Address(chars_view str)
 
 int
 IPv6_Address::
-compare(const IPv6_Address& other)
-  const noexcept
+compare(const IPv6_Address& other) const noexcept
   {
     char tdata[18];
     ::memcpy(tdata, &(this->m_addr), 16);
@@ -158,16 +154,14 @@ compare(const IPv6_Address& other)
 
 IP_Address_Class
 IPv6_Address::
-classify()
-  const noexcept
+classify() const noexcept
   {
     return do_classify_ipv6_generic((const char*) &(this->m_addr));
   }
 
 size_t
 IPv6_Address::
-parse(chars_view str)
-  noexcept
+parse(chars_view str) noexcept
   {
     Network_Reference caddr;
     size_t aclen = parse_network_reference(caddr, str);
@@ -203,8 +197,7 @@ parse(chars_view str)
 
 size_t
 IPv6_Address::
-print_partial(char* str)
-  const noexcept
+print_partial(char* str) const noexcept
   {
     const char* addr = (const char*) &(this->m_addr);
     ::asteria::ascii_numput nump;
@@ -235,8 +228,7 @@ print_partial(char* str)
 
 tinyfmt&
 IPv6_Address::
-print_to(tinyfmt& fmt)
-  const
+print_to(tinyfmt& fmt) const
   {
     char str[64];
     size_t len = this->print_partial(str);
@@ -245,8 +237,7 @@ print_to(tinyfmt& fmt)
 
 cow_string
 IPv6_Address::
-to_string()
-  const
+to_string() const
   {
     char str[64];
     size_t len = this->print_partial(str);

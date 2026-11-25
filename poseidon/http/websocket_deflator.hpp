@@ -25,8 +25,7 @@ class WebSocket_Deflator
   public:
     // Initializes a new deflator/inflator with PMCE arguments from `parser`. A
     // previous WebSocket handshake shall have completed.
-    explicit
-    WebSocket_Deflator(const WebSocket_Frame_Parser& parser);
+    explicit WebSocket_Deflator(const WebSocket_Frame_Parser& parser);
 
   public:
     WebSocket_Deflator(const WebSocket_Deflator&) = delete;
@@ -35,8 +34,7 @@ class WebSocket_Deflator
 
     // Get the deflator output buffer.
     linear_buffer&
-    deflate_output_buffer(plain_mutex::unique_lock& lock)
-      noexcept
+    deflate_output_buffer(plain_mutex::unique_lock& lock) noexcept
       {
         lock.lock(this->m_def_mtx);
         return this->m_def_buf;
@@ -45,8 +43,7 @@ class WebSocket_Deflator
     // Resets the deflator state. This is used when `no_context_takeover` is in
     // effect.
     void
-    deflate_reset(plain_mutex::unique_lock& lock)
-      noexcept;
+    deflate_reset(plain_mutex::unique_lock& lock) noexcept;
 
     // Compresses a part of the frame payload.
     void
@@ -59,8 +56,7 @@ class WebSocket_Deflator
 
     // Get the inflator output buffer.
     linear_buffer&
-    inflate_output_buffer(plain_mutex::unique_lock& lock)
-      noexcept
+    inflate_output_buffer(plain_mutex::unique_lock& lock) noexcept
       {
         lock.lock(this->m_inf_mtx);
         return this->m_inf_buf;

@@ -35,8 +35,7 @@ class Easy_Timer
 
     // Checks whether the timer is running.
     bool
-    running()
-      const noexcept;
+    running() const noexcept;
 
     // Starts a timer, replacing the running one. The timer callback will be
     // called after `delay` milliseconds, and then, if `period` is non-zero,
@@ -51,8 +50,7 @@ class Easy_Timer
 
     // Stops the timer, if one is running.
     void
-    stop()
-      noexcept;
+    stop() noexcept;
   };
 
 }  // namespace poseidon

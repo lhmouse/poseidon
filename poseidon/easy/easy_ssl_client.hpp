@@ -51,8 +51,7 @@ class Easy_SSL_Client
 
     // Shuts down all connections.
     void
-    close_all()
-      noexcept;
+    close_all() noexcept;
   };
 
 }  // namespace poseidon

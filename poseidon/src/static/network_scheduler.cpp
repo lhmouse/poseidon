@@ -12,8 +12,7 @@
 namespace poseidon {
 
 Network_Scheduler::
-Network_Scheduler()
-  noexcept
+Network_Scheduler() noexcept
   {
   }
 
@@ -25,8 +24,7 @@ Network_Scheduler::
 POSEIDON_VISIBILITY_HIDDEN
 wkptr<Abstract_Socket>&
 Network_Scheduler::
-do_find_socket_nolock(volatile Abstract_Socket* socket)
-  noexcept
+do_find_socket_nolock(volatile Abstract_Socket* socket) noexcept
   {
     ASTERIA_ASSERT(socket);
 
@@ -62,8 +60,7 @@ do_find_socket_nolock(volatile Abstract_Socket* socket)
 
 uniptr_SSL_CTX
 Network_Scheduler::
-server_ssl_ctx()
-  const
+server_ssl_ctx() const
   {
     plain_mutex::unique_lock lock(this->m_conf_mutex);
     auto ptr = this->m_server_ssl_ctx.get();
@@ -78,8 +75,7 @@ server_ssl_ctx()
 
 uniptr_SSL_CTX
 Network_Scheduler::
-client_ssl_ctx()
-  const
+client_ssl_ctx() const
   {
     plain_mutex::unique_lock lock(this->m_conf_mutex);
     auto ptr = this->m_client_ssl_ctx.get();

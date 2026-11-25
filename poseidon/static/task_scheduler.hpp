@@ -17,8 +17,7 @@ class Task_Scheduler
 
   public:
     // Creates an empty task scheduler.
-    Task_Scheduler()
-      noexcept;
+    Task_Scheduler() noexcept;
 
   public:
     Task_Scheduler(const Task_Scheduler&) = delete;

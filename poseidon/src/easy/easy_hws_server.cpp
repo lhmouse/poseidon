@@ -50,8 +50,7 @@ struct Final_Fiber final : Abstract_Fiber
 
     virtual
     void
-    do_on_abstract_fiber_execute()
-      override
+    do_on_abstract_fiber_execute() override
       {
         for(;;) {
           // The event callback may stop this server, so we have to check for
@@ -150,8 +149,7 @@ struct Final_Session final : WS_Server_Session
 
     virtual
     HTTP_Payload_Type
-    do_on_http_request_headers(HTTP_C_Headers& req, bool eot)
-      override
+    do_on_http_request_headers(HTTP_C_Headers& req, bool eot) override
       {
         if(req.is_proxy) {
           // Reject proxy requests.
@@ -201,8 +199,7 @@ struct Final_Session final : WS_Server_Session
 
     virtual
     void
-    do_on_ws_accepted(cow_string&& caddr)
-      override
+    do_on_ws_accepted(cow_string&& caddr) override
       {
         Event event;
         event.type = easy_hws_open;
@@ -212,8 +209,7 @@ struct Final_Session final : WS_Server_Session
 
     virtual
     void
-    do_on_ws_message_finish(WS_Opcode opcode, linear_buffer&& data)
-      override
+    do_on_ws_message_finish(WS_Opcode opcode, linear_buffer&& data) override
       {
         Easy_HWS_Event ev_type;
         if(opcode == ws_TEXT)
@@ -233,8 +229,7 @@ struct Final_Session final : WS_Server_Session
 
     virtual
     void
-    do_on_ws_close(WS_Status status, chars_view reason)
-      override
+    do_on_ws_close(WS_Status status, chars_view reason) override
       {
         tinyfmt_ln fmt;
         fmt << status << ": " << reason;
@@ -262,8 +257,7 @@ struct Final_Acceptor final : TCP_Acceptor
 
     virtual
     shptr<Abstract_Socket>
-    do_accept_socket_opt(IPv6_Address&& addr, unique_posix_fd&& fd)
-      override
+    do_accept_socket_opt(IPv6_Address&& addr, unique_posix_fd&& fd) override
       {
         auto sessions = this->m_wsessions.lock();
         if(!sessions)
@@ -294,8 +288,7 @@ Easy_HWS_Server::
 
 const IPv6_Address&
 Easy_HWS_Server::
-local_address()
-  const noexcept
+local_address() const noexcept
   {
     if(!this->m_acceptor)
       return ipv6_unspecified;
@@ -332,8 +325,7 @@ start(uint16_t port, const callback_type& callback)
 
 void
 Easy_HWS_Server::
-stop()
-  noexcept
+stop() noexcept
   {
     this->m_sessions = nullptr;
     this->m_acceptor = nullptr;

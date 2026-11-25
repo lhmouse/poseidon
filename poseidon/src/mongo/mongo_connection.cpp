@@ -49,8 +49,7 @@ Mongo_Connection::
 
 bool
 Mongo_Connection::
-reset()
-  noexcept
+reset() noexcept
   {
     // Discard the current reply and cursor.
     this->m_cursor.reset();

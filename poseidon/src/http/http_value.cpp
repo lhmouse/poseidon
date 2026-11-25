@@ -11,8 +11,7 @@ namespace {
 
 constexpr
 bool
-do_is_ctl_or_sep(char ch)
-  noexcept
+do_is_ctl_or_sep(char ch) noexcept
   {
     // https://www.rfc-editor.org/rfc/rfc2616#section-2.2
     return ((ch >= 0x00) && (ch <= 0x20)) || (ch == 0x7F)
@@ -25,8 +24,7 @@ do_is_ctl_or_sep(char ch)
 
 constexpr
 bool
-do_is_ctl_or_unquoted_sep(char ch)
-  noexcept
+do_is_ctl_or_unquoted_sep(char ch) noexcept
   {
     return ((ch >= 0x00) && (ch <= 0x20)) || (ch == 0x7F)
            || (ch == ',') || (ch == ';');
@@ -34,8 +32,7 @@ do_is_ctl_or_unquoted_sep(char ch)
 
 constexpr
 bool
-do_is_ctl_or_ws(char ch)
-  noexcept
+do_is_ctl_or_ws(char ch) noexcept
   {
     return ((ch >= 0x00) && (ch <= 0x20)) || (ch == 0x7F);
   }
@@ -217,8 +214,7 @@ parse(chars_view str)
 
 tinyfmt&
 HTTP_Value::
-print_to(tinyfmt& fmt)
-  const
+print_to(tinyfmt& fmt) const
   {
     if(this->m_vm & vm_int_valid)
       return fmt << this->m_int;
@@ -267,8 +263,7 @@ print_to(tinyfmt& fmt)
 
 cow_string
 HTTP_Value::
-to_string()
-  const
+to_string() const
   {
     tinyfmt_str fmt;
     this->print_to(fmt);

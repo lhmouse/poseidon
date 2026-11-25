@@ -7,8 +7,7 @@
 namespace poseidon {
 
 HTTP_Header_Parser::
-HTTP_Header_Parser()
-  noexcept
+HTTP_Header_Parser() noexcept
   {
   }
 
@@ -19,8 +18,7 @@ HTTP_Header_Parser::
 
 void
 HTTP_Header_Parser::
-clear()
-  noexcept
+clear() noexcept
   {
     this->m_hstr.clear();
     this->m_hpos = 0;

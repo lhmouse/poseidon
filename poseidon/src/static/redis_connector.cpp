@@ -21,8 +21,7 @@ POSEIDON_HIDDEN_X_STRUCT(Redis_Connector,
   Pooled_Connection);
 
 Redis_Connector::
-Redis_Connector()
-  noexcept
+Redis_Connector() noexcept
   {
   }
 

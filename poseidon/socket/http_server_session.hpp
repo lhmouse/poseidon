@@ -27,13 +27,11 @@ class HTTP_Server_Session
     // This function implements `TCP_Socket`.
     virtual
     void
-    do_on_tcp_stream(linear_buffer& data, bool eof)
-      override;
+    do_on_tcp_stream(linear_buffer& data, bool eof) override;
 
     // Checks whether the protocol has changed.
     bool
-    do_has_upgraded()
-      const noexcept
+    do_has_upgraded() const noexcept
       { return this->m_upgrade_ack.load();  }
 
     // This callback is invoked by the network thread after all headers of a
@@ -151,12 +149,10 @@ class HTTP_Server_Session
     // a standard status code, or an integer within [200,599]. Any other value is
     // sanitized to 400.
     bool
-    http_shut_down(HTTP_Status status = http_status_bad_request)
-      noexcept;
+    http_shut_down(HTTP_Status status = http_status_bad_request) noexcept;
 
     bool
-    http_shut_down(int status)
-      noexcept;
+    http_shut_down(int status) noexcept;
   };
 
 }  // namespace poseidon

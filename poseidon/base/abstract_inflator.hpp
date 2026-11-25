@@ -15,8 +15,7 @@ class Abstract_Inflator
 
   public:
     // Constructs a data decompressor.
-    explicit
-    Abstract_Inflator(zlib_Format format);
+    explicit Abstract_Inflator(zlib_Format format);
 
   protected:
     // This callback is invoked to request an output buffer if none has been
@@ -49,8 +48,7 @@ class Abstract_Inflator
 
     // Resets internal states. Pending data are discarded.
     void
-    reset()
-      noexcept;
+    reset() noexcept;
 
     // Decompresses some data and returns the number of bytes that have been
     // consumed. This function may return a value that is less than `size` if

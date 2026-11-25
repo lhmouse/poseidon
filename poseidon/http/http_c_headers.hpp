@@ -39,8 +39,7 @@ struct HTTP_C_Headers
     ~HTTP_C_Headers();
 
     HTTP_C_Headers&
-    swap(HTTP_C_Headers& other)
-      noexcept
+    swap(HTTP_C_Headers& other) noexcept
       {
         ::std::swap(this->packed_fields_1, other.packed_fields_1);
         this->raw_host.swap(other.raw_host);
@@ -53,8 +52,7 @@ struct HTTP_C_Headers
 
     // Clears all fields.
     void
-    clear()
-      noexcept
+    clear() noexcept
       {
         this->packed_fields_1 = _mm_setzero_si128();
         this->raw_host.clear();
@@ -79,14 +77,12 @@ struct HTTP_C_Headers
     // Encodes headers in wire format. Lines are separated by CR LF pairs. The
     // output will be suitable for sending through a stream socket.
     void
-    encode(tinyfmt& fmt)
-      const;
+    encode(tinyfmt& fmt) const;
   };
 
 inline
 void
-swap(HTTP_C_Headers& lhs, HTTP_C_Headers& rhs)
-  noexcept
+swap(HTTP_C_Headers& lhs, HTTP_C_Headers& rhs) noexcept
   { lhs.swap(rhs);  }
 
 }  // namespace poseidon

@@ -20,8 +20,7 @@ class UDP_Socket
 
   protected:
     // Creates a socket that is bound onto `addr`. [server-side constructor]
-    explicit
-    UDP_Socket(const IPv6_Address& addr);
+    explicit UDP_Socket(const IPv6_Address& addr);
 
     // Creates an unbound socket. [client-side constructor]
     UDP_Socket();
@@ -30,18 +29,15 @@ class UDP_Socket
     // These callbacks implement `Abstract_Socket`.
     virtual
     void
-    do_abstract_socket_on_closed()
-      override;
+    do_abstract_socket_on_closed() override;
 
     virtual
     void
-    do_abstract_socket_on_readable()
-      override;
+    do_abstract_socket_on_readable() override;
 
     virtual
     void
-    do_abstract_socket_on_writeable()
-      override;
+    do_abstract_socket_on_writeable() override;
 
     // This callback is invoked by the network thread when a packet has been
     // received, and is intended to be overriden by derived classes.

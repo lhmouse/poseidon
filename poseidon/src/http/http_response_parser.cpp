@@ -189,8 +189,7 @@ HTTP_Response_Parser::
 
 void
 HTTP_Response_Parser::
-next_message()
-  noexcept
+next_message() noexcept
   {
     this->m_headers.clear();
     this->m_payload.clear();
@@ -202,8 +201,7 @@ next_message()
 
 void
 HTTP_Response_Parser::
-clear()
-  noexcept
+clear() noexcept
   {
     ::llhttp_reset(&(this->m_llhttp_parser));
     this->next_message();
@@ -211,8 +209,7 @@ clear()
 
 void
 HTTP_Response_Parser::
-deallocate()
-  noexcept
+deallocate() noexcept
   {
     ::asteria::exchange(this->m_headers.reason);
     ::asteria::exchange(this->m_headers.headers);

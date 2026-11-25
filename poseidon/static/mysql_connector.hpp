@@ -26,8 +26,7 @@ class MySQL_Connector
 
   public:
     // Constructs an empty connector.
-    MySQL_Connector()
-      noexcept;
+    MySQL_Connector() noexcept;
 
   private:
     uniptr<MySQL_Connection>

@@ -21,25 +21,21 @@ class TCP_Acceptor
   protected:
     // Creates a TCP socket that is bound onto the given address, that accepts
     // either TCP or SSL connections.
-    explicit
-    TCP_Acceptor(const IPv6_Address& addr);
+    explicit TCP_Acceptor(const IPv6_Address& addr);
 
   protected:
     // These callbacks implement `Abstract_Socket`.
     virtual
     void
-    do_abstract_socket_on_closed()
-      override;
+    do_abstract_socket_on_closed() override;
 
     virtual
     void
-    do_abstract_socket_on_readable()
-      override;
+    do_abstract_socket_on_readable() override;
 
     virtual
     void
-    do_abstract_socket_on_writeable()
-      override;
+    do_abstract_socket_on_writeable() override;
 
     // This callback is invoked by the network thread when a connection has been
     // received, and is intended to be overriden by derived classes. This function

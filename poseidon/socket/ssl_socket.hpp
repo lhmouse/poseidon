@@ -30,25 +30,21 @@ class SSL_Socket
 
     // Creates a socket for outgoing connections, using SSL configuration
     // from `scheduler`. [client-side constructor]
-    explicit
-    SSL_Socket(const Network_Scheduler& scheduler);
+    explicit SSL_Socket(const Network_Scheduler& scheduler);
 
   protected:
     // These callbacks implement `Abstract_Socket`.
     virtual
     void
-    do_abstract_socket_on_closed()
-      override;
+    do_abstract_socket_on_closed() override;
 
     virtual
     void
-    do_abstract_socket_on_readable()
-      override;
+    do_abstract_socket_on_readable() override;
 
     virtual
     void
-    do_abstract_socket_on_writeable()
-      override;
+    do_abstract_socket_on_writeable() override;
 
     // This callback is invoked by the network thread after a full-duplex
     // connection has been established.
@@ -73,19 +69,16 @@ class SSL_Socket
 
     // Get user-defined private data. This value is not used by the framework.
     const ::taxon::Value&
-    session_user_data()
-      const noexcept
+    session_user_data() const noexcept
       { return this->m_session_user_data;  }
 
     ::taxon::Value&
-    mut_session_user_data()
-      noexcept
+    mut_session_user_data() noexcept
       { return this->m_session_user_data;  }
 
     // Gets the maximum segment size (MSS) for outgoing packets.
     uint32_t
-    max_segment_size()
-      const;
+    max_segment_size() const;
 
     // Enqueues some bytes for sending.
     // If this function returns `true`, data will have been enqueued; however it
@@ -100,8 +93,7 @@ class SSL_Socket
     // are ignored.
     // This function is thread-safe.
     bool
-    ssl_shut_down()
-      noexcept;
+    ssl_shut_down() noexcept;
   };
 
 }  // namespace poseidon

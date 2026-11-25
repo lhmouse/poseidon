@@ -52,8 +52,7 @@ Mongo_Value::
 
 tinyfmt&
 Mongo_Value::
-print_to(tinyfmt& fmt)
-  const
+print_to(tinyfmt& fmt) const
   {
     // Break deep recursion with a handwritten stack.
     struct xFrame
@@ -208,8 +207,7 @@ print_to(tinyfmt& fmt)
 
 cow_string
 Mongo_Value::
-to_string()
-  const
+to_string() const
   {
     tinyfmt_str fmt;
     this->print_to(fmt);

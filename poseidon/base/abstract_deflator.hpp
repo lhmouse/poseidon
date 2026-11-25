@@ -15,8 +15,7 @@ class Abstract_Deflator
 
   public:
     // Constructs a data compressor.
-    explicit
-    Abstract_Deflator(zlib_Format format, int level = Z_DEFAULT_COMPRESSION);
+    explicit Abstract_Deflator(zlib_Format format, int level = Z_DEFAULT_COMPRESSION);
 
   protected:
     // This callback is invoked to request an output buffer if none has been
@@ -49,8 +48,7 @@ class Abstract_Deflator
 
     // Resets internal states. Pending data are discarded.
     void
-    reset()
-      noexcept;
+    reset() noexcept;
 
     // Compresses some data and returns the number of bytes that have been
     // consumed. This function returns zero if `finish()` has been called to

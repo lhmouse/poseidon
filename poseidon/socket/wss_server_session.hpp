@@ -32,33 +32,27 @@ class WSS_Server_Session
     // This function implements `HTTPS_Server_Session`.
     virtual
     void
-    do_abstract_socket_on_closed()
-      override;
+    do_abstract_socket_on_closed() override;
 
     virtual
     HTTP_Payload_Type
-    do_on_https_request_headers(HTTP_C_Headers& req, bool eot)
-      override;
+    do_on_https_request_headers(HTTP_C_Headers& req, bool eot) override;
 
     virtual
     void
-    do_on_https_request_payload_stream(linear_buffer& data)
-      override;
+    do_on_https_request_payload_stream(linear_buffer& data) override;
 
     virtual
     void
-    do_on_https_request_finish(HTTP_C_Headers&& req, linear_buffer&& data, bool eot)
-      override;
+    do_on_https_request_finish(HTTP_C_Headers&& req, linear_buffer&& data, bool eot) override;
 
     virtual
     void
-    do_on_https_request_error(bool method_was_head, HTTP_Status status)
-      override;
+    do_on_https_request_error(bool method_was_head, HTTP_Status status) override;
 
     virtual
     void
-    do_on_https_upgraded_stream(linear_buffer& data, bool eof)
-      override;
+    do_on_https_upgraded_stream(linear_buffer& data, bool eof) override;
 
     // This callback is invoked by the network thread when a WebSocket connection
     // has been accepted. The argument is the request URI of the client.
@@ -126,12 +120,10 @@ class WSS_Server_Session
     // be truncated to 123 bytes if it's too long.
     // This function is thread-safe.
     bool
-    wss_shut_down(WS_Status status = ws_status_normal, chars_view reason = "")
-      noexcept;
+    wss_shut_down(WS_Status status = ws_status_normal, chars_view reason = "") noexcept;
 
     bool
-    wss_shut_down(int status, chars_view reason = "")
-      noexcept;
+    wss_shut_down(int status, chars_view reason = "") noexcept;
   };
 
 }  // namespace poseidon

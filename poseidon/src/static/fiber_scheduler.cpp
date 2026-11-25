@@ -79,8 +79,7 @@ do_allocate_stack(size_t vm_size)
   }
 
 void
-do_free_stack(::stack_t st)
-  noexcept
+do_free_stack(::stack_t st) noexcept
   {
     auto cst = (Cached_Stack*) st.ss_sp;
     if(!st.ss_sp)
@@ -124,18 +123,15 @@ struct Fiber_Comparator
   {
     // We have to build a minheap here.
     bool
-    operator()(const shptr<Queued_Fiber>& lhs, const shptr<Queued_Fiber>& rhs)
-      noexcept
+    operator()(const shptr<Queued_Fiber>& lhs, const shptr<Queued_Fiber>& rhs) noexcept
       { return lhs->check_time > rhs->check_time;  }
 
     bool
-    operator()(const shptr<Queued_Fiber>& lhs, steady_time rhs)
-      noexcept
+    operator()(const shptr<Queued_Fiber>& lhs, steady_time rhs) noexcept
       { return lhs->check_time > rhs;  }
 
     bool
-    operator()(steady_time lhs, const shptr<Queued_Fiber>& rhs)
-      noexcept
+    operator()(steady_time lhs, const shptr<Queued_Fiber>& rhs) noexcept
       { return lhs > rhs->check_time;  }
   }
   constexpr s_fiber_comparator;
@@ -166,8 +162,7 @@ POSEIDON_HIDDEN_X_STRUCT(Fiber_Scheduler,
   Queued_Fiber);
 
 Fiber_Scheduler::
-Fiber_Scheduler()
-  noexcept
+Fiber_Scheduler() noexcept
   {
   }
 
@@ -179,8 +174,7 @@ Fiber_Scheduler::
 POSEIDON_VISIBILITY_HIDDEN
 void
 Fiber_Scheduler::
-do_fiber_procedure()
-  noexcept
+do_fiber_procedure() noexcept
   {
     do_sanitizer_finish_switch_fiber();
     ASTERIA_ASSERT(s_ep);
@@ -394,8 +388,7 @@ thread_loop()
 
 size_t
 Fiber_Scheduler::
-size()
-  const noexcept
+size() const noexcept
   {
     plain_mutex::unique_lock lock(this->m_pq_mutex);
     return this->m_pq.size();

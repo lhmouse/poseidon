@@ -20,8 +20,7 @@ Abstract_Deflator::
 
 void
 Abstract_Deflator::
-reset()
-  noexcept
+reset() noexcept
   {
     ::deflateReset(this->m_strm);
   }

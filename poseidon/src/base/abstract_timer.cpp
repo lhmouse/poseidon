@@ -6,8 +6,7 @@
 namespace poseidon {
 
 Abstract_Timer::
-Abstract_Timer()
-  noexcept
+Abstract_Timer() noexcept
   {
     this->m_scheduler = reinterpret_cast<Timer_Scheduler*>(-1);
   }
@@ -19,8 +18,7 @@ Abstract_Timer::
 
 Timer_Scheduler&
 Abstract_Timer::
-do_abstract_timer_lock_scheduler(recursive_mutex::unique_lock& lock)
-  const noexcept
+do_abstract_timer_lock_scheduler(recursive_mutex::unique_lock& lock) const noexcept
   {
     lock.lock(this->m_sched_mutex);
     ASTERIA_ASSERT(this->m_scheduler);

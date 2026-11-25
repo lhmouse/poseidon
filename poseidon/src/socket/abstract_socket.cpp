@@ -55,8 +55,7 @@ Abstract_Socket::
 
 Network_Scheduler&
 Abstract_Socket::
-do_abstract_socket_lock_scheduler(recursive_mutex::unique_lock& lock)
-  const noexcept
+do_abstract_socket_lock_scheduler(recursive_mutex::unique_lock& lock) const noexcept
   {
     lock.lock(this->m_sched_mutex);
     ASTERIA_ASSERT(this->m_scheduler);
@@ -65,8 +64,7 @@ do_abstract_socket_lock_scheduler(recursive_mutex::unique_lock& lock)
 
 linear_buffer&
 Abstract_Socket::
-do_abstract_socket_lock_read_queue(recursive_mutex::unique_lock& lock)
-  noexcept
+do_abstract_socket_lock_read_queue(recursive_mutex::unique_lock& lock) noexcept
   {
     lock.lock(this->m_sched_mutex);
     return this->m_sched_read_queue;
@@ -74,8 +72,7 @@ do_abstract_socket_lock_read_queue(recursive_mutex::unique_lock& lock)
 
 linear_buffer&
 Abstract_Socket::
-do_abstract_socket_lock_write_queue(recursive_mutex::unique_lock& lock)
-  noexcept
+do_abstract_socket_lock_write_queue(recursive_mutex::unique_lock& lock) noexcept
   {
     lock.lock(this->m_sched_mutex);
     return this->m_sched_write_queue;
@@ -83,8 +80,7 @@ do_abstract_socket_lock_write_queue(recursive_mutex::unique_lock& lock)
 
 const IPv6_Address&
 Abstract_Socket::
-local_address()
-  const noexcept
+local_address() const noexcept
   {
     if(this->m_sockname_ready.load())
       return this->m_sockname;
@@ -114,8 +110,7 @@ local_address()
 
 const IPv6_Address&
 Abstract_Socket::
-remote_address()
-  const noexcept
+remote_address() const noexcept
   {
     if(this->m_peername_ready.load())
       return this->m_peername;
@@ -145,8 +140,7 @@ remote_address()
 
 bool
 Abstract_Socket::
-quick_shut_down()
-  noexcept
+quick_shut_down() noexcept
   {
     int r = ::shutdown(this->m_fd, SHUT_RDWR);
     this->m_state.store(socket_closed);

@@ -274,8 +274,7 @@ HTTP_Request_Parser::
 
 HTTP_Status
 HTTP_Request_Parser::
-http_status_from_error()
-  const noexcept
+http_status_from_error() const noexcept
   {
     switch(this->m_llhttp_parser.error)
       {
@@ -300,8 +299,7 @@ http_status_from_error()
 
 void
 HTTP_Request_Parser::
-next_message()
-  noexcept
+next_message() noexcept
   {
     this->m_headers.clear();
     this->m_payload.clear();
@@ -314,8 +312,7 @@ next_message()
 
 void
 HTTP_Request_Parser::
-clear()
-  noexcept
+clear() noexcept
   {
     ::llhttp_reset(&(this->m_llhttp_parser));
     this->next_message();
@@ -323,8 +320,7 @@ clear()
 
 void
 HTTP_Request_Parser::
-deallocate()
-  noexcept
+deallocate() noexcept
   {
     ::asteria::exchange(this->m_headers.raw_host);
     ::asteria::exchange(this->m_headers.raw_userinfo);

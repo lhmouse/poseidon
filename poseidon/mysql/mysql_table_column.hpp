@@ -25,8 +25,7 @@ struct MySQL_Table_Column
     ~MySQL_Table_Column();
 
     MySQL_Table_Column&
-    swap(MySQL_Table_Column& other)
-      noexcept
+    swap(MySQL_Table_Column& other) noexcept
       {
         this->name.swap(other.name);
         ::std::swap(this->type, other.type);
@@ -36,8 +35,7 @@ struct MySQL_Table_Column
       }
 
     void
-    clear()
-      noexcept
+    clear() noexcept
       {
         this->name.clear();
         this->type = mysql_column_dropped;
@@ -48,8 +46,7 @@ struct MySQL_Table_Column
 
 inline
 void
-swap(MySQL_Table_Column& lhs, MySQL_Table_Column& rhs)
-  noexcept
+swap(MySQL_Table_Column& lhs, MySQL_Table_Column& rhs) noexcept
   { lhs.swap(rhs);  }
 
 }  // namespace poseidon

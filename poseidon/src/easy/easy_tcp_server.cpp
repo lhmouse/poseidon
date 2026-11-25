@@ -55,8 +55,7 @@ struct Final_Fiber final : Abstract_Fiber
 
     virtual
     void
-    do_on_abstract_fiber_execute()
-      override
+    do_on_abstract_fiber_execute() override
       {
         for(;;) {
           // The event callback may stop this server, so we have to check for
@@ -164,8 +163,7 @@ struct Final_Socket final : TCP_Socket
 
     virtual
     void
-    do_on_tcp_connected()
-      override
+    do_on_tcp_connected() override
       {
         Event event;
         event.type = easy_stream_open;
@@ -174,8 +172,7 @@ struct Final_Socket final : TCP_Socket
 
     virtual
     void
-    do_on_tcp_stream(linear_buffer& data, bool eof)
-      override
+    do_on_tcp_stream(linear_buffer& data, bool eof) override
       {
         Event event;
         event.type = easy_stream_data;
@@ -186,8 +183,7 @@ struct Final_Socket final : TCP_Socket
 
     virtual
     void
-    do_abstract_socket_on_closed()
-      override
+    do_abstract_socket_on_closed() override
       {
         char sbuf[1024];
         int err_code = errno;
@@ -216,8 +212,7 @@ struct Final_Acceptor final : TCP_Acceptor
 
     virtual
     shptr<Abstract_Socket>
-    do_accept_socket_opt(IPv6_Address&& addr, unique_posix_fd&& fd)
-      override
+    do_accept_socket_opt(IPv6_Address&& addr, unique_posix_fd&& fd) override
       {
         auto sessions = this->m_wsessions.lock();
         if(!sessions)
@@ -248,8 +243,7 @@ Easy_TCP_Server::
 
 const IPv6_Address&
 Easy_TCP_Server::
-local_address()
-  const noexcept
+local_address() const noexcept
   {
     if(!this->m_acceptor)
       return ipv6_unspecified;
@@ -286,8 +280,7 @@ start(uint16_t port, const callback_type& callback)
 
 void
 Easy_TCP_Server::
-stop()
-  noexcept
+stop() noexcept
   {
     this->m_sessions = nullptr;
     this->m_acceptor = nullptr;

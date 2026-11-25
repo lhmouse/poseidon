@@ -18,15 +18,13 @@ class Abstract_Task
 
   protected:
     // Constructs an asynchronous task.
-    Abstract_Task()
-      noexcept;
+    Abstract_Task() noexcept;
 
   protected:
     // Get the task scheduler instance inside the callbacks hereafter. If this
     // function is called elsewhere, the behavior is undefined.
     Task_Scheduler&
-    do_abstract_task_lock_scheduler(recursive_mutex::unique_lock& lock)
-      const noexcept;
+    do_abstract_task_lock_scheduler(recursive_mutex::unique_lock& lock) const noexcept;
 
     // This callback is invoked by the task scheduler thread and is intended to
     // be overriden by derived classes.
@@ -41,8 +39,7 @@ class Abstract_Task
     // Mark this task as abandoned to prevent it from being scheduled. This
     // operation cannot be undone.
     void
-    abandon()
-      noexcept
+    abandon() noexcept
       { this->m_abandoned.store(true);  }
   };
 

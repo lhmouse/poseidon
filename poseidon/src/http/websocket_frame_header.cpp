@@ -8,8 +8,7 @@ namespace poseidon {
 
 void
 WebSocket_Frame_Header::
-encode(tinyfmt& fmt)
-  const
+encode(tinyfmt& fmt) const
   {
     // Write the opcode byte. Fields are written according to the figure in
     // 5.2. Base Framing Protocol, RFC 6455, in big-endian byte order.
@@ -52,8 +51,7 @@ encode(tinyfmt& fmt)
 
 void
 WebSocket_Frame_Header::
-mask_payload(char* data, size_t size)
-  noexcept
+mask_payload(char* data, size_t size) noexcept
   {
     if(!this->masked || (this->masking_key == 0))
       return;

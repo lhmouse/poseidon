@@ -18,15 +18,13 @@ class Abstract_Timer
 
   protected:
     // Constructs an inactive timer.
-    Abstract_Timer()
-      noexcept;
+    Abstract_Timer() noexcept;
 
   protected:
     // Get the timer scheduler instance inside the callbacks hereafter. If this
     // function is called elsewhere, the behavior is undefined.
     Timer_Scheduler&
-    do_abstract_timer_lock_scheduler(recursive_mutex::unique_lock& lock)
-      const noexcept;
+    do_abstract_timer_lock_scheduler(recursive_mutex::unique_lock& lock) const noexcept;
 
     // This callback is invoked by the timer thread and is intended to be
     // overriden by derived classes.
@@ -41,8 +39,7 @@ class Abstract_Timer
     // Mark this timer as abandoned so it will cease to be scheduled. This
     // operation cannot be undone.
     void
-    abandon()
-      noexcept
+    abandon() noexcept
       { this->m_abandoned.store(true);  }
   };
 

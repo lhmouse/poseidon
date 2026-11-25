@@ -157,8 +157,7 @@ parse(chars_view str)
 
 size_t
 DateTime::
-print_rfc1123_partial(char* str)
-  const noexcept
+print_rfc1123_partial(char* str) const noexcept
   {
     // `Sun, 06 Nov 1994 08:49:37 GMT`
     struct timespec ts;
@@ -175,8 +174,7 @@ print_rfc1123_partial(char* str)
 
 size_t
 DateTime::
-print_rfc850_partial(char* str)
-  const noexcept
+print_rfc850_partial(char* str) const noexcept
   {
     // `Sunday, 06-Nov-94 08:49:37 GMT`
     struct timespec ts;
@@ -193,8 +191,7 @@ print_rfc850_partial(char* str)
 
 size_t
 DateTime::
-print_asctime_partial(char* str)
-  const noexcept
+print_asctime_partial(char* str) const noexcept
   {
     // `Sun Nov  6 08:49:37 1994`
     struct timespec ts;
@@ -211,8 +208,7 @@ print_asctime_partial(char* str)
 
 size_t
 DateTime::
-print_cookie_partial(char* str)
-  const noexcept
+print_cookie_partial(char* str) const noexcept
   {
     // `Sun, 06-Nov-1994 08:49:37 GMT`
     struct timespec ts;
@@ -229,8 +225,7 @@ print_cookie_partial(char* str)
 
 size_t
 DateTime::
-print_git_partial(char* str)
-  const noexcept
+print_git_partial(char* str) const noexcept
   {
     // `1994-11-06 16:49:37 +0800`
     struct timespec ts;
@@ -247,8 +242,7 @@ print_git_partial(char* str)
 
 tinyfmt&
 DateTime::
-print_to(tinyfmt& fmt)
-  const
+print_to(tinyfmt& fmt) const
   {
     char str[64];
     size_t len = this->print_git_partial(str);
@@ -257,8 +251,7 @@ print_to(tinyfmt& fmt)
 
 cow_string
 DateTime::
-to_string()
-  const
+to_string() const
   {
     char str[64];
     size_t len = this->print_git_partial(str);

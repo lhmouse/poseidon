@@ -42,8 +42,7 @@ struct Final_Fiber final : Abstract_Fiber
 
     virtual
     void
-    do_on_abstract_fiber_execute()
-      override
+    do_on_abstract_fiber_execute() override
       {
         for(;;) {
           // The packet callback may stop this timer, so we have to check for
@@ -96,8 +95,7 @@ struct Final_Timer final : Abstract_Timer
 
     virtual
     void
-    do_abstract_timer_on_tick(steady_time time)
-      override
+    do_abstract_timer_on_tick(steady_time time) override
       {
         auto queue = this->m_wqueue.lock();
         if(!queue)
@@ -131,8 +129,7 @@ Easy_Timer::
 
 bool
 Easy_Timer::
-running()
-  const noexcept
+running() const noexcept
   {
     return this->m_timer != nullptr;
   }
@@ -160,8 +157,7 @@ start(milliseconds period, const callback_type& callback)
 
 void
 Easy_Timer::
-stop()
-  noexcept
+stop() noexcept
   {
     this->m_queue = nullptr;
     this->m_timer = nullptr;

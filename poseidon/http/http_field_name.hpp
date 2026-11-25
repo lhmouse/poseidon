@@ -16,13 +16,11 @@ class HTTP_Field_Name
     cow_string m_str;
 
   public:
-    HTTP_Field_Name()
-      noexcept = default;
+    HTTP_Field_Name() noexcept = default;
 
     template<typename xstringT,
     ASTERIA_ENABLE_IF(::std::is_constructible<cow_string, xstringT&&>::value)>
-    constexpr
-    HTTP_Field_Name(xstringT&& xstr)
+    constexpr HTTP_Field_Name(xstringT&& xstr)
       noexcept(::std::is_nothrow_constructible<cow_string, xstringT&&>::value)
       :
         m_str(forward<xstringT>(xstr))
@@ -31,16 +29,15 @@ class HTTP_Field_Name
     template<typename xstringT,
     ASTERIA_ENABLE_IF(::std::is_assignable<cow_string&, xstringT&&>::value)>
     HTTP_Field_Name&
-    operator=(xstringT&& xstr)
-      & noexcept(::std::is_nothrow_assignable<cow_string&, xstringT&&>::value)
+    operator=(xstringT&& xstr) &
+      noexcept(::std::is_nothrow_assignable<cow_string&, xstringT&&>::value)
       {
         this->m_str = forward<xstringT>(xstr);
         return *this;
       }
 
     HTTP_Field_Name&
-    swap(HTTP_Field_Name& other)
-      noexcept
+    swap(HTTP_Field_Name& other) noexcept
       {
         this->m_str.swap(other.m_str);
         return *this;
@@ -56,74 +53,62 @@ class HTTP_Field_Name
     // accessors
     constexpr
     const cow_string&
-    rdstr()
-      const noexcept
+    rdstr() const noexcept
       { return this->m_str;  }
 
-    operator const cow_string&()
-      const noexcept
+    operator
+    const cow_string&() const noexcept
       { return this->m_str;  }
 
     constexpr
     const cow_string&
-    str()
-      const noexcept
+    str() const noexcept
       { return this->m_str;  }
 
     cow_string&
-    mut_str()
-      noexcept
+    mut_str() noexcept
       { return this->m_str;  }
 
     constexpr
     bool
-    empty()
-      const noexcept
+    empty() const noexcept
       { return this->m_str.empty();  }
 
     constexpr
     size_t
-    size()
-      const noexcept
+    size() const noexcept
       { return this->m_str.size();  }
 
     constexpr
     size_t
-    length()
-      const noexcept
+    length() const noexcept
       { return this->m_str.length();  }
 
     void
-    clear()
-      noexcept
+    clear() noexcept
       { this->m_str.clear();  }
 
     constexpr
     size_t
-    max_size()
-      const noexcept
+    max_size() const noexcept
       { return this->m_str.max_size();  }
 
     constexpr
     ptrdiff_t
-    ssize()
-      const noexcept
+    ssize() const noexcept
       { return this->m_str.ssize();  }
 
     constexpr
     size_t
-    capacity()
-      const noexcept
+    capacity() const noexcept
       { return this->m_str.capacity();  }
 
     cow_string::const_iterator
-    begin()
-      const noexcept
+    begin() const noexcept
       { return this->m_str.begin();  }
 
     cow_string::const_iterator
-    end()
-      const noexcept
+    end() const noexcept
       { return this->m_str.end();  }
 
     cow_string::iterator
@@ -135,13 +120,11 @@ class HTTP_Field_Name
       { return this->m_str.mut_end();  }
 
     cow_string::const_reverse_iterator
-    rbegin()
-      const noexcept
+    rbegin() const noexcept
       { return this->m_str.rbegin();  }
 
     cow_string::const_reverse_iterator
-    rend()
-      const noexcept
+    rend() const noexcept
       { return this->m_str.rend();  }
 
     cow_string::reverse_iterator
@@ -154,14 +137,12 @@ class HTTP_Field_Name
 
     constexpr
     const char*
-    c_str()
-      const noexcept
+    c_str() const noexcept
       { return this->m_str.c_str();  }
 
     constexpr
     const char*
-    data()
-      const noexcept
+    data() const noexcept
       { return this->m_str.data();  }
 
     char*
@@ -169,14 +150,12 @@ class HTTP_Field_Name
       { return this->m_str.mut_data();  }
 
     const char&
-    at(size_t pos)
-      const
+    at(size_t pos) const
       { return this->m_str.at(pos);  }
 
     constexpr
     const char&
-    operator[](size_t pos)
-      const noexcept
+    operator[](size_t pos) const noexcept
       { return this->m_str[pos];  }
 
     char&
@@ -191,8 +170,7 @@ class HTTP_Field_Name
     // Compare names in a case-insensitive way.
     constexpr ASTERIA_PURE
     bool
-    equals(const cow_string& str)
-      const noexcept
+    equals(const cow_string& str) const noexcept
       {
         if(this->m_str.size() != str.size())
           return false;
@@ -201,8 +179,7 @@ class HTTP_Field_Name
 
     constexpr ASTERIA_PURE
     bool
-    equals(const HTTP_Field_Name& other)
-      const noexcept
+    equals(const HTTP_Field_Name& other) const noexcept
       {
         if(this->m_str.size() != other.m_str.size())
           return false;
@@ -211,19 +188,16 @@ class HTTP_Field_Name
 
     ASTERIA_PURE
     int
-    compare(const cow_string& cmps)
-      const noexcept;
+    compare(const cow_string& cmps) const noexcept;
 
     ASTERIA_PURE
     int
-    compare(const HTTP_Field_Name& other)
-      const noexcept;
+    compare(const HTTP_Field_Name& other) const noexcept;
 
     // Gets the case-insensitive hash value of this name.
     ASTERIA_PURE
     size_t
-    rdhash()
-      const noexcept;
+    rdhash() const noexcept;
 
     // Validates this name and converts all ASCII letters to lowercase. If this
     // string is not a valid HTTP token, an exception is thrown, and the string
@@ -235,195 +209,163 @@ class HTTP_Field_Name
 struct HTTP_Field_Name::hash
   {
     size_t
-    operator()(const HTTP_Field_Name& name)
-      const noexcept
+    operator()(const HTTP_Field_Name& name) const noexcept
       { return name.rdhash();  }
   };
 
 inline
 void
-swap(HTTP_Field_Name& lhs, HTTP_Field_Name& rhs)
-  noexcept
+swap(HTTP_Field_Name& lhs, HTTP_Field_Name& rhs) noexcept
   { lhs.swap(rhs);  }
 
 inline
 bool
-operator==(const HTTP_Field_Name& lhs, const HTTP_Field_Name& rhs)
-  noexcept
+operator==(const HTTP_Field_Name& lhs, const HTTP_Field_Name& rhs) noexcept
   { return lhs.equals(rhs);  }
 
 inline
 bool
-operator==(const HTTP_Field_Name& lhs, const cow_string& rhs)
-  noexcept
+operator==(const HTTP_Field_Name& lhs, const cow_string& rhs) noexcept
   { return lhs.equals(rhs);  }
 
 inline
 bool
-operator==(const HTTP_Field_Name& lhs, const char* rhs)
-  noexcept
+operator==(const HTTP_Field_Name& lhs, const char* rhs) noexcept
   { return lhs.equals(rhs);  }
 
 inline
 bool
-operator==(const cow_string& lhs, const HTTP_Field_Name& rhs)
-  noexcept
+operator==(const cow_string& lhs, const HTTP_Field_Name& rhs) noexcept
   { return rhs.equals(lhs);  }
 
 inline
 bool
-operator==(const char* lhs, const HTTP_Field_Name& rhs)
-  noexcept
+operator==(const char* lhs, const HTTP_Field_Name& rhs) noexcept
   { return rhs.equals(lhs);  }
 
 inline
 bool
-operator!=(const HTTP_Field_Name& lhs, const HTTP_Field_Name& rhs)
-  noexcept
+operator!=(const HTTP_Field_Name& lhs, const HTTP_Field_Name& rhs) noexcept
   { return !lhs.equals(rhs);  }
 
 inline
 bool
-operator!=(const HTTP_Field_Name& lhs, const cow_string& rhs)
-  noexcept
+operator!=(const HTTP_Field_Name& lhs, const cow_string& rhs) noexcept
   { return !lhs.equals(rhs);  }
 
 inline
 bool
-operator!=(const HTTP_Field_Name& lhs, const char* rhs)
-  noexcept
+operator!=(const HTTP_Field_Name& lhs, const char* rhs) noexcept
   { return !lhs.equals(rhs);  }
 
 inline
 bool
-operator!=(const cow_string& lhs, const HTTP_Field_Name& rhs)
-  noexcept
+operator!=(const cow_string& lhs, const HTTP_Field_Name& rhs) noexcept
   { return !rhs.equals(lhs);  }
 
 inline
 bool
-operator!=(const char* lhs, const HTTP_Field_Name& rhs)
-  noexcept
+operator!=(const char* lhs, const HTTP_Field_Name& rhs) noexcept
   { return !rhs.equals(lhs);  }
 
 inline
 bool
-operator<(const HTTP_Field_Name& lhs, const HTTP_Field_Name& rhs)
-  noexcept
+operator<(const HTTP_Field_Name& lhs, const HTTP_Field_Name& rhs) noexcept
   { return lhs.compare(rhs) < 0;  }
 
 inline
 bool
-operator<(const HTTP_Field_Name& lhs, const cow_string& rhs)
-  noexcept
+operator<(const HTTP_Field_Name& lhs, const cow_string& rhs) noexcept
   { return lhs.compare(rhs) < 0;  }
 
 inline
 bool
-operator<(const HTTP_Field_Name& lhs, const char* rhs)
-  noexcept
+operator<(const HTTP_Field_Name& lhs, const char* rhs) noexcept
   { return lhs.compare(rhs) < 0;  }
 
 inline
 bool
-operator<(const cow_string& lhs, const HTTP_Field_Name& rhs)
-  noexcept
+operator<(const cow_string& lhs, const HTTP_Field_Name& rhs) noexcept
   { return rhs.compare(lhs) > 0;  }
 
 inline
 bool
-operator<(const char* lhs, const HTTP_Field_Name& rhs)
-  noexcept
+operator<(const char* lhs, const HTTP_Field_Name& rhs) noexcept
   { return rhs.compare(lhs) > 0;  }
 
 inline
 bool
-operator<=(const HTTP_Field_Name& lhs, const HTTP_Field_Name& rhs)
-  noexcept
+operator<=(const HTTP_Field_Name& lhs, const HTTP_Field_Name& rhs) noexcept
   { return lhs.compare(rhs) <= 0;  }
 
 inline
 bool
-operator<=(const HTTP_Field_Name& lhs, const cow_string& rhs)
-  noexcept
+operator<=(const HTTP_Field_Name& lhs, const cow_string& rhs) noexcept
   { return lhs.compare(rhs) <= 0;  }
 
 inline
 bool
-operator<=(const HTTP_Field_Name& lhs, const char* rhs)
-  noexcept
+operator<=(const HTTP_Field_Name& lhs, const char* rhs) noexcept
   { return lhs.compare(rhs) <= 0;  }
 
 inline
 bool
-operator<=(const cow_string& lhs, const HTTP_Field_Name& rhs)
-  noexcept
+operator<=(const cow_string& lhs, const HTTP_Field_Name& rhs) noexcept
   { return rhs.compare(lhs) >= 0;  }
 
 inline
 bool
-operator<=(const char* lhs, const HTTP_Field_Name& rhs)
-  noexcept
+operator<=(const char* lhs, const HTTP_Field_Name& rhs) noexcept
   { return rhs.compare(lhs) >= 0;  }
 
 inline
 bool
-operator>(const HTTP_Field_Name& lhs, const HTTP_Field_Name& rhs)
-  noexcept
+operator>(const HTTP_Field_Name& lhs, const HTTP_Field_Name& rhs) noexcept
   { return lhs.compare(rhs) > 0;  }
 
 inline
 bool
-operator>(const HTTP_Field_Name& lhs, const cow_string& rhs)
-  noexcept
+operator>(const HTTP_Field_Name& lhs, const cow_string& rhs) noexcept
   { return lhs.compare(rhs) > 0;  }
 
 inline
 bool
-operator>(const HTTP_Field_Name& lhs, const char* rhs)
-  noexcept
+operator>(const HTTP_Field_Name& lhs, const char* rhs) noexcept
   { return lhs.compare(rhs) > 0;  }
 
 inline
 bool
-operator>(const cow_string& lhs, const HTTP_Field_Name& rhs)
-  noexcept
+operator>(const cow_string& lhs, const HTTP_Field_Name& rhs) noexcept
   { return rhs.compare(lhs) < 0;  }
 
 inline
 bool
-operator>(const char* lhs, const HTTP_Field_Name& rhs)
-  noexcept
+operator>(const char* lhs, const HTTP_Field_Name& rhs) noexcept
   { return rhs.compare(lhs) < 0;  }
 
 inline
 bool
-operator>=(const HTTP_Field_Name& lhs, const HTTP_Field_Name& rhs)
-  noexcept
+operator>=(const HTTP_Field_Name& lhs, const HTTP_Field_Name& rhs) noexcept
   { return lhs.compare(rhs) >= 0;  }
 
 inline
 bool
-operator>=(const HTTP_Field_Name& lhs, const cow_string& rhs)
-  noexcept
+operator>=(const HTTP_Field_Name& lhs, const cow_string& rhs) noexcept
   { return lhs.compare(rhs) >= 0;  }
 
 inline
 bool
-operator>=(const HTTP_Field_Name& lhs, const char* rhs)
-  noexcept
+operator>=(const HTTP_Field_Name& lhs, const char* rhs) noexcept
   { return lhs.compare(rhs) >= 0;  }
 
 inline
 bool
-operator>=(const cow_string& lhs, const HTTP_Field_Name& rhs)
-  noexcept
+operator>=(const cow_string& lhs, const HTTP_Field_Name& rhs) noexcept
   { return rhs.compare(lhs) <= 0;  }
 
 inline
 bool
-operator>=(const char* lhs, const HTTP_Field_Name& rhs)
-  noexcept
+operator>=(const char* lhs, const HTTP_Field_Name& rhs) noexcept
   { return rhs.compare(lhs) <= 0;  }
 
 inline

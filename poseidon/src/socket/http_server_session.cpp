@@ -281,8 +281,7 @@ http_chunked_response_finish()
 
 bool
 HTTP_Server_Session::
-http_shut_down(HTTP_Status status)
-  noexcept
+http_shut_down(HTTP_Status status) noexcept
   {
     if(this->m_upgrade_ack.load())
       return this->quick_shut_down();
@@ -319,8 +318,7 @@ http_shut_down(HTTP_Status status)
 
 bool
 HTTP_Server_Session::
-http_shut_down(int status)
-  noexcept
+http_shut_down(int status) noexcept
   {
     HTTP_Status real_status = http_status_bad_request;
     if((status >= 200) && (status <= 599))

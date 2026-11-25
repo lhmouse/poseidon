@@ -49,8 +49,7 @@ class Easy_HTTP_Client
 
     // Shuts down all connections.
     void
-    close_all()
-      noexcept;
+    close_all() noexcept;
   };
 
 }  // namespace poseidon

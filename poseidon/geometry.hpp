@@ -18,33 +18,34 @@ struct degrees
   {
     int t;
 
-    constexpr
-    degrees()
-      noexcept : t(0)  { }
+    constexpr degrees() noexcept
+      :
+        t(0)
+      { }
 
-    explicit constexpr
-    degrees(int n1)
-      noexcept : t(n1)  { }
-
-    constexpr
-    bool
-    operator==(degrees rhs)
-      const noexcept { return t == rhs.t;  }
+    explicit constexpr degrees(int n1) noexcept
+      :
+        t(n1)
+      { }
 
     constexpr
     bool
-    operator!=(degrees rhs)
-      const noexcept { return t != rhs.t;  }
+    operator==(degrees rhs) const noexcept
+      { return t == rhs.t;  }
+
+    constexpr
+    bool
+    operator!=(degrees rhs) const noexcept
+      { return t != rhs.t;  }
 
     constexpr
     degrees
-    abs()
-      const noexcept { return degrees(::std::abs(t));  }
+    abs() const noexcept
+      { return degrees(::std::abs(t));  }
 
     constexpr
     degrees
-    reduce360()
-      const noexcept
+    reduce360() const noexcept
       {
         // [0,359]
         uint32_t t0 = (static_cast<uint32_t>(t) + 2147483160) % 360;
@@ -53,8 +54,7 @@ struct degrees
 
     constexpr
     degrees
-    reduce180()
-      const noexcept
+    reduce180() const noexcept
       {
         // [-179,180]
         uint32_t t0 = (static_cast<uint32_t>(t) + 2147483339) % 360 - 179;
@@ -63,8 +63,7 @@ struct degrees
 
     constexpr
     float
-    sin()
-      const noexcept
+    sin() const noexcept
       {
         if(ASTERIA_CONSTANT_P(::sinf(t * 0.0174532925F)))
           return ::sinf(t * 0.0174532925F);
@@ -74,8 +73,7 @@ struct degrees
 
     constexpr
     float
-    cos()
-      const noexcept
+    cos() const noexcept
       {
         if(ASTERIA_CONSTANT_P(::cosf(t * 0.0174532925F)))
           return ::cosf(t * 0.0174532925F);
@@ -85,8 +83,7 @@ struct degrees
 
     constexpr
     float
-    tan()
-      const noexcept
+    tan() const noexcept
       {
         if(ASTERIA_CONSTANT_P(::tanf(t * 0.0174532925F)))
           return ::tanf(t * 0.0174532925F);
@@ -97,8 +94,7 @@ struct degrees
 
 inline
 void
-swap(degrees& lhs, degrees& rhs)
-  noexcept
+swap(degrees& lhs, degrees& rhs) noexcept
   {
     ::std::swap(lhs.t, rhs.t);
   }
@@ -114,13 +110,15 @@ struct point2
   {
     float x, y;
 
-    constexpr
-    point2()
-      noexcept : x(0), y(0)  { }
+    constexpr point2() noexcept
+      :
+        x(0), y(0)
+      { }
 
-    constexpr
-    point2(float x1, float y1)
-      noexcept : x(x1), y(y1)  { }
+    constexpr point2(float x1, float y1) noexcept
+      :
+        x(x1), y(y1)
+      { }
 
     constexpr
     bool
@@ -135,8 +133,7 @@ struct point2
 
 inline
 void
-swap(point2& lhs, point2& rhs)
-  noexcept
+swap(point2& lhs, point2& rhs) noexcept
   {
     ::std::swap(lhs.x, rhs.x);
     ::std::swap(lhs.y, rhs.y);
@@ -153,21 +150,25 @@ struct vector2
   {
     float x, y;
 
-    constexpr
-    vector2()
-      noexcept : x(0), y(0)  { }
+    constexpr vector2() noexcept
+      :
+        x(0), y(0)
+      { }
 
-    constexpr
-    vector2(float x1, float y1)
-      noexcept : x(x1), y(y1)  { }
+    constexpr vector2(float x1, float y1) noexcept
+      :
+        x(x1), y(y1)
+      { }
 
-    constexpr
-    vector2(float rho, degrees theta)
-      noexcept : x(rho * theta.cos()), y(rho * theta.sin())  { }
+    constexpr vector2(float rho, degrees theta) noexcept
+      :
+        x(rho * theta.cos()), y(rho * theta.sin())
+      { }
 
-    constexpr
-    vector2(point2 from, point2 to)
-      noexcept : x(to.x - from.x), y(to.y - from.y)  { }
+    constexpr vector2(point2 from, point2 to) noexcept
+      :
+        x(to.x - from.x), y(to.y - from.y)
+      { }
 
     constexpr
     bool
@@ -191,8 +192,7 @@ struct vector2
 
     constexpr
     float
-    magnitude()
-      const noexcept
+    magnitude() const noexcept
       {
         if(ASTERIA_CONSTANT_P(::hypotf(x, y)))
           return ::hypotf(x, y);
@@ -205,8 +205,7 @@ struct vector2
 
     constexpr
     degrees
-    direction()
-      const noexcept
+    direction() const noexcept
       {
         if(ASTERIA_CONSTANT_P(::atan2f(y, x) * 57.2957795F))
           return degrees(::atan2f(y, x) * 57.2957795F);
@@ -216,8 +215,7 @@ struct vector2
 
     constexpr
     vector2
-    unit()
-      const noexcept
+    unit() const noexcept
       {
         if((y == 0) || (y != y))
           return vector2(signbit(x) ? -1 : 1, 0);
@@ -238,8 +236,7 @@ struct vector2
 
     constexpr
     vector2
-    rotate(degrees theta)
-      const noexcept
+    rotate(degrees theta) const noexcept
       {
         float cos_th = theta.cos();
         float sin_th = theta.sin();
@@ -248,8 +245,7 @@ struct vector2
 
     constexpr
     degrees
-    angle_from(vector2 from)
-      const noexcept
+    angle_from(vector2 from) const noexcept
       {
         float delta_x = from.dot(*this);
         float delta_y = from.cross(*this);
@@ -259,8 +255,7 @@ struct vector2
 
 inline
 void
-swap(vector2& lhs, vector2& rhs)
-  noexcept
+swap(vector2& lhs, vector2& rhs) noexcept
   {
     ::std::swap(lhs.x, rhs.x);
     ::std::swap(lhs.y, rhs.y);

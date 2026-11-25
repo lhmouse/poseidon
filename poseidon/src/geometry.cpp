@@ -401,16 +401,14 @@ do_reduced_arctan(float slope)
 }  // namespace
 
 const trigonometric&
-do_trig_degrees(int theta)
-  noexcept
+do_trig_degrees(int theta) noexcept
   {
     uint32_t t0 = (static_cast<uint32_t>(theta) + 2147483160) % 360;
     return s_trig_table[t0];
   }
 
 int
-do_arctan_degrees(float y, float x)
-  noexcept
+do_arctan_degrees(float y, float x) noexcept
   {
     // Determine the octant of this angle, counterclockwise.
     __m128 ps1 = _mm_cmpeq_ps(_mm_set_ps(x, x, y, y), _mm_set_ps(x, 0, y, 0));

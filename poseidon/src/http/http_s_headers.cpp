@@ -8,8 +8,7 @@ namespace poseidon {
 
 shallow_string
 HTTP_S_Headers::
-default_reason(HTTP_Status status)
-  noexcept
+default_reason(HTTP_Status status) noexcept
   {
     switch(status)
       {
@@ -151,8 +150,7 @@ HTTP_S_Headers::
 
 void
 HTTP_S_Headers::
-encode(tinyfmt& fmt)
-  const
+encode(tinyfmt& fmt) const
   {
     // Write the status line. If `reason` is empty, a default reason string
     // is written. This function does not validate whether these fields

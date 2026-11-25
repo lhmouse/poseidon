@@ -54,8 +54,7 @@ enroll(const cow_string& lock_path)
 
 void
 Appointment::
-withdraw()
-  noexcept
+withdraw() noexcept
   {
     this->m_fd.reset();
     this->m_index = -1;

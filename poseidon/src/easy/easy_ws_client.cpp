@@ -51,8 +51,7 @@ struct Final_Fiber final : Abstract_Fiber
 
     virtual
     void
-    do_on_abstract_fiber_execute()
-      override
+    do_on_abstract_fiber_execute() override
       {
         for(;;) {
           // The event callback may stop this client, so we have to check for
@@ -160,8 +159,7 @@ struct Final_Session final : WS_Client_Session
 
     virtual
     void
-    do_on_ws_connected()
-      override
+    do_on_ws_connected() override
       {
         Event event;
         event.type = easy_ws_open;
@@ -181,8 +179,7 @@ struct Final_Session final : WS_Client_Session
 
     virtual
     void
-    do_on_ws_message_finish(WS_Opcode opcode, linear_buffer&& data)
-      override
+    do_on_ws_message_finish(WS_Opcode opcode, linear_buffer&& data) override
       {
         Event event;
         if(opcode == ws_TEXT)
@@ -200,8 +197,7 @@ struct Final_Session final : WS_Client_Session
 
     virtual
     void
-    do_on_ws_close(WS_Status status, chars_view reason)
-      override
+    do_on_ws_close(WS_Status status, chars_view reason) override
       {
         Event event;
         event.type = easy_ws_close;
@@ -264,8 +260,7 @@ connect(const cow_string& addr, const callback_type& callback)
 
 void
 Easy_WS_Client::
-close_all()
-  noexcept
+close_all() noexcept
   {
     this->m_sessions = nullptr;
   }

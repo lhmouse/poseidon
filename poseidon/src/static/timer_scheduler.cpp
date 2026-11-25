@@ -20,18 +20,15 @@ struct Timer_Comparator
   {
     // We have to build a minheap here.
     bool
-    operator()(const Queued_Timer& lhs, const Queued_Timer& rhs)
-      noexcept
+    operator()(const Queued_Timer& lhs, const Queued_Timer& rhs) noexcept
       { return lhs.next > rhs.next;  }
 
     bool
-    operator()(const Queued_Timer& lhs, steady_time rhs)
-      noexcept
+    operator()(const Queued_Timer& lhs, steady_time rhs) noexcept
       { return lhs.next > rhs;  }
 
     bool
-    operator()(steady_time lhs, const Queued_Timer& rhs)
-      noexcept
+    operator()(steady_time lhs, const Queued_Timer& rhs) noexcept
       { return lhs > rhs.next;  }
   }
   constexpr timer_comparator;
@@ -42,8 +39,7 @@ POSEIDON_HIDDEN_X_STRUCT(Timer_Scheduler,
   Queued_Timer);
 
 Timer_Scheduler::
-Timer_Scheduler()
-  noexcept
+Timer_Scheduler() noexcept
   {
   }
 

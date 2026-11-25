@@ -45,47 +45,39 @@ class HTTP_Request_Parser
 
     // Get configuration values.
     int
-    default_compression_level()
-      const noexcept
+    default_compression_level() const noexcept
       { return this->m_default_compression_level;  }
 
     uint32_t
-    max_header_length()
-      const noexcept
+    max_header_length() const noexcept
       { return this->m_max_header_length;  }
 
     uint32_t
-    max_content_length()
-      const noexcept
+    max_content_length() const noexcept
       { return this->m_max_content_length;  }
 
     // Has an error occurred?
     bool
-    error()
-      const noexcept
+    error() const noexcept
       { return this->m_llhttp_parser.error != HPE_OK;  }
 
     // Translates the error code to an HTTP status code.
     ASTERIA_PURE
     HTTP_Status
-    http_status_from_error()
-      const noexcept;
+    http_status_from_error() const noexcept;
 
     // Clears the current complete message, so the parser can start the next one.
     void
-    next_message()
-      noexcept;
+    next_message() noexcept;
 
     // Clears all fields. This function shall not be called unless the parser is
     // to be reused for another stream.
     void
-    clear()
-      noexcept;
+    clear() noexcept;
 
     // Deallocate dynamic memory, if any.
     void
-    deallocate()
-      noexcept;
+    deallocate() noexcept;
 
     // Parses the request line and headers of an HTTP request from a stream.
     // `data` may be consumed partially, and must be preserved between calls. If
@@ -96,23 +88,19 @@ class HTTP_Request_Parser
 
     // Get the parsed headers.
     bool
-    should_close_after_payload()
-      const noexcept
+    should_close_after_payload() const noexcept
       { return this->m_close_after_payload;  }
 
     bool
-    headers_complete()
-      const noexcept
+    headers_complete() const noexcept
       { return this->m_hreq >= hreq_headers_done;  }
 
     const HTTP_C_Headers&
-    headers()
-      const noexcept
+    headers() const noexcept
       { return this->m_headers;  }
 
     HTTP_C_Headers&
-    mut_headers()
-      noexcept
+    mut_headers() noexcept
       { return this->m_headers;  }
 
     // Parses the payload of an HTTP request from a stream. `data` may be consumed
@@ -123,18 +111,15 @@ class HTTP_Request_Parser
 
     // Get the parsed payload.
     bool
-    payload_complete()
-      const noexcept
+    payload_complete() const noexcept
       { return this->m_hreq >= hreq_payload_done;  }
 
     const linear_buffer&
-    payload()
-      const noexcept
+    payload() const noexcept
       { return this->m_payload;  }
 
     linear_buffer&
-    mut_payload()
-      noexcept
+    mut_payload() noexcept
       { return this->m_payload;  }
   };
 

@@ -43,13 +43,11 @@ class Abstract_Socket
     // should not be `const`. This function exists for convenience for derived
     // classes.
     int
-    do_socket_fd()
-      const noexcept
+    do_socket_fd() const noexcept
       { return this->m_fd.get();  }
 
     bool
-    do_socket_test_change(Socket_State from, Socket_State to)
-      noexcept
+    do_socket_test_change(Socket_State from, Socket_State to) noexcept
       {
         Socket_State old = this->m_state.load();
         return (old == from) && this->m_state.cmpxchg(old, to);
@@ -58,16 +56,13 @@ class Abstract_Socket
     // Get the network scheduler instance inside the callbacks hereafter. If this
     // function is called elsewhere, the behavior is undefined.
     Network_Scheduler&
-    do_abstract_socket_lock_scheduler(recursive_mutex::unique_lock& lock)
-      const noexcept;
+    do_abstract_socket_lock_scheduler(recursive_mutex::unique_lock& lock) const noexcept;
 
     linear_buffer&
-    do_abstract_socket_lock_read_queue(recursive_mutex::unique_lock& lock)
-      noexcept;
+    do_abstract_socket_lock_read_queue(recursive_mutex::unique_lock& lock) noexcept;
 
     linear_buffer&
-    do_abstract_socket_lock_write_queue(recursive_mutex::unique_lock& lock)
-      noexcept;
+    do_abstract_socket_lock_write_queue(recursive_mutex::unique_lock& lock) noexcept;
 
     // This callback is invoked by the network thread when incoming data are
     // available, and is intended to be overriden by derived classes.
@@ -99,14 +94,12 @@ class Abstract_Socket
 
     // Get the file descriptor.
     int
-    fd()
-      noexcept
+    fd() noexcept
       { return this->m_fd.get();  }
 
     // Get the connection state.
     Socket_State
-    socket_state()
-      const noexcept
+    socket_state() const noexcept
       { return this->m_state.load();  }
 
     // Get the local or bound address of this socket. In case of errors,
@@ -114,24 +107,21 @@ class Abstract_Socket
     // changes that other APIs may have made.
     ASTERIA_PURE
     const IPv6_Address&
-    local_address()
-      const noexcept;
+    local_address() const noexcept;
 
     // Get the remote or connected address of this socket. In case of errors,
     // `ipv6_invalid` is returned. The result is cached and will not reflect
     // changes that other APIs may have made.
     ASTERIA_PURE
     const IPv6_Address&
-    remote_address()
-      const noexcept;
+    remote_address() const noexcept;
 
     // Shut the socket down without flushing unsent data nor sending any
     // protocol-specific notifications, useful for abandoning an abnormal
     // connection. Be advised that data loss or corruption may happen.
     // This function is thread-safe.
     bool
-    quick_shut_down()
-      noexcept;
+    quick_shut_down() noexcept;
   };
 
 }  // namespace poseidon

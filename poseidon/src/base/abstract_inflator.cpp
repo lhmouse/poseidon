@@ -20,8 +20,7 @@ Abstract_Inflator::
 
 void
 Abstract_Inflator::
-reset()
-  noexcept
+reset() noexcept
   {
     ::inflateReset(this->m_strm);
   }

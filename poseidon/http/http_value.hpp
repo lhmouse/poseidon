@@ -32,10 +32,7 @@ class HTTP_Value
   public:
     // Initialize a value from the given argument. It's important that all fields
     // are updated accordingly, so users may read this value in any format.
-    HTTP_Value()
-      noexcept
-      {
-      }
+    HTTP_Value() noexcept = default;
 
     HTTP_Value(const cow_string& str)
       :
@@ -46,8 +43,7 @@ class HTTP_Value
       }
 
     HTTP_Value&
-    operator=(const cow_string& str)
-      &
+    operator=(const cow_string& str) &
       {
         this->m_str = str;
         this->m_vm = vm_str_valid;
@@ -56,8 +52,7 @@ class HTTP_Value
       }
 
     HTTP_Value&
-    operator=(cow_string&& str)
-      &
+    operator=(cow_string&& str) &
       {
         this->m_str = move(str);
         this->m_vm = vm_str_valid;
@@ -78,8 +73,7 @@ class HTTP_Value
     template<typename ycharT, size_t N,
     ASTERIA_ENABLE_IF(::std::is_same<ycharT, char>::value)>
     HTTP_Value&
-    operator=(const ycharT (*ps)[N])
-      &
+    operator=(const ycharT (*ps)[N]) &
       {
         this->m_str = ps;
         this->m_vm = vm_str_valid;
@@ -96,8 +90,7 @@ class HTTP_Value
       }
 
     HTTP_Value&
-    operator=(int num)
-      &
+    operator=(int num) &
       {
         this->m_int = num;
         this->m_vm = vm_int_valid;
@@ -114,8 +107,7 @@ class HTTP_Value
       }
 
     HTTP_Value&
-    operator=(long num)
-      &
+    operator=(long num) &
       {
         this->m_int = num;
         this->m_vm = vm_int_valid;
@@ -132,8 +124,7 @@ class HTTP_Value
       }
 
     HTTP_Value&
-    operator=(long long num)
-      &
+    operator=(long long num) &
       {
         this->m_int = num;
         this->m_vm = vm_int_valid;
@@ -150,8 +141,7 @@ class HTTP_Value
       }
 
     HTTP_Value&
-    operator=(double num)
-      &
+    operator=(double num) &
       {
         this->m_dbl = num;
         this->m_vm = vm_dbl_valid;
@@ -168,8 +158,7 @@ class HTTP_Value
       }
 
     HTTP_Value&
-    operator=(const DateTime& dt)
-      &
+    operator=(const DateTime& dt) &
       {
         this->m_vm = vm_dt_valid;
         this->m_dt = dt;
@@ -186,8 +175,7 @@ class HTTP_Value
       }
 
     HTTP_Value&
-    operator=(const system_time& tm)
-      &
+    operator=(const system_time& tm) &
       {
         this->m_dt = tm;
         this->m_vm = vm_dt_valid;
@@ -196,8 +184,7 @@ class HTTP_Value
       }
 
     HTTP_Value&
-    swap(HTTP_Value& other)
-      noexcept
+    swap(HTTP_Value& other) noexcept
       {
         ::std::swap(this->m_int, other.m_int);
         this->m_str.swap(other.m_str);
@@ -216,8 +203,7 @@ class HTTP_Value
 
     // Sets this value to an empty string.
     void
-    clear()
-      noexcept
+    clear() noexcept
       {
         this->m_int = 0;
         this->m_str.clear();
@@ -228,58 +214,47 @@ class HTTP_Value
 
     // Access individual fields. These are always synchronized.
     bool
-    is_null()
-      const noexcept
+    is_null() const noexcept
       { return !(this->m_vm & vm_str_valid);  }
 
     const cow_string&
-    as_string()
-      const noexcept
+    as_string() const noexcept
       { return this->m_str;  };
 
     const char*
-    as_string_c_str()
-      const noexcept
+    as_string_c_str() const noexcept
       { return this->m_str.c_str();  }
 
     size_t
-    as_string_length()
-      const noexcept
+    as_string_length() const noexcept
       { return this->m_str.length();  }
 
     bool
-    is_integer()
-      const noexcept
+    is_integer() const noexcept
       { return this->m_vm & vm_int_valid;  }
 
     int64_t
-    as_integer()
-      const noexcept
+    as_integer() const noexcept
       { return this->m_int;  }
 
     bool
-    is_double()
-      const noexcept
+    is_double() const noexcept
       { return this->m_vm & vm_dbl_valid;  }
 
     double
-    as_double()
-      const noexcept
+    as_double() const noexcept
       { return this->m_dbl;  }
 
     bool
-    is_datetime()
-      const noexcept
+    is_datetime() const noexcept
       { return this->m_vm & vm_dt_valid;  }
 
     const DateTime&
-    as_datetime()
-      const noexcept
+    as_datetime() const noexcept
       { return this->m_dt;  }
 
     system_time
-    as_system_time()
-      const noexcept
+    as_system_time() const noexcept
       { return this->m_dt.as_system_time();  }
 
     // Sets raw data.
@@ -335,18 +310,15 @@ class HTTP_Value
     // immediate use in an HTTP header. It is important to note that HTTP date/time,
     // which contain a comma itself, will not be enclosed in double quotes.
     tinyfmt&
-    print_to(tinyfmt& fmt)
-      const;
+    print_to(tinyfmt& fmt) const;
 
     cow_string
-    to_string()
-      const;
+    to_string() const;
   };
 
 inline
 void
-swap(HTTP_Value& lhs, HTTP_Value& rhs)
-  noexcept
+swap(HTTP_Value& lhs, HTTP_Value& rhs) noexcept
   { lhs.swap(rhs);  }
 
 inline

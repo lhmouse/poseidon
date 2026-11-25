@@ -83,8 +83,7 @@ do_color(linear_buffer& mtext, const Level_Config& lconf, const char* code)
 
 template<typename xFiles>
 void
-do_write_nothrow(xFiles& io_files,  const Level_Config& lconf, const Message& msg)
-  noexcept
+do_write_nothrow(xFiles& io_files, const Level_Config& lconf, const Message& msg) noexcept
   try {
     linear_buffer mtext;
     ::asteria::ascii_numput nump;
@@ -211,8 +210,7 @@ POSEIDON_HIDDEN_X_STRUCT(Logger,
   Message);
 
 Logger::
-Logger()
-  noexcept
+Logger() noexcept
   {
   }
 
@@ -326,8 +324,7 @@ enqueue(uint8_t level, const char* func, const char* file, uint32_t line, const 
 
 void
 Logger::
-synchronize()
-  noexcept
+synchronize() noexcept
   {
     // Get all pending elements.
     plain_mutex::unique_lock lock(this->m_queue_mutex);

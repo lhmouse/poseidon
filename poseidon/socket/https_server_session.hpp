@@ -27,13 +27,11 @@ class HTTPS_Server_Session
     // These function implement `SSL_Socket`.
     virtual
     void
-    do_on_ssl_stream(linear_buffer& data, bool eof)
-      override;
+    do_on_ssl_stream(linear_buffer& data, bool eof) override;
 
     // Checks whether the protocol has changed.
     bool
-    do_has_upgraded()
-      const noexcept
+    do_has_upgraded() const noexcept
       { return this->m_upgrade_ack.load();  }
 
     // This callback is invoked by the network thread after all headers of a
@@ -151,12 +149,10 @@ class HTTPS_Server_Session
     // a standard status code, or an integer within [200,599]. Any other value is
     // sanitized to 400.
     bool
-    https_shut_down(HTTP_Status status = http_status_bad_request)
-      noexcept;
+    https_shut_down(HTTP_Status status = http_status_bad_request) noexcept;
 
     bool
-    https_shut_down(int status)
-      noexcept;
+    https_shut_down(int status) noexcept;
   };
 
 }  // namespace poseidon

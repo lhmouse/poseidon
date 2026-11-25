@@ -7,8 +7,7 @@
 namespace poseidon {
 
 Abstract_Future::
-Abstract_Future()
-  noexcept
+Abstract_Future() noexcept
   {
   }
 
@@ -60,8 +59,7 @@ do_abstract_future_initialize_once()
 
 void
 Abstract_Future::
-do_abstract_future_check_success()
-  const
+do_abstract_future_check_success() const
   {
     if(!this->m_init.load())
       POSEIDON_THROW((

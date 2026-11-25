@@ -10,8 +10,7 @@
 namespace poseidon {
 
 Config_File::
-Config_File()
-  noexcept
+Config_File() noexcept
   {
   }
 
@@ -28,8 +27,7 @@ Config_File::
 
 void
 Config_File::
-clear()
-  noexcept
+clear() noexcept
   {
     this->m_path.clear();
     this->m_root.clear();
@@ -49,8 +47,7 @@ reload(const cow_string& conf_path)
 
 const ::asteria::Value&
 Config_File::
-query(chars_view vpath)
-  const
+query(chars_view vpath) const
   {
     enum Parser_State
       {
@@ -287,8 +284,7 @@ query(chars_view vpath)
 
 bool
 Config_File::
-get_boolean(chars_view vpath)
-  const
+get_boolean(chars_view vpath) const
   {
     const auto& value = this->query(vpath);
     if(value.is_null())
@@ -308,8 +304,7 @@ get_boolean(chars_view vpath)
 
 opt<bool>
 Config_File::
-get_boolean_opt(chars_view vpath)
-  const
+get_boolean_opt(chars_view vpath) const
   {
     const auto& value = this->query(vpath);
     if(value.is_null())
@@ -326,8 +321,7 @@ get_boolean_opt(chars_view vpath)
 
 int64_t
 Config_File::
-get_integer(chars_view vpath, int64_t min, int64_t max)
-  const
+get_integer(chars_view vpath, int64_t min, int64_t max) const
   {
     const auto& value = this->query(vpath);
     if(value.is_null())
@@ -353,8 +347,7 @@ get_integer(chars_view vpath, int64_t min, int64_t max)
 
 opt<int64_t>
 Config_File::
-get_integer_opt(chars_view vpath, int64_t min, int64_t max)
-  const
+get_integer_opt(chars_view vpath, int64_t min, int64_t max) const
   {
     const auto& value = this->query(vpath);
     if(value.is_null())
@@ -377,8 +370,7 @@ get_integer_opt(chars_view vpath, int64_t min, int64_t max)
 
 double
 Config_File::
-get_real(chars_view vpath, double min, double max)
-  const
+get_real(chars_view vpath, double min, double max) const
   {
     const auto& value = this->query(vpath);
     if(value.is_null())
@@ -404,8 +396,7 @@ get_real(chars_view vpath, double min, double max)
 
 opt<double>
 Config_File::
-get_real_opt(chars_view vpath, double min, double max)
-  const
+get_real_opt(chars_view vpath, double min, double max) const
   {
     const auto& value = this->query(vpath);
     if(value.is_null())
@@ -428,8 +419,7 @@ get_real_opt(chars_view vpath, double min, double max)
 
 const cow_string&
 Config_File::
-get_string(chars_view vpath)
-  const
+get_string(chars_view vpath) const
   {
     const auto& value = this->query(vpath);
     if(value.is_null())
@@ -449,8 +439,7 @@ get_string(chars_view vpath)
 
 opt<cow_string>
 Config_File::
-get_string_opt(chars_view vpath)
-  const
+get_string_opt(chars_view vpath) const
   {
     const auto& value = this->query(vpath);
     if(value.is_null())
@@ -467,8 +456,7 @@ get_string_opt(chars_view vpath)
 
 size_t
 Config_File::
-get_array_size(chars_view vpath)
-  const
+get_array_size(chars_view vpath) const
   {
     const auto& value = this->query(vpath);
     if(value.is_null())
@@ -488,8 +476,7 @@ get_array_size(chars_view vpath)
 
 opt<size_t>
 Config_File::
-get_array_size_opt(chars_view vpath)
-  const
+get_array_size_opt(chars_view vpath) const
   {
     const auto& value = this->query(vpath);
     if(value.is_null())

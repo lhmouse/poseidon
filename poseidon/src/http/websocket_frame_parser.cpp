@@ -147,8 +147,7 @@ WebSocket_Frame_Parser::
 
 void
 WebSocket_Frame_Parser::
-clear()
-  noexcept
+clear() noexcept
   {
     this->m_frm_header.clear();
     this->m_frm_payload.clear();
@@ -160,8 +159,7 @@ clear()
 
 void
 WebSocket_Frame_Parser::
-deallocate()
-  noexcept
+deallocate() noexcept
   {
     ::asteria::exchange(this->m_frm_payload);
   }
