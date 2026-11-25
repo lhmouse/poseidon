@@ -23,8 +23,8 @@ class UUID
 
   private:
     union {
-      __m128i m_stor = { };
-      ::std::array<uint8_t, 16> m_bytes;
+      ::std::array<uint8_t, 16> m_bytes = { };
+      __m128i m_stor;
     };
 
   public:
