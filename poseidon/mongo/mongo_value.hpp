@@ -25,7 +25,9 @@ class Mongo_Value
 
   public:
     // Value constructors
-    constexpr Mongo_Value(nullptr_t = nullptr) noexcept = default;
+    constexpr Mongo_Value(nullptr_t = nullptr) noexcept
+      {
+      }
 
     Mongo_Value(bool value) noexcept
       {
