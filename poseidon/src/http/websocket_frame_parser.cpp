@@ -220,6 +220,14 @@ accept_handshake_request(HTTP_S_Headers& resp, const HTTP_C_Headers& req)
                                  "Sec-WebSocket-Extensions, Sec-WebSocket-Protocol");
       return;
     }
+    else if(req.method != http_method_GET) {
+      // The method MUST be GET.
+      // Reference: https://datatracker.ietf.org/doc/html/rfc6455#section-4.2.1
+      resp.status = http_status_method_not_allowed;
+      resp.headers.emplace_back(&"Allow", &"GET");
+      POSEIDON_LOG_ERROR(("WebSocket handshake method isn't GET; failing"));
+      return;
+    }
 
     this->m_wsf = wsf_error;
     this->m_error_desc = "handshake request invalid";
