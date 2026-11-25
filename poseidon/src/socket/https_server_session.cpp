@@ -45,7 +45,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
 
         if(this->m_req_parser.error()) {
           data.clear();
-          this->do_on_https_request_error(this->m_req_parser.headers().method == http_method_HEAD,
+          this->do_on_https_request_error(this->m_req_parser.headers().method,
                                           this->m_req_parser.http_status_from_error());
           return;
         }
@@ -61,31 +61,13 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
 
         if(headers.raw_host.empty()) {
           data.clear();
-          this->do_on_https_request_error(this->m_req_parser.headers().method == http_method_HEAD,
+          this->do_on_https_request_error(this->m_req_parser.headers().method,
                                           http_status_bad_request);
           return;
         }
 
         bool fin = this->m_req_parser.should_close_after_content();
-        auto content_type = this->do_on_https_request_headers(headers, fin);
-        switch(content_type)
-          {
-          case http_content_normal:
-          case http_content_empty:
-            break;
-
-          case http_content_connect:
-            this->m_upgrade_ack.store(true);
-            this->m_req_parser.deallocate();
-            this->do_on_https_upgraded_stream(data, eof);
-            return;
-
-          default:
-            POSEIDON_THROW((
-                "Invalid content type `$3` returned from `do_https_parser_on_headers_complete()`",
-                "[HTTPS server session `$1` (class `$2`)]"),
-                this, typeid(*this), content_type);
-          }
+        this->do_on_https_request_headers(headers, fin);
       }
 
       if(!this->m_req_parser.content_complete()) {
@@ -93,7 +75,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
 
         if(this->m_req_parser.error()) {
           data.clear();
-          this->do_on_https_request_error(this->m_req_parser.headers().method == http_method_HEAD,
+          this->do_on_https_request_error(this->m_req_parser.headers().method,
                                           this->m_req_parser.http_status_from_error());
           return;
         }
@@ -114,23 +96,20 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
     }
   }
 
-HTTP_Content_Type
+void
 HTTPS_Server_Session::
 do_on_https_request_headers(HTTP_C_Headers& req, bool /*eot*/)
   {
     if(req.is_proxy) {
       // Reject proxy requests.
-      this->do_on_https_request_error(false, http_status_forbidden);
-      return http_content_normal;
+      this->do_on_https_request_error(req.method, http_status_forbidden);
+      return;
     }
 
     POSEIDON_LOG_DEBUG((
         "HTTPS server received request: $3 $4",
         "[HTTPS server session `$1` (class `$2`)]"),
         this, typeid(*this), req.method, req.raw_path);
-
-    // The default handler doesn't handle Upgrade requests.
-    return http_content_normal;
   }
 
 void
@@ -160,7 +139,7 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
 
 bool
 HTTPS_Server_Session::
-do_https_raw_response(const HTTP_S_Headers& resp, chars_view data)
+do_https_raw_response(HTTP_Method method, const HTTP_S_Headers& resp, chars_view data)
   {
     // Compose the message and send it as a whole.
     tinyfmt_ln fmt;
@@ -199,12 +178,12 @@ https_response_headers_only(HTTP_S_Headers&& resp)
           "[HTTPS server session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    return this->do_https_raw_response(resp, "");
+    return this->do_https_raw_response(http_method_HEAD, resp, "");
   }
 
 bool
 HTTPS_Server_Session::
-https_response(bool method_was_head, HTTP_S_Headers&& resp, chars_view data)
+https_response(HTTP_Method method, HTTP_S_Headers&& resp, chars_view data)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -215,18 +194,18 @@ https_response(bool method_was_head, HTTP_S_Headers&& resp, chars_view data)
     // Some responses are required to have no content and require no
     // `Content-Length` header.
     if((resp.status <= 199) || (resp.status == 204) || (resp.status == 304))
-      return this->do_https_raw_response(resp, "");
+      return this->do_https_raw_response(method, resp, "");
 
     // Otherwise, a `Content-Length` is required; otherwise the response would
     // be interpreted as terminating by closure ofthe connection.
     resp.headers.emplace_back(&"Content-Length", static_cast<int64_t>(data.n));
 
-    return this->do_https_raw_response(resp, method_was_head ? "" : data);
+    return this->do_https_raw_response(method, resp, data);
   }
 
 bool
 HTTPS_Server_Session::
-https_chunked_response_start(HTTP_S_Headers&& resp)
+https_chunked_response_start(HTTP_Method method, HTTP_S_Headers&& resp)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -237,7 +216,7 @@ https_chunked_response_start(HTTP_S_Headers&& resp)
     // Write a chunked header.
     resp.headers.emplace_back(&"Transfer-Encoding", &"chunked");
 
-    return this->do_https_raw_response(resp, "");
+    return this->do_https_raw_response(method, resp, "");
   }
 
 bool
@@ -304,7 +283,7 @@ https_shut_down(HTTP_Status status) noexcept
       tinyfmt_ln fmt;
       format(fmt, default_page, status, resp.reason);
 
-      succ = this->do_https_raw_response(resp, fmt.get_buffer());
+      succ = this->do_https_raw_response(http_method_GET, resp, fmt.get_buffer());
     }
     catch(exception& stdex) {
       POSEIDON_LOG_ERROR((

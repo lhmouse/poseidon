@@ -41,14 +41,24 @@ my_server_callback(const shptr<WS_Server_Session>& session,
         break;
 
       case easy_hws_get:
-      case easy_hws_head:
         {
-          POSEIDON_LOG_ERROR(("example HTTP/WS server received HTTP: $1"), data);
+          POSEIDON_LOG_ERROR(("example HTTP/WS server received HTTP GET: $1"), data);
 
           HTTP_S_Headers resp;
           resp.status = http_status_ok;
           resp.headers.emplace_back(&"Content-Type", &"text/plain");
-          session->http_response(event == easy_hws_head, move(resp), "example HTTP/WS server\n");
+          session->http_response(http_method_GET, move(resp), "example HTTP/WS server GET\n");
+        }
+        break;
+
+      case easy_hws_head:
+        {
+          POSEIDON_LOG_ERROR(("example HTTP/WS server received HTTP HEAD: $1"), data);
+
+          HTTP_S_Headers resp;
+          resp.status = http_status_ok;
+          resp.headers.emplace_back(&"Content-Type", &"text/plain");
+          session->http_response(http_method_HEAD, move(resp), "example HTTP/WS server HEAD\n");
         }
         break;
 

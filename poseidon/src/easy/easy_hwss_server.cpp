@@ -148,13 +148,13 @@ struct Final_Session final : WSS_Server_Session
       }
 
     virtual
-    HTTP_Content_Type
+    void
     do_on_https_request_headers(HTTP_C_Headers& req, bool eot) override
       {
         if(req.is_proxy) {
           // Reject proxy requests.
-          this->do_on_https_request_error(false, http_status_forbidden);
-          return http_content_normal;
+          this->do_on_https_request_error(req.method, http_status_forbidden);
+          return;
         }
 
         Event event;
@@ -163,13 +163,13 @@ struct Final_Session final : WSS_Server_Session
           case http_method_OPTIONS:
             // Respond to an XSS check.
             this->do_wss_complete_handshake(req, eot);
-            return http_content_normal;
+            return;
 
           case http_method_GET:
             if(any_of(req.headers, [&](const auto& r) { return r.first == "Upgrade";  })) {
               // Try upgrading to WebSocket.
               this->do_wss_complete_handshake(req, eot);
-              return http_content_normal;
+              return;
             }
 
             // Handle a plain HTTP GET request.
@@ -183,9 +183,9 @@ struct Final_Session final : WSS_Server_Session
 
           default:
             // Reject all the other.
-            this->do_on_https_request_error(false, http_status_method_not_allowed);
+            this->do_on_https_request_error(req.method, http_status_method_not_allowed);
             this->quick_shut_down();
-            return http_content_normal;
+            return;
           }
 
         event.data.putn(req.raw_host.data(), req.raw_host.size());
@@ -194,7 +194,6 @@ struct Final_Session final : WSS_Server_Session
         event.data.putn(req.raw_query.data(), req.raw_query.size());
 
         this->do_push_event_common(move(event));
-        return http_content_normal;
       }
 
     virtual

@@ -35,18 +35,15 @@ class HTTP_Server_Session
       { return this->m_upgrade_ack.load();  }
 
     // This callback is invoked by the network thread after all headers of a
-    // request have been received, just before the content of it. Returning
-    // `http_content_normal` indicates that the request has content whose length
-    // is described by the `Content-Length` or `Transfer-Encoding` header.
-    // Returning `http_content_connect` causes all further incoming data to
-    // be delivered via `do_on_http_upgraded_stream()`. This callback is
-    // primarily used to examine request paths and headers before message bodies.
+    // request have been received, just before the content of it. This callback
+    // is primarily used to examine request paths and headers before message
+    // bodies. Sending a 101 response from here switches the connection to
+    // `do_on_http_upgraded_stream()`.
     // The default implementation invokes `do_on_http_request_error()` if the
-    // request method is CONNECT or the request URI is absolute (this usually
-    // causes shutdown of the connection), ignores upgrade requests, and returns
-    // `http_content_normal`.
+    // request URI is absolute (this usually causes shutdown of the connection),
+    // and ignores upgrade requests.
     virtual
-    HTTP_Content_Type
+    void
     do_on_http_request_headers(HTTP_C_Headers& req, bool eot);
 
     // This callback is invoked by the network thread for each fragment of the
@@ -84,7 +81,7 @@ class HTTP_Server_Session
     // thread, after all requests, to preserve the order of responses.
     virtual
     void
-    do_on_http_request_error(bool method_was_head, HTTP_Status status)
+    do_on_http_request_error(HTTP_Method method, HTTP_Status status)
       = 0;
 
     // This callback is invoked by the network thread on a connection that has
@@ -99,7 +96,7 @@ class HTTP_Server_Session
     // performed. This function is provided for convenience only, and maybe
     // isn't very useful unless for some low-level hacks.
     bool
-    do_http_raw_response(const HTTP_S_Headers& resp, chars_view data);
+    do_http_raw_response(HTTP_Method method, const HTTP_S_Headers& resp, chars_view data);
 
   public:
     HTTP_Server_Session(const HTTP_Server_Session&) = delete;
@@ -124,7 +121,7 @@ class HTTP_Server_Session
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    http_response(bool method_was_head, HTTP_S_Headers&& resp, chars_view data);
+    http_response(HTTP_Method method, HTTP_S_Headers&& resp, chars_view data);
 
     // Send a response with chunked content, which may contain multiple chunks.
     // Callers should not supply `Transfer-Encoding` headers, as they will be
@@ -137,7 +134,7 @@ class HTTP_Server_Session
     // If these function throw an exception, there is no effect.
     // These functions are thread-safe.
     bool
-    http_chunked_response_start(HTTP_S_Headers&& resp);
+    http_chunked_response_start(HTTP_Method method, HTTP_S_Headers&& resp);
 
     bool
     http_chunked_response_send(chars_view data);

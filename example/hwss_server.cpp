@@ -41,14 +41,24 @@ my_server_callback(const shptr<WSS_Server_Session>& session,
         break;
 
       case easy_hws_get:
-      case easy_hws_head:
         {
-          POSEIDON_LOG_ERROR(("example HTTPS/WSS server received HTTP: $1"), data);
+          POSEIDON_LOG_ERROR(("example HTTPS/WSS server received HTTP GET: $1"), data);
 
           HTTP_S_Headers resp;
           resp.status = http_status_ok;
           resp.headers.emplace_back(&"Content-Type", &"text/plain");
-          session->https_response(event == easy_hws_head, move(resp), "example HTTPS/WSS server\n");
+          session->https_response(http_method_GET, move(resp), "example HTTPS/WSS server GET\n");
+        }
+        break;
+
+      case easy_hws_head:
+        {
+          POSEIDON_LOG_ERROR(("example HTTPS/WSS server received HTTP HEAD: $1"), data);
+
+          HTTP_S_Headers resp;
+          resp.status = http_status_ok;
+          resp.headers.emplace_back(&"Content-Type", &"text/plain");
+          session->https_response(http_method_HEAD, move(resp), "example HTTPS/WSS server HEAD\n");
         }
         break;
 

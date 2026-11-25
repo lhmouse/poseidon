@@ -35,7 +35,7 @@ class WS_Server_Session
     do_abstract_socket_on_closed() override;
 
     virtual
-    HTTP_Content_Type
+    void
     do_on_http_request_headers(HTTP_C_Headers& req, bool eot) override;
 
     virtual
@@ -48,7 +48,7 @@ class WS_Server_Session
 
     virtual
     void
-    do_on_http_request_error(bool method_was_head, HTTP_Status status) override;
+    do_on_http_request_error(HTTP_Method method, HTTP_Status status) override;
 
     virtual
     void
