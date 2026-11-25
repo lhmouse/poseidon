@@ -31,6 +31,7 @@ class HTTP_Request_Parser
     cow_string m_stash;
     uint32_t m_header_size = 0;
     HREQ_State m_hreq = hreq_new;
+    bool m_host_set = false;
     bool m_close_after_payload = false;
 
   public:
@@ -142,6 +143,7 @@ class HTTP_Request_Parser
         this->m_payload.clear();
         this->m_header_size = 0;
         this->m_hreq = hreq_new;
+        this->m_host_set = false;
         this->m_close_after_payload = false;
       }
   };

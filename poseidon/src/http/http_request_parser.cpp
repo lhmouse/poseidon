@@ -95,22 +95,6 @@ HTTP_Request_Parser::s_llhttp_settings =
         if(this->m_hreq >= hreq_headers_done)  // chunk trailer
           return 0;
 
-        if(!this->m_headers.is_proxy) {
-          // Get the `Host:` header. Multiple `Host:` headers are not allowed.
-          uint32_t count = 0;
-          for(const auto& hr : this->m_headers.headers)
-            if(hr.first == "Host") {
-              count ++;
-              if(count == 1)
-                this->m_headers.raw_host = hr.second.as_string();
-              else
-                break;
-            }
-
-          if(count != 1)
-            return -1;  // fail
-        }
-
         this->m_hreq = hreq_headers_done;
         this->m_close_after_payload = ::llhttp_should_keep_alive(ps) == 0;
         return HPE_PAUSED;
@@ -148,15 +132,11 @@ HTTP_Request_Parser::s_llhttp_settings =
         size_t pos = this->m_stash.find("://");
         if(pos != this->m_stash.npos) {
           // An explicit scheme indicates a proxy request.
-          this->m_headers.is_proxy = true;
-
           if(::asteria::ascii_ci_equal(this->m_stash.data(), pos, "http", 4)) {
-            this->m_headers.port = 80;
             this->m_headers.is_ssl = false;
             this->m_stash.erase(0, 7);
           }
           else if(::asteria::ascii_ci_equal(this->m_stash.data(), pos, "https", 5)) {
-            this->m_headers.port = 443;
             this->m_headers.is_ssl = true;
             this->m_stash.erase(0, 8);
           }
@@ -168,6 +148,18 @@ HTTP_Request_Parser::s_llhttp_settings =
             this->m_headers.raw_userinfo.assign(this->m_stash, 0, pos);
             this->m_stash.erase(0, pos + 1);
           }
+
+          if(parse_network_reference(ref, this->m_stash) != this->m_stash.size())
+            return -1;  // fail
+
+          this->m_headers.raw_host.assign(ref.host.p, ref.host.n);
+          this->m_headers.is_proxy = true;
+          this->m_host_set = true;
+
+          if(ref.port.n != 0)
+            this->m_headers.port = ref.port_num;
+          else
+            this->m_headers.port = static_cast<uint16_t>(this->m_headers.is_ssl ? 443 : 80);
         }
         else {
           // The path must be absolute.
@@ -175,16 +167,10 @@ HTTP_Request_Parser::s_llhttp_settings =
             return -1;  // fail
 
           this->m_stash.insert(0, "a");  // placeholder
+
+          if(parse_network_reference(ref, this->m_stash) != this->m_stash.size())
+            return -1;  // fail
         }
-
-        if(parse_network_reference(ref, this->m_stash) != this->m_stash.size())
-          return -1;  // fail
-
-        if(this->m_headers.is_proxy)
-          this->m_headers.raw_host.assign(ref.host.p, ref.host.n);
-
-        if(ref.port.n != 0)
-          this->m_headers.port = ref.port_num;
 
         if(ref.path.n != 0)
           this->m_headers.raw_path.assign(ref.path.p, ref.path.n);
@@ -234,6 +220,14 @@ HTTP_Request_Parser::s_llhttp_settings =
       {
         if(this->m_hreq >= hreq_headers_done)  // chunk trailer
           return 0;
+
+        if(!this->m_headers.is_proxy && (this->m_headers.headers.back().first == "Host")) {
+          if(this->m_host_set)
+            return -1;  // not allowed
+
+          this->m_headers.raw_host = this->m_stash;
+          this->m_host_set = true;
+        }
 
         this->m_headers.headers.mut_back().second = move(this->m_stash);
         this->m_stash.clear();
@@ -292,6 +286,7 @@ http_status_from_error()
         return http_status_http_version_not_supported;
 
       case HPE_INVALID_METHOD:
+      case HPE_CB_METHOD_COMPLETE:
         return http_status_method_not_allowed;
 
       case HPE_INVALID_TRANSFER_ENCODING:
@@ -313,6 +308,7 @@ clear()
     this->m_stash.clear();
     this->m_header_size = 0;
     this->m_hreq = hreq_new;
+    this->m_host_set = false;
     this->m_close_after_payload = false;
   }
 
@@ -355,12 +351,6 @@ parse_headers_from_stream(linear_buffer& data, bool eof)
       if(err != HPE_OK)
         this->m_llhttp_parser.error = err;
     }
-
-    // Normalize errors that are returned by our calbacks.
-    if(this->m_llhttp_parser.error == HPE_CB_METHOD_COMPLETE)
-      this->m_llhttp_parser.error = HPE_INVALID_METHOD;
-    else if(this->m_llhttp_parser.error == HPE_CB_URL_COMPLETE)
-      this->m_llhttp_parser.error = HPE_INVALID_URL;
 
     // `HPE_PAUSED` means the end of a message has been reached, which should
     // not passed to the caller.
