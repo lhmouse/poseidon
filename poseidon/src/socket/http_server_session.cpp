@@ -127,7 +127,7 @@ do_on_http_request_headers(HTTP_C_Headers& req, bool /*eot*/)
     POSEIDON_LOG_DEBUG((
         "HTTP server received request: $3 $4",
         "[HTTP server session `$1` (class `$2`)]"),
-        this, typeid(*this), req.method_str, req.raw_path);
+        this, typeid(*this), req.method, req.raw_path);
 
     // The default handler doesn't handle Upgrade requests.
     return http_content_normal;

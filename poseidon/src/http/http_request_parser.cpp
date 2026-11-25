@@ -36,17 +36,7 @@ HTTP_Request_Parser::s_llhttp_settings =
     nullptr,
 
     // on_method
-    +[](::llhttp_t* ps, const char* str, size_t len) -> int
-      {
-        if(this->m_header_size + len > this->m_max_header_length)
-          POSEIDON_THROW((
-              "HTTP header length limit exceeded: `$1` > `$2`"),
-              this->m_header_size + len, this->m_max_header_length);
-
-        this->m_stash.append(str, len);
-        this->m_header_size += static_cast<uint32_t>(len);
-        return 0;
-      },
+    nullptr,
 
     // on_version
     nullptr,
@@ -190,14 +180,11 @@ HTTP_Request_Parser::s_llhttp_settings =
     // on_method_complete
     +[](::llhttp_t* ps) -> int
       {
-        if(is_none_of(ps->method, { HTTP_GET, HTTP_HEAD, HTTP_POST, HTTP_PUT,
-                                    HTTP_DELETE, HTTP_CONNECT, HTTP_OPTIONS,
-                                    HTTP_TRACE, HTTP_PATCH }))
-          return -1;  // error
-
-        this->m_stash.append(8, '\0');
-        ::memcpy(this->m_headers.method_str, this->m_stash.data(), 8);
-        this->m_stash.clear();
+        const char* s = ::llhttp_method_name(static_cast<::llhttp_method_t>(ps->method));
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
+        ::strncpy(reinterpret_cast<char*>(this->m_headers.method), s, 16);
+#pragma GCC diagnostic pop
         return 0;
       },
 

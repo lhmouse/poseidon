@@ -12,19 +12,10 @@ namespace poseidon {
 
 struct HTTP_C_Headers
   {
-    union {
-      __m128i packed_fields_1 = { };
-      HTTP_Method method;
-      struct {
-        char method_str[8];
-        char method_nul_do_not_use;
-        uint8_t is_proxy : 1;
-        uint8_t is_ssl : 1;
-        uint16_t port;
-        uint32_t reserved_1;
-      };
-    };
-
+    HTTP_Method method = http_method_null;
+    uint16_t port = 0;
+    bool is_proxy = false;
+    bool is_ssl = false;
     cow_string raw_host;
     cow_string raw_userinfo;
     cow_string raw_path;
@@ -41,7 +32,10 @@ struct HTTP_C_Headers
     HTTP_C_Headers&
     swap(HTTP_C_Headers& other) noexcept
       {
-        ::std::swap(this->packed_fields_1, other.packed_fields_1);
+        ::std::swap(this->method, other.method);
+        ::std::swap(this->port, other.port);
+        ::std::swap(this->is_proxy, other.is_proxy);
+        ::std::swap(this->is_ssl, other.is_ssl);
         this->raw_host.swap(other.raw_host);
         this->raw_userinfo.swap(other.raw_userinfo);
         this->raw_path.swap(other.raw_path);
@@ -54,7 +48,10 @@ struct HTTP_C_Headers
     void
     clear() noexcept
       {
-        this->packed_fields_1 = _mm_setzero_si128();
+        this->method = http_method_null;
+        this->port = 0;
+        this->is_proxy = false;
+        this->is_ssl = false;
         this->raw_host.clear();
         this->raw_userinfo.clear();
         this->raw_path.clear();

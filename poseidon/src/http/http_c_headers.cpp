@@ -160,15 +160,15 @@ encode(tinyfmt& fmt) const
   {
     // Write the request line. If `method` is an empty string, `GET` is assumed.
     // This function does not validate whether these fields contain valid values.
-    if(this->method_str[0] == 0)
+    if(this->method == http_method_null)
       fmt << "GET ";
     else {
-      alignas(16) char str[16];
-      __m128i t = _mm_loadu_si64(this->method_str);
-      uint32_t tn = static_cast<uint32_t>(_mm_cmpistri(t, _mm_setzero_si128(), 0x08));
-      _mm_store_si128(reinterpret_cast<__m128i*>(str), t);
-      str[tn ++] = ' ';
-      fmt.putn(str, tn);
+      alignas(16) char temp[17];
+      __m128i t = _mm_load_si128(reinterpret_cast<const __m128i*>(&(this->method)));
+      uint32_t len = static_cast<uint32_t>(_mm_cmpistri(t, _mm_setzero_si128(), 0x08));
+      _mm_store_si128(reinterpret_cast<__m128i*>(temp), t);
+      temp[len ++] = ' ';
+      fmt.putn(temp, len);
     }
 
     if(this->is_proxy) {

@@ -155,7 +155,7 @@ add_project_arguments(
     '-Wunused-but-set-variable', '-Wunused-but-set-parameter', '-Wno-redundant-move',
     '-Wno-missing-braces',
     cxx.get_supported_arguments(
-      '-masm=intel', '-msse4.1', '-fno-ident', '-fno-devirtualize-speculatively',
+      '-masm=intel', '-msse4.2', '-fno-ident', '-fno-devirtualize-speculatively',
       '-fimplicit-constexpr', '-Wsuggest-attribute=noreturn', '-Wno-option-ignored',
       '-Wno-unused-command-line-argument', '-Wno-unqualified-std-cast-call',
       '-Wno-string-plus-int', '-Wno-bitwise-instead-of-logical'),
