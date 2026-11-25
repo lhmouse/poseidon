@@ -145,6 +145,7 @@ HTTP_Response_Parser::s_llhttp_settings =
 
         this->m_headers.headers.mut_back().second = move(this->m_stash);
         this->m_stash.clear();
+        this->m_header_size += 32;
         return 0;
       },
 
