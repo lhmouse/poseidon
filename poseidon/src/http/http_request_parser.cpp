@@ -221,7 +221,7 @@ HTTP_Request_Parser::s_llhttp_settings =
         if(this->m_hreq >= hreq_headers_done)  // chunk trailer
           return 0;
 
-        if(this->m_headers.headers.mut_back().first == "Host") {
+        if(!this->m_headers.is_proxy && (this->m_headers.headers.back().first == "Host")) {
           if(this->m_host_set)
             return -1;  // not allowed
 
