@@ -21,6 +21,27 @@ default_reason(HTTP_Status status) noexcept
       case http_status_switching_protocols:
         return &"Switching Protocols";
 
+      case http_status_processing:
+        return &"Processing";
+
+      case http_status_early_hints:
+        return &"Early Hints";
+
+      case http_status_response_is_stale:
+        return &"Response is Stale";
+
+      case http_status_revalidation_failed:
+        return &"Revalidation Failed";
+
+      case http_status_disconnected_operation:
+        return &"Disconnected Operation";
+
+      case http_status_heuristic_expiration:
+        return &"Heuristic Expiration";
+
+      case http_status_miscellaneous_warning:
+        return &"Miscellaneous Warning";
+
       case http_status_ok:
         return &"OK";
 
@@ -42,6 +63,21 @@ default_reason(HTTP_Status status) noexcept
       case http_status_partial_content:
         return &"Partial Content";
 
+      case http_status_multi_status:
+        return &"Multi-Status";
+
+      case http_status_already_reported:
+        return &"Already Reported";
+
+      case http_status_transformation_applied:
+        return &"Transformation Applied";
+
+      case http_status_im_used:
+        return &"IM Used";
+
+      case http_status_miscellaneous_persistent_warning:
+        return &"Miscellaneous Persistent Warning";
+
       case http_status_multiple_choices:
         return &"Multiple Choices";
 
@@ -60,8 +96,14 @@ default_reason(HTTP_Status status) noexcept
       case http_status_use_proxy:
         return &"Use Proxy";
 
+      case http_status_switch_proxy:
+        return &"Switch Proxy";
+
       case http_status_temporary_redirect:
         return &"Temporary Redirect";
+
+      case http_status_permanent_redirect:
+        return &"Permanent Redirect";
 
       case http_status_bad_request:
         return &"Bad Request";
@@ -117,8 +159,81 @@ default_reason(HTTP_Status status) noexcept
       case http_status_expectation_failed:
         return &"Expectation Failed";
 
+      case http_status_im_a_teapot:
+        return &"I'm a Teapot";
+
+      case http_status_page_expired:
+        return &"Page Expired";
+
+      case http_status_enhance_your_calm:
+        return &"Enhance Your Calm";
+
+      case http_status_misdirected_request:
+        return &"Misdirected Request";
+
+      case http_status_unprocessable_entity:
+        return &"Unprocessable Entity";
+
+      case http_status_locked:
+        return &"Locked";
+
+      case http_status_failed_dependency:
+        return &"Failed Dependency";
+
+      case http_status_too_early:
+        return &"Too Early";
+
       case http_status_upgrade_required:
         return &"Upgrade Required";
+
+      case http_status_precondition_required:
+        return &"Precondition Required";
+
+      case http_status_too_many_requests:
+        return &"Too Many Requests";
+
+      case http_status_request_header_fields_too_large_unofficial:
+      case http_status_request_header_fields_too_large:
+        return &"Request Header Fields Too Large";
+
+      case http_status_login_timeout:
+        return &"Login Timeout";
+
+      case http_status_no_response:
+        return &"No Response";
+
+      case http_status_retry_with:
+        return &"Retry With";
+
+      case http_status_blocked_by_parental_control:
+        return &"Blocked by Parental Controls";
+
+      case http_status_unavailable_for_legal_reasons:
+        return &"Unavailable for Legal Reasons";
+
+      case http_status_client_closed_load_balanced_request:
+        return &"Client Closed Load-Balanced Request";
+
+      case http_status_invalid_x_forwarded_for:
+        return &"Invalid X-Forwarded-For";
+
+      case http_status_request_header_too_large:
+        return &"Request Header Too Large";
+
+      case http_status_ssl_certificate_error:
+        return &"SSL Certificate Error";
+
+      case http_status_ssl_certificate_required:
+        return &"SSL Certificate Required";
+
+      case http_status_http_request_sent_to_https_port:
+        return &"HTTP Request Sent to HTTPS Port";
+
+      case http_status_invalid_token:
+        return &"Invalid Token";
+
+      case http_status_client_closed_request:
+        return &"Client Closed Request";
 
       case http_status_internal_server_error:
         return &"Internal Server Error";
@@ -137,6 +252,63 @@ default_reason(HTTP_Status status) noexcept
 
       case http_status_http_version_not_supported:
         return &"HTTP Version Not Supported";
+
+      case http_status_variant_also_negotiates:
+        return &"Variant Also Negotiates";
+
+      case http_status_insufficient_storage:
+        return &"Insufficient Storage";
+
+      case http_status_loop_detected:
+        return &"Loop Detected";
+
+      case http_status_bandwidth_limit_exceeded:
+        return &"Bandwidth Limit Exceeded";
+
+      case http_status_not_extended:
+        return &"Not Extended";
+
+      case http_status_network_authentication_required:
+        return &"Network Authentication Required";
+
+      case http_status_web_server_unknown_error:
+        return &"Web Server Unknown Error";
+
+      case http_status_web_server_is_down:
+        return &"Web Server Is Down";
+
+      case http_status_connection_timeout:
+        return &"Connection Timeout";
+
+      case http_status_origin_is_unreachable:
+        return &"Origin Is Unreachable";
+
+      case http_status_timeout_occured:
+        return &"A Timeout Occurred";
+
+      case http_status_ssl_handshake_failed:
+        return &"SSL Handshake Failed";
+
+      case http_status_invalid_ssl_certificate:
+        return &"Invalid SSL Certificate";
+
+      case http_status_railgun_error:
+        return &"Railgun Error";
+
+      case http_status_site_is_overloaded:
+        return &"Site Is Overloaded";
+
+      case http_status_site_is_frozen:
+        return &"Site Is Frozen";
+
+      case http_status_identity_provider_authentication_error:
+        return &"Identity Provider Authentication Error";
+
+      case http_status_network_read_timeout:
+        return &"Network Read Timeout";
+
+      case http_status_network_connect_timeout:
+        return &"Network Connect Timeout";
 
       default:
         return &"Unknown Status";
