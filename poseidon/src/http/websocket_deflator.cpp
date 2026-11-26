@@ -87,7 +87,7 @@ deflate_message_finish(plain_mutex::unique_lock& lock)
     while(err == Z_OK);
 
     if((this->m_def_buf.size() >= 4)
-       && (::memcmp(this->m_def_buf.end() - 4, "\x00\x00\xFF\xFF", 4) == 0))
+        && (::memcmp(this->m_def_buf.end() - 4, "\x00\x00\xFF\xFF", 4) == 0))
       this->m_def_buf.unaccept(4);
   }
 

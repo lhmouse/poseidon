@@ -234,6 +234,7 @@ print_to(tinyfmt& fmt) const
       else {
         fmt.putc('"');
         fmt.putn(this->m_str.data(), static_cast<size_t>(pos - this->m_str.data()));
+
         do {
           if((*pos == '\\') || (*pos == '"')) {
             // Escape it.
@@ -255,6 +256,7 @@ print_to(tinyfmt& fmt) const
           }
         }
         while(pos != eptr);
+
         fmt.putc('"');
       }
       return fmt;
