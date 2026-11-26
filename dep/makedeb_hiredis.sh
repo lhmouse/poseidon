@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
-_version=1.4.1
-_sha256='ca3180359a8b1275838a45415851f8cd5c411e27bdbf18f4823012e45507d2e4'
+_version=1.5.1
+_sha256='f5ec19151c0f4f15ca018c22b17b6f6739a672a4fc0c085b692aef69a154ebef'
 _arch=$(dpkg --print-architecture)
 
 # https://github.com/redis/hiredis/releases/
