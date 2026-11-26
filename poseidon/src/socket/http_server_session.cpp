@@ -291,6 +291,7 @@ http_shut_down(HTTP_Status status) noexcept
           "[HTTP server session `$1` (class `$2`)]"),
           this, typeid(*this), stdex);
     }
+
     succ |= this->tcp_shut_down();
     return succ;
   }
