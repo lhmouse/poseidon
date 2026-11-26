@@ -1,11 +1,11 @@
 #!/bin/bash -e
 
-_version=9.7.4
-_sha256='9188eb1abec42b8ab8bb69948492f06258dd27e6aabd13e2d4c6197dbcde75b2'
+_version=9.7.4.1
+_sha256='5150b1b27dc29073936f228d0c7baf043c085079439aec35a13b06f84a9d1db0'
 _arch=$(dpkg --print-architecture)
 
-# https://dev.mysql.com/downloads/mysql/
-wget -c "https://dev.mysql.com/get/Downloads/MySQL-${_version%.*}/mysql-${_version}.tar.gz" \
+# https://github.com/mysql/mysql-server/tags/
+wget -c "https://github.com/mysql/mysql-server/archive/refs/tags/mysql-${_version}.tar.gz"  \
   -O "mysql-${_version}.tar.gz"
 echo "${_sha256}" "mysql-${_version}.tar.gz" | sha256sum -c
 
@@ -17,7 +17,7 @@ cmake -G Ninja  \
   -DCMAKE_INSTALL_PREFIX="/usr/local" -DINSTALL_INCLUDEDIR="include/mysql"  \
   -DWITH_SYSTEM_LIBS=ON -DWITHOUT_SERVER=ON  \
   -DMYSQL_UNIX_ADDR="/var/run/mysqld/mysqld.sock"  \
-  -S "build_mysql-client/mysql-${_version}"  \
+  -S "build_mysql-client/mysql-server-mysql-${_version}"  \
   -B "build_mysql-client/build"
 
 cmake --build "build_mysql-client/build"
