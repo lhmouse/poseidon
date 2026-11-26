@@ -27,13 +27,6 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
     }
 
     for(;;) {
-      // Check whether the connection has switched to another protocol.
-      if(this->m_upgrade_ack.load()) {
-        this->m_req_parser.deallocate();
-        this->do_on_https_upgraded_stream(data, eof);
-        return;
-      }
-
       // If something has gone wrong, ignore further incoming data.
       if(this->m_req_parser.error()) {
         data.clear();
@@ -88,6 +81,13 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
         this->do_on_https_request_finish(move(this->m_req_parser.mut_headers()),
                                          move(this->m_req_parser.mut_content()),
                                          this->m_req_parser.should_close_after_content());
+      }
+
+      // Check whether the connection has switched to another protocol.
+      if(this->m_upgrade_ack.load()) {
+        this->m_req_parser.deallocate();
+        this->do_on_https_upgraded_stream(data, eof);
+        return;
       }
 
       this->m_req_parser.next_message();
