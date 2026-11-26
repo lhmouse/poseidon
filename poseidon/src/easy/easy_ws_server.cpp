@@ -163,11 +163,11 @@ struct Final_Session final : WS_Server_Session
       {
         Event event;
 
-        if(opcode == ws_TEXT)
+        if(opcode == ws_opcode_TEXT)
           event.type = easy_ws_text;
-        else if(opcode == ws_BINARY)
+        else if(opcode == ws_opcode_BINARY)
           event.type = easy_ws_binary;
-        else if(opcode == ws_PONG)
+        else if(opcode == ws_opcode_PONG)
           event.type = easy_ws_pong;
         else
           return;

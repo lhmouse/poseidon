@@ -211,11 +211,11 @@ struct Final_Session final : WS_Server_Session
     do_on_ws_message_finish(WS_Opcode opcode, linear_buffer&& data) override
       {
         Easy_HWS_Event ev_type;
-        if(opcode == ws_TEXT)
+        if(opcode == ws_opcode_TEXT)
           ev_type = easy_hws_text;
-        else if(opcode == ws_BINARY)
+        else if(opcode == ws_opcode_BINARY)
           ev_type = easy_hws_binary;
-        else if(opcode == ws_PONG)
+        else if(opcode == ws_opcode_PONG)
           ev_type = easy_hws_pong;
         else
           return;

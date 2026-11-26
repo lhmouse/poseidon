@@ -73,7 +73,7 @@ my_timer_callback(const shptr<Abstract_Timer>& timer,
       case 1:
         {
           const char data[] = "some text data";
-          my_client_session->wss_send(ws_TEXT, data);
+          my_client_session->wss_send(ws_opcode_TEXT, data);
           POSEIDON_LOG_DEBUG(("example WSS client sent TEXT frame: $1"), data);
         }
         break;
@@ -81,7 +81,7 @@ my_timer_callback(const shptr<Abstract_Timer>& timer,
       case 2:
         {
           const char data[] = "some binary data";
-          my_client_session->wss_send(ws_BINARY, data);
+          my_client_session->wss_send(ws_opcode_BINARY, data);
           POSEIDON_LOG_DEBUG(("example WSS client sent BINARY frame: $1"), data);
         }
         break;
@@ -95,7 +95,7 @@ my_timer_callback(const shptr<Abstract_Timer>& timer,
 
           // fragment 1
           header.fin = 0;
-          header.opcode = ws_TEXT;
+          header.opcode = ws_opcode_TEXT;
           char data1[] = "fragmented";
           header.payload_len = sizeof(data1) - 1;
 
@@ -107,7 +107,7 @@ my_timer_callback(const shptr<Abstract_Timer>& timer,
 
           // nested PING
           header.fin = 1;
-          header.opcode = ws_PING;
+          header.opcode = ws_opcode_PING;
           char ping1[] = "ping within fragmented text message";
           header.payload_len = sizeof(ping1) - 1;
 
@@ -119,7 +119,7 @@ my_timer_callback(const shptr<Abstract_Timer>& timer,
 
           // fragment 2
           header.fin = 0;
-          header.opcode = ws_CONTINUATION;
+          header.opcode = ws_opcode_CONTINUATION;
           char data2[] = " text";
           header.payload_len = sizeof(data2) - 1;
 
@@ -131,7 +131,7 @@ my_timer_callback(const shptr<Abstract_Timer>& timer,
 
           // fragment 3
           header.fin = 1;
-          header.opcode = ws_CONTINUATION;
+          header.opcode = ws_opcode_CONTINUATION;
           char data3[] = " data";
           header.payload_len = sizeof(data3) - 1;
 
@@ -152,7 +152,7 @@ my_timer_callback(const shptr<Abstract_Timer>& timer,
 
           // fragment 1
           header.fin = 0;
-          header.opcode = ws_BINARY;
+          header.opcode = ws_opcode_BINARY;
           char data1[] = "fragmented";
           header.payload_len = sizeof(data1) - 1;
 
@@ -164,7 +164,7 @@ my_timer_callback(const shptr<Abstract_Timer>& timer,
 
           // fragment 2
           header.fin = 0;
-          header.opcode = ws_CONTINUATION;
+          header.opcode = ws_opcode_CONTINUATION;
           char data2[] = " binary";
           header.payload_len = sizeof(data2) - 1;
 
@@ -176,7 +176,7 @@ my_timer_callback(const shptr<Abstract_Timer>& timer,
 
           // nested PING
           header.fin = 1;
-          header.opcode = ws_PING;
+          header.opcode = ws_opcode_PING;
           char ping1[] = "ping within fragmented binary message";
           header.payload_len = sizeof(ping1) - 1;
 
@@ -188,7 +188,7 @@ my_timer_callback(const shptr<Abstract_Timer>& timer,
 
           // fragment 3
           header.fin = 1;
-          header.opcode = ws_CONTINUATION;
+          header.opcode = ws_opcode_CONTINUATION;
           char data3[] = " data";
           header.payload_len = sizeof(data3) - 1;
 

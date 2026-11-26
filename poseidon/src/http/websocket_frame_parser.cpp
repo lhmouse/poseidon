@@ -456,8 +456,8 @@ parse_frame_header_from_stream(linear_buffer& data)
 
     switch(this->m_frm_header.opcode)
       {
-      case ws_TEXT:
-      case ws_BINARY:
+      case ws_opcode_TEXT:
+      case ws_opcode_BINARY:
         {
           if(this->m_opcode != 0) {
             // The previous message must have terminated.
@@ -493,7 +493,7 @@ parse_frame_header_from_stream(linear_buffer& data)
         POSEIDON_LOG_TRACE(("Data frame: opcode = $1"), this->m_opcode);
         break;
 
-      case ws_CONTINUATION:
+      case ws_opcode_CONTINUATION:
         {
           if(mask_len_rsv_opcode & 0b01110000) {
             // RSV bits shall only be set in the first data frame.
@@ -519,9 +519,9 @@ parse_frame_header_from_stream(linear_buffer& data)
           break;
         }
 
-      case ws_CLOSE:
-      case ws_PING:
-      case ws_PONG:
+      case ws_opcode_CLOSE:
+      case ws_opcode_PING:
+      case ws_opcode_PONG:
         {
           if(mask_len_rsv_opcode & 0b01110000) {
             // RSV bits shall only be set in a data frame.

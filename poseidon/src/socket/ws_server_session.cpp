@@ -142,7 +142,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
           // If this is a data frame or continuation, its payload is part of a
           // (potentially fragmented) data message, so combine it.
           auto opcode = static_cast<WS_Opcode>(this->m_parser.message_opcode());
-          ASTERIA_ASSERT(is_any_of(opcode, { ws_TEXT, ws_BINARY }));
+          ASTERIA_ASSERT(is_any_of(opcode, { ws_opcode_TEXT, ws_opcode_BINARY }));
           this->do_on_ws_message_data_stream(opcode, splice_buffers(this->m_msg, move(payload)));
         }
 
@@ -154,17 +154,17 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
         if(this->m_parser.frame_header().fin)
           switch(this->m_parser.frame_header().opcode)
             {
-            case ws_CONTINUATION:
-            case ws_TEXT:
-            case ws_BINARY:
+            case ws_opcode_CONTINUATION:
+            case ws_opcode_TEXT:
+            case ws_opcode_BINARY:
               {
                 auto opcode = static_cast<WS_Opcode>(this->m_parser.message_opcode());
-                ASTERIA_ASSERT(is_any_of(opcode, { ws_TEXT, ws_BINARY }));
+                ASTERIA_ASSERT(is_any_of(opcode, { ws_opcode_TEXT, ws_opcode_BINARY }));
                 this->do_on_ws_message_finish(opcode, move(this->m_msg));
                 break;
               }
 
-            case ws_CLOSE:
+            case ws_opcode_CLOSE:
               {
                 ASTERIA_ASSERT(this->m_closure_notified == false);
                 this->m_closure_notified = true;
@@ -178,15 +178,15 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
                 return;
               }
 
-            case ws_PING:
+            case ws_opcode_PING:
               POSEIDON_LOG_TRACE(("PING from `$1`: $2"), this->remote_address(), payload);
               this->do_ws_send_raw_frame(0x8A, payload);
-              this->do_on_ws_message_finish(ws_PING, move(payload));
+              this->do_on_ws_message_finish(ws_opcode_PING, move(payload));
               break;
 
-            case ws_PONG:
+            case ws_opcode_PONG:
               POSEIDON_LOG_TRACE(("PONG from `$1`: $2"), this->remote_address(), payload);
-              this->do_on_ws_message_finish(ws_PONG, move(payload));
+              this->do_on_ws_message_finish(ws_opcode_PONG, move(payload));
               break;
             }
       }
@@ -281,8 +281,8 @@ ws_send(WS_Opcode opcode, chars_view data)
   {
     switch(static_cast<uint32_t>(opcode))
       {
-      case ws_TEXT:
-      case ws_BINARY:
+      case ws_opcode_TEXT:
+      case ws_opcode_BINARY:
         {
           if(this->do_has_upgraded() && this->m_pmce_opt) {
             // Don't compress small frames when it's not worth the cost.
@@ -324,8 +324,8 @@ ws_send(WS_Opcode opcode, chars_view data)
           return this->do_ws_send_raw_frame(0b10000000 | opcode, data);
         }
 
-      case ws_PING:
-      case ws_PONG:
+      case ws_opcode_PING:
+      case ws_opcode_PONG:
         {
           if(data.n > 125)
             POSEIDON_THROW((

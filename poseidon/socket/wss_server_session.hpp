@@ -63,7 +63,7 @@ class WSS_Server_Session
 
     // This callback is invoked by the network thread for each fragment of a data
     // message. `opcode` indicates the type of the message, which can be either
-    // `ws_text` or `ws_binary`; control frames are never notified via
+    // `ws_opcode_TEXT` or `ws_opcode_BINARY`; control frames are never notified via
     // this callback. As with `TCP_Connection::do_on_tcp_stream()`, the argument
     // buffer contains all data that have been accumulated so far and callees are
     // supposed to remove bytes that have been processed.
@@ -76,8 +76,8 @@ class WSS_Server_Session
     do_on_wss_message_data_stream(WS_Opcode opcode, linear_buffer& data);
 
     // This callback is invoked by the network thread at the end of a data message
-    // or a control frame. `opcode` may be `ws_text`, `ws_binary`,
-    // `ws_ping` or `ws_pong`.
+    // or a control frame. `opcode` may be `ws_opcode_TEXT`, `ws_opcode_BINARY`,
+    // `ws_opcode_PING` or `ws_opcode_PONG`.
     virtual
     void
     do_on_wss_message_finish(WS_Opcode opcode, linear_buffer&& data)
