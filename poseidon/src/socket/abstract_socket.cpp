@@ -40,10 +40,11 @@ Abstract_Socket(int type, int protocol)
           "[`socket()` failed: ${errno:full}]"),
           type, protocol);
 
-    // Use `TCP_QUICKACK`. Errors are ignored.
-    static constexpr int one = 1;
-    if((type == SOCK_STREAM) && is_any_of(protocol, { IPPROTO_IP, IPPROTO_TCP }))
-      ::setsockopt(this->m_fd, IPPROTO_TCP, TCP_QUICKACK, &one, sizeof(one));
+    if((type == SOCK_STREAM) && is_any_of(protocol, { IPPROTO_IP, IPPROTO_TCP })) {
+      // Use `TCP_NODELAY`. Errors are ignored.
+      static constexpr int one = 1;
+      ::setsockopt(this->m_fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one));
+    }
 
     this->m_scheduler = reinterpret_cast<Network_Scheduler*>(-3);
   }

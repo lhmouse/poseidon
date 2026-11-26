@@ -83,8 +83,9 @@ do_abstract_socket_on_readable()
       from_addr.set_addr(sa.sin6_addr);
       from_addr.set_port(::ntohs(sa.sin6_port));
 
+      // Use `TCP_NODELAY`. Errors are ignored.
       static constexpr int one = 1;
-      ::setsockopt(fd, IPPROTO_TCP, TCP_QUICKACK, &one, sizeof(one));
+      ::setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one));
 
       try {
         // Call the user-defined accept callback. If a null pointer is returned,
