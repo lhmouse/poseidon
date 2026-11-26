@@ -183,7 +183,7 @@ HTTP_Request_Parser::s_llhttp_settings =
         const char* s = ::llhttp_method_name(static_cast<::llhttp_method_t>(ps->method));
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstringop-truncation"
-        ::strncpy(reinterpret_cast<char*>(this->m_headers.method), s, 16);
+        ::strncpy(reinterpret_cast<char*>(&(this->m_headers.method)), s, 16);
 #pragma GCC diagnostic pop
         return 0;
       },
