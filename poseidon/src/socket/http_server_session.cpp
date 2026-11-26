@@ -54,20 +54,19 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
           return;
 
         // Check headers.
-        auto& headers = this->m_req_parser.mut_headers();
+        auto& req = this->m_req_parser.mut_headers();
 
-        if(headers.is_proxy == false)
-          headers.is_ssl = false;
+        if(req.is_proxy == false)
+          req.is_ssl = false;
 
-        if(headers.raw_host.empty()) {
+        if(req.raw_host.empty()) {
           data.clear();
-          this->do_on_http_request_error(this->m_req_parser.headers().method,
-                                         http_status_bad_request);
+          this->do_on_http_request_error(req.method, http_status_bad_request);
           return;
         }
 
         bool fin = this->m_req_parser.should_close_after_content();
-        this->do_on_http_request_headers(headers, fin);
+        this->do_on_http_request_headers(req, fin);
       }
 
       if(!this->m_req_parser.content_complete()) {
