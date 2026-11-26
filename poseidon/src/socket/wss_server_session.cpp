@@ -170,11 +170,18 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
                 this->m_closure_notified = true;
                 data.clear();
 
-                // Get the status code in big-endian order..
+                WS_Status status;
                 char temp[2];
-                ::asteria::store_be<uint16_t>(temp, ws_status_no_status_code);
-                payload.getn(temp, 2);
-                this->do_on_wss_close(::asteria::load_be<WS_Status>(temp), payload);
+                size_t tlen = payload.getn(temp, 2);
+                if(tlen == 0)
+                  status = ws_status_no_status_code;
+                else if(tlen == 1)
+                  status = ws_status_protocol_error;
+                else
+                  status = ::asteria::load_be<WS_Status>(temp);
+
+                this->do_on_wss_close(status, payload);
+                this->wss_shut_down(ws_status_normal, "");
                 return;
               }
 
