@@ -270,258 +270,258 @@ operator<<(tinyfmt& fmt, vector2 v)
 
 constexpr
 degrees
-abs(degrees d)
-  noexcept { return d.abs();  }
+abs(degrees d) noexcept
+  { return d.abs();  }
 
 constexpr
 degrees
-reduce360(degrees d)
-  noexcept { return d.reduce360();  }
+reduce360(degrees d) noexcept
+  { return d.reduce360();  }
 
 constexpr
 degrees
-reduce180(degrees d)
-  noexcept { return d.reduce180();  }
+reduce180(degrees d) noexcept
+  { return d.reduce180();  }
 
 constexpr
 float
-sin(degrees d)
-  noexcept { return d.sin();  }
+sin(degrees d) noexcept
+  { return d.sin();  }
 
 constexpr
 float
-cos(degrees d)
-  noexcept { return d.cos();  }
+cos(degrees d) noexcept
+  { return d.cos();  }
 
 constexpr
 float
-tan(degrees d)
-  noexcept { return d.tan();  }
+tan(degrees d) noexcept
+  { return d.tan();  }
 
 constexpr
 float
-dot(vector2 lhs, vector2 rhs)
-  noexcept { return lhs.dot(rhs);  }
+dot(vector2 lhs, vector2 rhs) noexcept
+  { return lhs.dot(rhs);  }
 
 constexpr
 float
-cross(vector2 lhs, vector2 rhs)
-  noexcept { return lhs.cross(rhs);  }
+cross(vector2 lhs, vector2 rhs) noexcept
+  { return lhs.cross(rhs);  }
 
 constexpr
 float
-magnitude(vector2 v)
-  noexcept { return v.magnitude();  }
+magnitude(vector2 v) noexcept
+  { return v.magnitude();  }
 
 constexpr
 degrees
-direction(vector2 v)
-  noexcept { return v.direction();  }
+direction(vector2 v) noexcept
+  { return v.direction();  }
 
 constexpr
 vector2
-unit(vector2 v)
-  noexcept { return v.unit();  }
+unit(vector2 v) noexcept
+  { return v.unit();  }
 
 constexpr
 vector2
-rotate(vector2 v, degrees theta)
-  noexcept { return v.rotate(theta);  }
+rotate(vector2 v, degrees theta) noexcept
+  { return v.rotate(theta);  }
 
 constexpr
 degrees
-angle(vector2 from, vector2 to)
-  noexcept { return to.angle_from(from);  }
+angle(vector2 from, vector2 to) noexcept
+  { return to.angle_from(from);  }
 
 constexpr
 degrees
-operator+(degrees rhs)
-  noexcept { return rhs;  }
+operator+(degrees rhs) noexcept
+  { return rhs;  }
 
 constexpr
 vector2
-operator+(vector2 rhs)
-  noexcept { return rhs;  }
+operator+(vector2 rhs) noexcept
+  { return rhs;  }
 
 constexpr
 degrees
-operator-(degrees rhs)
-  noexcept { return degrees(- rhs.t);  }
+operator-(degrees rhs) noexcept
+  { return degrees(- rhs.t);  }
 
 constexpr
 vector2
-operator-(vector2 rhs)
-  noexcept { return vector2(- rhs.x, - rhs.y);  }
+operator-(vector2 rhs) noexcept
+  { return vector2(- rhs.x, - rhs.y);  }
 
 constexpr
 degrees
-operator+(degrees lhs, degrees rhs)
-  noexcept { return degrees(lhs.t + rhs.t);  }
+operator+(degrees lhs, degrees rhs) noexcept
+  { return degrees(lhs.t + rhs.t);  }
 
 constexpr
 vector2
-operator+(vector2 lhs, vector2 rhs)
-  noexcept { return vector2(lhs.x + rhs.x, lhs.y + rhs.y);  }
+operator+(vector2 lhs, vector2 rhs) noexcept
+  { return vector2(lhs.x + rhs.x, lhs.y + rhs.y);  }
 
 constexpr
 point2
-operator+(vector2 lhs, point2 rhs)
-  noexcept { return point2(lhs.x + rhs.x, lhs.y + rhs.y);  }
+operator+(vector2 lhs, point2 rhs) noexcept
+  { return point2(lhs.x + rhs.x, lhs.y + rhs.y);  }
 
 constexpr
 point2
-operator+(point2 lhs, vector2 rhs)
-  noexcept { return point2(lhs.x + rhs.x, lhs.y + rhs.y);  }
+operator+(point2 lhs, vector2 rhs) noexcept
+  { return point2(lhs.x + rhs.x, lhs.y + rhs.y);  }
 
 constexpr
 degrees
-operator-(degrees lhs, degrees rhs)
-  noexcept { return degrees(lhs.t - rhs.t);  }
+operator-(degrees lhs, degrees rhs) noexcept
+  { return degrees(lhs.t - rhs.t);  }
 
 constexpr
 vector2
-operator-(vector2 lhs, vector2 rhs)
-  noexcept { return vector2(lhs.x - rhs.x, lhs.y - rhs.y);  }
+operator-(vector2 lhs, vector2 rhs) noexcept
+  { return vector2(lhs.x - rhs.x, lhs.y - rhs.y);  }
 
 constexpr
 point2
-operator-(point2 lhs, vector2 rhs)
-  noexcept { return point2(lhs.x - rhs.x, lhs.y - rhs.y);  }
+operator-(point2 lhs, vector2 rhs) noexcept
+  { return point2(lhs.x - rhs.x, lhs.y - rhs.y);  }
 
 constexpr
 vector2
-operator-(point2 lhs, point2 rhs)
-  noexcept { return vector2(lhs.x - rhs.x, lhs.y - rhs.y);  }
+operator-(point2 lhs, point2 rhs) noexcept
+  { return vector2(lhs.x - rhs.x, lhs.y - rhs.y);  }
 
 constexpr
 degrees
-operator*(degrees lhs, int rhs)
-  noexcept { return degrees(lhs.t * rhs);  }
+operator*(degrees lhs, int rhs) noexcept
+  { return degrees(lhs.t * rhs);  }
 
 constexpr
 degrees
-operator*(int lhs, degrees rhs)
-  noexcept { return degrees(lhs * rhs.t);  }
+operator*(int lhs, degrees rhs) noexcept
+  { return degrees(lhs * rhs.t);  }
 
 constexpr
 degrees
-operator*(degrees lhs, float rhs)
-  noexcept { return degrees(::lrintf(lhs.t * rhs));  }
+operator*(degrees lhs, float rhs) noexcept
+  { return degrees(::lrintf(lhs.t * rhs));  }
 
 constexpr
 degrees
-operator*(float lhs, degrees rhs)
-  noexcept { return degrees(::lrintf(lhs * rhs.t));  }
+operator*(float lhs, degrees rhs) noexcept
+  { return degrees(::lrintf(lhs * rhs.t));  }
 
 constexpr
 vector2
-operator*(vector2 lhs, int rhs)
-  noexcept { return vector2(lhs.x * rhs, lhs.y * rhs);  }
+operator*(vector2 lhs, int rhs) noexcept
+  { return vector2(lhs.x * rhs, lhs.y * rhs);  }
 
 constexpr
 vector2
-operator*(int lhs, vector2 rhs)
-  noexcept { return vector2(lhs * rhs.x, lhs * rhs.y);  }
+operator*(int lhs, vector2 rhs) noexcept
+  { return vector2(lhs * rhs.x, lhs * rhs.y);  }
 
 constexpr
 vector2
-operator*(vector2 lhs, float rhs)
-  noexcept { return vector2(lhs.x * rhs, lhs.y * rhs);  }
+operator*(vector2 lhs, float rhs) noexcept
+  { return vector2(lhs.x * rhs, lhs.y * rhs);  }
 
 constexpr
 vector2
-operator*(float lhs, vector2 rhs)
-  noexcept { return vector2(lhs * rhs.x, lhs * rhs.y);  }
+operator*(float lhs, vector2 rhs) noexcept
+  { return vector2(lhs * rhs.x, lhs * rhs.y);  }
 
 constexpr
 degrees
-operator/(degrees lhs, int rhs)
-  noexcept { return degrees(lhs.t / rhs);  }
+operator/(degrees lhs, int rhs) noexcept
+  { return degrees(lhs.t / rhs);  }
 
 constexpr
 degrees
-operator/(degrees lhs, float rhs)
-  noexcept { return degrees(lhs.t / rhs);  }
+operator/(degrees lhs, float rhs) noexcept
+  { return degrees(lhs.t / rhs);  }
 
 constexpr
 vector2
-operator/(vector2 lhs, int rhs)
-  noexcept { return vector2(lhs.x / rhs, lhs.y / rhs);  }
+operator/(vector2 lhs, int rhs) noexcept
+  { return vector2(lhs.x / rhs, lhs.y / rhs);  }
 
 constexpr
 vector2
-operator/(vector2 lhs, float rhs)
-  noexcept { return vector2(lhs.x / rhs, lhs.y / rhs);  }
+operator/(vector2 lhs, float rhs) noexcept
+  { return vector2(lhs.x / rhs, lhs.y / rhs);  }
 
 constexpr
 degrees&
-operator+=(degrees& lhs, degrees rhs)
-  noexcept { return lhs = lhs + rhs;  }
+operator+=(degrees& lhs, degrees rhs) noexcept
+  { return lhs = lhs + rhs;  }
 
 constexpr
 vector2&
-operator+=(vector2& lhs, vector2 rhs)
-  noexcept { return lhs = lhs + rhs;  }
+operator+=(vector2& lhs, vector2 rhs) noexcept
+  { return lhs = lhs + rhs;  }
 
 constexpr
 point2&
-operator+=(point2& lhs, vector2 rhs)
-  noexcept { return lhs = lhs + rhs;  }
+operator+=(point2& lhs, vector2 rhs) noexcept
+  { return lhs = lhs + rhs;  }
 
 constexpr
 degrees&
-operator-=(degrees& lhs, degrees rhs)
-  noexcept { return lhs = lhs - rhs;  }
+operator-=(degrees& lhs, degrees rhs) noexcept
+  { return lhs = lhs - rhs;  }
 
 constexpr
 vector2&
-operator-=(vector2& lhs, vector2 rhs)
-  noexcept { return lhs = lhs - rhs;  }
+operator-=(vector2& lhs, vector2 rhs) noexcept
+  { return lhs = lhs - rhs;  }
 
 constexpr
 point2&
-operator-=(point2& lhs, vector2 rhs)
-  noexcept { return lhs = lhs - rhs;  }
+operator-=(point2& lhs, vector2 rhs) noexcept
+  { return lhs = lhs - rhs;  }
 
 constexpr
 degrees&
-operator*=(degrees& lhs, int rhs)
-  noexcept { return lhs = lhs * rhs;  }
+operator*=(degrees& lhs, int rhs) noexcept
+  { return lhs = lhs * rhs;  }
 
 constexpr
 degrees&
-operator*=(degrees& lhs, float rhs)
-  noexcept { return lhs = lhs * rhs;  }
+operator*=(degrees& lhs, float rhs) noexcept
+  { return lhs = lhs * rhs;  }
 
 constexpr
 vector2&
-operator*=(vector2& lhs, int rhs)
-  noexcept { return lhs = lhs * rhs;  }
+operator*=(vector2& lhs, int rhs) noexcept
+  { return lhs = lhs * rhs;  }
 
 constexpr
 vector2&
-operator*=(vector2& lhs, float rhs)
-  noexcept { return lhs = lhs * rhs;  }
+operator*=(vector2& lhs, float rhs) noexcept
+  { return lhs = lhs * rhs;  }
 
 constexpr
 degrees&
-operator/=(degrees& lhs, int rhs)
-  noexcept { return lhs = lhs / rhs;  }
+operator/=(degrees& lhs, int rhs) noexcept
+  { return lhs = lhs / rhs;  }
 
 constexpr
 degrees&
-operator/=(degrees& lhs, float rhs)
-  noexcept { return lhs = lhs / rhs;  }
+operator/=(degrees& lhs, float rhs) noexcept
+  { return lhs = lhs / rhs;  }
 
 constexpr
 vector2&
-operator/=(vector2& lhs, int rhs)
-  noexcept { return lhs = lhs / rhs;  }
+operator/=(vector2& lhs, int rhs) noexcept
+  { return lhs = lhs / rhs;  }
 
 constexpr
 vector2&
-operator/=(vector2& lhs, float rhs)
-  noexcept { return lhs = lhs / rhs;  }
+operator/=(vector2& lhs, float rhs) noexcept
+  { return lhs = lhs / rhs;  }
 
 }  // namespace poseidon
 #pragma GCC diagnostic pop

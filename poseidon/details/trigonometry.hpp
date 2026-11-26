@@ -15,13 +15,13 @@ struct trigonometric
     float reserved;
   };
 
+__attribute__((__const__, __leaf__))
 const trigonometric&
-do_trig_degrees(int theta)
-  noexcept __attribute__((__const__, __leaf__));
+do_trig_degrees(int theta) noexcept;
 
+__attribute__((__const__, __leaf__))
 int
-do_arctan_degrees(float y, float x)
-  noexcept __attribute__((__const__, __leaf__));
+do_arctan_degrees(float y, float x) noexcept;
 
 }  // namespace poseidon
 #endif

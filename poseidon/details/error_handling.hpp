@@ -7,9 +7,9 @@
 #include "../fwd.hpp"
 namespace poseidon {
 
+__attribute__((__const__, __leaf__))
 bool
-do_is_log_enabled(uint8_t level)
-  noexcept __attribute__((__const__, __leaf__));
+do_is_log_enabled(uint8_t level) noexcept;
 
 bool
 do_push_log_message(uint8_t level, const char* func, const char* file, uint32_t line,
