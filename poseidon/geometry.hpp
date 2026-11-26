@@ -122,13 +122,13 @@ struct point2
 
     constexpr
     bool
-    operator==(point2 rhs)
-      const noexcept { return (x == rhs.x) && (y == rhs.y);  }
+    operator==(point2 rhs) const noexcept
+      { return (x == rhs.x) && (y == rhs.y);  }
 
     constexpr
     bool
-    operator!=(point2 rhs)
-      const noexcept { return (x != rhs.x) || (y != rhs.y);  }
+    operator!=(point2 rhs) const noexcept
+      { return (x != rhs.x) || (y != rhs.y);  }
   };
 
 inline
@@ -172,23 +172,23 @@ struct vector2
 
     constexpr
     bool
-    operator==(vector2 rhs)
-      const noexcept { return (x == rhs.x) && (y == rhs.y);  }
+    operator==(vector2 rhs) const noexcept
+      { return (x == rhs.x) && (y == rhs.y);  }
 
     constexpr
     bool
-    operator!=(vector2 rhs)
-      const noexcept { return (x != rhs.x) || (y != rhs.y);  }
+    operator!=(vector2 rhs) const noexcept
+      { return (x != rhs.x) || (y != rhs.y);  }
 
     constexpr
     float
-    dot(vector2 rhs)
-      const noexcept { return x * rhs.x + y * rhs.y;  }
+    dot(vector2 rhs) const noexcept
+      { return x * rhs.x + y * rhs.y;  }
 
     constexpr
     float
-    cross(vector2 rhs)
-      const noexcept { return x * rhs.y - y * rhs.x;  }
+    cross(vector2 rhs) const noexcept
+      { return x * rhs.y - y * rhs.x;  }
 
     constexpr
     float
