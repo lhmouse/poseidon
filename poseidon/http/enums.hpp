@@ -165,12 +165,12 @@ enum HTTP_Status : uint16_t
 
 enum WS_Opcode : uint8_t
   {
-    ws_opcode_CONTINUATION =  0,
-    ws_opcode_TEXT         =  1,
-    ws_opcode_BINARY       =  2,
-    ws_opcode_CLOSE        =  8,
-    ws_opcode_PING         =  9,
-    ws_opcode_PONG         = 10,
+    ws_opcode_CONTINUATION  =  0,
+    ws_opcode_TEXT          =  1,
+    ws_opcode_BINARY        =  2,
+    ws_opcode_CLOSE         =  8,
+    ws_opcode_PING          =  9,
+    ws_opcode_PONG          = 10,
   };
 
 enum WS_Status : uint16_t
