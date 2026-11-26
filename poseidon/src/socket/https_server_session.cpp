@@ -146,7 +146,6 @@ https_response(HTTP_Method method, HTTP_Response_Headers& resp, chars_view data)
           "[HTTPS server session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    tinyfmt_ln fmt;
     HTTP_Header_Parser hparser;
     bool connection_close = false;
 
@@ -168,6 +167,7 @@ https_response(HTTP_Method method, HTTP_Response_Headers& resp, chars_view data)
     // neither `Content-Length:` nor a response body. For 304 responses and
     // responses to HEAD requests, there must be no response body, but
     // `Content-Length:` may exist.
+    tinyfmt_ln fmt;
     if(((method == http_method_CONNECT) && (resp.status >= 200) && (resp.status <= 299))
         || ((resp.status >= 100) && (resp.status <= 199))
         || (resp.status == 204))
@@ -224,6 +224,7 @@ https_chunked_response_start(HTTP_Method method, HTTP_Response_Headers& resp)
 
     tinyfmt_ln fmt;
     resp.encode(fmt);
+
     return this->ssl_send(fmt);
   }
 
@@ -250,6 +251,7 @@ https_chunked_response_send(chars_view data)
     fmt << "\r\n";
     fmt.putn(data.p, data.n);
     fmt << "\r\n";
+
     return this->ssl_send(fmt);
   }
 

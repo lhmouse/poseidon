@@ -146,7 +146,6 @@ http_request(HTTP_Request_Headers& req, chars_view data)
           "[HTTP client session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    tinyfmt_ln fmt;
     bool has_host = false;
 
     // Erase `Transfer-Encoding:` and `Content-Length:` headers, if any. Check
@@ -161,12 +160,17 @@ http_request(HTTP_Request_Headers& req, chars_view data)
 
     // Ensure `Host:` is set, as per HTTP/1.1.
     if(!req.is_proxy && !has_host)
-      req.headers.emplace_back(&"Host", this->m_default_host);
+      req.headers.emplace_back(&"Host",
+            this->m_default_host.empty() ? this->remote_address().to_string()
+                                         : this->m_default_host);
 
     // For a request, lack of `Content-Length:` means there's no message body.
     // When a message body is given, do set it.
     if(data.n != 0)
       req.headers.emplace_back(&"Content-Length", static_cast<int64_t>(data.n));
+
+    tinyfmt_ln fmt;
+    req.encode(fmt);
 
     plain_mutex::unique_lock pipeline_lock(this->m_pipeline_mutex);
     this->m_pipeline.putn(reinterpret_cast<const char*>(&(req.method)), sizeof(req.method));
@@ -200,13 +204,16 @@ http_chunked_request_start(HTTP_Request_Headers& req)
 
     // Ensure `Host:` is set, as per HTTP/1.1.
     if(!req.is_proxy && !has_host)
-      req.headers.emplace_back(&"Host", this->m_default_host);
+      req.headers.emplace_back(&"Host",
+            this->m_default_host.empty() ? this->remote_address().to_string()
+                                         : this->m_default_host);
 
     // Write a chunked header.
     req.headers.emplace_back(&"Transfer-Encoding", &"chunked");
 
     tinyfmt_ln fmt;
     req.encode(fmt);
+
     plain_mutex::unique_lock pipeline_lock(this->m_pipeline_mutex);
     this->m_pipeline.putn(reinterpret_cast<const char*>(&(req.method)), sizeof(req.method));
     return this->tcp_send(fmt);
@@ -235,6 +242,7 @@ http_chunked_request_send(chars_view data)
     fmt << "\r\n";
     fmt.putn(data.p, data.n);
     fmt << "\r\n";
+
     return this->tcp_send(fmt);
   }
 
