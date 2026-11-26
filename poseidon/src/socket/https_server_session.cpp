@@ -139,29 +139,55 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
 
 bool
 HTTPS_Server_Session::
-do_https_raw_response(HTTP_Method method, const HTTP_S_Headers& resp, chars_view data)
+https_response(HTTP_Method method, HTTP_S_Headers& resp, chars_view data)
   {
-    // Compose the message and send it as a whole.
+    if(this->m_upgrade_ack.load())
+      POSEIDON_THROW((
+          "HTTPS connection switched to another protocol",
+          "[HTTPS server session `$1` (class `$2`)]"),
+          this, typeid(*this));
+
     tinyfmt_ln fmt;
-    resp.encode(fmt);
-    fmt.putn(data.p, data.n);
-    bool sent = this->ssl_send(fmt);
-
-    // For server sessions, a status of 101 indicates that the server will switch
-    // to another protocol after this message. The client might have sent more
-    // data before this, which would violate RFC 6455 anyway, so we don't care.
-    if(resp.status == 101)
-      this->m_upgrade_ack.store(true);
-
-    // If `Connection:` contains `close`, the connection should be closed.
     HTTP_Header_Parser hparser;
-    for(const auto& hr : resp.headers)
-      if(hr.first == "Connection") {
-        hparser.reload(hr.second.as_string());
+    bool connection_close = false;
+
+    // Check for `Connection: close`. Erase `Transfer-Encoding:` and
+    // `Content-Length:` headers, if any.
+    for(size_t index = 0;  index != resp.headers.size();  index ++)
+      if(resp.headers.at(index).first == "Transfer-Encoding")
+        resp.headers.erase(index --);
+      else if(resp.headers.at(index).first == "Content-Length")
+        resp.headers.erase(index --);
+      else if(resp.headers.at(index).first == "Connection") {
+        hparser.reload(resp.headers.at(index).second.as_string());
         while(hparser.next_element())
           if(hparser.current_name() == "close")
-            this->ssl_shut_down();
+            connection_close = true;
       }
+
+    // For 2xx responses to CONNECT, and for 1xx and 204 responses, there must be
+    // neither `Content-Length:` nor a response body. For 304 responses and
+    // responses to HEAD requests, there must be no response body, but
+    // `Content-Length:` may exist.
+    if(((method == http_method_CONNECT) && (resp.status >= 200) && (resp.status <= 299))
+        || ((resp.status >= 100) && (resp.status <= 199))
+        || (resp.status == 204))
+      resp.encode(fmt);
+    else {
+      resp.headers.emplace_back(&"Content-Length", static_cast<int64_t>(data.n));
+      resp.encode(fmt);
+      if(!((resp.status == 304) || (method == http_method_HEAD)))
+        fmt.putn(data.p, data.n);
+    }
+
+    bool sent = this->ssl_send(fmt);
+    if(connection_close)
+      this->ssl_shut_down();
+
+    // Check whether the connection should switch to another protocol.
+    if(((method == http_method_CONNECT) && (resp.status >= 200) && (resp.status <= 299))
+        || (resp.status == 101))
+      this->m_upgrade_ack.store(true);
 
     // The return value indicates whether no error has occurred. There is no
     // guarantee that data will eventually arrive, due to network flapping.
@@ -170,7 +196,7 @@ do_https_raw_response(HTTP_Method method, const HTTP_S_Headers& resp, chars_view
 
 bool
 HTTPS_Server_Session::
-https_response_headers_only(HTTP_S_Headers&& resp)
+https_chunked_response_start(HTTP_Method method, HTTP_S_Headers& resp)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -178,45 +204,28 @@ https_response_headers_only(HTTP_S_Headers&& resp)
           "[HTTPS server session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    return this->do_https_raw_response(http_method_HEAD, resp, "");
-  }
-
-bool
-HTTPS_Server_Session::
-https_response(HTTP_Method method, HTTP_S_Headers&& resp, chars_view data)
-  {
-    if(this->m_upgrade_ack.load())
+    if(((method == http_method_CONNECT) && (resp.status >= 200) && (resp.status <= 299))
+        || ((resp.status >= 100) && (resp.status <= 199))
+        || (resp.status == 204)
+        || (resp.status == 304)
+        || (method == http_method_HEAD))
       POSEIDON_THROW((
-          "HTTPS connection switched to another protocol",
+          "Message body not allowed for this response; call `https_response()` instead",
           "[HTTPS server session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    // Some responses are required to have no content and require no
-    // `Content-Length` header.
-    if((resp.status <= 199) || (resp.status == 204) || (resp.status == 304))
-      return this->do_https_raw_response(method, resp, "");
+    tinyfmt_ln fmt;
 
-    // Otherwise, a `Content-Length` is required; otherwise the response would
-    // be interpreted as terminating by closure ofthe connection.
-    resp.headers.emplace_back(&"Content-Length", static_cast<int64_t>(data.n));
-
-    return this->do_https_raw_response(method, resp, data);
-  }
-
-bool
-HTTPS_Server_Session::
-https_chunked_response_start(HTTP_Method method, HTTP_S_Headers&& resp)
-  {
-    if(this->m_upgrade_ack.load())
-      POSEIDON_THROW((
-          "HTTPS connection switched to another protocol",
-          "[HTTPS server session `$1` (class `$2`)]"),
-          this, typeid(*this));
+    // Erase `Transfer-Encoding:` headers, if any. `Content-Length:` may be useful
+    // so it's left intact, despite violation of the specification.
+    for(size_t index = 0;  index != resp.headers.size();  index ++)
+      if(resp.headers.at(index).first == "Transfer-Encoding")
+        resp.headers.erase(index --);
 
     // Write a chunked header.
     resp.headers.emplace_back(&"Transfer-Encoding", &"chunked");
-
-    return this->do_https_raw_response(method, resp, "");
+    resp.encode(fmt);
+    return this->ssl_send(fmt);
   }
 
 bool
@@ -229,14 +238,15 @@ https_chunked_response_send(chars_view data)
           "[HTTPS server session `$1` (class `$2`)]"),
           this, typeid(*this));
 
+    tinyfmt_ln fmt;
+    ::asteria::ascii_numput nump;
+
     // Ignore empty chunks, which would mark the end of the content.
     if(data.n == 0)
       return this->ssl_send("");
 
     // Compose a chunk and send it as a whole. The length of this chunk is
     // written as a hexadecimal integer without the `0x` prefix.
-    tinyfmt_ln fmt;
-    ::asteria::ascii_numput nump;
     nump.put_XU(data.n);
     fmt.putn(nump.data() + 2, nump.size() - 2);
     fmt << "\r\n";
@@ -247,15 +257,34 @@ https_chunked_response_send(chars_view data)
 
 bool
 HTTPS_Server_Session::
-https_chunked_response_finish()
+https_chunked_response_finish(HTTP_S_Headers& resp)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
-          "HTTPS connection switched to another protocol",
-          "[HTTPS server session `$1` (class `$2`)]"),
+          "HTTP connection switched to another protocol",
+          "[HTTP server session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    return this->ssl_send("0\r\n\r\n");
+    HTTP_Header_Parser hparser;
+    bool connection_close = false;
+
+    // Check for `Connection: close`.
+    for(size_t index = 0;  index != resp.headers.size();  index ++)
+      if(resp.headers.at(index).first == "Connection") {
+        hparser.reload(resp.headers.at(index).second.as_string());
+        while(hparser.next_element())
+          if(hparser.current_name() == "close")
+            connection_close = true;
+      }
+
+    // Send an empty chunk trailer.
+    bool sent = this->ssl_send("0\r\n\r\n");
+    if(connection_close)
+      this->ssl_shut_down();
+
+    // The return value indicates whether no error has occurred. There is no
+    // guarantee that data will eventually arrive, due to network flapping.
+    return sent;
   }
 
 bool
@@ -283,12 +312,12 @@ https_shut_down(HTTP_Status status) noexcept
       tinyfmt_ln fmt;
       format(fmt, default_page, status, resp.reason);
 
-      succ = this->do_https_raw_response(http_method_GET, resp, fmt.get_buffer());
+      succ = this->https_response(http_method_GET, resp, fmt.get_buffer());
     }
     catch(exception& stdex) {
       POSEIDON_LOG_ERROR((
           "Failed to send default page: $3",
-          "[HTTPS client session `$1` (class `$2`)]"),
+          "[HTTPS server session `$1` (class `$2`)]"),
           this, typeid(*this), stdex);
     }
     succ |= this->ssl_shut_down();

@@ -66,7 +66,7 @@ do_on_https_request_error(HTTP_Method method, HTTP_Status status)
     HTTP_S_Headers resp;
     resp.status = status;
     resp.headers.emplace_back(&"Connection", &"close");
-    this->https_response(method, move(resp), "");
+    this->https_response(method, resp, "");
 
     // Close the connection.
     this->do_call_on_wss_close_once(ws_status_no_close_frame, "handshake rejected by HTTP error");
@@ -237,7 +237,7 @@ do_wss_complete_handshake(HTTP_C_Headers& req, bool eot)
     // Send the handshake response.
     HTTP_S_Headers resp;
     this->m_parser.accept_handshake_request(resp, req);
-    this->https_response_headers_only(move(resp));
+    this->https_response(http_method_GET, resp, "");
 
     if(req.method == http_method_OPTIONS)
       return;

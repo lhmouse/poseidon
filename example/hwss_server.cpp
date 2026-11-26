@@ -47,7 +47,7 @@ my_server_callback(const shptr<WSS_Server_Session>& session,
           HTTP_S_Headers resp;
           resp.status = http_status_ok;
           resp.headers.emplace_back(&"Content-Type", &"text/plain");
-          session->https_response(http_method_GET, move(resp), "example HTTPS/WSS server GET\n");
+          session->https_response(http_method_GET, resp, "example HTTPS/WSS server GET\n");
         }
         break;
 
@@ -58,7 +58,7 @@ my_server_callback(const shptr<WSS_Server_Session>& session,
           HTTP_S_Headers resp;
           resp.status = http_status_ok;
           resp.headers.emplace_back(&"Content-Type", &"text/plain");
-          session->https_response(http_method_HEAD, move(resp), "example HTTPS/WSS server HEAD\n");
+          session->https_response(http_method_HEAD, resp, "example HTTPS/WSS server HEAD\n");
         }
         break;
 

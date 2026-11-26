@@ -92,36 +92,21 @@ class HTTPS_Server_Session
     void
     do_on_https_upgraded_stream(linear_buffer& data, bool eof);
 
-    // Sends response headers with some additional data. No error checking is
-    // performed. This function is provided for convenience only, and maybe
-    // isn't very useful unless for some low-level hacks.
-    bool
-    do_https_raw_response(HTTP_Method method, const HTTP_S_Headers& resp, chars_view data);
-
   public:
     HTTPS_Server_Session(const HTTPS_Server_Session&) = delete;
     HTTPS_Server_Session& operator=(const HTTPS_Server_Session&) & = delete;
     virtual ~HTTPS_Server_Session();
 
-    // Sends a headers-only response. This can be used to respond to a HEAD or
-    // CONNECT request, or to indicate that the message content terminates until
-    // closure of the connection. In the latter case, callers must not supply
-    // `Content-Length` or `Transfer-Encoding` headers, and shall send further
-    // data with `ssl_send()`.
-    // If this function throws an exception, there is no effect.
-    // This function is thread-safe.
-    bool
-    https_response_headers_only(HTTP_S_Headers&& resp);
-
     // Sends a simple response, possibly with the complete content. Callers should
-    // not supply `Content-Length` or `Transfer-Encoding` headers, as they
-    // will be rewritten. If `resp.status` equals 1xx, 204 or 304, the HTTP
-    // specification requires that the response shall have no message content, in
-    // which case `data` and `size` are ignored.
+    // not supply `Content-Length` or `Transfer-Encoding` headers, as they will be
+    // rewritten. If `resp.status` equals 1xx, 204 or 304, the HTTP specification
+    // requires that the response shall have no message content, in which case
+    // `data` and `size` are ignored. The function may rewrite `resp.headers` as
+    // necessary.
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    https_response(HTTP_Method method, HTTP_S_Headers&& resp, chars_view data);
+    https_response(HTTP_Method method, HTTP_S_Headers& resp, chars_view data);
 
     // Send a response with chunked content, which may contain multiple chunks.
     // Callers should not supply `Transfer-Encoding` headers, as they will be
@@ -130,17 +115,18 @@ class HTTPS_Server_Session
     // `https_chunked_response_send()`. These functions do very little error
     // checking. Calling `https_chunked_response_send()` or
     // `https_chunked_response_finish()` when no chunked response is active is
-    // likely to corrupt the connection.
+    // likely to corrupt the connection. These functions may rewrite
+    // `resp.headers` as necessary.
     // If these function throw an exception, there is no effect.
     // These functions are thread-safe.
     bool
-    https_chunked_response_start(HTTP_Method method, HTTP_S_Headers&& resp);
+    https_chunked_response_start(HTTP_Method method, HTTP_S_Headers& resp);
 
     bool
     https_chunked_response_send(chars_view data);
 
     bool
-    https_chunked_response_finish();
+    https_chunked_response_finish(HTTP_S_Headers& resp);
 
     // Sends a default response and shuts down the connection. `status` may be
     // a standard status code, or an integer within [200,599]. Any other value is
