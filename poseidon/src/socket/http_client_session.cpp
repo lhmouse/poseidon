@@ -115,7 +115,7 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
 
 HTTP_Content_Type
 HTTP_Client_Session::
-do_on_http_response_headers(HTTP_S_Headers& resp)
+do_on_http_response_headers(HTTP_Response_Headers& resp)
   {
     POSEIDON_LOG_DEBUG((
         "HTTP client received response: $3 $4",
@@ -153,7 +153,7 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
 bool
 HTTP_Client_Session::
-do_http_raw_request(const HTTP_C_Headers& req, chars_view data)
+do_http_raw_request(const HTTP_Request_Headers& req, chars_view data)
   {
     // Compose the message and send it as a whole.
     tinyfmt_ln fmt;
@@ -168,7 +168,7 @@ do_http_raw_request(const HTTP_C_Headers& req, chars_view data)
 
 bool
 HTTP_Client_Session::
-http_request(HTTP_C_Headers&& req, chars_view data)
+http_request(HTTP_Request_Headers&& req, chars_view data)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -190,7 +190,7 @@ http_request(HTTP_C_Headers&& req, chars_view data)
 
 bool
 HTTP_Client_Session::
-http_chunked_request_start(HTTP_C_Headers&& req)
+http_chunked_request_start(HTTP_Request_Headers&& req)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((

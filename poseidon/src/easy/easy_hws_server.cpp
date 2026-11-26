@@ -149,7 +149,7 @@ struct Final_Session final : WS_Server_Session
 
     virtual
     void
-    do_on_http_request_headers(HTTP_C_Headers& req, bool eot) override
+    do_on_http_request_headers(HTTP_Request_Headers& req, bool eot) override
       {
         if(req.is_proxy) {
           // Reject proxy requests.

@@ -8,7 +8,7 @@
 #include "enums.hpp"
 #include "tcp_socket.hpp"
 #include "../http/http_request_parser.hpp"
-#include "../http/http_s_headers.hpp"
+#include "../http/http_response_headers.hpp"
 namespace poseidon {
 
 class HTTP_Server_Session
@@ -44,7 +44,7 @@ class HTTP_Server_Session
     // and ignores upgrade requests.
     virtual
     void
-    do_on_http_request_headers(HTTP_C_Headers& req, bool eot);
+    do_on_http_request_headers(HTTP_Request_Headers& req, bool eot);
 
     // This callback is invoked by the network thread for each fragment of the
     // request content that has been received. As with `TCP_Connection::
@@ -67,7 +67,7 @@ class HTTP_Server_Session
     // message.
     virtual
     void
-    do_on_http_request_finish(HTTP_C_Headers&& req, linear_buffer&& data, bool eot)
+    do_on_http_request_finish(HTTP_Request_Headers&& req, linear_buffer&& data, bool eot)
       = 0;
 
     // This callback is invoked when an HTTP parser error happens. Why must we
@@ -106,7 +106,7 @@ class HTTP_Server_Session
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    http_response(HTTP_Method method, HTTP_S_Headers& resp, chars_view data);
+    http_response(HTTP_Method method, HTTP_Response_Headers& resp, chars_view data);
 
     // Send a response with chunked content, which may contain multiple chunks.
     // Callers should not supply `Transfer-Encoding` headers, as they will be
@@ -120,13 +120,13 @@ class HTTP_Server_Session
     // If these function throw an exception, there is no effect.
     // These functions are thread-safe.
     bool
-    http_chunked_response_start(HTTP_Method method, HTTP_S_Headers& resp);
+    http_chunked_response_start(HTTP_Method method, HTTP_Response_Headers& resp);
 
     bool
     http_chunked_response_send(chars_view data);
 
     bool
-    http_chunked_response_finish(HTTP_S_Headers& resp);
+    http_chunked_response_finish(HTTP_Response_Headers& resp);
 
     // Sends a default response and shuts down the connection. `status` may be
     // a standard status code, or an integer within [200,599]. Any other value is

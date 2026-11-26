@@ -5,7 +5,7 @@
 #define POSEIDON_HTTP_HTTP_RESPONSE_PARSER_
 
 #include "../fwd.hpp"
-#include "http_s_headers.hpp"
+#include "http_response_headers.hpp"
 #include <llhttp.h>
 namespace poseidon {
 
@@ -18,7 +18,7 @@ class HTTP_Response_Parser
 
     static const ::llhttp_settings_t s_llhttp_settings;
     ::llhttp_t m_llhttp_parser;
-    HTTP_S_Headers m_headers;
+    HTTP_Response_Headers m_headers;
     linear_buffer m_content;
 
     enum HRESP_State : uint8_t
@@ -98,11 +98,11 @@ class HTTP_Response_Parser
     headers_complete() const noexcept
       { return this->m_hresp >= hresp_headers_done;  }
 
-    const HTTP_S_Headers&
+    const HTTP_Response_Headers&
     headers() const noexcept
       { return this->m_headers;  }
 
-    HTTP_S_Headers&
+    HTTP_Response_Headers&
     mut_headers() noexcept
       { return this->m_headers;  }
 

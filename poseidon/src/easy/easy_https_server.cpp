@@ -16,7 +16,7 @@ namespace {
 struct Event
   {
     Easy_HTTP_Event type;
-    HTTP_C_Headers req;
+    HTTP_Request_Headers req;
     linear_buffer data;
     bool eot = false;
     HTTP_Status status = http_status_null;
@@ -96,7 +96,7 @@ struct Final_Fiber final : Abstract_Fiber
           try {
             if(event.status != http_status_null) {
               // Send a bad request response.
-              HTTP_S_Headers resp;
+              HTTP_Response_Headers resp;
               resp.status = event.status;
               resp.headers.emplace_back(&"Connection", &"close");
               session->https_response(event.req.method, resp, "");
@@ -174,7 +174,7 @@ struct Final_Session final : HTTPS_Server_Session
 
     virtual
     void
-    do_on_https_request_finish(HTTP_C_Headers&& req, linear_buffer&& data, bool eot) override
+    do_on_https_request_finish(HTTP_Request_Headers&& req, linear_buffer&& data, bool eot) override
       {
         Event event;
         event.type = easy_http_message;

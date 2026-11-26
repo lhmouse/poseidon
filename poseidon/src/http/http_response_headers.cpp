@@ -2,12 +2,12 @@
 // Copyright (C) 2022-2026 LH_Mouse. All wrongs reserved.
 
 #include "../xprecompiled.hpp"
-#include "../../http/http_s_headers.hpp"
+#include "../../http/http_response_headers.hpp"
 #include "../../utils.hpp"
 namespace poseidon {
 
 shallow_string
-HTTP_S_Headers::
+HTTP_Response_Headers::
 default_reason(HTTP_Status status) noexcept
   {
     switch(status)
@@ -315,13 +315,13 @@ default_reason(HTTP_Status status) noexcept
       }
   }
 
-HTTP_S_Headers::
-~HTTP_S_Headers()
+HTTP_Response_Headers::
+~HTTP_Response_Headers()
   {
   }
 
 void
-HTTP_S_Headers::
+HTTP_Response_Headers::
 encode(tinyfmt& fmt) const
   {
     // Write the status line. If `reason` is empty, a default reason string
@@ -331,7 +331,7 @@ encode(tinyfmt& fmt) const
     if(this->reason.size() != 0)
       fmt << this->reason;
     else
-      fmt << HTTP_S_Headers::default_reason(this->status);
+      fmt << HTTP_Response_Headers::default_reason(this->status);
 
     // Write response headers. Empty headers are ignored.
     for(const auto& hr : this->headers)

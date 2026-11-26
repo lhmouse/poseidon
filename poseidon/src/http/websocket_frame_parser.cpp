@@ -3,8 +3,8 @@
 
 #include "../xprecompiled.hpp"
 #include "../../http/websocket_frame_parser.hpp"
-#include "../../http/http_c_headers.hpp"
-#include "../../http/http_s_headers.hpp"
+#include "../../http/http_request_headers.hpp"
+#include "../../http/http_response_headers.hpp"
 #include "../../http/http_header_parser.hpp"
 #include "../../base/config_file.hpp"
 #include "../../static/main_config.hpp"
@@ -166,7 +166,7 @@ deallocate() noexcept
 
 void
 WebSocket_Frame_Parser::
-create_handshake_request(HTTP_C_Headers& req)
+create_handshake_request(HTTP_Request_Headers& req)
   {
     if((this->m_wshs != wshs_pending) && (this->m_wshs != wshs_c_req_sent))
       POSEIDON_THROW((
@@ -194,7 +194,7 @@ create_handshake_request(HTTP_C_Headers& req)
 
 void
 WebSocket_Frame_Parser::
-accept_handshake_request(HTTP_S_Headers& resp, const HTTP_C_Headers& req)
+accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers& req)
   {
     if(this->m_wshs != wshs_pending)
       POSEIDON_THROW((
@@ -327,7 +327,7 @@ accept_handshake_request(HTTP_S_Headers& resp, const HTTP_C_Headers& req)
 
 void
 WebSocket_Frame_Parser::
-accept_handshake_response(const HTTP_S_Headers& resp)
+accept_handshake_response(const HTTP_Response_Headers& resp)
   {
     if(this->m_wshs != wshs_c_req_sent)
       POSEIDON_THROW((

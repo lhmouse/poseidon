@@ -36,7 +36,7 @@ class WSS_Server_Session
 
     virtual
     void
-    do_on_https_request_headers(HTTP_C_Headers& req, bool eot) override;
+    do_on_https_request_headers(HTTP_Request_Headers& req, bool eot) override;
 
     virtual
     void
@@ -44,7 +44,7 @@ class WSS_Server_Session
 
     virtual
     void
-    do_on_https_request_finish(HTTP_C_Headers&& req, linear_buffer&& data, bool eot) override;
+    do_on_https_request_finish(HTTP_Request_Headers&& req, linear_buffer&& data, bool eot) override;
 
     virtual
     void
@@ -94,7 +94,7 @@ class WSS_Server_Session
     // This function shall be called by `do_on_https_request_headers()` to
     // establish a WebSocket connection.
     void
-    do_wss_complete_handshake(HTTP_C_Headers& req, bool eot);
+    do_wss_complete_handshake(HTTP_Request_Headers& req, bool eot);
 
     // Sends a raw frame (not a message). No error checking is performed. This
     // function is provided for convenience only, and maybe isn't very useful

@@ -40,7 +40,7 @@ do_abstract_socket_on_closed()
 
 void
 WSS_Server_Session::
-do_on_https_request_headers(HTTP_C_Headers& req, bool eot)
+do_on_https_request_headers(HTTP_Request_Headers& req, bool eot)
   {
     this->do_wss_complete_handshake(req, eot);
   }
@@ -54,7 +54,7 @@ do_on_https_request_content_stream(linear_buffer& data)
 
 void
 WSS_Server_Session::
-do_on_https_request_finish(HTTP_C_Headers&& /*req*/, linear_buffer&& /*data*/, bool /*eot*/)
+do_on_https_request_finish(HTTP_Request_Headers&& /*req*/, linear_buffer&& /*data*/, bool /*eot*/)
   {
   }
 
@@ -63,7 +63,7 @@ WSS_Server_Session::
 do_on_https_request_error(HTTP_Method method, HTTP_Status status)
   {
     // This error can be reported synchronously.
-    HTTP_S_Headers resp;
+    HTTP_Response_Headers resp;
     resp.status = status;
     resp.headers.emplace_back(&"Connection", &"close");
     this->https_response(method, resp, "");
@@ -226,7 +226,7 @@ do_on_wss_close(WS_Status status, chars_view reason)
 
 void
 WSS_Server_Session::
-do_wss_complete_handshake(HTTP_C_Headers& req, bool eot)
+do_wss_complete_handshake(HTTP_Request_Headers& req, bool eot)
   {
     if(req.is_proxy) {
       // Reject proxy requests.
@@ -235,7 +235,7 @@ do_wss_complete_handshake(HTTP_C_Headers& req, bool eot)
     }
 
     // Send the handshake response.
-    HTTP_S_Headers resp;
+    HTTP_Response_Headers resp;
     this->m_parser.accept_handshake_request(resp, req);
     this->https_response(http_method_GET, resp, "");
 

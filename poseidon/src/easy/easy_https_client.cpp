@@ -17,7 +17,7 @@ namespace {
 struct Event
   {
     Easy_HTTP_Event type;
-    HTTP_S_Headers resp;
+    HTTP_Response_Headers resp;
     linear_buffer data;
   };
 
@@ -162,7 +162,7 @@ struct Final_Session final : HTTPS_Client_Session
 
     virtual
     void
-    do_on_https_response_finish(HTTP_S_Headers&& resp, linear_buffer&& data) override
+    do_on_https_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data) override
       {
         Event event;
         event.type = easy_http_message;

@@ -126,7 +126,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
 
 HTTP_Content_Type
 HTTPS_Client_Session::
-do_on_https_response_headers(HTTP_S_Headers& resp)
+do_on_https_response_headers(HTTP_Response_Headers& resp)
   {
     POSEIDON_LOG_DEBUG((
         "HTTPS client received response: $3 $4",
@@ -164,7 +164,7 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
 
 bool
 HTTPS_Client_Session::
-do_https_raw_request(const HTTP_C_Headers& req, chars_view data)
+do_https_raw_request(const HTTP_Request_Headers& req, chars_view data)
   {
     // Compose the message and send it as a whole.
     tinyfmt_ln fmt;
@@ -179,7 +179,7 @@ do_https_raw_request(const HTTP_C_Headers& req, chars_view data)
 
 bool
 HTTPS_Client_Session::
-https_request(HTTP_C_Headers&& req, chars_view data)
+https_request(HTTP_Request_Headers&& req, chars_view data)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -201,7 +201,7 @@ https_request(HTTP_C_Headers&& req, chars_view data)
 
 bool
 HTTPS_Client_Session::
-https_chunked_request_start(HTTP_C_Headers&& req)
+https_chunked_request_start(HTTP_Request_Headers&& req)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((

@@ -2,18 +2,18 @@
 // Copyright (C) 2022-2026 LH_Mouse. All wrongs reserved.
 
 #include "../xprecompiled.hpp"
-#include "../../http/http_c_headers.hpp"
+#include "../../http/http_request_headers.hpp"
 #include "../../socket/abstract_socket.hpp"
 #include "../../utils.hpp"
 namespace poseidon {
 
-HTTP_C_Headers::
-~HTTP_C_Headers()
+HTTP_Request_Headers::
+~HTTP_Request_Headers()
   {
   }
 
 void
-HTTP_C_Headers::
+HTTP_Request_Headers::
 encode_and_set_path(chars_view path)
   {
     this->raw_path.clear();
@@ -51,7 +51,7 @@ encode_and_set_path(chars_view path)
   }
 
 void
-HTTP_C_Headers::
+HTTP_Request_Headers::
 encode_and_append_query(chars_view key, chars_view value)
   {
     if(!this->raw_query.empty())
@@ -125,7 +125,7 @@ encode_and_append_query(chars_view key, chars_view value)
   }
 
 void
-HTTP_C_Headers::
+HTTP_Request_Headers::
 set_request_host(const Abstract_Socket& socket, const cow_string& default_host)
   {
     // A proxy request has a hostname in the URI.
@@ -155,7 +155,7 @@ set_request_host(const Abstract_Socket& socket, const cow_string& default_host)
   }
 
 void
-HTTP_C_Headers::
+HTTP_Request_Headers::
 encode(tinyfmt& fmt) const
   {
     // Write the request line. If `method` is an empty string, `GET` is assumed.

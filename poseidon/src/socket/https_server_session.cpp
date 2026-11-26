@@ -98,7 +98,7 @@ do_on_ssl_stream(linear_buffer& data, bool eof)
 
 void
 HTTPS_Server_Session::
-do_on_https_request_headers(HTTP_C_Headers& req, bool /*eot*/)
+do_on_https_request_headers(HTTP_Request_Headers& req, bool /*eot*/)
   {
     if(req.is_proxy) {
       // Reject proxy requests.
@@ -139,7 +139,7 @@ do_on_https_upgraded_stream(linear_buffer& data, bool eof)
 
 bool
 HTTPS_Server_Session::
-https_response(HTTP_Method method, HTTP_S_Headers& resp, chars_view data)
+https_response(HTTP_Method method, HTTP_Response_Headers& resp, chars_view data)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -196,7 +196,7 @@ https_response(HTTP_Method method, HTTP_S_Headers& resp, chars_view data)
 
 bool
 HTTPS_Server_Session::
-https_chunked_response_start(HTTP_Method method, HTTP_S_Headers& resp)
+https_chunked_response_start(HTTP_Method method, HTTP_Response_Headers& resp)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -257,7 +257,7 @@ https_chunked_response_send(chars_view data)
 
 bool
 HTTPS_Server_Session::
-https_chunked_response_finish(HTTP_S_Headers& resp)
+https_chunked_response_finish(HTTP_Response_Headers& resp)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -297,9 +297,9 @@ https_shut_down(HTTP_Status status) noexcept
     bool succ = false;
     try {
       // Compose a default page.
-      HTTP_S_Headers resp;
+      HTTP_Response_Headers resp;
       resp.status = status;
-      resp.reason = HTTP_S_Headers::default_reason(status);
+      resp.reason = HTTP_Response_Headers::default_reason(status);
       resp.headers.emplace_back(&"Content-Type", &"text/html");
       resp.headers.emplace_back(&"Connection", &"close");
 

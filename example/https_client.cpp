@@ -13,7 +13,7 @@ static Easy_Timer my_timer;
 
 static void
 my_client_callback(const shptr<HTTPS_Client_Session>& session, Abstract_Fiber& fiber,
-      Easy_HTTP_Event event, HTTP_S_Headers&& resp, linear_buffer&& data)
+      Easy_HTTP_Event event, HTTP_Response_Headers&& resp, linear_buffer&& data)
   {
     (void) fiber;
 
@@ -71,7 +71,7 @@ my_timer_callback(const shptr<Abstract_Timer>& timer,
 
       case 1:
         {
-          HTTP_C_Headers req;
+          HTTP_Request_Headers req;
           req.method = http_method_GET;
           req.encode_and_set_path(&"/");
           req.headers.emplace_back(&"Connection", &"keep-alive");
@@ -82,7 +82,7 @@ my_timer_callback(const shptr<Abstract_Timer>& timer,
 
       case 2:
         {
-          HTTP_C_Headers req;
+          HTTP_Request_Headers req;
           req.method = http_method_POST;
           req.encode_and_set_path(&"/");
           my_client_session->https_request(move(req), "testdata");
@@ -92,7 +92,7 @@ my_timer_callback(const shptr<Abstract_Timer>& timer,
 
       case 3:
         {
-          HTTP_C_Headers req;
+          HTTP_Request_Headers req;
           req.method = http_method_DELETE;
           req.encode_and_set_path(&"/");
           my_client_session->https_request(move(req), "");

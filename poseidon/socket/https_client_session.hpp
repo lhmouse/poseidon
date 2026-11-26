@@ -8,7 +8,7 @@
 #include "enums.hpp"
 #include "ssl_socket.hpp"
 #include "../http/http_response_parser.hpp"
-#include "../http/http_c_headers.hpp"
+#include "../http/http_request_headers.hpp"
 namespace poseidon {
 
 class HTTPS_Client_Session
@@ -49,7 +49,7 @@ class HTTPS_Client_Session
     // and returns `http_content_normal`.
     virtual
     HTTP_Content_Type
-    do_on_https_response_headers(HTTP_S_Headers& resp);
+    do_on_https_response_headers(HTTP_Response_Headers& resp);
 
     // This callback is invoked by the network thread for each fragment of the
     // response content that has been received. As with `SSL_Connection::
@@ -68,7 +68,7 @@ class HTTPS_Client_Session
     // message. Arguments have the same semantics with the other callbacks.
     virtual
     void
-    do_on_https_response_finish(HTTP_S_Headers&& resp, linear_buffer&& data)
+    do_on_https_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& data)
       = 0;
 
     // This callback is invoked by the network thread on a connection that has
@@ -83,7 +83,7 @@ class HTTPS_Client_Session
     // performed. This function is provided for convenience only, and maybe
     // isn't very useful unless for some low-level hacks.
     bool
-    do_https_raw_request(const HTTP_C_Headers& req, chars_view data);
+    do_https_raw_request(const HTTP_Request_Headers& req, chars_view data);
 
   public:
     HTTPS_Client_Session(const HTTPS_Client_Session&) = delete;
@@ -102,7 +102,7 @@ class HTTPS_Client_Session
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    https_request(HTTP_C_Headers&& req, chars_view data);
+    https_request(HTTP_Request_Headers&& req, chars_view data);
 
     // Send a request with chunked content, which may contain multiple chunks.
     // Callers should not supply `Transfer-Encoding` headers, as they will be
@@ -114,7 +114,7 @@ class HTTPS_Client_Session
     // If these function throw an exception, there is no effect.
     // These functions are thread-safe.
     bool
-    https_chunked_request_start(HTTP_C_Headers&& req);
+    https_chunked_request_start(HTTP_Request_Headers&& req);
 
     bool
     https_chunked_request_send(chars_view data);

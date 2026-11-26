@@ -10,7 +10,7 @@
 #include "enums.hpp"
 namespace poseidon {
 
-struct HTTP_S_Headers
+struct HTTP_Response_Headers
   {
     HTTP_Status status = http_status_null;
     uint16_t reserved_1 = 0;
@@ -18,15 +18,15 @@ struct HTTP_S_Headers
     cow_string reason;
     cow_bivector<HTTP_Field_Name, HTTP_Value> headers;
 
-    HTTP_S_Headers() noexcept = default;
-    HTTP_S_Headers(const HTTP_S_Headers&) = default;
-    HTTP_S_Headers(HTTP_S_Headers&&) = default;
-    HTTP_S_Headers& operator=(const HTTP_S_Headers&) & = default;
-    HTTP_S_Headers& operator=(HTTP_S_Headers&&) & = default;
-    ~HTTP_S_Headers();
+    HTTP_Response_Headers() noexcept = default;
+    HTTP_Response_Headers(const HTTP_Response_Headers&) = default;
+    HTTP_Response_Headers(HTTP_Response_Headers&&) = default;
+    HTTP_Response_Headers& operator=(const HTTP_Response_Headers&) & = default;
+    HTTP_Response_Headers& operator=(HTTP_Response_Headers&&) & = default;
+    ~HTTP_Response_Headers();
 
-    HTTP_S_Headers&
-    swap(HTTP_S_Headers& other) noexcept
+    HTTP_Response_Headers&
+    swap(HTTP_Response_Headers& other) noexcept
       {
         ::std::swap(this->status, other.status);
         this->reason.swap(other.reason);
@@ -57,7 +57,7 @@ struct HTTP_S_Headers
 
 inline
 void
-swap(HTTP_S_Headers& lhs, HTTP_S_Headers& rhs) noexcept
+swap(HTTP_Response_Headers& lhs, HTTP_Response_Headers& rhs) noexcept
   { lhs.swap(rhs);  }
 
 }  // namespace poseidon
