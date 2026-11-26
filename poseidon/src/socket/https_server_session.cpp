@@ -214,8 +214,6 @@ https_chunked_response_start(HTTP_Method method, HTTP_Response_Headers& resp)
           "[HTTPS server session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    tinyfmt_ln fmt;
-
     // Erase `Transfer-Encoding:` headers, if any. `Content-Length:` may be useful
     // so it's left intact, despite violation of the specification.
     for(size_t index = 0;  index != resp.headers.size();  index ++)
@@ -224,6 +222,8 @@ https_chunked_response_start(HTTP_Method method, HTTP_Response_Headers& resp)
 
     // Write a chunked header.
     resp.headers.emplace_back(&"Transfer-Encoding", &"chunked");
+
+    tinyfmt_ln fmt;
     resp.encode(fmt);
     return this->ssl_send(fmt);
   }
@@ -238,15 +238,14 @@ https_chunked_response_send(chars_view data)
           "[HTTPS server session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    tinyfmt_ln fmt;
-    ::asteria::ascii_numput nump;
-
     // Ignore empty chunks, which would mark the end of the content.
     if(data.n == 0)
       return this->ssl_send("");
 
     // Compose a chunk and send it as a whole. The length of this chunk is
     // written as a hexadecimal integer without the `0x` prefix.
+    tinyfmt_ln fmt;
+    ::asteria::ascii_numput nump;
     nump.put_XU(data.n);
     fmt.putn(nump.data() + 2, nump.size() - 2);
     fmt << "\r\n";
@@ -320,6 +319,7 @@ https_shut_down(HTTP_Status status) noexcept
           "[HTTPS server session `$1` (class `$2`)]"),
           this, typeid(*this), stdex);
     }
+
     succ |= this->ssl_shut_down();
     return succ;
   }

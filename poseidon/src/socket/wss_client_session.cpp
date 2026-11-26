@@ -345,6 +345,7 @@ wss_shut_down(WS_Status status, chars_view reason) noexcept
           "[WebSocket client session `$1` (class `$2`)]"),
           this, typeid(*this), stdex);
     }
+
     succ |= this->ssl_shut_down();
     return succ;
   }
