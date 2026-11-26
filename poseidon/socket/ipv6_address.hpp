@@ -164,7 +164,7 @@ operator==(const IPv6_Address& lhs, const IPv6_Address& rhs) noexcept
 inline
 bool
 operator!=(const IPv6_Address& lhs, const IPv6_Address& rhs) noexcept
-  { return not lhs.equals(rhs);  }
+  { return !lhs.equals(rhs);  }
 
 inline
 bool

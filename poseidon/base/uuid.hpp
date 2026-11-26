@@ -218,12 +218,12 @@ operator<<(tinyfmt& fmt, const UUID& value)
 inline
 bool
 operator==(const UUID& lhs, const UUID& rhs) noexcept
-  { return lhs.equals(rhs) != false;  }
+  { return lhs.equals(rhs);  }
 
 inline
 bool
 operator!=(const UUID& lhs, const UUID& rhs) noexcept
-  { return lhs.equals(rhs) == false;  }
+  { return !lhs.equals(rhs);  }
 
 inline
 bool
