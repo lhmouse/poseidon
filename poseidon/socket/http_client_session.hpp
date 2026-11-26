@@ -20,6 +20,9 @@ class HTTP_Client_Session
     cow_string m_default_host;
     atomic_relaxed<bool> m_upgrade_ack;
 
+    mutable plain_mutex m_pipeline_mutex;
+    linear_buffer m_pipeline;
+
   public:
     // Constructs a socket for outgoing connections.
     explicit HTTP_Client_Session(const cow_string& default_host);
@@ -36,20 +39,13 @@ class HTTP_Client_Session
       { return this->m_upgrade_ack.load();  }
 
     // This callback is invoked by the network thread after all headers of a
-    // response have been received, just before the content of it. Returning
-    // `http_content_normal` indicates that the response has content whose
-    // length is described by the `Content-Length` or `Transfer-Encoding`
-    // header. Returning `http_content_empty` indicates that the message
-    // does not have content even if it appears so, such as the response to a
-    // HEAD request. Returning `http_content_connect` causes all further
-    // incoming data to be delivered via `do_on_http_upgraded_stream()`. This
-    // callback is primarily used to examine the status code before processing
-    // response data.
-    // The default implementation does not check for HEAD or upgrade responses
-    // and returns `http_content_normal`.
+    // response have been received, just before the content of it. This callback
+    // is primarily used to examine the status code before processing response
+    // data.
+    // The default implementation does nothing.
     virtual
-    HTTP_Content_Type
-    do_on_http_response_headers(HTTP_Response_Headers& resp);
+    void
+    do_on_http_response_headers(HTTP_Method method, HTTP_Response_Headers& resp);
 
     // This callback is invoked by the network thread for each fragment of the
     // response content that has been received. As with `TCP_Connection::
@@ -79,12 +75,6 @@ class HTTP_Client_Session
     void
     do_on_http_upgraded_stream(linear_buffer& data, bool eof);
 
-    // Sends request headers with some additional data. No error checking is
-    // performed. This function is provided for convenience only, and maybe
-    // isn't very useful unless for some low-level hacks.
-    bool
-    do_http_raw_request(const HTTP_Request_Headers& req, chars_view data);
-
   public:
     HTTP_Client_Session(const HTTP_Client_Session&) = delete;
     HTTP_Client_Session& operator=(const HTTP_Client_Session&) & = delete;
@@ -98,11 +88,11 @@ class HTTP_Client_Session
 
     // Sends a simple request, possibly with the complete content. Callers should
     // not supply `Content-Length` or `Transfer-Encoding` headers, as they
-    // will be rewritten.
+    // will be rewritten. This function may rewrite `req.headers` as necessary.
     // If this function throws an exception, there is no effect.
     // This function is thread-safe.
     bool
-    http_request(HTTP_Request_Headers&& req, chars_view data);
+    http_request(HTTP_Request_Headers& req, chars_view data);
 
     // Send a request with chunked content, which may contain multiple chunks.
     // Callers should not supply `Transfer-Encoding` headers, as they will be
@@ -110,17 +100,18 @@ class HTTP_Client_Session
     // terminates the chunked content; therefore, empty chunks are ignored by
     // `http_chunked_request_send()`. These functions do little error checking.
     // Calling `http_chunked_request_send()` or `http_chunked_request_finish()`
-    // when no chunked request is active will corrupt the connection.
+    // when no chunked request is active will corrupt the connection. These
+    // functions may rewrite `req.headers` as necessary.
     // If these function throw an exception, there is no effect.
     // These functions are thread-safe.
     bool
-    http_chunked_request_start(HTTP_Request_Headers&& req);
+    http_chunked_request_start(HTTP_Request_Headers& req);
 
     bool
     http_chunked_request_send(chars_view data);
 
     bool
-    http_chunked_request_finish();
+    http_chunked_request_finish(HTTP_Request_Headers& req);
   };
 
 }  // namespace poseidon

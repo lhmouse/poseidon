@@ -126,36 +126,6 @@ encode_and_append_query(chars_view key, chars_view value)
 
 void
 HTTP_Request_Headers::
-set_request_host(const Abstract_Socket& socket, const cow_string& default_host)
-  {
-    // A proxy request has a hostname in the URI.
-    if(this->is_proxy)
-      return;
-
-    if(this->raw_host == "") {
-      // Ensure `uri_host` is set to a non-empty string.
-      if(default_host != "")
-        this->raw_host = default_host;
-      else
-        this->raw_host = socket.remote_address().to_string();
-    }
-
-    // Replace the existent host header.
-    size_t index = SIZE_MAX;
-    for(size_t k = 0;  k != this->headers.size();  ++k)
-      if(this->headers[k].first == "Host") {
-        index = k;
-        break;
-      }
-
-    if(index == SIZE_MAX)
-      this->headers.emplace_back(&"Host", this->raw_host);
-    else
-      this->headers.mut(index).second = this->raw_host;
-  }
-
-void
-HTTP_Request_Headers::
 encode(tinyfmt& fmt) const
   {
     // Write the request line. If `method` is an empty string, `GET` is assumed.

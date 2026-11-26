@@ -67,10 +67,6 @@ struct HTTP_Request_Headers
     void
     encode_and_append_query(chars_view key, chars_view value);
 
-    // Creates a `Host:` header if no one is found.
-    void
-    set_request_host(const Abstract_Socket& socket, const cow_string& default_host);
-
     // Encodes headers in wire format. Lines are separated by CR LF pairs. The
     // output will be suitable for sending through a stream socket.
     void

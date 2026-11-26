@@ -78,16 +78,7 @@ class HTTP_Response_Parser
     // `headers_complete()` returns `true` before the call, this function does
     // nothing.
     void
-    parse_headers_from_stream(linear_buffer& data, bool eof);
-
-    // Informs the HTTP parser that the current message has no content, e.g. the
-    // response to a HEAD or CONNECT request. This cannot be undone.
-    void
-    set_no_content() noexcept
-      {
-        ASTERIA_ASSERT(this->m_hresp >= hresp_headers_done);
-        this->m_llhttp_parser.flags |= F_SKIPBODY;
-      }
+    parse_headers_from_stream(HTTP_Method method, linear_buffer& data, bool eof);
 
     // Get the parsed headers.
     bool

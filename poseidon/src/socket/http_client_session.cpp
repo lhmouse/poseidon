@@ -28,13 +28,6 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
     }
 
     for(;;) {
-      // Check whether the connection has switched to another protocol.
-      if(this->m_upgrade_ack.load()) {
-        this->m_resp_parser.deallocate();
-        this->do_on_http_upgraded_stream(data, eof);
-        return;
-      }
-
       // If something has gone wrong, ignore further incoming data.
       if(this->m_resp_parser.error()) {
         data.clear();
@@ -42,7 +35,11 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
       }
 
       if(!this->m_resp_parser.headers_complete()) {
-        this->m_resp_parser.parse_headers_from_stream(data, eof);
+        HTTP_Method method = http_method_null;
+        plain_mutex::unique_lock pipeline_lock(this->m_pipeline_mutex);
+        this->m_pipeline.peekn(reinterpret_cast<char*>(&method), sizeof(method));
+        pipeline_lock.unlock();
+        this->m_resp_parser.parse_headers_from_stream(method, data, eof);
 
         if(this->m_resp_parser.error()) {
           data.clear();
@@ -54,28 +51,27 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
           return;
 
         // Check headers.
-        auto content_type = this->do_on_http_response_headers(this->m_resp_parser.mut_headers());
-        switch(content_type)
-          {
-          case http_content_normal:
-            break;
+        auto& resp = this->m_resp_parser.mut_headers();
 
-          case http_content_empty:
-            this->m_resp_parser.set_no_content();
-            break;
+        this->do_on_http_response_headers(method, resp);
 
-          case http_content_connect:
+        if((resp.status == 101) || !((resp.status >= 100) && (resp.status <= 199))) {
+          // Pop a request and check whether the connection has switched to
+          // another protocol.
+          pipeline_lock.lock(this->m_pipeline_mutex);
+          if(((method == http_method_CONNECT) && (resp.status >= 200) && (resp.status <= 299))
+              || (resp.status == 101)) {  // switching protocols
+            ::asteria::exchange(this->m_pipeline);
+            pipeline_lock.unlock();
+
             this->m_upgrade_ack.store(true);
             this->m_resp_parser.deallocate();
             this->do_on_http_upgraded_stream(data, eof);
             return;
-
-          default:
-            POSEIDON_THROW((
-                "Invalid content type `$3` returned from `do_on_http_response_headers()`",
-                "[HTTP client session `$1` (class `$2`)]"),
-                this, typeid(*this), content_type);
           }
+
+          this->m_pipeline.discard(sizeof(method));
+        }
       }
 
       if(!this->m_resp_parser.content_complete()) {
@@ -93,19 +89,11 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
           return;
 
         // The message is complete now.
-        uint32_t status = this->m_resp_parser.headers().status;
-
         this->do_on_http_response_finish(move(this->m_resp_parser.mut_headers()),
                                          move(this->m_resp_parser.mut_content()));
 
         if(this->m_resp_parser.should_close_after_content())
           this->tcp_shut_down();
-
-        // For WebSocket and HTTP 2.0, this indicates the server has switched to
-        // another protocol. CONNECT responses are handled differently after the
-        // headers; see above.
-        if(status == 101)
-          this->m_upgrade_ack.store(true);
       }
 
       this->m_resp_parser.next_message();
@@ -113,17 +101,14 @@ do_on_tcp_stream(linear_buffer& data, bool eof)
     }
   }
 
-HTTP_Content_Type
+void
 HTTP_Client_Session::
-do_on_http_response_headers(HTTP_Response_Headers& resp)
+do_on_http_response_headers(HTTP_Method method, HTTP_Response_Headers& resp)
   {
     POSEIDON_LOG_DEBUG((
-        "HTTP client received response: $3 $4",
+        "HTTP client received response for method $3: $4 $5",
         "[HTTP client session `$1` (class `$2`)]"),
-        this, typeid(*this), resp.status, resp.reason);
-
-    // The default handler doesn't handle HEAD, CONNECT or Upgrade responses.
-    return http_content_normal;
+        this, typeid(*this), method, resp.status, resp.reason);
   }
 
 void
@@ -153,13 +138,40 @@ do_on_http_upgraded_stream(linear_buffer& data, bool eof)
 
 bool
 HTTP_Client_Session::
-do_http_raw_request(const HTTP_Request_Headers& req, chars_view data)
+http_request(HTTP_Request_Headers& req, chars_view data)
   {
-    // Compose the message and send it as a whole.
+    if(this->m_upgrade_ack.load())
+      POSEIDON_THROW((
+          "HTTP connection switched to another protocol",
+          "[HTTP client session `$1` (class `$2`)]"),
+          this, typeid(*this));
+
     tinyfmt_ln fmt;
-    req.encode(fmt);
-    fmt.putn(data.p, data.n);
+    bool has_host = false;
+
+    // Erase `Transfer-Encoding:` and `Content-Length:` headers, if any. Check
+    // whether `Host:` has been set.
+    for(size_t index = 0;  index != req.headers.size();  index ++)
+      if(req.headers.at(index).first == "Transfer-Encoding")
+        req.headers.erase(index --);
+      else if(req.headers.at(index).first == "Content-Length")
+        req.headers.erase(index --);
+      else if(!req.is_proxy && (req.headers.at(index).first == "Host"))
+        has_host = true;
+
+    // Ensure `Host:` is set, as per HTTP/1.1.
+    if(!req.is_proxy && !has_host)
+      req.headers.emplace_back(&"Host", this->m_default_host);
+
+    // For a request, lack of `Content-Length:` means there's no message body.
+    // When a message body is given, do set it.
+    if(data.n != 0)
+      req.headers.emplace_back(&"Content-Length", static_cast<int64_t>(data.n));
+
+    plain_mutex::unique_lock pipeline_lock(this->m_pipeline_mutex);
+    this->m_pipeline.putn(reinterpret_cast<const char*>(&(req.method)), sizeof(req.method));
     bool sent = this->tcp_send(fmt);
+    pipeline_lock.unlock();
 
     // The return value indicates whether no error has occurred. There is no
     // guarantee that data will eventually arrive, due to network flapping.
@@ -168,7 +180,7 @@ do_http_raw_request(const HTTP_Request_Headers& req, chars_view data)
 
 bool
 HTTP_Client_Session::
-http_request(HTTP_Request_Headers&& req, chars_view data)
+http_chunked_request_start(HTTP_Request_Headers& req)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -176,36 +188,28 @@ http_request(HTTP_Request_Headers&& req, chars_view data)
           "[HTTP client session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    // Set `Host:` as per HTTP/1.1.
-    if(!req.is_proxy)
-      req.set_request_host(*this, this->m_default_host);
+    bool has_host = false;
 
-    // By default, request messages do not have content. Hence the length
-    // is only necessary if the content is non-empty.
-    if(data.n != 0)
-      req.headers.emplace_back(&"Content-Length", static_cast<int64_t>(data.n));
+    // Erase `Transfer-Encoding:` headers, if any. `Content-Length:` may be useful
+    // so it's left intact, despite violation of the specification.
+    for(size_t index = 0;  index != req.headers.size();  index ++)
+      if(req.headers.at(index).first == "Transfer-Encoding")
+        req.headers.erase(index --);
+      else if(!req.is_proxy && (req.headers.at(index).first == "Host"))
+        has_host = true;
 
-    return this->do_http_raw_request(req, data);
-  }
-
-bool
-HTTP_Client_Session::
-http_chunked_request_start(HTTP_Request_Headers&& req)
-  {
-    if(this->m_upgrade_ack.load())
-      POSEIDON_THROW((
-          "HTTP connection switched to another protocol",
-          "[HTTP client session `$1` (class `$2`)]"),
-          this, typeid(*this));
-
-    // Set `Host:` as per HTTP/1.1.
-    if(!req.is_proxy)
-      req.set_request_host(*this, this->m_default_host);
+    // Ensure `Host:` is set, as per HTTP/1.1.
+    if(!req.is_proxy && !has_host)
+      req.headers.emplace_back(&"Host", this->m_default_host);
 
     // Write a chunked header.
     req.headers.emplace_back(&"Transfer-Encoding", &"chunked");
 
-    return this->do_http_raw_request(req, "");
+    tinyfmt_ln fmt;
+    req.encode(fmt);
+    plain_mutex::unique_lock pipeline_lock(this->m_pipeline_mutex);
+    this->m_pipeline.putn(reinterpret_cast<const char*>(&(req.method)), sizeof(req.method));
+    return this->tcp_send(fmt);
   }
 
 bool
@@ -218,7 +222,7 @@ http_chunked_request_send(chars_view data)
           "[HTTP client session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    // Ignore empty chunks, which would have marked the end of the content.
+    // Ignore empty chunks, which would mark the end of the content.
     if(data.n == 0)
       return this->tcp_send("");
 
@@ -236,7 +240,7 @@ http_chunked_request_send(chars_view data)
 
 bool
 HTTP_Client_Session::
-http_chunked_request_finish()
+http_chunked_request_finish(HTTP_Request_Headers& req)
   {
     if(this->m_upgrade_ack.load())
       POSEIDON_THROW((
@@ -244,7 +248,14 @@ http_chunked_request_finish()
           "[HTTP client session `$1` (class `$2`)]"),
           this, typeid(*this));
 
-    return this->tcp_send("0\r\n\r\n");
+    (void) req;
+
+    // Send an empty chunk trailer.
+    bool sent = this->tcp_send("0\r\n\r\n");
+
+    // The return value indicates whether no error has occurred. There is no
+    // guarantee that data will eventually arrive, due to network flapping.
+    return sent;
   }
 
 }  // namespace poseidon

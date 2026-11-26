@@ -75,7 +75,7 @@ my_timer_callback(const shptr<Abstract_Timer>& timer,
           req.method = http_method_GET;
           req.encode_and_set_path(&"/");
           req.headers.emplace_back(&"Connection", &"keep-alive");
-          my_client_session->https_request(move(req), "");
+          my_client_session->https_request(req, "");
           POSEIDON_LOG_ERROR(("example HTTPS client: $1 $2"), req.method, req.raw_path);
         }
         break;
@@ -85,7 +85,7 @@ my_timer_callback(const shptr<Abstract_Timer>& timer,
           HTTP_Request_Headers req;
           req.method = http_method_POST;
           req.encode_and_set_path(&"/");
-          my_client_session->https_request(move(req), "testdata");
+          my_client_session->https_request(req, "testdata");
           POSEIDON_LOG_ERROR(("example HTTPS client: $1 $2"), req.method, req.raw_path);
         }
         break;
@@ -95,7 +95,7 @@ my_timer_callback(const shptr<Abstract_Timer>& timer,
           HTTP_Request_Headers req;
           req.method = http_method_DELETE;
           req.encode_and_set_path(&"/");
-          my_client_session->https_request(move(req), "");
+          my_client_session->https_request(req, "");
           POSEIDON_LOG_ERROR(("example HTTPS client: $1 $2"), req.method, req.raw_path);
         }
         break;

@@ -15,8 +15,7 @@ WS_Client_Session(const cow_string& raw_path, const cow_string& raw_query)
     req.is_ssl = false;
     req.raw_path = raw_path;
     req.raw_query = raw_query;
-    req.set_request_host(*this, this->http_default_host());
-    this->do_http_raw_request(move(req), "");
+    this->http_request(req, "");
   }
 
 WS_Client_Session::

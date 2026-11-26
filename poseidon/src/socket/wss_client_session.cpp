@@ -15,8 +15,7 @@ WSS_Client_Session(const cow_string& raw_path, const cow_string& raw_query)
     req.is_ssl = true;
     req.raw_path = raw_path;
     req.raw_query = raw_query;
-    req.set_request_host(*this, this->https_default_host());
-    this->do_https_raw_request(move(req), "");
+    this->https_request(req, "");
   }
 
 WSS_Client_Session::
@@ -345,7 +344,6 @@ wss_shut_down(WS_Status status, chars_view reason) noexcept
           "[WebSocket client session `$1` (class `$2`)]"),
           this, typeid(*this), stdex);
     }
-
     succ |= this->ssl_shut_down();
     return succ;
   }

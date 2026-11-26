@@ -219,10 +219,13 @@ deallocate() noexcept
 
 void
 HTTP_Response_Parser::
-parse_headers_from_stream(linear_buffer& data, bool eof)
+parse_headers_from_stream(HTTP_Method method, linear_buffer& data, bool eof)
   {
     if(this->m_hresp >= hresp_headers_done)
       return;
+
+    if(method == http_method_HEAD)
+      this->m_llhttp_parser.flags |= F_SKIPBODY;
 
     this->m_llhttp_parser.error_pos = nullptr;
     ::llhttp_errno_t err = ::llhttp_execute(&(this->m_llhttp_parser), data.data(), data.size());
