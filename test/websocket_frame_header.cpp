@@ -31,7 +31,7 @@ main()
     header.fin = 1;
     header.opcode = ws_opcode_TEXT;
     header.masked = 1;
-    header.masking_key = 0x37fa213d;
+    header.masking_key = 0x3d21fa37;
     header.payload_len = 5;
     header.encode(fmt);
 
@@ -84,7 +84,7 @@ main()
     header.fin = 1;
     header.opcode = ws_opcode_PONG;
     header.masked = 1;
-    header.masking_key = 0x37fa213d;
+    header.masking_key = 0x3d21fa37;
     header.payload_len = 5;
     header.encode(fmt);
 
@@ -101,7 +101,7 @@ main()
     header.fin = 1;
     header.opcode = ws_opcode_PONG;
     header.masked = 1;
-    header.masking_key = 0x37fa213d;
+    header.masking_key = 0x3d21fa37;
     header.payload_len = 283;
     header.encode(fmt);
 
@@ -135,7 +135,7 @@ main()
     header.fin = 1;
     header.opcode = ws_opcode_PONG;
     header.masked = 1;
-    header.masking_key = 0x37fa213d;
+    header.masking_key = 0x3d21fa37;
     header.payload_len = 5;
     header.encode(fmt);
 

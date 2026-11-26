@@ -567,28 +567,28 @@ parse_frame_header_from_stream(linear_buffer& data)
     }
     else if(this->m_frm_header.reserved_1 == 126) {
       // two-byte length
-      ntotal += 2;
-      if(data.size() < ntotal)
+      if(data.size() < ntotal + 2)
         return;
 
-      this->m_frm_header.payload_len = ::asteria::load_be<uint16_t>(bptr + ntotal - 2);
+      this->m_frm_header.payload_len = ::asteria::load_be<uint16_t>(bptr + ntotal);
+      ntotal += 2;
     }
     else {
       // eight-byte length
-      ntotal += 8;
-      if(data.size() < ntotal)
+      if(data.size() < ntotal + 8)
         return;
 
-      this->m_frm_header.payload_len = ::asteria::load_be<uint64_t>(bptr + ntotal - 8);
+      this->m_frm_header.payload_len = ::asteria::load_be<uint64_t>(bptr + ntotal);
+      ntotal += 8;
     }
 
     if(this->m_frm_header.masked) {
       // four-byte masking key
-      ntotal += 4;
-      if(data.size() < ntotal)
+      if(data.size() < ntotal + 4)
         return;
 
-      this->m_frm_header.masking_key = ::asteria::load_be<uint32_t>(bptr + ntotal - 4);
+      ::memcpy(&(this->m_frm_header.masking_key), bptr + ntotal, 4);
+      ntotal += 4;
     }
 
     data.discard(ntotal);
