@@ -314,9 +314,9 @@ accept_handshake_request(HTTP_Response_Headers& resp, const HTTP_Request_Headers
       // Accept PMCE parameters.
       this->m_pmce_reserved = 0;
       this->m_pmce_compression_level_m2 = clamp(pmce.compression_level - 2, 1, 7) & 7;
-      this->m_pmce_send_no_context_takeover = pmce.server_no_context_takeover;
-      this->m_pmce_send_window_bits = pmce.server_max_window_bits & 15;
-      this->m_pmce_receive_window_bits = pmce.client_max_window_bits & 15;
+      this->m_pmce_sender_no_context_takeover = pmce.server_no_context_takeover;
+      this->m_pmce_sender_window_bits = pmce.server_max_window_bits & 15;
+      this->m_pmce_receiver_window_bits = pmce.client_max_window_bits & 15;
     }
 
     // For the server, this connection has now been established.
@@ -393,9 +393,9 @@ accept_handshake_response(const HTTP_Response_Headers& resp)
       // Accept PMCE parameters.
       this->m_pmce_reserved = 0;
       this->m_pmce_compression_level_m2 = clamp(pmce.compression_level - 2, 1, 7) & 7;
-      this->m_pmce_send_no_context_takeover = pmce.client_no_context_takeover;
-      this->m_pmce_send_window_bits = pmce.client_max_window_bits & 15;
-      this->m_pmce_receive_window_bits = pmce.server_max_window_bits & 15;
+      this->m_pmce_sender_no_context_takeover = pmce.client_no_context_takeover;
+      this->m_pmce_sender_window_bits = pmce.client_max_window_bits & 15;
+      this->m_pmce_receiver_window_bits = pmce.server_max_window_bits & 15;
     }
 
     // For the client, this connection has now been established.
@@ -470,7 +470,7 @@ parse_frame_header_from_stream(linear_buffer& data)
           if(rsv_reject != 0) {
             // If PMCE has been enabled, the RSV1 bit is accepted, so remove it
             // from this mask.
-            if(this->m_pmce_send_window_bits != 0)
+            if(this->m_pmce_sender_window_bits != 0)
               rsv_reject &= 0b00110000;
 
             if(rsv_reject != 0) {

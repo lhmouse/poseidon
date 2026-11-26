@@ -66,7 +66,7 @@ do_on_http_response_finish(HTTP_Response_Headers&& resp, linear_buffer&& /*data*
     }
 
     // Initialize extensions.
-    if(this->m_parser.pmce_send_window_bits() != 0)
+    if(this->m_parser.pmce_sender_window_bits() != 0)
       this->m_pmce_opt = new_sh<WebSocket_Deflator>(this->m_parser);
 
     this->do_on_ws_connected();
@@ -260,7 +260,7 @@ ws_send(WS_Opcode opcode, chars_view data)
             // Don't compress small frames when it's not worth the cost.
             // TODO: Is this configurable?
             size_t compression_threshold = 64;
-            if(this->m_parser.pmce_send_no_context_takeover())
+            if(this->m_parser.pmce_sender_no_context_takeover())
               compression_threshold = 1024;
 
             if(data.n >= compression_threshold) {
@@ -272,7 +272,7 @@ ws_send(WS_Opcode opcode, chars_view data)
               auto& out_buf = this->m_pmce_opt->deflate_output_buffer(lock);
               out_buf.clear();
 
-              if(this->m_parser.pmce_send_no_context_takeover())
+              if(this->m_parser.pmce_sender_no_context_takeover())
                 this->m_pmce_opt->deflate_reset(lock);
 
               try {

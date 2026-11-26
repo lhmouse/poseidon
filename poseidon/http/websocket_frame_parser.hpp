@@ -43,10 +43,10 @@ class WebSocket_Frame_Parser
         WSHS_State m_wshs : 2;
         uint8_t m_pmce_reserved : 2;
         uint8_t m_pmce_compression_level_m2 : 3;
-        uint8_t m_pmce_send_no_context_takeover : 1;
+        uint8_t m_pmce_sender_no_context_takeover : 1;
         // 1
-        uint8_t m_pmce_send_window_bits : 4;
-        uint8_t m_pmce_receive_window_bits : 4;
+        uint8_t m_pmce_sender_window_bits : 4;
+        uint8_t m_pmce_receiver_window_bits : 4;
         // 2
         WSF_State m_wsf;
         // 3
@@ -101,16 +101,16 @@ class WebSocket_Frame_Parser
       { return this->m_pmce_compression_level_m2 + 2;  }
 
     bool
-    pmce_send_no_context_takeover() const noexcept
-      { return this->m_pmce_send_no_context_takeover;  }
+    pmce_sender_no_context_takeover() const noexcept
+      { return this->m_pmce_sender_no_context_takeover;  }
 
     uint8_t
-    pmce_send_window_bits() const noexcept
-      { return this->m_pmce_send_window_bits;  }
+    pmce_sender_window_bits() const noexcept
+      { return this->m_pmce_sender_window_bits;  }
 
     uint8_t
-    pmce_receive_window_bits() const noexcept
-      { return this->m_pmce_receive_window_bits;  }
+    pmce_receiver_window_bits() const noexcept
+      { return this->m_pmce_receiver_window_bits;  }
 
     // Clears all fields. This function shall not be called unless the parser is
     // to be reused for another stream.
