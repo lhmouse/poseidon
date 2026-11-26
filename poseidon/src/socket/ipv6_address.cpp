@@ -223,7 +223,7 @@ print_partial(char* str) const noexcept
     xmemrpcpy(wptr, nump.data(), nump.size());
 
     // Return the number of characters that have been written in total.
-    return (size_t) (wptr - str);
+    return static_cast<size_t>(wptr - str);
   }
 
 tinyfmt&

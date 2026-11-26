@@ -101,8 +101,8 @@ do_next_attribute_from_separator()
     }
 
     // Accept this attribute and return the terminating separator.
-    this->m_hpos = (size_t) (sptr - this->m_hstr.c_str());
-    return (uint8_t) *sptr;
+    this->m_hpos = static_cast<size_t>(sptr - this->m_hstr.c_str());
+    return static_cast<uint8_t>(*sptr);
   }
 
 bool

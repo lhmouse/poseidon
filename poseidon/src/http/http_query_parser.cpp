@@ -66,7 +66,7 @@ next_element()
     size_t name_len = SIZE_MAX;
 
     while(sptr != esptr) {
-      uint32_t ch = (uint8_t) *sptr;
+      uint32_t ch = static_cast<uint8_t>(*sptr);
       if(ch < 128) {
         if((bad_chars[ch / 32] >> (ch % 32)) & 1) {
           POSEIDON_LOG_DEBUG(("Invalid character encountered at `$1`"), snview(sptr, 40));
@@ -87,11 +87,11 @@ next_element()
           }
 
           if((sptr[1] >= '0') && (sptr[1] <= '9'))
-            ch = (uint32_t) ((uint8_t) sptr[1] - '0') << 4;
+            ch = static_cast<uint32_t>(sptr[1] - '0') << 4;
           else if((sptr[1] >= 'A') && (sptr[1] <= 'F'))
-            ch = (uint32_t) ((uint8_t) sptr[1] - 'A' + 10) << 4;
+            ch = static_cast<uint32_t>(sptr[1] - 'A' + 10) << 4;
           else if((sptr[1] >= 'a') && (sptr[1] <= 'f'))
-            ch = (uint32_t) ((uint8_t) sptr[1] - 'a' + 10) << 4;
+            ch = static_cast<uint32_t>(sptr[1] - 'a' + 10) << 4;
           else {
             POSEIDON_LOG_DEBUG(("Invalid hex digit encountered at `$1`"), snview(sptr, 40));
             this->m_hpos = error_hpos;
@@ -99,11 +99,11 @@ next_element()
           }
 
           if((sptr[2] >= '0') && (sptr[2] <= '9'))
-            ch |= (uint32_t) ((uint8_t) sptr[2] - '0');
+            ch |= static_cast<uint32_t>(sptr[2] - '0');
           else if((sptr[2] >= 'A') && (sptr[2] <= 'F'))
-            ch |= (uint32_t) ((uint8_t) sptr[2] - 'A' + 10);
+            ch |= static_cast<uint32_t>(sptr[2] - 'A' + 10);
           else if((sptr[2] >= 'a') && (sptr[2] <= 'f'))
-            ch |= (uint32_t) ((uint8_t) sptr[2] - 'a' + 10);
+            ch |= static_cast<uint32_t>(sptr[2] - 'a' + 10);
           else {
             POSEIDON_LOG_DEBUG(("Invalid hex digit encountered at `$1`"), snview(sptr, 40));
             this->m_hpos = error_hpos;
@@ -111,7 +111,7 @@ next_element()
           }
 
           // Accept this sequence.
-          this->m_name.mut_str() += (char) ch;
+          this->m_name.mut_str() += static_cast<char>(ch);
           sptr += 3;
           continue;
         }
@@ -131,7 +131,7 @@ next_element()
       }
 
       // Accept this character verbatim.
-      this->m_name.mut_str() += (char) ch;
+      this->m_name.mut_str() += static_cast<char>(ch);
       sptr ++;
     }
 
@@ -142,7 +142,7 @@ next_element()
     }
 
     // Accept this name-value pair.
-    this->m_hpos = (size_t) (sptr - this->m_hstr.c_str());
+    this->m_hpos = static_cast<size_t>(sptr - this->m_hstr.c_str());
     return true;
   }
 

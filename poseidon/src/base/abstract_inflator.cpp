@@ -62,7 +62,7 @@ inflate(chars_view data)
     while((in_ptr != in_end) && (err == Z_OK));
 
     // Return the number of characters that have been consumed.
-    return (size_t) (in_ptr - data.p);
+    return static_cast<size_t>(in_ptr - data.p);
   }
 
 bool

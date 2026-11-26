@@ -304,7 +304,7 @@ parse_network_reference(Network_Reference& caddr, chars_view str) noexcept
         return 0;
 
       caddr.host.p = bptr;
-      caddr.host.n = (size_t) (mptr - bptr);
+      caddr.host.n = static_cast<size_t>(mptr - bptr);
       caddr.is_ipv6 = true;
 
       // Skip it.
@@ -328,7 +328,7 @@ parse_network_reference(Network_Reference& caddr, chars_view str) noexcept
         return 0;
 
       caddr.host.p = bptr;
-      caddr.host.n = (size_t) (mptr - bptr);
+      caddr.host.n = static_cast<size_t>(mptr - bptr);
 
       if(mptr == str.p + str.n)
         return str.n;
@@ -347,14 +347,14 @@ parse_network_reference(Network_Reference& caddr, chars_view str) noexcept
 
       if(!::std::all_of(bptr, mptr,
            [&](char c) {
-             port_num = port_num * 10 + (uint8_t) c - '0';
+             port_num = port_num * 10 + static_cast<uint8_t>(c) - '0';
              return port_num <= UINT16_MAX;
            }))
         return 0;
 
       caddr.port.p = bptr;
-      caddr.port.n = (size_t) (mptr - bptr);
-      caddr.port_num = (uint16_t) port_num;
+      caddr.port.n = static_cast<size_t>(mptr - bptr);
+      caddr.port_num = static_cast<uint16_t>(port_num);
 
       if(mptr == str.p + str.n)
         return str.n;
@@ -376,7 +376,7 @@ parse_network_reference(Network_Reference& caddr, chars_view str) noexcept
         });
 
       caddr.path.p = bptr;
-      caddr.path.n = (size_t) (mptr - bptr);
+      caddr.path.n = static_cast<size_t>(mptr - bptr);
 
       if(mptr == str.p + str.n)
         return str.n;
@@ -398,7 +398,7 @@ parse_network_reference(Network_Reference& caddr, chars_view str) noexcept
         });
 
       caddr.query.p = bptr;
-      caddr.query.n = (size_t) (mptr - bptr);
+      caddr.query.n = static_cast<size_t>(mptr - bptr);
 
       if(mptr == str.p + str.n)
         return str.n;
@@ -420,14 +420,14 @@ parse_network_reference(Network_Reference& caddr, chars_view str) noexcept
         });
 
       caddr.fragment.p = bptr;
-      caddr.fragment.n = (size_t) (mptr - bptr);
+      caddr.fragment.n = static_cast<size_t>(mptr - bptr);
 
       if(mptr == str.p + str.n)
         return str.n;
     }
 
     // Return the number of characters that have been consumed.
-    return (size_t) (mptr - str.p);
+    return static_cast<size_t>(mptr - str.p);
   }
 
 cow_string
@@ -457,38 +457,38 @@ decode_and_canonicalize_uri_path(chars_view path)
       else if(result.ends_with("/../"))
         do_pop_dot_dot(3);
 
-      uint32_t ch = (uint8_t) *bptr;
+      uint32_t ch = static_cast<uint8_t>(*bptr);
       if(ch == '%') {
         // Expect two hexadecimal digits.
         if(eptr - bptr < 3)
           return result;
 
         if((bptr[1] >= '0') && (bptr[1] <= '9'))
-          ch = (uint32_t) ((uint8_t) bptr[1] - '0') << 4;
+          ch = static_cast<uint32_t>(bptr[1] - '0') << 4;
         else if((bptr[1] >= 'A') && (bptr[1] <= 'F'))
-          ch = (uint32_t) ((uint8_t) bptr[1] - 'A' + 10) << 4;
+          ch = static_cast<uint32_t>(bptr[1] - 'A' + 10) << 4;
         else if((bptr[1] >= 'a') && (bptr[1] <= 'f'))
-          ch = (uint32_t) ((uint8_t) bptr[1] - 'a' + 10) << 4;
+          ch = static_cast<uint32_t>(bptr[1] - 'a' + 10) << 4;
         else
           return result;
 
         if((bptr[2] >= '0') && (bptr[2] <= '9'))
-          ch |= (uint32_t) ((uint8_t) bptr[2] - '0');
+          ch |= static_cast<uint32_t>(bptr[2] - '0');
         else if((bptr[2] >= 'A') && (bptr[2] <= 'F'))
-          ch |= (uint32_t) ((uint8_t) bptr[2] - 'A' + 10);
+          ch |= static_cast<uint32_t>(bptr[2] - 'A' + 10);
         else if((bptr[2] >= 'a') && (bptr[2] <= 'f'))
-          ch |= (uint32_t) ((uint8_t) bptr[2] - 'a' + 10);
+          ch |= static_cast<uint32_t>(bptr[2] - 'a' + 10);
         else
           return result;
 
         // Accept this sequence.
-        result += (char) ch;
+        result += static_cast<char>(ch);
         bptr += 3;
         continue;
       }
 
       // Accept this character verbatim.
-      result += (char) ch;
+      result += static_cast<char>(ch);
       bptr ++;
     }
 
