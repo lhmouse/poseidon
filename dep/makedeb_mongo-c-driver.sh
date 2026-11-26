@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
-_version=2.5.9
-_sha256='bc7e4a7a1949fa7e8ed8e2223569224d1db492da43cf8659d01cc359d80b70a7'
+_version=2.5.10
+_sha256='4ffc91ffc7f9811446bbfa467ca3f89d4372f72c8a2c6a0830631a6da09d14d6'
 _arch=$(dpkg --print-architecture)
 
 # https://github.com/mongodb/mongo-c-driver/releases/
