@@ -180,12 +180,18 @@ HTTP_Request_Parser::s_llhttp_settings =
     // on_method_complete
     +[](::llhttp_t* ps) -> int
       {
-        const char* s = ::llhttp_method_name(static_cast<::llhttp_method_t>(ps->method));
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstringop-truncation"
-        ::strncpy(reinterpret_cast<char*>(&(this->m_headers.method)), s, 16);
-#pragma GCC diagnostic pop
-        return 0;
+        switch(ps->method)
+          {
+#define do_set_method_from_llhttp_(n,m,s)  \
+          case n:  \
+            this->m_headers.method = http_method_##m;  \
+            return 0;  // end of macro
+
+            HTTP_METHOD_MAP(do_set_method_from_llhttp_)
+
+          default:
+            return -1;
+          }
       },
 
     // on_version_complete

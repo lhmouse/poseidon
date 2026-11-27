@@ -447,10 +447,11 @@ class WSS_Client_Session;
 class DNS_Connect_Task;
 
 // HTTP and WebSocket types
-enum HTTP_Method : unsigned __int128;
+enum HTTP_Method_Number : uint64_t;
 enum HTTP_Status : uint16_t;
 enum WS_Opcode : uint8_t;
 enum WS_Status : uint16_t;
+class HTTP_Method;
 class HTTP_Value;
 class HTTP_Field_Name;
 class HTTP_Header_Parser;
@@ -462,26 +463,6 @@ class HTTP_Response_Parser;
 struct WebSocket_Frame_Header;
 class WebSocket_Frame_Parser;
 class WebSocket_Deflator;
-
-constexpr
-HTTP_Method
-operator""_http_method(const char* str, size_t len) noexcept
-  {
-    ASTERIA_ASSERT(len <= 16);
-    unsigned __int128 value = 0;
-    for(uint32_t k = 0;  k < len;  k++)
-      value |= static_cast<unsigned __int128>(str[k] & 0xFF) << k * 8;
-    return static_cast<HTTP_Method>(value);
-  }
-
-inline
-tinyfmt&
-operator<<(tinyfmt& fmt, HTTP_Method method)
-  {
-    __m128i t = _mm_load_si128(reinterpret_cast<const __m128i*>(&method));
-    uint32_t len = static_cast<uint32_t>(_mm_cmpistri(t, _mm_setzero_si128(), 0x08));
-    return fmt.putn(reinterpret_cast<const char*>(&method), len);
-  }
 
 // MySQL types
 enum MySQL_Column_Type : uint8_t;

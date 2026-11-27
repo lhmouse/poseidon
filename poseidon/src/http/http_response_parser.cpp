@@ -3,6 +3,7 @@
 
 #include "../xprecompiled.hpp"
 #include "../../http/http_response_parser.hpp"
+#include "../../http/http_method.hpp"
 #include "../../base/config_file.hpp"
 #include "../../static/main_config.hpp"
 #include "../../utils.hpp"

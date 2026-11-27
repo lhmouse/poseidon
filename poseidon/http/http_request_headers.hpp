@@ -5,6 +5,7 @@
 #define POSEIDON_HTTP_HTTP_REQUEST_HEADERS_
 
 #include "../fwd.hpp"
+#include "http_method.hpp"
 #include "http_field_name.hpp"
 #include "http_value.hpp"
 #include "enums.hpp"

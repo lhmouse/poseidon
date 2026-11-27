@@ -158,7 +158,7 @@ struct Final_Session final : WS_Server_Session
         }
 
         Event event;
-        switch(static_cast<::std::underlying_type_t<HTTP_Method>>(req.method))
+        switch(req.method.as_number())
           {
           case http_method_OPTIONS:
             // Respond to an XSS check.

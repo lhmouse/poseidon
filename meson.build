@@ -42,7 +42,7 @@ poseidon_include = [
   'poseidon/socket/https_client_session.hpp', 'poseidon/socket/ws_server_session.hpp',
   'poseidon/socket/ws_client_session.hpp', 'poseidon/socket/wss_server_session.hpp',
   'poseidon/socket/wss_client_session.hpp', 'poseidon/socket/dns_connect_task.hpp',
-  'poseidon/http/enums.hpp', 'poseidon/http/http_value.hpp',
+  'poseidon/http/enums.hpp', 'poseidon/http/http_method.hpp', 'poseidon/http/http_value.hpp',
   'poseidon/http/http_field_name.hpp', 'poseidon/http/http_header_parser.hpp',
   'poseidon/http/http_query_parser.hpp', 'poseidon/http/http_request_headers.hpp',
   'poseidon/http/http_request_parser.hpp', 'poseidon/http/http_response_headers.hpp',
@@ -89,7 +89,8 @@ poseidon_src = [
   'poseidon/src/socket/https_server_session.cpp', 'poseidon/src/socket/https_client_session.cpp',
   'poseidon/src/socket/ws_server_session.cpp', 'poseidon/src/socket/ws_client_session.cpp',
   'poseidon/src/socket/wss_server_session.cpp', 'poseidon/src/socket/wss_client_session.cpp',
-  'poseidon/src/socket/dns_connect_task.cpp', 'poseidon/src/http/http_value.cpp',
+  'poseidon/src/socket/dns_connect_task.cpp', 'poseidon/src/http/http_method.cpp',
+  'poseidon/src/http/http_value.cpp',
   'poseidon/src/http/http_field_name.cpp', 'poseidon/src/http/http_header_parser.cpp',
   'poseidon/src/http/http_query_parser.cpp', 'poseidon/src/http/http_request_headers.cpp',
   'poseidon/src/http/http_request_parser.cpp', 'poseidon/src/http/http_response_headers.cpp',
@@ -129,7 +130,7 @@ test_src = [
   'test/http_query_parser.cpp', 'test/websocket_frame_header.cpp', 'test/mysql_value.cpp',
   'test/websocket_handshake.cpp', 'test/mysql_connection.cpp', 'test/mongo_value.cpp',
   'test/mongo_connection.cpp', 'test/redis_value.cpp', 'test/redis_connection.cpp',
-  'test/geometry.cpp' ]
+  'test/geometry.cpp', 'test/http_method.cpp' ]
 
 #===========================================================
 # Global configuration
