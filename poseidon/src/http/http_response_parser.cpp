@@ -85,7 +85,6 @@ HTTP_Response_Parser::s_llhttp_settings =
         if(this->m_hresp >= hresp_headers_done)  // chunk trailer
           return 0;
 
-        this->m_headers.status = static_cast<HTTP_Status>(ps->status_code);
         this->m_hresp = hresp_headers_done;
         this->m_close_after_content = ::llhttp_should_keep_alive(ps) == 0;
         this->m_stash.clear();
@@ -118,7 +117,11 @@ HTTP_Response_Parser::s_llhttp_settings =
     nullptr,
 
     // on_status_complete
-    nullptr,
+    +[](::llhttp_t* ps) -> int
+      {
+        this->m_headers.status = static_cast<HTTP_Status>(ps->status_code);
+        return 0;
+      },
 
     // on_method_complete
     nullptr,
