@@ -187,7 +187,7 @@ HTTP_Request_Parser::s_llhttp_settings =
             this->m_headers.method = http_method_##m;  \
             return 0;  // end of macro
 
-            HTTP_METHOD_MAP(do_set_method_from_llhttp_)
+            HTTP_ALL_METHOD_MAP(do_set_method_from_llhttp_)
 
           default:
             return -1;
