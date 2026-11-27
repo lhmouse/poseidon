@@ -133,12 +133,10 @@ encode(tinyfmt& fmt) const
     if(this->method == http_method_null)
       fmt << "GET ";
     else {
-      alignas(16) char temp[17];
-      __m128i t = _mm_load_si128(reinterpret_cast<const __m128i*>(&(this->method)));
-      uint32_t len = static_cast<uint32_t>(_mm_cmpistri(t, _mm_setzero_si128(), 0x08));
-      _mm_store_si128(reinterpret_cast<__m128i*>(temp), t);
-      temp[len ++] = ' ';
-      fmt.putn(temp, len);
+      char temp[16];
+      size_t len = this->method.print_partial(temp);
+      temp[len] = ' ';
+      fmt.putn(temp, len + 1);
     }
 
     if(this->is_proxy) {
