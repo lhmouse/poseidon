@@ -14,6 +14,7 @@ class Abstract_Socket
   private:
     friend class Network_Scheduler;
     friend class DNS_Connect_Task;
+    friend class TCP_Acceptor;
 
     unique_posix_fd m_fd;
     atomic_relaxed<Socket_State> m_state;

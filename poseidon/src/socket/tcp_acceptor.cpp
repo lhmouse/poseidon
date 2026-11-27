@@ -87,10 +87,13 @@ do_abstract_socket_on_readable()
       static constexpr int one = 1;
       ::setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one));
 
+      shptr<Abstract_Socket> client;
+      bool scheduled = false;
+
       try {
         // Call the user-defined accept callback. If a null pointer is returned,
         // the accepted socket will be closed immediately.
-        auto client = this->do_accept_socket_opt(move(from_addr), move(fd));
+        client = this->do_accept_socket_opt(move(from_addr), move(fd));
         if(ASTERIA_UNEXPECT(!client))
           continue;
 
@@ -101,18 +104,20 @@ do_abstract_socket_on_readable()
             this, typeid(*this), client->remote_address(), client, typeid(*client));
 
         scheduler.insert_weak(client);
+        scheduled = true;
       }
       catch(exception& stdex) {
         POSEIDON_LOG_ERROR((
             "TCP socket accept error: ${errno:full}",
             "[TCP acceptor `$1` (class `$2`)]"),
             this, typeid(*this));
-
-        // For TCP accept sockets, errors are ignored.
-        continue;
       }
 
-      POSEIDON_LOG_TRACE(("TCP acceptor `$1` (class `$2`) IN"), this, typeid(*this));
+      if(client && !scheduled) {
+        // Ensure this is invoked at least once.
+        errno = ENOMEM;
+        POSEIDON_CATCH_EVERYTHING(client->do_abstract_socket_on_closed());
+      }
     }
   }
 
