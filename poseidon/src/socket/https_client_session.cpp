@@ -12,8 +12,8 @@ HTTPS_Client_Session(const cow_string& default_host)
     m_default_host(default_host)
   {
     Network_Reference caddr;
-    size_t aclen = parse_network_reference(caddr, this->m_default_host);
-    if((aclen != 0) && (caddr.host.n >= 1) && (caddr.host.n <= 253)) {
+    size_t acc_len = parse_network_reference(caddr, this->m_default_host);
+    if((acc_len != 0) && (caddr.host.n >= 1) && (caddr.host.n <= 253)) {
       charbuf_256 str;
       ::strlcpy(str.mut_data(), caddr.host.p, caddr.host.n + 1);
       ::SSL_set1_host(this->m_ssl, str.data());

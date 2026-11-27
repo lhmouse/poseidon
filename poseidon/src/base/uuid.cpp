@@ -22,7 +22,7 @@ UUID::
 UUID(chars_view str)
   {
     if(this->parse(str) != str.n)
-      POSEIDON_THROW(("Could not parse UUID string `$1`"), str);
+      POSEIDON_THROW(("Failed to parse UUID string `$1`"), str);
   }
 
 const UUID&
@@ -143,8 +143,8 @@ UUID::
 parse(chars_view str) noexcept
   {
     if(str.n >= 36)
-      if(size_t aclen = this->parse_partial(str.p))
-        return aclen;
+      if(size_t acc_len = this->parse_partial(str.p))
+        return acc_len;
 
     return 0;
   }

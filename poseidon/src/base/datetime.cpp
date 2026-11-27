@@ -11,7 +11,7 @@ DateTime::
 DateTime(chars_view str)
   {
     if(this->parse(str) != str.n)
-      POSEIDON_THROW(("Could not parse date/time string `$1`"), str);
+      POSEIDON_THROW(("Failed to parse date/time string `$1`"), str);
   }
 
 size_t
@@ -133,24 +133,24 @@ parse(chars_view str)
     // A string with an erroneous length will not be accepted, so we just need to
     // check for possibilities by `str.n`.
     if(str.n >= 29)
-      if(size_t aclen = this->parse_rfc1123_partial(str.p))
-        return aclen;
+      if(size_t acc_len = this->parse_rfc1123_partial(str.p))
+        return acc_len;
 
     if(str.n >= 30)
-      if(size_t aclen = this->parse_rfc850_partial(str.p))
-        return aclen;
+      if(size_t acc_len = this->parse_rfc850_partial(str.p))
+        return acc_len;
 
     if(str.n >= 24)
-      if(size_t aclen = this->parse_asctime_partial(str.p))
-        return aclen;
+      if(size_t acc_len = this->parse_asctime_partial(str.p))
+        return acc_len;
 
     if(str.n >= 29)
-      if(size_t aclen = this->parse_cookie_partial(str.p))
-        return aclen;
+      if(size_t acc_len = this->parse_cookie_partial(str.p))
+        return acc_len;
 
     if(str.n >= 19)
-      if(size_t aclen = this->parse_git_partial(str.p))
-        return aclen;
+      if(size_t acc_len = this->parse_git_partial(str.p))
+        return acc_len;
 
     return 0;
   }

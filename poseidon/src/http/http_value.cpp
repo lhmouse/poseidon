@@ -148,15 +148,15 @@ parse_datetime_partial(chars_view str)
   {
     this->clear();
 
-    size_t aclen = this->m_dt.parse(str);
-    if(aclen == 0)
+    size_t acc_len = this->m_dt.parse(str);
+    if(acc_len == 0)
       return 0;
 
-    this->m_str.assign(str.p, aclen);
+    this->m_str.assign(str.p, acc_len);
     this->m_int = 0;
     this->m_dbl = 0;
     this->m_vm = vm_dt_valid;
-    return aclen;
+    return acc_len;
   }
 
 size_t
@@ -200,14 +200,14 @@ parse(chars_view str)
 
     // What does the string look like?
     if(*str == '"')
-      if(size_t aclen = this->parse_quoted_string_partial(str))
-        return aclen;
+      if(size_t acc_len = this->parse_quoted_string_partial(str))
+        return acc_len;
 
-    if(size_t aclen = this->parse_datetime_partial(str))
-      return aclen;
+    if(size_t acc_len = this->parse_datetime_partial(str))
+      return acc_len;
 
-    if(size_t aclen = this->parse_unquoted_partial(str))
-      return aclen;
+    if(size_t acc_len = this->parse_unquoted_partial(str))
+      return acc_len;
 
     return 0;
   }

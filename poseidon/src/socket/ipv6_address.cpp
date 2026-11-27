@@ -134,7 +134,7 @@ IPv6_Address::
 IPv6_Address(chars_view str)
   {
     if(this->parse(str) != str.n)
-      POSEIDON_THROW(("Could not parse socket address string `$1`"), str);
+      POSEIDON_THROW(("Failed to parse socket address string `$1`"), str);
   }
 
 int
@@ -164,7 +164,7 @@ IPv6_Address::
 parse(chars_view str) noexcept
   {
     Network_Reference caddr;
-    size_t aclen = parse_network_reference(caddr, str);
+    size_t acc_len = parse_network_reference(caddr, str);
 
     // The URI string shall only contain the host and port parts.
     if((caddr.host.n == 0) || (caddr.host.n > 63))
@@ -192,7 +192,7 @@ parse(chars_view str) noexcept
 
     // port
     this->m_port = caddr.port_num;
-    return aclen;
+    return acc_len;
   }
 
 size_t
