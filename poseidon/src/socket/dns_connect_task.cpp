@@ -80,6 +80,9 @@ do_on_abstract_task_execute()
                     || (errno == EINPROGRESS);
         }
 
+      if(!success)
+        POSEIDON_LOG_WARN(("DNS lookup failed for `$1`"), this->m_host);
+
       // Insert the socket, only after `connect()` has been called. Even in
       // the case of a failure, a closure notification shall be delivered.
       this->m_scheduler->insert_weak(socket);
@@ -96,10 +99,8 @@ do_on_abstract_task_execute()
         return;
     }
 
-    if(!success) {
-      POSEIDON_LOG_WARN(("DNS lookup failed for `$1`"), this->m_host);
+    if(!success || !scheduled)
       socket->quick_shut_down();
-    }
 
     if(!scheduled) {
       errno = ENOMEM;
