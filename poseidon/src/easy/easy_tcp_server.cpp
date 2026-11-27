@@ -7,6 +7,7 @@
 #include "../../static/network_scheduler.hpp"
 #include "../../fiber/abstract_fiber.hpp"
 #include "../../static/fiber_scheduler.hpp"
+#include "../../base/uuid.hpp"
 #include "../../utils.hpp"
 #include <deque>
 #include <unordered_map>
@@ -38,19 +39,19 @@ struct Event_Queue
 struct Session_Table
   {
     mutable plain_mutex mutex;
-    ::std::unordered_map<volatile TCP_Socket*, Event_Queue> session_map;
+    ::std::unordered_map<UUID, Event_Queue, UUID::hash> session_map;
   };
 
 struct Final_Fiber final : Abstract_Fiber
   {
     Easy_TCP_Server::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
-    volatile TCP_Socket* m_refptr;
+    UUID m_session_uuid;
 
     Final_Fiber(const Easy_TCP_Server::callback_type& callback,
-          const shptr<Session_Table>& sessions, volatile TCP_Socket* refptr)
+          const shptr<Session_Table>& sessions, const UUID& session_uuid)
       :
-        m_callback(callback), m_wsessions(sessions), m_refptr(refptr)
+        m_callback(callback), m_wsessions(sessions), m_session_uuid(session_uuid)
       { }
 
     virtual
@@ -68,7 +69,7 @@ struct Final_Fiber final : Abstract_Fiber
           // main thread. Exceptions are ignored.
           plain_mutex::unique_lock lock(sessions->mutex);
 
-          auto session_iter = sessions->session_map.find(this->m_refptr);
+          auto session_iter = sessions->session_map.find(this->m_session_uuid);
           if(session_iter == sessions->session_map.end())
             return;
 
@@ -119,6 +120,7 @@ struct Final_Fiber final : Abstract_Fiber
 
 struct Final_Socket final : TCP_Socket
   {
+    UUID m_uuid;
     Easy_TCP_Server::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
 
@@ -126,7 +128,7 @@ struct Final_Socket final : TCP_Socket
           const Easy_TCP_Server::callback_type& callback,
           const shptr<Session_Table>& sessions)
       :
-        TCP_Socket(move(fd)),
+        TCP_Socket(move(fd)), m_uuid(UUID::random_v4()),
         m_callback(callback), m_wsessions(sessions)
       { }
 
@@ -140,7 +142,7 @@ struct Final_Socket final : TCP_Socket
         // We are in the network thread here.
         plain_mutex::unique_lock lock(sessions->mutex);
 
-        auto session_iter = sessions->session_map.find(this);
+        auto session_iter = sessions->session_map.find(this->m_uuid);
         if(session_iter == sessions->session_map.end())
           return;
 
@@ -148,7 +150,7 @@ struct Final_Socket final : TCP_Socket
           if(!session_iter->second.fiber_active) {
             // Create a new fiber, if none is active. The fiber shall only reset
             // `m_fiber_private_buffer` if no event is pending.
-            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_callback, sessions, this));
+            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_callback, sessions, this->m_uuid));
             session_iter->second.fiber_active = true;
           }
 
@@ -224,7 +226,7 @@ struct Final_Acceptor final : TCP_Acceptor
         // We are in the network thread here.
         plain_mutex::unique_lock lock(sessions->mutex);
 
-        auto r = sessions->session_map.try_emplace(socket.get());
+        auto r = sessions->session_map.try_emplace(socket->m_uuid);
         ASTERIA_ASSERT(r.second);
         r.first->second.socket = socket;
         return socket;

@@ -8,6 +8,7 @@
 #include "../../static/fiber_scheduler.hpp"
 #include "../../socket/dns_connect_task.hpp"
 #include "../../static/task_scheduler.hpp"
+#include "../../base/uuid.hpp"
 #include "../../utils.hpp"
 #include <deque>
 #include <unordered_map>
@@ -39,19 +40,19 @@ struct Event_Queue
 struct Session_Table
   {
     mutable plain_mutex mutex;
-    ::std::unordered_map<volatile SSL_Socket*, Event_Queue> session_map;
+    ::std::unordered_map<UUID, Event_Queue, UUID::hash> session_map;
   };
 
 struct Final_Fiber final : Abstract_Fiber
   {
     Easy_SSL_Client::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
-    volatile SSL_Socket* m_refptr;
+    UUID m_session_uuid;
 
     Final_Fiber(const Easy_SSL_Client::callback_type& callback,
-          const shptr<Session_Table>& sessions, volatile SSL_Socket* refptr)
+          const shptr<Session_Table>& sessions, const UUID& session_uuid)
       :
-        m_callback(callback), m_wsessions(sessions), m_refptr(refptr)
+        m_callback(callback), m_wsessions(sessions), m_session_uuid(session_uuid)
       { }
 
     virtual
@@ -69,7 +70,7 @@ struct Final_Fiber final : Abstract_Fiber
           // main thread. Exceptions are ignored.
           plain_mutex::unique_lock lock(sessions->mutex);
 
-          auto session_iter = sessions->session_map.find(this->m_refptr);
+          auto session_iter = sessions->session_map.find(this->m_session_uuid);
           if(session_iter == sessions->session_map.end())
             return;
 
@@ -120,13 +121,14 @@ struct Final_Fiber final : Abstract_Fiber
 
 struct Final_Socket final : SSL_Socket
   {
+    UUID m_uuid;
     Easy_SSL_Client::callback_type m_callback;
     wkptr<Session_Table> m_wsessions;
 
     Final_Socket(const Easy_SSL_Client::callback_type& callback,
           const shptr<Session_Table>& sessions)
       :
-        SSL_Socket(network_scheduler),
+        SSL_Socket(network_scheduler), m_uuid(UUID::random_v4()),
         m_callback(callback), m_wsessions(sessions)
       { }
 
@@ -140,7 +142,7 @@ struct Final_Socket final : SSL_Socket
         // We are in the network thread here.
         plain_mutex::unique_lock lock(sessions->mutex);
 
-        auto session_iter = sessions->session_map.find(this);
+        auto session_iter = sessions->session_map.find(this->m_uuid);
         if(session_iter == sessions->session_map.end())
           return;
 
@@ -148,7 +150,7 @@ struct Final_Socket final : SSL_Socket
           if(!session_iter->second.fiber_active) {
             // Create a new fiber, if none is active. The fiber shall only reset
             // `m_fiber_private_buffer` if no event is pending.
-            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_callback, sessions, this));
+            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_callback, sessions, this->m_uuid));
             session_iter->second.fiber_active = true;
           }
 
@@ -242,7 +244,7 @@ connect(const cow_string& addr, const callback_type& callback)
     plain_mutex::unique_lock lock(this->m_sessions->mutex);
 
     task_scheduler.launch(dns_task);
-    auto r = this->m_sessions->session_map.try_emplace(socket.get());
+    auto r = this->m_sessions->session_map.try_emplace(socket->m_uuid);
     ASTERIA_ASSERT(r.second);
     r.first->second.socket = socket;
     return socket;
