@@ -80,9 +80,10 @@ struct Final_Fiber final : Abstract_Fiber
           ASTERIA_ASSERT(session_iter->second.fiber_active);
           auto session = session_iter->second.session;
           auto event = move(session_iter->second.events.front());
-          session_iter->second.events.pop_front();
 
-          if(ASTERIA_UNEXPECT(event.type == easy_hws_close))
+          if(ASTERIA_UNEXPECT(event.type != easy_hws_close))
+            session_iter->second.events.pop_front();
+          else
             sessions->session_map.erase(session_iter);
 
           session_iter = { };

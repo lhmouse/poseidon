@@ -82,18 +82,16 @@ struct Final_Fiber final : Abstract_Fiber
           // After `sessions->mutex` is unlocked, other threads may modify
           // `sessions->session_map` and invalidate all iterators, so maintain a
           // reference outside it for safety.
-          auto queue = &(session_iter->second);
-          ASTERIA_ASSERT(queue->fiber_active);
-          auto socket = queue->socket;
-          auto event = move(queue->events.front());
-          queue->events.pop_front();
+          ASTERIA_ASSERT(session_iter->second.fiber_active);
+          auto socket = session_iter->second.socket;
+          auto event = move(session_iter->second.events.front());
 
-          if(ASTERIA_UNEXPECT(event.type == easy_stream_close)) {
-            // This will be the last event on this socket.
-            queue = nullptr;
+          if(ASTERIA_UNEXPECT(event.type != easy_stream_close))
+            session_iter->second.events.pop_front();
+          else
             sessions->session_map.erase(session_iter);
-          }
-          session_iter = sessions->session_map.end();
+
+          session_iter = { };
           lock.unlock();
 
           try {
