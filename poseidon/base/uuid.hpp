@@ -176,7 +176,7 @@ class UUID
     // Converts this UUID to its RFC 4112 form. Hexadecimal digits are written in
     // uppercase. The caller should supply a buffer for 37 characters. A null
     // terminator is always appended. The number of characters that have been written
-    // is stored, which is always 36.
+    // is returned, which is always 36.
     size_t
     print_partial(char* str) const noexcept;
 
