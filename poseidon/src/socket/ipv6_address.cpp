@@ -119,16 +119,13 @@ do_classify_ipv6_generic(const char* addr) noexcept
 
 }  // namespace
 
-#define DOCUMENTATION_   32,1,13,184,243,151,214,23,74,162,130,224,   // 2001:db8::/32; random
-#define IPV4_MAPPED_     0,0,0,0,0,0,0,0,0,0,255,255,  // ::ffff:0:0/96
+constexpr IPv6_Address ipv6_unspecified = POSEIDON_IPV6(0,0,0,0,0,0,0,0000, 0);
+constexpr IPv6_Address ipv6_loopback = POSEIDON_IPV6(0,0,0,0,0,0,0,0001, 0);
+constexpr IPv6_Address ipv6_invalid = POSEIDON_IPV6(2001,db8,0,0,0,0,e5ac,171d, 0);
 
-const IPv6_Address ipv6_unspecified   = { (::in6_addr)   IN6ADDR_ANY_INIT,                0 };
-const IPv6_Address ipv6_loopback      = { (::in6_addr)   IN6ADDR_LOOPBACK_INIT,           0 };
-const IPv6_Address ipv6_invalid       = { (::in6_addr) { DOCUMENTATION_ 44,95,237,217 },  0 };
-
-const IPv6_Address ipv4_unspecified   = { (::in6_addr) { IPV4_MAPPED_ 0,0,0,0 },          0 };
-const IPv6_Address ipv4_loopback      = { (::in6_addr) { IPV4_MAPPED_ 127,0,0,1 },        0 };
-const IPv6_Address ipv4_broadcast     = { (::in6_addr) { IPV4_MAPPED_ 255,255,255,255 },  0 };
+constexpr IPv6_Address ipv4_unspecified = POSEIDON_IPV4(0,0,0,0, 0);
+constexpr IPv6_Address ipv4_loopback = POSEIDON_IPV4(127,0,0,1, 0);
+constexpr IPv6_Address ipv4_broadcast = POSEIDON_IPV4(255,255,255,255, 0);
 
 IPv6_Address::
 IPv6_Address(chars_view str)

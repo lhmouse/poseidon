@@ -11,9 +11,19 @@ namespace poseidon {
 
 class IPv6_Address
   {
+  public:
+    struct hash;
+
+    struct fields
+      {
+        uint16_t addr[8];
+        uint16_t port;
+      };
+
   private:
     union {
-      ::in6_addr m_addr = { };
+      ::std::array<uint8_t, 16> m_bytes = { };
+      ::in6_addr m_addr;
       __m128i m_addr_stor;
     };
     uint16_t m_port = 0;
@@ -21,6 +31,32 @@ class IPv6_Address
   public:
     // Initializes an unspecified (all-zero) address.
     constexpr IPv6_Address() noexcept = default;
+
+    // Constructs an address from individual fields.
+    constexpr IPv6_Address(const fields& f) noexcept
+      {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+        this->m_bytes[0] = f.addr[0] >> 8;
+        this->m_bytes[1] = f.addr[0];
+        this->m_bytes[2] = f.addr[1] >> 8;
+        this->m_bytes[3] = f.addr[1];
+        this->m_bytes[4] = f.addr[2] >> 8;
+        this->m_bytes[5] = f.addr[2];
+        this->m_bytes[6] = f.addr[3] >> 8;
+        this->m_bytes[7] = f.addr[3];
+        this->m_bytes[8] = f.addr[4] >> 8;
+        this->m_bytes[9] = f.addr[4];
+        this->m_bytes[10] = f.addr[5] >> 8;
+        this->m_bytes[11] = f.addr[5];
+        this->m_bytes[12] = f.addr[6] >> 8;
+        this->m_bytes[13] = f.addr[6];
+        this->m_bytes[14] = f.addr[7] >> 8;
+        this->m_bytes[15] = f.addr[7];
+#pragma GCC diagnostic pop
+        this->m_port = f.port;
+      }
 
     // Initializes an address from a foreign source.
     constexpr IPv6_Address(const ::in6_addr& addr, uint16_t port) noexcept
@@ -137,6 +173,31 @@ class IPv6_Address
     cow_string
     to_string() const;
   };
+
+struct IPv6_Address::hash
+  {
+    using result_type    = size_t;
+    using argument_type  = IPv6_Address;
+
+    result_type
+    operator()(const IPv6_Address& addr) const noexcept
+      {
+        __m128i tval = _mm_load_si128(&(addr.m_addr_stor));
+        tval = _mm_hadd_epi32(tval, _mm_bsrli_si128(tval, 8));
+        tval = _mm_hadd_epi32(tval, tval);
+        return static_cast<size_t>(_mm_cvtsi128_si64(tval)) + addr.m_port;
+      }
+  };
+
+#define POSEIDON_IPV6(w0,w1,w2,w3,w4,w5,w6,w7, port)  \
+    (::poseidon::IPv6_Address(::poseidon::IPv6_Address::fields{  \
+           { 0x##w0,0x##w1,0x##w2,0x##w3,0x##w4,0x##w5,0x##w6,0x##w7 },  \
+           (port) }))
+
+#define POSEIDON_IPV4(a,b,c,d, port)  \
+    (::poseidon::IPv6_Address(::poseidon::IPv6_Address::fields{  \
+           { 0,0,0,0,0,0xFFFF, (a) * 256 + (b), (c) * 256 + (d) },  \
+           (port) }))
 
 extern const IPv6_Address ipv6_unspecified;  // [::]:0
 extern const IPv6_Address ipv6_loopback;     // [::1]:0
