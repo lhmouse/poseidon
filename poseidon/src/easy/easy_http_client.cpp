@@ -8,7 +8,6 @@
 #include "../../static/fiber_scheduler.hpp"
 #include "../../socket/dns_connect_task.hpp"
 #include "../../static/task_scheduler.hpp"
-#include "../../base/uuid.hpp"
 #include "../../utils.hpp"
 #include <deque>
 #include <unordered_map>
@@ -36,19 +35,20 @@ struct Event_Queue
 struct Session_Table
   {
     mutable plain_mutex mutex;
-    ::std::unordered_map<UUID, Event_Queue, UUID::hash> session_map;
+    uint64_t next_serial = 0;
+    ::std::unordered_map<uint64_t, Event_Queue> session_map;
   };
 
 struct Final_Fiber final : Abstract_Fiber
   {
     Easy_HTTP_Client::callback_type m_callback;
     wkptr<Session_Table> m_wtable;
-    UUID m_session_uuid;
+    uint64_t m_serial;
 
     Final_Fiber(const Easy_HTTP_Client::callback_type& callback,
-          const shptr<Session_Table>& table, const UUID& session_uuid)
+          const shptr<Session_Table>& table, uint64_t serial)
       :
-        m_callback(callback), m_wtable(table), m_session_uuid(session_uuid)
+        m_callback(callback), m_wtable(table), m_serial(serial)
       { }
 
     virtual
@@ -66,7 +66,7 @@ struct Final_Fiber final : Abstract_Fiber
           // main thread. Exceptions are ignored.
           plain_mutex::unique_lock lock(table->mutex);
 
-          auto session_iter = table->session_map.find(this->m_session_uuid);
+          auto session_iter = table->session_map.find(this->m_serial);
           if(session_iter == table->session_map.end())
             return;
 
@@ -113,15 +113,15 @@ struct Final_Fiber final : Abstract_Fiber
 
 struct Final_Session final : HTTP_Client_Session
   {
-    UUID m_uuid;
+    uint64_t m_serial;
     Easy_HTTP_Client::callback_type m_callback;
     wkptr<Session_Table> m_wtable;
 
-    Final_Session(const cow_string& default_host,
+    Final_Session(const cow_string& default_host, uint64_t serial,
           const Easy_HTTP_Client::callback_type& callback,
           const shptr<Session_Table>& table)
       :
-        TCP_Socket(), HTTP_Client_Session(default_host), m_uuid(UUID::random_v4()),
+        TCP_Socket(), HTTP_Client_Session(default_host), m_serial(serial),
         m_callback(callback), m_wtable(table)
       { }
 
@@ -135,7 +135,7 @@ struct Final_Session final : HTTP_Client_Session
         // We are in the network thread here.
         plain_mutex::unique_lock lock(table->mutex);
 
-        auto session_iter = table->session_map.find(this->m_uuid);
+        auto session_iter = table->session_map.find(this->m_serial);
         if(session_iter == table->session_map.end())
           return;
 
@@ -143,7 +143,7 @@ struct Final_Session final : HTTP_Client_Session
           if(!session_iter->second.fiber_active) {
             // Create a new fiber, if none is active. The fiber shall only reset
             // `m_fiber_private_buffer` if no event is pending.
-            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_callback, table, this->m_uuid));
+            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_callback, table, this->m_serial));
             session_iter->second.fiber_active = true;
           }
 
@@ -226,16 +226,17 @@ connect(const cow_string& addr, const callback_type& callback)
     if(!this->m_table)
       this->m_table = new_sh<X_Session_Table>();
 
+    // Initiate the connection.
+    plain_mutex::unique_lock lock(this->m_table->mutex);
+
     auto session = new_sh<Final_Session>(sformat("$1:$2", caddr.host, caddr.port_num),
+                                         this->m_table->next_serial ++,
                                          callback, this->m_table);
     auto dns_task = new_sh<DNS_Connect_Task>(network_scheduler,
                        session, cow_string(caddr.host), caddr.port_num);
 
-    // Initiate the connection.
-    plain_mutex::unique_lock lock(this->m_table->mutex);
-
     task_scheduler.launch(dns_task);
-    auto r = this->m_table->session_map.try_emplace(session->m_uuid);
+    auto r = this->m_table->session_map.try_emplace(session->m_serial);
     ASTERIA_ASSERT(r.second);
     r.first->second.session = session;
     return session;

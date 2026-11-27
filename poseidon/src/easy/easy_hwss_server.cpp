@@ -7,7 +7,6 @@
 #include "../../static/network_scheduler.hpp"
 #include "../../fiber/abstract_fiber.hpp"
 #include "../../static/fiber_scheduler.hpp"
-#include "../../base/uuid.hpp"
 #include "../../utils.hpp"
 #include <deque>
 #include <unordered_map>
@@ -34,19 +33,20 @@ struct Event_Queue
 struct Session_Table
   {
     mutable plain_mutex mutex;
-    ::std::unordered_map<UUID, Event_Queue, UUID::hash> session_map;
+    uint64_t next_serial = 0;
+    ::std::unordered_map<uint64_t, Event_Queue> session_map;
   };
 
 struct Final_Fiber final : Abstract_Fiber
   {
     Easy_HWSS_Server::callback_type m_callback;
     wkptr<Session_Table> m_wtable;
-    UUID m_session_uuid;
+    uint64_t m_serial;
 
     Final_Fiber(const Easy_HWSS_Server::callback_type& callback,
-          const shptr<Session_Table>& table, const UUID& session_uuid)
+          const shptr<Session_Table>& table, uint64_t serial)
       :
-        m_callback(callback), m_wtable(table), m_session_uuid(session_uuid)
+        m_callback(callback), m_wtable(table), m_serial(serial)
       { }
 
     virtual
@@ -64,7 +64,7 @@ struct Final_Fiber final : Abstract_Fiber
           // main thread. Exceptions are ignored.
           plain_mutex::unique_lock lock(table->mutex);
 
-          auto session_iter = table->session_map.find(this->m_session_uuid);
+          auto session_iter = table->session_map.find(this->m_serial);
           if(session_iter == table->session_map.end())
             return;
 
@@ -109,16 +109,16 @@ struct Final_Fiber final : Abstract_Fiber
 
 struct Final_Session final : WSS_Server_Session
   {
-    UUID m_uuid;
+    uint64_t m_serial;
     Easy_HWSS_Server::callback_type m_callback;
     wkptr<Session_Table> m_wtable;
 
-    Final_Session(unique_posix_fd&& fd,
+    Final_Session(unique_posix_fd&& fd, uint64_t serial,
           const Easy_HWSS_Server::callback_type& callback,
           const shptr<Session_Table>& table)
       :
         SSL_Socket(move(fd), network_scheduler), WSS_Server_Session(),
-        m_uuid(UUID::random_v4()), m_callback(callback), m_wtable(table)
+        m_serial(serial), m_callback(callback), m_wtable(table)
       { }
 
     void
@@ -131,7 +131,7 @@ struct Final_Session final : WSS_Server_Session
         // We are in the network thread here.
         plain_mutex::unique_lock lock(table->mutex);
 
-        auto session_iter = table->session_map.find(this->m_uuid);
+        auto session_iter = table->session_map.find(this->m_serial);
         if(session_iter == table->session_map.end())
           return;
 
@@ -139,7 +139,7 @@ struct Final_Session final : WSS_Server_Session
           if(!session_iter->second.fiber_active) {
             // Create a new fiber, if none is active. The fiber shall only reset
             // `m_fiber_private_buffer` if no event is pending.
-            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_callback, table, this->m_uuid));
+            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_callback, table, this->m_serial));
             session_iter->second.fiber_active = true;
           }
 
@@ -254,26 +254,25 @@ struct Final_Acceptor final : TCP_Acceptor
           const Easy_HWSS_Server::callback_type& callback,
           const shptr<Session_Table>& table)
       :
-        TCP_Acceptor(addr),
-        m_callback(callback), m_wtable(table)
+        TCP_Acceptor(addr), m_callback(callback), m_wtable(table)
       {
       }
 
     virtual
     shptr<Abstract_Socket>
-    do_accept_socket_opt(IPv6_Address&& addr, unique_posix_fd&& fd) override
+    do_accept_socket_opt(IPv6_Address&& /*addr*/, unique_posix_fd&& fd) override
       {
         auto table = this->m_wtable.lock();
         if(!table)
           return nullptr;
 
-        auto session = new_sh<Final_Session>(move(fd), this->m_callback, table);
-        (void) addr;
-
         // We are in the network thread here.
         plain_mutex::unique_lock lock(table->mutex);
 
-        auto r = table->session_map.try_emplace(session->m_uuid);
+        auto session = new_sh<Final_Session>(move(fd), table->next_serial ++,
+                                             this->m_callback, table);
+
+        auto r = table->session_map.try_emplace(session->m_serial);
         ASTERIA_ASSERT(r.second);
         r.first->second.session = session;
         return session;
