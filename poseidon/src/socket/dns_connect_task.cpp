@@ -79,12 +79,12 @@ do_on_abstract_task_execute()
                     || (errno == EINPROGRESS);
         }
 
+      if(!success)
+        POSEIDON_LOG_WARN(("DNS lookup failed for `$1`"), this->m_host);
+
       // Insert the socket, only after `connect()` has been called. Even in
       // the case of a failure, a closure notification shall be delivered.
-      if(success)
-        this->m_scheduler->insert_weak(socket);
-      else
-        POSEIDON_LOG_WARN(("DNS lookup failed for `$1`"), this->m_host);
+      this->m_scheduler->insert_weak(socket);
     }
     catch(exception& stdex) {
       POSEIDON_LOG_ERROR(("DNS lookup error: $1"), stdex);
