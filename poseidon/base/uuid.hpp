@@ -203,7 +203,8 @@ struct UUID::hash
   };
 
 #define POSEIDON_UUID(a8,b4,c4,d4,e12)  \
-    (::poseidon::UUID(::poseidon::UUID::fields { 0x##a8,0x##b4,0x##c4,0x##d4,0x##e12 }))
+    (::poseidon::UUID(::poseidon::UUID::fields{  \
+          0x##a8,0x##b4,0x##c4,0x##d4,0x##e12 }))
 
 inline
 void
