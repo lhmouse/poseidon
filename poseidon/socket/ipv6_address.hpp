@@ -16,7 +16,8 @@ class IPv6_Address
 
     struct fields
       {
-        uint16_t addr[8];
+        uint16_t addr_h[6];
+        uint8_t addr_l[4];
         uint16_t port;
       };
 
@@ -38,22 +39,22 @@ class IPv6_Address
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
-        this->m_bytes[0] = f.addr[0] >> 8;
-        this->m_bytes[1] = f.addr[0];
-        this->m_bytes[2] = f.addr[1] >> 8;
-        this->m_bytes[3] = f.addr[1];
-        this->m_bytes[4] = f.addr[2] >> 8;
-        this->m_bytes[5] = f.addr[2];
-        this->m_bytes[6] = f.addr[3] >> 8;
-        this->m_bytes[7] = f.addr[3];
-        this->m_bytes[8] = f.addr[4] >> 8;
-        this->m_bytes[9] = f.addr[4];
-        this->m_bytes[10] = f.addr[5] >> 8;
-        this->m_bytes[11] = f.addr[5];
-        this->m_bytes[12] = f.addr[6] >> 8;
-        this->m_bytes[13] = f.addr[6];
-        this->m_bytes[14] = f.addr[7] >> 8;
-        this->m_bytes[15] = f.addr[7];
+        this->m_bytes[0] = f.addr_h[0] >> 8;
+        this->m_bytes[1] = f.addr_h[0];
+        this->m_bytes[2] = f.addr_h[1] >> 8;
+        this->m_bytes[3] = f.addr_h[1];
+        this->m_bytes[4] = f.addr_h[2] >> 8;
+        this->m_bytes[5] = f.addr_h[2];
+        this->m_bytes[6] = f.addr_h[3] >> 8;
+        this->m_bytes[7] = f.addr_h[3];
+        this->m_bytes[8] = f.addr_h[4] >> 8;
+        this->m_bytes[9] = f.addr_h[4];
+        this->m_bytes[10] = f.addr_h[5] >> 8;
+        this->m_bytes[11] = f.addr_h[5];
+        this->m_bytes[12] = f.addr_l[0];
+        this->m_bytes[13] = f.addr_l[1];
+        this->m_bytes[14] = f.addr_l[2];
+        this->m_bytes[15] = f.addr_l[3];
 #pragma GCC diagnostic pop
         this->m_port = f.port;
       }
@@ -191,11 +192,12 @@ struct IPv6_Address::hash
 
 #define POSEIDON_IPV6(w0,w1,w2,w3,w4,w5,w6,w7, port)  \
     (::poseidon::IPv6_Address(::poseidon::IPv6_Address::fields{  \
-          { 0x##w0,0x##w1,0x##w2,0x##w3,0x##w4,0x##w5,0x##w6,0x##w7 }, (port) }))
+          0x##w0, 0x##w1, 0x##w2, 0x##w3, 0x##w4, 0x##w5,  \
+          0x##w6 >> 8, 0x##w6 & 0xFF, 0x##w7 >> 8, 0x##w7 & 0xFF, (port) }))
 
 #define POSEIDON_IPV4(a,b,c,d, port)  \
     (::poseidon::IPv6_Address(::poseidon::IPv6_Address::fields{  \
-          { 0,0,0,0,0,0xFFFF, (a) * 256 + (b), (c) * 256 + (d) }, (port) }))
+          0, 0, 0, 0, 0, 0xFFFF, (a), (b), (c), (d), (port) }))
 
 extern const IPv6_Address ipv6_unspecified;  // [::]:0
 extern const IPv6_Address ipv6_loopback;     // [::1]:0
