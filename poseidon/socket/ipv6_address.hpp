@@ -191,13 +191,11 @@ struct IPv6_Address::hash
 
 #define POSEIDON_IPV6(w0,w1,w2,w3,w4,w5,w6,w7, port)  \
     (::poseidon::IPv6_Address(::poseidon::IPv6_Address::fields{  \
-           { 0x##w0,0x##w1,0x##w2,0x##w3,0x##w4,0x##w5,0x##w6,0x##w7 },  \
-           (port) }))
+          { 0x##w0,0x##w1,0x##w2,0x##w3,0x##w4,0x##w5,0x##w6,0x##w7 }, (port) }))
 
 #define POSEIDON_IPV4(a,b,c,d, port)  \
     (::poseidon::IPv6_Address(::poseidon::IPv6_Address::fields{  \
-           { 0,0,0,0,0,0xFFFF, (a) * 256 + (b), (c) * 256 + (d) },  \
-           (port) }))
+          { 0,0,0,0,0,0xFFFF, (a) * 256 + (b), (c) * 256 + (d) }, (port) }))
 
 extern const IPv6_Address ipv6_unspecified;  // [::]:0
 extern const IPv6_Address ipv6_loopback;     // [::1]:0
