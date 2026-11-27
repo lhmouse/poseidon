@@ -20,7 +20,7 @@ class Easy_TCP_Client
     //    `.discard()` processed data from `data`, otherwise they will remain
     //    there for the next call); `code` is non-zero if the remote peer has
     //    closed the connection; or
-    // 3) `easy_stream_closed`, then `data` is the error description and `code`
+    // 3) `easy_stream_close`, then `data` is the error description and `code`
     //    is the system error number.
     //
     // This client object stores a copy of the callback, which is invoked
