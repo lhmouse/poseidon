@@ -36,7 +36,7 @@ class Easy_WSS_Client
 
   private:
     struct X_Session_Table;
-    shptr<X_Session_Table> m_sessions;
+    shptr<X_Session_Table> m_table;
 
   public:
     Easy_WSS_Client() noexcept = default;

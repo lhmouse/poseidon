@@ -33,7 +33,7 @@ class Easy_HTTPS_Client
 
   private:
     struct X_Session_Table;
-    shptr<X_Session_Table> m_sessions;
+    shptr<X_Session_Table> m_table;
 
   public:
     Easy_HTTPS_Client() noexcept = default;

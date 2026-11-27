@@ -115,9 +115,12 @@ do_abstract_socket_on_readable()
 
       if(client && !scheduled) {
         // Ensure this is invoked at least once.
+        client->quick_shut_down();
         errno = ENOMEM;
         POSEIDON_CATCH_EVERYTHING(client->do_abstract_socket_on_closed());
       }
+
+      POSEIDON_LOG_TRACE(("TCP acceptor `$1` (class `$2`) IN"), this, typeid(*this));
     }
   }
 

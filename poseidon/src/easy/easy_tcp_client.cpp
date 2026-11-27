@@ -43,13 +43,13 @@ struct Session_Table
 struct Final_Fiber final : Abstract_Fiber
   {
     Easy_TCP_Client::callback_type m_callback;
-    wkptr<Session_Table> m_wsessions;
+    wkptr<Session_Table> m_wtable;
     UUID m_session_uuid;
 
     Final_Fiber(const Easy_TCP_Client::callback_type& callback,
-          const shptr<Session_Table>& sessions, const UUID& session_uuid)
+          const shptr<Session_Table>& table, const UUID& session_uuid)
       :
-        m_callback(callback), m_wsessions(sessions), m_session_uuid(session_uuid)
+        m_callback(callback), m_wtable(table), m_session_uuid(session_uuid)
       { }
 
     virtual
@@ -59,16 +59,16 @@ struct Final_Fiber final : Abstract_Fiber
         for(;;) {
           // The event callback may stop this client, so we have to check for
           // expiry in every iteration.
-          auto sessions = this->m_wsessions.lock();
-          if(!sessions)
+          auto table = this->m_wtable.lock();
+          if(!table)
             return;
 
           // Pop an event and invoke the user-defined callback here in the
           // main thread. Exceptions are ignored.
-          plain_mutex::unique_lock lock(sessions->mutex);
+          plain_mutex::unique_lock lock(table->mutex);
 
-          auto session_iter = sessions->session_map.find(this->m_session_uuid);
-          if(session_iter == sessions->session_map.end())
+          auto session_iter = table->session_map.find(this->m_session_uuid);
+          if(session_iter == table->session_map.end())
             return;
 
           if(session_iter->second.events.empty()) {
@@ -77,8 +77,8 @@ struct Final_Fiber final : Abstract_Fiber
             return;
           }
 
-          // After `sessions->mutex` is unlocked, other threads may modify
-          // `sessions->session_map` and invalidate all iterators, so maintain a
+          // After `table->mutex` is unlocked, other threads may modify
+          // `table->session_map` and invalidate all iterators, so maintain a
           // reference outside it for safety.
           ASTERIA_ASSERT(session_iter->second.fiber_active);
           auto socket = session_iter->second.socket;
@@ -88,10 +88,15 @@ struct Final_Fiber final : Abstract_Fiber
           if(ASTERIA_UNEXPECT(event.type != easy_stream_close))
             session_iter->second.events.pop_front();
           else
-            sessions->session_map.erase(session_iter);
+            table->session_map.erase(session_iter);
 
           session_iter = { };
           lock.unlock();
+
+          // `table->mutex` has been unlocked, and we don't need to hold a
+          // reference to the table anymore. This allows the table to be
+          // destroyed.
+          table.reset();
 
           try {
             // `easy_stream_data` is really special. We append new data to
@@ -119,34 +124,34 @@ struct Final_Socket final : TCP_Socket
   {
     UUID m_uuid;
     Easy_TCP_Client::callback_type m_callback;
-    wkptr<Session_Table> m_wsessions;
+    wkptr<Session_Table> m_wtable;
 
     Final_Socket(const Easy_TCP_Client::callback_type& callback,
-          const shptr<Session_Table>& sessions)
+          const shptr<Session_Table>& table)
       :
         TCP_Socket(), m_uuid(UUID::random_v4()),
-        m_callback(callback), m_wsessions(sessions)
+        m_callback(callback), m_wtable(table)
       { }
 
     void
     do_push_event_common(Event&& event)
       {
-        auto sessions = this->m_wsessions.lock();
-        if(!sessions)
+        auto table = this->m_wtable.lock();
+        if(!table)
           return;
 
         // We are in the network thread here.
-        plain_mutex::unique_lock lock(sessions->mutex);
+        plain_mutex::unique_lock lock(table->mutex);
 
-        auto session_iter = sessions->session_map.find(this->m_uuid);
-        if(session_iter == sessions->session_map.end())
+        auto session_iter = table->session_map.find(this->m_uuid);
+        if(session_iter == table->session_map.end())
           return;
 
         try {
           if(!session_iter->second.fiber_active) {
             // Create a new fiber, if none is active. The fiber shall only reset
             // `m_fiber_private_buffer` if no event is pending.
-            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_callback, sessions, this->m_uuid));
+            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_callback, table, this->m_uuid));
             session_iter->second.fiber_active = true;
           }
 
@@ -154,7 +159,7 @@ struct Final_Socket final : TCP_Socket
         }
         catch(exception& stdex) {
           POSEIDON_LOG_ERROR(("Could not push network event: $1"), stdex);
-          sessions->session_map.erase(session_iter);
+          table->session_map.erase(session_iter);
           this->quick_shut_down();
         }
       }
@@ -229,21 +234,22 @@ connect(const cow_string& addr, const callback_type& callback)
       POSEIDON_THROW(("URI fragment shall not be specified in address `$1`"), addr);
 
     // Pre-allocate necessary objects. The entire operation will be atomic.
-    if(!this->m_sessions)
-      this->m_sessions = new_sh<X_Session_Table>();
+    if(!this->m_table)
+      this->m_table = new_sh<X_Session_Table>();
 
-    auto socket = new_sh<Final_Socket>(callback, this->m_sessions);
+    auto socket = new_sh<Final_Socket>(callback, this->m_table);
     auto dns_task = new_sh<DNS_Connect_Task>(network_scheduler,
                        socket, cow_string(caddr.host), caddr.port_num);
+    auto stream = new_sh<linear_buffer>();
 
     // Initiate the connection.
-    plain_mutex::unique_lock lock(this->m_sessions->mutex);
+    plain_mutex::unique_lock lock(this->m_table->mutex);
 
     task_scheduler.launch(dns_task);
-    auto r = this->m_sessions->session_map.try_emplace(socket->m_uuid);
+    auto r = this->m_table->session_map.try_emplace(socket->m_uuid);
     ASTERIA_ASSERT(r.second);
     r.first->second.socket = socket;
-    r.first->second.stream = new_sh<linear_buffer>();
+    r.first->second.stream = move(stream);
     return socket;
   }
 
@@ -251,7 +257,7 @@ void
 Easy_TCP_Client::
 close_all() noexcept
   {
-    this->m_sessions = nullptr;
+    this->m_table = nullptr;
   }
 
 }  // namespace poseidon

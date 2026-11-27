@@ -43,13 +43,13 @@ struct Session_Table
 struct Final_Fiber final : Abstract_Fiber
   {
     Easy_HTTP_Server::callback_type m_callback;
-    wkptr<Session_Table> m_wsessions;
+    wkptr<Session_Table> m_wtable;
     UUID m_session_uuid;
 
     Final_Fiber(const Easy_HTTP_Server::callback_type& callback,
-          const shptr<Session_Table>& sessions, const UUID& session_uuid)
+          const shptr<Session_Table>& table, const UUID& session_uuid)
       :
-        m_callback(callback), m_wsessions(sessions), m_session_uuid(session_uuid)
+        m_callback(callback), m_wtable(table), m_session_uuid(session_uuid)
       { }
 
     virtual
@@ -59,16 +59,16 @@ struct Final_Fiber final : Abstract_Fiber
         for(;;) {
           // The event callback may stop this server, so we have to check for
           // expiry in every iteration.
-          auto sessions = this->m_wsessions.lock();
-          if(!sessions)
+          auto table = this->m_wtable.lock();
+          if(!table)
             return;
 
           // Pop an event and invoke the user-defined callback here in the
           // main thread. Exceptions are ignored.
-          plain_mutex::unique_lock lock(sessions->mutex);
+          plain_mutex::unique_lock lock(table->mutex);
 
-          auto session_iter = sessions->session_map.find(this->m_session_uuid);
-          if(session_iter == sessions->session_map.end())
+          auto session_iter = table->session_map.find(this->m_session_uuid);
+          if(session_iter == table->session_map.end())
             return;
 
           if(session_iter->second.events.empty()) {
@@ -77,8 +77,8 @@ struct Final_Fiber final : Abstract_Fiber
             return;
           }
 
-          // After `sessions->mutex` is unlocked, other threads may modify
-          // `sessions->session_map` and invalidate all iterators, so maintain a
+          // After `table->mutex` is unlocked, other threads may modify
+          // `table->session_map` and invalidate all iterators, so maintain a
           // reference outside it for safety.
           ASTERIA_ASSERT(session_iter->second.fiber_active);
           auto session = session_iter->second.session;
@@ -87,10 +87,11 @@ struct Final_Fiber final : Abstract_Fiber
           if(ASTERIA_UNEXPECT(event.type != easy_http_close))
             session_iter->second.events.pop_front();
           else
-            sessions->session_map.erase(session_iter);
+            table->session_map.erase(session_iter);
 
           session_iter = { };
           lock.unlock();
+          table.reset();
 
           try {
             if(event.status != http_status_null) {
@@ -122,35 +123,35 @@ struct Final_Session final : HTTP_Server_Session
   {
     UUID m_uuid;
     Easy_HTTP_Server::callback_type m_callback;
-    wkptr<Session_Table> m_wsessions;
+    wkptr<Session_Table> m_wtable;
 
     Final_Session(unique_posix_fd&& fd,
           const Easy_HTTP_Server::callback_type& callback,
-          const shptr<Session_Table>& sessions)
+          const shptr<Session_Table>& table)
       :
         TCP_Socket(move(fd)), HTTP_Server_Session(), m_uuid(UUID::random_v4()),
-        m_callback(callback), m_wsessions(sessions)
+        m_callback(callback), m_wtable(table)
       { }
 
     void
     do_push_event_common(Event&& event)
       {
-        auto sessions = this->m_wsessions.lock();
-        if(!sessions)
+        auto table = this->m_wtable.lock();
+        if(!table)
           return;
 
         // We are in the network thread here.
-        plain_mutex::unique_lock lock(sessions->mutex);
+        plain_mutex::unique_lock lock(table->mutex);
 
-        auto session_iter = sessions->session_map.find(this->m_uuid);
-        if(session_iter == sessions->session_map.end())
+        auto session_iter = table->session_map.find(this->m_uuid);
+        if(session_iter == table->session_map.end())
           return;
 
         try {
           if(!session_iter->second.fiber_active) {
             // Create a new fiber, if none is active. The fiber shall only reset
             // `m_fiber_private_buffer` if no event is pending.
-            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_callback, sessions, this->m_uuid));
+            fiber_scheduler.launch(new_sh<Final_Fiber>(this->m_callback, table, this->m_uuid));
             session_iter->second.fiber_active = true;
           }
 
@@ -158,7 +159,7 @@ struct Final_Session final : HTTP_Server_Session
         }
         catch(exception& stdex) {
           POSEIDON_LOG_ERROR(("Could not push network event: $1"), stdex);
-          sessions->session_map.erase(session_iter);
+          table->session_map.erase(session_iter);
           this->quick_shut_down();
         }
       }
@@ -213,14 +214,14 @@ struct Final_Session final : HTTP_Server_Session
 struct Final_Acceptor final : TCP_Acceptor
   {
     Easy_HTTP_Server::callback_type m_callback;
-    wkptr<Session_Table> m_wsessions;
+    wkptr<Session_Table> m_wtable;
 
     Final_Acceptor(const IPv6_Address& addr,
           const Easy_HTTP_Server::callback_type& callback,
-          const shptr<Session_Table>& sessions)
+          const shptr<Session_Table>& table)
       :
         TCP_Acceptor(addr),
-        m_callback(callback), m_wsessions(sessions)
+        m_callback(callback), m_wtable(table)
       {
       }
 
@@ -228,17 +229,17 @@ struct Final_Acceptor final : TCP_Acceptor
     shptr<Abstract_Socket>
     do_accept_socket_opt(IPv6_Address&& addr, unique_posix_fd&& fd) override
       {
-        auto sessions = this->m_wsessions.lock();
-        if(!sessions)
+        auto table = this->m_wtable.lock();
+        if(!table)
           return nullptr;
 
-        auto session = new_sh<Final_Session>(move(fd), this->m_callback, sessions);
+        auto session = new_sh<Final_Session>(move(fd), this->m_callback, table);
         (void) addr;
 
         // We are in the network thread here.
-        plain_mutex::unique_lock lock(sessions->mutex);
+        plain_mutex::unique_lock lock(table->mutex);
 
-        auto r = sessions->session_map.try_emplace(session->m_uuid);
+        auto r = table->session_map.try_emplace(session->m_uuid);
         ASTERIA_ASSERT(r.second);
         r.first->second.session = session;
         return session;
@@ -269,11 +270,11 @@ shptr<TCP_Acceptor>
 Easy_HTTP_Server::
 start(const IPv6_Address& addr, const callback_type& callback)
   {
-    auto sessions = new_sh<X_Session_Table>();
-    auto acceptor = new_sh<Final_Acceptor>(addr, callback, sessions);
+    auto table = new_sh<X_Session_Table>();
+    auto acceptor = new_sh<Final_Acceptor>(addr, callback, table);
 
     network_scheduler.insert_weak(acceptor);
-    this->m_sessions = move(sessions);
+    this->m_table = move(table);
     this->m_acceptor = acceptor;
     return acceptor;
   }
@@ -296,7 +297,7 @@ void
 Easy_HTTP_Server::
 stop() noexcept
   {
-    this->m_sessions = nullptr;
+    this->m_table = nullptr;
     this->m_acceptor = nullptr;
   }
 

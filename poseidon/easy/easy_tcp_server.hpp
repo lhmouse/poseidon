@@ -38,7 +38,7 @@ class Easy_TCP_Server
 
   private:
     struct X_Session_Table;
-    shptr<X_Session_Table> m_sessions;
+    shptr<X_Session_Table> m_table;
     shptr<TCP_Acceptor> m_acceptor;
 
   public:
