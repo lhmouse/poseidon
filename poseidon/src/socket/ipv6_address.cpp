@@ -70,19 +70,19 @@ IP_Address_Class
 do_classify_ipv6_generic(const char* addr) noexcept
   {
     // ::ffff:0:0/96: IPv4-mapped
-    if(do_match_subnet(addr, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF", 96))
+    if(do_match_subnet(addr, "\0\0\0\0\0\0\0\0\0\0\xFF\xFF", 96))
       return do_classify_ipv4_generic(addr + 12);
 
     // ::/128: Unspecified
-    if(do_match_subnet(addr, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 128))
+    if(do_match_subnet(addr, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", 128))
       return ip_address_unspecified;
 
     // ::1/128: Loopback
-    if(do_match_subnet(addr, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01", 128))
+    if(do_match_subnet(addr, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x00\x01", 128))
       return ip_address_loopback;
 
     // 64:ff9b::/96: IPv4 to IPv6
-    if(do_match_subnet(addr, "\x00\x64\xFF\x9B\x00\x00\x00\x00\x00\x00\x00\x00", 96))
+    if(do_match_subnet(addr, "\x00\x64\xFF\x9B\0\0\0\0\0\0\0\0", 96))
       return do_classify_ipv4_generic(addr + 12);
 
     // 64:ff9b:1::/48: Local-Use IPv4/IPv6
@@ -90,7 +90,7 @@ do_classify_ipv6_generic(const char* addr) noexcept
       return do_classify_ipv4_generic(addr + 12);
 
     // 100::/64: Discard-Only
-    if(do_match_subnet(addr, "\x01\x00\x00\x00\x00\x00\x00\x00", 64))
+    if(do_match_subnet(addr, "\x01\x00\0\0\0\0\0\0", 64))
       return ip_address_reserved;
 
     // 2001:db8::/32: Documentation
@@ -170,7 +170,8 @@ parse(chars_view str) noexcept
     if((caddr.host.n == 0) || (caddr.host.n > 63))
       return 0;
 
-    if((caddr.port.n == 0) || (caddr.path.n != 0) || (caddr.query.n != 0)  || (caddr.fragment.n != 0))
+    if((caddr.port.n == 0) || (caddr.path.n != 0) || (caddr.query.n != 0)
+        || (caddr.fragment.n != 0))
       return 0;
 
     // Null-terminate the host name.
@@ -203,7 +204,7 @@ print_partial(char* str) const noexcept
     ::asteria::ascii_numput nump;
     char* wptr = str;
 
-    if(do_match_subnet(addr, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF", 96)) {
+    if(do_match_subnet(addr, "\0\0\0\0\0\0\0\0\0\0\xFF\xFF", 96)) {
       // IPv4
       addr += 12;
       ::inet_ntop(AF_INET, addr, wptr, INET_ADDRSTRLEN);
