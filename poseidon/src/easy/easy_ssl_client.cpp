@@ -26,11 +26,8 @@ struct Event_Queue
   {
     // read-only fields; no locking needed
     shptr<SSL_Socket> socket;
+    shptr<linear_buffer> stream;
     cacheline_barrier xcb_1;
-
-    // fiber-private fields; no locking needed
-    linear_buffer data_stream;
-    cacheline_barrier xcb_2;
 
     // shared fields between threads
     ::std::deque<Event> events;
@@ -85,6 +82,7 @@ struct Final_Fiber final : Abstract_Fiber
           // reference outside it for safety.
           ASTERIA_ASSERT(session_iter->second.fiber_active);
           auto socket = session_iter->second.socket;
+          auto stream = session_iter->second.stream;
           auto event = move(session_iter->second.events.front());
 
           if(ASTERIA_UNEXPECT(event.type != easy_stream_close))
@@ -97,12 +95,12 @@ struct Final_Fiber final : Abstract_Fiber
 
           try {
             // `easy_stream_data` is really special. We append new data to
-            // `data_stream` which is passed to the callback instead of
-            // `event.data`. `data_stream` may be consumed partially by user code,
-            // and shall be preserved across callbacks.
+            // `stream` which is passed to the callback instead of `event.data`.
+            // `stream` may be consumed partially by user code, and shall be
+            // preserved across callbacks.
             if(event.type == easy_stream_data)
               this->m_callback(socket, *this, event.type,
-                      splice_buffers(queue->data_stream, move(event.data)), event.code);
+                     splice_buffers(*stream, move(event.data)), event.code);
             else
               this->m_callback(socket, *this, event.type, event.data, event.code);
           }
@@ -245,6 +243,7 @@ connect(const cow_string& addr, const callback_type& callback)
     auto r = this->m_sessions->session_map.try_emplace(socket->m_uuid);
     ASTERIA_ASSERT(r.second);
     r.first->second.socket = socket;
+    r.first->second.stream = new_sh<linear_buffer>();
     return socket;
   }
 
