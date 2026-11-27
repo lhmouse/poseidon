@@ -22,15 +22,16 @@ parse(chars_view str) noexcept
 
     // Encode the method with base28.
     uint64_t reg = 0;
-    for(size_t k = str.n - 1;  k != SIZE_MAX;  k--) {
+    uint32_t pos = static_cast<uint32_t>(str.n) - 1;
+    while(pos != UINT32_MAX) {
+      uint32_t ch = static_cast<uint8_t>(str.p[pos --]);
       reg *= 28;
-      uint32_t ch = static_cast<uint8_t>(str.p[k]);
       if((ch >= 'A') && (ch <= 'Z'))
-        reg += ch - 'A';
+        reg += ch - 'A' + 1;
       else if(ch == '-')
-        reg += 26;
-      else if(ch == '_')
         reg += 27;
+      else if(ch == '_')
+        reg += 28;
       else
         return 0;
     }
@@ -46,14 +47,14 @@ print_partial(char* str) const noexcept
     char* wptr = str;
     uint64_t reg = this->m_number;
     while(reg != 0) {
-      uint64_t next_reg = reg / 28;
+      uint64_t next_reg = (reg - 1) / 28;
       uint32_t digit = static_cast<uint32_t>(reg - next_reg * 28);
       reg = next_reg;
-      if(digit < 26)
-        *(wptr ++) = static_cast<char>('A' + digit);
-      else if(digit == 26)
-        *(wptr ++) = '-';
+      if(digit <= 26)
+        *(wptr ++) = static_cast<char>('A' + digit - 1);
       else if(digit == 27)
+        *(wptr ++) = '-';
+      else if(digit == 28)
         *(wptr ++) = '_';
     }
 
