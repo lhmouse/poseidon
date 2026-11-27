@@ -9,7 +9,7 @@ namespace poseidon {
 
 enum HTTP_Method_Number : uint64_t
   {
-    http_method_null           = 0,
+    http_method_null         = 0,
     http_method_DELETE       = 98464272,
     http_method_GET          = 15827,
     http_method_HEAD         = 88740,
