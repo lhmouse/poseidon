@@ -11,7 +11,7 @@ namespace poseidon {
 struct WebSocket_Frame_Header
   {
     union {
-      __m128i packed_fields_1 = { };
+      uint64_t packed_fields_1 = 0;
       struct {
         // The payload length is always stored as an `uint64_t`. The `encode()`
         // function will deduce the correct field basing on its value.
@@ -25,9 +25,9 @@ struct WebSocket_Frame_Header
         uint8_t masked : 1;
         uint16_t reserved_2;
         uint32_t masking_key;
-        uint64_t payload_len;
       };
     };
+    uint64_t payload_len = 0;
 
     WebSocket_Frame_Header() noexcept = default;
     WebSocket_Frame_Header(const WebSocket_Frame_Header&) = default;
@@ -40,6 +40,7 @@ struct WebSocket_Frame_Header
     swap(WebSocket_Frame_Header& other) noexcept
       {
         ::std::swap(this->packed_fields_1, other.packed_fields_1);
+        ::std::swap(this->payload_len, other.payload_len);
         return *this;
       }
 
@@ -47,7 +48,8 @@ struct WebSocket_Frame_Header
     void
     clear() noexcept
       {
-        this->packed_fields_1 = _mm_setzero_si128();
+        this->packed_fields_1 = 0;
+        this->payload_len = 0;
       }
 
     // Encodes this frame header in wire format. The output will be suitable
