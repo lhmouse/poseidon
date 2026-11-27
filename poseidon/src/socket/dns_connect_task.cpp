@@ -34,6 +34,7 @@ do_on_abstract_task_execute()
   {
     shptr<Abstract_Socket> socket;
     bool success = false;
+    bool scheduled = false;
 
     try {
       // Perform DNS query. This will block the worker thread.
@@ -79,12 +80,10 @@ do_on_abstract_task_execute()
                     || (errno == EINPROGRESS);
         }
 
-      if(!success)
-        POSEIDON_LOG_WARN(("DNS lookup failed for `$1`"), this->m_host);
-
       // Insert the socket, only after `connect()` has been called. Even in
       // the case of a failure, a closure notification shall be delivered.
       this->m_scheduler->insert_weak(socket);
+      scheduled = true;
     }
     catch(exception& stdex) {
       POSEIDON_LOG_ERROR(("DNS lookup error: $1"), stdex);
@@ -97,8 +96,15 @@ do_on_abstract_task_execute()
         return;
     }
 
-    if(!success)
+    if(!success) {
+      POSEIDON_LOG_WARN(("DNS lookup failed for `$1`"), this->m_host);
       socket->quick_shut_down();
+    }
+
+    if(!scheduled) {
+      errno = ENOMEM;
+      POSEIDON_CATCH_EVERYTHING(socket->do_abstract_socket_on_closed());
+    }
   }
 
 }  // namespace poseidon
