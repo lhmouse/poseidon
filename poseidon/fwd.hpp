@@ -206,18 +206,6 @@ new_sh(xValue&& value)
     return ::std::make_shared<typename ::std::decay<xValue>::type>(forward<xValue>(value));
   }
 
-struct cacheline_barrier
-  {
-    static constexpr size_t alignment = alignof(max_align_t);
-    static constexpr size_t size = 64UL - alignof(max_align_t);
-
-    alignas(alignment) char bytes[size];
-
-    cacheline_barrier() noexcept { }
-    cacheline_barrier(const cacheline_barrier&) noexcept { }
-    cacheline_barrier& operator=(const cacheline_barrier&) & noexcept { return *this; }
-  };
-
 struct chars_view
   {
     const char* p;

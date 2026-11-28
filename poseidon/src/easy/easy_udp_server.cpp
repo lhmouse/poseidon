@@ -21,10 +21,9 @@ struct Packet_Queue
   {
     // read-only fields; no locking needed
     wkptr<UDP_Socket> wsocket;
-    cacheline_barrier xcb_1;
 
     // shared fields between threads
-    mutable plain_mutex mutex;
+    alignas(::std::hardware_destructive_interference_size) mutable plain_mutex mutex;
     ::std::deque<Packet> packets;
     bool fiber_active = false;
   };

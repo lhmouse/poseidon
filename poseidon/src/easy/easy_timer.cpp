@@ -21,10 +21,9 @@ struct Event_Queue
   {
     // read-only fields; no locking needed
     wkptr<Abstract_Timer> wtimer;
-    cacheline_barrier xcb_1;
 
     // shared fields between threads
-    mutable plain_mutex mutex;
+    alignas(::std::hardware_destructive_interference_size) mutable plain_mutex mutex;
     ::std::deque<Event> events;
     bool fiber_active = false;
   };

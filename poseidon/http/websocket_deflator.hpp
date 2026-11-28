@@ -15,7 +15,6 @@ class WebSocket_Deflator
     mutable plain_mutex m_def_mtx;
     scoped_deflate_stream m_def_strm;
     linear_buffer m_def_buf;
-    cacheline_barrier m_xcb_1;
 
     // inflator (recv)
     mutable plain_mutex m_inf_mtx;

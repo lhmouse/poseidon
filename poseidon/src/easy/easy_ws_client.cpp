@@ -24,10 +24,9 @@ struct Event_Queue
   {
     // read-only fields; no locking needed
     shptr<WS_Client_Session> session;
-    cacheline_barrier xcb_1;
 
     // shared fields between threads
-    ::std::deque<Event> events;
+    alignas(::std::hardware_destructive_interference_size) ::std::deque<Event> events;
     bool fiber_active = false;
   };
 
