@@ -44,14 +44,14 @@ const cow_string hostname = do_get_hostname();
 const cow_string empty_cow_string;
 const phcow_string empty_phcow_string;
 
-Main_Config main_config;
-Logger logger;
-Timer_Scheduler timer_scheduler;
-Task_Scheduler task_scheduler;
-Network_Scheduler network_scheduler;
-Fiber_Scheduler fiber_scheduler;
-MySQL_Connector mysql_connector;
-Mongo_Connector mongo_connector;
-Redis_Connector redis_connector;
+alignas(::std::hardware_destructive_interference_size) Main_Config main_config;
+alignas(::std::hardware_destructive_interference_size) Logger logger;
+alignas(::std::hardware_destructive_interference_size) Timer_Scheduler timer_scheduler;
+alignas(::std::hardware_destructive_interference_size) Task_Scheduler task_scheduler;
+alignas(::std::hardware_destructive_interference_size) Network_Scheduler network_scheduler;
+alignas(::std::hardware_destructive_interference_size) Fiber_Scheduler fiber_scheduler;
+alignas(::std::hardware_destructive_interference_size) MySQL_Connector mysql_connector;
+alignas(::std::hardware_destructive_interference_size) Mongo_Connector mongo_connector;
+alignas(::std::hardware_destructive_interference_size) Redis_Connector redis_connector;
 
 }  // namespace poseidon
