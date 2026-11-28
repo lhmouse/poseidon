@@ -216,11 +216,14 @@ connect(const cow_string& addr, const callback_type& callback)
       caddr.port_num = 443;
 
     // Disallow superfluous components.
-    if(caddr.path.p != nullptr)
+    if(caddr.path.n != 0)
       POSEIDON_THROW(("URI path shall not be specified in address `$1`"), addr);
 
-    if(caddr.query.p != nullptr)
+    if(caddr.query.n != 0)
       POSEIDON_THROW(("URI query shall not be specified in address `$1`"), addr);
+
+    if(caddr.fragment.n != 0)
+      POSEIDON_THROW(("URI fragment shall not be specified in address `$1`"), addr);
 
     // Pre-allocate necessary objects. The entire operation will be atomic.
     if(!this->m_table)
