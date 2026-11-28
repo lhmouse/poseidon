@@ -108,27 +108,21 @@ struct Final_Fiber final : Abstract_Fiber
       }
   };
 
-struct Request_URI
-  {
-    cow_string host;
-    cow_string path;
-    cow_string query;
-    cow_string fragment;
-  };
-
 struct Final_Session final : WS_Client_Session
   {
     uint64_t m_serial;
     Easy_WS_Client::callback_type m_callback;
     wkptr<Session_Table> m_wtable;
-    uniptr<Request_URI> m_uri;
+    cow_string m_path;
+    cow_string m_query;
 
     Final_Session(uint64_t serial, const Easy_WS_Client::callback_type& callback,
-          const shptr<Session_Table>& table, uniptr<Request_URI>&& uri)
+          const shptr<Session_Table>& table, const cow_string& host,
+          const cow_string& path, const cow_string& query)
       :
-        TCP_Socket(), HTTP_Client_Session(uri->host),
-        WS_Client_Session(uri->path, uri->query), m_serial(serial),
-        m_callback(callback), m_wtable(table), m_uri(move(uri))
+        TCP_Socket(), HTTP_Client_Session(host), WS_Client_Session(path, query),
+        m_serial(serial), m_callback(callback), m_wtable(table), m_path(path),
+        m_query(query)
       { }
 
     void
@@ -169,15 +163,10 @@ struct Final_Session final : WS_Client_Session
         Event event;
         event.type = easy_ws_open;
 
-        auto uri = move(this->m_uri);
-        ASTERIA_ASSERT(uri);
-
-        event.data.putn(uri->host.data(), uri->host.size());
-        event.data.putn(uri->path.data(), uri->path.size());
+        event.data.putn(this->http_default_host().data(), this->http_default_host().size());
+        event.data.putn(this->m_path.data(), this->m_path.size());
         event.data.putc('?');
-        event.data.putn(uri->query.data(), uri->query.size());
-        event.data.putc('#');
-        event.data.putn(uri->fragment.data(), uri->fragment.size());
+        event.data.putn(this->m_query.data(), this->m_query.size());
 
         this->do_push_event_common(move(event));
       }
@@ -239,11 +228,8 @@ connect(const cow_string& addr, const callback_type& callback)
     if(caddr.port.n == 0)
       caddr.port_num = 80;
 
-    auto uri = new_uni<Request_URI>();
-    uri->host = sformat("$1:$2", caddr.host, caddr.port_num);
-    uri->path = cow_string(caddr.path);
-    uri->query = cow_string(caddr.query);
-    uri->fragment = cow_string(caddr.fragment);
+    if(caddr.path.n == 0)
+      caddr.path = &"/";
 
     // Pre-allocate necessary objects. The entire operation will be atomic.
     if(!this->m_table)
@@ -252,8 +238,9 @@ connect(const cow_string& addr, const callback_type& callback)
     // Initiate the connection.
     plain_mutex::unique_lock lock(this->m_table->mutex);
 
-    auto session = new_sh<Final_Session>(this->m_table->next_serial ++,
-                                         callback, this->m_table, move(uri));
+    auto session = new_sh<Final_Session>(this->m_table->next_serial ++, callback,
+                      this->m_table, sformat("$1:$2", caddr.host, caddr.port_num),
+                      cow_string(caddr.path), cow_string(caddr.query));
     auto dns_task = new_sh<DNS_Connect_Task>(network_scheduler,
                        session, cow_string(caddr.host), caddr.port_num);
 
