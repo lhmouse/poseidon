@@ -49,7 +49,7 @@ canonicalize()
 
         case 'A' ... 'Z':
           // Convert this letter to lowercase.
-          this->m_str.mut(k) = (char) (this->m_str[k] | 0x20);
+          this->m_str.mut(k) = static_cast<char>(this->m_str[k] | 0x20);
           break;
 
         default:

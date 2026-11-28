@@ -69,7 +69,8 @@ random_v7() noexcept
     plain_mutex::unique_lock lock(s_gen_mutex);
     struct timespec ts;
     ::clock_gettime(CLOCK_REALTIME, &ts);
-    uint64_t time = (uint64_t) ts.tv_sec * 1000 + (uint32_t) ts.tv_nsec / 1000000;
+    uint64_t time = static_cast<uint64_t>(ts.tv_sec) * 1000
+                    + static_cast<uint32_t>(ts.tv_nsec) / 1000000;
     uint32_t serial = (s_gen_time == time) ? ((s_gen_serial + 1) & 0x0FFF) : 0;
     s_gen_time = time;
     s_gen_serial = serial;
@@ -79,7 +80,7 @@ random_v7() noexcept
 
     // Set UUID version and variant.
     uint64_t x0 = time << 16 | 0x7000 | serial;
-    z2 = 0x80000000 | (((uint32_t) ::getpid() & 0x3FFF) << 16) | (z2 & 0xFFFF);
+    z2 = 0x80000000 | ((static_cast<uint32_t>(::getpid()) & 0x3FFF) << 16) | (z2 & 0xFFFF);
 
     UUID result;
     ::asteria::store_be<uint64_t>(result.m_bytes.data() + 0, x0);

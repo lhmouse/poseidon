@@ -189,7 +189,7 @@ do_parse_command_line(int argc, char** argv)
     if(version)
       do_print_version_and_exit();
 
-    for(uint32_t k = (uint32_t) ::optind;  (int) k < argc;  ++k) {
+    for(int k = ::optind;  k < argc;  ++k) {
       // If more arguments follow, they denote the working directory and
       // modules to load.
       if(!abs_path.reset(::realpath(argv[k], nullptr)))
@@ -197,7 +197,7 @@ do_parse_command_line(int argc, char** argv)
             "%s: invalid path -- '%s': %m",
             argv[0], argv[k]);
 
-      if((int) k == ::optind)
+      if(k == ::optind)
         cmdline.cd_here.assign(abs_path.get());
       else
         cmdline.modules.emplace_back(abs_path.get());
@@ -221,20 +221,19 @@ do_set_working_directory()
 int
 do_waitpid_and_exit(::pid_t cpid)
   {
-    for(;;) {
-      int wstat;
-      if(POSEIDON_SYSCALL_LOOP(::waitpid(cpid, &wstat, 0)) == -1)
+    int wstat;
+    for(;;)
+      if(POSEIDON_SYSCALL_LOOP(::waitpid(cpid, &wstat, 0)) == -1) {
         do_exit_printf(exit_system_error,
-            "Failed to await child process %d: %m", (int) cpid);
-
-      if(WIFEXITED(wstat))
-        ::_Exit(WEXITSTATUS(wstat));
-
-      if(WIFSIGNALED(wstat))
+            "Failed to await child process %d: %m", static_cast<int>(cpid));
+      }
+      else if(WIFSIGNALED(wstat)) {
         do_exit_printf(128 + WTERMSIG(wstat),
             "Child process %d terminated by signal %d: %s",
-            (int) cpid, WTERMSIG(wstat), ::strsignal(WTERMSIG(wstat)));
-    }
+            static_cast<int>(cpid), WTERMSIG(wstat), ::strsignal(WTERMSIG(wstat)));
+      }
+      else if(WIFEXITED(wstat))
+        ::_Exit(WEXITSTATUS(wstat));
   }
 
 ASTERIA_NEVER_INLINE
@@ -258,7 +257,7 @@ do_daemonize_start()
     //    v               _Exit()             |
     //  waitpid() <------/                    v
     //  _Exit()                             loop ...
-    ::fprintf(stderr, "Daemonizing process %d...\n", (int) ::getpid());
+    ::fprintf(stderr, "Daemonizing process %d...\n", static_cast<int>(::getpid()));
     ::pid_t cpid = ::fork();
     if(cpid == -1)
       do_exit_printf(exit_system_error, "Could not spawn child process: %m");
@@ -289,7 +288,7 @@ do_daemonize_start()
       }
 
       // Detach the GRANDCHILD.
-      ::fprintf(stderr, "Process %d detached successfully\n", (int) cpid);
+      ::fprintf(stderr, "Process %d detached successfully\n", static_cast<int>(cpid));
       ::_Exit(0);
     }
 
@@ -341,7 +340,7 @@ do_create_resident_thread(xObject& obj, const char* name)
       nullptr,
       +[](void* thread_param) -> void*
       {
-        auto& xobj = *(xObject*) thread_param;
+        auto& xobj = *static_cast<xObject*>(thread_param);
 
         ::pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, nullptr);
         ::pthread_sigmask(SIG_BLOCK, s_blocked_signals, nullptr);
@@ -430,7 +429,7 @@ do_write_pid_file()
 
     // Write the PID of myself. Errors are ignored.
     POSEIDON_LOG_DEBUG(("Writing current process ID to '$1'"), pid_file.c_str());
-    ::dprintf(pid_file_fd, "%d\n", (int) ::getpid());
+    ::dprintf(pid_file_fd, "%d\n", static_cast<int>(::getpid()));
     ::at_quick_exit([] { (void)! ::ftruncate(pid_file_fd, 0);  });
 
     // Downgrade the lock so the PID may be read by others.

@@ -25,7 +25,7 @@ struct Cached_Stack
     size_t vm_size;
   };
 
-const uint32_t s_page_size = (uint32_t) ::sysconf(_SC_PAGESIZE);
+const uint32_t s_page_size = static_cast<uint32_t>(::sysconf(_SC_PAGESIZE));
 atomic<Cached_Stack*> s_stack_cache;
 
 ::stack_t
@@ -38,7 +38,7 @@ do_allocate_stack(size_t vm_size)
     // Deallocate anything which another thread might have put in between,
     // or when reconfiguration was requested.
     while(cst && (cst->next || (cst->vm_size != vm_size))) {
-      void* map_base = (char*) cst - s_page_size;
+      void* map_base = reinterpret_cast<char*>(cst) - s_page_size;
       size_t map_size = cst->vm_size + 2 * s_page_size;
       cst = cst->next;
 
@@ -61,7 +61,7 @@ do_allocate_stack(size_t vm_size)
             "[`mmap()` failed: ${errno:full}]"),
             map_size);
 
-      cst = (Cached_Stack*) ((char*) map_base + s_page_size);
+      cst = reinterpret_cast<Cached_Stack*>(static_cast<char*>(map_base) + s_page_size);
       ::mprotect(cst, vm_size, PROT_READ | PROT_WRITE);
       cst->vm_size = vm_size;
     }
@@ -81,7 +81,7 @@ do_allocate_stack(size_t vm_size)
 void
 do_free_stack(::stack_t st) noexcept
   {
-    auto cst = (Cached_Stack*) st.ss_sp;
+    auto cst = static_cast<Cached_Stack*>(st.ss_sp);
     if(!st.ss_sp)
       return;
 

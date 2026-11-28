@@ -306,7 +306,7 @@ enqueue(uint8_t level, const char* func, const char* file, uint32_t line, const 
     // Fill in the name and LWP ID of the calling thread.
     X_Message msg;
     msg.level = level;
-    msg.thrd_lwpid = (uint32_t) ::syscall(SYS_gettid) & 0xFFFFFFU;
+    msg.thrd_lwpid = static_cast<uint32_t>(::syscall(SYS_gettid)) & 0xFFFFFFU;
 
     if(::pthread_getname_np(::pthread_self(), msg.thrd_name, sizeof(msg.thrd_name)) != 0)
       ::strcpy(msg.thrd_name, "unknown");

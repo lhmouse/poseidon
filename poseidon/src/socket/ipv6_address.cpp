@@ -153,7 +153,7 @@ IP_Address_Class
 IPv6_Address::
 classify() const noexcept
   {
-    return do_classify_ipv6_generic((const char*) &(this->m_addr));
+    return do_classify_ipv6_generic(reinterpret_cast<const char*>(&(this->m_addr)));
   }
 
 size_t
@@ -184,7 +184,7 @@ parse(chars_view str) noexcept
     else {
       // IPv4-mapped
       this->m_addr = ipv4_unspecified.m_addr;
-      if(::inet_pton(AF_INET, sbuf, (char*) &(this->m_addr) + 12) == 0)
+      if(::inet_pton(AF_INET, sbuf, reinterpret_cast<char*>(&(this->m_addr)) + 12) == 0)
         return 0;
     }
 
@@ -197,7 +197,7 @@ size_t
 IPv6_Address::
 print_partial(char* str) const noexcept
   {
-    const char* addr = (const char*) &(this->m_addr);
+    const char* addr = reinterpret_cast<const char*>(&(this->m_addr));
     ::asteria::ascii_numput nump;
     char* wptr = str;
 

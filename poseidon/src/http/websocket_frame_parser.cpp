@@ -427,7 +427,7 @@ parse_frame_header_from_stream(linear_buffer& data)
     }
 
     // Calculate the length of this header.
-    const uint8_t* bptr = (const uint8_t*) data.data();
+    const uint8_t* bptr = reinterpret_cast<const uint8_t*>(data.data());
     size_t ntotal = 2;
     if(data.size() < ntotal)
       return;

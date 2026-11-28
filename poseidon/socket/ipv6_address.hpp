@@ -96,11 +96,11 @@ class IPv6_Address
 
     const uint8_t*
     data() const noexcept
-      { return (const uint8_t*) &(this->m_addr);  }
+      { return reinterpret_cast<const uint8_t*>(&(this->m_addr));  }
 
     uint8_t*
     mut_data() noexcept
-      { return (uint8_t*) &(this->m_addr);  }
+      { return reinterpret_cast<uint8_t*>(&(this->m_addr));  }
 
     ::in6_addr&
     mut_addr() noexcept

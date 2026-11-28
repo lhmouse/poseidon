@@ -35,9 +35,10 @@ do_find_socket_nolock(volatile Abstract_Socket* socket) noexcept
 
     // Make a fixed-point value in the interval [0,1), and then multiply `dist` by
     // it to get an index in the middle.
-    uint32_t ratio = (uint32_t) ((uintptr_t) socket / sizeof(void*)) * 0x9E3779B9U;
+    uintptr_t key = reinterpret_cast<uintptr_t>(socket) / sizeof(void*);
+    uint32_t ratio = static_cast<uint32_t>(key) * 0x9E3779B9U;
     auto begin = &(this->m_epoll_map_stor[0]);
-    auto origin = begin + (ptrdiff_t) (dist * ratio >> 32);
+    auto origin = begin + static_cast<ptrdiff_t>(dist * ratio >> 32);
     auto end = begin + this->m_epoll_map_stor.size();
 
     // HACK: Compare the socket pointer without tampering with the reference
@@ -160,11 +161,11 @@ reload(const Config_File& conf_file)
       // performance.
       uint8_t sid_ctx[32];
       ::memset(sid_ctx, '*', sizeof(sid_ctx));
-      ::gethostname((char*) sid_ctx, sizeof(sid_ctx));
+      ::gethostname(reinterpret_cast<char*>(sid_ctx), sizeof(sid_ctx));
       if(!::SSL_CTX_set_session_id_context(server_ssl_ctx, sid_ctx, sizeof(sid_ctx)))
         POSEIDON_THROW((
             "Could not set SSL session ID context",
-            "[`SSL_set_session_id_context()` failed: $1]",
+            "[`SSL_CTX_set_session_id_context()` failed: $1]",
             "[in configuration file '$2']"),
             ::ERR_reason_error_string(::ERR_get_error()), conf_file.path());
 
