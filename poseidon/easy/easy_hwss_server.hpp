@@ -14,14 +14,19 @@ class Easy_HWSS_Server
   public:
     // This is the user-defined callback, where `session` points to an internal
     // client session object, and if `event` is
-    // 1) `easy_hws_open`, then `data` is the request URI; or
+    // 1) `easy_hws_open`, then `data` is the request URI with an optional query
+    //    string; or
     // 2) `easy_hws_msg_text`, then `data` is a complete text message that has
     //    been received; or
     // 3) `easy_hws_msg_bin`, then `data` is a complete binary message that has
     //    been received; or
     // 4) `easy_hws_pong`, then `data` is a PONG notification that has been
     //    received, usually a copy of a previous PING notification; or
-    // 5) `easy_hws_close`, then `data` is a string about the reason, such as
+    // 5) `easy_hws_get`, then `data` is the request URI with an optional query
+    //    string; or
+    // 6) `easy_hws_head`, then `data` is the request URI with an optional query
+    //    string; or
+    // 7) `easy_hws_close`, then `data` is a string about the reason, such as
     //    `"1002: invalid opcode"`.
     //
     // The server object owns all client socket objects. As a recommendation,
