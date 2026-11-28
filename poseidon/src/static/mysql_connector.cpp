@@ -82,7 +82,8 @@ reload(const Config_File& conf_file)
 POSEIDON_VISIBILITY_HIDDEN
 uniptr<MySQL_Connection>
 MySQL_Connector::
-do_get_pooled_connection_opt(seconds idle_timeout, const cow_string& service_uri)
+do_get_pooled_connection(seconds idle_timeout, const cow_string& service_uri,
+      const cow_string& password)
   {
     plain_mutex::unique_lock lock(this->m_pool_mutex);
     const steady_time now = steady_clock::now();
@@ -100,6 +101,10 @@ do_get_pooled_connection_opt(seconds idle_timeout, const cow_string& service_uri
     while(!this->m_pool.empty() && (now - this->m_pool.back().time > idle_timeout))
       this->m_pool.pop_back();
 
+    // Create a new connection if no pooled connection was found.
+    lock.unlock();
+    if(!conn)
+      conn = new_uni<MySQL_Connection>(service_uri, password);
     return conn;
   }
 
@@ -111,10 +116,7 @@ allocate_connection(const cow_string& service_uri, const cow_string& password)
     const seconds idle_timeout = this->m_conf_connection_idle_timeout;
     lock.unlock();
 
-    auto conn = this->do_get_pooled_connection_opt(idle_timeout, service_uri);
-    if(!conn)
-      conn = new_uni<MySQL_Connection>(service_uri, password);
-    return conn;
+    return this->do_get_pooled_connection(idle_timeout, service_uri, password);
   }
 
 uniptr<MySQL_Connection>
@@ -127,10 +129,7 @@ allocate_default_connection()
     const seconds idle_timeout = this->m_conf_connection_idle_timeout;
     lock.unlock();
 
-    auto conn = this->do_get_pooled_connection_opt(idle_timeout, service_uri);
-    if(!conn)
-      conn = new_uni<MySQL_Connection>(service_uri, password);
-    return conn;
+    return this->do_get_pooled_connection(idle_timeout, service_uri, password);
   }
 
 uniptr<MySQL_Connection>
@@ -143,10 +142,7 @@ allocate_secondary_connection()
     const seconds idle_timeout = this->m_conf_connection_idle_timeout;
     lock.unlock();
 
-    auto conn = this->do_get_pooled_connection_opt(idle_timeout, service_uri);
-    if(!conn)
-      conn = new_uni<MySQL_Connection>(service_uri, password);
-    return conn;
+    return this->do_get_pooled_connection(idle_timeout, service_uri, password);
   }
 
 uniptr<MySQL_Connection>
@@ -159,10 +155,7 @@ allocate_tertiary_connection()
     const seconds idle_timeout = this->m_conf_connection_idle_timeout;
     lock.unlock();
 
-    auto conn = this->do_get_pooled_connection_opt(idle_timeout, service_uri);
-    if(!conn)
-      conn = new_uni<MySQL_Connection>(service_uri, password);
-    return conn;
+    return this->do_get_pooled_connection(idle_timeout, service_uri, password);
   }
 
 bool

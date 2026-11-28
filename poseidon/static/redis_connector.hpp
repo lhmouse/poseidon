@@ -26,7 +26,8 @@ class Redis_Connector
 
   private:
     uniptr<Redis_Connection>
-    do_get_pooled_connection_opt(seconds idle_timeout, const cow_string& service_uri);
+    do_get_pooled_connection(seconds idle_timeout, const cow_string& service_uri,
+          const cow_string& password);
 
   public:
     Redis_Connector(const Redis_Connector&) = delete;

@@ -26,7 +26,8 @@ class Mongo_Connector
 
   private:
     uniptr<Mongo_Connection>
-    do_get_pooled_connection_opt(seconds idle_timeout, const cow_string& service_uri);
+    do_get_pooled_connection(seconds idle_timeout, const cow_string& service_uri,
+          const cow_string& password);
 
   public:
     Mongo_Connector(const Mongo_Connector&) = delete;

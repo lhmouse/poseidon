@@ -30,7 +30,8 @@ class MySQL_Connector
 
   private:
     uniptr<MySQL_Connection>
-    do_get_pooled_connection_opt(seconds idle_timeout, const cow_string& service_uri);
+    do_get_pooled_connection(seconds idle_timeout, const cow_string& service_uri,
+          const cow_string& password);
 
   public:
     MySQL_Connector(const MySQL_Connector&) = delete;
